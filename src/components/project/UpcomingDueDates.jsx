@@ -1,162 +1,125 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, ListTodo, Package, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Calendar as CalendarIcon, ListTodo, Package, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths, isToday, isBefore, startOfDay } from 'date-fns';
+import { format, isBefore, startOfDay, parseISO, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 export default function UpcomingDueDates({ tasks = [], parts = [] }) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
+  const today = startOfDay(new Date());
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  // Get items with due dates, sorted by date
+  const tasksWithDue = tasks
+    .filter(t => t.due_date && t.status !== 'completed')
+    .map(t => ({ ...t, type: 'task', date: parseISO(t.due_date) }));
+  
+  const partsWithDue = parts
+    .filter(p => p.due_date && p.status !== 'installed')
+    .map(p => ({ ...p, type: 'part', date: parseISO(p.due_date) }));
 
-  // Get first day of week offset (0 = Sunday)
-  const startDayOfWeek = monthStart.getDay();
-  const emptyDays = Array(startDayOfWeek).fill(null);
+  const allItems = [...tasksWithDue, ...partsWithDue]
+    .sort((a, b) => a.date - b.date)
+    .slice(0, 8); // Show max 8 items
 
-  // Get items with due dates
-  const tasksWithDue = tasks.filter(t => t.due_date && t.status !== 'completed');
-  const partsWithDue = parts.filter(p => p.due_date && p.status !== 'installed');
+  const overdueItems = allItems.filter(item => isBefore(item.date, today));
+  const upcomingItems = allItems.filter(item => !isBefore(item.date, today));
 
-  const getItemsForDate = (date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const dayTasks = tasksWithDue.filter(t => t.due_date === dateStr);
-    const dayParts = partsWithDue.filter(p => p.due_date === dateStr);
-    return { tasks: dayTasks, parts: dayParts };
+  const getDateLabel = (date) => {
+    const days = differenceInDays(date, today);
+    if (days < 0) return `${Math.abs(days)}d overdue`;
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Tomorrow';
+    if (days <= 7) return `In ${days} days`;
+    return format(date, 'MMM d');
   };
 
-  const hasItemsOnDate = (date) => {
-    const { tasks, parts } = getItemsForDate(date);
-    return tasks.length > 0 || parts.length > 0;
-  };
-
-  const isOverdue = (date) => {
-    return isBefore(startOfDay(date), startOfDay(new Date()));
-  };
-
-  const selectedItems = selectedDate ? getItemsForDate(selectedDate) : null;
+  if (allItems.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-xl bg-rose-100">
+            <CalendarIcon className="w-4 h-4 text-rose-600" />
+          </div>
+          <h3 className="font-semibold text-slate-900 text-sm">Upcoming</h3>
+        </div>
+        <p className="text-sm text-slate-400 text-center py-4">No upcoming due dates</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-      <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-rose-50 to-pink-100/50">
+      <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-rose-50 to-pink-50">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-rose-500 shadow-lg shadow-rose-200">
-            <CalendarIcon className="w-5 h-5 text-white" />
+          <div className="p-2 rounded-xl bg-rose-500 shadow-md shadow-rose-200">
+            <CalendarIcon className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-900">Upcoming Due Dates</h3>
-            <p className="text-sm text-slate-500">{tasksWithDue.length} tasks · {partsWithDue.length} parts</p>
+            <h3 className="font-semibold text-slate-900 text-sm">Upcoming Due Dates</h3>
+            <p className="text-xs text-slate-500">{allItems.length} items</p>
           </div>
         </div>
       </div>
 
-      <div className="p-4">
-        {/* Month Navigation */}
-        <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <h4 className="font-semibold text-slate-900">{format(currentMonth, 'MMMM yyyy')}</h4>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
+      <div className="p-3 space-y-1.5 max-h-[280px] overflow-y-auto">
+        {overdueItems.length > 0 && (
+          <div className="flex items-center gap-2 px-2 py-1">
+            <AlertCircle className="w-3 h-3 text-red-500" />
+            <span className="text-xs font-medium text-red-600">Overdue</span>
+          </div>
+        )}
+        
+        {overdueItems.map((item, idx) => (
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.03 }}
+            className="flex items-center gap-3 p-2.5 rounded-xl bg-red-50 border border-red-100"
+          >
+            {item.type === 'task' ? (
+              <ListTodo className="w-4 h-4 text-red-500 shrink-0" />
+            ) : (
+              <Package className="w-4 h-4 text-red-500 shrink-0" />
+            )}
+            <span className="text-sm text-slate-700 flex-1 truncate">{item.title || item.name}</span>
+            <span className="text-xs text-red-600 font-medium whitespace-nowrap">{getDateLabel(item.date)}</span>
+          </motion.div>
+        ))}
 
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1 mb-4">
-          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-            <div key={day} className="text-center text-xs font-medium text-slate-400 py-2">
-              {day}
-            </div>
-          ))}
+        {upcomingItems.length > 0 && overdueItems.length > 0 && (
+          <div className="border-t border-slate-100 my-2" />
+        )}
+
+        {upcomingItems.map((item, idx) => {
+          const days = differenceInDays(item.date, today);
+          const isUrgent = days <= 2;
           
-          {emptyDays.map((_, idx) => (
-            <div key={`empty-${idx}`} className="aspect-square" />
-          ))}
-          
-          {days.map(day => {
-            const hasItems = hasItemsOnDate(day);
-            const { tasks: dayTasks, parts: dayParts } = getItemsForDate(day);
-            const overdue = hasItems && isOverdue(day);
-            const isSelected = selectedDate && isSameDay(day, selectedDate);
-
-            return (
-              <button
-                key={day.toISOString()}
-                onClick={() => setSelectedDate(hasItems ? day : null)}
-                className={cn(
-                  "aspect-square rounded-lg text-sm font-medium transition-all relative",
-                  isToday(day) && "ring-2 ring-indigo-500 ring-offset-1",
-                  isSelected && "bg-indigo-600 text-white",
-                  !isSelected && hasItems && !overdue && "bg-blue-50 text-blue-700 hover:bg-blue-100",
-                  !isSelected && overdue && "bg-red-50 text-red-700 hover:bg-red-100",
-                  !isSelected && !hasItems && "text-slate-600 hover:bg-slate-50",
-                  !isSameMonth(day, currentMonth) && "text-slate-300"
-                )}
-              >
-                {format(day, 'd')}
-                {hasItems && (
-                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                    {dayTasks.length > 0 && <div className={cn("w-1.5 h-1.5 rounded-full", isSelected ? "bg-white" : "bg-indigo-500")} />}
-                    {dayParts.length > 0 && <div className={cn("w-1.5 h-1.5 rounded-full", isSelected ? "bg-white" : "bg-amber-500")} />}
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Selected Date Items */}
-        <AnimatePresence mode="wait">
-          {selectedItems && (selectedItems.tasks.length > 0 || selectedItems.parts.length > 0) && (
+          return (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="border-t border-slate-100 pt-4 space-y-2"
+              key={item.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: (overdueItems.length + idx) * 0.03 }}
+              className={cn(
+                "flex items-center gap-3 p-2.5 rounded-xl transition-colors",
+                isUrgent ? "bg-amber-50 border border-amber-100" : "bg-slate-50 hover:bg-slate-100"
+              )}
             >
-              <h5 className="text-sm font-semibold text-slate-700 mb-3">
-                {format(selectedDate, 'EEEE, MMMM d')}
-              </h5>
-              
-              {selectedItems.tasks.map(task => (
-                <div key={task.id} className="flex items-center gap-3 p-2 rounded-lg bg-indigo-50">
-                  <ListTodo className="w-4 h-4 text-indigo-600" />
-                  <span className="text-sm text-slate-700 flex-1 truncate">{task.title}</span>
-                  <Badge variant="outline" className="text-xs">{task.status?.replace('_', ' ')}</Badge>
-                </div>
-              ))}
-              
-              {selectedItems.parts.map(part => (
-                <div key={part.id} className="flex items-center gap-3 p-2 rounded-lg bg-amber-50">
-                  <Package className="w-4 h-4 text-amber-600" />
-                  <span className="text-sm text-slate-700 flex-1 truncate">{part.name}</span>
-                  <Badge variant="outline" className="text-xs">{part.status}</Badge>
-                </div>
-              ))}
+              {item.type === 'task' ? (
+                <ListTodo className={cn("w-4 h-4 shrink-0", isUrgent ? "text-amber-600" : "text-indigo-500")} />
+              ) : (
+                <Package className={cn("w-4 h-4 shrink-0", isUrgent ? "text-amber-600" : "text-amber-500")} />
+              )}
+              <span className="text-sm text-slate-700 flex-1 truncate">{item.title || item.name}</span>
+              <span className={cn(
+                "text-xs font-medium whitespace-nowrap",
+                isUrgent ? "text-amber-600" : "text-slate-500"
+              )}>
+                {getDateLabel(item.date)}
+              </span>
             </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Legend */}
-        <div className="flex items-center justify-center gap-4 pt-4 border-t border-slate-100 mt-4">
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
-            <div className="w-2 h-2 rounded-full bg-indigo-500" />
-            <span>Tasks</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
-            <div className="w-2 h-2 rounded-full bg-amber-500" />
-            <span>Parts</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
-            <div className="w-2 h-2 rounded-full bg-red-500" />
-            <span>Overdue</span>
-          </div>
-        </div>
+          );
+        })}
       </div>
     </div>
   );
