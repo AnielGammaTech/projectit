@@ -7,7 +7,8 @@ import {
   Users, 
   Menu,
   X,
-  Wrench
+  Wrench,
+  FileStack
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,7 @@ const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
   { name: 'All Tasks', icon: ListTodo, page: 'AllTasks' },
   { name: 'Team', icon: Users, page: 'Team' },
+  { name: 'Templates', icon: FileStack, page: 'Templates' },
 ];
 
 export default function Layout({ children, currentPageName }) {

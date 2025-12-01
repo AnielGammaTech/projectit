@@ -30,6 +30,12 @@ export default function AllTasks() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('all'); // 'all' or 'mine'
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useState(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['allTasks'],
@@ -57,7 +63,8 @@ export default function AllTasks() {
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
     const matchesAssignee = assigneeFilter === 'all' || task.assigned_to === assigneeFilter;
-    return matchesSearch && matchesStatus && matchesPriority && matchesAssignee;
+    const matchesViewMode = viewMode === 'all' || (viewMode === 'mine' && task.assigned_to === currentUser?.email);
+    return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
   });
 
   const tasksByStatus = {
@@ -78,6 +85,28 @@ export default function AllTasks() {
         >
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">All Tasks</h1>
           <p className="text-slate-500 mt-1">View and filter all tasks across projects</p>
+          
+          {/* View Mode Tabs */}
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={() => setViewMode('all')}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                viewMode === 'all' ? "bg-indigo-600 text-white" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+              )}
+            >
+              All Tasks
+            </button>
+            <button
+              onClick={() => setViewMode('mine')}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                viewMode === 'mine' ? "bg-indigo-600 text-white" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+              )}
+            >
+              My Tasks
+            </button>
+          </div>
         </motion.div>
 
         {/* Filters */}
