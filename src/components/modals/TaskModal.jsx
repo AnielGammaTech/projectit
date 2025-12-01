@@ -10,10 +10,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
-export default function TaskModal({ open, onClose, task, projectId, teamMembers = [], onSave }) {
+export default function TaskModal({ open, onClose, task, projectId, teamMembers = [], groups = [], onSave }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    project_id: projectId,
+    group_id: '',
     assigned_to: '',
     assigned_name: '',
     status: 'todo',
@@ -26,6 +28,8 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
       setFormData({
         title: task.title || '',
         description: task.description || '',
+        project_id: task.project_id || projectId,
+        group_id: task.group_id || '',
         assigned_to: task.assigned_to || '',
         assigned_name: task.assigned_name || '',
         status: task.status || 'todo',
@@ -36,6 +40,8 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
       setFormData({
         title: '',
         description: '',
+        project_id: projectId,
+        group_id: '',
         assigned_to: '',
         assigned_name: '',
         status: 'todo',
@@ -43,7 +49,7 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
         due_date: ''
       });
     }
-  }, [task, open]);
+  }, [task, open, projectId]);
 
   const handleAssigneeChange = (email) => {
     const member = teamMembers.find(m => m.email === email);
@@ -56,7 +62,7 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({ ...formData, project_id: projectId });
+    onSave(formData);
   };
 
   return (
@@ -72,7 +78,7 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
               id="title"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Enter task title"
+              placeholder="e.g., Install network cables"
               required
               className="mt-1.5"
             />
@@ -84,23 +90,39 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Describe the task..."
-              className="mt-1.5 h-24"
+              placeholder="Task details..."
+              className="mt-1.5 h-20"
             />
           </div>
+
+          {groups.length > 0 && (
+            <div>
+              <Label>Group</Label>
+              <Select value={formData.group_id || 'none'} onValueChange={(v) => setFormData(prev => ({ ...prev, group_id: v === 'none' ? '' : v }))}>
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue placeholder="Select group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Group</SelectItem>
+                  {groups.map(group => (
+                    <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Assign To</Label>
-              <Select value={formData.assigned_to} onValueChange={handleAssigneeChange}>
+              <Select value={formData.assigned_to || 'unassigned'} onValueChange={handleAssigneeChange}>
                 <SelectTrigger className="mt-1.5">
-                  <SelectValue placeholder="Select tech" />
+                  <SelectValue placeholder="Assign to..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
                   {teamMembers.map(member => (
-                    <SelectItem key={member.id} value={member.email}>
-                      {member.name}
-                    </SelectItem>
+                    <SelectItem key={member.id} value={member.email}>{member.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -143,7 +165,7 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full mt-1.5 justify-start font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.due_date ? format(new Date(formData.due_date), 'PPP') : 'Pick a date'}
+                    {formData.due_date ? format(new Date(formData.due_date), 'PPP') : 'Pick date'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">

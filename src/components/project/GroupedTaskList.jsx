@@ -1,0 +1,334 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ChevronRight, Plus, Edit2, Trash2, CheckCircle2, Circle, Clock, ArrowUpCircle, User, AlertTriangle, MoreHorizontal } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
+import { cn } from '@/lib/utils';
+
+const statusConfig = {
+  todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
+  in_progress: { icon: ArrowUpCircle, color: 'text-blue-500', bg: 'bg-blue-100', label: 'In Progress' },
+  review: { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-100', label: 'Review' },
+  completed: { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-100', label: 'Completed' }
+};
+
+const priorityColors = {
+  low: 'bg-slate-100 text-slate-600',
+  medium: 'bg-amber-100 text-amber-700',
+  high: 'bg-red-100 text-red-700'
+};
+
+const groupColors = {
+  slate: 'bg-slate-500',
+  red: 'bg-red-500',
+  amber: 'bg-amber-500',
+  emerald: 'bg-emerald-500',
+  blue: 'bg-blue-500',
+  violet: 'bg-violet-500',
+  pink: 'bg-pink-500'
+};
+
+const getDueDateInfo = (dueDate, status) => {
+  if (!dueDate || status === 'completed') return null;
+  const date = new Date(dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  if (isPast(date) && !isToday(date)) return { label: 'Overdue', color: 'bg-red-500 text-white', urgent: true };
+  if (isToday(date)) return { label: 'Due Today', color: 'bg-orange-500 text-white', urgent: true };
+  if (isTomorrow(date)) return { label: 'Tomorrow', color: 'bg-amber-500 text-white', urgent: true };
+  const days = differenceInDays(date, today);
+  if (days <= 7) return { label: `${days} days`, color: 'bg-blue-100 text-blue-700', urgent: false };
+  return { label: format(date, 'MMM d'), color: 'bg-slate-100 text-slate-600', urgent: false };
+};
+
+const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
+  const status = statusConfig[task.status] || statusConfig.todo;
+  const StatusIcon = status.icon;
+  const dueDateInfo = getDueDateInfo(task.due_date, task.status);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -10 }}
+      className={cn(
+        "group bg-white rounded-lg border p-2.5 hover:shadow-sm transition-all cursor-pointer",
+        task.status === 'completed' ? "opacity-60 border-slate-100" : 
+        dueDateInfo?.urgent ? "border-red-200 bg-red-50/30" : "border-slate-100"
+      )}
+      onClick={() => onTaskClick?.(task)}
+    >
+      <div className="flex items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+            <button className={cn("p-1 rounded transition-colors shrink-0", status.bg)}>
+              <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {Object.entries(statusConfig).map(([key, config]) => {
+              const Icon = config.icon;
+              return (
+                <DropdownMenuItem key={key} onClick={(e) => { e.stopPropagation(); onStatusChange(task, key); }}>
+                  <Icon className={cn("w-4 h-4 mr-2", config.color)} />
+                  {config.label}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <span className={cn(
+          "flex-1 text-sm font-medium truncate",
+          task.status === 'completed' && "line-through text-slate-500"
+        )}>
+          {task.title}
+        </span>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          {dueDateInfo && (
+            <Badge className={cn("text-[10px] px-1.5 py-0", dueDateInfo.color)}>
+              {dueDateInfo.urgent && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
+              {dueDateInfo.label}
+            </Badge>
+          )}
+          {task.assigned_name && (
+            <span className="text-[10px] text-slate-400 hidden sm:block">{task.assigned_name.split(' ')[0]}</span>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
+                <MoreHorizontal className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(task); }}>
+                <Edit2 className="w-4 h-4 mr-2" />Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDelete(task); }} className="text-red-600">
+                <Trash2 className="w-4 h-4 mr-2" />Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default function GroupedTaskList({ 
+  tasks = [], 
+  groups = [], 
+  onStatusChange, 
+  onEdit, 
+  onDelete, 
+  onTaskClick,
+  onCreateGroup,
+  onEditGroup,
+  onDeleteGroup,
+  currentUserEmail
+}) {
+  const [expandedGroups, setExpandedGroups] = useState(new Set(['ungrouped', ...groups.map(g => g.id)]));
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupColor, setNewGroupColor] = useState('slate');
+  const [viewFilter, setViewFilter] = useState('all');
+
+  const toggleGroup = (groupId) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupId)) {
+      newExpanded.delete(groupId);
+    } else {
+      newExpanded.add(groupId);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
+  const filteredTasks = tasks.filter(task => {
+    if (viewFilter === 'my_tasks') return task.assigned_to === currentUserEmail;
+    if (viewFilter === 'my_due') return task.assigned_to === currentUserEmail && task.due_date;
+    return true;
+  });
+
+  const ungroupedTasks = filteredTasks.filter(t => !t.group_id);
+  const getTasksForGroup = (groupId) => filteredTasks.filter(t => t.group_id === groupId);
+
+  const handleCreateGroup = () => {
+    if (!newGroupName.trim()) return;
+    onCreateGroup({ name: newGroupName, color: newGroupColor });
+    setNewGroupName('');
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Filter Tabs */}
+      {currentUserEmail && (
+        <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
+          {[['all', 'All'], ['my_tasks', 'Mine'], ['my_due', 'Due']].map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setViewFilter(key)}
+              className={cn(
+                "flex-1 text-xs font-medium py-1.5 px-2 rounded-md transition-all",
+                viewFilter === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Groups */}
+      {groups.map((group) => {
+        const groupTasks = getTasksForGroup(group.id);
+        const completedCount = groupTasks.filter(t => t.status === 'completed').length;
+        const isExpanded = expandedGroups.has(group.id);
+
+        return (
+          <div key={group.id} className="border border-slate-200 rounded-xl overflow-hidden">
+            <div
+              className="flex items-center gap-3 p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
+              onClick={() => toggleGroup(group.id)}
+            >
+              {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+              <div className={cn("w-3 h-3 rounded-full", groupColors[group.color] || groupColors.slate)} />
+              <span className="font-medium text-slate-900 flex-1">{group.name}</span>
+              <span className="text-xs text-slate-500">{completedCount}/{groupTasks.length}</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <MoreHorizontal className="w-3.5 h-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEditGroup(group); }}>
+                    <Edit2 className="w-4 h-4 mr-2" />Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDeleteGroup(group); }} className="text-red-600">
+                    <Trash2 className="w-4 h-4 mr-2" />Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="p-2 space-y-1.5 bg-white"
+                >
+                  {groupTasks.length === 0 ? (
+                    <p className="text-xs text-slate-400 text-center py-3">No tasks in this group</p>
+                  ) : (
+                    groupTasks.map(task => (
+                      <TaskItem
+                        key={task.id}
+                        task={task}
+                        onStatusChange={onStatusChange}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        onTaskClick={onTaskClick}
+                      />
+                    ))
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        );
+      })}
+
+      {/* Ungrouped */}
+      {ungroupedTasks.length > 0 && (
+        <div className="border border-slate-200 rounded-xl overflow-hidden">
+          <div
+            className="flex items-center gap-3 p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
+            onClick={() => toggleGroup('ungrouped')}
+          >
+            {expandedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+            <span className="font-medium text-slate-500 flex-1">Ungrouped</span>
+            <span className="text-xs text-slate-500">{ungroupedTasks.filter(t => t.status === 'completed').length}/{ungroupedTasks.length}</span>
+          </div>
+          <AnimatePresence>
+            {expandedGroups.has('ungrouped') && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="p-2 space-y-1.5 bg-white"
+              >
+                {ungroupedTasks.map(task => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onStatusChange={onStatusChange}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onTaskClick={onTaskClick}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Add Group */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="w-full border-dashed">
+            <Plus className="w-4 h-4 mr-1.5" />
+            Add Group
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64">
+          <div className="space-y-3">
+            <Input
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              placeholder="Group name"
+            />
+            <div className="flex gap-1.5">
+              {Object.keys(groupColors).map((color) => (
+                <button
+                  key={color}
+                  onClick={() => setNewGroupColor(color)}
+                  className={cn(
+                    "w-6 h-6 rounded-full transition-all",
+                    groupColors[color],
+                    newGroupColor === color ? "ring-2 ring-offset-2 ring-indigo-500" : ""
+                  )}
+                />
+              ))}
+            </div>
+            <Button onClick={handleCreateGroup} size="sm" className="w-full bg-indigo-600 hover:bg-indigo-700">
+              Create Group
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      {filteredTasks.length === 0 && groups.length === 0 && (
+        <div className="text-center py-6 text-slate-500">
+          <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+          <p className="text-sm">No tasks yet</p>
+        </div>
+      )}
+    </div>
+  );
+}
