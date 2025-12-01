@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { ListTodo, Filter, Search, Plus, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, User, FolderKanban } from 'lucide-react';
+import { ListTodo, Filter, Search, Plus, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, User, FolderKanban, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +42,11 @@ export default function AllTasks() {
     queryFn: () => base44.entities.Task.list('-created_date')
   });
 
+  const { data: parts = [] } = useQuery({
+    queryKey: ['allParts'],
+    queryFn: () => base44.entities.Part.list('-created_date')
+  });
+
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
     queryFn: () => base44.entities.Project.list()
@@ -66,6 +71,11 @@ export default function AllTasks() {
     const matchesViewMode = viewMode === 'all' || (viewMode === 'mine' && task.assigned_to === currentUser?.email);
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
   });
+
+  // My assigned parts (with due dates)
+  const myParts = parts.filter(part => 
+    part.assigned_to === currentUser?.email && part.due_date
+  );
 
   const tasksByStatus = {
     todo: filteredTasks.filter(t => t.status === 'todo'),
@@ -105,6 +115,9 @@ export default function AllTasks() {
               )}
             >
               My Tasks
+              {viewMode !== 'mine' && myParts.length > 0 && (
+                <span className="ml-1.5 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full">+{myParts.length}</span>
+              )}
             </button>
           </div>
         </motion.div>
@@ -195,6 +208,53 @@ export default function AllTasks() {
             );
           })}
         </div>
+
+        {/* My Assigned Parts (when in My Tasks view) */}
+        {viewMode === 'mine' && myParts.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-3 flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              My Assigned Parts
+            </h3>
+            <div className="space-y-2">
+              {myParts.map((part, idx) => (
+                <motion.div
+                  key={part.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.02 }}
+                  className="bg-amber-50 rounded-xl border border-amber-200 p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-1.5 rounded-lg bg-amber-100">
+                      <Package className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-slate-900">{part.name}</h4>
+                      <div className="flex items-center gap-3 text-sm text-slate-500 mt-1">
+                        <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200">
+                          {part.status}
+                        </Badge>
+                        {part.due_date && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {format(new Date(part.due_date), 'MMM d')}
+                          </span>
+                        )}
+                        <Link to={createPageUrl('ProjectDetail') + `?id=${part.project_id}`}>
+                          <Badge variant="outline" className="hover:bg-slate-100">
+                            <FolderKanban className="w-3 h-3 mr-1" />
+                            {getProjectName(part.project_id)}
+                          </Badge>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Tasks List */}
         <div className="space-y-3">
