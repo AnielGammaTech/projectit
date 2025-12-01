@@ -14,7 +14,9 @@ import {
   Plus,
   MessageSquare,
   MoreHorizontal,
-  Copy
+  Copy,
+  Archive,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +35,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
@@ -203,6 +206,24 @@ export default function ProjectDetail() {
     alert('Project saved as template!');
   };
 
+  // Archive project
+  const handleArchiveProject = async () => {
+    await base44.entities.Project.update(projectId, { ...project, status: 'archived' });
+    window.location.href = createPageUrl('Dashboard');
+  };
+
+  // Delete project
+  const handleDeleteProject = async () => {
+    if (confirm('Are you sure you want to delete this project? This will also delete all tasks, parts, and notes.')) {
+      // Delete related items
+      for (const task of tasks) await base44.entities.Task.delete(task.id);
+      for (const part of parts) await base44.entities.Part.delete(part.id);
+      for (const group of taskGroups) await base44.entities.TaskGroup.delete(group.id);
+      await base44.entities.Project.delete(projectId);
+      window.location.href = createPageUrl('Dashboard');
+    }
+  };
+
   // Progress update
   const handleProgressUpdate = async (progressValue) => {
     await base44.entities.Project.update(projectId, { ...project, progress: progressValue });
@@ -324,6 +345,15 @@ export default function ProjectDetail() {
                   <DropdownMenuItem onClick={handleSaveAsTemplate}>
                     <Copy className="w-4 h-4 mr-2" />
                     Save as Template
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleArchiveProject}>
+                    <Archive className="w-4 h-4 mr-2" />
+                    Archive Project
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleDeleteProject} className="text-red-600">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Project
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -474,10 +504,12 @@ export default function ProjectDetail() {
         open={showPartsView}
         onClose={() => setShowPartsView(false)}
         parts={parts}
+        projectId={projectId}
         onAdd={() => { setShowPartsView(false); setEditingPart(null); setShowPartModal(true); }}
         onEdit={(part) => { setShowPartsView(false); setEditingPart(part); setShowPartModal(true); }}
         onDelete={(part) => setDeleteConfirm({ open: true, type: 'part', item: part })}
         onStatusChange={handlePartStatusChange}
+        onPartsExtracted={refetchParts}
       />
 
       <NotesViewModal
