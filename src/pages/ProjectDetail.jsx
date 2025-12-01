@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   ListTodo,
   Package,
-  Bell,
   Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,10 +31,9 @@ import { format } from 'date-fns';
 
 import TaskList from '@/components/project/TaskList';
 import PartsList from '@/components/project/PartsList';
-import RemindersList from '@/components/project/RemindersList';
 import TaskModal from '@/components/modals/TaskModal';
+import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import PartModal from '@/components/modals/PartModal';
-import ReminderModal from '@/components/modals/ReminderModal';
 import ProjectModal from '@/components/modals/ProjectModal';
 
 const statusColors = {
@@ -59,10 +57,9 @@ export default function ProjectDetail() {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showPartModal, setShowPartModal] = useState(false);
-  const [showReminderModal, setShowReminderModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [editingPart, setEditingPart] = useState(null);
-  const [editingReminder, setEditingReminder] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: null, item: null });
 
   const { data: project, isLoading: loadingProject, refetch: refetchProject } = useQuery({
@@ -83,12 +80,6 @@ export default function ProjectDetail() {
   const { data: parts = [], refetch: refetchParts } = useQuery({
     queryKey: ['parts', projectId],
     queryFn: () => base44.entities.Part.filter({ project_id: projectId }),
-    enabled: !!projectId
-  });
-
-  const { data: reminders = [], refetch: refetchReminders } = useQuery({
-    queryKey: ['reminders', projectId],
-    queryFn: () => base44.entities.Reminder.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
@@ -131,23 +122,6 @@ export default function ProjectDetail() {
     refetchParts();
   };
 
-  // Reminders
-  const handleSaveReminder = async (data) => {
-    if (editingReminder) {
-      await base44.entities.Reminder.update(editingReminder.id, data);
-    } else {
-      await base44.entities.Reminder.create(data);
-    }
-    refetchReminders();
-    setShowReminderModal(false);
-    setEditingReminder(null);
-  };
-
-  const handleReminderToggle = async (reminder) => {
-    await base44.entities.Reminder.update(reminder.id, { ...reminder, is_completed: !reminder.is_completed });
-    refetchReminders();
-  };
-
   // Project
   const handleUpdateProject = async (data) => {
     await base44.entities.Project.update(projectId, data);
@@ -164,9 +138,6 @@ export default function ProjectDetail() {
     } else if (type === 'part') {
       await base44.entities.Part.delete(item.id);
       refetchParts();
-    } else if (type === 'reminder') {
-      await base44.entities.Reminder.delete(item.id);
-      refetchReminders();
     }
     setDeleteConfirm({ open: false, type: null, item: null });
   };
@@ -197,7 +168,6 @@ export default function ProjectDetail() {
 
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const progress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
-  const pendingReminders = reminders.filter(r => !r.is_completed).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
@@ -310,6 +280,7 @@ export default function ProjectDetail() {
                 onStatusChange={handleTaskStatusChange}
                 onEdit={(task) => { setEditingTask(task); setShowTaskModal(true); }}
                 onDelete={(task) => setDeleteConfirm({ open: true, type: 'task', item: task })}
+                onTaskClick={(task) => setSelectedTask(task)}
                 currentUserEmail={currentUser?.email}
               />
             </div>
@@ -352,43 +323,7 @@ export default function ProjectDetail() {
             </div>
           </motion.div>
 
-          {/* Reminders Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
-          >
-            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-purple-100/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-violet-600 shadow-lg shadow-violet-200">
-                    <Bell className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900">Reminders</h3>
-                    <p className="text-sm text-slate-500">{pendingReminders} pending</p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  onClick={() => { setEditingReminder(null); setShowReminderModal(true); }}
-                  className="bg-violet-600 hover:bg-violet-700 shadow-md"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="p-4 max-h-[500px] overflow-y-auto">
-              <RemindersList
-                reminders={reminders}
-                onToggleComplete={handleReminderToggle}
-                onEdit={(reminder) => { setEditingReminder(reminder); setShowReminderModal(true); }}
-                onDelete={(reminder) => setDeleteConfirm({ open: true, type: 'reminder', item: reminder })}
-              />
-            </div>
-          </motion.div>
-        </div>
+          </div>
       </div>
 
       {/* Modals */}
@@ -416,12 +351,13 @@ export default function ProjectDetail() {
         onSave={handleSavePart}
       />
 
-      <ReminderModal
-        open={showReminderModal}
-        onClose={() => { setShowReminderModal(false); setEditingReminder(null); }}
-        reminder={editingReminder}
-        projectId={projectId}
-        onSave={handleSaveReminder}
+      <TaskDetailModal
+        open={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        task={selectedTask}
+        teamMembers={teamMembers}
+        currentUser={currentUser}
+        onEdit={(task) => { setSelectedTask(null); setEditingTask(task); setShowTaskModal(true); }}
       />
 
       {/* Delete Confirmation */}
