@@ -4,6 +4,7 @@ import Team from './pages/Team';
 import AllTasks from './pages/AllTasks';
 import Templates from './pages/Templates';
 import UserGroups from './pages/UserGroups';
+import ProjectTasks from './pages/ProjectTasks';
 import __Layout from './Layout.jsx';
 
 
@@ -14,6 +15,7 @@ export const PAGES = {
     "AllTasks": AllTasks,
     "Templates": Templates,
     "UserGroups": UserGroups,
+    "ProjectTasks": ProjectTasks,
 }
 
 export const pagesConfig = {

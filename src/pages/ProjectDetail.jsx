@@ -439,12 +439,12 @@ export default function ProjectDetail() {
         {/* Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Tasks Card - Clickable */}
+          <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
-            onClick={() => setShowTasksView(true)}
           >
             <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-indigo-100/50">
               <div className="flex items-center justify-between">
@@ -472,7 +472,7 @@ export default function ProjectDetail() {
               )}
             </div>
             <div className="p-4">
-              <p className="text-sm text-slate-500 text-center">Click to view all tasks by group</p>
+              <p className="text-sm text-slate-500 text-center">Click to view all tasks</p>
               {taskGroups.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
                   {taskGroups.map(g => (
@@ -482,6 +482,7 @@ export default function ProjectDetail() {
               )}
             </div>
           </motion.div>
+          </Link>
 
           {/* Parts Card - Clickable */}
           <motion.div

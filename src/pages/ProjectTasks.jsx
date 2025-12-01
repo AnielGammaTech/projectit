@@ -1,0 +1,623 @@
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowLeft, Plus, Search, ChevronDown, ChevronRight, 
+  CheckCircle2, Circle, Clock, ArrowUpCircle, 
+  MoreHorizontal, Edit2, Trash2, Calendar as CalendarIcon,
+  UserPlus, User, AlertTriangle, MessageCircle, Paperclip,
+  FolderPlus
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
+import { cn } from '@/lib/utils';
+import TaskModal from '@/components/modals/TaskModal';
+import TaskDetailModal from '@/components/modals/TaskDetailModal';
+import GroupModal from '@/components/modals/GroupModal';
+
+const statusConfig = {
+  todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
+  in_progress: { icon: ArrowUpCircle, color: 'text-blue-500', bg: 'bg-blue-100', label: 'In Progress' },
+  review: { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-100', label: 'Review' },
+  completed: { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-100', label: 'Completed' }
+};
+
+const groupColors = {
+  slate: 'bg-slate-500', red: 'bg-red-500', amber: 'bg-amber-500',
+  emerald: 'bg-emerald-500', blue: 'bg-blue-500', violet: 'bg-violet-500', pink: 'bg-pink-500'
+};
+
+const avatarColors = [
+  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
+  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
+  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
+];
+
+const getColorForEmail = (email) => {
+  if (!email) return avatarColors[0];
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) {
+    hash = email.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+};
+
+const getInitials = (name) => {
+  if (!name) return '?';
+  const parts = name.split(' ');
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
+const getDueDateInfo = (dueDate, status) => {
+  if (!dueDate || status === 'completed') return null;
+  const date = new Date(dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  if (isPast(date) && !isToday(date)) return { label: 'Overdue', color: 'bg-red-500 text-white', urgent: true };
+  if (isToday(date)) return { label: 'Today', color: 'bg-orange-500 text-white', urgent: true };
+  if (isTomorrow(date)) return { label: 'Tomorrow', color: 'bg-amber-500 text-white', urgent: true };
+  const days = differenceInDays(date, today);
+  if (days <= 7) return { label: `${days}d`, color: 'bg-blue-100 text-blue-700', urgent: false };
+  return { label: format(date, 'MMM d'), color: 'bg-slate-100 text-slate-600', urgent: false };
+};
+
+export default function ProjectTasks() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const projectId = urlParams.get('id');
+  const queryClient = useQueryClient();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewFilter, setViewFilter] = useState('all');
+  const [expandedGroups, setExpandedGroups] = useState(new Set());
+  
+  // Quick create state
+  const [quickTaskTitle, setQuickTaskTitle] = useState('');
+  const [quickTaskDueDate, setQuickTaskDueDate] = useState(null);
+  const [quickTaskAssignee, setQuickTaskAssignee] = useState(null);
+  const [quickTaskGroup, setQuickTaskGroup] = useState('');
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  // Modals
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [editingGroup, setEditingGroup] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: null, item: null });
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
+
+  const { data: project } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: async () => {
+      const projects = await base44.entities.Project.filter({ id: projectId });
+      return projects[0];
+    },
+    enabled: !!projectId
+  });
+
+  const { data: tasks = [], refetch: refetchTasks } = useQuery({
+    queryKey: ['tasks', projectId],
+    queryFn: () => base44.entities.Task.filter({ project_id: projectId }),
+    enabled: !!projectId
+  });
+
+  const { data: taskGroups = [], refetch: refetchGroups } = useQuery({
+    queryKey: ['taskGroups', projectId],
+    queryFn: () => base44.entities.TaskGroup.filter({ project_id: projectId }),
+    enabled: !!projectId
+  });
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => base44.entities.TeamMember.list()
+  });
+
+  const { data: allComments = [] } = useQuery({
+    queryKey: ['allTaskComments', projectId],
+    queryFn: async () => {
+      const taskIds = tasks.map(t => t.id);
+      if (taskIds.length === 0) return [];
+      const comments = await base44.entities.TaskComment.list();
+      return comments.filter(c => taskIds.includes(c.task_id));
+    },
+    enabled: tasks.length > 0
+  });
+
+  // Initialize expanded groups
+  useEffect(() => {
+    if (taskGroups.length > 0 && expandedGroups.size === 0) {
+      setExpandedGroups(new Set(['ungrouped', ...taskGroups.map(g => g.id)]));
+    }
+  }, [taskGroups]);
+
+  const getCommentCount = (taskId) => {
+    return allComments.filter(c => c.task_id === taskId).length;
+  };
+
+  const toggleGroup = (groupId) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupId)) {
+      newExpanded.delete(groupId);
+    } else {
+      newExpanded.add(groupId);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = task.title?.toLowerCase().includes(searchQuery.toLowerCase());
+    if (viewFilter === 'my_tasks') return matchesSearch && task.assigned_to === currentUser?.email;
+    if (viewFilter === 'overdue') {
+      const dueDateInfo = getDueDateInfo(task.due_date, task.status);
+      return matchesSearch && dueDateInfo?.urgent;
+    }
+    return matchesSearch;
+  });
+
+  const ungroupedTasks = filteredTasks.filter(t => !t.group_id);
+  const getTasksForGroup = (groupId) => filteredTasks.filter(t => t.group_id === groupId);
+
+  const handleQuickCreate = async (e) => {
+    e.preventDefault();
+    if (!quickTaskTitle.trim() || isCreating) return;
+    
+    setIsCreating(true);
+    await base44.entities.Task.create({
+      title: quickTaskTitle.trim(),
+      project_id: projectId,
+      status: 'todo',
+      priority: 'medium',
+      group_id: quickTaskGroup || '',
+      due_date: quickTaskDueDate ? format(quickTaskDueDate, 'yyyy-MM-dd') : '',
+      assigned_to: quickTaskAssignee?.email || '',
+      assigned_name: quickTaskAssignee?.name || ''
+    });
+    setQuickTaskTitle('');
+    setQuickTaskDueDate(null);
+    setQuickTaskAssignee(null);
+    setQuickTaskGroup('');
+    setIsCreating(false);
+    refetchTasks();
+  };
+
+  const handleStatusChange = async (task, status) => {
+    await base44.entities.Task.update(task.id, { status });
+    refetchTasks();
+  };
+
+  const handleSaveTask = async (data) => {
+    if (editingTask) {
+      await base44.entities.Task.update(editingTask.id, data);
+    } else {
+      await base44.entities.Task.create(data);
+    }
+    refetchTasks();
+    setShowTaskModal(false);
+    setEditingTask(null);
+  };
+
+  const handleCreateGroup = async (data) => {
+    await base44.entities.TaskGroup.create({ ...data, project_id: projectId });
+    refetchGroups();
+    setShowGroupModal(false);
+  };
+
+  const handleDeleteGroup = async (group) => {
+    await base44.entities.TaskGroup.delete(group.id);
+    const groupTasks = tasks.filter(t => t.group_id === group.id);
+    for (const task of groupTasks) {
+      await base44.entities.Task.update(task.id, { group_id: '' });
+    }
+    refetchGroups();
+    refetchTasks();
+  };
+
+  const handleDelete = async () => {
+    const { type, item } = deleteConfirm;
+    if (type === 'task') {
+      await base44.entities.Task.delete(item.id);
+      refetchTasks();
+    } else if (type === 'group') {
+      await handleDeleteGroup(item);
+    }
+    setDeleteConfirm({ open: false, type: null, item: null });
+  };
+
+  const completedTasks = tasks.filter(t => t.status === 'completed').length;
+
+  const TaskRow = ({ task }) => {
+    const status = statusConfig[task.status] || statusConfig.todo;
+    const StatusIcon = status.icon;
+    const dueDateInfo = getDueDateInfo(task.due_date, task.status);
+    const commentCount = getCommentCount(task.id);
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={cn(
+          "group flex items-center gap-3 p-3 bg-white rounded-xl border hover:shadow-md transition-all cursor-pointer",
+          task.status === 'completed' ? "opacity-60 border-slate-100" : 
+          dueDateInfo?.urgent ? "border-red-200 bg-red-50/30" : "border-slate-200"
+        )}
+        onClick={() => setSelectedTask(task)}
+      >
+        {/* Status */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleStatusChange(task, task.status === 'completed' ? 'todo' : 'completed');
+          }}
+          className={cn("p-1.5 rounded-lg transition-all hover:scale-110", status.bg, "hover:bg-emerald-100")}
+        >
+          <StatusIcon className={cn("w-4 h-4", status.color)} />
+        </button>
+
+        {/* Title */}
+        <span className={cn(
+          "flex-1 font-medium truncate",
+          task.status === 'completed' && "line-through text-slate-500"
+        )}>
+          {task.title}
+        </span>
+
+        {/* Indicators */}
+        <div className="flex items-center gap-2">
+          {/* Comment count */}
+          {commentCount > 0 && (
+            <div className="flex items-center gap-1 text-slate-400">
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span className="text-xs">{commentCount}</span>
+            </div>
+          )}
+
+          {/* Attachments indicator */}
+          {task.attachments?.length > 0 && (
+            <div className="flex items-center gap-1 text-slate-400">
+              <Paperclip className="w-3.5 h-3.5" />
+              <span className="text-xs">{task.attachments.length}</span>
+            </div>
+          )}
+
+          {/* Due date */}
+          {dueDateInfo && (
+            <Badge className={cn("text-[10px] px-1.5 py-0", dueDateInfo.color)}>
+              {dueDateInfo.urgent && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
+              {dueDateInfo.label}
+            </Badge>
+          )}
+
+          {/* Assignee */}
+          {task.assigned_name ? (
+            <div 
+              className={cn("w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium", getColorForEmail(task.assigned_to))}
+              title={task.assigned_name}
+            >
+              {getInitials(task.assigned_name)}
+            </div>
+          ) : (
+            <div className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <UserPlus className="w-3 h-3 text-slate-400" />
+            </div>
+          )}
+
+          {/* More menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => { setEditingTask(task); setShowTaskModal(true); }}>
+                <Edit2 className="w-4 h-4 mr-2" />Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setDeleteConfirm({ open: true, type: 'task', item: task })} className="text-red-600">
+                <Trash2 className="w-4 h-4 mr-2" />Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </motion.div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Link to={createPageUrl('ProjectDetail') + `?id=${projectId}`} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+              <ArrowLeft className="w-5 h-5 text-slate-600" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Tasks</h1>
+              <p className="text-sm text-slate-500">{project?.name} • {completedTasks}/{tasks.length} completed</p>
+            </div>
+          </div>
+          <Button onClick={() => setShowGroupModal(true)} variant="outline" size="sm">
+            <FolderPlus className="w-4 h-4 mr-2" />
+            New Group
+          </Button>
+        </div>
+
+        {/* Quick Add */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-6 shadow-sm">
+          <form onSubmit={handleQuickCreate} className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                value={quickTaskTitle}
+                onChange={(e) => setQuickTaskTitle(e.target.value)}
+                placeholder="Add a new task..."
+                className="flex-1 h-11"
+                disabled={isCreating}
+              />
+              <Button type="submit" disabled={!quickTaskTitle.trim() || isCreating} className="bg-indigo-600 hover:bg-indigo-700 h-11 px-6">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Task
+              </Button>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {/* Group */}
+              <Select value={quickTaskGroup} onValueChange={setQuickTaskGroup}>
+                <SelectTrigger className="w-[140px] h-8 text-xs">
+                  <SelectValue placeholder="No group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>No group</SelectItem>
+                  {taskGroups.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>
+                      <div className="flex items-center gap-2">
+                        <div className={cn("w-2 h-2 rounded-full", groupColors[g.color])} />
+                        {g.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Due Date */}
+              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" size="sm" className={cn("h-8 text-xs gap-1.5", quickTaskDueDate && "text-indigo-600")}>
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    {quickTaskDueDate ? format(quickTaskDueDate, 'MMM d') : 'Due date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={quickTaskDueDate}
+                    onSelect={(date) => { setQuickTaskDueDate(date); setDatePickerOpen(false); }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {/* Assignee */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                    {quickTaskAssignee ? (
+                      <>
+                        <div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px]", getColorForEmail(quickTaskAssignee.email))}>
+                          {getInitials(quickTaskAssignee.name)}
+                        </div>
+                        {quickTaskAssignee.name.split(' ')[0]}
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-3.5 h-3.5" />
+                        Assign
+                      </>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {quickTaskAssignee && (
+                    <DropdownMenuItem onClick={() => setQuickTaskAssignee(null)} className="text-slate-500">
+                      <User className="w-4 h-4 mr-2" />
+                      Unassign
+                    </DropdownMenuItem>
+                  )}
+                  {teamMembers.map((member) => (
+                    <DropdownMenuItem key={member.id} onClick={() => setQuickTaskAssignee(member)}>
+                      <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                        {getInitials(member.name)}
+                      </div>
+                      {member.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </form>
+        </div>
+
+        {/* Filters */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tasks..."
+              className="pl-9 h-9"
+            />
+          </div>
+          <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
+            {[['all', 'All'], ['my_tasks', 'My Tasks'], ['overdue', 'Overdue']].map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setViewFilter(key)}
+                className={cn(
+                  "text-xs font-medium py-1.5 px-3 rounded-md transition-all",
+                  viewFilter === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Task Groups */}
+        <div className="space-y-4">
+          {taskGroups.map((group) => {
+            const groupTasks = getTasksForGroup(group.id);
+            const completedCount = groupTasks.filter(t => t.status === 'completed').length;
+            const isExpanded = expandedGroups.has(group.id);
+
+            return (
+              <div key={group.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div
+                  className="flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
+                  onClick={() => toggleGroup(group.id)}
+                >
+                  {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                  <div className={cn("w-3 h-3 rounded-full", groupColors[group.color] || groupColors.slate)} />
+                  <span className="font-semibold text-slate-900 flex-1">{group.name}</span>
+                  <span className="text-sm text-slate-500">{completedCount}/{groupTasks.length}</span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => { setEditingGroup(group); setShowGroupModal(true); }}>
+                        <Edit2 className="w-4 h-4 mr-2" />Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeleteConfirm({ open: true, type: 'group', item: group })} className="text-red-600">
+                        <Trash2 className="w-4 h-4 mr-2" />Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="px-4 pb-4 space-y-2"
+                    >
+                      {groupTasks.length === 0 ? (
+                        <p className="text-sm text-slate-400 text-center py-4">No tasks in this group</p>
+                      ) : (
+                        groupTasks.map(task => <TaskRow key={task.id} task={task} />)
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+
+          {/* Ungrouped */}
+          {ungroupedTasks.length > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              <div
+                className="flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
+                onClick={() => toggleGroup('ungrouped')}
+              >
+                {expandedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                <span className="font-semibold text-slate-500 flex-1">Ungrouped</span>
+                <span className="text-sm text-slate-500">
+                  {ungroupedTasks.filter(t => t.status === 'completed').length}/{ungroupedTasks.length}
+                </span>
+              </div>
+              <AnimatePresence>
+                {expandedGroups.has('ungrouped') && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="px-4 pb-4 space-y-2"
+                  >
+                    {ungroupedTasks.map(task => <TaskRow key={task.id} task={task} />)}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {filteredTasks.length === 0 && taskGroups.length === 0 && (
+            <div className="text-center py-12 text-slate-500">
+              <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+              <p className="font-medium">No tasks yet</p>
+              <p className="text-sm">Add your first task above</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modals */}
+      <TaskModal
+        open={showTaskModal}
+        onClose={() => { setShowTaskModal(false); setEditingTask(null); }}
+        task={editingTask}
+        projectId={projectId}
+        teamMembers={teamMembers}
+        groups={taskGroups}
+        onSave={handleSaveTask}
+      />
+
+      <GroupModal
+        open={showGroupModal}
+        onClose={() => { setShowGroupModal(false); setEditingGroup(null); }}
+        group={editingGroup}
+        projectId={projectId}
+        onSave={handleCreateGroup}
+      />
+
+      <TaskDetailModal
+        open={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        task={selectedTask}
+        teamMembers={teamMembers}
+        currentUser={currentUser}
+        onEdit={(task) => { setSelectedTask(null); setEditingTask(task); setShowTaskModal(true); }}
+      />
+
+      <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, type: null, item: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {deleteConfirm.type}?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
