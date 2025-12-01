@@ -8,11 +8,13 @@ import {
   Menu,
   X,
   Wrench,
-  FileStack
+  FileStack,
+  Settings
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { base44 } from '@/api/base44Client';
 
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
@@ -20,10 +22,18 @@ const navItems = [
   { name: 'Team', icon: Users, page: 'Team' },
   { name: 'User Groups', icon: Users, page: 'UserGroups' },
   { name: 'Templates', icon: FileStack, page: 'Templates' },
+  { name: 'Settings', icon: Settings, page: 'Settings', adminOnly: true },
 ];
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    base44.auth.me().then(user => {
+      setIsAdmin(user?.role === 'admin');
+    }).catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -80,7 +90,7 @@ export default function Layout({ children, currentPageName }) {
         </div>
 
         <nav className="px-3">
-          {navItems.map((item) => {
+          {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
             const isActive = currentPageName === item.page;
             const Icon = item.icon;
 

@@ -8,6 +8,7 @@ import ProjectTasks from './pages/ProjectTasks';
 import ProjectParts from './pages/ProjectParts';
 import ProjectNotes from './pages/ProjectNotes';
 import ProjectFiles from './pages/ProjectFiles';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
@@ -22,6 +23,7 @@ export const PAGES = {
     "ProjectParts": ProjectParts,
     "ProjectNotes": ProjectNotes,
     "ProjectFiles": ProjectFiles,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {
