@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, CheckCircle2, ArrowRight, Palette, CalendarIcon } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, Palette } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -75,8 +75,10 @@ const statusOptions = [
 ];
 
 export default function ProjectCard({ project, tasks = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, groups = [] }) {
+  const navigate = useNavigate();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const totalTasks = tasks.length;
@@ -161,7 +163,7 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
       </div>
 
       <div 
-        onClick={() => window.location.href = createPageUrl('ProjectDetail') + `?id=${project.id}`}
+        onClick={() => navigate(createPageUrl('ProjectDetail') + `?id=${project.id}`)}
         className={cn(
           "bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 border-l-4 cursor-pointer",
           colorClass
@@ -170,19 +172,26 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${priorityDots[project.priority]}`} />
-            <DropdownMenu>
+            <DropdownMenu open={statusOpen} onOpenChange={setStatusOpen}>
               <DropdownMenuTrigger asChild>
                 <Badge 
                   variant="outline" 
                   className={cn("text-xs cursor-pointer hover:opacity-80", statusColors[project.status])}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); setStatusOpen(true); }}
                 >
                   {project.status?.replace('_', ' ')}
                 </Badge>
               </DropdownMenuTrigger>
-              <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuContent>
                 {statusOptions.map((opt) => (
-                  <DropdownMenuItem key={opt.value} onClick={(e) => { e.stopPropagation(); onStatusChange?.(project, opt.value); }}>
+                  <DropdownMenuItem 
+                    key={opt.value} 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      onStatusChange?.(project, opt.value); 
+                      setStatusOpen(false);
+                    }}
+                  >
                     <Badge className={cn("mr-2", statusColors[opt.value])}>{opt.label}</Badge>
                   </DropdownMenuItem>
                 ))}

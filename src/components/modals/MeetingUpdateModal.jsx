@@ -17,6 +17,7 @@ export default function MeetingUpdateModal({
   onNoteSaved,
   onTasksCreated
 }) {
+  const [meetingTitle, setMeetingTitle] = useState('');
   const [formData, setFormData] = useState({
     doneLastWeek: [''],
     plannedThisWeek: [''],
@@ -94,9 +95,13 @@ ${formatList(formData.issues)}
 3. ✅ Action Items
 ${formData.actionItems.filter(a => a.title.trim()).map(a => `- ${a.title}${a.assigned_name ? ` (@${a.assigned_name})` : ''}`).join('\n') || '- None'}`;
 
-    // Save the note
+    // Save the note with title
+    const today = new Date();
+    const defaultTitle = `Weekly Update - ${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    
     await base44.entities.ProjectNote.create({
       project_id: projectId,
+      title: meetingTitle.trim() || defaultTitle,
       content: noteContent,
       type: 'update',
       author_email: currentUser?.email,
@@ -122,6 +127,7 @@ ${formData.actionItems.filter(a => a.title.trim()).map(a => `- ${a.title}${a.ass
     onClose();
     
     // Reset form
+    setMeetingTitle('');
     setFormData({
       doneLastWeek: [''],
       plannedThisWeek: [''],
@@ -165,6 +171,17 @@ ${formData.actionItems.filter(a => a.title.trim()).map(a => `- ${a.title}${a.ass
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
+          {/* Meeting Title */}
+          <div>
+            <Label className="text-sm font-medium text-slate-700">Meeting Title</Label>
+            <Input
+              value={meetingTitle}
+              onChange={(e) => setMeetingTitle(e.target.value)}
+              placeholder={`Weekly Update - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+              className="mt-2"
+            />
+          </div>
+
           {/* Section 1: Project Updates */}
           <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
             <h3 className="font-semibold text-blue-900 mb-4">🔄 Project Updates</h3>
