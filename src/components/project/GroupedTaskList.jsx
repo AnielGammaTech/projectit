@@ -123,29 +123,17 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
       onClick={() => onTaskClick?.(task)}
     >
       <div className="flex items-center gap-2">
-        {/* Status Toggle */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button 
-              onClick={(e) => e.stopPropagation()}
-              className={cn("p-1 rounded transition-all shrink-0 hover:scale-110", status.bg)}
-              title="Change status"
-            >
-              <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {Object.entries(statusConfig).map(([key, config]) => {
-              const Icon = config.icon;
-              return (
-                <DropdownMenuItem key={key} onClick={() => onStatusChange(task, key)}>
-                  <Icon className={cn("w-4 h-4 mr-2", config.color)} />
-                  {config.label}
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Status Toggle - Click to complete */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onStatusChange(task, task.status === 'completed' ? 'todo' : 'completed');
+          }}
+          className={cn("p-1 rounded transition-all shrink-0 hover:scale-110", status.bg, "hover:bg-emerald-100")}
+          title={task.status === 'completed' ? "Mark as todo" : "Mark as completed"}
+        >
+          <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
+        </button>
 
         <span className={cn(
           "flex-1 text-sm font-medium truncate",
