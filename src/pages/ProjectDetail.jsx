@@ -625,6 +625,7 @@ export default function ProjectDetail() {
         onClose={() => setShowTasksView(false)}
         tasks={tasks}
         groups={taskGroups}
+        projectId={projectId}
         teamMembers={teamMembers}
         currentUser={currentUser}
         onStatusChange={handleTaskStatusChange}
@@ -635,6 +636,7 @@ export default function ProjectDetail() {
         onEditGroup={(group) => { setEditingGroup(group); setShowGroupModal(true); }}
         onDeleteGroup={handleDeleteGroup}
         onAddTask={() => { setShowTasksView(false); setEditingTask(null); setShowTaskModal(true); }}
+        onTasksRefresh={refetchTasks}
         currentUserEmail={currentUser?.email}
       />
 
