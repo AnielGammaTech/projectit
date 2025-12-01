@@ -135,13 +135,26 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete }) => {
   );
 };
 
-export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete }) {
+export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete, currentUserEmail }) {
+  const [viewFilter, setViewFilter] = useState('all'); // 'all', 'my_tasks', 'my_due'
+
+  // Filter tasks based on view
+  const filteredTasks = tasks.filter(task => {
+    if (viewFilter === 'my_tasks') {
+      return task.assigned_to === currentUserEmail;
+    }
+    if (viewFilter === 'my_due') {
+      return task.assigned_to === currentUserEmail && task.due_date;
+    }
+    return true;
+  });
+
   // Group tasks by status
   const groupedTasks = {
-    todo: tasks.filter(t => t.status === 'todo'),
-    in_progress: tasks.filter(t => t.status === 'in_progress'),
-    review: tasks.filter(t => t.status === 'review'),
-    completed: tasks.filter(t => t.status === 'completed')
+    todo: filteredTasks.filter(t => t.status === 'todo'),
+    in_progress: filteredTasks.filter(t => t.status === 'in_progress'),
+    review: filteredTasks.filter(t => t.status === 'review'),
+    completed: filteredTasks.filter(t => t.status === 'completed')
   };
 
   // Sort each group by due date (urgent first)
@@ -157,17 +170,48 @@ export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete 
   const activeGroups = ['todo', 'in_progress', 'review'].filter(key => groupedTasks[key].length > 0);
   const hasCompleted = groupedTasks.completed.length > 0;
 
-  if (tasks.length === 0) {
-    return (
-      <div className="text-center py-8 text-slate-500">
-        <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-        <p className="text-sm">No tasks yet</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
+      {/* Filter Tabs */}
+      {currentUserEmail && (
+        <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
+          <button
+            onClick={() => setViewFilter('all')}
+            className={cn(
+              "flex-1 text-xs font-medium py-1.5 px-2 rounded-md transition-all",
+              viewFilter === 'all' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+            )}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setViewFilter('my_tasks')}
+            className={cn(
+              "flex-1 text-xs font-medium py-1.5 px-2 rounded-md transition-all",
+              viewFilter === 'my_tasks' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+            )}
+          >
+            My Tasks
+          </button>
+          <button
+            onClick={() => setViewFilter('my_due')}
+            className={cn(
+              "flex-1 text-xs font-medium py-1.5 px-2 rounded-md transition-all",
+              viewFilter === 'my_due' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+            )}
+          >
+            My Due
+          </button>
+        </div>
+      )}
+
+      {filteredTasks.length === 0 ? (
+        <div className="text-center py-8 text-slate-500">
+          <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+          <p className="text-sm">{viewFilter === 'all' ? 'No tasks yet' : 'No matching tasks'}</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
       {activeGroups.map(statusKey => {
         const config = statusConfig[statusKey];
         const StatusIcon = config.icon;
@@ -217,6 +261,8 @@ export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete 
               />
             ))}
           </AnimatePresence>
+        </div>
+      )}
         </div>
       )}
     </div>
