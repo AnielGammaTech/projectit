@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, Plus, Edit2, Trash2, CheckCircle2, Circle, Clock, ArrowUpCircle, User, AlertTriangle, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Edit2, Trash2, CheckCircle2, Circle, Clock, ArrowUpCircle, User, AlertTriangle, MoreHorizontal, UserPlus, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,29 @@ import {
 } from '@/components/ui/popover';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { base44 } from '@/api/base44Client';
+
+const avatarColors = [
+  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
+  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
+  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
+];
+
+const getColorForEmail = (email) => {
+  if (!email) return avatarColors[0];
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) {
+    hash = email.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+};
+
+const getInitials = (name) => {
+  if (!name) return '?';
+  const parts = name.split(' ');
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -55,7 +79,7 @@ const getDueDateInfo = (dueDate, status) => {
   return { label: format(date, 'MMM d'), color: 'bg-slate-100 text-slate-600', urgent: false };
 };
 
-const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
+const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, onTaskClick, onTaskUpdate }) => {
   const status = statusConfig[task.status] || statusConfig.todo;
   const StatusIcon = status.icon;
   const dueDateInfo = getDueDateInfo(task.due_date, task.status);
@@ -63,6 +87,35 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
   const handleComplete = (e) => {
     e.stopPropagation();
     onStatusChange(task, 'completed');
+  };
+
+  const handleAssign = async (e, email) => {
+    e.stopPropagation();
+    const member = teamMembers.find(m => m.email === email);
+    await base44.entities.Task.update(task.id, {
+      ...task,
+      assigned_to: email,
+      assigned_name: member?.name || email
+    });
+    onTaskUpdate?.();
+  };
+
+  const handleUnassign = async (e) => {
+    e.stopPropagation();
+    await base44.entities.Task.update(task.id, {
+      ...task,
+      assigned_to: '',
+      assigned_name: ''
+    });
+    onTaskUpdate?.();
+  };
+
+  const handleDateChange = async (date) => {
+    await base44.entities.Task.update(task.id, {
+      ...task,
+      due_date: date ? format(date, 'yyyy-MM-dd') : ''
+    });
+    onTaskUpdate?.();
   };
 
   return (
@@ -78,13 +131,28 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
       onClick={() => onTaskClick?.(task)}
     >
       <div className="flex items-center gap-2">
-        <button 
-          onClick={handleComplete}
-          className={cn("p-1 rounded transition-all shrink-0 hover:scale-110", status.bg, "hover:bg-emerald-100")}
-          title="Mark as completed"
-        >
-          <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
-        </button>
+        {/* Status Toggle */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+            <button 
+              className={cn("p-1 rounded transition-all shrink-0 hover:scale-110", status.bg)}
+              title="Change status"
+            >
+              <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {Object.entries(statusConfig).map(([key, config]) => {
+              const Icon = config.icon;
+              return (
+                <DropdownMenuItem key={key} onClick={(e) => { e.stopPropagation(); onStatusChange(task, key); }}>
+                  <Icon className={cn("w-4 h-4 mr-2", config.color)} />
+                  {config.label}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <span className={cn(
           "flex-1 text-sm font-medium truncate",
@@ -94,15 +162,70 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
         </span>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          {dueDateInfo && (
-            <Badge className={cn("text-[10px] px-1.5 py-0", dueDateInfo.color)}>
-              {dueDateInfo.urgent && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
-              {dueDateInfo.label}
-            </Badge>
-          )}
-          {task.assigned_name && (
-            <span className="text-[10px] text-slate-400 hidden sm:block">{task.assigned_name.split(' ')[0]}</span>
-          )}
+          {/* Due Date Picker */}
+          <Popover>
+            <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
+              {dueDateInfo ? (
+                <Badge className={cn("text-[10px] px-1.5 py-0 cursor-pointer hover:opacity-80", dueDateInfo.color)}>
+                  {dueDateInfo.urgent && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
+                  {dueDateInfo.label}
+                </Badge>
+              ) : (
+                <button className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+              )}
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+              <CalendarPicker
+                mode="single"
+                selected={task.due_date ? new Date(task.due_date) : undefined}
+                onSelect={handleDateChange}
+              />
+              {task.due_date && (
+                <div className="p-2 border-t">
+                  <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={(e) => { e.stopPropagation(); handleDateChange(null); }}>
+                    Clear date
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+
+          {/* Assignee */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              {task.assigned_name ? (
+                <button className={cn(
+                  "w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 transition-all",
+                  getColorForEmail(task.assigned_to)
+                )} title={task.assigned_name}>
+                  {getInitials(task.assigned_name)}
+                </button>
+              ) : (
+                <button className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all" title="Assign">
+                  <UserPlus className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {task.assigned_to && (
+                <DropdownMenuItem onClick={handleUnassign} className="text-slate-500">
+                  <User className="w-4 h-4 mr-2" />
+                  Unassign
+                </DropdownMenuItem>
+              )}
+              {teamMembers.map((member) => (
+                <DropdownMenuItem key={member.id} onClick={(e) => handleAssign(e, member.email)}>
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                    {getInitials(member.name)}
+                  </div>
+                  {member.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
@@ -127,6 +250,7 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
 export default function GroupedTaskList({ 
   tasks = [], 
   groups = [], 
+  teamMembers = [],
   onStatusChange, 
   onEdit, 
   onDelete, 
@@ -134,6 +258,7 @@ export default function GroupedTaskList({
   onCreateGroup,
   onEditGroup,
   onDeleteGroup,
+  onTaskUpdate,
   currentUserEmail
 }) {
   const [expandedGroups, setExpandedGroups] = useState(new Set(['ungrouped', ...groups.map(g => g.id)]));
@@ -233,10 +358,12 @@ export default function GroupedTaskList({
                       <TaskItem
                         key={task.id}
                         task={task}
+                        teamMembers={teamMembers}
                         onStatusChange={onStatusChange}
                         onEdit={onEdit}
                         onDelete={onDelete}
                         onTaskClick={onTaskClick}
+                        onTaskUpdate={onTaskUpdate}
                       />
                     ))
                   )}
@@ -270,10 +397,12 @@ export default function GroupedTaskList({
                   <TaskItem
                     key={task.id}
                     task={task}
+                    teamMembers={teamMembers}
                     onStatusChange={onStatusChange}
                     onEdit={onEdit}
                     onDelete={onDelete}
                     onTaskClick={onTaskClick}
+                    onTaskUpdate={onTaskUpdate}
                   />
                 ))}
               </motion.div>

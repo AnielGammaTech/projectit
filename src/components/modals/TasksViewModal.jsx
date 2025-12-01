@@ -87,6 +87,7 @@ export default function TasksViewModal({
           <GroupedTaskList
             tasks={tasks}
             groups={groups}
+            teamMembers={teamMembers}
             onStatusChange={onStatusChange}
             onEdit={onEdit}
             onDelete={onDelete}
@@ -94,6 +95,7 @@ export default function TasksViewModal({
             onCreateGroup={onCreateGroup}
             onEditGroup={onEditGroup}
             onDeleteGroup={onDeleteGroup}
+            onTaskUpdate={() => {}}
             currentUserEmail={currentUserEmail}
           />
         </div>
