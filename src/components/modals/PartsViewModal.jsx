@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Package, User, Calendar, MoreHorizontal, Edit2, Trash2, Upload, Loader2, FileText } from 'lucide-react';
+import { Plus, Package, User, Calendar, MoreHorizontal, Edit2, Trash2, Upload, Loader2, ChevronLeft, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -33,7 +34,13 @@ export default function PartsViewModal({
   onPartsExtracted
 }) {
   const [uploading, setUploading] = useState(false);
+  const [selectedPart, setSelectedPart] = useState(null);
   const totalCost = parts.reduce((sum, p) => sum + ((p.unit_cost || 0) * (p.quantity || 1)), 0);
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => base44.entities.TeamMember.list()
+  });
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -82,6 +89,114 @@ export default function PartsViewModal({
     e.target.value = '';
   };
 
+  const handleAssign = async (part, email) => {
+    const member = teamMembers.find(m => m.email === email);
+    await base44.entities.Part.update(part.id, {
+      ...part,
+      assigned_to: email,
+      assigned_name: member?.name || email
+    });
+    onPartsExtracted?.();
+  };
+
+  const handleUnassign = async (part) => {
+    await base44.entities.Part.update(part.id, {
+      ...part,
+      assigned_to: '',
+      assigned_name: ''
+    });
+    onPartsExtracted?.();
+  };
+
+  // Part detail view
+  if (selectedPart) {
+    const part = parts.find(p => p.id === selectedPart);
+    if (!part) {
+      setSelectedPart(null);
+      return null;
+    }
+    const status = statusConfig[part.status] || statusConfig.needed;
+
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedPart(null)}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              Part Details
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">{part.name}</h2>
+              {part.part_number && <p className="text-sm text-slate-500">#{part.part_number}</p>}
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Badge className={cn("cursor-pointer text-sm", status.color)}>
+                    {status.label}
+                  </Badge>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {Object.entries(statusConfig).map(([key, config]) => (
+                    <DropdownMenuItem key={key} onClick={() => onStatusChange(part, key)}>
+                      <Badge className={cn("mr-2", config.color)}>{config.label}</Badge>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-slate-500">Quantity</span>
+                <p className="font-medium">{part.quantity || 1}</p>
+              </div>
+              {part.unit_cost > 0 && (
+                <div>
+                  <span className="text-slate-500">Unit Cost</span>
+                  <p className="font-medium">${part.unit_cost}</p>
+                </div>
+              )}
+              {part.supplier && (
+                <div>
+                  <span className="text-slate-500">Supplier</span>
+                  <p className="font-medium">{part.supplier}</p>
+                </div>
+              )}
+              {part.due_date && (
+                <div>
+                  <span className="text-slate-500">Due Date</span>
+                  <p className="font-medium">{format(new Date(part.due_date), 'MMM d, yyyy')}</p>
+                </div>
+              )}
+            </div>
+
+            {part.notes && (
+              <div>
+                <span className="text-sm text-slate-500">Notes</span>
+                <p className="text-slate-700 mt-1">{part.notes}</p>
+              </div>
+            )}
+
+            <div className="pt-4 border-t flex justify-between">
+              <Button variant="outline" onClick={() => onEdit(part)}>
+                <Edit2 className="w-4 h-4 mr-2" />Edit
+              </Button>
+              <Button variant="outline" onClick={() => { onDelete(part); setSelectedPart(null); }} className="text-red-600 hover:text-red-700">
+                <Trash2 className="w-4 h-4 mr-2" />Delete
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -123,7 +238,8 @@ export default function PartsViewModal({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -10 }}
-                    className="group bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md transition-all"
+                    className="group bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer"
+                    onClick={() => setSelectedPart(part.id)}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -135,7 +251,7 @@ export default function PartsViewModal({
                         </div>
                         <div className="flex flex-wrap items-center gap-2 text-sm">
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                               <Badge className={cn("cursor-pointer", status.color)}>
                                 {status.label}
                               </Badge>
@@ -156,28 +272,47 @@ export default function PartsViewModal({
                             <span className="text-slate-400">• {part.supplier}</span>
                           )}
                         </div>
-                        {(part.assigned_name || part.due_date) && (
-                          <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
-                            {part.assigned_name && (
-                              <span className="flex items-center gap-1">
-                                <User className="w-3 h-3" />
-                                {part.assigned_name}
-                              </span>
-                            )}
-                            {part.due_date && (
-                              <span className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3" />
-                                {format(new Date(part.due_date), 'MMM d')}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        {part.notes && (
-                          <p className="text-xs text-slate-500 mt-2">{part.notes}</p>
-                        )}
+                        <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                          {/* Quick Assign Button */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              {part.assigned_name ? (
+                                <button className="flex items-center gap-1 px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 transition-colors">
+                                  <User className="w-3 h-3" />
+                                  {part.assigned_name}
+                                </button>
+                              ) : (
+                                <button className="flex items-center gap-1 px-2 py-1 rounded border border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-colors text-slate-500">
+                                  <UserPlus className="w-3 h-3" />
+                                  Unassigned
+                                </button>
+                              )}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              {part.assigned_to && (
+                                <DropdownMenuItem onClick={() => handleUnassign(part)} className="text-slate-500">
+                                  <User className="w-4 h-4 mr-2" />
+                                  Unassign
+                                </DropdownMenuItem>
+                              )}
+                              {teamMembers.map((member) => (
+                                <DropdownMenuItem key={member.id} onClick={() => handleAssign(part, member.email)}>
+                                  <User className="w-4 h-4 mr-2" />
+                                  {member.name}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          {part.due_date && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {format(new Date(part.due_date), 'MMM d')}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
