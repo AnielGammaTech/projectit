@@ -60,10 +60,9 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
   const StatusIcon = status.icon;
   const dueDateInfo = getDueDateInfo(task.due_date, task.status);
 
-  const handleToggleComplete = (e) => {
+  const handleComplete = (e) => {
     e.stopPropagation();
-    const newStatus = task.status === 'completed' ? 'todo' : 'completed';
-    onStatusChange(task, newStatus);
+    onStatusChange(task, 'completed');
   };
 
   return (
@@ -80,8 +79,9 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
     >
       <div className="flex items-center gap-2">
         <button 
-          onClick={handleToggleComplete}
-          className={cn("p-1 rounded transition-all shrink-0 hover:scale-110", status.bg)}
+          onClick={handleComplete}
+          className={cn("p-1 rounded transition-all shrink-0 hover:scale-110", status.bg, "hover:bg-emerald-100")}
+          title="Mark as completed"
         >
           <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
         </button>
