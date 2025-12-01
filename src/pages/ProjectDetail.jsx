@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
 import { Progress } from '@/components/ui/progress';
 import {
   AlertDialog,
@@ -30,14 +29,15 @@ import {
 } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 
-import TaskList from '@/components/project/TaskList';
 import PartsList from '@/components/project/PartsList';
 import ProjectNotes from '@/components/project/ProjectNotes';
 import ProgressNeedle from '@/components/project/ProgressNeedle';
 import TaskModal from '@/components/modals/TaskModal';
 import TaskDetailModal from '@/components/modals/TaskDetailModal';
+import TasksViewModal from '@/components/modals/TasksViewModal';
 import PartModal from '@/components/modals/PartModal';
 import ProjectModal from '@/components/modals/ProjectModal';
+import GroupModal from '@/components/modals/GroupModal';
 
 const statusColors = {
   planning: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -56,12 +56,14 @@ export default function ProjectDetail() {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
-  
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showPartModal, setShowPartModal] = useState(false);
+  const [showTasksView, setShowTasksView] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [editingPart, setEditingPart] = useState(null);
+  const [editingGroup, setEditingGroup] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: null, item: null });
 
@@ -80,6 +82,12 @@ export default function ProjectDetail() {
     enabled: !!projectId
   });
 
+  const { data: taskGroups = [], refetch: refetchGroups } = useQuery({
+    queryKey: ['taskGroups', projectId],
+    queryFn: () => base44.entities.TaskGroup.filter({ project_id: projectId }),
+    enabled: !!projectId
+  });
+
   const { data: parts = [], refetch: refetchParts } = useQuery({
     queryKey: ['parts', projectId],
     queryFn: () => base44.entities.Part.filter({ project_id: projectId }),
@@ -89,6 +97,11 @@ export default function ProjectDetail() {
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: () => base44.entities.TeamMember.list()
+  });
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ['templates'],
+    queryFn: () => base44.entities.ProjectTemplate.list()
   });
 
   // Tasks
@@ -105,6 +118,34 @@ export default function ProjectDetail() {
 
   const handleTaskStatusChange = async (task, status) => {
     await base44.entities.Task.update(task.id, { ...task, status });
+    refetchTasks();
+  };
+
+  // Groups
+  const handleCreateGroup = async (data) => {
+    await base44.entities.TaskGroup.create({ ...data, project_id: projectId });
+    refetchGroups();
+  };
+
+  const handleSaveGroup = async (data) => {
+    if (editingGroup) {
+      await base44.entities.TaskGroup.update(editingGroup.id, data);
+    } else {
+      await base44.entities.TaskGroup.create(data);
+    }
+    refetchGroups();
+    setShowGroupModal(false);
+    setEditingGroup(null);
+  };
+
+  const handleDeleteGroup = async (group) => {
+    await base44.entities.TaskGroup.delete(group.id);
+    // Ungroup tasks
+    const groupTasks = tasks.filter(t => t.group_id === group.id);
+    for (const task of groupTasks) {
+      await base44.entities.Task.update(task.id, { ...task, group_id: '' });
+    }
+    refetchGroups();
     refetchTasks();
   };
 
@@ -176,7 +217,7 @@ export default function ProjectDetail() {
   }
 
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
-  const progress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
+  const taskProgress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
@@ -187,10 +228,25 @@ export default function ProjectDetail() {
           Back to Dashboard
         </Link>
 
+        {/* Progress Needle at Top */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <ProgressNeedle 
+            projectId={projectId} 
+            value={project.progress || 0} 
+            onSave={handleProgressUpdate} 
+            currentUser={currentUser}
+          />
+        </motion.div>
+
         {/* Project Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
           className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-6"
         >
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
@@ -204,12 +260,8 @@ export default function ProjectDetail() {
                 </Badge>
               </div>
               <h1 className="text-2xl font-bold text-slate-900 mb-2">{project.name}</h1>
-              {project.client && (
-                <p className="text-slate-500 mb-4">{project.client}</p>
-              )}
-              {project.description && (
-                <p className="text-slate-600 mb-4">{project.description}</p>
-              )}
+              {project.client && <p className="text-slate-500 mb-4">{project.client}</p>}
+              {project.description && <p className="text-slate-600 mb-4">{project.description}</p>}
 
               <div className="flex flex-wrap gap-4 text-sm">
                 {project.start_date && (
@@ -224,7 +276,6 @@ export default function ProjectDetail() {
                     <span>Due: {format(new Date(project.due_date), 'MMM d, yyyy')}</span>
                   </div>
                 )}
-
               </div>
             </div>
 
@@ -235,28 +286,17 @@ export default function ProjectDetail() {
               </Button>
             </div>
           </div>
-
-          {/* Progress */}
-          {tasks.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-slate-100">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-slate-600">Overall Progress</span>
-                <span className="font-medium">{completedTasks}/{tasks.length} tasks • {Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
-          )}
-
         </motion.div>
 
-        {/* Enhanced Tabs */}
+        {/* Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Tasks Card */}
+          {/* Tasks Card - Clickable */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => setShowTasksView(true)}
           >
             <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-indigo-100/50">
               <div className="flex items-center justify-between">
@@ -271,7 +311,7 @@ export default function ProjectDetail() {
                 </div>
                 <Button
                   size="sm"
-                  onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
+                  onClick={(e) => { e.stopPropagation(); setEditingTask(null); setShowTaskModal(true); }}
                   className="bg-indigo-600 hover:bg-indigo-700 shadow-md"
                 >
                   <Plus className="w-4 h-4" />
@@ -279,19 +319,19 @@ export default function ProjectDetail() {
               </div>
               {tasks.length > 0 && (
                 <div className="mt-4">
-                  <Progress value={progress} className="h-2" />
+                  <Progress value={taskProgress} className="h-2" />
                 </div>
               )}
             </div>
-            <div className="p-4 max-h-[500px] overflow-y-auto">
-              <TaskList
-                tasks={tasks}
-                onStatusChange={handleTaskStatusChange}
-                onEdit={(task) => { setEditingTask(task); setShowTaskModal(true); }}
-                onDelete={(task) => setDeleteConfirm({ open: true, type: 'task', item: task })}
-                onTaskClick={(task) => setSelectedTask(task)}
-                currentUserEmail={currentUser?.email}
-              />
+            <div className="p-4">
+              <p className="text-sm text-slate-500 text-center">Click to view all tasks by group</p>
+              {taskGroups.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
+                  {taskGroups.map(g => (
+                    <Badge key={g.id} variant="outline" className="text-xs">{g.name}</Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -299,7 +339,7 @@ export default function ProjectDetail() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.3 }}
             className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
           >
             <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-100/50">
@@ -322,7 +362,7 @@ export default function ProjectDetail() {
                 </Button>
               </div>
             </div>
-            <div className="p-4 max-h-[500px] overflow-y-auto">
+            <div className="p-4 max-h-[400px] overflow-y-auto">
               <PartsList
                 parts={parts}
                 onStatusChange={handlePartStatusChange}
@@ -336,7 +376,7 @@ export default function ProjectDetail() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.4 }}
             className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
           >
             <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-purple-100/50">
@@ -350,21 +390,11 @@ export default function ProjectDetail() {
                 </div>
               </div>
             </div>
-            <div className="p-4 max-h-[500px] overflow-y-auto">
+            <div className="p-4 max-h-[400px] overflow-y-auto">
               <ProjectNotes projectId={projectId} currentUser={currentUser} />
             </div>
           </motion.div>
         </div>
-
-        {/* Progress Needle */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-6"
-        >
-          <ProgressNeedle value={project.progress || 0} onSave={handleProgressUpdate} />
-        </motion.div>
       </div>
 
       {/* Modals */}
@@ -372,6 +402,7 @@ export default function ProjectDetail() {
         open={showProjectModal}
         onClose={() => setShowProjectModal(false)}
         project={project}
+        templates={templates}
         onSave={handleUpdateProject}
       />
 
@@ -381,6 +412,7 @@ export default function ProjectDetail() {
         task={editingTask}
         projectId={projectId}
         teamMembers={teamMembers}
+        groups={taskGroups}
         onSave={handleSaveTask}
       />
 
@@ -390,6 +422,29 @@ export default function ProjectDetail() {
         part={editingPart}
         projectId={projectId}
         onSave={handleSavePart}
+      />
+
+      <TasksViewModal
+        open={showTasksView}
+        onClose={() => setShowTasksView(false)}
+        tasks={tasks}
+        groups={taskGroups}
+        onStatusChange={handleTaskStatusChange}
+        onEdit={(task) => { setShowTasksView(false); setEditingTask(task); setShowTaskModal(true); }}
+        onDelete={(task) => setDeleteConfirm({ open: true, type: 'task', item: task })}
+        onTaskClick={(task) => { setShowTasksView(false); setSelectedTask(task); }}
+        onCreateGroup={handleCreateGroup}
+        onEditGroup={(group) => { setEditingGroup(group); setShowGroupModal(true); }}
+        onDeleteGroup={handleDeleteGroup}
+        currentUserEmail={currentUser?.email}
+      />
+
+      <GroupModal
+        open={showGroupModal}
+        onClose={() => { setShowGroupModal(false); setEditingGroup(null); }}
+        group={editingGroup}
+        projectId={projectId}
+        onSave={handleSaveGroup}
       />
 
       <TaskDetailModal
@@ -407,7 +462,7 @@ export default function ProjectDetail() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {deleteConfirm.type}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this {deleteConfirm.type}.
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

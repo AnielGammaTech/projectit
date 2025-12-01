@@ -41,8 +41,47 @@ export default function Dashboard() {
 
   const getTasksForProject = (projectId) => tasks.filter(t => t.project_id === projectId);
 
-  const handleCreateProject = async (data) => {
-    await base44.entities.Project.create(data);
+  const { data: templates = [] } = useQuery({
+    queryKey: ['templates'],
+    queryFn: () => base44.entities.ProjectTemplate.list()
+  });
+
+  const handleCreateProject = async (data, template, extractedParts) => {
+    const newProject = await base44.entities.Project.create(data);
+    
+    // Create tasks from template
+    if (template?.default_tasks?.length) {
+      for (const task of template.default_tasks) {
+        await base44.entities.Task.create({
+          ...task,
+          project_id: newProject.id
+        });
+      }
+      refetchTasks();
+    }
+    
+    // Create parts from template
+    if (template?.default_parts?.length) {
+      for (const part of template.default_parts) {
+        await base44.entities.Part.create({
+          ...part,
+          project_id: newProject.id,
+          status: 'needed'
+        });
+      }
+    }
+
+    // Create parts from PDF extraction
+    if (extractedParts?.length) {
+      for (const part of extractedParts) {
+        await base44.entities.Part.create({
+          ...part,
+          project_id: newProject.id,
+          status: 'needed'
+        });
+      }
+    }
+
     refetchProjects();
     setShowProjectModal(false);
   };
@@ -149,6 +188,7 @@ export default function Dashboard() {
       <ProjectModal
         open={showProjectModal}
         onClose={() => setShowProjectModal(false)}
+        templates={templates}
         onSave={handleCreateProject}
       />
     </div>
