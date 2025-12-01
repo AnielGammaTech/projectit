@@ -19,7 +19,9 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     status: 'planning',
     priority: 'medium',
     start_date: '',
-    due_date: ''
+    due_date: '',
+    color: 'slate',
+    group: ''
   });
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -34,7 +36,9 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         status: project.status || 'planning',
         priority: project.priority || 'medium',
         start_date: project.start_date || '',
-        due_date: project.due_date || ''
+        due_date: project.due_date || '',
+        color: project.color || 'slate',
+        group: project.group || ''
       });
       setExtractedParts([]);
     } else {
@@ -45,7 +49,9 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         status: 'planning',
         priority: 'medium',
         start_date: '',
-        due_date: ''
+        due_date: '',
+        color: 'slate',
+        group: ''
       });
       setExtractedParts([]);
     }
@@ -226,6 +232,38 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                   <SelectItem value="urgent">Urgent</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Color</Label>
+              <Select value={formData.color} onValueChange={(v) => setFormData(prev => ({ ...prev, color: v }))}>
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {['slate', 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'].map(c => (
+                    <SelectItem key={c} value={c}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full bg-${c}-500`} style={{ backgroundColor: `var(--${c}-500, ${c === 'slate' ? '#64748b' : c === 'red' ? '#ef4444' : c === 'orange' ? '#f97316' : c === 'amber' ? '#f59e0b' : c === 'yellow' ? '#eab308' : c === 'lime' ? '#84cc16' : c === 'green' ? '#22c55e' : c === 'emerald' ? '#10b981' : c === 'teal' ? '#14b8a6' : c === 'cyan' ? '#06b6d4' : c === 'sky' ? '#0ea5e9' : c === 'blue' ? '#3b82f6' : c === 'indigo' ? '#6366f1' : c === 'violet' ? '#8b5cf6' : c === 'purple' ? '#a855f7' : c === 'fuchsia' ? '#d946ef' : c === 'pink' ? '#ec4899' : '#f43f5e'})` }} />
+                        <span className="capitalize">{c}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="group">Group</Label>
+              <Input
+                id="group"
+                value={formData.group}
+                onChange={(e) => setFormData(prev => ({ ...prev, group: e.target.value }))}
+                placeholder="e.g., Client A, Phase 1"
+                className="mt-1.5"
+              />
             </div>
           </div>
 
