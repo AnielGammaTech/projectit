@@ -3,10 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Send, User, Calendar, Clock, AlertTriangle, Edit2, Trash2 } from 'lucide-react';
+import { Send, User, Calendar, Clock, AlertTriangle, Edit2, Trash2, Paperclip, X, FileText, Image, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const priorityColors = {
@@ -22,12 +22,41 @@ const statusLabels = {
   completed: 'Completed'
 };
 
+const avatarColors = [
+  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
+  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
+  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
+];
+
+const getColorForEmail = (email) => {
+  if (!email) return avatarColors[0];
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) {
+    hash = email.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+};
+
+const getInitials = (name) => {
+  if (!name) return '?';
+  const parts = name.split(' ');
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
+const getFileIcon = (type) => {
+  if (type?.startsWith('image')) return Image;
+  return FileText;
+};
+
 export default function TaskDetailModal({ open, onClose, task, teamMembers = [], onEdit, currentUser }) {
   const [comment, setComment] = useState('');
   const [showMentions, setShowMentions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
+  const [uploading, setUploading] = useState(false);
   const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
   const { data: comments = [], refetch: refetchComments } = useQuery({
@@ -106,6 +135,35 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     m.name.toLowerCase().includes(mentionSearch)
   );
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    
+    const newAttachment = {
+      name: file.name,
+      url: file_url,
+      type: file.type
+    };
+
+    const currentAttachments = task.attachments || [];
+    await base44.entities.Task.update(task.id, {
+      attachments: [...currentAttachments, newAttachment]
+    });
+    
+    setUploading(false);
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+  };
+
+  const handleRemoveAttachment = async (index) => {
+    const newAttachments = [...(task.attachments || [])];
+    newAttachments.splice(index, 1);
+    await base44.entities.Task.update(task.id, { attachments: newAttachments });
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+  };
+
   if (!task) return null;
 
   return (
@@ -153,6 +211,51 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
             </div>
           </div>
 
+          {/* Attachments Section */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-slate-900 flex items-center gap-2">
+                <Paperclip className="w-4 h-4" />
+                Attachments ({task.attachments?.length || 0})
+              </h4>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4 mr-1" />}
+                Add
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+            </div>
+            {task.attachments?.length > 0 ? (
+              <div className="space-y-2">
+                {task.attachments.map((att, idx) => {
+                  const FileIcon = getFileIcon(att.type);
+                  return (
+                    <div key={idx} className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg group">
+                      <FileIcon className="w-4 h-4 text-slate-500" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm text-indigo-600 hover:underline truncate">
+                        {att.name}
+                      </a>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveAttachment(idx)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400 text-center py-2">No attachments</p>
+            )}
+          </div>
+
           {/* Comments Section */}
           <div className="border-t pt-4">
             <h4 className="font-semibold text-slate-900 mb-4">Comments ({comments.length})</h4>
@@ -160,19 +263,17 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
             <div className="space-y-4 mb-4">
               {comments.map((c) => (
                 <div key={c.id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-medium text-indigo-600">
-                      {c.author_name?.charAt(0)?.toUpperCase() || '?'}
-                    </span>
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-medium", getColorForEmail(c.author_email))}>
+                    {getInitials(c.author_name)}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-slate-900 text-sm">{c.author_name}</span>
                       <span className="text-xs text-slate-400">
-                        {format(new Date(c.created_date), 'MMM d, h:mm a')}
+                        {formatDistanceToNow(new Date(c.created_date), { addSuffix: true })}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-600 whitespace-pre-wrap">
+                    <p className="text-sm text-slate-600 whitespace-pre-wrap bg-slate-50 rounded-lg px-3 py-2">
                       {c.content.split(/(@\w+(?:\s\w+)?)/g).map((part, i) => 
                         part.startsWith('@') ? (
                           <span key={i} className="text-indigo-600 font-medium">{part}</span>
