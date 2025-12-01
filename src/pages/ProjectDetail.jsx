@@ -53,6 +53,8 @@ import ProjectModal from '@/components/modals/ProjectModal';
 import GroupModal from '@/components/modals/GroupModal';
 import FilesViewModal from '@/components/modals/FilesViewModal';
 import ProjectActivityFeed from '@/components/project/ProjectActivityFeed';
+import UpcomingDueDates from '@/components/project/UpcomingDueDates';
+import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
 import { cn } from '@/lib/utils';
 
 const statusColors = {
@@ -148,17 +150,26 @@ export default function ProjectDetail() {
   const handleSaveTask = async (data) => {
     if (editingTask) {
       await base44.entities.Task.update(editingTask.id, data);
+      await logActivity(projectId, ActivityActions.TASK_UPDATED, `updated task "${data.title}"`, currentUser, 'task', editingTask.id);
     } else {
-      await base44.entities.Task.create(data);
+      const newTask = await base44.entities.Task.create(data);
+      await logActivity(projectId, ActivityActions.TASK_CREATED, `created task "${data.title}"`, currentUser, 'task', newTask.id);
     }
     refetchTasks();
+    queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
     setShowTaskModal(false);
     setEditingTask(null);
   };
 
   const handleTaskStatusChange = async (task, status) => {
     await base44.entities.Task.update(task.id, { ...task, status });
+    if (status === 'completed') {
+      await logActivity(projectId, ActivityActions.TASK_COMPLETED, `completed task "${task.title}"`, currentUser, 'task', task.id);
+    } else {
+      await logActivity(projectId, ActivityActions.TASK_UPDATED, `changed task "${task.title}" status to ${status.replace('_', ' ')}`, currentUser, 'task', task.id);
+    }
     refetchTasks();
+    queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
   };
 
   // Groups
@@ -193,17 +204,27 @@ export default function ProjectDetail() {
   const handleSavePart = async (data) => {
     if (editingPart) {
       await base44.entities.Part.update(editingPart.id, data);
+      await logActivity(projectId, ActivityActions.PART_UPDATED, `updated part "${data.name}"`, currentUser, 'part', editingPart.id);
     } else {
-      await base44.entities.Part.create(data);
+      const newPart = await base44.entities.Part.create(data);
+      await logActivity(projectId, ActivityActions.PART_CREATED, `added part "${data.name}"`, currentUser, 'part', newPart.id);
     }
     refetchParts();
+    queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
     setShowPartModal(false);
     setEditingPart(null);
   };
 
   const handlePartStatusChange = async (part, status) => {
     await base44.entities.Part.update(part.id, { ...part, status });
+    const actionMap = {
+      ordered: ActivityActions.PART_ORDERED,
+      received: ActivityActions.PART_RECEIVED,
+      installed: ActivityActions.PART_INSTALLED
+    };
+    await logActivity(projectId, actionMap[status] || ActivityActions.PART_UPDATED, `changed part "${part.name}" status to ${status}`, currentUser, 'part', part.id);
     refetchParts();
+    queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
   };
 
   // Project
@@ -269,7 +290,9 @@ export default function ProjectDetail() {
   // Progress update
   const handleProgressUpdate = async (progressValue) => {
     await base44.entities.Project.update(projectId, { ...project, progress: progressValue });
+    await logActivity(projectId, ActivityActions.PROGRESS_UPDATED, `updated progress to ${progressValue}%`, currentUser);
     refetchProject();
+    queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
   };
 
   // Delete
@@ -575,12 +598,21 @@ export default function ProjectDetail() {
           </Link>
           </div>
 
+          {/* Calendar Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+          >
+            <UpcomingDueDates tasks={tasks} parts={parts} />
+          </motion.div>
+
           {/* Activity Feed */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="mt-8 lg:col-span-3"
+            className="lg:col-span-2"
           >
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-indigo-50/30">
