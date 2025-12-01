@@ -60,6 +60,12 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
   const StatusIcon = status.icon;
   const dueDateInfo = getDueDateInfo(task.due_date, task.status);
 
+  const handleToggleComplete = (e) => {
+    e.stopPropagation();
+    const newStatus = task.status === 'completed' ? 'todo' : 'completed';
+    onStatusChange(task, newStatus);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 5 }}
@@ -73,24 +79,12 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
       onClick={() => onTaskClick?.(task)}
     >
       <div className="flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <button className={cn("p-1 rounded transition-colors shrink-0", status.bg)}>
-              <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            {Object.entries(statusConfig).map(([key, config]) => {
-              const Icon = config.icon;
-              return (
-                <DropdownMenuItem key={key} onClick={(e) => { e.stopPropagation(); onStatusChange(task, key); }}>
-                  <Icon className={cn("w-4 h-4 mr-2", config.color)} />
-                  {config.label}
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <button 
+          onClick={handleToggleComplete}
+          className={cn("p-1 rounded transition-all shrink-0 hover:scale-110", status.bg)}
+        >
+          <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
+        </button>
 
         <span className={cn(
           "flex-1 text-sm font-medium truncate",

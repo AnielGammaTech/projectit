@@ -10,7 +10,6 @@ import { createPageUrl } from '@/utils';
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import MyTasksCard from '@/components/dashboard/MyTasksCard';
-import UpcomingDeadlines from '@/components/dashboard/UpcomingDeadlines';
 import ProjectModal from '@/components/modals/ProjectModal';
 
 export default function Dashboard() {
@@ -250,10 +249,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Bottom Section - Deadlines */}
-        <div className="mt-8">
-          <UpcomingDeadlines tasks={tasks} parts={parts} projects={projects} />
-        </div>
       </div>
 
       <ProjectModal

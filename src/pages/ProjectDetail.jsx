@@ -535,6 +535,7 @@ export default function ProjectDetail() {
         onCreateGroup={handleCreateGroup}
         onEditGroup={(group) => { setEditingGroup(group); setShowGroupModal(true); }}
         onDeleteGroup={handleDeleteGroup}
+        onAddTask={() => { setShowTasksView(false); setEditingTask(null); setShowTaskModal(true); }}
         currentUserEmail={currentUser?.email}
       />
 
