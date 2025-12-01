@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, StickyNote, Bell, Send, Trash2 } from 'lucide-react';
+import { MessageSquare, StickyNote, Bell, Send, Trash2, CalendarCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -51,6 +51,29 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser }
     });
   };
 
+  const insertMeetingTemplate = () => {
+    const template = `📋 Project Weekly Update Meeting
+
+1. 🔄 Project Updates
+What was done last week:
+- 
+
+What's planned this week:
+- 
+
+Any blockers or help needed:
+- 
+
+2. ⚠️ Issues & Risks
+Any project-specific issues that need escalation or decisions:
+- 
+
+3. ✅ Action Items
+- `;
+    setNewContent(template);
+    setNewType('update');
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -60,7 +83,7 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser }
 
         {/* Add New */}
         <div className="border border-slate-200 rounded-xl p-4 bg-slate-50">
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-2 mb-3 flex-wrap">
             {Object.entries(typeConfig).map(([key, config]) => {
               const Icon = config.icon;
               return (
@@ -77,6 +100,13 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser }
                 </button>
               );
             })}
+            <button
+              onClick={insertMeetingTemplate}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-indigo-100 text-indigo-700 hover:bg-indigo-200 ml-auto"
+            >
+              <CalendarCheck className="w-4 h-4" />
+              Meeting Update
+            </button>
           </div>
           <div className="flex gap-2">
             <Textarea
