@@ -160,75 +160,83 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
         </Popover>
       </div>
 
-      <Link to={createPageUrl('ProjectDetail') + `?id=${project.id}`}>
-        <div className={cn(
-          "bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 border-l-4",
+      <div 
+        onClick={() => window.location.href = createPageUrl('ProjectDetail') + `?id=${project.id}`}
+        className={cn(
+          "bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 border-l-4 cursor-pointer",
           colorClass
-        )}>
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${priorityDots[project.priority]}`} />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-                  <Badge variant="outline" className={cn("text-xs cursor-pointer hover:opacity-80", statusColors[project.status])}>
-                    {project.status?.replace('_', ' ')}
-                  </Badge>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-                  {statusOptions.map((opt) => (
-                    <DropdownMenuItem key={opt.value} onClick={() => onStatusChange?.(project, opt.value)}>
-                      <Badge className={cn("mr-2", statusColors[opt.value])}>{opt.label}</Badge>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
+        )}
+      >
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${priorityDots[project.priority]}`} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Badge 
+                  variant="outline" 
+                  className={cn("text-xs cursor-pointer hover:opacity-80", statusColors[project.status])}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {project.status?.replace('_', ' ')}
+                </Badge>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                {statusOptions.map((opt) => (
+                  <DropdownMenuItem key={opt.value} onClick={(e) => { e.stopPropagation(); onStatusChange?.(project, opt.value); }}>
+                    <Badge className={cn("mr-2", statusColors[opt.value])}>{opt.label}</Badge>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-
-          <h3 className="text-base font-semibold text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors line-clamp-1">
-            {project.name}
-          </h3>
-          {project.client && (
-            <p className="text-sm text-slate-500 mb-3 line-clamp-1">{project.client}</p>
-          )}
-
-          {totalTasks > 0 && (
-            <div className="mb-3">
-              <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-slate-500">Progress</span>
-                <span className="font-medium text-slate-700">{completedTasks}/{totalTasks}</span>
-              </div>
-              <Progress value={progress} className="h-1.5" />
-            </div>
-          )}
-
-          <div className="flex items-center gap-3 text-xs text-slate-500">
-            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-              <PopoverTrigger asChild onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-                <div className="flex items-center gap-1 cursor-pointer hover:text-indigo-600 transition-colors">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>{project.due_date ? format(new Date(project.due_date), 'MMM d') : 'Set date'}</span>
-                </div>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
-                <CalendarPicker
-                  mode="single"
-                  selected={project.due_date ? new Date(project.due_date) : undefined}
-                  onSelect={(date) => { onDueDateChange?.(project, date); setDatePickerOpen(false); }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            {totalTasks > 0 && (
-              <div className="flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{Math.round(progress)}%</span>
-              </div>
-            )}
-          </div>
+          <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
         </div>
-      </Link>
+
+        <h3 className="text-base font-semibold text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors line-clamp-1">
+          {project.name}
+        </h3>
+        {project.client && (
+          <p className="text-sm text-slate-500 mb-3 line-clamp-1">{project.client}</p>
+        )}
+
+        {totalTasks > 0 && (
+          <div className="mb-3">
+            <div className="flex justify-between text-xs mb-1.5">
+              <span className="text-slate-500">Progress</span>
+              <span className="font-medium text-slate-700">{completedTasks}/{totalTasks}</span>
+            </div>
+            <Progress value={progress} className="h-1.5" />
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 text-xs text-slate-500">
+          <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+            <PopoverTrigger asChild>
+              <div 
+                className="flex items-center gap-1 cursor-pointer hover:text-indigo-600 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{project.due_date ? format(new Date(project.due_date), 'MMM d') : 'Set date'}</span>
+              </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
+              <CalendarPicker
+                mode="single"
+                selected={project.due_date ? new Date(project.due_date) : undefined}
+                onSelect={(date) => { onDueDateChange?.(project, date); setDatePickerOpen(false); }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          {totalTasks > 0 && (
+            <div className="flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>{Math.round(progress)}%</span>
+            </div>
+          )}
+        </div>
+      </div>
     </motion.div>
   );
 }
