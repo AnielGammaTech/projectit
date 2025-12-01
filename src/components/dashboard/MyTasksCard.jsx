@@ -5,6 +5,7 @@ import { ListTodo, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, Package
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { base44 } from '@/api/base44Client';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100' },
@@ -13,7 +14,7 @@ const statusConfig = {
   completed: { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-100' }
 };
 
-export default function MyTasksCard({ tasks = [], parts = [], projects = [], currentUserEmail }) {
+export default function MyTasksCard({ tasks = [], parts = [], projects = [], currentUserEmail, onTaskComplete }) {
   const getProjectName = (projectId) => {
     return projects.find(p => p.id === projectId)?.name || 'Unknown';
   };
@@ -59,23 +60,27 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.03 }}
               >
-                <Link to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`}>
-                  <div className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-all">
-                    <div className={cn("p-1.5 rounded-lg", status.bg)}>
-                      <StatusIcon className={cn("w-4 h-4", status.color)} />
+                <div className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-all">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onTaskComplete?.(task);
+                    }}
+                    className={cn("p-1.5 rounded-lg hover:scale-110 transition-transform", status.bg)}
+                  >
+                    <StatusIcon className={cn("w-4 h-4", status.color)} />
+                  </button>
+                  <Link to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`} className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-900 text-sm truncate">{task.title}</p>
+                    <p className="text-xs text-slate-500 truncate">{getProjectName(task.project_id)}</p>
+                  </Link>
+                  {task.due_date && (
+                    <div className="flex items-center gap-1 text-xs text-slate-400">
+                      <Calendar className="w-3 h-3" />
+                      {format(new Date(task.due_date), 'MMM d')}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-slate-900 text-sm truncate">{task.title}</p>
-                      <p className="text-xs text-slate-500 truncate">{getProjectName(task.project_id)}</p>
-                    </div>
-                    {task.due_date && (
-                      <div className="flex items-center gap-1 text-xs text-slate-400">
-                        <Calendar className="w-3 h-3" />
-                        {format(new Date(task.due_date), 'MMM d')}
-                      </div>
-                    )}
-                  </div>
-                </Link>
+                  )}
+                </div>
               </motion.div>
             );
           })}
