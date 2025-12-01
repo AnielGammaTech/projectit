@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Upload, Loader2, FileText } from 'lucide-react';
 import { format } from 'date-fns';
+import { base44 } from '@/api/base44Client';
 
-export default function ProjectModal({ open, onClose, project, onSave }) {
+export default function ProjectModal({ open, onClose, project, templates = [], onSave, onPartsExtracted }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -20,6 +21,9 @@ export default function ProjectModal({ open, onClose, project, onSave }) {
     start_date: '',
     due_date: ''
   });
+  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [extractedParts, setExtractedParts] = useState([]);
 
   useEffect(() => {
     if (project) {
@@ -32,6 +36,7 @@ export default function ProjectModal({ open, onClose, project, onSave }) {
         start_date: project.start_date || '',
         due_date: project.due_date || ''
       });
+      setExtractedParts([]);
     } else {
       setFormData({
         name: '',
@@ -42,17 +47,59 @@ export default function ProjectModal({ open, onClose, project, onSave }) {
         start_date: '',
         due_date: ''
       });
+      setExtractedParts([]);
     }
+    setSelectedTemplate('');
   }, [project, open]);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      
+      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+        file_url,
+        json_schema: {
+          type: "object",
+          properties: {
+            parts: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  part_number: { type: "string" },
+                  quantity: { type: "number" },
+                  unit_cost: { type: "number" },
+                  description: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (result.status === 'success' && result.output?.parts) {
+        setExtractedParts(result.output.parts);
+      }
+    } catch (err) {
+      console.error('Failed to extract parts:', err);
+    }
+    setUploading(false);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+    const template = templates.find(t => t.id === selectedTemplate);
+    onSave(formData, template, extractedParts);
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{project ? 'Edit Project' : 'New Project'}</DialogTitle>
         </DialogHeader>
@@ -90,6 +137,61 @@ export default function ProjectModal({ open, onClose, project, onSave }) {
               className="mt-1.5 h-20"
             />
           </div>
+
+          {!project && templates.length > 0 && (
+            <div>
+              <Label>Use Template</Label>
+              <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue placeholder="Select a template (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>No Template</SelectItem>
+                  {templates.map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {!project && (
+            <div>
+              <Label>Upload Quote PDF (Optional)</Label>
+              <div className="mt-1.5">
+                <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-colors">
+                  {uploading ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                  ) : (
+                    <Upload className="w-5 h-5 text-slate-400" />
+                  )}
+                  <span className="text-sm text-slate-600">
+                    {uploading ? 'Extracting parts...' : 'Upload PDF to extract parts'}
+                  </span>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                </label>
+              </div>
+              {extractedParts.length > 0 && (
+                <div className="mt-2 p-3 bg-emerald-50 rounded-lg">
+                  <div className="flex items-center gap-2 text-emerald-700 text-sm font-medium mb-2">
+                    <FileText className="w-4 h-4" />
+                    {extractedParts.length} parts extracted
+                  </div>
+                  <div className="text-xs text-emerald-600 max-h-24 overflow-y-auto">
+                    {extractedParts.map((p, i) => (
+                      <div key={i}>{p.name} {p.quantity > 1 && `(x${p.quantity})`}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
