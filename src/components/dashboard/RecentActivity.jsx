@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Activity, CheckCircle2, Package, Bell, FolderPlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-export default function RecentActivity({ tasks = [], parts = [], reminders = [] }) {
+export default function RecentActivity({ tasks = [], parts = [] }) {
   // Combine recent items
   const activities = [
     ...tasks.slice(0, 3).map(t => ({
