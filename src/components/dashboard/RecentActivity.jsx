@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
-import { Activity, CheckCircle2, Package, Bell, FolderPlus } from 'lucide-react';
+import { Activity, CheckCircle2, Package } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function RecentActivity({ tasks = [], parts = [] }) {
   // Combine recent items
   const activities = [
-    ...tasks.slice(0, 3).map(t => ({
+    ...tasks.slice(0, 4).map(t => ({
       type: 'task',
       icon: CheckCircle2,
       color: 'text-emerald-500 bg-emerald-50',
@@ -20,14 +20,6 @@ export default function RecentActivity({ tasks = [], parts = [] }) {
       title: p.name,
       subtitle: p.status,
       date: p.updated_date
-    })),
-    ...reminders.slice(0, 2).map(r => ({
-      type: 'reminder',
-      icon: Bell,
-      color: 'text-violet-500 bg-violet-50',
-      title: r.title,
-      subtitle: 'Reminder set',
-      date: r.created_date
     }))
   ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
 
