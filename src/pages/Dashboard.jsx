@@ -6,6 +6,7 @@ import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, Chevron
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
+import { format } from 'date-fns';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
@@ -83,6 +84,16 @@ export default function Dashboard() {
 
   const handleProjectGroupChange = async (project, group) => {
     await base44.entities.Project.update(project.id, { group });
+    refetchProjects();
+  };
+
+  const handleProjectStatusChange = async (project, status) => {
+    await base44.entities.Project.update(project.id, { status });
+    refetchProjects();
+  };
+
+  const handleProjectDueDateChange = async (project, date) => {
+    await base44.entities.Project.update(project.id, { due_date: date ? format(date, 'yyyy-MM-dd') : '' });
     refetchProjects();
   };
 
@@ -227,6 +238,8 @@ export default function Dashboard() {
                               groups={allGroups}
                               onColorChange={handleProjectColorChange}
                               onGroupChange={handleProjectGroupChange}
+                              onStatusChange={handleProjectStatusChange}
+                              onDueDateChange={handleProjectDueDateChange}
                             />
                           ))}
                         </div>

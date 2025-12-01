@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, CheckCircle2, ArrowRight, Palette } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, Palette, CalendarIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarPicker } from '@/components/ui/calendar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
@@ -65,9 +67,16 @@ const priorityDots = {
   urgent: 'bg-red-500'
 };
 
-export default function ProjectCard({ project, tasks = [], index, onColorChange, onGroupChange, groups = [] }) {
+const statusOptions = [
+  { value: 'planning', label: 'Planning' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'on_hold', label: 'On Hold' },
+  { value: 'completed', label: 'Completed' }
+];
+
+export default function ProjectCard({ project, tasks = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, groups = [] }) {
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
-  const [groupPickerOpen, setGroupPickerOpen] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const totalTasks = tasks.length;
@@ -159,9 +168,20 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${priorityDots[project.priority]}`} />
-              <Badge variant="outline" className={cn("text-xs", statusColors[project.status])}>
-                {project.status?.replace('_', ' ')}
-              </Badge>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                  <Badge variant="outline" className={cn("text-xs cursor-pointer hover:opacity-80", statusColors[project.status])}>
+                    {project.status?.replace('_', ' ')}
+                  </Badge>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                  {statusOptions.map((opt) => (
+                    <DropdownMenuItem key={opt.value} onClick={() => onStatusChange?.(project, opt.value)}>
+                      <Badge className={cn("mr-2", statusColors[opt.value])}>{opt.label}</Badge>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
           </div>
@@ -184,12 +204,22 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
           )}
 
           <div className="flex items-center gap-3 text-xs text-slate-500">
-            {project.due_date && (
-              <div className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{format(new Date(project.due_date), 'MMM d')}</span>
-              </div>
-            )}
+            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+              <PopoverTrigger asChild onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                <div className="flex items-center gap-1 cursor-pointer hover:text-indigo-600 transition-colors">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{project.due_date ? format(new Date(project.due_date), 'MMM d') : 'Set date'}</span>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
+                <CalendarPicker
+                  mode="single"
+                  selected={project.due_date ? new Date(project.due_date) : undefined}
+                  onSelect={(date) => { onDueDateChange?.(project, date); setDatePickerOpen(false); }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
             {totalTasks > 0 && (
               <div className="flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
