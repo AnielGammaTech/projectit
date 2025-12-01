@@ -80,30 +80,22 @@ const getDueDateInfo = (dueDate, status) => {
 };
 
 const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, onTaskClick, onTaskUpdate }) => {
+  const [dateOpen, setDateOpen] = useState(false);
   const status = statusConfig[task.status] || statusConfig.todo;
   const StatusIcon = status.icon;
   const dueDateInfo = getDueDateInfo(task.due_date, task.status);
 
-  const handleComplete = (e) => {
-    e.stopPropagation();
-    onStatusChange(task, 'completed');
-  };
-
-  const handleAssign = async (e, email) => {
-    e.stopPropagation();
+  const handleAssign = async (email) => {
     const member = teamMembers.find(m => m.email === email);
     await base44.entities.Task.update(task.id, {
-      ...task,
       assigned_to: email,
       assigned_name: member?.name || email
     });
     onTaskUpdate?.();
   };
 
-  const handleUnassign = async (e) => {
-    e.stopPropagation();
+  const handleUnassign = async () => {
     await base44.entities.Task.update(task.id, {
-      ...task,
       assigned_to: '',
       assigned_name: ''
     });
@@ -112,9 +104,9 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
 
   const handleDateChange = async (date) => {
     await base44.entities.Task.update(task.id, {
-      ...task,
       due_date: date ? format(date, 'yyyy-MM-dd') : ''
     });
+    setDateOpen(false);
     onTaskUpdate?.();
   };
 
@@ -133,8 +125,9 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
       <div className="flex items-center gap-2">
         {/* Status Toggle */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+          <DropdownMenuTrigger asChild>
             <button 
+              onClick={(e) => e.stopPropagation()}
               className={cn("p-1 rounded transition-all shrink-0 hover:scale-110", status.bg)}
               title="Change status"
             >
@@ -145,7 +138,7 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
             {Object.entries(statusConfig).map(([key, config]) => {
               const Icon = config.icon;
               return (
-                <DropdownMenuItem key={key} onClick={(e) => { e.stopPropagation(); onStatusChange(task, key); }}>
+                <DropdownMenuItem key={key} onClick={() => onStatusChange(task, key)}>
                   <Icon className={cn("w-4 h-4 mr-2", config.color)} />
                   {config.label}
                 </DropdownMenuItem>
@@ -163,28 +156,35 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
 
         <div className="flex items-center gap-1.5 shrink-0">
           {/* Due Date Picker */}
-          <Popover>
-            <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
+            <PopoverTrigger asChild>
               {dueDateInfo ? (
-                <Badge className={cn("text-[10px] px-1.5 py-0 cursor-pointer hover:opacity-80", dueDateInfo.color)}>
+                <Badge 
+                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                  className={cn("text-[10px] px-1.5 py-0 cursor-pointer hover:opacity-80", dueDateInfo.color)}
+                >
                   {dueDateInfo.urgent && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
                   {dueDateInfo.label}
                 </Badge>
               ) : (
-                <button className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                  className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all"
+                >
                   <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 </button>
               )}
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+            <PopoverContent className="w-auto p-0" align="end">
               <CalendarPicker
                 mode="single"
                 selected={task.due_date ? new Date(task.due_date) : undefined}
-                onSelect={handleDateChange}
+                onSelect={(date) => handleDateChange(date)}
+                initialFocus
               />
               {task.due_date && (
                 <div className="p-2 border-t">
-                  <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={(e) => { e.stopPropagation(); handleDateChange(null); }}>
+                  <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => handleDateChange(null)}>
                     Clear date
                   </Button>
                 </div>
@@ -194,29 +194,37 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
 
           {/* Assignee */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuTrigger asChild>
               {task.assigned_name ? (
-                <button className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 transition-all",
-                  getColorForEmail(task.assigned_to)
-                )} title={task.assigned_name}>
+                <button 
+                  onClick={(e) => e.stopPropagation()}
+                  className={cn(
+                    "w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 transition-all",
+                    getColorForEmail(task.assigned_to)
+                  )} 
+                  title={task.assigned_name}
+                >
                   {getInitials(task.assigned_name)}
                 </button>
               ) : (
-                <button className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all" title="Assign">
+                <button 
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all" 
+                  title="Assign"
+                >
                   <UserPlus className="w-3.5 h-3.5 text-slate-400" />
                 </button>
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               {task.assigned_to && (
-                <DropdownMenuItem onClick={handleUnassign} className="text-slate-500">
+                <DropdownMenuItem onClick={() => handleUnassign()} className="text-slate-500">
                   <User className="w-4 h-4 mr-2" />
                   Unassign
                 </DropdownMenuItem>
               )}
               {teamMembers.map((member) => (
-                <DropdownMenuItem key={member.id} onClick={(e) => handleAssign(e, member.email)}>
+                <DropdownMenuItem key={member.id} onClick={() => handleAssign(member.email)}>
                   <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
                     {getInitials(member.name)}
                   </div>
@@ -227,16 +235,21 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
           </DropdownMenu>
 
           <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <MoreHorizontal className="w-3 h-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(task); }}>
+              <DropdownMenuItem onClick={() => onEdit(task)}>
                 <Edit2 className="w-4 h-4 mr-2" />Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDelete(task); }} className="text-red-600">
+              <DropdownMenuItem onClick={() => onDelete(task)} className="text-red-600">
                 <Trash2 className="w-4 h-4 mr-2" />Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
