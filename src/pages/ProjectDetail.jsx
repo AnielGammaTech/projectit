@@ -521,6 +521,8 @@ export default function ProjectDetail() {
         onClose={() => setShowNotesView(false)}
         projectId={projectId}
         currentUser={currentUser}
+        teamMembers={teamMembers}
+        onTasksCreated={refetchTasks}
       />
 
       <TasksViewModal

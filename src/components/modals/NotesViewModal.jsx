@@ -9,6 +9,7 @@ import { MessageSquare, StickyNote, Bell, Send, Trash2, CalendarCheck } from 'lu
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import MeetingUpdateModal from './MeetingUpdateModal';
 
 const typeConfig = {
   note: { icon: StickyNote, color: 'bg-slate-100 text-slate-700', label: 'Note' },
@@ -16,10 +17,11 @@ const typeConfig = {
   update: { icon: Bell, color: 'bg-amber-100 text-amber-700', label: 'Update' }
 };
 
-export default function NotesViewModal({ open, onClose, projectId, currentUser }) {
+export default function NotesViewModal({ open, onClose, projectId, currentUser, teamMembers = [], onTasksCreated }) {
   const queryClient = useQueryClient();
   const [newContent, setNewContent] = useState('');
   const [newType, setNewType] = useState('note');
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ['projectNotes', projectId],
@@ -51,28 +53,7 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser }
     });
   };
 
-  const insertMeetingTemplate = () => {
-    const template = `📋 Project Weekly Update Meeting
 
-1. 🔄 Project Updates
-What was done last week:
-- 
-
-What's planned this week:
-- 
-
-Any blockers or help needed:
-- 
-
-2. ⚠️ Issues & Risks
-Any project-specific issues that need escalation or decisions:
-- 
-
-3. ✅ Action Items
-- `;
-    setNewContent(template);
-    setNewType('update');
-  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -101,7 +82,7 @@ Any project-specific issues that need escalation or decisions:
               );
             })}
             <button
-              onClick={insertMeetingTemplate}
+              onClick={() => setShowMeetingModal(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-indigo-100 text-indigo-700 hover:bg-indigo-200 ml-auto"
             >
               <CalendarCheck className="w-4 h-4" />
@@ -185,6 +166,16 @@ Any project-specific issues that need escalation or decisions:
           )}
         </div>
       </DialogContent>
+
+      <MeetingUpdateModal
+        open={showMeetingModal}
+        onClose={() => setShowMeetingModal(false)}
+        projectId={projectId}
+        currentUser={currentUser}
+        teamMembers={teamMembers}
+        onNoteSaved={() => queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] })}
+        onTasksCreated={onTasksCreated}
+      />
     </Dialog>
   );
 }
