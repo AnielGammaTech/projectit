@@ -42,6 +42,7 @@ import {
 import { format } from 'date-fns';
 
 import ProgressNeedle from '@/components/project/ProgressNeedle';
+import TeamAvatars from '@/components/project/TeamAvatars';
 import TaskModal from '@/components/modals/TaskModal';
 import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import TasksViewModal from '@/components/modals/TasksViewModal';
@@ -51,12 +52,34 @@ import NotesViewModal from '@/components/modals/NotesViewModal';
 import ProjectModal from '@/components/modals/ProjectModal';
 import GroupModal from '@/components/modals/GroupModal';
 import FilesViewModal from '@/components/modals/FilesViewModal';
+import { cn } from '@/lib/utils';
 
 const statusColors = {
   planning: 'bg-amber-50 text-amber-700 border-amber-200',
   in_progress: 'bg-blue-50 text-blue-700 border-blue-200',
   on_hold: 'bg-slate-50 text-slate-700 border-slate-200',
   completed: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+};
+
+const statusOptions = [
+  { value: 'planning', label: 'Planning' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'on_hold', label: 'On Hold' },
+  { value: 'completed', label: 'Completed' }
+];
+
+const priorityOptions = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+  { value: 'urgent', label: 'Urgent' }
+];
+
+const priorityColors = {
+  low: 'bg-slate-100 text-slate-600 border-slate-200',
+  medium: 'bg-blue-50 text-blue-700 border-blue-200',
+  high: 'bg-orange-50 text-orange-700 border-orange-200',
+  urgent: 'bg-red-50 text-red-700 border-red-200'
 };
 
 export default function ProjectDetail() {
@@ -193,6 +216,17 @@ export default function ProjectDetail() {
     setShowProjectModal(false);
   };
 
+  // Quick inline update
+  const handleQuickUpdate = async (field, value) => {
+    await base44.entities.Project.update(projectId, { ...project, [field]: value });
+    refetchProject();
+  };
+
+  const handleTeamUpdate = async (emails) => {
+    await base44.entities.Project.update(projectId, { ...project, team_members: emails });
+    refetchProject();
+  };
+
   // Save as Template
   const handleSaveAsTemplate = async () => {
     const templateData = {
@@ -309,13 +343,38 @@ export default function ProjectDetail() {
         >
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <Badge variant="outline" className={statusColors[project.status]}>
-                  {project.status?.replace('_', ' ')}
-                </Badge>
-                <Badge variant="outline" className="border-slate-200">
-                  {project.priority} priority
-                </Badge>
+              <div className="flex items-center gap-3 mb-3 flex-wrap">
+                {/* Inline Status Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80", statusColors[project.status])}>
+                      {project.status?.replace('_', ' ')}
+                    </Badge>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {statusOptions.map((opt) => (
+                      <DropdownMenuItem key={opt.value} onClick={() => handleQuickUpdate('status', opt.value)}>
+                        <Badge className={cn("mr-2", statusColors[opt.value])}>{opt.label}</Badge>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Inline Priority Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80", priorityColors[project.priority])}>
+                      {project.priority} priority
+                    </Badge>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {priorityOptions.map((opt) => (
+                      <DropdownMenuItem key={opt.value} onClick={() => handleQuickUpdate('priority', opt.value)}>
+                        <Badge className={cn("mr-2", priorityColors[opt.value])}>{opt.label}</Badge>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               <h1 className="text-2xl font-bold text-slate-900 mb-2">{project.name}</h1>
               {project.client && <p className="text-slate-500 mb-4">{project.client}</p>}
@@ -334,6 +393,15 @@ export default function ProjectDetail() {
                     <span>Due: {format(new Date(project.due_date), 'MMM d, yyyy')}</span>
                   </div>
                 )}
+              </div>
+
+              {/* Team Avatars */}
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <TeamAvatars
+                  members={project.team_members || []}
+                  teamMembers={teamMembers}
+                  onUpdate={handleTeamUpdate}
+                />
               </div>
             </div>
 
@@ -557,6 +625,8 @@ export default function ProjectDetail() {
         onClose={() => setShowTasksView(false)}
         tasks={tasks}
         groups={taskGroups}
+        teamMembers={teamMembers}
+        currentUser={currentUser}
         onStatusChange={handleTaskStatusChange}
         onEdit={(task) => { setShowTasksView(false); setEditingTask(task); setShowTaskModal(true); }}
         onDelete={(task) => setDeleteConfirm({ open: true, type: 'task', item: task })}
