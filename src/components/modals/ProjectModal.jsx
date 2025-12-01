@@ -18,8 +18,7 @@ export default function ProjectModal({ open, onClose, project, onSave }) {
     status: 'planning',
     priority: 'medium',
     start_date: '',
-    due_date: '',
-    budget: ''
+    due_date: ''
   });
 
   useEffect(() => {
@@ -31,8 +30,7 @@ export default function ProjectModal({ open, onClose, project, onSave }) {
         status: project.status || 'planning',
         priority: project.priority || 'medium',
         start_date: project.start_date || '',
-        due_date: project.due_date || '',
-        budget: project.budget || ''
+        due_date: project.due_date || ''
       });
     } else {
       setFormData({
@@ -42,8 +40,7 @@ export default function ProjectModal({ open, onClose, project, onSave }) {
         status: 'planning',
         priority: 'medium',
         start_date: '',
-        due_date: '',
-        budget: ''
+        due_date: ''
       });
     }
   }, [project, open]);
@@ -164,20 +161,6 @@ export default function ProjectModal({ open, onClose, project, onSave }) {
                 </PopoverContent>
               </Popover>
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="budget">Budget ($)</Label>
-            <Input
-              id="budget"
-              type="number"
-              min="0"
-              step="100"
-              value={formData.budget}
-              onChange={(e) => setFormData(prev => ({ ...prev, budget: parseFloat(e.target.value) || '' }))}
-              placeholder="e.g., 5000"
-              className="mt-1.5"
-            />
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
