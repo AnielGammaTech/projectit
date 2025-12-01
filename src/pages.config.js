@@ -7,6 +7,7 @@ import UserGroups from './pages/UserGroups';
 import ProjectTasks from './pages/ProjectTasks';
 import ProjectParts from './pages/ProjectParts';
 import ProjectNotes from './pages/ProjectNotes';
+import ProjectFiles from './pages/ProjectFiles';
 import __Layout from './Layout.jsx';
 
 
@@ -20,6 +21,7 @@ export const PAGES = {
     "ProjectTasks": ProjectTasks,
     "ProjectParts": ProjectParts,
     "ProjectNotes": ProjectNotes,
+    "ProjectFiles": ProjectFiles,
 }
 
 export const pagesConfig = {

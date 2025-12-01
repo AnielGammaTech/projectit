@@ -486,12 +486,12 @@ export default function ProjectDetail() {
           </Link>
 
           {/* Parts Card - Clickable */}
+          <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
-            onClick={() => setShowPartsView(true)}
           >
             <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-100/50">
               <div className="flex items-center justify-between">
@@ -506,7 +506,7 @@ export default function ProjectDetail() {
                 </div>
                 <Button
                   size="sm"
-                  onClick={(e) => { e.stopPropagation(); setEditingPart(null); setShowPartModal(true); }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingPart(null); setShowPartModal(true); }}
                   className="bg-amber-500 hover:bg-amber-600 shadow-md"
                 >
                   <Plus className="w-4 h-4" />
@@ -522,14 +522,15 @@ export default function ProjectDetail() {
               )}
             </div>
           </motion.div>
+          </Link>
 
           {/* Notes & Messages Card - Clickable */}
+          <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
             className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
-            onClick={() => setShowNotesView(true)}
           >
             <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-purple-100/50">
               <div className="flex items-center gap-3">
@@ -546,14 +547,15 @@ export default function ProjectDetail() {
               <p className="text-sm text-slate-500 text-center">Click to view notes & messages</p>
             </div>
           </motion.div>
+          </Link>
 
           {/* Files Card - Clickable */}
+          <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
-            onClick={() => setShowFilesView(true)}
           >
             <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-teal-50 to-cyan-100/50">
               <div className="flex items-center gap-3">
@@ -570,6 +572,7 @@ export default function ProjectDetail() {
               <p className="text-sm text-slate-500 text-center">Click to view files</p>
             </div>
           </motion.div>
+          </Link>
           </div>
 
           {/* Activity Feed */}
