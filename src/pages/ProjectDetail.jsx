@@ -7,9 +7,7 @@ import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
   Calendar, 
-  DollarSign, 
   Edit2, 
-  Trash2,
   CheckCircle2,
   ListTodo,
   Package,
@@ -18,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { Progress } from '@/components/ui/progress';
 import {
   AlertDialog,
@@ -194,7 +192,7 @@ export default function ProjectDetail() {
 
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const progress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
-  const totalPartsCost = parts.reduce((sum, p) => sum + (p.quantity || 1) * (p.unit_cost || 0), 0);
+  const pendingReminders = reminders.filter(r => !r.is_completed).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
@@ -242,12 +240,7 @@ export default function ProjectDetail() {
                     <span>Due: {format(new Date(project.due_date), 'MMM d, yyyy')}</span>
                   </div>
                 )}
-                {project.budget > 0 && (
-                  <div className="flex items-center gap-1.5 text-slate-600">
-                    <DollarSign className="w-4 h-4" />
-                    <span>Budget: ${project.budget.toLocaleString()}</span>
-                  </div>
-                )}
+
               </div>
             </div>
 
@@ -270,96 +263,126 @@ export default function ProjectDetail() {
             </div>
           )}
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-100">
-            <div className="text-center p-3 rounded-xl bg-slate-50">
-              <ListTodo className="w-5 h-5 mx-auto text-indigo-600 mb-1" />
-              <p className="text-2xl font-bold text-slate-900">{tasks.length}</p>
-              <p className="text-xs text-slate-500">Tasks</p>
-            </div>
-            <div className="text-center p-3 rounded-xl bg-slate-50">
-              <CheckCircle2 className="w-5 h-5 mx-auto text-emerald-600 mb-1" />
-              <p className="text-2xl font-bold text-slate-900">{completedTasks}</p>
-              <p className="text-xs text-slate-500">Completed</p>
-            </div>
-            <div className="text-center p-3 rounded-xl bg-slate-50">
-              <Package className="w-5 h-5 mx-auto text-amber-600 mb-1" />
-              <p className="text-2xl font-bold text-slate-900">{parts.length}</p>
-              <p className="text-xs text-slate-500">Parts</p>
-            </div>
-            <div className="text-center p-3 rounded-xl bg-slate-50">
-              <DollarSign className="w-5 h-5 mx-auto text-violet-600 mb-1" />
-              <p className="text-2xl font-bold text-slate-900">${totalPartsCost.toFixed(0)}</p>
-              <p className="text-xs text-slate-500">Parts Cost</p>
-            </div>
-          </div>
         </motion.div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="flex items-center justify-between">
-            <TabsList className="bg-white border border-slate-200">
-              <TabsTrigger value="tasks" className="gap-2">
-                <ListTodo className="w-4 h-4" />
-                Tasks ({tasks.length})
-              </TabsTrigger>
-              <TabsTrigger value="parts" className="gap-2">
-                <Package className="w-4 h-4" />
-                Parts ({parts.length})
-              </TabsTrigger>
-              <TabsTrigger value="reminders" className="gap-2">
-                <Bell className="w-4 h-4" />
-                Reminders ({reminders.length})
-              </TabsTrigger>
-            </TabsList>
+        {/* Enhanced Tabs */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Tasks Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+          >
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-indigo-100/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-200">
+                    <ListTodo className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">Tasks</h3>
+                    <p className="text-sm text-slate-500">{completedTasks}/{tasks.length} completed</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
+                  className="bg-indigo-600 hover:bg-indigo-700 shadow-md"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+              {tasks.length > 0 && (
+                <div className="mt-4">
+                  <Progress value={progress} className="h-2" />
+                </div>
+              )}
+            </div>
+            <div className="p-4 max-h-[500px] overflow-y-auto">
+              <TaskList
+                tasks={tasks}
+                onStatusChange={handleTaskStatusChange}
+                onEdit={(task) => { setEditingTask(task); setShowTaskModal(true); }}
+                onDelete={(task) => setDeleteConfirm({ open: true, type: 'task', item: task })}
+              />
+            </div>
+          </motion.div>
 
-            <Button
-              onClick={() => {
-                if (activeTab === 'tasks') {
-                  setEditingTask(null);
-                  setShowTaskModal(true);
-                } else if (activeTab === 'parts') {
-                  setEditingPart(null);
-                  setShowPartModal(true);
-                } else {
-                  setEditingReminder(null);
-                  setShowReminderModal(true);
-                }
-              }}
-              className="bg-indigo-600 hover:bg-indigo-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add {activeTab === 'tasks' ? 'Task' : activeTab === 'parts' ? 'Part' : 'Reminder'}
-            </Button>
-          </div>
+          {/* Parts Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+          >
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-100/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-amber-500 shadow-lg shadow-amber-200">
+                    <Package className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">Parts</h3>
+                    <p className="text-sm text-slate-500">{parts.length} items tracked</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => { setEditingPart(null); setShowPartModal(true); }}
+                  className="bg-amber-500 hover:bg-amber-600 shadow-md"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-4 max-h-[500px] overflow-y-auto">
+              <PartsList
+                parts={parts}
+                onStatusChange={handlePartStatusChange}
+                onEdit={(part) => { setEditingPart(part); setShowPartModal(true); }}
+                onDelete={(part) => setDeleteConfirm({ open: true, type: 'part', item: part })}
+              />
+            </div>
+          </motion.div>
 
-          <TabsContent value="tasks">
-            <TaskList
-              tasks={tasks}
-              onStatusChange={handleTaskStatusChange}
-              onEdit={(task) => { setEditingTask(task); setShowTaskModal(true); }}
-              onDelete={(task) => setDeleteConfirm({ open: true, type: 'task', item: task })}
-            />
-          </TabsContent>
-
-          <TabsContent value="parts">
-            <PartsList
-              parts={parts}
-              onStatusChange={handlePartStatusChange}
-              onEdit={(part) => { setEditingPart(part); setShowPartModal(true); }}
-              onDelete={(part) => setDeleteConfirm({ open: true, type: 'part', item: part })}
-            />
-          </TabsContent>
-
-          <TabsContent value="reminders">
-            <RemindersList
-              reminders={reminders}
-              onToggleComplete={handleReminderToggle}
-              onEdit={(reminder) => { setEditingReminder(reminder); setShowReminderModal(true); }}
-              onDelete={(reminder) => setDeleteConfirm({ open: true, type: 'reminder', item: reminder })}
-            />
-          </TabsContent>
-        </Tabs>
+          {/* Reminders Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+          >
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-purple-100/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-violet-600 shadow-lg shadow-violet-200">
+                    <Bell className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">Reminders</h3>
+                    <p className="text-sm text-slate-500">{pendingReminders} pending</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => { setEditingReminder(null); setShowReminderModal(true); }}
+                  className="bg-violet-600 hover:bg-violet-700 shadow-md"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-4 max-h-[500px] overflow-y-auto">
+              <RemindersList
+                reminders={reminders}
+                onToggleComplete={handleReminderToggle}
+                onEdit={(reminder) => { setEditingReminder(reminder); setShowReminderModal(true); }}
+                onDelete={(reminder) => setDeleteConfirm({ open: true, type: 'reminder', item: reminder })}
+              />
+            </div>
+          </motion.div>
+        </div>
       </div>
 
       {/* Modals */}
