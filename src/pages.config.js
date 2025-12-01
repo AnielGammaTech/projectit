@@ -3,6 +3,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import Team from './pages/Team';
 import AllTasks from './pages/AllTasks';
 import Templates from './pages/Templates';
+import UserGroups from './pages/UserGroups';
 import __Layout from './Layout.jsx';
 
 
@@ -12,6 +13,7 @@ export const PAGES = {
     "Team": Team,
     "AllTasks": AllTasks,
     "Templates": Templates,
+    "UserGroups": UserGroups,
 }
 
 export const pagesConfig = {
