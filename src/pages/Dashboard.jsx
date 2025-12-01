@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { FolderKanban, CheckCircle2, Bell, Package, Plus, Search } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
-import UpcomingReminders from '@/components/dashboard/UpcomingReminders';
 import RecentActivity from '@/components/dashboard/RecentActivity';
 import ProjectModal from '@/components/modals/ProjectModal';
 
@@ -24,11 +23,6 @@ export default function Dashboard() {
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks'],
     queryFn: () => base44.entities.Task.list('-created_date')
-  });
-
-  const { data: reminders = [], refetch: refetchReminders } = useQuery({
-    queryKey: ['reminders'],
-    queryFn: () => base44.entities.Reminder.list('-created_date')
   });
 
   const { data: parts = [] } = useQuery({
@@ -91,13 +85,7 @@ export default function Dashboard() {
             color="bg-emerald-600"
             subtitle={`${completedTasks.length} completed`}
           />
-          <StatsCard
-            title="Reminders"
-            value={reminders.filter(r => !r.is_completed).length}
-            icon={Bell}
-            color="bg-violet-600"
-            subtitle="pending"
-          />
+
           <StatsCard
             title="Parts Tracking"
             value={pendingParts.length}
@@ -153,8 +141,7 @@ export default function Dashboard() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <UpcomingReminders reminders={reminders} projects={projects} />
-            <RecentActivity tasks={tasks} parts={parts} reminders={reminders} />
+            <RecentActivity tasks={tasks} parts={parts} />
           </div>
         </div>
       </div>
