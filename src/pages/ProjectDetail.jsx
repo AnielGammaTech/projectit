@@ -11,7 +11,8 @@ import {
   CheckCircle2,
   ListTodo,
   Package,
-  Plus
+  Plus,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,8 @@ import { format } from 'date-fns';
 
 import TaskList from '@/components/project/TaskList';
 import PartsList from '@/components/project/PartsList';
+import ProjectNotes from '@/components/project/ProjectNotes';
+import ProgressNeedle from '@/components/project/ProgressNeedle';
 import TaskModal from '@/components/modals/TaskModal';
 import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import PartModal from '@/components/modals/PartModal';
@@ -129,6 +132,12 @@ export default function ProjectDetail() {
     setShowProjectModal(false);
   };
 
+  // Progress update
+  const handleProgressUpdate = async (progressValue) => {
+    await base44.entities.Project.update(projectId, { ...project, progress: progressValue });
+    refetchProject();
+  };
+
   // Delete
   const handleDelete = async () => {
     const { type, item } = deleteConfirm;
@@ -171,7 +180,7 @@ export default function ProjectDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Link */}
         <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -323,7 +332,39 @@ export default function ProjectDetail() {
             </div>
           </motion.div>
 
-          </div>
+          {/* Notes & Messages Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+          >
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-purple-100/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-violet-600 shadow-lg shadow-violet-200">
+                  <MessageSquare className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">Notes & Messages</h3>
+                  <p className="text-sm text-slate-500">Project communication</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 max-h-[500px] overflow-y-auto">
+              <ProjectNotes projectId={projectId} currentUser={currentUser} />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Progress Needle */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-6"
+        >
+          <ProgressNeedle value={project.progress || 0} onSave={handleProgressUpdate} />
+        </motion.div>
       </div>
 
       {/* Modals */}
