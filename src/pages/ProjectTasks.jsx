@@ -250,7 +250,32 @@ export default function ProjectTasks() {
 
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
 
+  const handleTaskAssign = async (task, email) => {
+    const member = teamMembers.find(m => m.email === email);
+    await base44.entities.Task.update(task.id, {
+      assigned_to: email,
+      assigned_name: member?.name || email
+    });
+    refetchTasks();
+  };
+
+  const handleTaskUnassign = async (task) => {
+    await base44.entities.Task.update(task.id, {
+      assigned_to: '',
+      assigned_name: ''
+    });
+    refetchTasks();
+  };
+
+  const handleTaskDueDateChange = async (task, date) => {
+    await base44.entities.Task.update(task.id, {
+      due_date: date ? format(date, 'yyyy-MM-dd') : ''
+    });
+    refetchTasks();
+  };
+
   const TaskRow = ({ task }) => {
+    const [dateOpen, setDateOpen] = useState(false);
     const status = statusConfig[task.status] || statusConfig.todo;
     const StatusIcon = status.icon;
     const dueDateInfo = getDueDateInfo(task.due_date, task.status);
@@ -304,27 +329,80 @@ export default function ProjectTasks() {
             </div>
           )}
 
-          {/* Due date */}
-          {dueDateInfo && (
-            <Badge className={cn("text-[10px] px-1.5 py-0", dueDateInfo.color)}>
-              {dueDateInfo.urgent && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
-              {dueDateInfo.label}
-            </Badge>
-          )}
+          {/* Due date picker */}
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
+            <PopoverTrigger asChild>
+              {dueDateInfo ? (
+                <Badge 
+                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                  className={cn("text-[10px] px-1.5 py-0 cursor-pointer hover:opacity-80", dueDateInfo.color)}
+                >
+                  {dueDateInfo.urgent && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
+                  {dueDateInfo.label}
+                </Badge>
+              ) : (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                  className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <CalendarIcon className="w-4 h-4 text-slate-400" />
+                </button>
+              )}
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
+              <Calendar
+                mode="single"
+                selected={task.due_date ? new Date(task.due_date) : undefined}
+                onSelect={(date) => { handleTaskDueDateChange(task, date); setDateOpen(false); }}
+                initialFocus
+              />
+              {task.due_date && (
+                <div className="p-2 border-t">
+                  <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => { handleTaskDueDateChange(task, null); setDateOpen(false); }}>
+                    Clear date
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
 
           {/* Assignee */}
-          {task.assigned_name ? (
-            <div 
-              className={cn("w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium", getColorForEmail(task.assigned_to))}
-              title={task.assigned_name}
-            >
-              {getInitials(task.assigned_name)}
-            </div>
-          ) : (
-            <div className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <UserPlus className="w-3 h-3 text-slate-400" />
-            </div>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              {task.assigned_name ? (
+                <button 
+                  onClick={(e) => e.stopPropagation()}
+                  className={cn("w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300", getColorForEmail(task.assigned_to))}
+                  title={task.assigned_name}
+                >
+                  {getInitials(task.assigned_name)}
+                </button>
+              ) : (
+                <button 
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-indigo-300"
+                >
+                  <UserPlus className="w-3 h-3 text-slate-400" />
+                </button>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+              {task.assigned_to && (
+                <DropdownMenuItem onClick={() => handleTaskUnassign(task)} className="text-slate-500">
+                  <User className="w-4 h-4 mr-2" />
+                  Unassign
+                </DropdownMenuItem>
+              )}
+              {teamMembers.map((member) => (
+                <DropdownMenuItem key={member.id} onClick={() => handleTaskAssign(task, member.email)}>
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                    {getInitials(member.name)}
+                  </div>
+                  {member.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* More menu */}
           <DropdownMenu>

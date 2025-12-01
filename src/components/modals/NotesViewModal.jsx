@@ -3,11 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, StickyNote, Bell, Send, Trash2, CalendarCheck } from 'lucide-react';
+import { MessageSquare, StickyNote, Bell, Send, Trash2, CalendarCheck, ChevronDown, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import MeetingUpdateModal from './MeetingUpdateModal';
 
@@ -19,9 +20,11 @@ const typeConfig = {
 
 export default function NotesViewModal({ open, onClose, projectId, currentUser, teamMembers = [], onTasksCreated }) {
   const queryClient = useQueryClient();
+  const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
   const [newType, setNewType] = useState('note');
   const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const [expandedNotes, setExpandedNotes] = useState(new Set());
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ['projectNotes', projectId],
@@ -46,11 +49,23 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser, 
     if (!newContent.trim()) return;
     addMutation.mutate({
       project_id: projectId,
+      title: newTitle.trim() || undefined,
       content: newContent,
       type: newType,
       author_email: currentUser?.email,
       author_name: currentUser?.full_name || currentUser?.email
     });
+    setNewTitle('');
+  };
+
+  const toggleNote = (noteId) => {
+    const newExpanded = new Set(expandedNotes);
+    if (newExpanded.has(noteId)) {
+      newExpanded.delete(noteId);
+    } else {
+      newExpanded.add(noteId);
+    }
+    setExpandedNotes(newExpanded);
   };
 
 
@@ -89,20 +104,28 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser, 
               Meeting Update
             </button>
           </div>
-          <div className="flex gap-2">
-            <Textarea
-              value={newContent}
-              onChange={(e) => setNewContent(e.target.value)}
-              placeholder={`Write a ${newType}...`}
-              className="min-h-[60px] bg-white"
+          <div className="space-y-2">
+            <Input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Title (optional)"
+              className="bg-white"
             />
-            <Button
-              onClick={handleAdd}
-              disabled={!newContent.trim() || addMutation.isPending}
-              className="bg-indigo-600 hover:bg-indigo-700 self-end"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+            <div className="flex gap-2">
+              <Textarea
+                value={newContent}
+                onChange={(e) => setNewContent(e.target.value)}
+                placeholder={`Write a ${newType}...`}
+                className="min-h-[60px] bg-white"
+              />
+              <Button
+                onClick={handleAdd}
+                disabled={!newContent.trim() || addMutation.isPending}
+                className="bg-indigo-600 hover:bg-indigo-700 self-end"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -121,6 +144,8 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser, 
                 const config = typeConfig[note.type] || typeConfig.note;
                 const Icon = config.icon;
                 const isOwn = note.author_email === currentUser?.email;
+                const isExpanded = expandedNotes.has(note.id);
+                const hasTitle = note.title?.trim();
 
                 return (
                   <motion.div
@@ -128,24 +153,43 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser, 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -10 }}
-                    className="group bg-white border border-slate-200 rounded-xl p-4"
+                    className="group bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 flex-1">
-                        <div className={cn("p-2 rounded-lg shrink-0", config.color)}>
-                          <Icon className="w-4 h-4" />
+                    {/* Header - Always visible */}
+                    <div 
+                      className={cn(
+                        "flex items-center gap-3 p-3 cursor-pointer",
+                        hasTitle && "border-b border-slate-100"
+                      )}
+                      onClick={() => hasTitle && toggleNote(note.id)}
+                    >
+                      <div className={cn("p-2 rounded-lg shrink-0", config.color)}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          {hasTitle ? (
+                            <>
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4 text-slate-400" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-slate-400" />
+                              )}
+                              <span className="font-semibold text-slate-900">{note.title}</span>
+                            </>
+                          ) : (
+                            <span className="text-slate-700 line-clamp-1">{note.content}</span>
+                          )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-slate-900 text-sm">{note.author_name}</span>
-                            <Badge variant="outline" className={cn("text-xs", config.color)}>
-                              {config.label}
-                            </Badge>
-                            <span className="text-xs text-slate-400">
-                              {formatDistanceToNow(new Date(note.created_date), { addSuffix: true })}
-                            </span>
-                          </div>
-                          <p className="text-slate-700 whitespace-pre-wrap">{note.content}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-xs text-slate-500">{note.author_name}</span>
+                          <span className="text-xs text-slate-400">•</span>
+                          <span className="text-xs text-slate-400">
+                            {format(new Date(note.created_date), 'MMM d, h:mm a')}
+                          </span>
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", config.color)}>
+                            {config.label}
+                          </Badge>
                         </div>
                       </div>
                       {isOwn && (
@@ -153,12 +197,30 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser, 
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600"
-                          onClick={() => deleteMutation.mutate(note.id)}
+                          onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(note.id); }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
+
+                    {/* Content - Expandable if has title */}
+                    {hasTitle && (
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="px-4 pb-4"
+                          >
+                            <p className="text-slate-600 whitespace-pre-wrap text-sm leading-relaxed pt-3">
+                              {note.content}
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    )}
                   </motion.div>
                 );
               })}

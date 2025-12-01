@@ -52,6 +52,7 @@ import NotesViewModal from '@/components/modals/NotesViewModal';
 import ProjectModal from '@/components/modals/ProjectModal';
 import GroupModal from '@/components/modals/GroupModal';
 import FilesViewModal from '@/components/modals/FilesViewModal';
+import ProjectActivityFeed from '@/components/project/ProjectActivityFeed';
 import { cn } from '@/lib/utils';
 
 const statusColors = {
@@ -570,7 +571,25 @@ export default function ProjectDetail() {
             </div>
           </motion.div>
           </div>
-      </div>
+
+          {/* Activity Feed */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mt-8 lg:col-span-3"
+          >
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-indigo-50/30">
+                <h3 className="font-semibold text-slate-900 text-lg">Recent Activity</h3>
+                <p className="text-sm text-slate-500">Track all project updates and changes</p>
+              </div>
+              <div className="p-6">
+                <ProjectActivityFeed projectId={projectId} />
+              </div>
+            </div>
+          </motion.div>
+          </div>
 
       {/* Modals */}
       <ProjectModal
