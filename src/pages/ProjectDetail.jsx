@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
@@ -50,6 +49,11 @@ export default function ProjectDetail() {
   const urlParams = new URLSearchParams(window.location.search);
   const projectId = urlParams.get('id');
   const queryClient = useQueryClient();
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   const [activeTab, setActiveTab] = useState('tasks');
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -306,6 +310,7 @@ export default function ProjectDetail() {
                 onStatusChange={handleTaskStatusChange}
                 onEdit={(task) => { setEditingTask(task); setShowTaskModal(true); }}
                 onDelete={(task) => setDeleteConfirm({ open: true, type: 'task', item: task })}
+                currentUserEmail={currentUser?.email}
               />
             </div>
           </motion.div>
