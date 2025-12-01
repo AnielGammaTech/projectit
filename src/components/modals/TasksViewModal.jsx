@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Plus, ChevronLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useQueryClient } from '@tanstack/react-query';
 import GroupedTaskList from '@/components/project/GroupedTaskList';
 import TaskDetailView from '@/components/project/TaskDetailView';
 
@@ -11,6 +13,7 @@ export default function TasksViewModal({
   onClose, 
   tasks, 
   groups, 
+  projectId,
   teamMembers = [],
   currentUser,
   onStatusChange, 
@@ -21,9 +24,13 @@ export default function TasksViewModal({
   onEditGroup,
   onDeleteGroup,
   onAddTask,
+  onTasksRefresh,
   currentUserEmail 
 }) {
   const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [quickTaskTitle, setQuickTaskTitle] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const queryClient = useQueryClient();
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
 
   const selectedTask = selectedTaskId ? tasks.find(t => t.id === selectedTaskId) : null;
@@ -34,6 +41,23 @@ export default function TasksViewModal({
 
   const handleBack = () => {
     setSelectedTaskId(null);
+  };
+
+  const handleQuickCreate = async (e) => {
+    e.preventDefault();
+    if (!quickTaskTitle.trim() || isCreating) return;
+    
+    setIsCreating(true);
+    await base44.entities.Task.create({
+      title: quickTaskTitle.trim(),
+      project_id: projectId,
+      status: 'todo',
+      priority: 'medium'
+    });
+    setQuickTaskTitle('');
+    setIsCreating(false);
+    onTasksRefresh?.();
+    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
   };
 
   // Task detail view
@@ -74,16 +98,26 @@ export default function TasksViewModal({
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Tasks</span>
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-normal text-slate-500">{completedTasks}/{tasks.length} completed</span>
-              <Button size="sm" onClick={onAddTask} className="bg-indigo-600 hover:bg-indigo-700">
-                <Plus className="w-4 h-4 mr-1" />
-                Add Task
-              </Button>
-            </div>
+            <span className="text-sm font-normal text-slate-500">{completedTasks}/{tasks.length} completed</span>
           </DialogTitle>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+        
+        {/* Quick Add Task */}
+        <form onSubmit={handleQuickCreate} className="flex gap-2 pb-3 border-b">
+          <Input
+            value={quickTaskTitle}
+            onChange={(e) => setQuickTaskTitle(e.target.value)}
+            placeholder="Type a task and press Enter..."
+            className="flex-1"
+            disabled={isCreating}
+          />
+          <Button type="submit" disabled={!quickTaskTitle.trim() || isCreating} className="bg-indigo-600 hover:bg-indigo-700">
+            <Plus className="w-4 h-4 mr-1" />
+            Add
+          </Button>
+        </form>
+
+        <div className="flex-1 overflow-y-auto pr-2 -mr-2 pt-3">
           <GroupedTaskList
             tasks={tasks}
             groups={groups}
@@ -95,7 +129,7 @@ export default function TasksViewModal({
             onCreateGroup={onCreateGroup}
             onEditGroup={onEditGroup}
             onDeleteGroup={onDeleteGroup}
-            onTaskUpdate={() => {}}
+            onTaskUpdate={onTasksRefresh}
             currentUserEmail={currentUserEmail}
           />
         </div>
