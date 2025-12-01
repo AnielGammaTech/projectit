@@ -12,7 +12,9 @@ import {
   ListTodo,
   Package,
   Plus,
-  MessageSquare
+  MessageSquare,
+  MoreHorizontal,
+  Copy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,15 +29,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 
-import PartsList from '@/components/project/PartsList';
-import ProjectNotes from '@/components/project/ProjectNotes';
 import ProgressNeedle from '@/components/project/ProgressNeedle';
 import TaskModal from '@/components/modals/TaskModal';
 import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import TasksViewModal from '@/components/modals/TasksViewModal';
 import PartModal from '@/components/modals/PartModal';
+import PartsViewModal from '@/components/modals/PartsViewModal';
+import NotesViewModal from '@/components/modals/NotesViewModal';
 import ProjectModal from '@/components/modals/ProjectModal';
 import GroupModal from '@/components/modals/GroupModal';
 
@@ -60,6 +68,8 @@ export default function ProjectDetail() {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showPartModal, setShowPartModal] = useState(false);
   const [showTasksView, setShowTasksView] = useState(false);
+  const [showPartsView, setShowPartsView] = useState(false);
+  const [showNotesView, setShowNotesView] = useState(false);
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [editingPart, setEditingPart] = useState(null);
@@ -173,6 +183,26 @@ export default function ProjectDetail() {
     setShowProjectModal(false);
   };
 
+  // Save as Template
+  const handleSaveAsTemplate = async () => {
+    const templateData = {
+      name: `${project.name} Template`,
+      description: project.description || '',
+      default_tasks: tasks.map(t => ({
+        title: t.title,
+        description: t.description || '',
+        priority: t.priority || 'medium'
+      })),
+      default_parts: parts.map(p => ({
+        name: p.name,
+        part_number: p.part_number || '',
+        quantity: p.quantity || 1
+      }))
+    };
+    await base44.entities.ProjectTemplate.create(templateData);
+    alert('Project saved as template!');
+  };
+
   // Progress update
   const handleProgressUpdate = async (progressValue) => {
     await base44.entities.Project.update(projectId, { ...project, progress: progressValue });
@@ -284,6 +314,19 @@ export default function ProjectDetail() {
                 <Edit2 className="w-4 h-4 mr-2" />
                 Edit
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleSaveAsTemplate}>
+                    <Copy className="w-4 h-4 mr-2" />
+                    Save as Template
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </motion.div>
@@ -335,12 +378,13 @@ export default function ProjectDetail() {
             </div>
           </motion.div>
 
-          {/* Parts Card */}
+          {/* Parts Card - Clickable */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => setShowPartsView(true)}
           >
             <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-100/50">
               <div className="flex items-center justify-between">
@@ -355,29 +399,30 @@ export default function ProjectDetail() {
                 </div>
                 <Button
                   size="sm"
-                  onClick={() => { setEditingPart(null); setShowPartModal(true); }}
+                  onClick={(e) => { e.stopPropagation(); setEditingPart(null); setShowPartModal(true); }}
                   className="bg-amber-500 hover:bg-amber-600 shadow-md"
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
             </div>
-            <div className="p-4 max-h-[400px] overflow-y-auto">
-              <PartsList
-                parts={parts}
-                onStatusChange={handlePartStatusChange}
-                onEdit={(part) => { setEditingPart(part); setShowPartModal(true); }}
-                onDelete={(part) => setDeleteConfirm({ open: true, type: 'part', item: part })}
-              />
+            <div className="p-4">
+              <p className="text-sm text-slate-500 text-center">Click to view all parts</p>
+              {parts.filter(p => p.assigned_to).length > 0 && (
+                <p className="text-xs text-slate-400 text-center mt-1">
+                  {parts.filter(p => p.assigned_to).length} assigned
+                </p>
+              )}
             </div>
           </motion.div>
 
-          {/* Notes & Messages Card */}
+          {/* Notes & Messages Card - Clickable */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => setShowNotesView(true)}
           >
             <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-purple-100/50">
               <div className="flex items-center gap-3">
@@ -390,8 +435,8 @@ export default function ProjectDetail() {
                 </div>
               </div>
             </div>
-            <div className="p-4 max-h-[400px] overflow-y-auto">
-              <ProjectNotes projectId={projectId} currentUser={currentUser} />
+            <div className="p-4">
+              <p className="text-sm text-slate-500 text-center">Click to view notes & messages</p>
             </div>
           </motion.div>
         </div>
@@ -421,7 +466,25 @@ export default function ProjectDetail() {
         onClose={() => { setShowPartModal(false); setEditingPart(null); }}
         part={editingPart}
         projectId={projectId}
+        teamMembers={teamMembers}
         onSave={handleSavePart}
+      />
+
+      <PartsViewModal
+        open={showPartsView}
+        onClose={() => setShowPartsView(false)}
+        parts={parts}
+        onAdd={() => { setShowPartsView(false); setEditingPart(null); setShowPartModal(true); }}
+        onEdit={(part) => { setShowPartsView(false); setEditingPart(part); setShowPartModal(true); }}
+        onDelete={(part) => setDeleteConfirm({ open: true, type: 'part', item: part })}
+        onStatusChange={handlePartStatusChange}
+      />
+
+      <NotesViewModal
+        open={showNotesView}
+        onClose={() => setShowNotesView(false)}
+        projectId={projectId}
+        currentUser={currentUser}
       />
 
       <TasksViewModal
