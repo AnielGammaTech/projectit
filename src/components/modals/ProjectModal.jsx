@@ -93,7 +93,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const template = templates.find(t => t.id === selectedTemplate);
+    const template = selectedTemplate && selectedTemplate !== 'none' ? templates.find(t => t.id === selectedTemplate) : null;
     onSave(formData, template, extractedParts);
   };
 
@@ -138,17 +138,21 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             />
           </div>
 
-          {!project && templates.length > 0 && (
-            <div>
-              <Label>Use Template</Label>
+          {!project && (
+            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-200">
+              <Label className="text-indigo-900 font-semibold">Create from Template</Label>
+              <p className="text-xs text-indigo-600 mb-2">Start with predefined tasks and parts</p>
               <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                <SelectTrigger className="mt-1.5">
-                  <SelectValue placeholder="Select a template (optional)" />
+                <SelectTrigger className="mt-1.5 bg-white">
+                  <SelectValue placeholder="Select a template..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={null}>No Template</SelectItem>
+                  <SelectItem value="none">No Template - Start Fresh</SelectItem>
                   {templates.map(t => (
-                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                      {t.default_tasks?.length > 0 && ` (${t.default_tasks.length} tasks)`}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

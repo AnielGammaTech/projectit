@@ -5,8 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 
-export default function PartModal({ open, onClose, part, projectId, onSave }) {
+export default function PartModal({ open, onClose, part, projectId, teamMembers = [], onSave }) {
   const [formData, setFormData] = useState({
     name: '',
     part_number: '',
@@ -14,7 +18,10 @@ export default function PartModal({ open, onClose, part, projectId, onSave }) {
     unit_cost: 0,
     status: 'needed',
     supplier: '',
-    notes: ''
+    notes: '',
+    assigned_to: '',
+    assigned_name: '',
+    due_date: ''
   });
 
   useEffect(() => {
@@ -26,7 +33,10 @@ export default function PartModal({ open, onClose, part, projectId, onSave }) {
         unit_cost: part.unit_cost || 0,
         status: part.status || 'needed',
         supplier: part.supplier || '',
-        notes: part.notes || ''
+        notes: part.notes || '',
+        assigned_to: part.assigned_to || '',
+        assigned_name: part.assigned_name || '',
+        due_date: part.due_date || ''
       });
     } else {
       setFormData({
@@ -36,10 +46,26 @@ export default function PartModal({ open, onClose, part, projectId, onSave }) {
         unit_cost: 0,
         status: 'needed',
         supplier: '',
-        notes: ''
+        notes: '',
+        assigned_to: '',
+        assigned_name: '',
+        due_date: ''
       });
     }
   }, [part, open]);
+
+  const handleAssigneeChange = (email) => {
+    if (email === 'unassigned') {
+      setFormData(prev => ({ ...prev, assigned_to: '', assigned_name: '' }));
+    } else {
+      const member = teamMembers.find(m => m.email === email);
+      setFormData(prev => ({
+        ...prev,
+        assigned_to: email,
+        assigned_name: member?.name || ''
+      }));
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
