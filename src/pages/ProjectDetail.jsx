@@ -348,7 +348,7 @@ export default function ProjectDetail() {
                 {/* Inline Status Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80", statusColors[project.status])}>
+                    <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80 transition-all", statusColors[project.status])}>
                       {project.status?.replace('_', ' ')}
                     </Badge>
                   </DropdownMenuTrigger>
@@ -364,7 +364,7 @@ export default function ProjectDetail() {
                 {/* Inline Priority Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80", priorityColors[project.priority])}>
+                    <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80 transition-all", priorityColors[project.priority])}>
                       {project.priority} priority
                     </Badge>
                   </DropdownMenuTrigger>

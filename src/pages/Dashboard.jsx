@@ -174,7 +174,7 @@ export default function Dashboard() {
             icon={Package}
             color="bg-amber-600"
             subtitle="pending"
-            href={createPageUrl('AllTasks')}
+            href={createPageUrl('AllTasks') + '?tab=parts'}
           />
         </div>
 
