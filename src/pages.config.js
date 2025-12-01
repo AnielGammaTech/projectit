@@ -2,6 +2,7 @@ import Dashboard from './pages/Dashboard';
 import ProjectDetail from './pages/ProjectDetail';
 import Team from './pages/Team';
 import AllTasks from './pages/AllTasks';
+import Templates from './pages/Templates';
 import __Layout from './Layout.jsx';
 
 
@@ -10,6 +11,7 @@ export const PAGES = {
     "ProjectDetail": ProjectDetail,
     "Team": Team,
     "AllTasks": AllTasks,
+    "Templates": Templates,
 }
 
 export const pagesConfig = {
