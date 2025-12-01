@@ -47,7 +47,7 @@ const getDueDateInfo = (dueDate, status) => {
   return { label: format(date, 'MMM d'), color: 'bg-slate-100 text-slate-600', urgent: false };
 };
 
-const TaskItem = ({ task, onStatusChange, onEdit, onDelete }) => {
+const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
   const status = statusConfig[task.status] || statusConfig.todo;
   const StatusIcon = status.icon;
   const dueDateInfo = getDueDateInfo(task.due_date, task.status);
@@ -83,10 +83,10 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete }) => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onTaskClick?.(task)}>
           <div className="flex items-start justify-between gap-2">
             <h4 className={cn(
-              "font-medium text-sm text-slate-900",
+              "font-medium text-sm text-slate-900 hover:text-indigo-600 transition-colors",
               task.status === 'completed' && "line-through text-slate-500"
             )}>
               {task.title}
@@ -135,7 +135,7 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete }) => {
   );
 };
 
-export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete, currentUserEmail }) {
+export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete, onTaskClick, currentUserEmail }) {
   const [viewFilter, setViewFilter] = useState('all'); // 'all', 'my_tasks', 'my_due'
 
   // Filter tasks based on view
@@ -234,6 +234,7 @@ export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete,
                   onStatusChange={onStatusChange}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onTaskClick={onTaskClick}
                 />
               ))}
             </AnimatePresence>
@@ -258,6 +259,7 @@ export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete,
                 onStatusChange={onStatusChange}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onTaskClick={onTaskClick}
               />
             ))}
           </AnimatePresence>
