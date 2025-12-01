@@ -1,21 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { FolderKanban, CheckCircle2, Package, Plus, Search } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { createPageUrl } from '@/utils';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
+import MyTasksCard from '@/components/dashboard/MyTasksCard';
 import UpcomingDeadlines from '@/components/dashboard/UpcomingDeadlines';
-import ActivityFeed from '@/components/dashboard/ActivityFeed';
 import ProjectStatusChart from '@/components/dashboard/ProjectStatusChart';
 import ProjectModal from '@/components/modals/ProjectModal';
 
 export default function Dashboard() {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
@@ -32,9 +39,9 @@ export default function Dashboard() {
     queryFn: () => base44.entities.Part.list('-created_date')
   });
 
-  const { data: notes = [] } = useQuery({
-    queryKey: ['allNotes'],
-    queryFn: () => base44.entities.ProjectNote.list('-created_date', 20)
+  const { data: templates = [] } = useQuery({
+    queryKey: ['templates'],
+    queryFn: () => base44.entities.ProjectTemplate.list()
   });
 
   const activeProjects = projects.filter(p => p.status !== 'completed');
@@ -46,46 +53,45 @@ export default function Dashboard() {
     p.client?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Group projects
+  const groupedProjects = filteredProjects.reduce((acc, project) => {
+    const group = project.group || 'Ungrouped';
+    if (!acc[group]) acc[group] = [];
+    acc[group].push(project);
+    return acc;
+  }, {});
+
+  const sortedGroups = Object.keys(groupedProjects).sort((a, b) => {
+    if (a === 'Ungrouped') return 1;
+    if (b === 'Ungrouped') return -1;
+    return a.localeCompare(b);
+  });
+
   const getTasksForProject = (projectId) => tasks.filter(t => t.project_id === projectId);
 
-  const { data: templates = [] } = useQuery({
-    queryKey: ['templates'],
-    queryFn: () => base44.entities.ProjectTemplate.list()
-  });
+  const toggleGroup = (group) => {
+    setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  };
 
   const handleCreateProject = async (data, template, extractedParts) => {
     const newProject = await base44.entities.Project.create(data);
     
-    // Create tasks from template
     if (template?.default_tasks?.length) {
       for (const task of template.default_tasks) {
-        await base44.entities.Task.create({
-          ...task,
-          project_id: newProject.id
-        });
+        await base44.entities.Task.create({ ...task, project_id: newProject.id });
       }
       refetchTasks();
     }
     
-    // Create parts from template
     if (template?.default_parts?.length) {
       for (const part of template.default_parts) {
-        await base44.entities.Part.create({
-          ...part,
-          project_id: newProject.id,
-          status: 'needed'
-        });
+        await base44.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
       }
     }
 
-    // Create parts from PDF extraction
     if (extractedParts?.length) {
       for (const part of extractedParts) {
-        await base44.entities.Part.create({
-          ...part,
-          project_id: newProject.id,
-          status: 'needed'
-        });
+        await base44.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
       }
     }
 
@@ -100,7 +106,7 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
         >
           <div>
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
@@ -115,66 +121,87 @@ export default function Dashboard() {
           </Button>
         </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Stats Grid - Clickable */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
           <StatsCard
             title="Active Projects"
             value={activeProjects.length}
             icon={FolderKanban}
             color="bg-indigo-600"
-            subtitle={`${projects.filter(p => p.status === 'completed').length} completed`}
+            subtitle={`${projects.filter(p => p.status === 'completed').length} done`}
+            href={createPageUrl('Dashboard')}
           />
           <StatsCard
             title="Tasks"
             value={tasks.length}
             icon={CheckCircle2}
             color="bg-emerald-600"
-            subtitle={`${completedTasks.length} completed`}
+            subtitle={`${completedTasks.length} done`}
+            href={createPageUrl('AllTasks')}
           />
-
           <StatsCard
-            title="Parts Tracking"
+            title="Parts"
             value={pendingParts.length}
             icon={Package}
             color="bg-amber-600"
-            subtitle="needed/ordered"
+            subtitle="pending"
+            href={createPageUrl('AllTasks')}
           />
         </div>
 
-        {/* Project Status Chart & Deadlines Row */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          <ProjectStatusChart projects={projects} />
-          <div className="lg:col-span-2">
-            <UpcomingDeadlines tasks={tasks} parts={parts} projects={projects} />
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Projects Section */}
           <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-slate-900">Active Projects</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-slate-900">Active Projects</h2>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
-                  placeholder="Search projects..."
+                  placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-64 bg-white"
+                  className="pl-9 w-48 bg-white h-9"
                 />
               </div>
             </div>
 
             {filteredProjects.length > 0 ? (
-              <div className="grid sm:grid-cols-2 gap-4">
-                {filteredProjects.map((project, idx) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    tasks={getTasksForProject(project.id)}
-                    index={idx}
-                  />
-                ))}
+              <div className="space-y-4">
+                {sortedGroups.map(group => {
+                  const groupProjects = groupedProjects[group];
+                  const isCollapsed = collapsedGroups[group];
+                  const showGroupHeader = sortedGroups.length > 1 || group !== 'Ungrouped';
+
+                  return (
+                    <div key={group}>
+                      {showGroupHeader && (
+                        <button
+                          onClick={() => toggleGroup(group)}
+                          className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 mb-3"
+                        >
+                          {isCollapsed ? (
+                            <ChevronRight className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                          {group} ({groupProjects.length})
+                        </button>
+                      )}
+                      {!isCollapsed && (
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          {groupProjects.map((project, idx) => (
+                            <ProjectCard
+                              key={project.id}
+                              project={project}
+                              tasks={getTasksForProject(project.id)}
+                              index={idx}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <motion.div
@@ -193,9 +220,22 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Sidebar - Activity Feed */}
-          <div className="space-y-6">
-            <ActivityFeed tasks={tasks} parts={parts} notes={notes} projects={projects} />
+          {/* Sidebar - My Tasks */}
+          <div>
+            <MyTasksCard 
+              tasks={tasks} 
+              parts={parts} 
+              projects={projects}
+              currentUserEmail={currentUser?.email}
+            />
+          </div>
+        </div>
+
+        {/* Bottom Section - Chart & Deadlines */}
+        <div className="grid lg:grid-cols-3 gap-6 mt-8">
+          <ProjectStatusChart projects={projects} />
+          <div className="lg:col-span-2">
+            <UpcomingDeadlines tasks={tasks} parts={parts} projects={projects} />
           </div>
         </div>
       </div>

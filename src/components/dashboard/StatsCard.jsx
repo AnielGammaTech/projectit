@@ -1,24 +1,36 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
-export default function StatsCard({ title, value, icon: Icon, color, subtitle }) {
-  return (
+export default function StatsCard({ title, value, icon: Icon, color, subtitle, href }) {
+  const content = (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300"
+      className={cn(
+        "bg-white rounded-xl p-4 border border-slate-100 shadow-sm transition-all duration-300",
+        href && "hover:shadow-md hover:border-slate-200 cursor-pointer"
+      )}
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-slate-500 tracking-wide uppercase">{title}</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">{value}</p>
-          {subtitle && (
-            <p className="text-sm text-slate-400 mt-1">{subtitle}</p>
-          )}
+      <div className="flex items-center gap-3">
+        <div className={`p-2.5 rounded-xl ${color}`}>
+          <Icon className="w-5 h-5 text-white" />
         </div>
-        <div className={`p-3 rounded-xl ${color}`}>
-          <Icon className="w-6 h-6 text-white" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{title}</p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-2xl font-bold text-slate-900">{value}</p>
+            {subtitle && (
+              <p className="text-xs text-slate-400 truncate">{subtitle}</p>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
   );
+
+  if (href) {
+    return <Link to={href}>{content}</Link>;
+  }
+  return content;
 }
