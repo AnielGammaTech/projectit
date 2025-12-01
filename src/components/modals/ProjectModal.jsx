@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Upload, Loader2, FileText } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CalendarIcon, Upload, Loader2, FileText, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
+import { cn } from '@/lib/utils';
 
 export default function ProjectModal({ open, onClose, project, templates = [], onSave, onPartsExtracted }) {
   const [formData, setFormData] = useState({
@@ -21,11 +25,18 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     start_date: '',
     due_date: '',
     color: 'slate',
-    group: ''
+    group: '',
+    user_groups: []
   });
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [uploading, setUploading] = useState(false);
   const [extractedParts, setExtractedParts] = useState([]);
+
+  const { data: userGroups = [] } = useQuery({
+    queryKey: ['userGroups'],
+    queryFn: () => base44.entities.UserGroup.list(),
+    enabled: open
+  });
 
   useEffect(() => {
     if (project) {
@@ -38,7 +49,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         start_date: project.start_date || '',
         due_date: project.due_date || '',
         color: project.color || 'slate',
-        group: project.group || ''
+        group: project.group || '',
+        user_groups: project.user_groups || []
       });
       setExtractedParts([]);
     } else {
@@ -51,12 +63,22 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         start_date: '',
         due_date: '',
         color: 'slate',
-        group: ''
+        group: '',
+        user_groups: []
       });
       setExtractedParts([]);
     }
     setSelectedTemplate('');
   }, [project, open]);
+
+  const toggleUserGroup = (groupId) => {
+    setFormData(prev => ({
+      ...prev,
+      user_groups: prev.user_groups.includes(groupId)
+        ? prev.user_groups.filter(id => id !== groupId)
+        : [...prev.user_groups, groupId]
+    }));
+  };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -256,7 +278,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             </div>
 
             <div>
-              <Label htmlFor="group">Group</Label>
+              <Label htmlFor="group">Project Group</Label>
               <Input
                 id="group"
                 value={formData.group}
@@ -266,6 +288,46 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
               />
             </div>
           </div>
+
+          {/* User Groups Access */}
+          {userGroups.length > 0 && (
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="w-4 h-4 text-slate-600" />
+                <Label className="text-slate-900 font-semibold">Access Control</Label>
+              </div>
+              <p className="text-xs text-slate-500 mb-3">Select which user groups can access this project</p>
+              <div className="space-y-2">
+                {userGroups.map((group) => (
+                  <label
+                    key={group.id}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                      formData.user_groups.includes(group.id)
+                        ? "border-indigo-300 bg-indigo-50"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    )}
+                  >
+                    <Checkbox
+                      checked={formData.user_groups.includes(group.id)}
+                      onCheckedChange={() => toggleUserGroup(group.id)}
+                    />
+                    <div className="flex-1">
+                      <span className="font-medium text-slate-900">{group.name}</span>
+                      {group.member_emails?.length > 0 && (
+                        <span className="text-xs text-slate-500 ml-2">
+                          ({group.member_emails.length} members)
+                        </span>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {formData.user_groups.length === 0 && (
+                <p className="text-xs text-amber-600 mt-2">No groups selected - project will be visible to all users</p>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>

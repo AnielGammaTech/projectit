@@ -16,7 +16,8 @@ import {
   MoreHorizontal,
   Copy,
   Archive,
-  Trash2
+  Trash2,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +50,7 @@ import PartsViewModal from '@/components/modals/PartsViewModal';
 import NotesViewModal from '@/components/modals/NotesViewModal';
 import ProjectModal from '@/components/modals/ProjectModal';
 import GroupModal from '@/components/modals/GroupModal';
+import FilesViewModal from '@/components/modals/FilesViewModal';
 
 const statusColors = {
   planning: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -74,6 +76,7 @@ export default function ProjectDetail() {
   const [showPartsView, setShowPartsView] = useState(false);
   const [showNotesView, setShowNotesView] = useState(false);
   const [showGroupModal, setShowGroupModal] = useState(false);
+  const [showFilesView, setShowFilesView] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [editingPart, setEditingPart] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
@@ -473,7 +476,31 @@ export default function ProjectDetail() {
               <p className="text-sm text-slate-500 text-center">Click to view notes & messages</p>
             </div>
           </motion.div>
-        </div>
+
+          {/* Files Card - Clickable */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => setShowFilesView(true)}
+          >
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-teal-50 to-cyan-100/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-teal-600 shadow-lg shadow-teal-200">
+                  <FileText className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">Documents & Files</h3>
+                  <p className="text-sm text-slate-500">Upload and manage files</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4">
+              <p className="text-sm text-slate-500 text-center">Click to view files</p>
+            </div>
+          </motion.div>
+          </div>
       </div>
 
       {/* Modals */}
@@ -556,6 +583,13 @@ export default function ProjectDetail() {
         teamMembers={teamMembers}
         currentUser={currentUser}
         onEdit={(task) => { setSelectedTask(null); setEditingTask(task); setShowTaskModal(true); }}
+      />
+
+      <FilesViewModal
+        open={showFilesView}
+        onClose={() => setShowFilesView(false)}
+        projectId={projectId}
+        currentUser={currentUser}
       />
 
       {/* Delete Confirmation */}

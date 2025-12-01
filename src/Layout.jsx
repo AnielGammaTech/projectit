@@ -18,6 +18,7 @@ const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
   { name: 'All Tasks', icon: ListTodo, page: 'AllTasks' },
   { name: 'Team', icon: Users, page: 'Team' },
+  { name: 'User Groups', icon: Users, page: 'UserGroups' },
   { name: 'Templates', icon: FileStack, page: 'Templates' },
 ];
 
