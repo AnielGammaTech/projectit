@@ -179,8 +179,16 @@ export default function ProjectTasks() {
     return matchesSearch;
   });
 
-  const ungroupedTasks = filteredTasks.filter(t => !t.group_id);
-  const getTasksForGroup = (groupId) => filteredTasks.filter(t => t.group_id === groupId);
+  const sortTasks = (taskList) => {
+    return [...taskList].sort((a, b) => {
+      if (a.status === 'completed' && b.status !== 'completed') return 1;
+      if (a.status !== 'completed' && b.status === 'completed') return -1;
+      return 0;
+    });
+  };
+
+  const ungroupedTasks = sortTasks(filteredTasks.filter(t => !t.group_id));
+  const getTasksForGroup = (groupId) => sortTasks(filteredTasks.filter(t => t.group_id === groupId));
 
   const handleQuickCreate = async (e) => {
     e.preventDefault();
