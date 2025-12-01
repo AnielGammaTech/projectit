@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
@@ -33,7 +33,7 @@ export default function AllTasks() {
   const [viewMode, setViewMode] = useState('all'); // 'all' or 'mine'
   const [currentUser, setCurrentUser] = useState(null);
 
-  useState(() => {
+  useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
