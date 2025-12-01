@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
-import RecentActivity from '@/components/dashboard/RecentActivity';
+import UpcomingDeadlines from '@/components/dashboard/UpcomingDeadlines';
+import ActivityFeed from '@/components/dashboard/ActivityFeed';
+import ProjectStatusChart from '@/components/dashboard/ProjectStatusChart';
 import ProjectModal from '@/components/modals/ProjectModal';
 
 export default function Dashboard() {
@@ -28,6 +30,11 @@ export default function Dashboard() {
   const { data: parts = [] } = useQuery({
     queryKey: ['parts'],
     queryFn: () => base44.entities.Part.list('-created_date')
+  });
+
+  const { data: notes = [] } = useQuery({
+    queryKey: ['allNotes'],
+    queryFn: () => base44.entities.ProjectNote.list('-created_date', 20)
   });
 
   const activeProjects = projects.filter(p => p.status !== 'completed');
@@ -134,6 +141,14 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* Project Status Chart & Deadlines Row */}
+        <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          <ProjectStatusChart projects={projects} />
+          <div className="lg:col-span-2">
+            <UpcomingDeadlines tasks={tasks} parts={parts} projects={projects} />
+          </div>
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Projects Section */}
           <div className="lg:col-span-2">
@@ -178,9 +193,9 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar - Activity Feed */}
           <div className="space-y-6">
-            <RecentActivity tasks={tasks} parts={parts} />
+            <ActivityFeed tasks={tasks} parts={parts} notes={notes} projects={projects} />
           </div>
         </div>
       </div>
