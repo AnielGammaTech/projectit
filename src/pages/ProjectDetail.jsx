@@ -182,6 +182,10 @@ export default function ProjectDetail() {
   // Project
   const handleUpdateProject = async (data) => {
     await base44.entities.Project.update(projectId, data);
+    // Auto-archive when completed
+    if (data.status === 'completed') {
+      await base44.entities.Project.update(projectId, { ...data, status: 'archived' });
+    }
     refetchProject();
     setShowProjectModal(false);
   };
