@@ -53,7 +53,7 @@ export default function ProjectDetail() {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
-  const [activeTab, setActiveTab] = useState('tasks');
+  
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showPartModal, setShowPartModal] = useState(false);
