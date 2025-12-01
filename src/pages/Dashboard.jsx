@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -11,7 +11,6 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import MyTasksCard from '@/components/dashboard/MyTasksCard';
 import UpcomingDeadlines from '@/components/dashboard/UpcomingDeadlines';
-import ProjectStatusChart from '@/components/dashboard/ProjectStatusChart';
 import ProjectModal from '@/components/modals/ProjectModal';
 
 export default function Dashboard() {
@@ -19,6 +18,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -44,11 +44,13 @@ export default function Dashboard() {
     queryFn: () => base44.entities.ProjectTemplate.list()
   });
 
-  const activeProjects = projects.filter(p => p.status !== 'completed');
+  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived');
+  const archivedProjects = projects.filter(p => p.status === 'archived' || p.status === 'completed');
   const completedTasks = tasks.filter(t => t.status === 'completed');
   const pendingParts = parts.filter(p => p.status === 'needed' || p.status === 'ordered');
 
-  const filteredProjects = activeProjects.filter(p =>
+  const displayProjects = showArchived ? archivedProjects : activeProjects;
+  const filteredProjects = displayProjects.filter(p =>
     p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.client?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -71,6 +73,11 @@ export default function Dashboard() {
 
   const toggleGroup = (group) => {
     setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  };
+
+  const handleTaskComplete = async (task) => {
+    await base44.entities.Task.update(task.id, { ...task, status: 'completed' });
+    refetchTasks();
   };
 
   const handleCreateProject = async (data, template, extractedParts) => {
@@ -153,7 +160,18 @@ export default function Dashboard() {
           {/* Projects Section */}
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-900">Active Projects</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold text-slate-900">
+                  {showArchived ? 'Archived Projects' : 'Active Projects'}
+                </h2>
+                <button
+                  onClick={() => setShowArchived(!showArchived)}
+                  className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+                >
+                  <Archive className="w-4 h-4" />
+                  {showArchived ? 'Show Active' : `Archived (${archivedProjects.length})`}
+                </button>
+              </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
@@ -227,16 +245,14 @@ export default function Dashboard() {
               parts={parts} 
               projects={projects}
               currentUserEmail={currentUser?.email}
+              onTaskComplete={handleTaskComplete}
             />
           </div>
         </div>
 
-        {/* Bottom Section - Chart & Deadlines */}
-        <div className="grid lg:grid-cols-3 gap-6 mt-8">
-          <ProjectStatusChart projects={projects} />
-          <div className="lg:col-span-2">
-            <UpcomingDeadlines tasks={tasks} parts={parts} projects={projects} />
-          </div>
+        {/* Bottom Section - Deadlines */}
+        <div className="mt-8">
+          <UpcomingDeadlines tasks={tasks} parts={parts} projects={projects} />
         </div>
       </div>
 

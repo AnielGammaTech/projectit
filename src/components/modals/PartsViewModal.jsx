@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Package, User, Calendar, MoreHorizontal, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Package, User, Calendar, MoreHorizontal, Edit2, Trash2, Upload, Loader2, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { base44 } from '@/api/base44Client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,12 +25,62 @@ export default function PartsViewModal({
   open, 
   onClose, 
   parts = [], 
+  projectId,
   onAdd,
   onEdit, 
   onDelete, 
-  onStatusChange 
+  onStatusChange,
+  onPartsExtracted
 }) {
+  const [uploading, setUploading] = useState(false);
   const totalCost = parts.reduce((sum, p) => sum + ((p.unit_cost || 0) * (p.quantity || 1)), 0);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      
+      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+        file_url,
+        json_schema: {
+          type: "object",
+          properties: {
+            parts: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  part_number: { type: "string" },
+                  quantity: { type: "number" },
+                  unit_cost: { type: "number" },
+                  description: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (result.status === 'success' && result.output?.parts) {
+        for (const part of result.output.parts) {
+          await base44.entities.Part.create({
+            ...part,
+            project_id: projectId,
+            status: 'needed'
+          });
+        }
+        onPartsExtracted?.();
+      }
+    } catch (err) {
+      console.error('Failed to extract parts:', err);
+    }
+    setUploading(false);
+    e.target.value = '';
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -40,6 +92,14 @@ export default function PartsViewModal({
               <span className="text-sm font-normal text-slate-500">
                 Total: ${totalCost.toLocaleString()}
               </span>
+              <label className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors",
+                uploading ? "bg-slate-100 text-slate-400" : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+              )}>
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                Scan Doc
+                <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileUpload} className="hidden" disabled={uploading} />
+              </label>
               <Button size="sm" onClick={onAdd} className="bg-amber-500 hover:bg-amber-600">
                 <Plus className="w-4 h-4 mr-1" />
                 Add Part
