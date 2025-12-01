@@ -74,6 +74,18 @@ export default function Dashboard() {
     setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }));
   };
 
+  const allGroups = [...new Set(projects.map(p => p.group).filter(Boolean))];
+
+  const handleProjectColorChange = async (project, color) => {
+    await base44.entities.Project.update(project.id, { color });
+    refetchProjects();
+  };
+
+  const handleProjectGroupChange = async (project, group) => {
+    await base44.entities.Project.update(project.id, { group });
+    refetchProjects();
+  };
+
   const handleTaskComplete = async (task) => {
     await base44.entities.Task.update(task.id, { ...task, status: 'completed' });
     refetchTasks();
@@ -212,6 +224,9 @@ export default function Dashboard() {
                               project={project}
                               tasks={getTasksForProject(project.id)}
                               index={idx}
+                              groups={allGroups}
+                              onColorChange={handleProjectColorChange}
+                              onGroupChange={handleProjectGroupChange}
                             />
                           ))}
                         </div>

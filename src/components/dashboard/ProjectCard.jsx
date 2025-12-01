@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, Palette } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
@@ -35,6 +37,27 @@ const cardColors = {
   rose: 'border-l-rose-500'
 };
 
+const colorOptions = [
+  { name: 'slate', bg: 'bg-slate-500' },
+  { name: 'red', bg: 'bg-red-500' },
+  { name: 'orange', bg: 'bg-orange-500' },
+  { name: 'amber', bg: 'bg-amber-500' },
+  { name: 'yellow', bg: 'bg-yellow-500' },
+  { name: 'lime', bg: 'bg-lime-500' },
+  { name: 'green', bg: 'bg-green-500' },
+  { name: 'emerald', bg: 'bg-emerald-500' },
+  { name: 'teal', bg: 'bg-teal-500' },
+  { name: 'cyan', bg: 'bg-cyan-500' },
+  { name: 'sky', bg: 'bg-sky-500' },
+  { name: 'blue', bg: 'bg-blue-500' },
+  { name: 'indigo', bg: 'bg-indigo-500' },
+  { name: 'violet', bg: 'bg-violet-500' },
+  { name: 'purple', bg: 'bg-purple-500' },
+  { name: 'fuchsia', bg: 'bg-fuchsia-500' },
+  { name: 'pink', bg: 'bg-pink-500' },
+  { name: 'rose', bg: 'bg-rose-500' }
+];
+
 const priorityDots = {
   low: 'bg-slate-400',
   medium: 'bg-amber-400',
@@ -42,11 +65,24 @@ const priorityDots = {
   urgent: 'bg-red-500'
 };
 
-export default function ProjectCard({ project, tasks = [], index }) {
+export default function ProjectCard({ project, tasks = [], index, onColorChange, onGroupChange, groups = [] }) {
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [groupPickerOpen, setGroupPickerOpen] = useState(false);
+  
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const totalTasks = tasks.length;
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
   const colorClass = cardColors[project.color] || cardColors.slate;
+
+  const handleColorSelect = (color) => {
+    onColorChange?.(project, color);
+    setColorPickerOpen(false);
+  };
+
+  const handleGroupSelect = (group) => {
+    onGroupChange?.(project, group);
+    setGroupPickerOpen(false);
+  };
 
   return (
     <motion.div
@@ -54,8 +90,67 @@ export default function ProjectCard({ project, tasks = [], index }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       whileHover={{ y: -4 }}
-      className="group"
+      className="group relative"
     >
+      {/* Hover actions */}
+      <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Color picker */}
+        <Popover open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
+          <PopoverTrigger asChild>
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setColorPickerOpen(true); }}
+              className="p-1.5 rounded-lg bg-white/90 backdrop-blur shadow-sm hover:bg-white transition-all"
+            >
+              <Palette className="w-3.5 h-3.5 text-slate-500" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-3" align="end" onClick={(e) => e.stopPropagation()}>
+            <p className="text-xs font-medium text-slate-600 mb-2">Card Color</p>
+            <div className="grid grid-cols-6 gap-1.5">
+              {colorOptions.map((c) => (
+                <button
+                  key={c.name}
+                  onClick={() => handleColorSelect(c.name)}
+                  className={cn(
+                    "w-6 h-6 rounded-full transition-all hover:scale-110",
+                    c.bg,
+                    project.color === c.name && "ring-2 ring-offset-2 ring-indigo-500"
+                  )}
+                />
+              ))}
+            </div>
+            {groups.length > 0 && (
+              <>
+                <p className="text-xs font-medium text-slate-600 mt-3 mb-2">Move to Group</p>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => handleGroupSelect('')}
+                    className={cn(
+                      "w-full text-left text-xs px-2 py-1.5 rounded-md transition-all",
+                      !project.group ? "bg-indigo-50 text-indigo-700" : "hover:bg-slate-100 text-slate-600"
+                    )}
+                  >
+                    No Group
+                  </button>
+                  {groups.map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => handleGroupSelect(g)}
+                      className={cn(
+                        "w-full text-left text-xs px-2 py-1.5 rounded-md transition-all",
+                        project.group === g ? "bg-indigo-50 text-indigo-700" : "hover:bg-slate-100 text-slate-600"
+                      )}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </PopoverContent>
+        </Popover>
+      </div>
+
       <Link to={createPageUrl('ProjectDetail') + `?id=${project.id}`}>
         <div className={cn(
           "bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 border-l-4",
