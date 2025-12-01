@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronLeft } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import GroupedTaskList from '@/components/project/GroupedTaskList';
 import TaskDetailView from '@/components/project/TaskDetailView';
 
@@ -53,6 +54,12 @@ export default function TasksViewModal({
             teamMembers={teamMembers}
             currentUser={currentUser}
             onStatusChange={(status) => { onStatusChange(selectedTask, status); }}
+            onPriorityChange={async (priority) => {
+              await base44.entities.Task.update(selectedTask.id, { ...selectedTask, priority });
+            }}
+            onAssigneeChange={async (email, name) => {
+              await base44.entities.Task.update(selectedTask.id, { ...selectedTask, assigned_to: email, assigned_name: name });
+            }}
             onEdit={() => { onEdit(selectedTask); }}
             onDelete={() => { onDelete(selectedTask); setSelectedTaskId(null); }}
           />
