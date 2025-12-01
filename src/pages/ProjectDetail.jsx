@@ -604,7 +604,7 @@ export default function ProjectDetail() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.55 }}
           >
-            <UpcomingDueDates tasks={tasks} parts={parts} />
+            <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
           </motion.div>
 
           {/* Activity Feed */}
