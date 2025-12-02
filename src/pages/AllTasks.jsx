@@ -179,31 +179,64 @@ export default function AllTasks() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-wrap gap-2 mb-4"
+            className="bg-white rounded-2xl border border-slate-100 p-3 mb-4"
           >
-            <Button
-              variant={viewMode === 'all' ? 'default' : 'outline'}
-              onClick={() => setViewMode('all')}
-              className={viewMode === 'all' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : ''}
-            >
-              All Tasks
-            </Button>
-            <Button
-              variant={viewMode === 'mine' ? 'default' : 'outline'}
-              onClick={() => setViewMode('mine')}
-              className={viewMode === 'mine' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : ''}
-            >
-              <User className="w-4 h-4 mr-2" />
-              My Tasks ({myTasksCount})
-            </Button>
-            <Button
-              variant={viewMode === 'mine_due' ? 'default' : 'outline'}
-              onClick={() => setViewMode('mine_due')}
-              className={viewMode === 'mine_due' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : ''}
-            >
-              <Calendar className="w-4 h-4 mr-2" />
-              My Tasks with Due Dates ({myTasksWithDueCount})
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setViewMode('all')}
+                className={cn(
+                  "px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2",
+                  viewMode === 'all' 
+                    ? "bg-[#0069AF] text-white shadow-md" 
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                )}
+              >
+                <ListTodo className="w-4 h-4" />
+                All Tasks
+                <span className={cn(
+                  "px-2 py-0.5 rounded-full text-xs",
+                  viewMode === 'all' ? "bg-white/20" : "bg-slate-200"
+                )}>
+                  {tasks.filter(t => t.status !== 'completed').length}
+                </span>
+              </button>
+              <button
+                onClick={() => setViewMode('mine')}
+                className={cn(
+                  "px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2",
+                  viewMode === 'mine' 
+                    ? "bg-[#0069AF] text-white shadow-md" 
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                )}
+              >
+                <User className="w-4 h-4" />
+                My Tasks
+                <span className={cn(
+                  "px-2 py-0.5 rounded-full text-xs",
+                  viewMode === 'mine' ? "bg-white/20" : "bg-slate-200"
+                )}>
+                  {myTasksCount}
+                </span>
+              </button>
+              <button
+                onClick={() => setViewMode('mine_due')}
+                className={cn(
+                  "px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2",
+                  viewMode === 'mine_due' 
+                    ? "bg-[#0069AF] text-white shadow-md" 
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                )}
+              >
+                <Calendar className="w-4 h-4" />
+                My Tasks with Due Dates
+                <span className={cn(
+                  "px-2 py-0.5 rounded-full text-xs",
+                  viewMode === 'mine_due' ? "bg-white/20" : "bg-amber-100 text-amber-700"
+                )}>
+                  {myTasksWithDueCount}
+                </span>
+              </button>
+            </div>
           </motion.div>
         )}
 

@@ -2,17 +2,17 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileStack, Bell, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
+import { Link } from 'react-router-dom';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import MyTasksCard from '@/components/dashboard/MyTasksCard';
 import ProjectModal from '@/components/modals/ProjectModal';
-import { FileText } from 'lucide-react';
 
 export default function Dashboard() {
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -146,16 +146,30 @@ export default function Dashboard() {
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
         >
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
-            <p className="text-slate-500 mt-1">Welcome back! Here's your project overview.</p>
+            <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Dashboard</h1>
+            <p className="text-slate-500 mt-1">Welcome back{currentUser?.full_name ? `, ${currentUser.full_name.split(' ')[0]}` : ''}! Here's your project overview.</p>
           </div>
-          <Button
-            onClick={() => setShowProjectModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Project
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link to={createPageUrl('Templates')}>
+              <Button variant="outline" size="sm">
+                <FileStack className="w-4 h-4 mr-2" />
+                Templates
+              </Button>
+            </Link>
+            <Link to={createPageUrl('NotificationSettings')}>
+              <Button variant="outline" size="sm">
+                <Bell className="w-4 h-4 mr-2" />
+                Notifications
+              </Button>
+            </Link>
+            <Button
+              onClick={() => setShowProjectModal(true)}
+              className="bg-[#0069AF] hover:bg-[#133F5C] shadow-lg shadow-[#0069AF]/20"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Project
+            </Button>
+          </div>
         </motion.div>
 
         {/* Stats Grid - Clickable */}

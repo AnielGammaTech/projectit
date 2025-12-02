@@ -6,17 +6,25 @@ import {
   Menu,
   X,
   Wrench,
-  FileStack,
   BarChart3,
-  Bell,
   FileText,
   Package,
-  Shield
+  Shield,
+  User,
+  Settings,
+  LogOut
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
@@ -24,38 +32,75 @@ const navItems = [
   { name: 'Quote Requests', icon: FileText, page: 'QuoteRequests' },
   { name: 'Inventory', icon: Package, page: 'Inventory' },
   { name: 'Reports', icon: BarChart3, page: 'Reports' },
-  { name: 'Templates', icon: FileStack, page: 'Templates' },
-  { name: 'Notifications', icon: Bell, page: 'NotificationSettings' },
   { name: 'Adminland', icon: Shield, page: 'Adminland', adminOnly: true },
 ];
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(user => {
+      setCurrentUser(user);
       setIsAdmin(user?.role === 'admin');
     }).catch(() => {});
   }, []);
 
+  const getInitials = (name) => {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-40 flex items-center px-4">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => setSidebarOpen(true)}
-        >
-          <Menu className="w-5 h-5" />
-        </Button>
-        <div className="flex items-center gap-2 ml-3">
-          <div className="w-8 h-8 rounded-lg bg-[#133F5C] flex items-center justify-center">
-            <Wrench className="w-4 h-4 text-white" />
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-40 flex items-center justify-between px-4">
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center gap-2 ml-3">
+            <div className="w-8 h-8 rounded-lg bg-[#133F5C] flex items-center justify-center">
+              <Wrench className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-semibold text-slate-900">IT Projects</span>
           </div>
-          <span className="font-semibold text-slate-900">IT Projects</span>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="w-8 h-8 rounded-full bg-[#0069AF] flex items-center justify-center text-white text-sm font-medium">
+              {currentUser?.avatar_url ? (
+                <img src={currentUser.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+              ) : (
+                getInitials(currentUser?.full_name || currentUser?.email)
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <div className="px-2 py-1.5">
+              <p className="text-sm font-medium">{currentUser?.full_name || 'User'}</p>
+              <p className="text-xs text-slate-500">{currentUser?.email}</p>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to={createPageUrl('Profile')} className="cursor-pointer">
+                <User className="w-4 h-4 mr-2" />
+                My Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -117,10 +162,44 @@ export default function Layout({ children, currentPageName }) {
           })}
         </nav>
 
+        {/* User Profile at Bottom */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100">
-          <div className="text-xs text-slate-400 text-center">
-            IT Project Management
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                {currentUser?.avatar_url ? (
+                  <img src={currentUser.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-[#0069AF] flex items-center justify-center text-white text-sm font-medium">
+                    {getInitials(currentUser?.full_name || currentUser?.email)}
+                  </div>
+                )}
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium text-slate-900 truncate">{currentUser?.full_name || 'User'}</p>
+                  <p className="text-xs text-slate-500 truncate">{currentUser?.email}</p>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="top" className="w-56">
+              <DropdownMenuItem asChild>
+                <Link to={createPageUrl('Profile')} className="cursor-pointer">
+                  <User className="w-4 h-4 mr-2" />
+                  My Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to={createPageUrl('NotificationSettings')} className="cursor-pointer">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Notification Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
 
