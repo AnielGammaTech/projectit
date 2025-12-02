@@ -33,6 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
+import { FolderKanban } from 'lucide-react';
 
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState('');
