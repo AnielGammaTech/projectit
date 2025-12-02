@@ -459,6 +459,16 @@ export default function Proposals() {
                              <Badge className="bg-emerald-500 text-white animate-pulse">✓ Approved!</Badge>
                             )}
                           </div>
+                          {proposal.status === 'approved' && (
+                            <Button
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); window.location.href = createPageUrl('Dashboard') + `?action=createFromProposal&proposalId=${proposal.id}`; }}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white mt-2"
+                            >
+                              <Plus className="w-3.5 h-3.5 mr-1.5" />
+                              Create Project
+                            </Button>
+                          )}
                           <h3 className="font-semibold text-slate-900 text-lg mb-1">{proposal.title || 'Untitled Proposal'}</h3>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
                             <span className="flex items-center gap-1.5">
