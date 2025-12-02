@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, ArrowLeft } from 'lucide-react';
+import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +44,8 @@ export default function Customers() {
   });
   const queryClient = useQueryClient();
 
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+
   const { data: customers = [], refetch } = useQuery({
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.list('-created_date')
@@ -52,6 +54,11 @@ export default function Customers() {
   const { data: proposals = [] } = useQuery({
     queryKey: ['proposals'],
     queryFn: () => base44.entities.Proposal.list()
+  });
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => base44.entities.Project.list()
   });
 
   useEffect(() => {
@@ -78,8 +85,11 @@ export default function Customers() {
     c.company?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getProposalCount = (email) => proposals.filter(p => p.customer_email === email).length;
-  const getTotalValue = (email) => proposals.filter(p => p.customer_email === email && p.status === 'approved').reduce((sum, p) => sum + (p.total || 0), 0);
+  const getCustomerProposals = (customerId, email) => proposals.filter(p => p.customer_id === customerId || p.customer_email === email);
+  const getCustomerProjects = (customerId) => projects.filter(p => p.customer_id === customerId);
+  const getProposalCount = (customerId, email) => getCustomerProposals(customerId, email).length;
+  const getProjectCount = (customerId) => getCustomerProjects(customerId).length;
+  const getTotalValue = (customerId, email) => getCustomerProposals(customerId, email).filter(p => p.status === 'approved').reduce((sum, p) => sum + (p.total || 0), 0);
 
   const handleSave = async () => {
     if (editingCustomer) {
@@ -103,11 +113,6 @@ export default function Customers() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link to={createPageUrl('Proposals')} className="inline-flex items-center text-[#0069AF] hover:text-[#133F5C] mb-6">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Proposals
-        </Link>
-
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -168,11 +173,15 @@ export default function Customers() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="text-sm text-slate-500">{getProposalCount(customer.email)} proposals</p>
-                      {getTotalValue(customer.email) > 0 && (
-                        <p className="text-sm font-medium text-emerald-600">${getTotalValue(customer.email).toLocaleString()} won</p>
+                      <p className="text-sm text-slate-500">{getProposalCount(customer.id, customer.email)} proposals · {getProjectCount(customer.id)} projects</p>
+                      {getTotalValue(customer.id, customer.email) > 0 && (
+                        <p className="text-sm font-medium text-emerald-600">${getTotalValue(customer.id, customer.email).toLocaleString()} won</p>
                       )}
                     </div>
+                    <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(customer)}>
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon"><MoreHorizontal className="w-5 h-5" /></Button>
@@ -275,6 +284,128 @@ export default function Customers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Customer Detail Modal */}
+      <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-semibold">
+                {selectedCustomer?.name?.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <span>{selectedCustomer?.name}</span>
+                {selectedCustomer?.company && <p className="text-sm text-slate-500 font-normal">{selectedCustomer.company}</p>}
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedCustomer && (
+            <div className="space-y-6 mt-4">
+              {/* Contact Info */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl">
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="w-4 h-4 text-slate-400" />
+                  <span>{selectedCustomer.email}</span>
+                </div>
+                {selectedCustomer.phone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="w-4 h-4 text-slate-400" />
+                    <span>{selectedCustomer.phone}</span>
+                  </div>
+                )}
+                {(selectedCustomer.address || selectedCustomer.city) && (
+                  <div className="flex items-center gap-2 text-sm col-span-2">
+                    <MapPin className="w-4 h-4 text-slate-400" />
+                    <span>{[selectedCustomer.address, selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}</span>
+                  </div>
+                )}
+                {selectedCustomer.default_tax_rate > 0 && (
+                  <div className="text-sm col-span-2">
+                    <span className="text-slate-500">Default Tax Rate:</span> <span className="font-medium">{selectedCustomer.default_tax_rate}%</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Projects */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-slate-900 flex items-center gap-2">
+                    <FolderKanban className="w-4 h-4 text-[#0069AF]" />
+                    Projects ({getCustomerProjects(selectedCustomer.id).length})
+                  </h4>
+                  <Link to={createPageUrl('Dashboard')}>
+                    <Button variant="outline" size="sm">View All</Button>
+                  </Link>
+                </div>
+                {getCustomerProjects(selectedCustomer.id).length > 0 ? (
+                  <div className="space-y-2">
+                    {getCustomerProjects(selectedCustomer.id).slice(0, 5).map(project => (
+                      <Link key={project.id} to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="block p-3 bg-white border rounded-lg hover:shadow-sm transition-all">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-slate-900">{project.name}</span>
+                          <Badge variant="outline" className={cn(
+                            project.status === 'completed' && "bg-emerald-50 text-emerald-700",
+                            project.status === 'in_progress' && "bg-blue-50 text-blue-700",
+                            project.status === 'planning' && "bg-amber-50 text-amber-700"
+                          )}>{project.status?.replace('_', ' ')}</Badge>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 text-center py-4">No projects linked</p>
+                )}
+              </div>
+
+              {/* Proposals */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-slate-900 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-[#0069AF]" />
+                    Proposals ({getCustomerProposals(selectedCustomer.id, selectedCustomer.email).length})
+                  </h4>
+                  <Link to={createPageUrl('Proposals')}>
+                    <Button variant="outline" size="sm">View All</Button>
+                  </Link>
+                </div>
+                {getCustomerProposals(selectedCustomer.id, selectedCustomer.email).length > 0 ? (
+                  <div className="space-y-2">
+                    {getCustomerProposals(selectedCustomer.id, selectedCustomer.email).slice(0, 5).map(proposal => (
+                      <Link key={proposal.id} to={createPageUrl('ProposalEditor') + `?id=${proposal.id}`} className="block p-3 bg-white border rounded-lg hover:shadow-sm transition-all">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="font-medium text-slate-900">{proposal.title || proposal.proposal_number}</span>
+                            <p className="text-xs text-slate-500">{proposal.proposal_number}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-slate-700">${(proposal.total || 0).toLocaleString()}</span>
+                            <Badge variant="outline" className={cn(
+                              proposal.status === 'approved' && "bg-emerald-50 text-emerald-700",
+                              proposal.status === 'sent' && "bg-blue-50 text-blue-700",
+                              proposal.status === 'draft' && "bg-slate-50 text-slate-600"
+                            )}>{proposal.status}</Badge>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 text-center py-4">No proposals yet</p>
+                )}
+              </div>
+
+              {/* Notes */}
+              {selectedCustomer.notes && (
+                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                  <h4 className="font-medium text-amber-800 mb-1">Notes</h4>
+                  <p className="text-sm text-amber-700">{selectedCustomer.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1000,6 +1000,146 @@ function ProposalSettingsSection({ queryClient }) {
   );
 }
 
+function IntegrationsSection({ queryClient }) {
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    halopsa_enabled: false,
+    halopsa_url: '',
+    halopsa_client_id: '',
+    halopsa_client_secret: '',
+    halopsa_tenant: '',
+    halopsa_sync_customers: true,
+    halopsa_sync_tickets: false
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['integrationSettings'],
+    queryFn: () => base44.entities.IntegrationSettings.filter({ setting_key: 'main' })
+  });
+
+  useEffect(() => {
+    if (settings[0]) {
+      setFormData({
+        halopsa_enabled: settings[0].halopsa_enabled || false,
+        halopsa_url: settings[0].halopsa_url || '',
+        halopsa_client_id: settings[0].halopsa_client_id || '',
+        halopsa_client_secret: settings[0].halopsa_client_secret || '',
+        halopsa_tenant: settings[0].halopsa_tenant || '',
+        halopsa_sync_customers: settings[0].halopsa_sync_customers !== false,
+        halopsa_sync_tickets: settings[0].halopsa_sync_tickets || false
+      });
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    if (settings[0]?.id) {
+      await base44.entities.IntegrationSettings.update(settings[0].id, { ...formData, setting_key: 'main' });
+    } else {
+      await base44.entities.IntegrationSettings.create({ ...formData, setting_key: 'main' });
+    }
+    refetch();
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-slate-900">Integrations</h2>
+          <p className="text-sm text-slate-500">Connect external services</p>
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+      <div className="p-6 space-y-6">
+        {/* HaloPSA */}
+        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                <GitMerge className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">HaloPSA</h3>
+                <p className="text-xs text-slate-500">Sync customers and tickets from HaloPSA</p>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox 
+                checked={formData.halopsa_enabled} 
+                onCheckedChange={(checked) => setFormData(p => ({ ...p, halopsa_enabled: checked }))} 
+              />
+              <span className="text-sm font-medium">{formData.halopsa_enabled ? 'Enabled' : 'Disabled'}</span>
+            </label>
+          </div>
+
+          {formData.halopsa_enabled && (
+            <div className="space-y-4 pt-4 border-t border-slate-200">
+              <div>
+                <Label className="text-xs">HaloPSA Instance URL</Label>
+                <Input 
+                  value={formData.halopsa_url} 
+                  onChange={(e) => setFormData(p => ({ ...p, halopsa_url: e.target.value }))} 
+                  placeholder="https://yourcompany.halopsa.com" 
+                  className="mt-1" 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs">Client ID</Label>
+                  <Input 
+                    value={formData.halopsa_client_id} 
+                    onChange={(e) => setFormData(p => ({ ...p, halopsa_client_id: e.target.value }))} 
+                    className="mt-1" 
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Client Secret</Label>
+                  <Input 
+                    type="password"
+                    value={formData.halopsa_client_secret} 
+                    onChange={(e) => setFormData(p => ({ ...p, halopsa_client_secret: e.target.value }))} 
+                    className="mt-1" 
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Tenant (optional)</Label>
+                <Input 
+                  value={formData.halopsa_tenant} 
+                  onChange={(e) => setFormData(p => ({ ...p, halopsa_tenant: e.target.value }))} 
+                  className="mt-1" 
+                />
+              </div>
+              <div className="flex gap-4 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox 
+                    checked={formData.halopsa_sync_customers} 
+                    onCheckedChange={(checked) => setFormData(p => ({ ...p, halopsa_sync_customers: checked }))} 
+                  />
+                  <span className="text-sm">Sync Customers</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox 
+                    checked={formData.halopsa_sync_tickets} 
+                    onCheckedChange={(checked) => setFormData(p => ({ ...p, halopsa_sync_tickets: checked }))} 
+                  />
+                  <span className="text-sm">Sync Tickets</span>
+                </label>
+              </div>
+              <p className="text-xs text-slate-500 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                Note: Backend functions must be enabled to sync data from HaloPSA. Contact support to enable this feature.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AppSettingsSection({ queryClient }) {
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
