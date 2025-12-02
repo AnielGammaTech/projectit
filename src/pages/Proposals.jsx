@@ -178,10 +178,12 @@ export default function Proposals() {
                 Reports
               </Button>
             </Link>
-            <Button onClick={() => { setEditingProposal(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
-              <Plus className="w-4 h-4 mr-2" />
-              New Proposal
-            </Button>
+            <Link to={createPageUrl('ProposalEditor')}>
+              <Button className="bg-[#0069AF] hover:bg-[#133F5C]">
+                <Plus className="w-4 h-4 mr-2" />
+                New Proposal
+              </Button>
+            </Link>
           </div>
         </motion.div>
 
@@ -279,9 +281,11 @@ export default function Proposals() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setEditingProposal(proposal); setShowModal(true); }}>
-                              <Edit2 className="w-4 h-4 mr-2" />
-                              Edit
+                            <DropdownMenuItem asChild>
+                              <Link to={createPageUrl('ProposalEditor') + `?id=${proposal.id}`}>
+                                <Edit2 className="w-4 h-4 mr-2" />
+                                Edit
+                              </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDuplicate(proposal)}>
                               <Copy className="w-4 h-4 mr-2" />
@@ -325,10 +329,12 @@ export default function Proposals() {
                 <FileText className="w-12 h-12 mx-auto text-slate-300 mb-4" />
                 <h3 className="text-lg font-medium text-slate-900 mb-2">No proposals yet</h3>
                 <p className="text-slate-500 mb-6">Create your first proposal to get started</p>
-                <Button onClick={() => setShowModal(true)} className="bg-[#0069AF] hover:bg-[#133F5C]">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Proposal
-                </Button>
+                <Link to={createPageUrl('ProposalEditor')}>
+                  <Button className="bg-[#0069AF] hover:bg-[#133F5C]">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Proposal
+                  </Button>
+                </Link>
               </motion.div>
             )}
           </AnimatePresence>

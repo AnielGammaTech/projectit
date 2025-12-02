@@ -21,6 +21,7 @@ import ProposalView from './pages/ProposalView';
 import ProposalApproval from './pages/ProposalApproval';
 import Customers from './pages/Customers';
 import ProposalReports from './pages/ProposalReports';
+import ProposalEditor from './pages/ProposalEditor';
 import __Layout from './Layout.jsx';
 
 
@@ -48,6 +49,7 @@ export const PAGES = {
     "ProposalApproval": ProposalApproval,
     "Customers": Customers,
     "ProposalReports": ProposalReports,
+    "ProposalEditor": ProposalEditor,
 }
 
 export const pagesConfig = {
