@@ -16,6 +16,11 @@ import Inventory from './pages/Inventory';
 import Adminland from './pages/Adminland';
 import TimeReport from './pages/TimeReport';
 import Profile from './pages/Profile';
+import Proposals from './pages/Proposals';
+import ProposalView from './pages/ProposalView';
+import ProposalApproval from './pages/ProposalApproval';
+import Customers from './pages/Customers';
+import ProposalReports from './pages/ProposalReports';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +43,11 @@ export const PAGES = {
     "Adminland": Adminland,
     "TimeReport": TimeReport,
     "Profile": Profile,
+    "Proposals": Proposals,
+    "ProposalView": ProposalView,
+    "ProposalApproval": ProposalApproval,
+    "Customers": Customers,
+    "ProposalReports": ProposalReports,
 }
 
 export const pagesConfig = {
