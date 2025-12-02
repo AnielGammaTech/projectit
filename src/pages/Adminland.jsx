@@ -58,7 +58,6 @@ const adminMenuItems = [
   { id: 'permissions', label: 'Manage permissions', icon: Package, description: 'Control feature access by group' },
   { id: 'proposals', label: 'Proposal settings', icon: Building2, description: 'Configure default proposal settings' },
   { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'Connect external services like HaloPSA' },
-  { id: 'categories', label: 'Change message categories', icon: Tags, description: 'Configure note and message types' },
   { id: 'tools', label: 'Rename project tools', icon: FolderKanban, description: 'Customize tool names' },
   { id: 'settings', label: 'App settings', icon: Settings, description: 'General app configuration' },
 ];
@@ -83,8 +82,6 @@ export default function Adminland() {
         return <ProposalSettingsSection queryClient={queryClient} />;
       case 'integrations':
         return <IntegrationsSection queryClient={queryClient} />;
-      case 'categories':
-        return <CategoriesSection queryClient={queryClient} />;
       case 'tools':
         return <ToolsSection queryClient={queryClient} />;
       case 'settings':
@@ -682,43 +679,6 @@ function PermissionsSection({ queryClient }) {
             Create user groups first to configure permissions
           </p>
         )}
-      </div>
-    </div>
-  );
-}
-
-function CategoriesSection({ queryClient }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-6 border-b">
-        <h2 className="text-xl font-semibold text-slate-900">Message Categories</h2>
-        <p className="text-sm text-slate-500">Configure note and message types</p>
-      </div>
-      <div className="p-6">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-slate-500"></div>
-              <span>Note</span>
-            </div>
-            <Badge variant="outline">Default</Badge>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span>Message</span>
-            </div>
-            <Badge variant="outline">Default</Badge>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <span>Update</span>
-            </div>
-            <Badge variant="outline">Default</Badge>
-          </div>
-        </div>
-        <p className="text-sm text-slate-500 mt-4">Category customization coming soon.</p>
       </div>
     </div>
   );
