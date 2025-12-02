@@ -180,7 +180,7 @@ export default function ProposalView() {
                             <td className="py-3">
                               <div className="flex items-start gap-3">
                                 {item.image_url && (
-                                  <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded object-cover print:w-10 print:h-10" />
+                                  <img src={item.image_url} alt={item.name} className="w-14 h-14 rounded object-contain bg-white border p-1 print:w-12 print:h-12" />
                                 )}
                                 <div>
                                   <p className="font-medium text-slate-900">{item.name}</p>
@@ -217,7 +217,7 @@ export default function ProposalView() {
                         <td className="py-4">
                           <div className="flex items-start gap-3">
                             {item.image_url && (
-                              <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded object-cover" />
+                              <img src={item.image_url} alt={item.name} className="w-14 h-14 rounded object-contain bg-white border p-1" />
                             )}
                             <div>
                               <p className="font-medium text-slate-900">{item.name}</p>

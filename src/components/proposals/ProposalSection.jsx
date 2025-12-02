@@ -175,9 +175,9 @@ export default function ProposalSection({
                   <div key={itemIndex} className="px-4 py-3 flex items-start gap-3 hover:bg-slate-50/50">
                     {/* Image or placeholder */}
                     {item.image_url ? (
-                      <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover border" />
+                      <img src={item.image_url} alt="" className="w-14 h-14 rounded-lg object-contain bg-white border p-1" />
                     ) : (
-                      <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center border">
+                      <div className="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center border">
                         <Package className="w-5 h-5 text-slate-300" />
                       </div>
                     )}
