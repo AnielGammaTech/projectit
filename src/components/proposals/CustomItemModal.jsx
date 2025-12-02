@@ -113,6 +113,65 @@ export default function CustomItemModal({
     ? ((item.unit_price - item.unit_cost) / item.unit_price * 100).toFixed(1)
     : 0;
 
+  const handleAmazonSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    setSearchResults([]);
+    
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Search for products on Amazon matching: "${searchQuery}"
+        
+Return 5 product results with realistic pricing. For each product provide:
+- name: Product title
+- description: Short description
+- price: Estimated price in USD (number only)
+- image_search: A search term to find an image of this product
+
+Return results as JSON array.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            products: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" },
+                  price: { type: "number" },
+                  image_search: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      setSearchResults(result.products || []);
+    } catch (err) {
+      console.error('Search failed:', err);
+    }
+    setSearching(false);
+  };
+
+  const selectSearchResult = (product) => {
+    const cost = product.price || 0;
+    setItem({
+      name: product.name,
+      description: product.description || '',
+      notes: '',
+      quantity: 1,
+      unit_cost: cost,
+      unit_price: useMarkup ? calculatePrice(cost) : cost,
+      image_url: ''
+    });
+    setShowSearch(false);
+    setSearchResults([]);
+    setSearchQuery('');
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
