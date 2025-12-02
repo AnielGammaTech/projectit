@@ -51,6 +51,8 @@ export default function Proposals() {
   const [editingProposal, setEditingProposal] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, proposal: null });
   const [currentUser, setCurrentUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('proposals');
+  const [salespersonFilter, setSalespersonFilter] = useState('all');
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -61,6 +63,19 @@ export default function Proposals() {
     queryKey: ['proposals'],
     queryFn: () => base44.entities.Proposal.list('-created_date')
   });
+
+  const { data: changeOrders = [], refetch: refetchChangeOrders } = useQuery({
+    queryKey: ['changeOrders'],
+    queryFn: () => base44.entities.ChangeOrder.list('-created_date')
+  });
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => base44.entities.TeamMember.list()
+  });
+
+  // Get unique salespersons
+  const salespersons = [...new Set(proposals.map(p => p.created_by_name).filter(Boolean))];
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
@@ -77,6 +92,15 @@ export default function Proposals() {
                          p.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          p.proposal_number?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+    const matchesSalesperson = salespersonFilter === 'all' || p.created_by_name === salespersonFilter;
+    return matchesSearch && matchesStatus && matchesSalesperson;
+  });
+
+  const filteredChangeOrders = changeOrders.filter(co => {
+    const matchesSearch = co.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         co.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         co.change_order_number?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || co.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -157,6 +181,26 @@ export default function Proposals() {
     refetch();
   };
 
+  const handleCreateChangeOrder = async (proposal) => {
+    const changeOrderNumber = `CO-${Date.now().toString(36).toUpperCase()}`;
+    const newCO = await base44.entities.ChangeOrder.create({
+      change_order_number: changeOrderNumber,
+      title: `Change Order for ${proposal.title}`,
+      original_proposal_id: proposal.id,
+      original_proposal_number: proposal.proposal_number,
+      customer_id: proposal.customer_id,
+      customer_name: proposal.customer_name,
+      customer_email: proposal.customer_email,
+      original_total: proposal.total,
+      change_amount: 0,
+      new_total: proposal.total,
+      status: 'draft',
+      created_by_email: currentUser?.email,
+      created_by_name: currentUser?.full_name
+    });
+    window.location.href = createPageUrl('ChangeOrderEditor') + `?id=${newCO.id}`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -198,8 +242,26 @@ export default function Proposals() {
           </div>
         </motion.div>
 
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          <Button 
+            variant={activeTab === 'proposals' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('proposals')}
+            className={activeTab === 'proposals' ? 'bg-[#0069AF]' : ''}
+          >
+            Proposals ({proposals.length})
+          </Button>
+          <Button 
+            variant={activeTab === 'change_orders' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('change_orders')}
+            className={activeTab === 'change_orders' ? 'bg-[#0069AF]' : ''}
+          >
+            Change Orders ({changeOrders.length})
+          </Button>
+        </div>
+
         {/* Stats */}
-        <ProposalStats proposals={proposals} />
+        {activeTab === 'proposals' && <ProposalStats proposals={proposals} />}
 
         {/* Filters */}
         <motion.div
@@ -211,7 +273,7 @@ export default function Proposals() {
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
-                placeholder="Search proposals..."
+                placeholder={activeTab === 'proposals' ? "Search proposals..." : "Search change orders..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -228,10 +290,106 @@ export default function Proposals() {
                 ))}
               </SelectContent>
             </Select>
+            {activeTab === 'proposals' && salespersons.length > 0 && (
+              <Select value={salespersonFilter} onValueChange={setSalespersonFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Salesperson" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Salespersons</SelectItem>
+                  {salespersons.map(name => (
+                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </motion.div>
 
+        {/* Change Orders List */}
+        {activeTab === 'change_orders' && (
+          <div className="space-y-3">
+            <AnimatePresence>
+              {filteredChangeOrders.length > 0 ? (
+                filteredChangeOrders.map((co, idx) => (
+                  <motion.div
+                    key={co.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ delay: idx * 0.02 }}
+                    className="bg-white rounded-xl border border-slate-100 p-5 hover:shadow-lg hover:border-slate-200 transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-4 flex-1">
+                        <div className="p-2.5 rounded-xl bg-orange-100">
+                          <FileText className="w-5 h-5 text-orange-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-mono text-slate-400">{co.change_order_number}</span>
+                            <Badge variant="outline" className={statusConfig[co.status]?.color || 'bg-slate-100'}>
+                              {statusConfig[co.status]?.label || co.status}
+                            </Badge>
+                          </div>
+                          <h3 className="font-semibold text-slate-900 mb-1">{co.title}</h3>
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+                            <span className="flex items-center gap-1.5">
+                              <Users className="w-4 h-4" />
+                              {co.customer_name}
+                            </span>
+                            <span className="text-xs text-slate-400">
+                              Original: {co.original_proposal_number}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className={cn("text-xl font-bold", co.change_amount >= 0 ? "text-emerald-600" : "text-red-600")}>
+                            {co.change_amount >= 0 ? '+' : ''}${co.change_amount?.toLocaleString() || '0'}
+                          </p>
+                          <p className="text-xs text-slate-500">New Total: ${co.new_total?.toLocaleString() || '0'}</p>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="w-5 h-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => window.location.href = createPageUrl('ChangeOrderEditor') + `?id=${co.id}`}>
+                              <Edit2 className="w-4 h-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={async () => { await base44.entities.ChangeOrder.delete(co.id); refetchChangeOrders(); }} className="text-red-600">
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-white rounded-2xl border border-slate-100 p-12 text-center"
+                >
+                  <FileText className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+                  <h3 className="text-lg font-medium text-slate-900 mb-2">No change orders yet</h3>
+                  <p className="text-slate-500 mb-6">Create a change order from an existing proposal</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
         {/* Proposals List */}
+        {activeTab === 'proposals' && (
         <div className="space-y-3">
           <AnimatePresence>
             {filteredProposals.length > 0 ? (
@@ -257,7 +415,7 @@ export default function Proposals() {
                           <StatusIcon className={cn("w-5 h-5", status.color.split(' ')[1])} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span className="text-xs font-mono text-slate-400">{proposal.proposal_number}</span>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -279,13 +437,18 @@ export default function Proposals() {
                               <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">Expired</Badge>
                             )}
                           </div>
-                          <h3 className="font-semibold text-slate-900 mb-1">{proposal.title}</h3>
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+                          <h3 className="font-semibold text-slate-900 text-lg mb-1">{proposal.title || 'Untitled Proposal'}</h3>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
                             <span className="flex items-center gap-1.5">
                               <Users className="w-4 h-4" />
                               {proposal.customer_name}
                               {proposal.customer_company && <span className="text-slate-400">({proposal.customer_company})</span>}
                             </span>
+                            {proposal.created_by_name && (
+                              <span className="flex items-center gap-1.5 text-xs bg-slate-100 px-2 py-0.5 rounded">
+                                Salesperson: {proposal.created_by_name}
+                              </span>
+                            )}
                             {proposal.valid_until && (
                               <span className={cn("flex items-center gap-1.5", daysLeft !== null && daysLeft <= 7 && daysLeft >= 0 && "text-amber-600")}>
                                 <Calendar className="w-4 h-4" />
@@ -336,6 +499,11 @@ export default function Proposals() {
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleCreateChangeOrder(proposal)}>
+                              <Plus className="w-4 h-4 mr-2" />
+                              Create Change Order
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => setDeleteConfirm({ open: true, proposal })} className="text-red-600">
                               <Trash2 className="w-4 h-4 mr-2" />
                               Delete
@@ -366,6 +534,7 @@ export default function Proposals() {
             )}
           </AnimatePresence>
         </div>
+        )}
       </div>
 
       <ProposalModal
