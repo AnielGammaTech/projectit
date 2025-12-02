@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 
-export default function ProjectModal({ open, onClose, project, templates = [], onSave, onPartsExtracted }) {
+export default function ProjectModal({ open, onClose, project, templates = [], onSave, onPartsExtracted, prefillData }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -39,6 +39,12 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     enabled: open
   });
 
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => base44.entities.Customer.list('name'),
+    enabled: open
+  });
+
   useEffect(() => {
     if (project) {
       setFormData({
@@ -55,6 +61,30 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         time_budget_hours: project.time_budget_hours || 0
       });
       setExtractedParts([]);
+    } else if (prefillData) {
+      setFormData({
+        name: prefillData.name || '',
+        description: '',
+        client: prefillData.client || '',
+        customer_id: prefillData.customer_id || '',
+        status: 'planning',
+        priority: 'medium',
+        start_date: '',
+        due_date: '',
+        color: 'slate',
+        group: '',
+        user_groups: [],
+        time_budget_hours: 0
+      });
+      // Convert proposal items to parts
+      if (prefillData.proposalItems) {
+        setExtractedParts(prefillData.proposalItems.map(item => ({
+          name: item.name,
+          quantity: item.quantity || 1,
+          unit_cost: item.unit_cost || 0,
+          description: item.description || ''
+        })));
+      }
     } else {
       setFormData({
         name: '',
@@ -72,7 +102,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
       setExtractedParts([]);
     }
     setSelectedTemplate('');
-  }, [project, open]);
+  }, [project, open, prefillData]);
 
   const toggleUserGroup = (groupId) => {
     setFormData(prev => ({
@@ -150,13 +180,21 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
           <div className="grid grid-cols-2 gap-3">
                           <div>
                             <Label htmlFor="client">Client</Label>
-                            <Input
-                              id="client"
-                              value={formData.client}
-                              onChange={(e) => setFormData(prev => ({ ...prev, client: e.target.value }))}
-                              placeholder="e.g., Acme Corporation"
-                              className="mt-1.5"
-                            />
+                            <Select value={formData.client || formData.customer_id} onValueChange={(v) => {
+                              const customer = customers.find(c => c.id === v);
+                              setFormData(prev => ({ ...prev, client: customer?.name || '', customer_id: v }));
+                            }}>
+                              <SelectTrigger className="mt-1.5">
+                                <SelectValue placeholder="Select customer..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {customers.map(c => (
+                                  <SelectItem key={c.id} value={c.id}>
+                                    {c.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div>
                             <Label htmlFor="time_budget_hours">Time Budget (hours)</Label>
@@ -204,43 +242,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             </div>
           )}
 
-          {!project && (
-            <div>
-              <Label>Upload Quote PDF (Optional)</Label>
-              <div className="mt-1.5">
-                <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-colors">
-                  {uploading ? (
-                    <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
-                  ) : (
-                    <Upload className="w-5 h-5 text-slate-400" />
-                  )}
-                  <span className="text-sm text-slate-600">
-                    {uploading ? 'Extracting parts...' : 'Upload PDF to extract parts'}
-                  </span>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    disabled={uploading}
-                  />
-                </label>
-              </div>
-              {extractedParts.length > 0 && (
-                <div className="mt-2 p-3 bg-emerald-50 rounded-lg">
-                  <div className="flex items-center gap-2 text-emerald-700 text-sm font-medium mb-2">
-                    <FileText className="w-4 h-4" />
-                    {extractedParts.length} parts extracted
-                  </div>
-                  <div className="text-xs text-emerald-600 max-h-24 overflow-y-auto">
-                    {extractedParts.map((p, i) => (
-                      <div key={i}>{p.name} {p.quantity > 1 && `(x${p.quantity})`}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+
 
           <div className="grid grid-cols-2 gap-4">
             <div>

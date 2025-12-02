@@ -711,16 +711,16 @@ function AIProposalSearchModal({ open, onClose, onAddItem, markupType, markupVal
     setSearching(true);
     
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `I need product/service suggestions for a proposal: "${searchQuery}"
-      
-Return 3-5 relevant suggestions. For each provide:
-- name: Clear product/service name
-- description: Brief description (1-2 sentences)
-- category: Category
-- estimated_cost: Estimated cost in USD (number only)
-- search_term: Good search term for product image
+      prompt: `Find real product information for: "${searchQuery}"
 
-Be specific and realistic with names and prices.`,
+Search online and return 3-5 REAL products with:
+- name: Actual product name
+- description: Brief description
+- category: Category
+- estimated_cost: Real market price in USD
+- image_search: Exact product model/name for finding real images
+
+Be specific with actual product names and real pricing.`,
       response_json_schema: {
         type: "object",
         properties: {
@@ -733,7 +733,7 @@ Be specific and realistic with names and prices.`,
                 description: { type: "string" },
                 category: { type: "string" },
                 estimated_cost: { type: "number" },
-                search_term: { type: "string" }
+                image_search: { type: "string" }
               }
             }
           }
@@ -742,18 +742,11 @@ Be specific and realistic with names and prices.`,
       add_context_from_internet: true
     });
 
-    const productsWithImages = await Promise.all(
-      (result.products || []).map(async (product) => {
-        try {
-          const imageResult = await base44.integrations.Core.GenerateImage({
-            prompt: `Professional product photo of ${product.search_term}, white background, studio lighting, e-commerce style, high quality`
-          });
-          return { ...product, image_url: imageResult.url };
-        } catch {
-          return product;
-        }
-      })
-    );
+    // Search for real product images online
+    const productsWithImages = (result.products || []).map(product => ({
+      ...product,
+      image_url: `https://source.unsplash.com/400x400/?${encodeURIComponent(product.image_search)}`
+    }));
 
     setSuggestions(productsWithImages);
     setSearching(false);

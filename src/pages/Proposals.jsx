@@ -177,7 +177,26 @@ export default function Proposals() {
   };
 
   const handleStatusChange = async (proposal, newStatus) => {
-    await base44.entities.Proposal.update(proposal.id, { status: newStatus });
+    const updates = { status: newStatus };
+    
+    // If approved, set approved date
+    if (newStatus === 'approved') {
+      updates.approved_date = new Date().toISOString();
+      
+      // Send notification
+      await base44.integrations.Core.SendEmail({
+        to: proposal.created_by_email || currentUser?.email,
+        subject: `Proposal Approved: ${proposal.title}`,
+        body: `
+          <h2>🎉 Proposal Approved!</h2>
+          <p>Great news! The proposal "${proposal.title}" for ${proposal.customer_name} has been approved.</p>
+          <p><strong>Total Amount:</strong> $${proposal.total?.toLocaleString()}</p>
+          <p><a href="${window.location.origin}${createPageUrl('Proposals')}">View Proposals</a></p>
+        `
+      });
+    }
+    
+    await base44.entities.Proposal.update(proposal.id, updates);
     refetch();
   };
 
@@ -434,7 +453,10 @@ export default function Proposals() {
                               </DropdownMenuContent>
                             </DropdownMenu>
                             {isExpired && proposal.status !== 'approved' && (
-                              <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">Expired</Badge>
+                             <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">Expired</Badge>
+                            )}
+                            {proposal.status === 'approved' && (
+                             <Badge className="bg-emerald-500 text-white animate-pulse">✓ Approved!</Badge>
                             )}
                           </div>
                           <h3 className="font-semibold text-slate-900 text-lg mb-1">{proposal.title || 'Untitled Proposal'}</h3>
@@ -471,12 +493,21 @@ export default function Proposals() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link to={createPageUrl('ProposalEditor') + `?id=${proposal.id}`}>
-                                <Edit2 className="w-4 h-4 mr-2" />
-                                Edit
-                              </Link>
-                            </DropdownMenuItem>
+                           {proposal.status === 'approved' && (
+                             <>
+                               <DropdownMenuItem onClick={() => window.location.href = createPageUrl('Dashboard') + `?action=createFromProposal&proposalId=${proposal.id}`}>
+                                 <Plus className="w-4 h-4 mr-2" />
+                                 Create Project from This
+                               </DropdownMenuItem>
+                               <DropdownMenuSeparator />
+                             </>
+                           )}
+                           <DropdownMenuItem asChild>
+                             <Link to={createPageUrl('ProposalEditor') + `?id=${proposal.id}`}>
+                               <Edit2 className="w-4 h-4 mr-2" />
+                               Edit
+                             </Link>
+                           </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDuplicate(proposal)}>
                               <Copy className="w-4 h-4 mr-2" />
                               Duplicate

@@ -20,9 +20,30 @@ export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState(null);
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [showArchived, setShowArchived] = useState(false);
+  const [prefillData, setPrefillData] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
+    
+    // Check for proposal-based project creation
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    const proposalId = urlParams.get('proposalId');
+    
+    if (action === 'createFromProposal' && proposalId) {
+      base44.entities.Proposal.filter({ id: proposalId }).then(proposals => {
+        if (proposals[0]) {
+          const proposal = proposals[0];
+          setPrefillData({
+            name: proposal.title,
+            client: proposal.customer_name,
+            customer_id: proposal.customer_id,
+            proposalItems: proposal.items || []
+          });
+          setShowProjectModal(true);
+        }
+      });
+    }
   }, []);
 
   const { data: projects = [], refetch: refetchProjects } = useQuery({
@@ -318,9 +339,10 @@ export default function Dashboard() {
 
       <ProjectModal
         open={showProjectModal}
-        onClose={() => setShowProjectModal(false)}
+        onClose={() => { setShowProjectModal(false); setPrefillData(null); }}
         templates={templates}
         onSave={handleCreateProject}
+        prefillData={prefillData}
       />
     </div>
   );
