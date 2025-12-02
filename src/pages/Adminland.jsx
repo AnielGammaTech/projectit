@@ -5,10 +5,10 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Users, UserPlus, Settings, Shield, Edit2, Trash2, 
-  Plus, MoreHorizontal, Mail, Phone, Package
+  Plus, MoreHorizontal, Mail, Phone, Package, ArrowLeft,
+  Building2, Tags, MessageSquare, FolderKanban, GitMerge, History
 } from 'lucide-react';
 import {
   Dialog,
@@ -34,7 +34,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
@@ -51,65 +50,84 @@ const groupColors = {
   indigo: 'bg-indigo-500', violet: 'bg-violet-500', purple: 'bg-purple-500', pink: 'bg-pink-500'
 };
 
+const adminMenuItems = [
+  { id: 'people', label: 'Manage people', icon: Users, description: 'Add, edit, and remove team members' },
+  { id: 'admins', label: 'Add/remove administrators', icon: Shield, description: 'Control who has admin access' },
+  { id: 'groups', label: 'Manage groups', icon: UserPlus, description: 'Create and manage user groups' },
+  { id: 'permissions', label: 'Manage permissions', icon: Package, description: 'Control feature access by group' },
+  { id: 'categories', label: 'Change message categories', icon: Tags, description: 'Configure note and message types' },
+  { id: 'tools', label: 'Rename project tools', icon: FolderKanban, description: 'Customize tool names' },
+  { id: 'settings', label: 'App settings', icon: Settings, description: 'General app configuration' },
+];
+
 export default function Adminland() {
   const urlParams = new URLSearchParams(window.location.search);
-  const initialTab = urlParams.get('tab') || 'team';
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const initialSection = urlParams.get('section') || null;
+  const [activeSection, setActiveSection] = useState(initialSection);
   const queryClient = useQueryClient();
 
+  const renderSection = () => {
+    switch (activeSection) {
+      case 'people':
+        return <TeamSection queryClient={queryClient} />;
+      case 'admins':
+        return <AdminsSection queryClient={queryClient} />;
+      case 'groups':
+        return <UserGroupsSection queryClient={queryClient} />;
+      case 'permissions':
+        return <PermissionsSection queryClient={queryClient} />;
+      case 'categories':
+        return <CategoriesSection queryClient={queryClient} />;
+      case 'tools':
+        return <ToolsSection queryClient={queryClient} />;
+      case 'settings':
+        return <AppSettingsSection queryClient={queryClient} />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-200">
-              <Shield className="w-6 h-6 text-white" />
+    <div className="min-h-screen bg-[#1e2a3a]">
+      <div className="max-w-3xl mx-auto px-4 py-12">
+        {activeSection ? (
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+            <button 
+              onClick={() => setActiveSection(null)}
+              className="flex items-center gap-2 text-[#74C7FF] hover:text-white mb-6 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Adminland
+            </button>
+            {renderSection()}
+          </motion.div>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="mb-8">
+              <h1 className="text-2xl font-semibold text-white mb-2">You're an admin, so you can...</h1>
             </div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Adminland</h1>
-          </div>
-          <p className="text-slate-500">Manage team members, user groups, and app settings</p>
-        </motion.div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-white border">
-            <TabsTrigger value="team" className="gap-2">
-              <Users className="w-4 h-4" />
-              Team Members
-            </TabsTrigger>
-            <TabsTrigger value="groups" className="gap-2">
-              <UserPlus className="w-4 h-4" />
-              User Groups
-            </TabsTrigger>
-            <TabsTrigger value="permissions" className="gap-2">
-              <Shield className="w-4 h-4" />
-              Permissions
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2">
-              <Settings className="w-4 h-4" />
-              App Settings
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="team">
-            <TeamSection queryClient={queryClient} />
-          </TabsContent>
-
-          <TabsContent value="groups">
-            <UserGroupsSection queryClient={queryClient} />
-          </TabsContent>
-
-          <TabsContent value="permissions">
-            <PermissionsSection queryClient={queryClient} />
-          </TabsContent>
-
-          <TabsContent value="settings">
-            <AppSettingsSection queryClient={queryClient} />
-          </TabsContent>
-        </Tabs>
+            
+            <div className="space-y-1">
+              {adminMenuItems.map((item, idx) => (
+                <motion.button
+                  key={item.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  onClick={() => setActiveSection(item.id)}
+                  className="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-[#2a3a4d] transition-colors group text-left"
+                >
+                  <div className="p-2 rounded-lg bg-[#0069AF] group-hover:bg-[#0080d4] transition-colors">
+                    <item.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-[#74C7FF] group-hover:text-white font-medium transition-colors">
+                    {item.label}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );
@@ -143,13 +161,13 @@ function TeamSection({ queryClient }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border shadow-sm">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Team Members</h2>
-          <p className="text-sm text-slate-500">{members.length} members</p>
+          <h2 className="text-xl font-semibold text-slate-900">Manage People</h2>
+          <p className="text-sm text-slate-500">{members.length} team members</p>
         </div>
-        <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-indigo-600 hover:bg-indigo-700">
+        <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
           <Plus className="w-4 h-4 mr-2" />
           Add Member
         </Button>
@@ -251,17 +269,91 @@ function TeamMemberModal({ open, onClose, member, onSave }) {
             <div className="flex gap-2 mt-2 flex-wrap">
               {avatarColors.map(color => (
                 <button key={color} type="button" onClick={() => setFormData(p => ({ ...p, avatar_color: color }))}
-                  className={cn("w-8 h-8 rounded-full", color, formData.avatar_color === color && "ring-2 ring-offset-2 ring-indigo-500")} />
+                  className={cn("w-8 h-8 rounded-full", color, formData.avatar_color === color && "ring-2 ring-offset-2 ring-[#0069AF]")} />
               ))}
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700">{member ? 'Update' : 'Add'}</Button>
+            <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]">{member ? 'Update' : 'Add'}</Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function AdminsSection({ queryClient }) {
+  const { data: members = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => base44.entities.TeamMember.list('name')
+  });
+
+  const toggleAdmin = async (member) => {
+    const newRole = member.role === 'Admin' ? '' : 'Admin';
+    await base44.entities.TeamMember.update(member.id, { ...member, role: newRole });
+    queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+  };
+
+  const admins = members.filter(m => m.role === 'Admin');
+  const nonAdmins = members.filter(m => m.role !== 'Admin');
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-semibold text-slate-900">Add/Remove Administrators</h2>
+        <p className="text-sm text-slate-500">Administrators have full access to Adminland</p>
+      </div>
+      
+      {admins.length > 0 && (
+        <div className="p-4 border-b bg-slate-50">
+          <h3 className="text-sm font-medium text-slate-700 mb-3">Current Administrators ({admins.length})</h3>
+          <div className="space-y-2">
+            {admins.map(member => (
+              <div key={member.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-sm", member.avatar_color || avatarColors[0])}>
+                    {member.name?.charAt(0)?.toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900">{member.name}</p>
+                    <p className="text-xs text-slate-500">{member.email}</p>
+                  </div>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => toggleAdmin(member)}>
+                  Remove Admin
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="p-4">
+        <h3 className="text-sm font-medium text-slate-700 mb-3">Team Members ({nonAdmins.length})</h3>
+        <div className="space-y-2">
+          {nonAdmins.map(member => (
+            <div key={member.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-sm", member.avatar_color || avatarColors[0])}>
+                  {member.name?.charAt(0)?.toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900">{member.name}</p>
+                  <p className="text-xs text-slate-500">{member.email}</p>
+                </div>
+              </div>
+              <Button size="sm" className="bg-[#0069AF] hover:bg-[#133F5C]" onClick={() => toggleAdmin(member)}>
+                Make Admin
+              </Button>
+            </div>
+          ))}
+          {nonAdmins.length === 0 && (
+            <p className="text-slate-500 text-center py-4">All team members are admins</p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -298,48 +390,46 @@ function UserGroupsSection({ queryClient }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border shadow-sm">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">User Groups</h2>
-          <p className="text-sm text-slate-500">Organize team members and control project access</p>
+          <h2 className="text-xl font-semibold text-slate-900">Manage Groups</h2>
+          <p className="text-sm text-slate-500">Organize team members and control access</p>
         </div>
-        <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-indigo-600 hover:bg-indigo-700">
+        <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
           <Plus className="w-4 h-4 mr-2" />
           Add Group
         </Button>
       </div>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+      <div className="divide-y">
         {groups.map((group) => (
-          <div key={group.id} className="border rounded-xl p-4 hover:shadow-md transition-all">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className={cn("w-3 h-3 rounded-full", groupColors[group.color] || 'bg-indigo-500')} />
-                <h3 className="font-semibold text-slate-900">{group.name}</h3>
+          <div key={group.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
+            <div className="flex items-center gap-4">
+              <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", groupColors[group.color] || 'bg-indigo-500')}>
+                <Users className="w-5 h-5 text-white" />
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => { setEditing(group); setShowModal(true); }}>
-                    <Edit2 className="w-4 h-4 mr-2" />Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setDeleteConfirm(group)} className="text-red-600">
-                    <Trash2 className="w-4 h-4 mr-2" />Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div>
+                <p className="font-medium text-slate-900">{group.name}</p>
+                <p className="text-sm text-slate-500">{group.member_emails?.length || 0} members</p>
+              </div>
             </div>
-            {group.description && <p className="text-sm text-slate-500 mb-3">{group.description}</p>}
-            <div className="flex items-center gap-1">
-              <Users className="w-4 h-4 text-slate-400" />
-              <span className="text-sm text-slate-600">{group.member_emails?.length || 0} members</span>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => { setEditing(group); setShowModal(true); }}>
+                  <Edit2 className="w-4 h-4 mr-2" />Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setDeleteConfirm(group)} className="text-red-600">
+                  <Trash2 className="w-4 h-4 mr-2" />Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ))}
         {groups.length === 0 && (
-          <div className="col-span-full p-8 text-center text-slate-500">No user groups yet</div>
+          <div className="p-8 text-center text-slate-500">No groups yet</div>
         )}
       </div>
 
@@ -401,7 +491,7 @@ function UserGroupModal({ open, onClose, group, members, onSave }) {
             <div className="flex gap-2 mt-2 flex-wrap">
               {Object.entries(groupColors).map(([name, className]) => (
                 <button key={name} type="button" onClick={() => setFormData(p => ({ ...p, color: name }))}
-                  className={cn("w-8 h-8 rounded-full", className, formData.color === name && "ring-2 ring-offset-2 ring-indigo-500")} />
+                  className={cn("w-8 h-8 rounded-full", className, formData.color === name && "ring-2 ring-offset-2 ring-[#0069AF]")} />
               ))}
             </div>
           </div>
@@ -420,7 +510,7 @@ function UserGroupModal({ open, onClose, group, members, onSave }) {
           </div>
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700">{group ? 'Update' : 'Create'}</Button>
+            <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]">{group ? 'Update' : 'Create'}</Button>
           </div>
         </form>
       </DialogContent>
@@ -480,10 +570,10 @@ function PermissionsSection({ queryClient }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border shadow-sm">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Permissions</h2>
+          <h2 className="text-xl font-semibold text-slate-900">Manage Permissions</h2>
           <p className="text-sm text-slate-500">Control access to features by user group</p>
         </div>
         <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
@@ -491,7 +581,6 @@ function PermissionsSection({ queryClient }) {
         </Button>
       </div>
       <div className="p-6 space-y-6">
-        {/* Inventory Permissions */}
         <div className="p-4 bg-slate-50 rounded-xl">
           <div className="flex items-center gap-2 mb-4">
             <Package className="w-5 h-5 text-[#0069AF]" />
@@ -562,31 +651,84 @@ function PermissionsSection({ queryClient }) {
   );
 }
 
-function AppSettingsSection({ queryClient }) {
-  const { data: settings = [] } = useQuery({
-    queryKey: ['appSettings'],
-    queryFn: () => base44.entities.AppSettings.filter({ setting_key: 'main' })
-  });
-
-  const currentSettings = settings[0] || {};
-
+function CategoriesSection({ queryClient }) {
   return (
-    <div className="bg-white rounded-2xl border shadow-sm p-6">
-      <h2 className="text-lg font-semibold text-slate-900 mb-4">App Settings</h2>
-      <p className="text-sm text-slate-500 mb-6">Configure project statuses, priorities, and other app-wide settings.</p>
-      
-      <div className="space-y-6">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-semibold text-slate-900">Message Categories</h2>
+        <p className="text-sm text-slate-500">Configure note and message types</p>
+      </div>
+      <div className="p-6">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-slate-500"></div>
+              <span>Note</span>
+            </div>
+            <Badge variant="outline">Default</Badge>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span>Message</span>
+            </div>
+            <Badge variant="outline">Default</Badge>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span>Update</span>
+            </div>
+            <Badge variant="outline">Default</Badge>
+          </div>
+        </div>
+        <p className="text-sm text-slate-500 mt-4">Category customization coming soon.</p>
+      </div>
+    </div>
+  );
+}
+
+function ToolsSection({ queryClient }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-semibold text-slate-900">Rename Project Tools</h2>
+        <p className="text-sm text-slate-500">Customize how tools appear in your projects</p>
+      </div>
+      <div className="p-6">
+        <div className="space-y-3">
+          {['Tasks', 'Parts & Materials', 'Notes', 'Files', 'Activity'].map(tool => (
+            <div key={tool} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+              <span className="font-medium">{tool}</span>
+              <Input className="w-48" defaultValue={tool} placeholder="Custom name..." />
+            </div>
+          ))}
+        </div>
+        <p className="text-sm text-slate-500 mt-4">Tool renaming coming soon.</p>
+      </div>
+    </div>
+  );
+}
+
+function AppSettingsSection({ queryClient }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-semibold text-slate-900">App Settings</h2>
+        <p className="text-sm text-slate-500">General app configuration</p>
+      </div>
+      <div className="p-6 space-y-4">
         <div className="p-4 bg-slate-50 rounded-xl">
           <h3 className="font-medium text-slate-900 mb-2">Project Statuses</h3>
-          <p className="text-sm text-slate-500">Default: Planning, In Progress, On Hold, Completed, Archived</p>
+          <p className="text-sm text-slate-500">Planning, In Progress, On Hold, Completed, Archived</p>
         </div>
         <div className="p-4 bg-slate-50 rounded-xl">
           <h3 className="font-medium text-slate-900 mb-2">Task Statuses</h3>
-          <p className="text-sm text-slate-500">Default: To Do, In Progress, Review, Completed</p>
+          <p className="text-sm text-slate-500">To Do, In Progress, Review, Completed</p>
         </div>
         <div className="p-4 bg-slate-50 rounded-xl">
           <h3 className="font-medium text-slate-900 mb-2">Priority Levels</h3>
-          <p className="text-sm text-slate-500">Default: Low, Medium, High, Urgent</p>
+          <p className="text-sm text-slate-500">Low, Medium, High, Urgent</p>
         </div>
       </div>
     </div>
