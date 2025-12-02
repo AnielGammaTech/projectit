@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Users, UserPlus, Settings, Shield, Palette, Edit2, Trash2, 
-  Plus, Save, MoreHorizontal, Mail, Phone
+  Users, UserPlus, Settings, Shield, Edit2, Trash2, 
+  Plus, MoreHorizontal, Mail, Phone, Package
 } from 'lucide-react';
 import {
   Dialog,
@@ -52,7 +52,9 @@ const groupColors = {
 };
 
 export default function Adminland() {
-  const [activeTab, setActiveTab] = useState('team');
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialTab = urlParams.get('tab') || 'team';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const queryClient = useQueryClient();
 
   return (
@@ -82,6 +84,10 @@ export default function Adminland() {
               <UserPlus className="w-4 h-4" />
               User Groups
             </TabsTrigger>
+            <TabsTrigger value="permissions" className="gap-2">
+              <Shield className="w-4 h-4" />
+              Permissions
+            </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="w-4 h-4" />
               App Settings
@@ -94,6 +100,10 @@ export default function Adminland() {
 
           <TabsContent value="groups">
             <UserGroupsSection queryClient={queryClient} />
+          </TabsContent>
+
+          <TabsContent value="permissions">
+            <PermissionsSection queryClient={queryClient} />
           </TabsContent>
 
           <TabsContent value="settings">
@@ -415,6 +425,140 @@ function UserGroupModal({ open, onClose, group, members, onSave }) {
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function PermissionsSection({ queryClient }) {
+  const [saving, setSaving] = useState(false);
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: () => base44.entities.AppSettings.filter({ setting_key: 'main' })
+  });
+
+  const { data: groups = [] } = useQuery({
+    queryKey: ['userGroups'],
+    queryFn: () => base44.entities.UserGroup.list('name')
+  });
+
+  const currentSettings = settings[0] || {};
+
+  const [formData, setFormData] = useState({
+    inventory_view_groups: [],
+    inventory_edit_groups: [],
+    inventory_checkout_groups: []
+  });
+
+  useEffect(() => {
+    if (currentSettings.id) {
+      setFormData({
+        inventory_view_groups: currentSettings.inventory_view_groups || [],
+        inventory_edit_groups: currentSettings.inventory_edit_groups || [],
+        inventory_checkout_groups: currentSettings.inventory_checkout_groups || []
+      });
+    }
+  }, [currentSettings.id]);
+
+  const toggleGroup = (field, groupId) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].includes(groupId)
+        ? prev[field].filter(id => id !== groupId)
+        : [...prev[field], groupId]
+    }));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    if (currentSettings.id) {
+      await base44.entities.AppSettings.update(currentSettings.id, { ...currentSettings, ...formData });
+    } else {
+      await base44.entities.AppSettings.create({ setting_key: 'main', ...formData });
+    }
+    refetch();
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border shadow-sm">
+      <div className="p-6 border-b flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">Permissions</h2>
+          <p className="text-sm text-slate-500">Control access to features by user group</p>
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+      <div className="p-6 space-y-6">
+        {/* Inventory Permissions */}
+        <div className="p-4 bg-slate-50 rounded-xl">
+          <div className="flex items-center gap-2 mb-4">
+            <Package className="w-5 h-5 text-[#0069AF]" />
+            <h3 className="font-semibold text-slate-900">Inventory Permissions</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium">Who can view inventory?</Label>
+              <p className="text-xs text-slate-500 mb-2">Leave empty to allow all users</p>
+              <div className="flex flex-wrap gap-2">
+                {groups.map(g => (
+                  <Badge
+                    key={g.id}
+                    variant={formData.inventory_view_groups.includes(g.id) ? "default" : "outline"}
+                    className={cn("cursor-pointer", formData.inventory_view_groups.includes(g.id) && "bg-[#0069AF]")}
+                    onClick={() => toggleGroup('inventory_view_groups', g.id)}
+                  >
+                    {g.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium">Who can edit inventory items?</Label>
+              <p className="text-xs text-slate-500 mb-2">Add, edit, delete items</p>
+              <div className="flex flex-wrap gap-2">
+                {groups.map(g => (
+                  <Badge
+                    key={g.id}
+                    variant={formData.inventory_edit_groups.includes(g.id) ? "default" : "outline"}
+                    className={cn("cursor-pointer", formData.inventory_edit_groups.includes(g.id) && "bg-[#0069AF]")}
+                    onClick={() => toggleGroup('inventory_edit_groups', g.id)}
+                  >
+                    {g.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium">Who can checkout/restock items?</Label>
+              <p className="text-xs text-slate-500 mb-2">Remove or add stock</p>
+              <div className="flex flex-wrap gap-2">
+                {groups.map(g => (
+                  <Badge
+                    key={g.id}
+                    variant={formData.inventory_checkout_groups.includes(g.id) ? "default" : "outline"}
+                    className={cn("cursor-pointer", formData.inventory_checkout_groups.includes(g.id) && "bg-[#0069AF]")}
+                    onClick={() => toggleGroup('inventory_checkout_groups', g.id)}
+                  >
+                    {g.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {groups.length === 0 && (
+          <p className="text-sm text-slate-500 text-center py-4">
+            Create user groups first to configure permissions
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
