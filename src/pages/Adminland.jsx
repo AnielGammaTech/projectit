@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Users, UserPlus, Settings, Shield, Edit2, Trash2, 
   Plus, MoreHorizontal, Mail, Phone, Package, ArrowLeft,
-  Building2, Tags, MessageSquare, FolderKanban, GitMerge, History
+  Building2, Tags, MessageSquare, FolderKanban, GitMerge, History,
+  RefreshCw, Loader2
 } from 'lucide-react';
 import {
   Dialog,
