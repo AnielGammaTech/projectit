@@ -1004,7 +1004,9 @@ function ProposalSettingsSection({ queryClient }) {
 function IntegrationsSection({ queryClient }) {
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
+  const [showFieldMapping, setShowFieldMapping] = useState(false);
   const [formData, setFormData] = useState({
     halopsa_enabled: false,
     halopsa_url: '',
@@ -1012,13 +1014,55 @@ function IntegrationsSection({ queryClient }) {
     halopsa_client_secret: '',
     halopsa_tenant: '',
     halopsa_sync_customers: true,
-    halopsa_sync_tickets: false
+    halopsa_sync_tickets: false,
+    halopsa_field_mapping: {
+      name: 'name',
+      email: 'email',
+      phone: 'main_phone',
+      address: 'address',
+      city: 'city',
+      state: 'county',
+      zip: 'postcode'
+    }
   });
 
   const { data: settings = [], refetch } = useQuery({
     queryKey: ['integrationSettings'],
     queryFn: () => base44.entities.IntegrationSettings.filter({ setting_key: 'main' })
   });
+
+  const handleTestConnection = async () => {
+    if (!formData.halopsa_url) {
+      setSyncResult({ success: false, message: 'Please enter your HaloPSA URL first' });
+      return;
+    }
+    
+    setTestingConnection(true);
+    setSyncResult(null);
+    
+    try {
+      const response = await base44.functions.invoke('syncHaloPSACustomers', { 
+        testOnly: true,
+        fieldMapping: formData.halopsa_field_mapping
+      });
+      const result = response.data;
+      
+      if (result.success) {
+        setSyncResult({ success: true, message: `Connection successful! Found ${result.total || 0} clients in HaloPSA.` });
+      } else {
+        setSyncResult({ success: false, message: result.error || 'Connection failed', details: result.details || result.debug });
+      }
+    } catch (error) {
+      const errorData = error.response?.data;
+      setSyncResult({ 
+        success: false, 
+        message: errorData?.error || 'Connection failed. Check your credentials.',
+        details: errorData?.details || errorData?.debug
+      });
+    }
+    
+    setTestingConnection(false);
+  };
 
   const handleSyncCustomers = async () => {
     if (!formData.halopsa_url) {
@@ -1030,7 +1074,9 @@ function IntegrationsSection({ queryClient }) {
     setSyncResult(null);
     
     try {
-      const response = await base44.functions.invoke('syncHaloPSACustomers');
+      const response = await base44.functions.invoke('syncHaloPSACustomers', {
+        fieldMapping: formData.halopsa_field_mapping
+      });
       const result = response.data;
       
       if (result.success) {
@@ -1038,10 +1084,15 @@ function IntegrationsSection({ queryClient }) {
         queryClient.invalidateQueries({ queryKey: ['customers'] });
         setSyncResult({ success: true, message: result.message });
       } else {
-        setSyncResult({ success: false, message: result.error || 'Sync failed' });
+        setSyncResult({ success: false, message: result.error || 'Sync failed', details: result.details || result.debug });
       }
     } catch (error) {
-      setSyncResult({ success: false, message: error.response?.data?.error || 'Sync failed. Please check your credentials.' });
+      const errorData = error.response?.data;
+      setSyncResult({ 
+        success: false, 
+        message: errorData?.error || 'Sync failed. Please check your credentials.',
+        details: errorData?.details || errorData?.debug 
+      });
     }
     
     setSyncing(false);
@@ -1056,7 +1107,16 @@ function IntegrationsSection({ queryClient }) {
         halopsa_client_secret: settings[0].halopsa_client_secret || '',
         halopsa_tenant: settings[0].halopsa_tenant || '',
         halopsa_sync_customers: settings[0].halopsa_sync_customers !== false,
-        halopsa_sync_tickets: settings[0].halopsa_sync_tickets || false
+        halopsa_sync_tickets: settings[0].halopsa_sync_tickets || false,
+        halopsa_field_mapping: settings[0].halopsa_field_mapping || {
+          name: 'name',
+          email: 'email',
+          phone: 'main_phone',
+          address: 'address',
+          city: 'city',
+          state: 'county',
+          zip: 'postcode'
+        }
       });
     }
   }, [settings]);
@@ -1159,10 +1219,58 @@ function IntegrationsSection({ queryClient }) {
                   <span className="text-sm">Sync Tickets</span>
                 </label>
               </div>
+              {/* Field Mapping */}
+              <div className="pt-2 border-t border-slate-200">
+                <button 
+                  onClick={() => setShowFieldMapping(!showFieldMapping)}
+                  className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700"
+                >
+                  <Settings className="w-4 h-4" />
+                  {showFieldMapping ? 'Hide' : 'Show'} Field Mapping
+                </button>
+                
+                {showFieldMapping && (
+                  <div className="mt-3 p-3 bg-white rounded-lg border space-y-3">
+                    <p className="text-xs text-slate-500">Map HaloPSA fields to your customer fields. Common HaloPSA fields: name, client_name, email, main_email, phone_number, main_phone, address, city, county, state, postcode</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {Object.entries(formData.halopsa_field_mapping || {}).map(([key, value]) => (
+                        <div key={key}>
+                          <Label className="text-xs capitalize">{key} → HaloPSA field</Label>
+                          <Input 
+                            value={value} 
+                            onChange={(e) => setFormData(p => ({ 
+                              ...p, 
+                              halopsa_field_mapping: { ...p.halopsa_field_mapping, [key]: e.target.value }
+                            }))} 
+                            className="mt-1 h-8 text-sm" 
+                            placeholder={`HaloPSA field for ${key}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
                 <Button 
+                  onClick={handleTestConnection} 
+                  disabled={testingConnection || syncing}
+                  variant="outline"
+                  className="border-purple-300 text-purple-600 hover:bg-purple-50"
+                >
+                  {testingConnection ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Testing...
+                    </>
+                  ) : (
+                    'Test Connection'
+                  )}
+                </Button>
+                <Button 
                   onClick={handleSyncCustomers} 
-                  disabled={syncing}
+                  disabled={syncing || testingConnection}
                   className="bg-purple-600 hover:bg-purple-700"
                 >
                   {syncing ? (
@@ -1189,12 +1297,17 @@ function IntegrationsSection({ queryClient }) {
                   "p-3 rounded-lg text-sm",
                   syncResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
                 )}>
-                  {syncResult.message}
+                  <p>{syncResult.message}</p>
+                  {syncResult.details && (
+                    <pre className="mt-2 text-xs bg-white/50 p-2 rounded overflow-x-auto">
+                      {typeof syncResult.details === 'object' ? JSON.stringify(syncResult.details, null, 2) : syncResult.details}
+                    </pre>
+                  )}
                 </div>
               )}
 
-              <p className="text-xs text-slate-500 bg-emerald-50 p-3 rounded-lg border border-emerald-200">
-                Connected to HaloPSA. Click "Sync Customers Now" to import customers from your HaloPSA instance.
+              <p className="text-xs text-slate-500 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <strong>Note:</strong> Credentials are stored in environment variables (HALOPSA_CLIENT_ID, HALOPSA_CLIENT_SECRET, HALOPSA_TENANT). The URL is saved above. Use "Test Connection" to verify your setup.
               </p>
             </div>
           )}
