@@ -44,6 +44,7 @@ export default function Customers() {
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, customer: null });
   const [expandedCompanies, setExpandedCompanies] = useState({});
   const [allCompaniesExpanded, setAllCompaniesExpanded] = useState(true);
+  const [viewFilter, setViewFilter] = useState('all'); // 'all', 'companies', 'contacts'
   const [addingContactTo, setAddingContactTo] = useState(null);
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', company: '', address: '', city: '', state: '', zip: '', notes: '', is_company: false, company_id: ''
@@ -218,20 +219,53 @@ export default function Customers() {
         </motion.div>
 
         <div className="bg-white rounded-2xl border border-slate-100 p-4 mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input
-              placeholder="Search customers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                placeholder="Search customers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+              <button
+                onClick={() => setViewFilter('all')}
+                className={cn(
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                  viewFilter === 'all' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                All ({companies.length + standaloneContacts.length})
+              </button>
+              <button
+                onClick={() => setViewFilter('companies')}
+                className={cn(
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5",
+                  viewFilter === 'companies' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                Companies ({companies.length})
+              </button>
+              <button
+                onClick={() => setViewFilter('contacts')}
+                className={cn(
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5",
+                  viewFilter === 'contacts' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                <Users className="w-3.5 h-3.5" />
+                Contacts ({standaloneContacts.length})
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="space-y-4">
           {/* Companies with expandable contacts */}
-          {filteredCompanies.length > 0 && (
+          {(viewFilter === 'all' || viewFilter === 'companies') && filteredCompanies.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-slate-500 flex items-center gap-2">
@@ -352,7 +386,7 @@ export default function Customers() {
           )}
 
           {/* Standalone Contacts */}
-          {filteredStandaloneContacts.length > 0 && (
+          {(viewFilter === 'all' || viewFilter === 'contacts') && filteredStandaloneContacts.length > 0 && (
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-slate-500 flex items-center gap-2">
                 <Users className="w-4 h-4" /> Individual Contacts ({filteredStandaloneContacts.length})
@@ -411,7 +445,9 @@ export default function Customers() {
             </div>
           )}
 
-          {filteredCompanies.length === 0 && filteredStandaloneContacts.length === 0 && (
+          {((viewFilter === 'all' && filteredCompanies.length === 0 && filteredStandaloneContacts.length === 0) ||
+            (viewFilter === 'companies' && filteredCompanies.length === 0) ||
+            (viewFilter === 'contacts' && filteredStandaloneContacts.length === 0)) && (
             <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
               <Users className="w-12 h-12 mx-auto text-slate-300 mb-4" />
               <h3 className="text-lg font-medium text-slate-900 mb-2">No customers yet</h3>
@@ -555,26 +591,54 @@ export default function Customers() {
           {selectedCustomer && (
             <div className="space-y-6 mt-4">
               {/* Contact Info */}
-              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="w-4 h-4 text-slate-400" />
-                  <span>{selectedCustomer.email}</span>
+              <div className="p-4 bg-slate-50 rounded-xl space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  {selectedCustomer.email && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="w-4 h-4 text-slate-400" />
+                      <a href={`mailto:${selectedCustomer.email}`} className="text-[#0069AF] hover:underline">{selectedCustomer.email}</a>
+                    </div>
+                  )}
+                  {selectedCustomer.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="w-4 h-4 text-slate-400" />
+                      <a href={`tel:${selectedCustomer.phone}`} className="text-[#0069AF] hover:underline">{selectedCustomer.phone}</a>
+                    </div>
+                  )}
                 </div>
-                {selectedCustomer.phone && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="w-4 h-4 text-slate-400" />
-                    <span>{selectedCustomer.phone}</span>
-                  </div>
-                )}
                 {(selectedCustomer.address || selectedCustomer.city) && (
-                  <div className="flex items-center gap-2 text-sm col-span-2">
+                  <div className="flex items-center gap-2 text-sm">
                     <MapPin className="w-4 h-4 text-slate-400" />
                     <span>{[selectedCustomer.address, selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}</span>
                   </div>
                 )}
+                
+                {/* Summary Stats */}
+                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-200">
+                  <div className="text-center p-2 bg-white rounded-lg">
+                    <p className="text-xl font-bold text-[#0069AF]">{getProposalCount(selectedCustomer.id, selectedCustomer.email)}</p>
+                    <p className="text-xs text-slate-500">Proposals</p>
+                  </div>
+                  <div className="text-center p-2 bg-white rounded-lg">
+                    <p className="text-xl font-bold text-[#0069AF]">{getProjectCount(selectedCustomer.id)}</p>
+                    <p className="text-xs text-slate-500">Projects</p>
+                  </div>
+                  <div className="text-center p-2 bg-white rounded-lg">
+                    <p className="text-xl font-bold text-emerald-600">${getTotalValue(selectedCustomer.id, selectedCustomer.email).toLocaleString()}</p>
+                    <p className="text-xs text-slate-500">Won Value</p>
+                  </div>
+                </div>
+
                 {selectedCustomer.default_tax_rate > 0 && (
-                  <div className="text-sm col-span-2">
+                  <div className="text-sm pt-2 border-t border-slate-200">
                     <span className="text-slate-500">Default Tax Rate:</span> <span className="font-medium">{selectedCustomer.default_tax_rate}%</span>
+                  </div>
+                )}
+                
+                {selectedCustomer.source && (
+                  <div className="text-xs text-slate-400 pt-2 border-t border-slate-200">
+                    Source: <Badge variant="outline" className="text-xs">{selectedCustomer.source}</Badge>
+                    {selectedCustomer.external_id && <span className="ml-2">ID: {selectedCustomer.external_id}</span>}
                   </div>
                 )}
               </div>
