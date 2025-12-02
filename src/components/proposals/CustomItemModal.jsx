@@ -180,6 +180,82 @@ Return results as JSON array.`,
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
+          {/* Amazon Search Toggle */}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={showSearch ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowSearch(!showSearch)}
+              className={showSearch ? "bg-[#FF9900] hover:bg-[#e88b00]" : ""}
+            >
+              <ShoppingCart className="w-4 h-4 mr-1.5" />
+              Search Amazon
+            </Button>
+          </div>
+
+          {/* Amazon Search Panel */}
+          {showSearch && (
+            <div className="p-4 bg-gradient-to-r from-[#232F3E] to-[#37475A] rounded-xl space-y-3">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAmazonSearch()}
+                    placeholder="Search for products..."
+                    className="pl-9 bg-white"
+                  />
+                </div>
+                <Button 
+                  onClick={handleAmazonSearch} 
+                  disabled={searching}
+                  className="bg-[#FF9900] hover:bg-[#e88b00] text-black font-medium"
+                >
+                  {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
+                </Button>
+              </div>
+              
+              {searching && (
+                <div className="text-center py-4 text-white/70">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                  <p className="text-sm">Searching products...</p>
+                </div>
+              )}
+              
+              {searchResults.length > 0 && (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {searchResults.map((product, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => selectSearchResult(product)}
+                      className="p-3 bg-white rounded-lg cursor-pointer hover:ring-2 hover:ring-[#FF9900] transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-slate-900 text-sm line-clamp-2">{product.name}</h4>
+                          {product.description && (
+                            <p className="text-xs text-slate-500 mt-1 line-clamp-1">{product.description}</p>
+                          )}
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="font-bold text-emerald-600">${product.price?.toFixed(2)}</p>
+                          <p className="text-[10px] text-slate-400">Est. cost</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-[10px] text-white/50 flex items-center gap-1">
+                <ExternalLink className="w-3 h-3" />
+                Prices are estimates from web search
+              </p>
+            </div>
+          )}
+
           {/* Image Upload */}
           <div>
             <Label className="text-xs text-slate-500 uppercase">Item Image</Label>
