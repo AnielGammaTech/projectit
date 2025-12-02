@@ -1123,6 +1123,12 @@ function IntegrationsSection({ queryClient }) {
   const [syncResult, setSyncResult] = useState(null);
   const [showFieldMapping, setShowFieldMapping] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
+  
+  // Hudu state
+  const [huduSyncing, setHuduSyncing] = useState(false);
+  const [huduTesting, setHuduTesting] = useState(false);
+  const [huduResult, setHuduResult] = useState(null);
+  
   const [formData, setFormData] = useState({
     halopsa_enabled: false,
     halopsa_url: '',
@@ -1141,7 +1147,11 @@ function IntegrationsSection({ queryClient }) {
       city: 'city',
       state: 'county',
       zip: 'postcode'
-    }
+    },
+    hudu_enabled: false,
+    hudu_base_url: '',
+    hudu_api_key: '',
+    hudu_sync_customers: true
   });
 
   const { data: settings = [], refetch } = useQuery({
@@ -1236,10 +1246,79 @@ function IntegrationsSection({ queryClient }) {
           city: 'city',
           state: 'county',
           zip: 'postcode'
-        }
+        },
+        hudu_enabled: settings[0].hudu_enabled || false,
+        hudu_base_url: settings[0].hudu_base_url || '',
+        hudu_api_key: settings[0].hudu_api_key || '',
+        hudu_sync_customers: settings[0].hudu_sync_customers !== false
       });
     }
   }, [settings]);
+
+  const handleHuduTest = async () => {
+    if (!formData.hudu_base_url || !formData.hudu_api_key) {
+      setHuduResult({ success: false, message: 'Please enter Hudu Base URL and API Key first' });
+      return;
+    }
+    
+    setHuduTesting(true);
+    setHuduResult(null);
+    
+    try {
+      // Save settings first so the function can read them
+      await handleSave();
+      
+      const response = await base44.functions.invoke('syncHuduCustomers', { testOnly: true });
+      const result = response.data;
+      
+      if (result.success) {
+        setHuduResult({ success: true, message: result.message });
+      } else {
+        setHuduResult({ success: false, message: result.error || 'Connection failed', details: result.details });
+      }
+    } catch (error) {
+      const errorData = error.response?.data;
+      setHuduResult({ 
+        success: false, 
+        message: errorData?.error || 'Connection failed. Check your credentials.',
+        details: errorData?.details
+      });
+    }
+    
+    setHuduTesting(false);
+  };
+
+  const handleHuduSync = async () => {
+    if (!formData.hudu_base_url || !formData.hudu_api_key) {
+      setHuduResult({ success: false, message: 'Please enter Hudu Base URL and API Key first' });
+      return;
+    }
+    
+    setHuduSyncing(true);
+    setHuduResult(null);
+    
+    try {
+      const response = await base44.functions.invoke('syncHuduCustomers', {});
+      const result = response.data;
+      
+      if (result.success) {
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ['customers'] });
+        setHuduResult({ success: true, message: result.message });
+      } else {
+        setHuduResult({ success: false, message: result.error || 'Sync failed', details: result.details });
+      }
+    } catch (error) {
+      const errorData = error.response?.data;
+      setHuduResult({ 
+        success: false, 
+        message: errorData?.error || 'Sync failed. Please check your credentials.',
+        details: errorData?.details
+      });
+    }
+    
+    setHuduSyncing(false);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -1437,6 +1516,126 @@ function IntegrationsSection({ queryClient }) {
               <p className="text-xs text-slate-500 bg-blue-50 p-3 rounded-lg border border-blue-200">
                 <strong>Note:</strong> Credentials are stored in environment variables (HALOPSA_CLIENT_ID, HALOPSA_CLIENT_SECRET, HALOPSA_TENANT). The URL is saved above. Use "Test Connection" to verify your setup.
               </p>
+            </div>
+          )}
+        </div>
+
+        {/* Hudu Integration */}
+        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">Hudu</h3>
+                <p className="text-xs text-slate-500">Sync customers from Hudu documentation platform</p>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox 
+                checked={formData.hudu_enabled} 
+                onCheckedChange={(checked) => setFormData(p => ({ ...p, hudu_enabled: checked }))} 
+              />
+              <span className="text-sm font-medium">{formData.hudu_enabled ? 'Enabled' : 'Disabled'}</span>
+            </label>
+          </div>
+
+          {formData.hudu_enabled && (
+            <div className="space-y-4 pt-4 border-t border-slate-200">
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs text-blue-700">
+                  <strong>Where to find your API key:</strong> In Hudu, go to <strong>Admin → API Keys</strong> and create a new API key. Copy both the API key and your Hudu instance URL.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs">Hudu Base URL</Label>
+                  <Input 
+                    value={formData.hudu_base_url} 
+                    onChange={(e) => setFormData(p => ({ ...p, hudu_base_url: e.target.value }))} 
+                    placeholder="https://yourcompany.huducloud.com" 
+                    className="mt-1" 
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Your Hudu instance URL</p>
+                </div>
+                <div>
+                  <Label className="text-xs">API Key</Label>
+                  <Input 
+                    type="password"
+                    value={formData.hudu_api_key} 
+                    onChange={(e) => setFormData(p => ({ ...p, hudu_api_key: e.target.value }))} 
+                    placeholder="Enter your Hudu API key" 
+                    className="mt-1" 
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">From Admin → API Keys</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox 
+                    checked={formData.hudu_sync_customers} 
+                    onCheckedChange={(checked) => setFormData(p => ({ ...p, hudu_sync_customers: checked }))} 
+                  />
+                  <span className="text-sm">Sync Companies as Customers</span>
+                </label>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
+                <Button 
+                  onClick={handleHuduTest} 
+                  disabled={huduTesting || huduSyncing}
+                  variant="outline"
+                  className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                >
+                  {huduTesting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Testing...
+                    </>
+                  ) : (
+                    'Test Connection'
+                  )}
+                </Button>
+                <Button 
+                  onClick={handleHuduSync} 
+                  disabled={huduSyncing || huduTesting}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {huduSyncing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Syncing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Sync Customers Now
+                    </>
+                  )}
+                </Button>
+                {settings[0]?.hudu_last_sync && (
+                  <span className="text-xs text-slate-500">
+                    Last sync: {new Date(settings[0].hudu_last_sync).toLocaleString()}
+                  </span>
+                )}
+              </div>
+              
+              {huduResult && (
+                <div className={cn(
+                  "p-3 rounded-lg text-sm",
+                  huduResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+                )}>
+                  <p>{huduResult.message}</p>
+                  {huduResult.details && (
+                    <pre className="mt-2 text-xs bg-white/50 p-2 rounded overflow-x-auto">
+                      {typeof huduResult.details === 'object' ? JSON.stringify(huduResult.details, null, 2) : huduResult.details}
+                    </pre>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
