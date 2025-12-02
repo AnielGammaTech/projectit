@@ -15,45 +15,69 @@ Deno.serve(async (req) => {
     const tenant = Deno.env.get("HALOPSA_TENANT");
 
     if (!clientId || !clientSecret) {
-      return Response.json({ error: 'HaloPSA credentials not configured' }, { status: 400 });
+      return Response.json({ error: 'HaloPSA credentials not configured. Please set HALOPSA_CLIENT_ID and HALOPSA_CLIENT_SECRET in your environment variables.' }, { status: 400 });
     }
 
     // Get integration settings for the URL
     const settings = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
-    const haloUrl = settings[0]?.halopsa_url;
+    let haloUrl = settings[0]?.halopsa_url;
 
     if (!haloUrl) {
-      return Response.json({ error: 'HaloPSA URL not configured in settings' }, { status: 400 });
+      return Response.json({ error: 'HaloPSA URL not configured in Adminland settings' }, { status: 400 });
     }
 
-    // Get OAuth token from HaloPSA
-    const tokenUrl = `${haloUrl}/auth/token`;
-    const tokenBody = new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: clientId,
-      client_secret: clientSecret,
-      scope: 'all'
-    });
+    // Clean up URL - remove trailing slash
+    haloUrl = haloUrl.replace(/\/$/, '');
 
-    if (tenant) {
-      tokenBody.append('tenant', tenant);
+    // HaloPSA auth endpoint - try different common paths
+    let accessToken = null;
+    let authError = null;
+
+    // Try the standard HaloPSA auth endpoint
+    const authEndpoints = [
+      `${haloUrl}/auth/token`,
+      `${haloUrl}/api/authtoken`
+    ];
+
+    for (const tokenUrl of authEndpoints) {
+      try {
+        const tokenBody = new URLSearchParams({
+          grant_type: 'client_credentials',
+          client_id: clientId,
+          client_secret: clientSecret,
+          scope: 'all'
+        });
+
+        if (tenant) {
+          tokenBody.append('tenant', tenant);
+        }
+
+        const tokenResponse = await fetch(tokenUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: tokenBody
+        });
+
+        if (tokenResponse.ok) {
+          const tokenData = await tokenResponse.json();
+          accessToken = tokenData.access_token;
+          break;
+        } else {
+          authError = await tokenResponse.text();
+        }
+      } catch (e) {
+        authError = e.message;
+      }
     }
 
-    const tokenResponse = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: tokenBody
-    });
-
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      return Response.json({ error: `Failed to authenticate with HaloPSA: ${errorText}` }, { status: 401 });
+    if (!accessToken) {
+      return Response.json({ 
+        error: `Failed to authenticate with HaloPSA. Check your credentials and URL. Details: ${authError}`,
+        debug: { haloUrl, clientIdLength: clientId?.length, hasTenant: !!tenant }
+      }, { status: 401 });
     }
-
-    const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.access_token;
 
     // Fetch clients from HaloPSA
     const clientsUrl = `${haloUrl}/api/Client?count=500`;
@@ -70,7 +94,8 @@ Deno.serve(async (req) => {
     }
 
     const clientsData = await clientsResponse.json();
-    const haloClients = clientsData.clients || [];
+    // HaloPSA returns clients in different formats depending on version
+    const haloClients = clientsData.clients || clientsData.records || clientsData || [];
 
     // Get existing customers to check for duplicates
     const existingCustomers = await base44.entities.Customer.list();
