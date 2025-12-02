@@ -40,6 +40,7 @@ import { cn } from '@/lib/utils';
 
 export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('products');
   const [showItemModal, setShowItemModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
@@ -88,15 +89,19 @@ export default function Inventory() {
   const canCheckout = isAdmin || !appSettings.inventory_checkout_groups?.length || 
     appSettings.inventory_checkout_groups.some(g => userGroupIds.includes(g));
 
-  const filteredItems = items.filter(item =>
+  const products = items.filter(item => item.item_type !== 'service');
+  const services = items.filter(item => item.item_type === 'service');
+  const currentItems = activeTab === 'products' ? products : services;
+
+  const filteredItems = currentItems.filter(item =>
     item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const lowStockItems = items.filter(i => i.quantity_in_stock <= i.minimum_stock && i.quantity_in_stock > 0);
-  const outOfStockItems = items.filter(i => i.quantity_in_stock === 0);
+  const lowStockItems = products.filter(i => i.quantity_in_stock <= i.minimum_stock && i.quantity_in_stock > 0);
+  const outOfStockItems = products.filter(i => i.quantity_in_stock === 0);
 
   const handleDelete = async () => {
     if (deleteConfirm) {
@@ -156,75 +161,98 @@ export default function Inventory() {
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
         >
           <div>
-            <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Inventory</h1>
-            <p className="text-slate-500 mt-1">Manage stock, checkout items, and print labels</p>
+            <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Catalog</h1>
+            <p className="text-slate-500 mt-1">Manage products and services</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowScanModal(true)}>
-              <Scan className="w-4 h-4 mr-2" />
-              Scan
-            </Button>
+            {activeTab === 'products' && (
+              <Button variant="outline" onClick={() => setShowScanModal(true)}>
+                <Scan className="w-4 h-4 mr-2" />
+                Scan
+              </Button>
+            )}
             {canEdit && (
               <Button
                 onClick={() => { setEditingItem(null); setShowItemModal(true); }}
                 className="bg-[#0069AF] hover:bg-[#133F5C]"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Item
+                Add {activeTab === 'products' ? 'Product' : 'Service'}
               </Button>
             )}
           </div>
         </motion.div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl border p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-[#74C7FF]/20">
-                <Package className="w-5 h-5 text-[#0069AF]" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-[#133F5C]">{items.length}</p>
-                <p className="text-sm text-slate-500">Total Items</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-100">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-[#133F5C]">
-                  {items.filter(i => i.quantity_in_stock > i.minimum_stock).length}
-                </p>
-                <p className="text-sm text-slate-500">In Stock</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-100">
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-[#133F5C]">{lowStockItems.length}</p>
-                <p className="text-sm text-slate-500">Low Stock</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-red-100">
-                <X className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-[#133F5C]">{outOfStockItems.length}</p>
-                <p className="text-sm text-slate-500">Out of Stock</p>
-              </div>
-            </div>
-          </div>
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          <Button 
+            variant={activeTab === 'products' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('products')}
+            className={activeTab === 'products' ? 'bg-[#0069AF]' : ''}
+          >
+            <Package className="w-4 h-4 mr-2" />
+            Products ({products.length})
+          </Button>
+          <Button 
+            variant={activeTab === 'services' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('services')}
+            className={activeTab === 'services' ? 'bg-[#0069AF]' : ''}
+          >
+            Services ({services.length})
+          </Button>
         </div>
+
+        {/* Stats - Only show for products */}
+        {activeTab === 'products' && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-xl border p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-[#74C7FF]/20">
+                  <Package className="w-5 h-5 text-[#0069AF]" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#133F5C]">{products.length}</p>
+                  <p className="text-sm text-slate-500">Total Products</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl border p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-green-100">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#133F5C]">
+                    {products.filter(i => i.quantity_in_stock > i.minimum_stock).length}
+                  </p>
+                  <p className="text-sm text-slate-500">In Stock</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl border p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-100">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#133F5C]">{lowStockItems.length}</p>
+                  <p className="text-sm text-slate-500">Low Stock</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl border p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-red-100">
+                  <X className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[#133F5C]">{outOfStockItems.length}</p>
+                  <p className="text-sm text-slate-500">Out of Stock</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Search */}
         <div className="relative mb-6">
@@ -354,6 +382,7 @@ export default function Inventory() {
         onClose={() => { setShowItemModal(false); setEditingItem(null); }}
         item={editingItem}
         onSaved={() => queryClient.invalidateQueries({ queryKey: ['inventoryItems'] })}
+        defaultType={activeTab === 'services' ? 'service' : 'product'}
       />
 
       {/* Checkout Modal */}
@@ -394,11 +423,11 @@ export default function Inventory() {
   );
 }
 
-function ItemModal({ open, onClose, item, onSaved }) {
+function ItemModal({ open, onClose, item, onSaved, defaultType = 'product' }) {
   const [formData, setFormData] = useState({
     name: '', sku: '', barcode: '', category: '', image_url: '',
     quantity_in_stock: 0, minimum_stock: 0, unit_cost: '', sell_price: '',
-    location: '', description: ''
+    location: '', description: '', item_type: 'product'
   });
   const [uploading, setUploading] = useState(false);
 
@@ -415,16 +444,17 @@ function ItemModal({ open, onClose, item, onSaved }) {
         unit_cost: item.unit_cost || '',
         sell_price: item.sell_price || '',
         location: item.location || '',
-        description: item.description || ''
+        description: item.description || '',
+        item_type: item.item_type || 'product'
       });
     } else {
       setFormData({
         name: '', sku: '', barcode: '', category: '', image_url: '',
         quantity_in_stock: 0, minimum_stock: 0, unit_cost: '', sell_price: '',
-        location: '', description: ''
+        location: '', description: '', item_type: defaultType
       });
     }
-  }, [item, open]);
+  }, [item, open, defaultType]);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -445,7 +475,9 @@ function ItemModal({ open, onClose, item, onSaved }) {
     const data = {
       ...formData,
       unit_cost: formData.unit_cost ? Number(formData.unit_cost) : null,
-      sell_price: formData.sell_price ? Number(formData.sell_price) : null
+      sell_price: formData.sell_price ? Number(formData.sell_price) : null,
+      quantity_in_stock: formData.item_type === 'service' ? 0 : formData.quantity_in_stock,
+      minimum_stock: formData.item_type === 'service' ? 0 : formData.minimum_stock
     };
     if (item) {
       await base44.entities.InventoryItem.update(item.id, data);
@@ -456,11 +488,13 @@ function ItemModal({ open, onClose, item, onSaved }) {
     onClose();
   };
 
+  const isService = formData.item_type === 'service';
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{item ? 'Edit Item' : 'Add Item'}</DialogTitle>
+          <DialogTitle>{item ? `Edit ${isService ? 'Service' : 'Product'}` : `Add ${isService ? 'Service' : 'Product'}`}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Image Upload */}
@@ -492,6 +526,19 @@ function ItemModal({ open, onClose, item, onSaved }) {
           </div>
 
           <div>
+            <Label>Type</Label>
+            <Select value={formData.item_type} onValueChange={(v) => setFormData(p => ({ ...p, item_type: v }))}>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="product">Product</SelectItem>
+                <SelectItem value="service">Service</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <Label>Name *</Label>
             <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} required className="mt-1" />
           </div>
@@ -507,26 +554,30 @@ function ItemModal({ open, onClose, item, onSaved }) {
             </div>
           </div>
 
-          <div>
-            <Label>Barcode</Label>
-            <div className="flex gap-2 mt-1">
-              <Input value={formData.barcode} onChange={(e) => setFormData(p => ({ ...p, barcode: e.target.value }))} placeholder="Enter or generate" />
-              <Button type="button" variant="outline" onClick={generateBarcode}>
-                <QrCode className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+          {!isService && (
+            <>
+              <div>
+                <Label>Barcode</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input value={formData.barcode} onChange={(e) => setFormData(p => ({ ...p, barcode: e.target.value }))} placeholder="Enter or generate" />
+                  <Button type="button" variant="outline" onClick={generateBarcode}>
+                    <QrCode className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Quantity</Label>
-              <Input type="number" value={formData.quantity_in_stock} onChange={(e) => setFormData(p => ({ ...p, quantity_in_stock: Number(e.target.value) }))} className="mt-1" />
-            </div>
-            <div>
-              <Label>Min Stock Alert</Label>
-              <Input type="number" value={formData.minimum_stock} onChange={(e) => setFormData(p => ({ ...p, minimum_stock: Number(e.target.value) }))} className="mt-1" />
-            </div>
-          </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Quantity</Label>
+                  <Input type="number" value={formData.quantity_in_stock} onChange={(e) => setFormData(p => ({ ...p, quantity_in_stock: Number(e.target.value) }))} className="mt-1" />
+                </div>
+                <div>
+                  <Label>Min Stock Alert</Label>
+                  <Input type="number" value={formData.minimum_stock} onChange={(e) => setFormData(p => ({ ...p, minimum_stock: Number(e.target.value) }))} className="mt-1" />
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -539,10 +590,12 @@ function ItemModal({ open, onClose, item, onSaved }) {
             </div>
           </div>
 
-          <div>
-            <Label>Location</Label>
-            <Input value={formData.location} onChange={(e) => setFormData(p => ({ ...p, location: e.target.value }))} className="mt-1" placeholder="e.g., Warehouse A, Shelf 3" />
-          </div>
+          {!isService && (
+            <div>
+              <Label>Location</Label>
+              <Input value={formData.location} onChange={(e) => setFormData(p => ({ ...p, location: e.target.value }))} className="mt-1" placeholder="e.g., Warehouse A, Shelf 3" />
+            </div>
+          )}
 
           <div>
             <Label>Description</Label>
@@ -552,7 +605,7 @@ function ItemModal({ open, onClose, item, onSaved }) {
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]">
-              {item ? 'Update' : 'Add Item'}
+              {item ? 'Update' : `Add ${isService ? 'Service' : 'Product'}`}
             </Button>
           </div>
         </form>
