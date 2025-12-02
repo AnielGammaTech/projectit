@@ -137,6 +137,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
                   <SelectItem value="needed">Needed</SelectItem>
                   <SelectItem value="ordered">Ordered</SelectItem>
                   <SelectItem value="received">Received</SelectItem>
+                  <SelectItem value="ready_to_install">Ready to Install</SelectItem>
                   <SelectItem value="installed">Installed</SelectItem>
                 </SelectContent>
               </Select>

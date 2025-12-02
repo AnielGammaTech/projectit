@@ -46,6 +46,7 @@ import {
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import PartModal from '@/components/modals/PartModal';
+import PartDetailModal from '@/components/modals/PartDetailModal';
 
 const statusConfig = {
   needed: { label: 'Needed', color: 'bg-slate-100 text-slate-700 border-slate-200' },
@@ -88,6 +89,7 @@ export default function ProjectParts() {
   const [editingPart, setEditingPart] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, part: null });
   const [uploading, setUploading] = useState(false);
+  const [selectedPartDetail, setSelectedPartDetail] = useState(null);
   
   // Multi-select state
   const [selectedParts, setSelectedParts] = useState(new Set());
@@ -537,7 +539,7 @@ export default function ProjectParts() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ delay: idx * 0.02 }}
-                  onClick={() => selectionMode ? togglePartSelection(part.id) : setEditingPart(part) || setShowPartModal(true)}
+                  onClick={() => selectionMode ? togglePartSelection(part.id) : setSelectedPartDetail(part)}
                   className={cn(
                     "bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md transition-all group cursor-pointer",
                     isSelected && "ring-2 ring-amber-500 bg-amber-50/50"
@@ -727,6 +729,16 @@ export default function ProjectParts() {
         projectId={projectId}
         teamMembers={teamMembers}
         onSave={handleSavePart}
+      />
+
+      <PartDetailModal
+        open={!!selectedPartDetail}
+        onClose={() => setSelectedPartDetail(null)}
+        part={selectedPartDetail}
+        teamMembers={teamMembers}
+        currentUser={currentUser}
+        onEdit={(part) => { setSelectedPartDetail(null); setEditingPart(part); setShowPartModal(true); }}
+        onStatusChange={(part, status) => { handleStatusChange(part, status); setSelectedPartDetail({ ...part, status }); }}
       />
 
       <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, part: null })}>
