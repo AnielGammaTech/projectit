@@ -1131,6 +1131,10 @@ function IntegrationsSection({ queryClient }) {
   const [huduResult, setHuduResult] = useState(null);
   const [showHuduFieldMapping, setShowHuduFieldMapping] = useState(false);
   
+  // Email test state
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [emailTestResult, setEmailTestResult] = useState(null);
+  
   const [formData, setFormData] = useState({
     halopsa_enabled: false,
     halopsa_url: '',
@@ -1162,7 +1166,30 @@ function IntegrationsSection({ queryClient }) {
       city: 'city',
       state: 'state',
       zip: 'zip'
-    }
+    },
+    // Email (SendGrid)
+    sendgrid_enabled: false,
+    sendgrid_api_key: '',
+    sendgrid_from_email: '',
+    sendgrid_from_name: '',
+    email_notifications_enabled: true,
+    email_proposal_sent: true,
+    email_proposal_approved: true,
+    email_proposal_rejected: true,
+    email_task_assigned: true,
+    email_task_due_reminder: true,
+    email_part_status_changed: false,
+    // Slack
+    slack_enabled: false,
+    slack_webhook_url: '',
+    slack_notify_proposals: true,
+    slack_notify_projects: true,
+    // SMS (Twilio)
+    twilio_enabled: false,
+    twilio_account_sid: '',
+    twilio_auth_token: '',
+    twilio_phone_number: '',
+    sms_notifications_enabled: false
   });
 
   const { data: settings = [], refetch } = useQuery({
