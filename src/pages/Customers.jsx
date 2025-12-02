@@ -528,7 +528,11 @@ export default function Customers() {
                 {getCustomerProposals(selectedCustomer.id, selectedCustomer.email).length > 0 ? (
                   <div className="space-y-2">
                     {getCustomerProposals(selectedCustomer.id, selectedCustomer.email).slice(0, 5).map(proposal => (
-                      <Link key={proposal.id} to={createPageUrl('ProposalEditor') + `?id=${proposal.id}`} className="block p-3 bg-white border rounded-lg hover:shadow-sm transition-all">
+                      <div 
+                        key={proposal.id} 
+                        onClick={() => window.location.href = createPageUrl('ProposalEditor') + `?id=${proposal.id}`}
+                        className="block p-3 bg-white border rounded-lg hover:shadow-sm hover:border-[#0069AF]/30 transition-all cursor-pointer"
+                      >
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="font-medium text-slate-900">{proposal.title || proposal.proposal_number}</span>
@@ -539,11 +543,13 @@ export default function Customers() {
                             <Badge variant="outline" className={cn(
                               proposal.status === 'approved' && "bg-emerald-50 text-emerald-700",
                               proposal.status === 'sent' && "bg-blue-50 text-blue-700",
-                              proposal.status === 'draft' && "bg-slate-50 text-slate-600"
+                              proposal.status === 'draft' && "bg-slate-50 text-slate-600",
+                              proposal.status === 'viewed' && "bg-purple-50 text-purple-700",
+                              proposal.status === 'rejected' && "bg-red-50 text-red-700"
                             )}>{proposal.status}</Badge>
                           </div>
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 ) : (
