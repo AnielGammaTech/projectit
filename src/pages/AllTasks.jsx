@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { ListTodo, Filter, Search, Plus, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, User, FolderKanban, Package } from 'lucide-react';
+import { ListTodo, Filter, Search, Plus, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, User, FolderKanban, Package, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { format } from 'date-fns';
+import { format, isPast, isToday, isTomorrow, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
+import TaskModal from '@/components/modals/TaskModal';
+import PartModal from '@/components/modals/PartModal';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -34,8 +36,13 @@ export default function AllTasks() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('all'); // 'all' or 'mine'
+  const [viewMode, setViewMode] = useState('all'); // 'all', 'mine', 'mine_due'
   const [currentUser, setCurrentUser] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
+  const [editingPart, setEditingPart] = useState(null);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showPartModal, setShowPartModal] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -72,14 +79,55 @@ export default function AllTasks() {
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
     const matchesAssignee = assigneeFilter === 'all' || task.assigned_to === assigneeFilter;
-    const matchesViewMode = viewMode === 'all' || (viewMode === 'mine' && task.assigned_to === currentUser?.email);
+    
+    let matchesViewMode = true;
+    if (viewMode === 'mine') {
+      matchesViewMode = task.assigned_to === currentUser?.email;
+    } else if (viewMode === 'mine_due') {
+      matchesViewMode = task.assigned_to === currentUser?.email && task.due_date;
+    }
+    
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
+  }).sort((a, b) => {
+    if (viewMode === 'mine_due') {
+      return new Date(a.due_date) - new Date(b.due_date);
+    }
+    return 0;
   });
 
   // My assigned parts (with due dates)
   const myParts = parts.filter(part => 
     part.assigned_to === currentUser?.email && part.due_date
   );
+
+  const myTasksCount = tasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed').length;
+  const myTasksWithDueCount = tasks.filter(t => t.assigned_to === currentUser?.email && t.due_date && t.status !== 'completed').length;
+
+  const handleSaveTask = async (data) => {
+    if (editingTask) {
+      await base44.entities.Task.update(editingTask.id, data);
+    }
+    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+    setShowTaskModal(false);
+    setEditingTask(null);
+  };
+
+  const handleSavePart = async (data) => {
+    if (editingPart) {
+      await base44.entities.Part.update(editingPart.id, data);
+    }
+    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    setShowPartModal(false);
+    setEditingPart(null);
+  };
+
+  const getDueDateLabel = (date) => {
+    const d = new Date(date);
+    if (isToday(d)) return { label: 'Today', color: 'text-amber-600 bg-amber-50' };
+    if (isTomorrow(d)) return { label: 'Tomorrow', color: 'text-blue-600 bg-blue-50' };
+    if (isPast(d)) return { label: 'Overdue', color: 'text-red-600 bg-red-50' };
+    return { label: format(d, 'MMM d'), color: 'text-slate-600 bg-slate-50' };
+  };
 
   const tasksByStatus = {
     todo: filteredTasks.filter(t => t.status === 'todo'),
@@ -125,6 +173,39 @@ export default function AllTasks() {
             </button>
           </div>
         </motion.div>
+
+        {/* My Tasks Buttons */}
+        {activeTab === 'tasks' && currentUser && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-wrap gap-2 mb-4"
+          >
+            <Button
+              variant={viewMode === 'all' ? 'default' : 'outline'}
+              onClick={() => setViewMode('all')}
+              className={viewMode === 'all' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : ''}
+            >
+              All Tasks
+            </Button>
+            <Button
+              variant={viewMode === 'mine' ? 'default' : 'outline'}
+              onClick={() => setViewMode('mine')}
+              className={viewMode === 'mine' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : ''}
+            >
+              <User className="w-4 h-4 mr-2" />
+              My Tasks ({myTasksCount})
+            </Button>
+            <Button
+              variant={viewMode === 'mine_due' ? 'default' : 'outline'}
+              onClick={() => setViewMode('mine_due')}
+              className={viewMode === 'mine_due' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : ''}
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              My Tasks with Due Dates ({myTasksWithDueCount})
+            </Button>
+          </motion.div>
+        )}
 
         {/* Filters - Tasks */}
         {activeTab === 'tasks' && (
@@ -224,6 +305,7 @@ export default function AllTasks() {
               filteredTasks.map((task, idx) => {
                 const status = statusConfig[task.status] || statusConfig.todo;
                 const StatusIcon = status.icon;
+                const dueInfo = task.due_date ? getDueDateLabel(task.due_date) : null;
 
                 return (
                   <motion.div
@@ -231,7 +313,8 @@ export default function AllTasks() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.02 }}
-                    className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all"
+                    onClick={() => { setEditingTask(task); setShowTaskModal(true); }}
+                    className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group"
                   >
                     <div className="flex items-start gap-4">
                       <div className={cn("p-1.5 rounded-lg", status.bg)}>
@@ -246,12 +329,15 @@ export default function AllTasks() {
                           )}>
                             {task.title}
                           </h4>
-                          <Link to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`}>
-                            <Badge variant="outline" className="shrink-0 hover:bg-slate-100">
-                              <FolderKanban className="w-3 h-3 mr-1" />
-                              {getProjectName(task.project_id)}
-                            </Badge>
-                          </Link>
+                          <div className="flex items-center gap-2">
+                            <Edit2 className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Link to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`} onClick={(e) => e.stopPropagation()}>
+                              <Badge variant="outline" className="shrink-0 hover:bg-slate-100">
+                                <FolderKanban className="w-3 h-3 mr-1" />
+                                {getProjectName(task.project_id)}
+                              </Badge>
+                            </Link>
+                          </div>
                         </div>
 
                         {task.description && (
@@ -270,11 +356,11 @@ export default function AllTasks() {
                             </div>
                           )}
 
-                          {task.due_date && (
-                            <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                              <Calendar className="w-3.5 h-3.5" />
-                              <span>{format(new Date(task.due_date), 'MMM d')}</span>
-                            </div>
+                          {dueInfo && (
+                            <Badge variant="outline" className={dueInfo.color}>
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {dueInfo.label}
+                            </Badge>
                           )}
                         </div>
                       </div>
@@ -300,65 +386,73 @@ export default function AllTasks() {
         {activeTab === 'parts' && (
           <div className="space-y-3">
             {parts.length > 0 ? (
-              parts.map((part, idx) => (
-                <motion.div
-                  key={part.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.02 }}
-                  className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="p-1.5 rounded-lg bg-amber-100">
-                      <Package className="w-5 h-5 text-amber-600" />
-                    </div>
+              parts.map((part, idx) => {
+                const dueInfo = part.due_date ? getDueDateLabel(part.due_date) : null;
+                
+                return (
+                  <motion.div
+                    key={part.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.02 }}
+                    onClick={() => { setEditingPart(part); setShowPartModal(true); }}
+                    className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="p-1.5 rounded-lg bg-amber-100">
+                        <Package className="w-5 h-5 text-amber-600" />
+                      </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-medium text-slate-900">{part.name}</h4>
-                        <Link to={createPageUrl('ProjectDetail') + `?id=${part.project_id}`}>
-                          <Badge variant="outline" className="shrink-0 hover:bg-slate-100">
-                            <FolderKanban className="w-3 h-3 mr-1" />
-                            {getProjectName(part.project_id)}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-medium text-slate-900">{part.name}</h4>
+                          <div className="flex items-center gap-2">
+                            <Edit2 className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Link to={createPageUrl('ProjectDetail') + `?id=${part.project_id}`} onClick={(e) => e.stopPropagation()}>
+                              <Badge variant="outline" className="shrink-0 hover:bg-slate-100">
+                                <FolderKanban className="w-3 h-3 mr-1" />
+                                {getProjectName(part.project_id)}
+                              </Badge>
+                            </Link>
+                          </div>
+                        </div>
+
+                        {part.part_number && (
+                          <p className="text-sm text-slate-500 mt-1">#{part.part_number}</p>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-3 mt-3">
+                          <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200">
+                            {part.status}
                           </Badge>
-                        </Link>
-                      </div>
 
-                      {part.part_number && (
-                        <p className="text-sm text-slate-500 mt-1">#{part.part_number}</p>
-                      )}
+                          {part.quantity > 1 && (
+                            <Badge variant="outline">Qty: {part.quantity}</Badge>
+                          )}
 
-                      <div className="flex flex-wrap items-center gap-3 mt-3">
-                        <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200">
-                          {part.status}
-                        </Badge>
+                          {part.assigned_name && (
+                            <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                              <User className="w-3.5 h-3.5" />
+                              <span>{part.assigned_name}</span>
+                            </div>
+                          )}
 
-                        {part.quantity > 1 && (
-                          <Badge variant="outline">Qty: {part.quantity}</Badge>
-                        )}
+                          {dueInfo && (
+                            <Badge variant="outline" className={dueInfo.color}>
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {dueInfo.label}
+                            </Badge>
+                          )}
 
-                        {part.assigned_name && (
-                          <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                            <User className="w-3.5 h-3.5" />
-                            <span>{part.assigned_name}</span>
-                          </div>
-                        )}
-
-                        {part.due_date && (
-                          <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <span>{format(new Date(part.due_date), 'MMM d')}</span>
-                          </div>
-                        )}
-
-                        {part.supplier && (
-                          <span className="text-xs text-slate-400">{part.supplier}</span>
-                        )}
+                          {part.supplier && (
+                            <span className="text-xs text-slate-400">{part.supplier}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))
+                  </motion.div>
+                );
+              })
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -373,6 +467,27 @@ export default function AllTasks() {
           </div>
         )}
       </div>
+
+      {/* Task Edit Modal */}
+      <TaskModal
+        open={showTaskModal}
+        onClose={() => { setShowTaskModal(false); setEditingTask(null); }}
+        task={editingTask}
+        projectId={editingTask?.project_id}
+        teamMembers={teamMembers}
+        groups={[]}
+        onSave={handleSaveTask}
+      />
+
+      {/* Part Edit Modal */}
+      <PartModal
+        open={showPartModal}
+        onClose={() => { setShowPartModal(false); setEditingPart(null); }}
+        part={editingPart}
+        projectId={editingPart?.project_id}
+        teamMembers={teamMembers}
+        onSave={handleSavePart}
+      />
     </div>
   );
 }
