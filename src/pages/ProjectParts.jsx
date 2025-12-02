@@ -19,7 +19,10 @@ import {
   CheckSquare,
   Square,
   X,
-  FileCheck
+  FileCheck,
+  PackageCheck,
+  Wrench,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +51,7 @@ const statusConfig = {
   needed: { label: 'Needed', color: 'bg-slate-100 text-slate-700 border-slate-200' },
   ordered: { label: 'Ordered', color: 'bg-blue-100 text-blue-700 border-blue-200' },
   received: { label: 'Received', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+  ready_to_install: { label: 'Ready to Install', color: 'bg-purple-100 text-purple-700 border-purple-200' },
   installed: { label: 'Installed', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' }
 };
 
@@ -272,6 +276,29 @@ export default function ProjectParts() {
     refetchParts();
   };
 
+  const handleReceivePart = async (part, installerEmail) => {
+    const member = teamMembers.find(m => m.email === installerEmail);
+    await base44.entities.Part.update(part.id, {
+      status: 'ready_to_install',
+      installer_email: installerEmail,
+      installer_name: member?.name || installerEmail,
+      received_date: format(new Date(), 'yyyy-MM-dd')
+    });
+    refetchParts();
+  };
+
+  const handleMarkInstalled = async (part) => {
+    await base44.entities.Part.update(part.id, {
+      status: 'installed',
+      installed_date: format(new Date(), 'yyyy-MM-dd')
+    });
+    refetchParts();
+  };
+
+  // Group parts by status for sections
+  const readyToInstallParts = parts.filter(p => p.status === 'ready_to_install');
+  const otherParts = filteredParts.filter(p => p.status !== 'ready_to_install');
+
   if (!project) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 flex items-center justify-center">
@@ -451,10 +478,56 @@ export default function ProjectParts() {
           </div>
         </div>
 
+        {/* Ready to Install Section */}
+        {readyToInstallParts.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 rounded-lg bg-purple-100">
+                <Wrench className="w-5 h-5 text-purple-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-slate-900">Ready to Install ({readyToInstallParts.length})</h2>
+            </div>
+            <div className="space-y-2">
+              {readyToInstallParts.map((part) => (
+                <motion.div
+                  key={part.id}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-purple-50 rounded-xl border border-purple-200 p-4 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <Package className="w-5 h-5 text-purple-600" />
+                    <div>
+                      <h4 className="font-medium text-slate-900">{part.name}</h4>
+                      <div className="flex items-center gap-3 text-sm text-slate-500">
+                        {part.part_number && <span>#{part.part_number}</span>}
+                        {part.quantity > 1 && <span>Qty: {part.quantity}</span>}
+                        {part.installer_name && (
+                          <span className="flex items-center gap-1">
+                            <Wrench className="w-3 h-3" />
+                            Installer: {part.installer_name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => handleMarkInstalled(part)}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Mark Installed
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Parts List */}
         <div className="space-y-3">
           <AnimatePresence>
-            {filteredParts.length > 0 ? (
+            {otherParts.length > 0 ? (
               filteredParts.map((part, idx) => {
                 const isSelected = selectedParts.has(part.id);
                 return (
@@ -560,6 +633,63 @@ export default function ProjectParts() {
                         )}
                       </div>
                     </div>
+                    <div className="flex gap-1 items-center">
+                      {/* Receive Button - shows for ordered parts */}
+                      {part.status === 'ordered' && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 border-amber-300 text-amber-700 hover:bg-amber-50"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <PackageCheck className="w-4 h-4 mr-1.5" />
+                              Receive
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                            <div className="px-2 py-1.5 text-xs text-slate-500 font-medium">Assign installer:</div>
+                            {teamMembers.map((member) => (
+                              <DropdownMenuItem key={member.id} onClick={() => handleReceivePart(part, member.email)}>
+                                <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                                  {getInitials(member.name)}
+                                </div>
+                                {member.name}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+
+                      {/* Quick mark as received for non-ordered */}
+                      {part.status === 'received' && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 border-purple-300 text-purple-700 hover:bg-purple-50"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Wrench className="w-4 h-4 mr-1.5" />
+                              Assign Install
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                            <div className="px-2 py-1.5 text-xs text-slate-500 font-medium">Assign installer:</div>
+                            {teamMembers.map((member) => (
+                              <DropdownMenuItem key={member.id} onClick={() => handleReceivePart(part, member.email)}>
+                                <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                                  {getInitials(member.name)}
+                                </div>
+                                {member.name}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditingPart(part); setShowPartModal(true); }}>
                         <Edit2 className="w-4 h-4" />
@@ -571,7 +701,7 @@ export default function ProjectParts() {
                   </div>
                 </motion.div>
               );})
-            ) : (
+            ) : filteredParts.length === 0 && readyToInstallParts.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -585,7 +715,7 @@ export default function ProjectParts() {
                   Add Part
                 </Button>
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </div>
       </div>
