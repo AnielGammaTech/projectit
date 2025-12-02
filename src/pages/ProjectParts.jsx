@@ -562,28 +562,28 @@ export default function ProjectParts() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h4 className="font-medium text-slate-900">{part.name}</h4>
-                          {part.part_number && (
-                            <p className="text-sm text-slate-500">#{part.part_number}</p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80", statusConfig[part.status]?.color)}>
-                                {statusConfig[part.status]?.label || part.status}
-                              </Badge>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              {Object.entries(statusConfig).map(([key, config]) => (
-                                <DropdownMenuItem key={key} onClick={() => handleStatusChange(part, key)}>
-                                  <Badge className={cn("mr-2", config.color)}>{config.label}</Badge>
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                      <div>
+                        <h4 className="font-medium text-slate-900">{part.name}</h4>
+                        {part.part_number && (
+                          <p className="text-sm text-slate-500">#{part.part_number}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80", statusConfig[part.status]?.color)}>
+                              {statusConfig[part.status]?.label || part.status}
+                            </Badge>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                            {Object.entries(statusConfig).map(([key, config]) => (
+                              <DropdownMenuItem key={key} onClick={(e) => { e.stopPropagation(); handleStatusChange(part, key); }}>
+                                <Badge className={cn("mr-2", config.color)}>{config.label}</Badge>
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-4 mt-3">
                         {part.quantity > 1 && (

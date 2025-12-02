@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileStack, Bell, FileText, DollarSign } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileStack, Bell, FileText, DollarSign, AlertTriangle, Clock, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
-import { format } from 'date-fns';
+import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { Link } from 'react-router-dom';
 
 import StatsCard from '@/components/dashboard/StatsCard';
@@ -79,6 +79,21 @@ export default function Dashboard() {
   const pendingQuotes = quoteRequests.filter(q => !['received'].includes(q.status));
   const approvedProposals = proposals.filter(p => p.status === 'approved');
   const approvedTotal = approvedProposals.reduce((sum, p) => sum + (p.total || 0), 0);
+
+  // Get user's overdue and due today tasks
+  const myUrgentTasks = tasks.filter(t => {
+    if (t.assigned_to !== currentUser?.email) return false;
+    if (t.status === 'completed' || t.status === 'archived') return false;
+    if (!t.due_date) return false;
+    const dueDate = new Date(t.due_date);
+    return isPast(dueDate) || isToday(dueDate) || isTomorrow(dueDate);
+  }).sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+
+  const overdueTasks = myUrgentTasks.filter(t => isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date)));
+  const dueTodayTasks = myUrgentTasks.filter(t => isToday(new Date(t.due_date)));
+  const dueTomorrowTasks = myUrgentTasks.filter(t => isTomorrow(new Date(t.due_date)));
+
+  const [dismissedAlert, setDismissedAlert] = useState(false);
 
   const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived');
   const archivedProjects = projects.filter(p => p.status === 'archived' || p.status === 'completed');
@@ -199,6 +214,102 @@ export default function Dashboard() {
             </Button>
           </div>
         </motion.div>
+
+        {/* Urgent Tasks Alert */}
+        {!dismissedAlert && myUrgentTasks.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className={cn(
+              "mb-6 rounded-2xl p-4 border-2 shadow-lg relative overflow-hidden",
+              overdueTasks.length > 0 
+                ? "bg-gradient-to-r from-red-500 to-red-600 border-red-400 text-white" 
+                : "bg-gradient-to-r from-amber-500 to-orange-500 border-amber-400 text-white"
+            )}
+          >
+            {/* Animated background pulse for overdue */}
+            {overdueTasks.length > 0 && (
+              <div className="absolute inset-0 bg-red-400/30 animate-pulse" />
+            )}
+            
+            <div className="relative flex items-start justify-between">
+              <div className="flex items-start gap-4">
+                <div className={cn(
+                  "p-3 rounded-xl shadow-lg",
+                  overdueTasks.length > 0 ? "bg-white/20" : "bg-white/20"
+                )}>
+                  {overdueTasks.length > 0 ? (
+                    <AlertTriangle className="w-6 h-6 animate-bounce" />
+                  ) : (
+                    <Clock className="w-6 h-6" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    {overdueTasks.length > 0 ? (
+                      <>
+                        <span className="animate-pulse">⚠️</span> 
+                        You have {overdueTasks.length} overdue task{overdueTasks.length > 1 ? 's' : ''}!
+                      </>
+                    ) : (
+                      <>Tasks due soon</>
+                    )}
+                  </h3>
+                  <div className="mt-2 space-y-1">
+                    {overdueTasks.slice(0, 3).map(task => {
+                      const daysOverdue = differenceInDays(new Date(), new Date(task.due_date));
+                      return (
+                        <div key={task.id} className="flex items-center gap-2 text-sm">
+                          <span className="font-medium">{task.title}</span>
+                          <span className="text-white/80">• {daysOverdue} day{daysOverdue > 1 ? 's' : ''} overdue</span>
+                        </div>
+                      );
+                    })}
+                    {dueTodayTasks.slice(0, 2).map(task => (
+                      <div key={task.id} className="flex items-center gap-2 text-sm">
+                        <span className="font-medium">{task.title}</span>
+                        <span className="text-white/80">• Due today</span>
+                      </div>
+                    ))}
+                    {dueTomorrowTasks.slice(0, 2).map(task => (
+                      <div key={task.id} className="flex items-center gap-2 text-sm">
+                        <span className="font-medium">{task.title}</span>
+                        <span className="text-white/80">• Due tomorrow</span>
+                      </div>
+                    ))}
+                    {myUrgentTasks.length > 5 && (
+                      <p className="text-sm text-white/80 mt-1">
+                        +{myUrgentTasks.length - 5} more task{myUrgentTasks.length - 5 > 1 ? 's' : ''}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link to={createPageUrl('AllTasks') + '?view=mine_due'}>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className={cn(
+                      "font-semibold shadow-lg",
+                      overdueTasks.length > 0 
+                        ? "bg-white text-red-600 hover:bg-red-50" 
+                        : "bg-white text-amber-600 hover:bg-amber-50"
+                    )}
+                  >
+                    View Tasks
+                  </Button>
+                </Link>
+                <button 
+                  onClick={() => setDismissedAlert(true)}
+                  className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Stats Grid - Clickable */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
