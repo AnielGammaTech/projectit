@@ -55,6 +55,7 @@ const adminMenuItems = [
   { id: 'admins', label: 'Add/remove administrators', icon: Shield, description: 'Control who has admin access' },
   { id: 'groups', label: 'Manage groups', icon: UserPlus, description: 'Create and manage user groups' },
   { id: 'permissions', label: 'Manage permissions', icon: Package, description: 'Control feature access by group' },
+  { id: 'proposals', label: 'Proposal settings', icon: Building2, description: 'Configure default proposal settings' },
   { id: 'categories', label: 'Change message categories', icon: Tags, description: 'Configure note and message types' },
   { id: 'tools', label: 'Rename project tools', icon: FolderKanban, description: 'Customize tool names' },
   { id: 'settings', label: 'App settings', icon: Settings, description: 'General app configuration' },
@@ -76,6 +77,8 @@ export default function Adminland() {
         return <UserGroupsSection queryClient={queryClient} />;
       case 'permissions':
         return <PermissionsSection queryClient={queryClient} />;
+      case 'proposals':
+        return <ProposalSettingsSection queryClient={queryClient} />;
       case 'categories':
         return <CategoriesSection queryClient={queryClient} />;
       case 'tools':
@@ -734,6 +737,195 @@ function ToolsSection({ queryClient }) {
           ))}
         </div>
         <p className="text-sm text-slate-500 mt-4">Tool renaming coming soon.</p>
+      </div>
+    </div>
+  );
+}
+
+function ProposalSettingsSection({ queryClient }) {
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    proposal_prefix: 'P-',
+    default_valid_days: 30,
+    default_sales_tax_percent: 0,
+    default_markup_type: 'percentage',
+    default_markup_value: 20,
+    default_terms_conditions: 'Payment due within 30 days of approval. All prices valid for 30 days.',
+    show_item_images: true,
+    company_name: '',
+    company_address: '',
+    company_phone: '',
+    company_email: '',
+    company_logo_url: ''
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['proposalSettings'],
+    queryFn: () => base44.entities.ProposalSettings.filter({ setting_key: 'main' })
+  });
+
+  useEffect(() => {
+    if (settings[0]) {
+      setFormData({
+        proposal_prefix: settings[0].proposal_prefix || 'P-',
+        default_valid_days: settings[0].default_valid_days || 30,
+        default_sales_tax_percent: settings[0].default_sales_tax_percent || 0,
+        default_markup_type: settings[0].default_markup_type || 'percentage',
+        default_markup_value: settings[0].default_markup_value || 20,
+        default_terms_conditions: settings[0].default_terms_conditions || '',
+        show_item_images: settings[0].show_item_images !== false,
+        company_name: settings[0].company_name || '',
+        company_address: settings[0].company_address || '',
+        company_phone: settings[0].company_phone || '',
+        company_email: settings[0].company_email || '',
+        company_logo_url: settings[0].company_logo_url || ''
+      });
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    if (settings[0]?.id) {
+      await base44.entities.ProposalSettings.update(settings[0].id, { ...formData, setting_key: 'main' });
+    } else {
+      await base44.entities.ProposalSettings.create({ ...formData, setting_key: 'main' });
+    }
+    refetch();
+    setSaving(false);
+  };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setFormData(prev => ({ ...prev, company_logo_url: file_url }));
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-slate-900">Proposal Settings</h2>
+          <p className="text-sm text-slate-500">Configure defaults for all proposals</p>
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+      <div className="p-6 space-y-6">
+        {/* Company Info */}
+        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+          <h3 className="font-semibold text-slate-900">Company Information</h3>
+          <div className="flex items-start gap-4">
+            <div>
+              {formData.company_logo_url ? (
+                <div className="relative">
+                  <img src={formData.company_logo_url} alt="Logo" className="w-20 h-20 object-contain rounded-lg border" />
+                  <button 
+                    onClick={() => setFormData(p => ({ ...p, company_logo_url: '' }))}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs"
+                  >×</button>
+                </div>
+              ) : (
+                <label className="w-20 h-20 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#0069AF]">
+                  <Building2 className="w-6 h-6 text-slate-400" />
+                  <span className="text-[10px] text-slate-400 mt-1">Logo</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                </label>
+              )}
+            </div>
+            <div className="flex-1 grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Company Name</Label>
+                <Input value={formData.company_name} onChange={(e) => setFormData(p => ({ ...p, company_name: e.target.value }))} className="mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Email</Label>
+                <Input value={formData.company_email} onChange={(e) => setFormData(p => ({ ...p, company_email: e.target.value }))} className="mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Phone</Label>
+                <Input value={formData.company_phone} onChange={(e) => setFormData(p => ({ ...p, company_phone: e.target.value }))} className="mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Address</Label>
+                <Input value={formData.company_address} onChange={(e) => setFormData(p => ({ ...p, company_address: e.target.value }))} className="mt-1" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Proposal Defaults */}
+        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+          <h3 className="font-semibold text-slate-900">Proposal Defaults</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label className="text-xs">Proposal Number Prefix</Label>
+              <Input value={formData.proposal_prefix} onChange={(e) => setFormData(p => ({ ...p, proposal_prefix: e.target.value }))} className="mt-1" placeholder="P-" />
+            </div>
+            <div>
+              <Label className="text-xs">Valid for (days)</Label>
+              <Input type="number" value={formData.default_valid_days} onChange={(e) => setFormData(p => ({ ...p, default_valid_days: parseInt(e.target.value) || 30 }))} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Default Tax %</Label>
+              <Input type="number" step="0.1" value={formData.default_sales_tax_percent} onChange={(e) => setFormData(p => ({ ...p, default_sales_tax_percent: parseFloat(e.target.value) || 0 }))} className="mt-1" />
+            </div>
+          </div>
+        </div>
+
+        {/* Markup Settings */}
+        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+          <h3 className="font-semibold text-slate-900">Default Markup</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs">Markup Type</Label>
+              <select 
+                value={formData.default_markup_type} 
+                onChange={(e) => setFormData(p => ({ ...p, default_markup_type: e.target.value }))}
+                className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="percentage">Percentage (%)</option>
+                <option value="fixed">Fixed Amount ($)</option>
+                <option value="none">No Markup</option>
+              </select>
+            </div>
+            {formData.default_markup_type !== 'none' && (
+              <div>
+                <Label className="text-xs">Markup Value</Label>
+                <Input 
+                  type="number" 
+                  value={formData.default_markup_value} 
+                  onChange={(e) => setFormData(p => ({ ...p, default_markup_value: parseFloat(e.target.value) || 0 }))} 
+                  className="mt-1" 
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Terms & Conditions */}
+        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+          <h3 className="font-semibold text-slate-900">Default Terms & Conditions</h3>
+          <Textarea 
+            value={formData.default_terms_conditions} 
+            onChange={(e) => setFormData(p => ({ ...p, default_terms_conditions: e.target.value }))}
+            className="h-32"
+            placeholder="Enter default terms and conditions..."
+          />
+        </div>
+
+        {/* Display Options */}
+        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+          <h3 className="font-semibold text-slate-900">Display Options</h3>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <Checkbox 
+              checked={formData.show_item_images} 
+              onCheckedChange={(checked) => setFormData(p => ({ ...p, show_item_images: checked }))} 
+            />
+            <span className="text-sm">Show item images on proposals</span>
+          </label>
+        </div>
       </div>
     </div>
   );
