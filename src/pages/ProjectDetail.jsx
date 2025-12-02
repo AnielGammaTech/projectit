@@ -17,7 +17,8 @@ import {
   Copy,
   Archive,
   Trash2,
-  FileText
+  FileText,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -447,19 +448,23 @@ export default function ProjectDetail() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleSaveAsTemplate}>
-                    <Copy className="w-4 h-4 mr-2" />
-                    Save as Template
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleArchiveProject}>
-                    <Archive className="w-4 h-4 mr-2" />
-                    Archive Project
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleDeleteProject} className="text-red-600">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Project
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => window.location.href = createPageUrl('TimeReport') + `?project_id=${projectId}`}>
+                                            <Clock className="w-4 h-4 mr-2" />
+                                            Time Report
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={handleSaveAsTemplate}>
+                                            <Copy className="w-4 h-4 mr-2" />
+                                            Save as Template
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={handleArchiveProject}>
+                                            <Archive className="w-4 h-4 mr-2" />
+                                            Archive Project
+                                          </DropdownMenuItem>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem onClick={handleDeleteProject} className="text-red-600">
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            Delete Project
+                                          </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

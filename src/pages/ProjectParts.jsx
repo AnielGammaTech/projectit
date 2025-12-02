@@ -269,7 +269,8 @@ export default function ProjectParts() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ delay: idx * 0.02 }}
-                  className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md transition-all group"
+                  onClick={() => { setEditingPart(part); setShowPartModal(true); }}
+                  className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md transition-all group cursor-pointer"
                 >
                   <div className="flex items-start gap-4">
                     <div className="p-2 rounded-lg bg-amber-100">
@@ -327,10 +328,10 @@ export default function ProjectParts() {
                       </div>
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingPart(part); setShowPartModal(true); }}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditingPart(part); setShowPartModal(true); }}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={() => setDeleteConfirm({ open: true, part })}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ open: true, part }); }}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>

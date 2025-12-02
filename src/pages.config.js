@@ -14,6 +14,7 @@ import NotificationSettings from './pages/NotificationSettings';
 import QuoteRequests from './pages/QuoteRequests';
 import Inventory from './pages/Inventory';
 import Adminland from './pages/Adminland';
+import TimeReport from './pages/TimeReport';
 import __Layout from './Layout.jsx';
 
 
@@ -34,6 +35,7 @@ export const PAGES = {
     "QuoteRequests": QuoteRequests,
     "Inventory": Inventory,
     "Adminland": Adminland,
+    "TimeReport": TimeReport,
 }
 
 export const pagesConfig = {

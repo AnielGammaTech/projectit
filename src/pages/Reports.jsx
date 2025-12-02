@@ -4,8 +4,10 @@ import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { 
   BarChart3, PieChart, TrendingUp, Calendar, Users, Package, 
-  CheckCircle2, Clock, AlertTriangle, Download, Filter
+  CheckCircle2, Clock, AlertTriangle, Download, Filter, Timer
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -120,6 +122,12 @@ export default function Reports() {
             <p className="text-slate-500 mt-1">Analytics and insights for your projects</p>
           </div>
           <div className="flex items-center gap-3">
+            <Link to={createPageUrl('TimeReport')}>
+              <Button variant="outline">
+                <Timer className="w-4 h-4 mr-2" />
+                Time Report
+              </Button>
+            </Link>
             <Select value={dateRange} onValueChange={setDateRange}>
               <SelectTrigger className="w-40 bg-white">
                 <Filter className="w-4 h-4 mr-2" />
