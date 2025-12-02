@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Save, Send, Plus, Eye, Calendar, User, Mail, Phone, FileText,
-  Search, Building2, ChevronDown
+  Search, Building2, ChevronDown, Sparkles, Wand2, Package, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,6 +45,7 @@ export default function ProposalEditor() {
   const [saving, setSaving] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showCustomItemModal, setShowCustomItemModal] = useState(false);
+  const [showAISearchModal, setShowAISearchModal] = useState(false);
   const [editingAreaIndex, setEditingAreaIndex] = useState(null);
   const [expandedAreas, setExpandedAreas] = useState({});
   
@@ -518,10 +519,20 @@ export default function ProposalEditor() {
                 </div>
               )}
 
-              <Button onClick={addArea} variant="outline" className="w-full mt-3 border-dashed h-10">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Section
-              </Button>
+              <div className="flex gap-2 mt-3">
+                <Button onClick={addArea} variant="outline" className="flex-1 border-dashed h-10">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Section
+                </Button>
+                <Button 
+                  onClick={() => setShowAISearchModal(true)} 
+                  variant="outline" 
+                  className="border-purple-300 text-purple-600 hover:bg-purple-50 h-10"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  AI Quick Add
+                </Button>
+              </div>
             </motion.div>
           </div>
 
@@ -660,6 +671,182 @@ export default function ProposalEditor() {
         markupType={markupType}
         markupValue={markupValue}
       />
+
+      {/* AI Search Modal */}
+      <AIProposalSearchModal
+        open={showAISearchModal}
+        onClose={() => setShowAISearchModal(false)}
+        onAddItem={(item) => {
+          // Add to first area or create new one
+          if (formData.areas.length === 0) {
+            setFormData(prev => ({
+              ...prev,
+              areas: [{ name: 'Items', items: [item], is_optional: false }]
+            }));
+            setExpandedAreas({ 0: true });
+          } else {
+            addItemToArea(0, item);
+          }
+        }}
+        markupType={markupType}
+        markupValue={markupValue}
+      />
     </div>
+  );
+}
+
+function AIProposalSearchModal({ open, onClose, onAddItem, markupType, markupValue }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+
+  const calculateMarkup = (cost) => {
+    if (markupType === 'percentage') return cost * (1 + markupValue / 100);
+    if (markupType === 'fixed') return cost + markupValue;
+    return cost;
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `I need product/service suggestions for a proposal: "${searchQuery}"
+      
+Return 3-5 relevant suggestions. For each provide:
+- name: Clear product/service name
+- description: Brief description (1-2 sentences)
+- category: Category
+- estimated_cost: Estimated cost in USD (number only)
+- search_term: Good search term for product image
+
+Be specific and realistic with names and prices.`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          products: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                description: { type: "string" },
+                category: { type: "string" },
+                estimated_cost: { type: "number" },
+                search_term: { type: "string" }
+              }
+            }
+          }
+        }
+      },
+      add_context_from_internet: true
+    });
+
+    const productsWithImages = await Promise.all(
+      (result.products || []).map(async (product) => {
+        try {
+          const imageResult = await base44.integrations.Core.GenerateImage({
+            prompt: `Professional product photo of ${product.search_term}, white background, studio lighting, e-commerce style, high quality`
+          });
+          return { ...product, image_url: imageResult.url };
+        } catch {
+          return product;
+        }
+      })
+    );
+
+    setSuggestions(productsWithImages);
+    setSearching(false);
+  };
+
+  const handleSelectProduct = (product) => {
+    const unitPrice = calculateMarkup(product.estimated_cost || 0);
+    onAddItem({
+      type: 'custom',
+      name: product.name,
+      description: product.description,
+      quantity: 1,
+      unit_cost: product.estimated_cost || 0,
+      unit_price: unitPrice,
+      image_url: product.image_url || ''
+    });
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-500" />
+            AI Quick Add to Proposal
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 mt-4">
+          <p className="text-sm text-slate-500">
+            Describe what you need and AI will suggest items with pricing and images.
+          </p>
+          
+          <div className="flex gap-2">
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="e.g., security camera system, network installation, cabling..."
+              className="flex-1"
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <Button 
+              onClick={handleSearch} 
+              disabled={searching || !searchQuery.trim()}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Wand2 className="w-4 h-4 mr-2" />Search</>}
+            </Button>
+          </div>
+
+          {searching && (
+            <div className="py-12 text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-500 mb-3" />
+              <p className="text-sm text-slate-500">Searching and generating suggestions...</p>
+              <p className="text-xs text-slate-400 mt-1">This may take 10-20 seconds</p>
+            </div>
+          )}
+
+          {suggestions.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="font-medium text-slate-900">Suggestions</h3>
+              {suggestions.map((product, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-start gap-4 p-4 border rounded-xl hover:border-purple-300 hover:bg-purple-50/50 cursor-pointer transition-all"
+                  onClick={() => handleSelectProduct(product)}
+                >
+                  {product.image_url ? (
+                    <img src={product.image_url} alt={product.name} className="w-20 h-20 rounded-lg object-contain bg-white border p-1" />
+                  ) : (
+                    <div className="w-20 h-20 rounded-lg bg-slate-100 flex items-center justify-center">
+                      <Package className="w-8 h-8 text-slate-300" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-slate-900">{product.name}</h4>
+                    <p className="text-sm text-slate-500 mt-1">{product.description}</p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Badge variant="outline" className="text-xs">{product.category}</Badge>
+                      <span className="text-xs text-slate-400">Cost: ${product.estimated_cost}</span>
+                      <span className="text-sm font-medium text-emerald-600">Price: ${calculateMarkup(product.estimated_cost || 0).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline" className="shrink-0">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

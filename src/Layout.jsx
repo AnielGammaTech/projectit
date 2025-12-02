@@ -12,9 +12,11 @@ import {
   Shield,
   User,
   Settings,
-  LogOut
+  LogOut,
+  Search
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import GlobalSearch from '@/components/GlobalSearch';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
@@ -40,6 +42,19 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [showSearch, setShowSearch] = useState(false);
+
+  // Global keyboard shortcut for search
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     base44.auth.me().then(user => {
@@ -73,6 +88,12 @@ export default function Layout({ children, currentPageName }) {
             <span className="font-semibold text-slate-900">IT Projects</span>
           </div>
         </div>
+        <button
+          onClick={() => setShowSearch(true)}
+          className="p-2 hover:bg-slate-100 rounded-lg mr-2"
+        >
+          <Search className="w-5 h-5 text-slate-500" />
+        </button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="w-8 h-8 rounded-full bg-[#0069AF] flex items-center justify-center text-white text-sm font-medium">
@@ -137,6 +158,18 @@ export default function Layout({ children, currentPageName }) {
               <X className="w-5 h-5" />
             </Button>
           </div>
+        </div>
+
+        {/* Search Button in Sidebar */}
+        <div className="px-3 mb-4">
+          <button
+            onClick={() => setShowSearch(true)}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500"
+          >
+            <Search className="w-4 h-4" />
+            <span className="text-sm">Search...</span>
+            <kbd className="ml-auto text-[10px] px-1.5 py-0.5 bg-white rounded border">⌘K</kbd>
+          </button>
         </div>
 
         <nav className="px-3">
@@ -208,6 +241,9 @@ export default function Layout({ children, currentPageName }) {
       <main className="lg:pl-64 pt-16 lg:pt-0">
         {children}
       </main>
+
+      {/* Global Search */}
+      <GlobalSearch isOpen={showSearch} onClose={() => setShowSearch(false)} />
     </div>
   );
 }
