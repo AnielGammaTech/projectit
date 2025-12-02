@@ -34,6 +34,12 @@ export default function CustomItemModal({
   });
   const [uploading, setUploading] = useState(false);
   const [useMarkup, setUseMarkup] = useState(true);
+  
+  // Amazon search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearch, setShowSearch] = useState(false);
 
   const calculatePrice = (cost) => {
     if (!useMarkup) return cost;
