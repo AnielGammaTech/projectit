@@ -43,6 +43,7 @@ export default function Customers() {
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, customer: null });
   const [expandedCompanies, setExpandedCompanies] = useState({});
+  const [allCompaniesExpanded, setAllCompaniesExpanded] = useState(true);
   const [addingContactTo, setAddingContactTo] = useState(null);
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', company: '', address: '', city: '', state: '', zip: '', notes: '', is_company: false, company_id: ''
@@ -63,6 +64,21 @@ export default function Customers() {
 
   const toggleCompany = (companyId) => {
     setExpandedCompanies(prev => ({ ...prev, [companyId]: !prev[companyId] }));
+  };
+
+  const toggleAllCompanies = () => {
+    if (allCompaniesExpanded) {
+      // Collapse all
+      const collapsed = {};
+      companies.forEach(c => { collapsed[c.id] = false; });
+      setExpandedCompanies(collapsed);
+    } else {
+      // Expand all
+      const expanded = {};
+      companies.forEach(c => { expanded[c.id] = true; });
+      setExpandedCompanies(expanded);
+    }
+    setAllCompaniesExpanded(!allCompaniesExpanded);
   };
 
   const { data: proposals = [] } = useQuery({
@@ -217,13 +233,31 @@ export default function Customers() {
           {/* Companies with expandable contacts */}
           {filteredCompanies.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                <Building2 className="w-4 h-4" /> Companies ({filteredCompanies.length})
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                  <Building2 className="w-4 h-4" /> Companies ({filteredCompanies.length})
+                </h3>
+                <button
+                  onClick={toggleAllCompanies}
+                  className="text-xs text-[#0069AF] hover:text-[#133F5C] flex items-center gap-1 font-medium"
+                >
+                  {allCompaniesExpanded ? (
+                    <>
+                      <ChevronDown className="w-3.5 h-3.5" />
+                      Collapse All
+                    </>
+                  ) : (
+                    <>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                      Expand All
+                    </>
+                  )}
+                </button>
+              </div>
               <AnimatePresence>
                 {filteredCompanies.map((company, idx) => {
                   const contacts = getContactsForCompany(company.id);
-                  const isExpanded = expandedCompanies[company.id];
+                  const isExpanded = expandedCompanies[company.id] !== false;
                   return (
                     <motion.div
                       key={company.id}
