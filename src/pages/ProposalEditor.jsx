@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Save, Send, Plus, Eye, Calendar, User, Mail, Phone, FileText,
-  Search, Building2
+  Search, Building2, ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format, addDays } from 'date-fns';
@@ -20,6 +26,15 @@ import { cn } from '@/lib/utils';
 import ProposalSection from '@/components/proposals/ProposalSection';
 import ProposalSummary from '@/components/proposals/ProposalSummary';
 import CustomItemModal from '@/components/proposals/CustomItemModal';
+
+const statusConfig = {
+  draft: { label: 'Draft', color: 'bg-slate-100 text-slate-600 border-slate-200' },
+  sent: { label: 'Sent', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  viewed: { label: 'Viewed', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+  approved: { label: 'Approved', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+  rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700 border-red-200' },
+  expired: { label: 'Expired', color: 'bg-slate-100 text-slate-500 border-slate-200' }
+};
 
 export default function ProposalEditor() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -363,14 +378,25 @@ export default function ProposalEditor() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs font-mono bg-slate-50">{formData.proposal_number}</Badge>
-              <Badge className={cn(
-                "text-xs",
-                formData.status === 'draft' && "bg-slate-100 text-slate-600",
-                formData.status === 'sent' && "bg-blue-100 text-blue-700",
-                formData.status === 'approved' && "bg-emerald-100 text-emerald-700"
-              )}>
-                {formData.status}
-              </Badge>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={cn(
+                    "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border cursor-pointer hover:opacity-80",
+                    statusConfig[formData.status]?.color || "bg-slate-100 text-slate-600"
+                  )}>
+                    {statusConfig[formData.status]?.label || formData.status}
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {Object.entries(statusConfig).map(([key, config]) => (
+                    <DropdownMenuItem key={key} onClick={() => setFormData(prev => ({ ...prev, status: key }))}>
+                      <span className={cn("w-2 h-2 rounded-full mr-2", config.color.split(' ')[0])}></span>
+                      {config.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -398,12 +424,13 @@ export default function ProposalEditor() {
           <div className="lg:col-span-8 space-y-5">
             {/* Title */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-slate-200 p-4">
-              <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">Proposal Title</Label>
-              <Input
+              <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">Proposal Title</label>
+              <input
+                type="text"
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Enter proposal title..."
-                className="text-2xl font-bold border-slate-200 h-14 focus-visible:ring-[#0069AF] placeholder:text-slate-300"
+                className="w-full text-2xl font-bold border border-slate-200 rounded-lg h-14 px-4 focus:outline-none focus:ring-2 focus:ring-[#0069AF] placeholder:text-slate-300"
               />
             </motion.div>
 

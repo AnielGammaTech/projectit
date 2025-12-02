@@ -33,6 +33,14 @@ export default function ProposalView() {
     enabled: !!proposalId
   });
 
+  const { data: proposalSettings } = useQuery({
+    queryKey: ['proposalSettings'],
+    queryFn: async () => {
+      const settings = await base44.entities.ProposalSettings.filter({ setting_key: 'main' });
+      return settings[0];
+    }
+  });
+
   const handlePrint = () => {
     window.print();
   };
@@ -79,23 +87,36 @@ export default function ProposalView() {
       {/* Proposal Document */}
       <div className="max-w-4xl mx-auto py-8 px-4 print:py-0 print:px-0 print:max-w-none">
         <div ref={printRef} className="bg-white rounded-lg shadow-lg print:shadow-none print:rounded-none">
-          {/* Header */}
+          {/* Header with Branding */}
           <div className="p-8 border-b border-slate-200">
             <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">PROPOSAL</p>
-                <p className="text-slate-500 font-mono">{proposal.proposal_number}</p>
+              <div className="flex items-center gap-4">
+                {proposalSettings?.company_logo_url && (
+                  <img src={proposalSettings.company_logo_url} alt="Company Logo" className="h-16 w-auto object-contain" />
+                )}
+                <div>
+                  {proposalSettings?.company_name && (
+                    <p className="font-bold text-lg text-slate-900">{proposalSettings.company_name}</p>
+                  )}
+                  {proposalSettings?.company_address && (
+                    <p className="text-sm text-slate-500">{proposalSettings.company_address}</p>
+                  )}
+                  {(proposalSettings?.company_phone || proposalSettings?.company_email) && (
+                    <p className="text-sm text-slate-500">
+                      {[proposalSettings.company_phone, proposalSettings.company_email].filter(Boolean).join(' • ')}
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="text-right">
-                <Badge className={cn("print:hidden", statusColors[proposal.status])}>
-                  {proposal.status?.toUpperCase()}
-                </Badge>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">PROPOSAL</p>
+                <p className="text-slate-500 font-mono">{proposal.proposal_number}</p>
                 <p className="text-sm text-slate-500 mt-2">
-                  Created: {format(new Date(proposal.created_date), 'MMMM d, yyyy')}
+                  {format(new Date(proposal.created_date), 'MMMM d, yyyy')}
                 </p>
                 {proposal.valid_until && (
                   <p className="text-sm text-slate-500">
-                    Valid Until: {format(new Date(proposal.valid_until), 'MMMM d, yyyy')}
+                    Valid: {format(new Date(proposal.valid_until), 'MMM d, yyyy')}
                   </p>
                 )}
               </div>
@@ -290,7 +311,10 @@ export default function ProposalView() {
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .print\\:hidden { display: none !important; }
+          nav, header, aside, .lg\\:pl-64 { padding-left: 0 !important; margin: 0 !important; }
+          * { box-shadow: none !important; }
         }
+        @page { margin: 0.5in; }
       `}</style>
     </div>
   );
