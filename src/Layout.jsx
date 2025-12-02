@@ -51,7 +51,7 @@ export default function Layout({ children, currentPageName }) {
           <Menu className="w-5 h-5" />
         </Button>
         <div className="flex items-center gap-2 ml-3">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-[#133F5C] flex items-center justify-center">
             <Wrench className="w-4 h-4 text-white" />
           </div>
           <span className="font-semibold text-slate-900">IT Projects</span>
@@ -74,7 +74,7 @@ export default function Layout({ children, currentPageName }) {
         <div className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+              <div className="w-10 h-10 rounded-xl bg-[#133F5C] flex items-center justify-center shadow-lg shadow-[#133F5C]/20">
                 <Wrench className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -104,13 +104,13 @@ export default function Layout({ children, currentPageName }) {
                 to={createPageUrl(item.page)}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all",
-                  isActive 
-                    ? "bg-indigo-50 text-indigo-600 font-medium" 
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                )}
+                                "flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all",
+                                isActive 
+                                  ? "bg-[#74C7FF]/20 text-[#133F5C] font-medium" 
+                                  : "text-[#0F2F44]/70 hover:bg-[#74C7FF]/10 hover:text-[#133F5C]"
+                              )}
               >
-                <Icon className={cn("w-5 h-5", isActive && "text-indigo-600")} />
+                <Icon className={cn("w-5 h-5", isActive && "text-[#0069AF]")} />
                 {item.name}
               </Link>
             );

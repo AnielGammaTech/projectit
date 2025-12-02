@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: 210 64% 22%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 204 65% 16%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 207 100% 34%;
+  --accent-foreground: 0 0% 100%;
+  --highlight: 202 100% 73%;
+  
+  --background: 210 20% 98%;
+  --foreground: 210 64% 22%;
+  --card: 0 0% 100%;
+  --card-foreground: 210 64% 22%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 64% 22%;
+  --muted: 210 20% 96%;
+  --muted-foreground: 210 20% 40%;
+  --border: 210 20% 90%;
+  --input: 210 20% 90%;
+  --ring: 207 100% 34%;
+  --radius: 0.75rem;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+}
+
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #133F5C;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0F2F44;
+}
