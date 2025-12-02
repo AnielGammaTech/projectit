@@ -88,13 +88,13 @@ export default function Adminland() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1e2a3a]">
-      <div className="max-w-3xl mx-auto px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeSection ? (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
             <button 
               onClick={() => setActiveSection(null)}
-              className="flex items-center gap-2 text-[#74C7FF] hover:text-white mb-6 transition-colors"
+              className="flex items-center gap-2 text-[#0069AF] hover:text-[#133F5C] mb-6 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Adminland
@@ -104,10 +104,16 @@ export default function Adminland() {
         ) : (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="mb-8">
-              <h1 className="text-2xl font-semibold text-white mb-2">You're an admin, so you can...</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Adminland</h1>
+              </div>
+              <p className="text-slate-500">You're an admin, so you can...</p>
             </div>
             
-            <div className="space-y-1">
+            <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
               {adminMenuItems.map((item, idx) => (
                 <motion.button
                   key={item.id}
@@ -115,14 +121,17 @@ export default function Adminland() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   onClick={() => setActiveSection(item.id)}
-                  className="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-[#2a3a4d] transition-colors group text-left"
+                  className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors group text-left border-b last:border-b-0"
                 >
-                  <div className="p-2 rounded-lg bg-[#0069AF] group-hover:bg-[#0080d4] transition-colors">
+                  <div className="p-2 rounded-lg bg-[#0069AF] group-hover:bg-[#133F5C] transition-colors">
                     <item.icon className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-[#74C7FF] group-hover:text-white font-medium transition-colors">
-                    {item.label}
-                  </span>
+                  <div>
+                    <span className="text-[#0069AF] group-hover:text-[#133F5C] font-medium transition-colors block">
+                      {item.label}
+                    </span>
+                    <span className="text-sm text-slate-500">{item.description}</span>
+                  </div>
                 </motion.button>
               ))}
             </div>
@@ -536,7 +545,13 @@ function PermissionsSection({ queryClient }) {
   const [formData, setFormData] = useState({
     inventory_view_groups: [],
     inventory_edit_groups: [],
-    inventory_checkout_groups: []
+    inventory_checkout_groups: [],
+    projects_create_groups: [],
+    projects_delete_groups: [],
+    quotes_view_groups: [],
+    quotes_manage_groups: [],
+    reports_view_groups: [],
+    time_tracking_groups: []
   });
 
   useEffect(() => {
@@ -544,7 +559,13 @@ function PermissionsSection({ queryClient }) {
       setFormData({
         inventory_view_groups: currentSettings.inventory_view_groups || [],
         inventory_edit_groups: currentSettings.inventory_edit_groups || [],
-        inventory_checkout_groups: currentSettings.inventory_checkout_groups || []
+        inventory_checkout_groups: currentSettings.inventory_checkout_groups || [],
+        projects_create_groups: currentSettings.projects_create_groups || [],
+        projects_delete_groups: currentSettings.projects_delete_groups || [],
+        quotes_view_groups: currentSettings.quotes_view_groups || [],
+        quotes_manage_groups: currentSettings.quotes_manage_groups || [],
+        reports_view_groups: currentSettings.reports_view_groups || [],
+        time_tracking_groups: currentSettings.time_tracking_groups || []
       });
     }
   }, [currentSettings.id]);
@@ -569,77 +590,85 @@ function PermissionsSection({ queryClient }) {
     setSaving(false);
   };
 
+  const PermissionGroup = ({ icon: Icon, title, permissions }) => (
+    <div className="p-4 bg-slate-50 rounded-xl">
+      <div className="flex items-center gap-2 mb-4">
+        <Icon className="w-5 h-5 text-[#0069AF]" />
+        <h3 className="font-semibold text-slate-900">{title}</h3>
+      </div>
+      <div className="space-y-4">
+        {permissions.map(({ field, label, description }) => (
+          <div key={field}>
+            <Label className="text-sm font-medium">{label}</Label>
+            <p className="text-xs text-slate-500 mb-2">{description}</p>
+            <div className="flex flex-wrap gap-2">
+              {groups.length > 0 ? groups.map(g => (
+                <Badge
+                  key={g.id}
+                  variant={formData[field]?.includes(g.id) ? "default" : "outline"}
+                  className={cn("cursor-pointer", formData[field]?.includes(g.id) && "bg-[#0069AF]")}
+                  onClick={() => toggleGroup(field, g.id)}
+                >
+                  {g.name}
+                </Badge>
+              )) : (
+                <span className="text-xs text-slate-400">No groups available</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">Manage Permissions</h2>
-          <p className="text-sm text-slate-500">Control access to features by user group</p>
+          <p className="text-sm text-slate-500">Control access to features by user group. Leave empty to allow all users.</p>
         </div>
         <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
           {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
       <div className="p-6 space-y-6">
-        <div className="p-4 bg-slate-50 rounded-xl">
-          <div className="flex items-center gap-2 mb-4">
-            <Package className="w-5 h-5 text-[#0069AF]" />
-            <h3 className="font-semibold text-slate-900">Inventory Permissions</h3>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium">Who can view inventory?</Label>
-              <p className="text-xs text-slate-500 mb-2">Leave empty to allow all users</p>
-              <div className="flex flex-wrap gap-2">
-                {groups.map(g => (
-                  <Badge
-                    key={g.id}
-                    variant={formData.inventory_view_groups.includes(g.id) ? "default" : "outline"}
-                    className={cn("cursor-pointer", formData.inventory_view_groups.includes(g.id) && "bg-[#0069AF]")}
-                    onClick={() => toggleGroup('inventory_view_groups', g.id)}
-                  >
-                    {g.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
+        <PermissionGroup 
+          icon={Package} 
+          title="Inventory" 
+          permissions={[
+            { field: 'inventory_view_groups', label: 'Who can view inventory?', description: 'Access to inventory list' },
+            { field: 'inventory_edit_groups', label: 'Who can edit inventory?', description: 'Add, edit, delete items' },
+            { field: 'inventory_checkout_groups', label: 'Who can checkout/restock?', description: 'Remove or add stock' },
+          ]} 
+        />
 
-            <div>
-              <Label className="text-sm font-medium">Who can edit inventory items?</Label>
-              <p className="text-xs text-slate-500 mb-2">Add, edit, delete items</p>
-              <div className="flex flex-wrap gap-2">
-                {groups.map(g => (
-                  <Badge
-                    key={g.id}
-                    variant={formData.inventory_edit_groups.includes(g.id) ? "default" : "outline"}
-                    className={cn("cursor-pointer", formData.inventory_edit_groups.includes(g.id) && "bg-[#0069AF]")}
-                    onClick={() => toggleGroup('inventory_edit_groups', g.id)}
-                  >
-                    {g.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
+        <PermissionGroup 
+          icon={FolderKanban} 
+          title="Projects" 
+          permissions={[
+            { field: 'projects_create_groups', label: 'Who can create projects?', description: 'Create new projects' },
+            { field: 'projects_delete_groups', label: 'Who can delete projects?', description: 'Delete and archive projects' },
+          ]} 
+        />
 
-            <div>
-              <Label className="text-sm font-medium">Who can checkout/restock items?</Label>
-              <p className="text-xs text-slate-500 mb-2">Remove or add stock</p>
-              <div className="flex flex-wrap gap-2">
-                {groups.map(g => (
-                  <Badge
-                    key={g.id}
-                    variant={formData.inventory_checkout_groups.includes(g.id) ? "default" : "outline"}
-                    className={cn("cursor-pointer", formData.inventory_checkout_groups.includes(g.id) && "bg-[#0069AF]")}
-                    onClick={() => toggleGroup('inventory_checkout_groups', g.id)}
-                  >
-                    {g.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <PermissionGroup 
+          icon={Tags} 
+          title="Quote Requests" 
+          permissions={[
+            { field: 'quotes_view_groups', label: 'Who can view quotes?', description: 'View quote requests' },
+            { field: 'quotes_manage_groups', label: 'Who can manage quotes?', description: 'Create, edit, approve quotes' },
+          ]} 
+        />
+
+        <PermissionGroup 
+          icon={Settings} 
+          title="Other Features" 
+          permissions={[
+            { field: 'reports_view_groups', label: 'Who can view reports?', description: 'Access analytics and reports' },
+            { field: 'time_tracking_groups', label: 'Who can track time?', description: 'Use time tracking features' },
+          ]} 
+        />
 
         {groups.length === 0 && (
           <p className="text-sm text-slate-500 text-center py-4">
