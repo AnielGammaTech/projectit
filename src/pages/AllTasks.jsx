@@ -100,6 +100,15 @@ export default function AllTasks() {
     part.assigned_to === currentUser?.email && part.due_date
   );
 
+  // Filter parts
+  const filteredParts = parts.filter(part => {
+    const matchesSearch = part.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         part.part_number?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || part.status === statusFilter;
+    const matchesAssignee = assigneeFilter === 'all' || part.assigned_to === assigneeFilter;
+    return matchesSearch && matchesStatus && matchesAssignee;
+  });
+
   const myTasksCount = tasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed').length;
   const myTasksWithDueCount = tasks.filter(t => t.assigned_to === currentUser?.email && t.due_date && t.status !== 'completed').length;
 
@@ -415,11 +424,93 @@ export default function AllTasks() {
           </div>
         )}
 
+        {/* Parts Filters */}
+        {activeTab === 'parts' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl border border-slate-100 p-4 mb-6"
+          >
+            <div className="flex flex-wrap gap-4">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Search parts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="needed">Needed</SelectItem>
+                  <SelectItem value="ordered">Ordered</SelectItem>
+                  <SelectItem value="received">Received</SelectItem>
+                  <SelectItem value="installed">Installed</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Assignee" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Assignees</SelectItem>
+                  {teamMembers.map(member => (
+                    <SelectItem key={member.id} value={member.email}>{member.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Parts Status Cards */}
+        {activeTab === 'parts' && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            {[
+              { key: 'needed', label: 'Needed', color: 'text-red-500', bg: 'bg-red-100' },
+              { key: 'ordered', label: 'Ordered', color: 'text-blue-500', bg: 'bg-blue-100' },
+              { key: 'received', label: 'Received', color: 'text-amber-500', bg: 'bg-amber-100' },
+              { key: 'installed', label: 'Installed', color: 'text-emerald-500', bg: 'bg-emerald-100' }
+            ].map((status) => {
+              const count = parts.filter(p => p.status === status.key).length;
+              return (
+                <motion.div
+                  key={status.key}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={cn(
+                    "p-4 rounded-xl border transition-all cursor-pointer hover:shadow-md",
+                    statusFilter === status.key ? "border-amber-300 bg-amber-50" : "border-slate-100 bg-white"
+                  )}
+                  onClick={() => setStatusFilter(statusFilter === status.key ? 'all' : status.key)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn("p-2 rounded-lg", status.bg)}>
+                      <Package className={cn("w-4 h-4", status.color)} />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">{count}</p>
+                      <p className="text-xs text-slate-500">{status.label}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Parts List */}
         {activeTab === 'parts' && (
           <div className="space-y-3">
-            {parts.length > 0 ? (
-              parts.map((part, idx) => {
+            {filteredParts.length > 0 ? (
+              filteredParts.map((part, idx) => {
                 const dueInfo = part.due_date ? getDueDateLabel(part.due_date) : null;
                 
                 return (
@@ -494,7 +585,7 @@ export default function AllTasks() {
               >
                 <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
                 <h3 className="text-lg font-medium text-slate-900 mb-2">No parts found</h3>
-                <p className="text-slate-500">Parts will appear here when added to projects</p>
+                <p className="text-slate-500">{statusFilter !== 'all' ? 'Try adjusting your filters' : 'Parts will appear here when added to projects'}</p>
               </motion.div>
             )}
           </div>
