@@ -9,13 +9,35 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Parse request body for options
+    let options = {};
+    try {
+      options = await req.json();
+    } catch {
+      // No body or invalid JSON, use defaults
+    }
+    
+    const testOnly = options.testOnly || false;
+    const fieldMapping = options.fieldMapping || {
+      name: 'name',
+      email: 'email',
+      phone: 'main_phone',
+      address: 'address',
+      city: 'city',
+      state: 'county',
+      zip: 'postcode'
+    };
+
     // Get HaloPSA credentials from environment
     const clientId = Deno.env.get("HALOPSA_CLIENT_ID");
     const clientSecret = Deno.env.get("HALOPSA_CLIENT_SECRET");
     const tenant = Deno.env.get("HALOPSA_TENANT");
 
     if (!clientId || !clientSecret) {
-      return Response.json({ error: 'HaloPSA credentials not configured. Please set HALOPSA_CLIENT_ID and HALOPSA_CLIENT_SECRET in your environment variables.' }, { status: 400 });
+      return Response.json({ 
+        error: 'HaloPSA credentials not configured.',
+        details: 'Please set HALOPSA_CLIENT_ID and HALOPSA_CLIENT_SECRET in your app environment variables (Dashboard > Settings > Environment Variables)'
+      }, { status: 400 });
     }
 
     // Get integration settings for the URL
@@ -29,7 +51,7 @@ Deno.serve(async (req) => {
     // Clean up URL - remove trailing slash and any /api suffix
     haloUrl = haloUrl.replace(/\/+$/, '').replace(/\/api\/?$/, '');
 
-    // HaloPSA OAuth token endpoint - per documentation it's /auth/token
+    // HaloPSA OAuth token endpoint
     const tokenUrl = `${haloUrl}/auth/token`;
     
     const tokenBody = new URLSearchParams({
@@ -44,20 +66,27 @@ Deno.serve(async (req) => {
       tokenBody.append('tenant', tenant);
     }
 
-    const tokenResponse = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: tokenBody
-    });
+    let tokenResponse;
+    try {
+      tokenResponse = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: tokenBody
+      });
+    } catch (fetchError) {
+      return Response.json({ 
+        error: `Cannot reach HaloPSA server: ${fetchError.message}`,
+        details: `URL attempted: ${tokenUrl}`
+      }, { status: 500 });
+    }
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       return Response.json({ 
-        error: `Failed to authenticate with HaloPSA. Status: ${tokenResponse.status}`,
-        details: errorText,
-        debug: { tokenUrl, hasTenant: !!tenant }
+        error: `HaloPSA authentication failed (${tokenResponse.status})`,
+        details: errorText || 'Check your Client ID, Client Secret, and Tenant settings'
       }, { status: 401 });
     }
 
@@ -67,23 +96,32 @@ Deno.serve(async (req) => {
     if (!accessToken) {
       return Response.json({ 
         error: 'No access token received from HaloPSA',
-        tokenResponse: tokenData
+        details: JSON.stringify(tokenData)
       }, { status: 401 });
     }
 
-    // Fetch clients from HaloPSA - endpoint is /api/Client
+    // Fetch clients from HaloPSA
     const clientsUrl = `${haloUrl}/api/Client?count=500&includeactive=true`;
-    const clientsResponse = await fetch(clientsUrl, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    
+    let clientsResponse;
+    try {
+      clientsResponse = await fetch(clientsUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    } catch (fetchError) {
+      return Response.json({ 
+        error: `Cannot fetch clients: ${fetchError.message}`,
+        details: `URL attempted: ${clientsUrl}`
+      }, { status: 500 });
+    }
 
     if (!clientsResponse.ok) {
       const errorText = await clientsResponse.text();
       return Response.json({ 
-        error: `Failed to fetch clients from HaloPSA. Status: ${clientsResponse.status}`,
+        error: `Failed to fetch clients (${clientsResponse.status})`,
         details: errorText
       }, { status: 500 });
     }
@@ -92,6 +130,25 @@ Deno.serve(async (req) => {
     
     // HaloPSA returns { record_count: X, clients: [...] }
     const haloClients = clientsData.clients || [];
+
+    // If test mode, just return success with count
+    if (testOnly) {
+      // Return sample of first client's fields for mapping help
+      const sampleFields = haloClients[0] ? Object.keys(haloClients[0]).slice(0, 20) : [];
+      return Response.json({
+        success: true,
+        message: `Connection successful! Found ${haloClients.length} clients.`,
+        total: haloClients.length,
+        sampleFields: sampleFields,
+        sampleClient: haloClients[0] ? {
+          id: haloClients[0].id,
+          name: haloClients[0].name,
+          client_name: haloClients[0].client_name,
+          email: haloClients[0].email,
+          main_email: haloClients[0].main_email
+        } : null
+      });
+    }
 
     if (haloClients.length === 0) {
       return Response.json({
@@ -109,17 +166,29 @@ Deno.serve(async (req) => {
     let created = 0;
     let updated = 0;
 
+    // Helper to get nested field value
+    const getField = (obj, fieldPath) => {
+      if (!fieldPath) return '';
+      const parts = fieldPath.split('.');
+      let value = obj;
+      for (const part of parts) {
+        value = value?.[part];
+        if (value === undefined) return '';
+      }
+      return value || '';
+    };
+
     for (const haloClient of haloClients) {
       const externalId = `halo_${haloClient.id}`;
       
       const customerData = {
-        name: haloClient.name || haloClient.client_name || 'Unknown',
-        email: haloClient.email || haloClient.main_email || '',
-        phone: haloClient.phone_number || haloClient.main_phone || haloClient.phonenumber || '',
-        address: haloClient.address || '',
-        city: haloClient.city || '',
-        state: haloClient.state || haloClient.county || '',
-        zip: haloClient.postcode || '',
+        name: getField(haloClient, fieldMapping.name) || haloClient.name || haloClient.client_name || 'Unknown',
+        email: getField(haloClient, fieldMapping.email) || haloClient.email || haloClient.main_email || '',
+        phone: getField(haloClient, fieldMapping.phone) || haloClient.main_phone || haloClient.phone_number || '',
+        address: getField(haloClient, fieldMapping.address) || haloClient.address || '',
+        city: getField(haloClient, fieldMapping.city) || haloClient.city || '',
+        state: getField(haloClient, fieldMapping.state) || haloClient.county || haloClient.state || '',
+        zip: getField(haloClient, fieldMapping.zip) || haloClient.postcode || '',
         external_id: externalId,
         is_company: true,
         source: 'halo_psa'
