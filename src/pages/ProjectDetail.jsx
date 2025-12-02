@@ -54,6 +54,7 @@ import GroupModal from '@/components/modals/GroupModal';
 import FilesViewModal from '@/components/modals/FilesViewModal';
 import ProjectActivityFeed from '@/components/project/ProjectActivityFeed';
 import UpcomingDueDates from '@/components/project/UpcomingDueDates';
+import TimeTracker from '@/components/project/TimeTracker';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
 import { cn } from '@/lib/utils';
 
@@ -598,14 +599,27 @@ export default function ProjectDetail() {
           </Link>
 
           {/* Calendar Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.55 }}
-          >
-            <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
-          </motion.div>
-          </div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.55 }}
+                      >
+                        <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
+                      </motion.div>
+
+                      {/* Time Tracker */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 }}
+                      >
+                        <TimeTracker 
+                          projectId={projectId} 
+                          currentUser={currentUser} 
+                          timeBudgetHours={project.time_budget_hours || 0} 
+                        />
+                      </motion.div>
+                      </div>
 
           {/* Activity Feed */}
           <motion.div

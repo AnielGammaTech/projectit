@@ -2,17 +2,16 @@ import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { 
   LayoutDashboard, 
-  FolderKanban, 
   ListTodo, 
-  Users, 
   Menu,
   X,
   Wrench,
   FileStack,
-  Settings,
   BarChart3,
   Bell,
-  FileText
+  FileText,
+  Package,
+  Shield
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -23,12 +22,11 @@ const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
   { name: 'All Tasks', icon: ListTodo, page: 'AllTasks' },
   { name: 'Quote Requests', icon: FileText, page: 'QuoteRequests' },
+  { name: 'Inventory', icon: Package, page: 'Inventory' },
   { name: 'Reports', icon: BarChart3, page: 'Reports' },
-  { name: 'Team', icon: Users, page: 'Team' },
-  { name: 'User Groups', icon: Users, page: 'UserGroups' },
   { name: 'Templates', icon: FileStack, page: 'Templates' },
   { name: 'Notifications', icon: Bell, page: 'NotificationSettings' },
-  { name: 'Settings', icon: Settings, page: 'Settings', adminOnly: true },
+  { name: 'Adminland', icon: Shield, page: 'Adminland', adminOnly: true },
 ];
 
 export default function Layout({ children, currentPageName }) {

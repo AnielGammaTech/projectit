@@ -26,7 +26,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     due_date: '',
     color: 'slate',
     group: '',
-    user_groups: []
+    user_groups: [],
+    time_budget_hours: 0
   });
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -50,7 +51,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         due_date: project.due_date || '',
         color: project.color || 'slate',
         group: project.group || '',
-        user_groups: project.user_groups || []
+        user_groups: project.user_groups || [],
+        time_budget_hours: project.time_budget_hours || 0
       });
       setExtractedParts([]);
     } else {
@@ -64,7 +66,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         due_date: '',
         color: 'slate',
         group: '',
-        user_groups: []
+        user_groups: [],
+        time_budget_hours: 0
       });
       setExtractedParts([]);
     }
@@ -144,15 +147,29 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             />
           </div>
 
-          <div>
-                          <Label htmlFor="client">Client</Label>
-                          <Input
-                            id="client"
-                            value={formData.client}
-                            onChange={(e) => setFormData(prev => ({ ...prev, client: e.target.value }))}
-                            placeholder="e.g., Acme Corporation"
-                            className="mt-1.5"
-                          />
+          <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor="client">Client</Label>
+                            <Input
+                              id="client"
+                              value={formData.client}
+                              onChange={(e) => setFormData(prev => ({ ...prev, client: e.target.value }))}
+                              placeholder="e.g., Acme Corporation"
+                              className="mt-1.5"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="time_budget_hours">Time Budget (hours)</Label>
+                            <Input
+                              id="time_budget_hours"
+                              type="number"
+                              step="0.5"
+                              value={formData.time_budget_hours || ''}
+                              onChange={(e) => setFormData(prev => ({ ...prev, time_budget_hours: e.target.value ? Number(e.target.value) : 0 }))}
+                              placeholder="e.g., 40"
+                              className="mt-1.5"
+                            />
+                          </div>
                         </div>
 
           <div>
