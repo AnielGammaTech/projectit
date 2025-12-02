@@ -12,6 +12,8 @@ import Settings from './pages/Settings';
 import Reports from './pages/Reports';
 import NotificationSettings from './pages/NotificationSettings';
 import QuoteRequests from './pages/QuoteRequests';
+import Inventory from './pages/Inventory';
+import Adminland from './pages/Adminland';
 import __Layout from './Layout.jsx';
 
 
@@ -30,6 +32,8 @@ export const PAGES = {
     "Reports": Reports,
     "NotificationSettings": NotificationSettings,
     "QuoteRequests": QuoteRequests,
+    "Inventory": Inventory,
+    "Adminland": Adminland,
 }
 
 export const pagesConfig = {
