@@ -147,28 +147,38 @@ export default function Proposals() {
   };
 
   const handleSendProposal = async (proposal) => {
-    await base44.entities.Proposal.update(proposal.id, { 
-      status: 'sent', 
-      sent_date: new Date().toISOString() 
-    });
+    if (!proposal.customer_email) {
+      alert('Please add a customer email before sending the proposal.');
+      return;
+    }
     
-    const approvalLink = `${window.location.origin}/ProposalApproval?token=${proposal.approval_token}`;
-    
-    await base44.integrations.Core.SendEmail({
-      to: proposal.customer_email,
-      subject: `Proposal: ${proposal.title}`,
-      body: `
-        <h2>You have received a proposal</h2>
-        <p>Dear ${proposal.customer_name},</p>
-        <p>Please review and approve the following proposal:</p>
-        <p><strong>${proposal.title}</strong></p>
-        <p>Total: $${proposal.total?.toLocaleString()}</p>
-        <p><a href="${approvalLink}" style="background: #0069AF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Review & Sign Proposal</a></p>
-        <p>This proposal is valid until ${proposal.valid_until ? format(new Date(proposal.valid_until), 'MMMM d, yyyy') : 'further notice'}.</p>
-      `
-    });
-    
-    refetch();
+    try {
+      await base44.entities.Proposal.update(proposal.id, { 
+        status: 'sent', 
+        sent_date: new Date().toISOString() 
+      });
+      
+      const approvalLink = `${window.location.origin}/ProposalApproval?token=${proposal.approval_token}`;
+      
+      await base44.integrations.Core.SendEmail({
+        to: proposal.customer_email,
+        subject: `Proposal: ${proposal.title}`,
+        body: `
+          <h2>You have received a proposal</h2>
+          <p>Dear ${proposal.customer_name},</p>
+          <p>Please review and approve the following proposal:</p>
+          <p><strong>${proposal.title}</strong></p>
+          <p>Total: $${proposal.total?.toLocaleString()}</p>
+          <p><a href="${approvalLink}" style="background: #0069AF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Review & Sign Proposal</a></p>
+          <p>This proposal is valid until ${proposal.valid_until ? format(new Date(proposal.valid_until), 'MMMM d, yyyy') : 'further notice'}.</p>
+        `
+      });
+      
+      refetch();
+    } catch (err) {
+      console.error('Failed to send proposal:', err);
+      alert('Failed to send proposal. Please try again.');
+    }
   };
 
   const copyApprovalLink = (proposal) => {
