@@ -12,6 +12,7 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import MyTasksCard from '@/components/dashboard/MyTasksCard';
 import ProjectModal from '@/components/modals/ProjectModal';
+import { FileText } from 'lucide-react';
 
 export default function Dashboard() {
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -43,6 +44,13 @@ export default function Dashboard() {
     queryKey: ['templates'],
     queryFn: () => base44.entities.ProjectTemplate.list()
   });
+
+  const { data: quoteRequests = [] } = useQuery({
+    queryKey: ['quoteRequests'],
+    queryFn: () => base44.entities.QuoteRequest.list()
+  });
+
+  const pendingQuotes = quoteRequests.filter(q => !['received'].includes(q.status));
 
   const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived');
   const archivedProjects = projects.filter(p => p.status === 'archived' || p.status === 'completed');
@@ -151,7 +159,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Stats Grid - Clickable */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatsCard
             title="Active Projects"
             value={activeProjects.length}
@@ -175,6 +183,14 @@ export default function Dashboard() {
             color="bg-amber-600"
             subtitle="pending"
             href={createPageUrl('AllTasks') + '?tab=parts'}
+          />
+          <StatsCard
+            title="Quote Requests"
+            value={pendingQuotes.length}
+            icon={FileText}
+            color="bg-violet-600"
+            subtitle="pending"
+            href={createPageUrl('QuoteRequests')}
           />
         </div>
 

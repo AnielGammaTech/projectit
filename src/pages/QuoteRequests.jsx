@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, Plus, Clock, CheckCircle2, Package, Truck, 
   Calendar, DollarSign, Building2, Search, Filter, 
-  ChevronRight, Edit2, Trash2
+  ChevronRight, Edit2, Trash2, User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -237,9 +237,15 @@ export default function QuoteRequests() {
                                     Install: {format(new Date(quote.install_date), 'MMM d')}
                                   </span>
                                 )}
-                                <span className="text-slate-400">
-                                  by {quote.requested_by_name}
-                                </span>
+                                {quote.assigned_to_name && (
+                                                                  <span className="flex items-center gap-1.5 text-indigo-600">
+                                                                    <User className="w-3.5 h-3.5" />
+                                                                    {quote.assigned_to_name}
+                                                                  </span>
+                                                                )}
+                                                                <span className="text-slate-400">
+                                                                  by {quote.requested_by_name}
+                                                                </span>
                               </div>
                             </div>
                             <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />

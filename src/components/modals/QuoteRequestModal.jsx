@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, Link as LinkIcon, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function QuoteRequestModal({ open, onClose, quote, projects = [], currentUser, onSaved }) {
   const [loading, setLoading] = useState(false);
@@ -15,7 +17,15 @@ export default function QuoteRequestModal({ open, onClose, quote, projects = [],
     description: '',
     project_id: '',
     priority: 'medium',
+    quote_link: '',
+    assigned_to_email: '',
     items: [{ name: '', quantity: 1, notes: '' }]
+  });
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => base44.entities.TeamMember.list(),
+    enabled: open
   });
 
   useEffect(() => {
@@ -25,6 +35,8 @@ export default function QuoteRequestModal({ open, onClose, quote, projects = [],
         description: quote.description || '',
         project_id: quote.project_id || '',
         priority: quote.priority || 'medium',
+        quote_link: quote.quote_link || '',
+        assigned_to_email: quote.assigned_to_email || '',
         items: quote.items?.length > 0 ? quote.items : [{ name: '', quantity: 1, notes: '' }]
       });
     } else {
@@ -33,6 +45,8 @@ export default function QuoteRequestModal({ open, onClose, quote, projects = [],
         description: '',
         project_id: '',
         priority: 'medium',
+        quote_link: '',
+        assigned_to_email: '',
         items: [{ name: '', quantity: 1, notes: '' }]
       });
     }
@@ -59,15 +73,26 @@ export default function QuoteRequestModal({ open, onClose, quote, projects = [],
     }));
   };
 
+  const handleAssigneeChange = (email) => {
+    const member = teamMembers.find(m => m.email === email);
+    setFormData(prev => ({
+      ...prev,
+      assigned_to_email: email,
+      assigned_to_name: member?.name || email
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
+    const assignee = teamMembers.find(m => m.email === formData.assigned_to_email);
     const data = {
       ...formData,
       items: formData.items.filter(i => i.name.trim()),
-      requested_by_email: currentUser?.email,
-      requested_by_name: currentUser?.full_name || currentUser?.email,
+      requested_by_email: quote?.requested_by_email || currentUser?.email,
+      requested_by_name: quote?.requested_by_name || currentUser?.full_name || currentUser?.email,
+      assigned_to_name: assignee?.name || formData.assigned_to_email || '',
       status: quote?.status || 'pending'
     };
 

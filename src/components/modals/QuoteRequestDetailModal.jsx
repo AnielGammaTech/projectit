@@ -11,7 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   CalendarIcon, DollarSign, Building2, Package, Edit2, Trash2, 
-  User, Clock, Loader2, CheckCircle2, Truck
+  User, Clock, Loader2, CheckCircle2, Truck, Link as LinkIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -127,6 +127,13 @@ export default function QuoteRequestDetailModal({
               <span className="text-slate-600">Requested by</span>
               <span className="font-medium">{quote.requested_by_name}</span>
             </div>
+            {quote.assigned_to_name && (
+              <div className="flex items-center gap-3 text-sm">
+                <User className="w-4 h-4 text-indigo-400" />
+                <span className="text-slate-600">Assigned to</span>
+                <span className="font-medium text-indigo-600">{quote.assigned_to_name}</span>
+              </div>
+            )}
             {project && (
               <div className="flex items-center gap-3 text-sm">
                 <Building2 className="w-4 h-4 text-slate-400" />
@@ -139,6 +146,17 @@ export default function QuoteRequestDetailModal({
               <span className="text-slate-600">Created</span>
               <span className="font-medium">{format(new Date(quote.created_date), 'PPP')}</span>
             </div>
+            {quote.quote_link && (
+              <a 
+                href={quote.quote_link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700"
+              >
+                <LinkIcon className="w-4 h-4" />
+                View Quote/Reference Link
+              </a>
+            )}
           </div>
 
           {/* Description */}
