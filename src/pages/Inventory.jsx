@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Package, Plus, Search, AlertTriangle, CheckCircle2, 
   ArrowDownCircle, Edit2, Trash2, MoreHorizontal, Image,
-  Printer, QrCode, ShoppingCart, Scan, X, Loader2
+  Printer, QrCode, ShoppingCart, Scan, X, Loader2, Sparkles, Wand2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -44,6 +44,7 @@ export default function Inventory() {
   const [showItemModal, setShowItemModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
+  const [showAISearchModal, setShowAISearchModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -172,13 +173,23 @@ export default function Inventory() {
               </Button>
             )}
             {canEdit && (
-              <Button
-                onClick={() => { setEditingItem(null); setShowItemModal(true); }}
-                className="bg-[#0069AF] hover:bg-[#133F5C]"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add {activeTab === 'products' ? 'Product' : 'Service'}
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAISearchModal(true)}
+                  className="border-purple-300 text-purple-600 hover:bg-purple-50"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  AI Quick Add
+                </Button>
+                <Button
+                  onClick={() => { setEditingItem(null); setShowItemModal(true); }}
+                  className="bg-[#0069AF] hover:bg-[#133F5C]"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add {activeTab === 'products' ? 'Product' : 'Service'}
+                </Button>
+              </>
             )}
           </div>
         </motion.div>
@@ -404,6 +415,17 @@ export default function Inventory() {
         onClose={() => setShowScanModal(false)}
         items={items}
         onItemFound={(item) => { setShowScanModal(false); setEditingItem(item); setShowItemModal(true); }}
+      />
+
+      {/* AI Search Modal */}
+      <AISearchModal
+        open={showAISearchModal}
+        onClose={() => setShowAISearchModal(false)}
+        onAddItem={(item) => {
+          setShowAISearchModal(false);
+          setEditingItem(item);
+          setShowItemModal(true);
+        }}
       />
 
       {/* Delete Confirm */}
@@ -721,6 +743,176 @@ function CheckoutModal({ open, onClose, item, projects, currentUser, onSaved }) 
             </Button>
           </div>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AISearchModal({ open, onClose, onAddItem }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+
+  useEffect(() => {
+    if (open) {
+      setSearchQuery('');
+      setSuggestions([]);
+    }
+  }, [open]);
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `I need product suggestions for: "${searchQuery}"
+      
+Return 3-5 product suggestions that match this search. For each product provide:
+- name: A clear product name
+- description: Brief description (1-2 sentences)
+- category: Product category
+- estimated_price: Estimated retail price in USD (number only)
+- search_term: A good search term to find an image of this product
+
+Be specific and realistic with product names and prices.`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          products: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                description: { type: "string" },
+                category: { type: "string" },
+                estimated_price: { type: "number" },
+                search_term: { type: "string" }
+              }
+            }
+          }
+        }
+      },
+      add_context_from_internet: true
+    });
+
+    // Generate images for suggestions
+    const productsWithImages = await Promise.all(
+      (result.products || []).map(async (product) => {
+        try {
+          const imageResult = await base44.integrations.Core.GenerateImage({
+            prompt: `Professional product photo of ${product.search_term}, white background, studio lighting, e-commerce style, high quality`
+          });
+          return { ...product, image_url: imageResult.url };
+        } catch {
+          return product;
+        }
+      })
+    );
+
+    setSuggestions(productsWithImages);
+    setSearching(false);
+  };
+
+  const handleSelectProduct = (product) => {
+    onAddItem({
+      name: product.name,
+      description: product.description,
+      category: product.category,
+      sell_price: product.estimated_price,
+      image_url: product.image_url || '',
+      item_type: 'product',
+      quantity_in_stock: 0,
+      minimum_stock: 0
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-500" />
+            AI Quick Add
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 mt-4">
+          <p className="text-sm text-slate-500">
+            Describe the product you want to add and AI will suggest details and generate an image.
+          </p>
+          
+          <div className="flex gap-2">
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="e.g., Ubiquiti access point, Cat6 cable, network switch..."
+              className="flex-1"
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <Button 
+              onClick={handleSearch} 
+              disabled={searching || !searchQuery.trim()}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {searching ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  Search
+                </>
+              )}
+            </Button>
+          </div>
+
+          {searching && (
+            <div className="py-12 text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-500 mb-3" />
+              <p className="text-sm text-slate-500">Searching and generating suggestions...</p>
+              <p className="text-xs text-slate-400 mt-1">This may take 10-20 seconds</p>
+            </div>
+          )}
+
+          {suggestions.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="font-medium text-slate-900">Suggestions</h3>
+              {suggestions.map((product, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-start gap-4 p-4 border rounded-xl hover:border-purple-300 hover:bg-purple-50/50 cursor-pointer transition-all"
+                  onClick={() => handleSelectProduct(product)}
+                >
+                  {product.image_url ? (
+                    <img src={product.image_url} alt={product.name} className="w-20 h-20 rounded-lg object-contain bg-white border p-1" />
+                  ) : (
+                    <div className="w-20 h-20 rounded-lg bg-slate-100 flex items-center justify-center">
+                      <Package className="w-8 h-8 text-slate-300" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-slate-900">{product.name}</h4>
+                    <p className="text-sm text-slate-500 mt-1">{product.description}</p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Badge variant="outline" className="text-xs">{product.category}</Badge>
+                      <span className="text-sm font-medium text-emerald-600">${product.estimated_price}</span>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline" className="shrink-0">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!searching && suggestions.length === 0 && searchQuery && (
+            <div className="py-8 text-center text-slate-400">
+              <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p>Enter a product description and click Search</p>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
