@@ -157,7 +157,8 @@ export default function Inventory() {
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-lg transition-all"
+                onClick={() => { setEditingItem(item); setShowItemModal(true); }}
+                className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-lg transition-all cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
@@ -166,16 +167,16 @@ export default function Inventory() {
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => { setEditingItem(item); setShowItemModal(true); }}>
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditingItem(item); setShowItemModal(true); }}>
                         <Edit2 className="w-4 h-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setSelectedItem(item); setShowCheckoutModal(true); }}>
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedItem(item); setShowCheckoutModal(true); }}>
                         <ArrowDownCircle className="w-4 h-4 mr-2" />
                         Checkout
                       </DropdownMenuItem>

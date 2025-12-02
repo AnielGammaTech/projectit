@@ -430,11 +430,16 @@ export default function ProjectDetail() {
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowProjectModal(true)}>
-                <Edit2 className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
+            <div className="flex items-center gap-3">
+                            <TimeTracker 
+                              projectId={projectId} 
+                              currentUser={currentUser} 
+                              timeBudgetHours={project.time_budget_hours || 0} 
+                            />
+                            <Button variant="outline" onClick={() => setShowProjectModal(true)}>
+                              <Edit2 className="w-4 h-4 mr-2" />
+                              Edit
+                            </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon">
@@ -607,18 +612,6 @@ export default function ProjectDetail() {
                         <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
                       </motion.div>
 
-                      {/* Time Tracker */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6 }}
-                      >
-                        <TimeTracker 
-                          projectId={projectId} 
-                          currentUser={currentUser} 
-                          timeBudgetHours={project.time_budget_hours || 0} 
-                        />
-                      </motion.div>
                       </div>
 
           {/* Activity Feed */}
