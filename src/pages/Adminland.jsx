@@ -1174,81 +1174,47 @@ function IntegrationsSection({ queryClient }) {
           <div className="space-y-4 pt-4 border-t border-slate-200">
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-xs text-blue-700">
-                <strong>Where to find these URLs:</strong> In HaloPSA, go to Configuration → Integrations → Halo API. You'll see the Authorisation Server URL and Resource Server URL listed there.
+                <strong>Where to find these URLs:</strong> In HaloPSA, go to <strong>Configuration → Integrations → Halo API</strong>. Copy the <em>Authorisation Server URL</em> and <em>Resource Server URL</em> from the API Details section.
               </p>
-            </div>
-            <div>
-              <Label className="text-xs">Base URL (Legacy - optional if using Auth/API URLs below)</Label>
-              <Input 
-                value={formData.halopsa_url} 
-                onChange={(e) => setFormData(p => ({ ...p, halopsa_url: e.target.value }))} 
-                placeholder="https://yourcompany.halopsa.com" 
-                className="mt-1" 
-              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-xs">Auth URL (Authorisation Server)</Label>
+                <Label className="text-xs">Authorisation Server URL</Label>
                 <Input 
                   value={formData.halopsa_auth_url} 
                   onChange={(e) => setFormData(p => ({ ...p, halopsa_auth_url: e.target.value }))} 
-                  placeholder="https://yourcompany.halopsa.com/auth" 
+                  placeholder="https://yourcompany.halopsa.com" 
                   className="mt-1" 
                 />
+                <p className="text-[10px] text-slate-400 mt-1">e.g., https://company.halopsa.com</p>
               </div>
               <div>
-                <Label className="text-xs">API URL (Resource Server)</Label>
+                <Label className="text-xs">Resource Server URL (API)</Label>
                 <Input 
                   value={formData.halopsa_api_url} 
                   onChange={(e) => setFormData(p => ({ ...p, halopsa_api_url: e.target.value }))} 
-                  placeholder="https://yourcompany.halopsa.com/api" 
+                  placeholder="https://yourcompany.haloservicedesk.com" 
                   className="mt-1" 
                 />
+                <p className="text-[10px] text-slate-400 mt-1">e.g., https://company.haloservicedesk.com</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs">Client ID</Label>
-                <Input 
-                  value={formData.halopsa_client_id} 
-                  onChange={(e) => setFormData(p => ({ ...p, halopsa_client_id: e.target.value }))} 
-                  className="mt-1" 
-                  placeholder="From environment variable"
-                  disabled
-                />
-                <p className="text-[10px] text-slate-400 mt-1">Set via HALOPSA_CLIENT_ID env var ✓</p>
+            <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <p className="text-xs font-medium text-emerald-700">Credentials Configured via Environment Variables</p>
               </div>
-              <div>
-                <Label className="text-xs">Client Secret</Label>
-                <div className="relative mt-1">
-                  <Input 
-                    type={showSecret ? "text" : "password"}
-                    value={formData.halopsa_client_secret} 
-                    onChange={(e) => setFormData(p => ({ ...p, halopsa_client_secret: e.target.value }))} 
-                    placeholder="From environment variable"
-                    disabled
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowSecret(!showSecret)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-700"
-                  >
-                    {showSecret ? '🙈 Hide' : '👁️ Show'}
-                  </button>
+              <div className="grid grid-cols-3 gap-3 text-xs text-emerald-600">
+                <div>
+                  <span className="font-medium">Client ID:</span> HALOPSA_CLIENT_ID ✓
                 </div>
-                <p className="text-[10px] text-slate-400 mt-1">Set via HALOPSA_CLIENT_SECRET env var ✓</p>
+                <div>
+                  <span className="font-medium">Client Secret:</span> HALOPSA_CLIENT_SECRET ✓
+                </div>
+                <div>
+                  <span className="font-medium">Tenant:</span> HALOPSA_TENANT ✓
+                </div>
               </div>
-            </div>
-            <div>
-              <Label className="text-xs">Tenant</Label>
-              <Input 
-                value={formData.halopsa_tenant} 
-                onChange={(e) => setFormData(p => ({ ...p, halopsa_tenant: e.target.value }))} 
-                className="mt-1"
-                placeholder="From environment variable" 
-                disabled
-              />
-              <p className="text-[10px] text-slate-400 mt-1">Set via HALOPSA_TENANT env var ✓</p>
             </div>
               <div className="flex gap-4 pt-2">
                 <label className="flex items-center gap-2 cursor-pointer">

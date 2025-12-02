@@ -42,47 +42,29 @@ Deno.serve(async (req) => {
 
     // Get integration settings for the URLs
     const settings = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
-    let haloUrl = settings[0]?.halopsa_url;
     let authUrl = settings[0]?.halopsa_auth_url;
     let apiUrl = settings[0]?.halopsa_api_url;
 
-    // If separate auth/api URLs are provided, use them. Otherwise fall back to base URL
-    if (!authUrl && !apiUrl && !haloUrl) {
-      return Response.json({ error: 'HaloPSA URLs not configured in Adminland settings' }, { status: 400 });
+    // Both URLs are required
+    if (!authUrl || !apiUrl) {
+      return Response.json({ 
+        error: 'HaloPSA URLs not configured', 
+        details: 'Please enter both the Authorisation Server URL and Resource Server URL in Adminland → Integrations' 
+      }, { status: 400 });
     }
 
-    // Clean up URLs
-    if (haloUrl) haloUrl = haloUrl.replace(/\/+$/, '');
-    if (authUrl) authUrl = authUrl.replace(/\/+$/, '');
-    if (apiUrl) apiUrl = apiUrl.replace(/\/+$/, '');
+    // Clean up URLs - remove trailing slashes
+    authUrl = authUrl.replace(/\/+$/, '');
+    apiUrl = apiUrl.replace(/\/+$/, '');
 
-    // Determine the token URL - prefer explicit auth URL
-    let tokenUrl;
-    if (authUrl) {
-      // If auth URL ends with /auth, add /token, otherwise add /auth/token
-      tokenUrl = authUrl.endsWith('/auth') ? `${authUrl}/token` : `${authUrl}/auth/token`;
-      // But if it already looks like a full token endpoint, use as-is
-      if (authUrl.includes('/token')) {
-        tokenUrl = authUrl;
-      } else if (!authUrl.includes('/auth')) {
-        tokenUrl = `${authUrl}/token`;
-      }
-    } else {
-      tokenUrl = `${haloUrl}/auth/token`;
-    }
+    // Build token URL: Auth URL + /auth/token
+    // The Auth URL is typically just the base (e.g., https://company.halopsa.com)
+    // We need to call /auth/token on it
+    let tokenUrl = `${authUrl}/auth/token`;
 
-    // Determine the API base URL
-    let apiBaseUrl;
-    if (apiUrl) {
-      // If API URL ends with /api, use as-is, otherwise append /api
-      apiBaseUrl = apiUrl.endsWith('/api') ? apiUrl : `${apiUrl}/api`;
-      // But if it already contains /api/, use as-is
-      if (apiUrl.includes('/api')) {
-        apiBaseUrl = apiUrl.replace(/\/api.*$/, '/api');
-      }
-    } else {
-      apiBaseUrl = `${haloUrl}/api`;
-    }
+    // Build API base URL: API URL + /api
+    // The Resource Server URL is typically just the base (e.g., https://company.haloservicedesk.com)
+    let apiBaseUrl = `${apiUrl}/api`;
     
     const tokenBody = new URLSearchParams({
       grant_type: 'client_credentials',
@@ -116,8 +98,8 @@ Deno.serve(async (req) => {
       const errorText = await tokenResponse.text();
       return Response.json({ 
         error: `HaloPSA authentication failed (${tokenResponse.status})`,
-        details: errorText || 'Check your Client ID, Client Secret, and Tenant settings',
-        debug: { tokenUrl, authUrl, apiUrl, haloUrl }
+        details: errorText || 'Check your Client ID, Client Secret, and Tenant in environment variables',
+        debug: { tokenUrl, authUrl, apiUrl }
       }, { status: 401 });
     }
 
