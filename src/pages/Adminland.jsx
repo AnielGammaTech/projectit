@@ -1297,7 +1297,30 @@ function IntegrationsSection({ queryClient }) {
           city: 'city',
           state: 'state',
           zip: 'zip'
-        }
+        },
+        // Email
+        sendgrid_enabled: settings[0].sendgrid_enabled || false,
+        sendgrid_api_key: settings[0].sendgrid_api_key || '',
+        sendgrid_from_email: settings[0].sendgrid_from_email || '',
+        sendgrid_from_name: settings[0].sendgrid_from_name || '',
+        email_notifications_enabled: settings[0].email_notifications_enabled !== false,
+        email_proposal_sent: settings[0].email_proposal_sent !== false,
+        email_proposal_approved: settings[0].email_proposal_approved !== false,
+        email_proposal_rejected: settings[0].email_proposal_rejected !== false,
+        email_task_assigned: settings[0].email_task_assigned !== false,
+        email_task_due_reminder: settings[0].email_task_due_reminder !== false,
+        email_part_status_changed: settings[0].email_part_status_changed || false,
+        // Slack
+        slack_enabled: settings[0].slack_enabled || false,
+        slack_webhook_url: settings[0].slack_webhook_url || '',
+        slack_notify_proposals: settings[0].slack_notify_proposals !== false,
+        slack_notify_projects: settings[0].slack_notify_projects !== false,
+        // Twilio
+        twilio_enabled: settings[0].twilio_enabled || false,
+        twilio_account_sid: settings[0].twilio_account_sid || '',
+        twilio_auth_token: settings[0].twilio_auth_token || '',
+        twilio_phone_number: settings[0].twilio_phone_number || '',
+        sms_notifications_enabled: settings[0].sms_notifications_enabled || false
       });
     }
   }, [settings]);
