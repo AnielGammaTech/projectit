@@ -55,6 +55,7 @@ import FilesViewModal from '@/components/modals/FilesViewModal';
 import ProjectActivityFeed from '@/components/project/ProjectActivityFeed';
 import UpcomingDueDates from '@/components/project/UpcomingDueDates';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
+import HaloTicketInfo from '@/components/project/HaloTicketInfo';
 import { cn } from '@/lib/utils';
 
 const statusColors = {
@@ -412,12 +413,19 @@ export default function ProjectDetail() {
                   </div>
                 )}
                 {project.due_date && (
-                  <div className="flex items-center gap-1.5 text-slate-600">
-                    <Calendar className="w-4 h-4" />
-                    <span>Due: {format(new Date(project.due_date), 'MMM d, yyyy')}</span>
-                  </div>
-                )}
-              </div>
+                                    <div className="flex items-center gap-1.5 text-slate-600">
+                                      <Calendar className="w-4 h-4" />
+                                      <span>Due: {format(new Date(project.due_date), 'MMM d, yyyy')}</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* HaloPSA Ticket */}
+                                {project.halo_ticket_id && (
+                                  <div className="mt-4">
+                                    <HaloTicketInfo ticketId={project.halo_ticket_id} compact />
+                                  </div>
+                                )}
 
               {/* Team Avatars */}
               <div className="mt-4 pt-4 border-t border-slate-100">
