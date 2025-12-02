@@ -33,25 +33,56 @@ Deno.serve(async (req) => {
     // Clean up the base URL
     const baseUrl = huduBaseUrl.replace(/\/$/, '');
 
-    // Fetch companies from Hudu
-    const companiesResponse = await fetch(`${baseUrl}/api/v1/companies`, {
-      headers: {
-        'x-api-key': huduApiKey,
-        'Content-Type': 'application/json'
-      }
-    });
+    // Field mapping with defaults
+    const fieldMapping = config.hudu_field_mapping || {
+      name: 'name',
+      email: 'email',
+      phone: 'phone_number',
+      address: 'address_line_1',
+      city: 'city',
+      state: 'state',
+      zip: 'zip'
+    };
 
-    if (!companiesResponse.ok) {
-      const errorText = await companiesResponse.text();
-      return Response.json({ 
-        success: false, 
-        error: 'Failed to connect to Hudu API',
-        details: `Status: ${companiesResponse.status} - ${errorText}`
-      }, { status: 400 });
+    // Fetch ALL companies from Hudu with pagination
+    let allCompanies = [];
+    let page = 1;
+    const perPage = 100;
+    let hasMore = true;
+
+    while (hasMore) {
+      const companiesResponse = await fetch(`${baseUrl}/api/v1/companies?page=${page}&per_page=${perPage}`, {
+        headers: {
+          'x-api-key': huduApiKey,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!companiesResponse.ok) {
+        const errorText = await companiesResponse.text();
+        return Response.json({ 
+          success: false, 
+          error: 'Failed to connect to Hudu API',
+          details: `Status: ${companiesResponse.status} - ${errorText}`
+        }, { status: 400 });
+      }
+
+      const companiesData = await companiesResponse.json();
+      const companies = companiesData.companies || [];
+
+      if (companies.length > 0) {
+        allCompanies = allCompanies.concat(companies);
+        page++;
+        // Safety limit to prevent infinite loops
+        if (page > 50) {
+          hasMore = false;
+        }
+      } else {
+        hasMore = false;
+      }
     }
 
-    const companiesData = await companiesResponse.json();
-    const companies = companiesData.companies || [];
+    const companies = allCompanies;
 
     if (testOnly) {
       return Response.json({ 
@@ -64,29 +95,45 @@ Deno.serve(async (req) => {
     // Get existing customers
     const existingCustomers = await base44.entities.Customer.list();
     const existingByExternalId = {};
+    const existingByName = {};
     existingCustomers.forEach(c => {
       if (c.external_id && c.source === 'hudu') {
         existingByExternalId[c.external_id] = c;
+      }
+      // Also index by name for matching existing customers without external_id
+      if (c.name && !c.external_id) {
+        existingByName[c.name.toLowerCase().trim()] = c;
       }
     });
 
     let created = 0;
     let updated = 0;
-    let skipped = 0;
+    let matched = 0;
 
     for (const company of companies) {
       const externalId = `hudu_${company.id}`;
-      const existing = existingByExternalId[externalId];
+      let existing = existingByExternalId[externalId];
+      
+      // Try to match by name if no external_id match
+      const companyName = company[fieldMapping.name] || company.name || '';
+      if (!existing && companyName) {
+        const nameKey = companyName.toLowerCase().trim();
+        if (existingByName[nameKey]) {
+          existing = existingByName[nameKey];
+          matched++;
+        }
+      }
 
+      // Build customer data using field mapping
       const customerData = {
-        name: company.name || 'Unknown Company',
-        email: company.email || '',
-        phone: company.phone_number || '',
-        company: company.name || '',
-        address: company.address_line_1 || '',
-        city: company.city || '',
-        state: company.state || '',
-        zip: company.zip || '',
+        name: company[fieldMapping.name] || company.name || 'Unknown Company',
+        email: company[fieldMapping.email] || '',
+        phone: company[fieldMapping.phone] || '',
+        company: company[fieldMapping.name] || company.name || '',
+        address: company[fieldMapping.address] || '',
+        city: company[fieldMapping.city] || '',
+        state: company[fieldMapping.state] || '',
+        zip: company[fieldMapping.zip] || '',
         is_company: true,
         source: 'hudu',
         external_id: externalId,
@@ -109,10 +156,10 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      message: `Sync completed! Created: ${created}, Updated: ${updated}, Skipped: ${skipped}`,
+      message: `Sync completed! Created: ${created}, Updated: ${updated}, Matched existing: ${matched}`,
       created,
       updated,
-      skipped,
+      matched,
       total: companies.length
     });
 

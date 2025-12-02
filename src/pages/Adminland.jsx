@@ -1123,11 +1123,13 @@ function IntegrationsSection({ queryClient }) {
   const [syncResult, setSyncResult] = useState(null);
   const [showFieldMapping, setShowFieldMapping] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState(null);
   
   // Hudu state
   const [huduSyncing, setHuduSyncing] = useState(false);
   const [huduTesting, setHuduTesting] = useState(false);
   const [huduResult, setHuduResult] = useState(null);
+  const [showHuduFieldMapping, setShowHuduFieldMapping] = useState(false);
   
   const [formData, setFormData] = useState({
     halopsa_enabled: false,
@@ -1151,7 +1153,16 @@ function IntegrationsSection({ queryClient }) {
     hudu_enabled: false,
     hudu_base_url: '',
     hudu_api_key: '',
-    hudu_sync_customers: true
+    hudu_sync_customers: true,
+    hudu_field_mapping: {
+      name: 'name',
+      email: 'email',
+      phone: 'phone_number',
+      address: 'address_line_1',
+      city: 'city',
+      state: 'state',
+      zip: 'zip'
+    }
   });
 
   const { data: settings = [], refetch } = useQuery({
@@ -1250,7 +1261,16 @@ function IntegrationsSection({ queryClient }) {
         hudu_enabled: settings[0].hudu_enabled || false,
         hudu_base_url: settings[0].hudu_base_url || '',
         hudu_api_key: settings[0].hudu_api_key || '',
-        hudu_sync_customers: settings[0].hudu_sync_customers !== false
+        hudu_sync_customers: settings[0].hudu_sync_customers !== false,
+        hudu_field_mapping: settings[0].hudu_field_mapping || {
+          name: 'name',
+          email: 'email',
+          phone: 'phone_number',
+          address: 'address_line_1',
+          city: 'city',
+          state: 'state',
+          zip: 'zip'
+        }
       });
     }
   }, [settings]);
@@ -1342,27 +1362,41 @@ function IntegrationsSection({ queryClient }) {
           {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
-      <div className="p-6 space-y-6">
-        {/* HaloPSA */}
-        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-          <div className="flex items-center justify-between">
+      <div className="p-6 space-y-4">
+        {/* Integration Cards */}
+        
+        {/* HaloPSA Card */}
+        <div className="border rounded-xl overflow-hidden">
+          <button
+            onClick={() => setSelectedIntegration(selectedIntegration === 'halopsa' ? null : 'halopsa')}
+            className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
+          >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
                 <GitMerge className="w-5 h-5 text-purple-600" />
               </div>
-              <div>
+              <div className="text-left">
                 <h3 className="font-semibold text-slate-900">HaloPSA</h3>
                 <p className="text-xs text-slate-500">Sync customers and tickets from HaloPSA</p>
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <Badge variant={formData.halopsa_enabled ? "default" : "outline"} className={formData.halopsa_enabled ? "bg-emerald-500" : ""}>
+                {formData.halopsa_enabled ? 'Enabled' : 'Disabled'}
+              </Badge>
+              {selectedIntegration === 'halopsa' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+            </div>
+          </button>
+          
+          {selectedIntegration === 'halopsa' && (
+          <div className="p-4 space-y-4 bg-white">
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox 
                 checked={formData.halopsa_enabled} 
                 onCheckedChange={(checked) => setFormData(p => ({ ...p, halopsa_enabled: checked }))} 
               />
-              <span className="text-sm font-medium">{formData.halopsa_enabled ? 'Enabled' : 'Disabled'}</span>
+              <span className="text-sm font-medium">Enable HaloPSA Integration</span>
             </label>
-          </div>
 
           {formData.halopsa_enabled && (
           <div className="space-y-4 pt-4 border-t border-slate-200">
@@ -1518,28 +1552,42 @@ function IntegrationsSection({ queryClient }) {
               </p>
             </div>
           )}
+          </div>
+          )}
         </div>
 
-        {/* Hudu Integration */}
-        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-          <div className="flex items-center justify-between">
+        {/* Hudu Card */}
+        <div className="border rounded-xl overflow-hidden">
+          <button
+            onClick={() => setSelectedIntegration(selectedIntegration === 'hudu' ? null : 'hudu')}
+            className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
+          >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-blue-600" />
               </div>
-              <div>
+              <div className="text-left">
                 <h3 className="font-semibold text-slate-900">Hudu</h3>
                 <p className="text-xs text-slate-500">Sync customers from Hudu documentation platform</p>
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <Badge variant={formData.hudu_enabled ? "default" : "outline"} className={formData.hudu_enabled ? "bg-emerald-500" : ""}>
+                {formData.hudu_enabled ? 'Enabled' : 'Disabled'}
+              </Badge>
+              {selectedIntegration === 'hudu' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+            </div>
+          </button>
+          
+          {selectedIntegration === 'hudu' && (
+          <div className="p-4 space-y-4 bg-white">
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox 
                 checked={formData.hudu_enabled} 
                 onCheckedChange={(checked) => setFormData(p => ({ ...p, hudu_enabled: checked }))} 
               />
-              <span className="text-sm font-medium">{formData.hudu_enabled ? 'Enabled' : 'Disabled'}</span>
+              <span className="text-sm font-medium">Enable Hudu Integration</span>
             </label>
-          </div>
 
           {formData.hudu_enabled && (
             <div className="space-y-4 pt-4 border-t border-slate-200">
@@ -1581,6 +1629,39 @@ function IntegrationsSection({ queryClient }) {
                   />
                   <span className="text-sm">Sync Companies as Customers</span>
                 </label>
+              </div>
+
+              {/* Hudu Field Mapping */}
+              <div className="pt-2 border-t border-slate-200">
+                <button 
+                  onClick={() => setShowHuduFieldMapping(!showHuduFieldMapping)}
+                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
+                >
+                  <Settings className="w-4 h-4" />
+                  {showHuduFieldMapping ? 'Hide' : 'Show'} Field Mapping
+                </button>
+                
+                {showHuduFieldMapping && (
+                  <div className="mt-3 p-3 bg-slate-50 rounded-lg border space-y-3">
+                    <p className="text-xs text-slate-500">Map Hudu Company fields to your customer fields. Common Hudu fields: name, nickname, email, phone_number, address_line_1, address_line_2, city, state, zip, country</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {Object.entries(formData.hudu_field_mapping || {}).map(([key, value]) => (
+                        <div key={key}>
+                          <Label className="text-xs capitalize">{key} → Hudu field</Label>
+                          <Input 
+                            value={value} 
+                            onChange={(e) => setFormData(p => ({ 
+                              ...p, 
+                              hudu_field_mapping: { ...p.hudu_field_mapping, [key]: e.target.value }
+                            }))} 
+                            className="mt-1 h-8 text-sm" 
+                            placeholder={`Hudu field for ${key}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
@@ -1637,6 +1718,8 @@ function IntegrationsSection({ queryClient }) {
                 </div>
               )}
             </div>
+          )}
+          </div>
           )}
         </div>
       </div>
