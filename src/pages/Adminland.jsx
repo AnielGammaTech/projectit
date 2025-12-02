@@ -8,8 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Users, UserPlus, Settings, Shield, Edit2, Trash2, 
   Plus, MoreHorizontal, Mail, Phone, Package, ArrowLeft,
-  Building2, Tags, MessageSquare, FolderKanban, GitMerge, History,
-  RefreshCw, Loader2
+  Building2, Tags, FolderKanban, GitMerge,
+  RefreshCw, Loader2, ChevronDown, ChevronRight
 } from 'lucide-react';
 import {
   Dialog,
@@ -533,6 +533,7 @@ function UserGroupModal({ open, onClose, group, members, onSave }) {
 
 function PermissionsSection({ queryClient }) {
   const [saving, setSaving] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({});
 
   const { data: settings = [], refetch } = useQuery({
     queryKey: ['appSettings'],
@@ -594,36 +595,51 @@ function PermissionsSection({ queryClient }) {
     setSaving(false);
   };
 
-  const PermissionGroup = ({ icon: Icon, title, permissions }) => (
-    <div className="p-4 bg-slate-50 rounded-xl">
-      <div className="flex items-center gap-2 mb-4">
-        <Icon className="w-5 h-5 text-[#0069AF]" />
-        <h3 className="font-semibold text-slate-900">{title}</h3>
-      </div>
-      <div className="space-y-4">
-        {permissions.map(({ field, label, description }) => (
-          <div key={field}>
-            <Label className="text-sm font-medium">{label}</Label>
-            <p className="text-xs text-slate-500 mb-2">{description}</p>
-            <div className="flex flex-wrap gap-2">
-              {groups.length > 0 ? groups.map(g => (
-                <Badge
-                  key={g.id}
-                  variant={formData[field]?.includes(g.id) ? "default" : "outline"}
-                  className={cn("cursor-pointer", formData[field]?.includes(g.id) && "bg-[#0069AF]")}
-                  onClick={() => toggleGroup(field, g.id)}
-                >
-                  {g.name}
-                </Badge>
-              )) : (
-                <span className="text-xs text-slate-400">No groups available</span>
-              )}
-            </div>
+  const toggleSection = (sectionId) => {
+    setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+  };
+
+  const PermissionGroup = ({ icon: Icon, title, sectionId, permissions }) => {
+    const isExpanded = expandedSections[sectionId];
+    return (
+      <div className="border rounded-xl overflow-hidden">
+        <button
+          onClick={() => toggleSection(sectionId)}
+          className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Icon className="w-5 h-5 text-[#0069AF]" />
+            <h3 className="font-semibold text-slate-900">{title}</h3>
           </div>
-        ))}
+          {isExpanded ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+        </button>
+        {isExpanded && (
+          <div className="p-4 space-y-4 bg-white">
+            {permissions.map(({ field, label, description }) => (
+              <div key={field}>
+                <Label className="text-sm font-medium">{label}</Label>
+                <p className="text-xs text-slate-500 mb-2">{description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {groups.length > 0 ? groups.map(g => (
+                    <Badge
+                      key={g.id}
+                      variant={formData[field]?.includes(g.id) ? "default" : "outline"}
+                      className={cn("cursor-pointer", formData[field]?.includes(g.id) && "bg-[#0069AF]")}
+                      onClick={() => toggleGroup(field, g.id)}
+                    >
+                      {g.name}
+                    </Badge>
+                  )) : (
+                    <span className="text-xs text-slate-400">No groups available</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -636,13 +652,14 @@ function PermissionsSection({ queryClient }) {
           {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-4">
         <PermissionGroup 
           icon={Package} 
-          title="Inventory" 
+          title="Catalog" 
+          sectionId="inventory"
           permissions={[
-            { field: 'inventory_view_groups', label: 'Who can view inventory?', description: 'Access to inventory list' },
-            { field: 'inventory_edit_groups', label: 'Who can edit inventory?', description: 'Add, edit, delete items' },
+            { field: 'inventory_view_groups', label: 'Who can view catalog?', description: 'Access to products and services list' },
+            { field: 'inventory_edit_groups', label: 'Who can edit catalog?', description: 'Add, edit, delete items' },
             { field: 'inventory_checkout_groups', label: 'Who can checkout/restock?', description: 'Remove or add stock' },
           ]} 
         />
@@ -650,6 +667,7 @@ function PermissionsSection({ queryClient }) {
         <PermissionGroup 
           icon={FolderKanban} 
           title="Projects" 
+          sectionId="projects"
           permissions={[
             { field: 'projects_create_groups', label: 'Who can create projects?', description: 'Create new projects' },
             { field: 'projects_delete_groups', label: 'Who can delete projects?', description: 'Delete and archive projects' },
@@ -659,6 +677,7 @@ function PermissionsSection({ queryClient }) {
         <PermissionGroup 
           icon={Tags} 
           title="Quote Requests" 
+          sectionId="quotes"
           permissions={[
             { field: 'quotes_view_groups', label: 'Who can view quotes?', description: 'View quote requests' },
             { field: 'quotes_manage_groups', label: 'Who can manage quotes?', description: 'Create, edit, approve quotes' },
@@ -668,6 +687,7 @@ function PermissionsSection({ queryClient }) {
         <PermissionGroup 
           icon={Settings} 
           title="Other Features" 
+          sectionId="other"
           permissions={[
             { field: 'reports_view_groups', label: 'Who can view reports?', description: 'Access analytics and reports' },
             { field: 'time_tracking_groups', label: 'Who can track time?', description: 'Use time tracking features' },
@@ -685,6 +705,8 @@ function PermissionsSection({ queryClient }) {
 }
 
 function ToolsSection({ queryClient }) {
+  const [expanded, setExpanded] = useState(false);
+  
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b">
@@ -692,15 +714,24 @@ function ToolsSection({ queryClient }) {
         <p className="text-sm text-slate-500">Customize how tools appear in your projects</p>
       </div>
       <div className="p-6">
-        <div className="space-y-3">
-          {['Tasks', 'Parts & Materials', 'Notes', 'Files', 'Activity'].map(tool => (
-            <div key={tool} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-              <span className="font-medium">{tool}</span>
-              <Input className="w-48" defaultValue={tool} placeholder="Custom name..." />
-            </div>
-          ))}
-        </div>
-        <p className="text-sm text-slate-500 mt-4">Tool renaming coming soon.</p>
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+        >
+          <span className="font-medium text-slate-900">Project Tool Names</span>
+          {expanded ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+        </button>
+        {expanded && (
+          <div className="mt-4 space-y-3">
+            {['Tasks', 'Parts & Materials', 'Notes', 'Files', 'Activity'].map(tool => (
+              <div key={tool} className="flex items-center justify-between p-3 bg-white border rounded-lg">
+                <span className="font-medium text-slate-700">{tool}</span>
+                <Input className="w-48" defaultValue={tool} placeholder="Custom name..." />
+              </div>
+            ))}
+            <p className="text-sm text-slate-500 mt-4">Tool renaming coming soon.</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1291,6 +1322,32 @@ function IntegrationsSection({ queryClient }) {
 }
 
 function AppSettingsSection({ queryClient }) {
+  const [expandedSections, setExpandedSections] = useState({});
+
+  const toggleSection = (sectionId) => {
+    setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+  };
+
+  const SettingsGroup = ({ title, sectionId, children }) => {
+    const isExpanded = expandedSections[sectionId];
+    return (
+      <div className="border rounded-xl overflow-hidden">
+        <button
+          onClick={() => toggleSection(sectionId)}
+          className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
+        >
+          <h3 className="font-medium text-slate-900">{title}</h3>
+          {isExpanded ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+        </button>
+        {isExpanded && (
+          <div className="p-4 bg-white">
+            {children}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b">
@@ -1298,18 +1355,41 @@ function AppSettingsSection({ queryClient }) {
         <p className="text-sm text-slate-500">General app configuration</p>
       </div>
       <div className="p-6 space-y-4">
-        <div className="p-4 bg-slate-50 rounded-xl">
-          <h3 className="font-medium text-slate-900 mb-2">Project Statuses</h3>
-          <p className="text-sm text-slate-500">Planning, In Progress, On Hold, Completed, Archived</p>
-        </div>
-        <div className="p-4 bg-slate-50 rounded-xl">
-          <h3 className="font-medium text-slate-900 mb-2">Task Statuses</h3>
-          <p className="text-sm text-slate-500">To Do, In Progress, Review, Completed</p>
-        </div>
-        <div className="p-4 bg-slate-50 rounded-xl">
-          <h3 className="font-medium text-slate-900 mb-2">Priority Levels</h3>
-          <p className="text-sm text-slate-500">Low, Medium, High, Urgent</p>
-        </div>
+        <SettingsGroup title="Project Statuses" sectionId="project_statuses">
+          <div className="space-y-2">
+            {['Planning', 'In Progress', 'On Hold', 'Completed', 'Archived'].map(status => (
+              <div key={status} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                <span className="text-sm text-slate-700">{status}</span>
+                <Badge variant="outline">Default</Badge>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-400 mt-3">Status customization coming soon.</p>
+        </SettingsGroup>
+
+        <SettingsGroup title="Task Statuses" sectionId="task_statuses">
+          <div className="space-y-2">
+            {['To Do', 'In Progress', 'Review', 'Completed'].map(status => (
+              <div key={status} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                <span className="text-sm text-slate-700">{status}</span>
+                <Badge variant="outline">Default</Badge>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-400 mt-3">Status customization coming soon.</p>
+        </SettingsGroup>
+
+        <SettingsGroup title="Priority Levels" sectionId="priorities">
+          <div className="space-y-2">
+            {['Low', 'Medium', 'High', 'Urgent'].map(priority => (
+              <div key={priority} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                <span className="text-sm text-slate-700">{priority}</span>
+                <Badge variant="outline">Default</Badge>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-400 mt-3">Priority customization coming soon.</p>
+        </SettingsGroup>
       </div>
     </div>
   );
