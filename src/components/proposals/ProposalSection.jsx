@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
 import { 
   ChevronUp, ChevronDown, Trash2, X, Package, Plus, 
-  Search, Copy, MoreHorizontal, Image, Layers, GripVertical
+  Search, Copy, MoreHorizontal, Layers, GripVertical
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -24,9 +25,11 @@ export default function ProposalSection({
   expanded,
   onToggle,
   onUpdateName,
+  onUpdateArea,
   onRemove,
   onDuplicate,
   onMakeOptional,
+  onAddOption,
   onUpdateItem,
   onRemoveItem,
   onDuplicateItem,
@@ -37,6 +40,9 @@ export default function ProposalSection({
   markupValue = 20
 }) {
   const [searchInventory, setSearchInventory] = useState('');
+  const [activeOption, setActiveOption] = useState(0);
+  const [showClientDesc, setShowClientDesc] = useState(!!area.client_description);
+  const [showInstallerNotes, setShowInstallerNotes] = useState(!!area.installer_notes);
 
   const filteredInventory = inventory.filter(item =>
     item.name?.toLowerCase().includes(searchInventory.toLowerCase()) ||
@@ -91,6 +97,11 @@ export default function ProposalSection({
         {area.is_optional && (
           <Badge className="bg-amber-100 text-amber-700 border-amber-200">Optional</Badge>
         )}
+        {(area.options?.length > 0) && (
+          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+            {area.options.length + 1} options
+          </Badge>
+        )}
         <Badge variant="outline" className="text-xs">{area.items?.length || 0} items</Badge>
         <span className="text-sm font-semibold text-slate-600">${sectionTotal.toFixed(2)}</span>
         
@@ -101,6 +112,10 @@ export default function ProposalSection({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onAddOption}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Option
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={onDuplicate}>
               <Copy className="w-4 h-4 mr-2" />
               Duplicate Section
@@ -127,6 +142,33 @@ export default function ProposalSection({
             exit={{ height: 0, opacity: 0 }}
             className="border-t border-slate-100"
           >
+            {/* Options Tabs */}
+            {area.options?.length > 0 && (
+              <div className="px-4 py-2 bg-slate-50 border-b flex items-center gap-1">
+                <button
+                  onClick={() => setActiveOption(0)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+                    activeOption === 0 ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+                  )}
+                >
+                  Option 1
+                </button>
+                {area.options.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveOption(idx + 1)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+                      activeOption === idx + 1 ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+                    )}
+                  >
+                    Option {idx + 2}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {area.items?.length > 0 && (
               <div className="divide-y divide-slate-100">
                 {area.items.map((item, itemIndex) => (
@@ -229,7 +271,7 @@ export default function ProposalSection({
             )}
 
             {/* Add Item Row */}
-            <div className="px-4 py-3 bg-slate-50/50 flex gap-2 border-t">
+            <div className="px-4 py-3 bg-slate-50/50 flex flex-wrap gap-2 border-t">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="sm" className="text-slate-500">
@@ -299,6 +341,48 @@ export default function ProposalSection({
                 </Button>
               )}
             </div>
+
+            {/* Client Description & Installer Notes Links */}
+            <div className="px-4 py-2 border-t border-slate-100 flex gap-4">
+              <button
+                onClick={() => setShowClientDesc(!showClientDesc)}
+                className="text-sm text-[#f97316] hover:text-[#ea580c] font-medium"
+              >
+                {showClientDesc ? '− Remove Client Description' : 'Add Client Description'}
+              </button>
+              <button
+                onClick={() => setShowInstallerNotes(!showInstallerNotes)}
+                className="text-sm text-[#f97316] hover:text-[#ea580c] font-medium"
+              >
+                {showInstallerNotes ? '− Remove Installer Notes' : 'Add Internal / Installer Notes (Hidden)'}
+              </button>
+            </div>
+
+            {/* Client Description */}
+            {showClientDesc && (
+              <div className="px-4 py-3 border-t border-slate-100 bg-blue-50/30">
+                <Label className="text-xs text-slate-500 mb-1 block">Client Description (shown on proposal)</Label>
+                <Textarea
+                  value={area.client_description || ''}
+                  onChange={(e) => onUpdateArea?.({ ...area, client_description: e.target.value })}
+                  className="h-16 text-sm bg-white"
+                  placeholder="Description visible to the client..."
+                />
+              </div>
+            )}
+
+            {/* Installer Notes */}
+            {showInstallerNotes && (
+              <div className="px-4 py-3 border-t border-slate-100 bg-amber-50/30">
+                <Label className="text-xs text-amber-700 mb-1 block">Internal / Installer Notes (hidden from client)</Label>
+                <Textarea
+                  value={area.installer_notes || ''}
+                  onChange={(e) => onUpdateArea?.({ ...area, installer_notes: e.target.value })}
+                  className="h-16 text-sm bg-white"
+                  placeholder="Notes for installers or internal team..."
+                />
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
