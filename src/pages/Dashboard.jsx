@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
