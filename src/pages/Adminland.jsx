@@ -56,6 +56,7 @@ const adminMenuItems = [
   { id: 'groups', label: 'Manage groups', icon: UserPlus, description: 'Create and manage user groups' },
   { id: 'permissions', label: 'Manage permissions', icon: Package, description: 'Control feature access by group' },
   { id: 'proposals', label: 'Proposal settings', icon: Building2, description: 'Configure default proposal settings' },
+  { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'Connect external services like HaloPSA' },
   { id: 'categories', label: 'Change message categories', icon: Tags, description: 'Configure note and message types' },
   { id: 'tools', label: 'Rename project tools', icon: FolderKanban, description: 'Customize tool names' },
   { id: 'settings', label: 'App settings', icon: Settings, description: 'General app configuration' },
@@ -79,6 +80,8 @@ export default function Adminland() {
         return <PermissionsSection queryClient={queryClient} />;
       case 'proposals':
         return <ProposalSettingsSection queryClient={queryClient} />;
+      case 'integrations':
+        return <IntegrationsSection queryClient={queryClient} />;
       case 'categories':
         return <CategoriesSection queryClient={queryClient} />;
       case 'tools':
