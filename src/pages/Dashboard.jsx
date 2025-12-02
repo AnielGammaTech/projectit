@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileStack, Bell, FileText } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileStack, Bell, FileText, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -50,7 +50,14 @@ export default function Dashboard() {
     queryFn: () => base44.entities.QuoteRequest.list()
   });
 
+  const { data: proposals = [] } = useQuery({
+    queryKey: ['proposals'],
+    queryFn: () => base44.entities.Proposal.list('-created_date')
+  });
+
   const pendingQuotes = quoteRequests.filter(q => !['received'].includes(q.status));
+  const approvedProposals = proposals.filter(p => p.status === 'approved');
+  const approvedTotal = approvedProposals.reduce((sum, p) => sum + (p.total || 0), 0);
 
   const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived');
   const archivedProjects = projects.filter(p => p.status === 'archived' || p.status === 'completed');
@@ -183,12 +190,12 @@ export default function Dashboard() {
             href={createPageUrl('Dashboard')}
           />
           <StatsCard
-            title="Tasks"
-            value={tasks.length}
-            icon={CheckCircle2}
+            title="Approved Proposals"
+            value={`$${approvedTotal.toLocaleString()}`}
+            icon={DollarSign}
             color="bg-emerald-600"
-            subtitle={`${completedTasks.length} done`}
-            href={createPageUrl('AllTasks')}
+            subtitle={`${approvedProposals.length} approved`}
+            href={createPageUrl('Proposals')}
           />
           <StatsCard
             title="Parts"

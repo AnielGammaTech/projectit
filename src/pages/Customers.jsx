@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye } from 'lucide-react';
+import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -39,8 +39,10 @@ export default function Customers() {
   const [showModal, setShowModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, customer: null });
+  const [expandedCompanies, setExpandedCompanies] = useState({});
+  const [addingContactTo, setAddingContactTo] = useState(null);
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', company: '', address: '', city: '', state: '', zip: '', notes: ''
+    name: '', email: '', phone: '', company: '', address: '', city: '', state: '', zip: '', notes: '', is_company: false, company_id: ''
   });
   const queryClient = useQueryClient();
 
@@ -50,6 +52,15 @@ export default function Customers() {
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.list('-created_date')
   });
+
+  // Separate companies and contacts
+  const companies = customers.filter(c => c.is_company);
+  const standaloneContacts = customers.filter(c => !c.is_company && !c.company_id);
+  const getContactsForCompany = (companyId) => customers.filter(c => c.company_id === companyId);
+
+  const toggleCompany = (companyId) => {
+    setExpandedCompanies(prev => ({ ...prev, [companyId]: !prev[companyId] }));
+  };
 
   const { data: proposals = [] } = useQuery({
     queryKey: ['proposals'],
@@ -72,14 +83,34 @@ export default function Customers() {
         city: editingCustomer.city || '',
         state: editingCustomer.state || '',
         zip: editingCustomer.zip || '',
-        notes: editingCustomer.notes || ''
+        notes: editingCustomer.notes || '',
+        is_company: editingCustomer.is_company || false,
+        company_id: editingCustomer.company_id || ''
+      });
+    } else if (addingContactTo) {
+      const parentCompany = customers.find(c => c.id === addingContactTo);
+      setFormData({ 
+        name: '', email: '', phone: '', 
+        company: parentCompany?.name || '', 
+        address: parentCompany?.address || '', 
+        city: parentCompany?.city || '', 
+        state: parentCompany?.state || '', 
+        zip: parentCompany?.zip || '', 
+        notes: '', 
+        is_company: false, 
+        company_id: addingContactTo 
       });
     } else {
-      setFormData({ name: '', email: '', phone: '', company: '', address: '', city: '', state: '', zip: '', notes: '' });
+      setFormData({ name: '', email: '', phone: '', company: '', address: '', city: '', state: '', zip: '', notes: '', is_company: false, company_id: '' });
     }
-  }, [editingCustomer, showModal]);
+  }, [editingCustomer, showModal, addingContactTo, customers]);
 
-  const filteredCustomers = customers.filter(c =>
+  const filteredCompanies = companies.filter(c =>
+    c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredStandaloneContacts = standaloneContacts.filter(c =>
     c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.company?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -100,6 +131,7 @@ export default function Customers() {
     refetch();
     setShowModal(false);
     setEditingCustomer(null);
+    setAddingContactTo(null);
   };
 
   const handleDelete = async () => {
@@ -122,10 +154,16 @@ export default function Customers() {
             <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Customers</h1>
             <p className="text-slate-500 mt-1">Manage your customer database</p>
           </div>
-          <Button onClick={() => { setEditingCustomer(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Customer
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }}>
+              <Building2 className="w-4 h-4 mr-2" />
+              Add Company
+            </Button>
+            <Button onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: false })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Contact
+            </Button>
+          </div>
         </motion.div>
 
         <div className="bg-white rounded-2xl border border-slate-100 p-4 mb-6">
@@ -140,93 +178,205 @@ export default function Customers() {
           </div>
         </div>
 
-        <div className="grid gap-4">
-          <AnimatePresence>
-            {filteredCustomers.map((customer, idx) => (
-              <motion.div
-                key={customer.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ delay: idx * 0.02 }}
-                className="bg-white rounded-xl border border-slate-100 p-5 hover:shadow-md transition-all"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-semibold text-lg">
-                      {customer.name?.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900">{customer.name}</h3>
-                      {customer.company && <p className="text-sm text-slate-500">{customer.company}</p>}
-                      <div className="flex flex-wrap gap-3 mt-2 text-sm text-slate-500">
-                        <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{customer.email}</span>
-                        {customer.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{customer.phone}</span>}
+        <div className="space-y-4">
+          {/* Companies with expandable contacts */}
+          {filteredCompanies.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                <Building2 className="w-4 h-4" /> Companies ({filteredCompanies.length})
+              </h3>
+              <AnimatePresence>
+                {filteredCompanies.map((company, idx) => {
+                  const contacts = getContactsForCompany(company.id);
+                  const isExpanded = expandedCompanies[company.id];
+                  return (
+                    <motion.div
+                      key={company.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.02 }}
+                      className="bg-white rounded-xl border border-slate-100 overflow-hidden"
+                    >
+                      <div className="p-5 hover:bg-slate-50/50 transition-all">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-4">
+                            <button onClick={() => toggleCompany(company.id)} className="mt-1">
+                              {isExpanded ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+                            </button>
+                            <div className="w-12 h-12 rounded-lg bg-[#133F5C]/10 flex items-center justify-center text-[#133F5C] font-semibold text-lg">
+                              <Building2 className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-slate-900">{company.name}</h3>
+                              <p className="text-sm text-slate-500">{contacts.length} contacts</p>
+                              <div className="flex flex-wrap gap-3 mt-2 text-sm text-slate-500">
+                                {company.email && <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{company.email}</span>}
+                                {company.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{company.phone}</span>}
+                              </div>
+                              {(company.city || company.state) && (
+                                <span className="flex items-center gap-1 text-sm text-slate-400 mt-1">
+                                  <MapPin className="w-3.5 h-3.5" />
+                                  {[company.city, company.state].filter(Boolean).join(', ')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <p className="text-sm text-slate-500">{getProposalCount(company.id, company.email)} proposals · {getProjectCount(company.id)} projects</p>
+                              {getTotalValue(company.id, company.email) > 0 && (
+                                <p className="text-sm font-medium text-emerald-600">${getTotalValue(company.id, company.email).toLocaleString()} won</p>
+                              )}
+                            </div>
+                            <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(company)}>
+                              <Eye className="w-4 h-4 mr-1" />View
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon"><MoreHorizontal className="w-5 h-5" /></Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => { setAddingContactTo(company.id); setShowModal(true); }}>
+                                  <UserPlus className="w-4 h-4 mr-2" />Add Contact
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { setEditingCustomer(company); setShowModal(true); }}>
+                                  <Edit2 className="w-4 h-4 mr-2" />Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setDeleteConfirm({ open: true, customer: company })} className="text-red-600">
+                                  <Trash2 className="w-4 h-4 mr-2" />Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
                       </div>
-                      {(customer.city || customer.state) && (
-                        <span className="flex items-center gap-1 text-sm text-slate-400 mt-1">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {[customer.city, customer.state].filter(Boolean).join(', ')}
-                        </span>
+                      {isExpanded && contacts.length > 0 && (
+                        <div className="border-t bg-slate-50/50 divide-y">
+                          {contacts.map(contact => (
+                            <div key={contact.id} className="px-5 py-3 pl-16 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm">
+                                  {contact.name?.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-slate-900 text-sm">{contact.name}</p>
+                                  <p className="text-xs text-slate-500">{contact.email}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => { setEditingCustomer(contact); setShowModal(true); }}>
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({ open: true, customer: contact })} className="text-red-500">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-sm text-slate-500">{getProposalCount(customer.id, customer.email)} proposals · {getProjectCount(customer.id)} projects</p>
-                      {getTotalValue(customer.id, customer.email) > 0 && (
-                        <p className="text-sm font-medium text-emerald-600">${getTotalValue(customer.id, customer.email).toLocaleString()} won</p>
-                      )}
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(customer)}>
-                      <Eye className="w-4 h-4 mr-1" />
-                      View
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon"><MoreHorizontal className="w-5 h-5" /></Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => { setEditingCustomer(customer); setShowModal(true); }}>
-                          <Edit2 className="w-4 h-4 mr-2" />Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setDeleteConfirm({ open: true, customer })} className="text-red-600">
-                          <Trash2 className="w-4 h-4 mr-2" />Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          )}
 
-          {filteredCustomers.length === 0 && (
+          {/* Standalone Contacts */}
+          {filteredStandaloneContacts.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                <Users className="w-4 h-4" /> Individual Contacts ({filteredStandaloneContacts.length})
+              </h3>
+              <AnimatePresence>
+                {filteredStandaloneContacts.map((customer, idx) => (
+                  <motion.div
+                    key={customer.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.02 }}
+                    className="bg-white rounded-xl border border-slate-100 p-5 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-semibold text-lg">
+                          {customer.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-slate-900">{customer.name}</h3>
+                          {customer.company && <p className="text-sm text-slate-500">{customer.company}</p>}
+                          <div className="flex flex-wrap gap-3 mt-2 text-sm text-slate-500">
+                            <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{customer.email}</span>
+                            {customer.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{customer.phone}</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-sm text-slate-500">{getProposalCount(customer.id, customer.email)} proposals · {getProjectCount(customer.id)} projects</p>
+                          {getTotalValue(customer.id, customer.email) > 0 && (
+                            <p className="text-sm font-medium text-emerald-600">${getTotalValue(customer.id, customer.email).toLocaleString()} won</p>
+                          )}
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(customer)}>
+                          <Eye className="w-4 h-4 mr-1" />View
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon"><MoreHorizontal className="w-5 h-5" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setEditingCustomer(customer); setShowModal(true); }}>
+                              <Edit2 className="w-4 h-4 mr-2" />Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDeleteConfirm({ open: true, customer })} className="text-red-600">
+                              <Trash2 className="w-4 h-4 mr-2" />Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {filteredCompanies.length === 0 && filteredStandaloneContacts.length === 0 && (
             <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
               <Users className="w-12 h-12 mx-auto text-slate-300 mb-4" />
               <h3 className="text-lg font-medium text-slate-900 mb-2">No customers yet</h3>
-              <p className="text-slate-500 mb-6">Add your first customer to get started</p>
-              <Button onClick={() => setShowModal(true)} className="bg-[#0069AF] hover:bg-[#133F5C]">
-                <Plus className="w-4 h-4 mr-2" />Add Customer
-              </Button>
+              <p className="text-slate-500 mb-6">Add your first company or contact to get started</p>
+              <div className="flex justify-center gap-2">
+                <Button variant="outline" onClick={() => { setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }}>
+                  <Building2 className="w-4 h-4 mr-2" />Add Company
+                </Button>
+                <Button onClick={() => setShowModal(true)} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                  <Plus className="w-4 h-4 mr-2" />Add Contact
+                </Button>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      <Dialog open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) setEditingCustomer(null); }}>
+      <Dialog open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) { setEditingCustomer(null); setAddingContactTo(null); } }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingCustomer ? 'Edit Customer' : 'Add Customer'}</DialogTitle>
+            <DialogTitle>
+              {editingCustomer ? `Edit ${editingCustomer.is_company ? 'Company' : 'Contact'}` : 
+               addingContactTo ? 'Add Contact to Company' :
+               formData.is_company ? 'Add Company' : 'Add Contact'}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Name *</Label>
+                <Label>{formData.is_company ? 'Company Name *' : 'Name *'}</Label>
                 <Input value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} className="mt-1" />
               </div>
               <div>
-                <Label>Email *</Label>
+                <Label>Email {formData.is_company ? '' : '*'}</Label>
                 <Input type="email" value={formData.email} onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))} className="mt-1" />
               </div>
             </div>
@@ -235,29 +385,35 @@ export default function Customers() {
                 <Label>Phone</Label>
                 <Input value={formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} className="mt-1" />
               </div>
-              <div>
-                <Label>Company</Label>
-                <Input value={formData.company} onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))} className="mt-1" />
-              </div>
+              {!formData.is_company && !addingContactTo && (
+                <div>
+                  <Label>Company</Label>
+                  <Input value={formData.company} onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))} className="mt-1" />
+                </div>
+              )}
             </div>
-            <div>
-              <Label>Address</Label>
-              <Input value={formData.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} className="mt-1" />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label>City</Label>
-                <Input value={formData.city} onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))} className="mt-1" />
-              </div>
-              <div>
-                <Label>State</Label>
-                <Input value={formData.state} onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))} className="mt-1" />
-              </div>
-              <div>
-                <Label>ZIP</Label>
-                <Input value={formData.zip} onChange={(e) => setFormData(prev => ({ ...prev, zip: e.target.value }))} className="mt-1" />
-              </div>
-            </div>
+            {(formData.is_company || !addingContactTo) && (
+              <>
+                <div>
+                  <Label>Address</Label>
+                  <Input value={formData.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} className="mt-1" />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label>City</Label>
+                    <Input value={formData.city} onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label>State</Label>
+                    <Input value={formData.state} onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label>ZIP</Label>
+                    <Input value={formData.zip} onChange={(e) => setFormData(prev => ({ ...prev, zip: e.target.value }))} className="mt-1" />
+                  </div>
+                </div>
+              </>
+            )}
             <div>
               <Label>Notes</Label>
               <Textarea value={formData.notes} onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))} className="mt-1" />
@@ -265,7 +421,7 @@ export default function Customers() {
             <div className="flex justify-end gap-3 pt-4">
               <Button variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
               <Button onClick={handleSave} className="bg-[#0069AF] hover:bg-[#133F5C]">
-                {editingCustomer ? 'Update' : 'Add Customer'}
+                {editingCustomer ? 'Update' : formData.is_company ? 'Add Company' : 'Add Contact'}
               </Button>
             </div>
           </div>
