@@ -9,7 +9,7 @@ import {
   CheckCircle2, Circle, Clock, ArrowUpCircle, 
   MoreHorizontal, Edit2, Trash2, Calendar as CalendarIcon,
   UserPlus, User, AlertTriangle, MessageCircle, Paperclip,
-  FolderPlus
+  FolderPlus, Archive, CheckSquare, Square, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +38,8 @@ const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
   in_progress: { icon: ArrowUpCircle, color: 'text-blue-500', bg: 'bg-blue-100', label: 'In Progress' },
   review: { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-100', label: 'Review' },
-  completed: { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-100', label: 'Completed' }
+  completed: { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-100', label: 'Completed' },
+  archived: { icon: Archive, color: 'text-slate-400', bg: 'bg-slate-100', label: 'Archived' }
 };
 
 const groupColors = {
@@ -107,6 +108,11 @@ export default function ProjectTasks() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: null, item: null });
 
+  // Multi-select state
+  const [selectedTasks, setSelectedTasks] = useState(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [bulkDatePickerOpen, setBulkDatePickerOpen] = useState(false);
+
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
@@ -170,14 +176,90 @@ export default function ProjectTasks() {
   };
 
   const filteredTasks = tasks.filter(task => {
+    // Hide archived unless viewing archived
+    if (task.status === 'archived' && viewFilter !== 'archived') return false;
+    
     const matchesSearch = task.title?.toLowerCase().includes(searchQuery.toLowerCase());
     if (viewFilter === 'my_tasks') return matchesSearch && task.assigned_to === currentUser?.email;
     if (viewFilter === 'overdue') {
       const dueDateInfo = getDueDateInfo(task.due_date, task.status);
       return matchesSearch && dueDateInfo?.urgent;
     }
+    if (viewFilter === 'archived') return matchesSearch && task.status === 'archived';
     return matchesSearch;
   });
+
+  // Multi-select handlers
+  const toggleTaskSelection = (taskId) => {
+    const newSelected = new Set(selectedTasks);
+    if (newSelected.has(taskId)) {
+      newSelected.delete(taskId);
+    } else {
+      newSelected.add(taskId);
+    }
+    setSelectedTasks(newSelected);
+    if (newSelected.size === 0) setSelectionMode(false);
+  };
+
+  const selectAllTasks = () => {
+    if (selectedTasks.size === filteredTasks.length) {
+      setSelectedTasks(new Set());
+      setSelectionMode(false);
+    } else {
+      setSelectedTasks(new Set(filteredTasks.map(t => t.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedTasks(new Set());
+    setSelectionMode(false);
+  };
+
+  const handleBulkArchive = async () => {
+    for (const taskId of selectedTasks) {
+      await base44.entities.Task.update(taskId, { status: 'archived' });
+    }
+    refetchTasks();
+    clearSelection();
+  };
+
+  const handleBulkDelete = async () => {
+    for (const taskId of selectedTasks) {
+      await base44.entities.Task.delete(taskId);
+    }
+    refetchTasks();
+    clearSelection();
+  };
+
+  const handleBulkAssign = async (email) => {
+    const member = teamMembers.find(m => m.email === email);
+    for (const taskId of selectedTasks) {
+      await base44.entities.Task.update(taskId, {
+        assigned_to: email,
+        assigned_name: member?.name || email
+      });
+    }
+    refetchTasks();
+    clearSelection();
+  };
+
+  const handleBulkDueDate = async (date) => {
+    for (const taskId of selectedTasks) {
+      await base44.entities.Task.update(taskId, {
+        due_date: date ? format(date, 'yyyy-MM-dd') : ''
+      });
+    }
+    refetchTasks();
+    setBulkDatePickerOpen(false);
+  };
+
+  const handleBulkMoveToGroup = async (groupId) => {
+    for (const taskId of selectedTasks) {
+      await base44.entities.Task.update(taskId, { group_id: groupId || '' });
+    }
+    refetchTasks();
+    clearSelection();
+  };
 
   const sortTasks = (taskList) => {
     return [...taskList].sort((a, b) => {
@@ -288,6 +370,7 @@ export default function ProjectTasks() {
     const StatusIcon = status.icon;
     const dueDateInfo = getDueDateInfo(task.due_date, task.status);
     const commentCount = getCommentCount(task.id);
+    const isSelected = selectedTasks.has(task.id);
 
     return (
       <motion.div
@@ -295,16 +378,31 @@ export default function ProjectTasks() {
         animate={{ opacity: 1, y: 0 }}
         className={cn(
           "group flex items-center gap-3 p-3 bg-white rounded-xl border hover:shadow-md transition-all cursor-pointer",
-          task.status === 'completed' ? "opacity-60 border-slate-100" : 
-          dueDateInfo?.urgent ? "border-red-200 bg-red-50/30" : "border-slate-200"
+          task.status === 'completed' || task.status === 'archived' ? "opacity-60 border-slate-100" : 
+          dueDateInfo?.urgent ? "border-red-200 bg-red-50/30" : "border-slate-200",
+          isSelected && "ring-2 ring-indigo-500 bg-indigo-50/50"
         )}
-        onClick={() => setSelectedTask(task)}
+        onClick={() => selectionMode ? toggleTaskSelection(task.id) : setSelectedTask(task)}
       >
+        {/* Selection checkbox */}
+        {selectionMode && (
+          <button 
+            onClick={(e) => { e.stopPropagation(); toggleTaskSelection(task.id); }}
+            className="p-1"
+          >
+            {isSelected ? (
+              <CheckSquare className="w-5 h-5 text-indigo-600" />
+            ) : (
+              <Square className="w-5 h-5 text-slate-300" />
+            )}
+          </button>
+        )}
+
         {/* Status */}
         <button 
           onClick={(e) => {
             e.stopPropagation();
-            handleStatusChange(task, task.status === 'completed' ? 'todo' : 'completed');
+            if (!selectionMode) handleStatusChange(task, task.status === 'completed' ? 'todo' : 'completed');
           }}
           className={cn("p-1.5 rounded-lg transition-all hover:scale-110", status.bg, "hover:bg-emerald-100")}
         >
@@ -412,6 +510,17 @@ export default function ProjectTasks() {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Archive button */}
+          {task.status !== 'archived' && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleStatusChange(task, 'archived'); }}
+              className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all"
+              title="Archive"
+            >
+              <Archive className="w-4 h-4 text-slate-400" />
+            </button>
+          )}
+
           {/* More menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -423,6 +532,15 @@ export default function ProjectTasks() {
               <DropdownMenuItem onClick={() => { setEditingTask(task); setShowTaskModal(true); }}>
                 <Edit2 className="w-4 h-4 mr-2" />Edit
               </DropdownMenuItem>
+              {task.status === 'archived' ? (
+                <DropdownMenuItem onClick={() => handleStatusChange(task, 'todo')}>
+                  <ArrowUpCircle className="w-4 h-4 mr-2" />Restore
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={() => handleStatusChange(task, 'archived')}>
+                  <Archive className="w-4 h-4 mr-2" />Archive
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => setDeleteConfirm({ open: true, type: 'task', item: task })} className="text-red-600">
                 <Trash2 className="w-4 h-4 mr-2" />Delete
               </DropdownMenuItem>
@@ -546,6 +664,96 @@ export default function ProjectTasks() {
           </form>
         </div>
 
+        {/* Bulk Action Bar */}
+        {selectionMode && selectedTasks.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-indigo-600 text-white rounded-xl p-3 mb-4 flex items-center justify-between shadow-lg"
+          >
+            <div className="flex items-center gap-3">
+              <button onClick={clearSelection} className="p-1 hover:bg-indigo-500 rounded">
+                <X className="w-4 h-4" />
+              </button>
+              <span className="font-medium">{selectedTasks.size} selected</span>
+              <button onClick={selectAllTasks} className="text-sm underline hover:no-underline">
+                {selectedTasks.size === filteredTasks.length ? 'Deselect all' : 'Select all'}
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Move to Group */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="secondary" className="h-8 text-xs">
+                    <FolderPlus className="w-3.5 h-3.5 mr-1.5" />
+                    Move to Group
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => handleBulkMoveToGroup('')}>
+                    Ungrouped
+                  </DropdownMenuItem>
+                  {taskGroups.map((g) => (
+                    <DropdownMenuItem key={g.id} onClick={() => handleBulkMoveToGroup(g.id)}>
+                      <div className={cn("w-2 h-2 rounded-full mr-2", groupColors[g.color])} />
+                      {g.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Assign */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="secondary" className="h-8 text-xs">
+                    <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                    Assign
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {teamMembers.map((member) => (
+                    <DropdownMenuItem key={member.id} onClick={() => handleBulkAssign(member.email)}>
+                      <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                        {getInitials(member.name)}
+                      </div>
+                      {member.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Due Date */}
+              <Popover open={bulkDatePickerOpen} onOpenChange={setBulkDatePickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button size="sm" variant="secondary" className="h-8 text-xs">
+                    <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                    Due Date
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    onSelect={handleBulkDueDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {/* Archive */}
+              <Button size="sm" variant="secondary" className="h-8 text-xs" onClick={handleBulkArchive}>
+                <Archive className="w-3.5 h-3.5 mr-1.5" />
+                Archive
+              </Button>
+
+              {/* Delete */}
+              <Button size="sm" variant="destructive" className="h-8 text-xs" onClick={handleBulkDelete}>
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                Delete
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
         {/* Filters */}
         <div className="flex items-center gap-4 mb-4">
           <div className="relative flex-1 max-w-xs">
@@ -558,7 +766,7 @@ export default function ProjectTasks() {
             />
           </div>
           <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
-            {[['all', 'All'], ['my_tasks', 'My Tasks'], ['overdue', 'Overdue']].map(([key, label]) => (
+            {[['all', 'All'], ['my_tasks', 'My Tasks'], ['overdue', 'Overdue'], ['archived', 'Archived']].map(([key, label]) => (
               <button
                 key={key}
                 onClick={() => setViewFilter(key)}
@@ -571,6 +779,15 @@ export default function ProjectTasks() {
               </button>
             ))}
           </div>
+          <Button 
+            variant={selectionMode ? "default" : "outline"} 
+            size="sm" 
+            onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
+            className={cn("h-9", selectionMode && "bg-indigo-600")}
+          >
+            <CheckSquare className="w-4 h-4 mr-2" />
+            {selectionMode ? 'Done' : 'Select'}
+          </Button>
         </div>
 
         {/* Task Groups */}
