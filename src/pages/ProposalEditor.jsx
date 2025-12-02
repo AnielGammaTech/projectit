@@ -47,6 +47,7 @@ export default function ProposalEditor() {
     customer_company: '',
     customer_phone: '',
     customer_address: '',
+    project_id: '',
     areas: [],
     notes: '',
     terms_conditions: 'Payment due within 30 days of approval. All prices valid for 30 days.',
@@ -61,6 +62,11 @@ export default function ProposalEditor() {
     quantity: 1,
     unit_price: 0
   });
+
+  const [newCustomer, setNewCustomer] = useState({
+    name: '', email: '', phone: '', company: ''
+  });
+  const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -86,6 +92,17 @@ export default function ProposalEditor() {
     queryFn: () => base44.entities.InventoryItem.list()
   });
 
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => base44.entities.Project.list('-created_date')
+  });
+
+  const { data: allProposals = [] } = useQuery({
+    queryKey: ['allProposalsCount'],
+    queryFn: () => base44.entities.Proposal.list(),
+    enabled: !proposalId
+  });
+
   useEffect(() => {
     if (proposal) {
       // Convert old items format to areas format if needed
@@ -102,6 +119,7 @@ export default function ProposalEditor() {
         customer_company: proposal.customer_company || '',
         customer_phone: proposal.customer_phone || '',
         customer_address: proposal.customer_address || '',
+        project_id: proposal.project_id || '',
         areas: areas,
         notes: proposal.notes || '',
         terms_conditions: proposal.terms_conditions || '',
@@ -114,12 +132,13 @@ export default function ProposalEditor() {
       const expanded = {};
       areas.forEach((_, idx) => { expanded[idx] = true; });
       setExpandedAreas(expanded);
-    } else if (!proposalId) {
-      // New proposal - generate number
-      const proposalNumber = `PROP-${Date.now().toString(36).toUpperCase()}`;
+    } else if (!proposalId && allProposals) {
+      // New proposal - generate sequential number
+      const nextNumber = (allProposals.length + 1).toString().padStart(4, '0');
+      const proposalNumber = `P-${nextNumber}`;
       setFormData(prev => ({ ...prev, proposal_number: proposalNumber }));
     }
-  }, [proposal, proposalId]);
+  }, [proposal, proposalId, allProposals]);
 
   const handleCustomerSelect = (customerId) => {
     const customer = customers.find(c => c.id === customerId);
@@ -133,6 +152,22 @@ export default function ProposalEditor() {
         customer_address: [customer.address, customer.city, customer.state, customer.zip].filter(Boolean).join(', ')
       }));
     }
+    setShowCustomerModal(false);
+  };
+
+  const handleCreateCustomer = async () => {
+    if (!newCustomer.name || !newCustomer.email) return;
+    const created = await base44.entities.Customer.create(newCustomer);
+    queryClient.invalidateQueries({ queryKey: ['customers'] });
+    setFormData(prev => ({
+      ...prev,
+      customer_name: newCustomer.name,
+      customer_email: newCustomer.email,
+      customer_company: newCustomer.company || '',
+      customer_phone: newCustomer.phone || ''
+    }));
+    setNewCustomer({ name: '', email: '', phone: '', company: '' });
+    setShowNewCustomerForm(false);
     setShowCustomerModal(false);
   };
 
@@ -321,41 +356,46 @@ export default function ProposalEditor() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Customer Section */}
+            {/* Customer & Project Section */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl border border-slate-200 p-6"
+              className="bg-white rounded-xl border border-slate-200 p-4"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-slate-900">Customer</h2>
-                <Button variant="outline" size="sm" onClick={() => setShowCustomerModal(true)}>
-                  {formData.customer_name ? 'Change' : 'Select Customer'}
+              <div className="flex items-center gap-4">
+                {formData.customer_name ? (
+                  <>
+                    <div className="w-10 h-10 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-semibold text-sm">
+                      {formData.customer_name.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-[#133F5C] truncate">{formData.customer_name}</p>
+                      <p className="text-xs text-slate-500 truncate">{formData.customer_email}</p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 text-sm text-slate-500">No customer selected</div>
+                )}
+                <Button variant="outline" size="sm" onClick={() => setShowCustomerModal(true)} className="shrink-0">
+                  {formData.customer_name ? 'Change' : 'Select'}
                 </Button>
               </div>
               
-              {formData.customer_name ? (
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-semibold">
-                    {formData.customer_name.charAt(0)}
-                  </div>
-                  <div className="flex-1 grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="font-medium text-slate-900">{formData.customer_name}</p>
-                      {formData.customer_company && <p className="text-sm text-slate-500">{formData.customer_company}</p>}
-                    </div>
-                    <div className="text-sm text-slate-500 space-y-1">
-                      {formData.customer_email && <p className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{formData.customer_email}</p>}
-                      {formData.customer_phone && <p className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{formData.customer_phone}</p>}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-slate-500">
-                  <User className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                  <p>No customer selected</p>
-                </div>
-              )}
+              {/* Project Link */}
+              <div className="mt-3 pt-3 border-t border-slate-100">
+                <Label className="text-xs text-slate-500">Linked Project</Label>
+                <Select value={formData.project_id || 'none'} onValueChange={(v) => setFormData(prev => ({ ...prev, project_id: v === 'none' ? '' : v }))}>
+                  <SelectTrigger className="mt-1 h-9">
+                    <SelectValue placeholder="Link to project..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No project</SelectItem>
+                    {projects.filter(p => p.status !== 'archived').map(project => (
+                      <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </motion.div>
 
             {/* Areas & Items */}
@@ -507,7 +547,7 @@ export default function ProposalEditor() {
                 </div>
               )}
 
-              <Button onClick={addArea} className="mt-4 bg-[#f97316] hover:bg-[#ea580c]">
+              <Button onClick={addArea} className="mt-4 bg-[#0069AF] hover:bg-[#133F5C]">
                 Create an Area
               </Button>
             </motion.div>
@@ -602,31 +642,67 @@ export default function ProposalEditor() {
       </div>
 
       {/* Customer Selection Modal */}
-      <Dialog open={showCustomerModal} onOpenChange={setShowCustomerModal}>
+      <Dialog open={showCustomerModal} onOpenChange={(open) => { setShowCustomerModal(open); if (!open) setShowNewCustomerForm(false); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Select Customer</DialogTitle>
+            <DialogTitle>{showNewCustomerForm ? 'New Customer' : 'Select Customer'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2 max-h-80 overflow-y-auto">
-            {customers.map(customer => (
-              <button
-                key={customer.id}
-                onClick={() => handleCustomerSelect(customer.id)}
-                className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 text-left"
-              >
-                <div className="w-10 h-10 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-semibold">
-                  {customer.name?.charAt(0)}
+          
+          {showNewCustomerForm ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Name *</Label>
+                  <Input value={newCustomer.name} onChange={(e) => setNewCustomer(prev => ({ ...prev, name: e.target.value }))} className="mt-1 h-9" />
                 </div>
                 <div>
-                  <p className="font-medium text-slate-900">{customer.name}</p>
-                  <p className="text-sm text-slate-500">{customer.email}</p>
+                  <Label className="text-xs">Email *</Label>
+                  <Input type="email" value={newCustomer.email} onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))} className="mt-1 h-9" />
                 </div>
-              </button>
-            ))}
-            {customers.length === 0 && (
-              <p className="text-center text-slate-500 py-8">No customers found</p>
-            )}
-          </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Company</Label>
+                  <Input value={newCustomer.company} onChange={(e) => setNewCustomer(prev => ({ ...prev, company: e.target.value }))} className="mt-1 h-9" />
+                </div>
+                <div>
+                  <Label className="text-xs">Phone</Label>
+                  <Input value={newCustomer.phone} onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))} className="mt-1 h-9" />
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => setShowNewCustomerForm(false)} className="flex-1">Back</Button>
+                <Button size="sm" onClick={handleCreateCustomer} className="flex-1 bg-[#0069AF] hover:bg-[#133F5C]">Create & Select</Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" onClick={() => setShowNewCustomerForm(true)} className="w-full mb-3">
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Customer
+              </Button>
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                {customers.map(customer => (
+                  <button
+                    key={customer.id}
+                    onClick={() => handleCustomerSelect(customer.id)}
+                    className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-100 text-left"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-semibold text-sm">
+                      {customer.name?.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-slate-900 truncate">{customer.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{customer.email}</p>
+                    </div>
+                  </button>
+                ))}
+                {customers.length === 0 && (
+                  <p className="text-center text-slate-500 py-6 text-sm">No customers yet</p>
+                )}
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
