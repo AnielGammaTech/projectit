@@ -748,6 +748,7 @@ function ProposalSettingsSection({ queryClient }) {
     proposal_prefix: 'P-',
     default_valid_days: 30,
     default_sales_tax_percent: 0,
+    tax_rates_by_location: [],
     default_markup_type: 'percentage',
     default_markup_value: 20,
     default_terms_conditions: 'Payment due within 30 days of approval. All prices valid for 30 days.',
@@ -758,6 +759,7 @@ function ProposalSettingsSection({ queryClient }) {
     company_email: '',
     company_logo_url: ''
   });
+  const [newTaxRate, setNewTaxRate] = useState({ name: '', state: '', city: '', zip: '', rate: 0 });
 
   const { data: settings = [], refetch } = useQuery({
     queryKey: ['proposalSettings'],
@@ -770,6 +772,7 @@ function ProposalSettingsSection({ queryClient }) {
         proposal_prefix: settings[0].proposal_prefix || 'P-',
         default_valid_days: settings[0].default_valid_days || 30,
         default_sales_tax_percent: settings[0].default_sales_tax_percent || 0,
+        tax_rates_by_location: settings[0].tax_rates_by_location || [],
         default_markup_type: settings[0].default_markup_type || 'percentage',
         default_markup_value: settings[0].default_markup_value || 20,
         default_terms_conditions: settings[0].default_terms_conditions || '',
@@ -782,6 +785,22 @@ function ProposalSettingsSection({ queryClient }) {
       });
     }
   }, [settings]);
+
+  const addTaxRate = () => {
+    if (!newTaxRate.name || !newTaxRate.rate) return;
+    setFormData(prev => ({
+      ...prev,
+      tax_rates_by_location: [...prev.tax_rates_by_location, { ...newTaxRate }]
+    }));
+    setNewTaxRate({ name: '', state: '', city: '', zip: '', rate: 0 });
+  };
+
+  const removeTaxRate = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      tax_rates_by_location: prev.tax_rates_by_location.filter((_, i) => i !== index)
+    }));
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -870,6 +889,53 @@ function ProposalSettingsSection({ queryClient }) {
             <div>
               <Label className="text-xs">Default Tax %</Label>
               <Input type="number" step="0.1" value={formData.default_sales_tax_percent} onChange={(e) => setFormData(p => ({ ...p, default_sales_tax_percent: parseFloat(e.target.value) || 0 }))} className="mt-1" />
+            </div>
+          </div>
+        </div>
+
+        {/* Tax Rates by Location */}
+        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+          <h3 className="font-semibold text-slate-900">Tax Rates by Location</h3>
+          <p className="text-xs text-slate-500">Set tax rates for specific locations. Customers can have a default tax rate assigned.</p>
+          
+          {formData.tax_rates_by_location?.length > 0 && (
+            <div className="space-y-2">
+              {formData.tax_rates_by_location.map((rate, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{rate.name}</p>
+                    <p className="text-xs text-slate-500">
+                      {[rate.city, rate.state, rate.zip].filter(Boolean).join(', ') || 'No location specified'}
+                    </p>
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-700">{rate.rate}%</Badge>
+                  <Button variant="ghost" size="sm" onClick={() => removeTaxRate(idx)} className="text-red-500 hover:text-red-700">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="grid grid-cols-5 gap-2 pt-2 border-t">
+            <div>
+              <Label className="text-xs">Name</Label>
+              <Input value={newTaxRate.name} onChange={(e) => setNewTaxRate(p => ({ ...p, name: e.target.value }))} placeholder="e.g., Texas" className="mt-1 h-9" />
+            </div>
+            <div>
+              <Label className="text-xs">State</Label>
+              <Input value={newTaxRate.state} onChange={(e) => setNewTaxRate(p => ({ ...p, state: e.target.value }))} placeholder="TX" className="mt-1 h-9" />
+            </div>
+            <div>
+              <Label className="text-xs">City</Label>
+              <Input value={newTaxRate.city} onChange={(e) => setNewTaxRate(p => ({ ...p, city: e.target.value }))} placeholder="Austin" className="mt-1 h-9" />
+            </div>
+            <div>
+              <Label className="text-xs">Rate %</Label>
+              <Input type="number" step="0.01" value={newTaxRate.rate} onChange={(e) => setNewTaxRate(p => ({ ...p, rate: parseFloat(e.target.value) || 0 }))} className="mt-1 h-9" />
+            </div>
+            <div className="flex items-end">
+              <Button onClick={addTaxRate} size="sm" className="w-full bg-[#0069AF] hover:bg-[#133F5C]">Add</Button>
             </div>
           </div>
         </div>
