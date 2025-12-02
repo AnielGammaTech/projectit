@@ -1021,8 +1021,8 @@ function IntegrationsSection({ queryClient }) {
   });
 
   const handleSyncCustomers = async () => {
-    if (!formData.halopsa_url || !formData.halopsa_client_id || !formData.halopsa_client_secret) {
-      setSyncResult({ success: false, message: 'Please fill in all HaloPSA credentials first' });
+    if (!formData.halopsa_url) {
+      setSyncResult({ success: false, message: 'Please enter your HaloPSA URL first' });
       return;
     }
     
@@ -1030,81 +1030,18 @@ function IntegrationsSection({ queryClient }) {
     setSyncResult(null);
     
     try {
-      // Use LLM to fetch and parse customer data from HaloPSA API
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are helping sync customers from HaloPSA. 
-        
-The user wants to sync their HaloPSA customers. Since we cannot make direct API calls, generate 5 sample customer records that would typically come from an MSP's HaloPSA system.
-
-Return a JSON array of customers with these fields:
-- name (company name)
-- email (main contact email)
-- phone
-- address
-- city
-- state
-- zip
-- external_id (a unique HaloPSA client ID like "halo_123")
-
-Make them realistic IT/MSP client companies.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            customers: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  email: { type: "string" },
-                  phone: { type: "string" },
-                  address: { type: "string" },
-                  city: { type: "string" },
-                  state: { type: "string" },
-                  zip: { type: "string" },
-                  external_id: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
-
-      if (result?.customers?.length > 0) {
-        let created = 0;
-        let skipped = 0;
-        
-        // Get existing customers to check for duplicates
-        const existingCustomers = await base44.entities.Customer.list();
-        const existingExternalIds = new Set(existingCustomers.map(c => c.external_id).filter(Boolean));
-        
-        for (const customer of result.customers) {
-          if (existingExternalIds.has(customer.external_id)) {
-            skipped++;
-            continue;
-          }
-          
-          await base44.entities.Customer.create({
-            ...customer,
-            is_company: true,
-            source: 'halo_psa'
-          });
-          created++;
-        }
-        
-        // Update last sync time
-        if (settings[0]?.id) {
-          await base44.entities.IntegrationSettings.update(settings[0].id, {
-            halopsa_last_sync: new Date().toISOString()
-          });
-          refetch();
-        }
-        
+      const response = await base44.functions.invoke('syncHaloPSACustomers');
+      const result = response.data;
+      
+      if (result.success) {
+        refetch();
         queryClient.invalidateQueries({ queryKey: ['customers'] });
-        setSyncResult({ success: true, message: `Synced ${created} customers${skipped > 0 ? `, ${skipped} already existed` : ''}` });
+        setSyncResult({ success: true, message: result.message });
+      } else {
+        setSyncResult({ success: false, message: result.error || 'Sync failed' });
       }
     } catch (error) {
-      setSyncResult({ success: false, message: 'Sync failed. Please check your credentials.' });
+      setSyncResult({ success: false, message: error.response?.data?.error || 'Sync failed. Please check your credentials.' });
     }
     
     setSyncing(false);
@@ -1256,8 +1193,8 @@ Make them realistic IT/MSP client companies.`,
                 </div>
               )}
 
-              <p className="text-xs text-slate-500 bg-amber-50 p-3 rounded-lg border border-amber-200">
-                Note: For full HaloPSA API integration, backend functions must be enabled. The sync above creates sample data for demonstration.
+              <p className="text-xs text-slate-500 bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                Connected to HaloPSA. Click "Sync Customers Now" to import customers from your HaloPSA instance.
               </p>
             </div>
           )}
