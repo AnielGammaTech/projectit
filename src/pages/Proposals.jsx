@@ -533,8 +533,8 @@ export default function Proposals() {
                               Duplicate
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            {proposal.status === 'draft' && (
-                              <DropdownMenuItem onClick={() => handleSendProposal(proposal)}>
+                            {proposal.status === 'draft' && proposal.customer_email && (
+                              <DropdownMenuItem onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSendProposal(proposal); }}>
                                 <Send className="w-4 h-4 mr-2" />
                                 Send to Customer
                               </DropdownMenuItem>
