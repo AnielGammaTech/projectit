@@ -9,7 +9,10 @@ import {
   X,
   Wrench,
   FileStack,
-  Settings
+  Settings,
+  BarChart3,
+  Bell,
+  FileText
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -19,9 +22,12 @@ import { base44 } from '@/api/base44Client';
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
   { name: 'All Tasks', icon: ListTodo, page: 'AllTasks' },
+  { name: 'Quote Requests', icon: FileText, page: 'QuoteRequests' },
+  { name: 'Reports', icon: BarChart3, page: 'Reports' },
   { name: 'Team', icon: Users, page: 'Team' },
   { name: 'User Groups', icon: Users, page: 'UserGroups' },
   { name: 'Templates', icon: FileStack, page: 'Templates' },
+  { name: 'Notifications', icon: Bell, page: 'NotificationSettings' },
   { name: 'Settings', icon: Settings, page: 'Settings', adminOnly: true },
 ];
 
