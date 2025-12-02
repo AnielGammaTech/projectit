@@ -411,7 +411,35 @@ export default function ProposalEditor() {
                 Preview
               </Button>
             </Link>
-            <Button size="sm" className="bg-[#0069AF] hover:bg-[#005a94]">
+            <Button 
+              size="sm" 
+              className="bg-[#0069AF] hover:bg-[#005a94]"
+              disabled={!proposalId || !formData.customer_email || formData.status !== 'draft'}
+              onClick={async () => {
+                if (!formData.customer_email) {
+                  alert('Please add a customer with an email address before sending.');
+                  return;
+                }
+                await handleSave();
+                const approvalLink = `${window.location.origin}/ProposalApproval?token=${proposal?.approval_token}`;
+                await base44.integrations.Core.SendEmail({
+                  to: formData.customer_email,
+                  subject: `Proposal: ${formData.title}`,
+                  body: `
+                    <h2>You have received a proposal</h2>
+                    <p>Dear ${formData.customer_name},</p>
+                    <p>Please review and approve the following proposal:</p>
+                    <p><strong>${formData.title}</strong></p>
+                    <p>Total: $${calculateTotals().total?.toLocaleString()}</p>
+                    <p><a href="${approvalLink}" style="background: #0069AF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Review & Sign Proposal</a></p>
+                    <p>This proposal is valid until ${formData.valid_until ? format(new Date(formData.valid_until), 'MMMM d, yyyy') : 'further notice'}.</p>
+                  `
+                });
+                await base44.entities.Proposal.update(proposalId, { status: 'sent', sent_date: new Date().toISOString() });
+                setFormData(prev => ({ ...prev, status: 'sent' }));
+                alert('Proposal sent successfully!');
+              }}
+            >
               <Send className="w-4 h-4 mr-1.5" />
               Send
             </Button>
