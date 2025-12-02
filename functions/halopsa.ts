@@ -1,15 +1,16 @@
 import { base44 } from './base44Client.js';
 
+// HaloPSA API configuration for helpdesk.gamma.tech
+// Resource Server: https://helpdesk.gamma.tech/api
+// Auth Server: https://helpdesk.gamma.tech/auth
+
 // Get access token from HaloPSA
 async function getAccessToken() {
   const clientId = process.env.HALOPSA_CLIENT_ID;
   const clientSecret = process.env.HALOPSA_CLIENT_SECRET;
-  const tenant = process.env.HALOPSA_TENANT;
+  const tenant = process.env.HALOPSA_TENANT; // "gammatech"
 
-  // Remove https:// or http:// if included in tenant
-  const cleanTenant = tenant.replace(/^https?:\/\//, '');
-
-  const response = await fetch(`https://${cleanTenant}/auth/token`, {
+  const response = await fetch(`https://helpdesk.gamma.tech/auth/token?tenant=${tenant}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -34,13 +35,10 @@ async function getAccessToken() {
 
 // Get ticket details by ID
 export async function getTicket({ ticketId }) {
-  const tenant = process.env.HALOPSA_TENANT;
-  const cleanTenant = tenant.replace(/^https?:\/\//, '');
-  
   try {
     const token = await getAccessToken();
 
-    const response = await fetch(`https://${cleanTenant}/api/tickets/${ticketId}`, {
+    const response = await fetch(`https://helpdesk.gamma.tech/api/tickets/${ticketId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -79,13 +77,10 @@ export async function getTicket({ ticketId }) {
 
 // Search tickets
 export async function searchTickets({ query, count = 10 }) {
-  const tenant = process.env.HALOPSA_TENANT;
-  const cleanTenant = tenant.replace(/^https?:\/\//, '');
-  
   try {
     const token = await getAccessToken();
 
-    const response = await fetch(`https://${cleanTenant}/api/tickets?search=${encodeURIComponent(query)}&count=${count}`, {
+    const response = await fetch(`https://helpdesk.gamma.tech/api/tickets?search=${encodeURIComponent(query)}&count=${count}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
