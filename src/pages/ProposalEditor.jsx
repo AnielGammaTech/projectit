@@ -234,6 +234,15 @@ export default function ProposalEditor() {
     }));
   };
 
+  const addOptionToArea = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      areas: prev.areas.map((area, i) => 
+        i === index ? { ...area, options: [...(area.options || []), { items: [] }] } : area
+      )
+    }));
+  };
+
   const toggleArea = (index) => {
     setExpandedAreas(prev => ({ ...prev, [index]: !prev[index] }));
   };
@@ -452,9 +461,16 @@ export default function ProposalEditor() {
                       expanded={expandedAreas[areaIndex]}
                       onToggle={() => toggleArea(areaIndex)}
                       onUpdateName={(name) => updateAreaName(areaIndex, name)}
+                      onUpdateArea={(updatedArea) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          areas: prev.areas.map((a, i) => i === areaIndex ? updatedArea : a)
+                        }));
+                      }}
                       onRemove={() => removeArea(areaIndex)}
                       onDuplicate={() => duplicateArea(areaIndex)}
                       onMakeOptional={() => toggleAreaOptional(areaIndex)}
+                      onAddOption={() => addOptionToArea(areaIndex)}
                       onUpdateItem={(itemIdx, field, value) => updateItemInArea(areaIndex, itemIdx, field, value)}
                       onRemoveItem={(itemIdx) => removeItemFromArea(areaIndex, itemIdx)}
                       onDuplicateItem={(itemIdx) => duplicateItemInArea(areaIndex, itemIdx)}
