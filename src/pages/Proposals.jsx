@@ -166,6 +166,12 @@ export default function Proposals() {
             <p className="text-slate-500 mt-1">Create and manage customer proposals</p>
           </div>
           <div className="flex gap-2">
+            <Link to={createPageUrl('QuoteRequests')}>
+              <Button variant="outline">
+                <FileText className="w-4 h-4 mr-2" />
+                Quote Requests
+              </Button>
+            </Link>
             <Link to={createPageUrl('Customers')}>
               <Button variant="outline">
                 <Users className="w-4 h-4 mr-2" />

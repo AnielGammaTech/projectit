@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus } from 'lucide-react';
+import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus, Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +37,9 @@ import { cn } from '@/lib/utils';
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importData, setImportData] = useState('');
+  const [importing, setImporting] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, customer: null });
   const [expandedCompanies, setExpandedCompanies] = useState({});
@@ -142,6 +145,34 @@ export default function Customers() {
     setDeleteConfirm({ open: false, customer: null });
   };
 
+  const handleImport = async () => {
+    setImporting(true);
+    const lines = importData.trim().split('\n');
+    const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+    
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(v => v.trim());
+      const customer = {};
+      headers.forEach((header, idx) => {
+        if (header === 'name') customer.name = values[idx];
+        if (header === 'email') customer.email = values[idx];
+        if (header === 'phone') customer.phone = values[idx];
+        if (header === 'company') customer.company = values[idx];
+        if (header === 'address') customer.address = values[idx];
+        if (header === 'city') customer.city = values[idx];
+        if (header === 'state') customer.state = values[idx];
+        if (header === 'zip') customer.zip = values[idx];
+      });
+      if (customer.name) {
+        await base44.entities.Customer.create({ ...customer, source: 'import' });
+      }
+    }
+    refetch();
+    setImporting(false);
+    setShowImportModal(false);
+    setImportData('');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -155,6 +186,10 @@ export default function Customers() {
             <p className="text-slate-500 mt-1">Manage your customer database</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowImportModal(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Import
+            </Button>
             <Button variant="outline" onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }}>
               <Building2 className="w-4 h-4 mr-2" />
               Add Company
@@ -440,6 +475,33 @@ export default function Customers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Import Modal */}
+      <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Import Customers</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <p className="text-sm text-slate-500">
+              Paste CSV data with headers: name, email, phone, company, address, city, state, zip
+            </p>
+            <Textarea 
+              value={importData}
+              onChange={(e) => setImportData(e.target.value)}
+              placeholder="name,email,phone,company,address,city,state,zip&#10;John Doe,john@example.com,555-1234,Acme Inc,123 Main St,Austin,TX,78701"
+              className="h-48 font-mono text-sm"
+            />
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowImportModal(false)}>Cancel</Button>
+              <Button onClick={handleImport} disabled={importing || !importData.trim()} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                {importing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+                Import
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Customer Detail Modal */}
       <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
