@@ -14,7 +14,12 @@ import {
   User,
   Calendar,
   Upload,
-  Loader2
+  Loader2,
+  UserPlus,
+  CheckSquare,
+  Square,
+  X,
+  FileCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,6 +84,10 @@ export default function ProjectParts() {
   const [editingPart, setEditingPart] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, part: null });
   const [uploading, setUploading] = useState(false);
+  
+  // Multi-select state
+  const [selectedParts, setSelectedParts] = useState(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -103,6 +112,18 @@ export default function ProjectParts() {
     queryKey: ['teamMembers'],
     queryFn: () => base44.entities.TeamMember.list()
   });
+
+  // Check for approved proposals linked to this project
+  const { data: approvedProposals = [] } = useQuery({
+    queryKey: ['approvedProposals', projectId],
+    queryFn: async () => {
+      const proposals = await base44.entities.Proposal.filter({ project_id: projectId, status: 'approved' });
+      return proposals;
+    },
+    enabled: !!projectId
+  });
+
+  const hasApprovedProposal = approvedProposals.length > 0;
 
   const filteredParts = parts.filter(part => {
     const matchesSearch = part.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -181,6 +202,75 @@ export default function ProjectParts() {
   };
 
   const totalCost = parts.reduce((sum, p) => sum + ((p.unit_cost || 0) * (p.quantity || 1)), 0);
+  const unassignedParts = parts.filter(p => !p.assigned_to);
+
+  // Multi-select handlers
+  const togglePartSelection = (partId) => {
+    const newSelected = new Set(selectedParts);
+    if (newSelected.has(partId)) {
+      newSelected.delete(partId);
+    } else {
+      newSelected.add(partId);
+    }
+    setSelectedParts(newSelected);
+    if (newSelected.size === 0) setSelectionMode(false);
+  };
+
+  const selectAllParts = () => {
+    if (selectedParts.size === filteredParts.length) {
+      setSelectedParts(new Set());
+      setSelectionMode(false);
+    } else {
+      setSelectedParts(new Set(filteredParts.map(p => p.id)));
+    }
+  };
+
+  const selectAllUnassigned = () => {
+    setSelectedParts(new Set(unassignedParts.map(p => p.id)));
+    setSelectionMode(true);
+  };
+
+  const clearSelection = () => {
+    setSelectedParts(new Set());
+    setSelectionMode(false);
+  };
+
+  const handleBulkAssign = async (email) => {
+    const member = teamMembers.find(m => m.email === email);
+    for (const partId of selectedParts) {
+      await base44.entities.Part.update(partId, {
+        assigned_to: email,
+        assigned_name: member?.name || email
+      });
+    }
+    refetchParts();
+    clearSelection();
+  };
+
+  const handleBulkStatusChange = async (status) => {
+    for (const partId of selectedParts) {
+      await base44.entities.Part.update(partId, { status });
+    }
+    refetchParts();
+    clearSelection();
+  };
+
+  const handleBulkDelete = async () => {
+    for (const partId of selectedParts) {
+      await base44.entities.Part.delete(partId);
+    }
+    refetchParts();
+    clearSelection();
+  };
+
+  const handleQuickAssign = async (part, email) => {
+    const member = teamMembers.find(m => m.email === email);
+    await base44.entities.Part.update(part.id, {
+      assigned_to: email,
+      assigned_name: member?.name || email
+    });
+    refetchParts();
+  };
 
   if (!project) {
     return (
@@ -199,6 +289,33 @@ export default function ProjectParts() {
           Back to {project.name}
         </Link>
 
+        {/* Approved Proposal Banner */}
+        {hasApprovedProposal && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl p-4 mb-6 flex items-center justify-between shadow-lg"
+          >
+            <div className="flex items-center gap-3">
+              <FileCheck className="w-6 h-6" />
+              <div>
+                <p className="font-semibold">Proposal Approved!</p>
+                <p className="text-sm text-emerald-100">Assign team members to parts to get started</p>
+              </div>
+            </div>
+            {unassignedParts.length > 0 && (
+              <Button 
+                onClick={selectAllUnassigned} 
+                variant="secondary" 
+                className="bg-white text-emerald-700 hover:bg-emerald-50"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Assign {unassignedParts.length} Unassigned
+              </Button>
+            )}
+          </motion.div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
@@ -207,7 +324,12 @@ export default function ProjectParts() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Parts & Materials</h1>
-              <p className="text-slate-500">{parts.length} items · Total: ${totalCost.toLocaleString()}</p>
+              <p className="text-slate-500">
+                {parts.length} items · Total: ${totalCost.toLocaleString()}
+                {unassignedParts.length > 0 && (
+                  <span className="text-amber-600 ml-2">· {unassignedParts.length} unassigned</span>
+                )}
+              </p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -226,6 +348,68 @@ export default function ProjectParts() {
             </Button>
           </div>
         </div>
+
+        {/* Bulk Action Bar */}
+        {selectionMode && selectedParts.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-600 text-white rounded-xl p-3 mb-4 flex items-center justify-between shadow-lg"
+          >
+            <div className="flex items-center gap-3">
+              <button onClick={clearSelection} className="p-1 hover:bg-amber-500 rounded">
+                <X className="w-4 h-4" />
+              </button>
+              <span className="font-medium">{selectedParts.size} selected</span>
+              <button onClick={selectAllParts} className="text-sm underline hover:no-underline">
+                {selectedParts.size === filteredParts.length ? 'Deselect all' : 'Select all'}
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Assign */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="secondary" className="h-8 text-xs">
+                    <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                    Assign
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {teamMembers.map((member) => (
+                    <DropdownMenuItem key={member.id} onClick={() => handleBulkAssign(member.email)}>
+                      <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                        {getInitials(member.name)}
+                      </div>
+                      {member.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Status */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="secondary" className="h-8 text-xs">
+                    Status
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {Object.entries(statusConfig).map(([key, config]) => (
+                    <DropdownMenuItem key={key} onClick={() => handleBulkStatusChange(key)}>
+                      <Badge className={cn("mr-2", config.color)}>{config.label}</Badge>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Delete */}
+              <Button size="sm" variant="destructive" className="h-8 text-xs" onClick={handleBulkDelete}>
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                Delete
+              </Button>
+            </div>
+          </motion.div>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-2xl border border-slate-100 p-4 mb-6">
@@ -255,6 +439,15 @@ export default function ProjectParts() {
                 </button>
               ))}
             </div>
+            <Button 
+              variant={selectionMode ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
+              className={cn("h-9", selectionMode && "bg-amber-600")}
+            >
+              <CheckSquare className="w-4 h-4 mr-2" />
+              {selectionMode ? 'Done' : 'Select'}
+            </Button>
           </div>
         </div>
 
@@ -262,17 +455,35 @@ export default function ProjectParts() {
         <div className="space-y-3">
           <AnimatePresence>
             {filteredParts.length > 0 ? (
-              filteredParts.map((part, idx) => (
+              filteredParts.map((part, idx) => {
+                const isSelected = selectedParts.has(part.id);
+                return (
                 <motion.div
                   key={part.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ delay: idx * 0.02 }}
-                  onClick={() => { setEditingPart(part); setShowPartModal(true); }}
-                  className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md transition-all group cursor-pointer"
+                  onClick={() => selectionMode ? togglePartSelection(part.id) : setEditingPart(part) || setShowPartModal(true)}
+                  className={cn(
+                    "bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md transition-all group cursor-pointer",
+                    isSelected && "ring-2 ring-amber-500 bg-amber-50/50"
+                  )}
                 >
                   <div className="flex items-start gap-4">
+                    {/* Selection checkbox */}
+                    {selectionMode && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); togglePartSelection(part.id); }}
+                        className="p-1 mt-1"
+                      >
+                        {isSelected ? (
+                          <CheckSquare className="w-5 h-5 text-amber-600" />
+                        ) : (
+                          <Square className="w-5 h-5 text-slate-300" />
+                        )}
+                      </button>
+                    )}
                     <div className="p-2 rounded-lg bg-amber-100">
                       <Package className="w-5 h-5 text-amber-600" />
                     </div>
@@ -311,13 +522,35 @@ export default function ProjectParts() {
                         {part.supplier && (
                           <span className="text-sm text-slate-500">{part.supplier}</span>
                         )}
-                        {part.assigned_name && (
+                        {part.assigned_name ? (
                           <div className="flex items-center gap-1.5">
                             <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(part.assigned_to))}>
                               {getInitials(part.assigned_name)}
                             </div>
                             <span className="text-sm text-slate-600">{part.assigned_name}</span>
                           </div>
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button 
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg border-2 border-dashed border-amber-300 bg-amber-50 hover:bg-amber-100 transition-colors"
+                              >
+                                <UserPlus className="w-3.5 h-3.5 text-amber-600" />
+                                <span className="text-xs font-medium text-amber-700">Unassigned</span>
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                              {teamMembers.map((member) => (
+                                <DropdownMenuItem key={member.id} onClick={() => handleQuickAssign(part, member.email)}>
+                                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                                    {getInitials(member.name)}
+                                  </div>
+                                  {member.name}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                         {part.due_date && (
                           <div className="flex items-center gap-1.5 text-sm text-slate-500">
@@ -337,7 +570,7 @@ export default function ProjectParts() {
                     </div>
                   </div>
                 </motion.div>
-              ))
+              );})
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
