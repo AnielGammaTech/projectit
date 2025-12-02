@@ -9,6 +9,9 @@ import ProjectParts from './pages/ProjectParts';
 import ProjectNotes from './pages/ProjectNotes';
 import ProjectFiles from './pages/ProjectFiles';
 import Settings from './pages/Settings';
+import Reports from './pages/Reports';
+import NotificationSettings from './pages/NotificationSettings';
+import QuoteRequests from './pages/QuoteRequests';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +27,9 @@ export const PAGES = {
     "ProjectNotes": ProjectNotes,
     "ProjectFiles": ProjectFiles,
     "Settings": Settings,
+    "Reports": Reports,
+    "NotificationSettings": NotificationSettings,
+    "QuoteRequests": QuoteRequests,
 }
 
 export const pagesConfig = {
