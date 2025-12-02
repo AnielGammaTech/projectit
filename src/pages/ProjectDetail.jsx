@@ -55,7 +55,6 @@ import FilesViewModal from '@/components/modals/FilesViewModal';
 import ProjectActivityFeed from '@/components/project/ProjectActivityFeed';
 import UpcomingDueDates from '@/components/project/UpcomingDueDates';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
-import HaloTicketInfo from '@/components/project/HaloTicketInfo';
 import { cn } from '@/lib/utils';
 
 const statusColors = {
@@ -420,14 +419,7 @@ export default function ProjectDetail() {
                                   )}
                                 </div>
 
-                                {/* HaloPSA Ticket */}
-                                {project.halo_ticket_id && (
-                                  <div className="mt-4">
-                                    <HaloTicketInfo ticketId={project.halo_ticket_id} compact />
-                                  </div>
-                                )}
-
-              {/* Team Avatars */}
+                                {/* Team Avatars */}
               <div className="mt-4 pt-4 border-t border-slate-100">
                 <TeamAvatars
                   members={project.team_members || []}
@@ -604,7 +596,6 @@ export default function ProjectDetail() {
             </div>
           </motion.div>
           </Link>
-          </div>
 
           {/* Calendar Card */}
           <motion.div
@@ -614,6 +605,7 @@ export default function ProjectDetail() {
           >
             <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
           </motion.div>
+          </div>
 
           {/* Activity Feed */}
           <motion.div

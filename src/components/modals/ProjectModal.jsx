@@ -26,8 +26,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     due_date: '',
     color: 'slate',
     group: '',
-    user_groups: [],
-    halo_ticket_id: ''
+    user_groups: []
   });
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -51,8 +50,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         due_date: project.due_date || '',
         color: project.color || 'slate',
         group: project.group || '',
-        user_groups: project.user_groups || [],
-        halo_ticket_id: project.halo_ticket_id || ''
+        user_groups: project.user_groups || []
       });
       setExtractedParts([]);
     } else {
@@ -66,8 +64,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         due_date: '',
         color: 'slate',
         group: '',
-        user_groups: [],
-        halo_ticket_id: ''
+        user_groups: []
       });
       setExtractedParts([]);
     }
@@ -147,27 +144,15 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label htmlFor="client">Client</Label>
-                            <Input
-                              id="client"
-                              value={formData.client}
-                              onChange={(e) => setFormData(prev => ({ ...prev, client: e.target.value }))}
-                              placeholder="e.g., Acme Corporation"
-                              className="mt-1.5"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="halo_ticket_id">HaloPSA Ticket #</Label>
-                            <Input
-                              id="halo_ticket_id"
-                              value={formData.halo_ticket_id}
-                              onChange={(e) => setFormData(prev => ({ ...prev, halo_ticket_id: e.target.value }))}
-                              placeholder="e.g., 12345"
-                              className="mt-1.5"
-                            />
-                          </div>
+          <div>
+                          <Label htmlFor="client">Client</Label>
+                          <Input
+                            id="client"
+                            value={formData.client}
+                            onChange={(e) => setFormData(prev => ({ ...prev, client: e.target.value }))}
+                            placeholder="e.g., Acme Corporation"
+                            className="mt-1.5"
+                          />
                         </div>
 
           <div>
