@@ -56,6 +56,7 @@ const adminMenuItems = [
   { id: 'admins', label: 'Add/remove administrators', icon: Shield, description: 'Control who has admin access' },
   { id: 'groups', label: 'Manage groups', icon: UserPlus, description: 'Create and manage user groups' },
   { id: 'permissions', label: 'Manage permissions', icon: Package, description: 'Control feature access by group' },
+  { id: 'branding', label: 'Branding & Logo', icon: Building2, description: 'Configure company branding and logos' },
   { id: 'proposals', label: 'Proposal settings', icon: Building2, description: 'Configure default proposal settings' },
   { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'Connect external services like HaloPSA' },
   { id: 'tools', label: 'Rename project tools', icon: FolderKanban, description: 'Customize tool names' },
@@ -78,6 +79,8 @@ export default function Adminland() {
         return <UserGroupsSection queryClient={queryClient} />;
       case 'permissions':
         return <PermissionsSection queryClient={queryClient} />;
+      case 'branding':
+        return <BrandingSection queryClient={queryClient} />;
       case 'proposals':
         return <ProposalSettingsSection queryClient={queryClient} />;
       case 'integrations':
@@ -732,6 +735,127 @@ function ToolsSection({ queryClient }) {
             <p className="text-sm text-slate-500 mt-4">Tool renaming coming soon.</p>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function BrandingSection({ queryClient }) {
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [formData, setFormData] = useState({
+    company_name: '',
+    company_logo_url: '',
+    company_address: '',
+    company_phone: '',
+    company_email: ''
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['proposalSettings'],
+    queryFn: () => base44.entities.ProposalSettings.filter({ setting_key: 'main' })
+  });
+
+  useEffect(() => {
+    if (settings[0]) {
+      setFormData({
+        company_name: settings[0].company_name || '',
+        company_logo_url: settings[0].company_logo_url || '',
+        company_address: settings[0].company_address || '',
+        company_phone: settings[0].company_phone || '',
+        company_email: settings[0].company_email || ''
+      });
+    }
+  }, [settings]);
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setFormData(prev => ({ ...prev, company_logo_url: file_url }));
+    setUploading(false);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    if (settings[0]?.id) {
+      await base44.entities.ProposalSettings.update(settings[0].id, { ...settings[0], ...formData });
+    } else {
+      await base44.entities.ProposalSettings.create({ setting_key: 'main', ...formData });
+    }
+    refetch();
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-slate-900">Branding & Logo</h2>
+          <p className="text-sm text-slate-500">Configure your company branding for proposals and documents</p>
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+      <div className="p-6 space-y-6">
+        {/* Logo Upload */}
+        <div className="p-4 bg-slate-50 rounded-xl">
+          <h3 className="font-semibold text-slate-900 mb-4">Company Logo</h3>
+          <div className="flex items-start gap-6">
+            <div className="flex-shrink-0">
+              {formData.company_logo_url ? (
+                <div className="relative">
+                  <img src={formData.company_logo_url} alt="Company Logo" className="w-32 h-32 object-contain rounded-lg border bg-white p-2" />
+                  <button 
+                    onClick={() => setFormData(p => ({ ...p, company_logo_url: '' }))}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm hover:bg-red-600"
+                  >×</button>
+                </div>
+              ) : (
+                <label className="w-32 h-32 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#0069AF] hover:bg-white transition-colors">
+                  {uploading ? (
+                    <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+                  ) : (
+                    <>
+                      <Building2 className="w-8 h-8 text-slate-400 mb-1" />
+                      <span className="text-xs text-slate-400">Upload Logo</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={uploading} />
+                </label>
+              )}
+            </div>
+            <div className="flex-1 space-y-3">
+              <p className="text-sm text-slate-600">Upload your company logo to appear on proposals and other documents.</p>
+              <p className="text-xs text-slate-400">Recommended: PNG or SVG, at least 200x200px</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Company Info */}
+        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+          <h3 className="font-semibold text-slate-900">Company Information</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs">Company Name</Label>
+              <Input value={formData.company_name} onChange={(e) => setFormData(p => ({ ...p, company_name: e.target.value }))} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Email</Label>
+              <Input value={formData.company_email} onChange={(e) => setFormData(p => ({ ...p, company_email: e.target.value }))} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Phone</Label>
+              <Input value={formData.company_phone} onChange={(e) => setFormData(p => ({ ...p, company_phone: e.target.value }))} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Address</Label>
+              <Input value={formData.company_address} onChange={(e) => setFormData(p => ({ ...p, company_address: e.target.value }))} className="mt-1" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

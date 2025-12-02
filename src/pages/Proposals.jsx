@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, Plus, Search, Filter, MoreHorizontal, Send, Eye, 
   CheckCircle2, XCircle, Clock, Edit2, Trash2, Copy, Download,
-  Users, DollarSign, TrendingUp, Calendar, ExternalLink
+  Users, DollarSign, TrendingUp, Calendar, ExternalLink, ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -152,6 +152,11 @@ export default function Proposals() {
     navigator.clipboard.writeText(link);
   };
 
+  const handleStatusChange = async (proposal, newStatus) => {
+    await base44.entities.Proposal.update(proposal.id, { status: newStatus });
+    refetch();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -243,7 +248,8 @@ export default function Proposals() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     transition={{ delay: idx * 0.02 }}
-                    className="bg-white rounded-xl border border-slate-100 p-5 hover:shadow-lg hover:border-slate-200 transition-all group"
+                    onClick={() => window.location.href = createPageUrl('ProposalEditor') + `?id=${proposal.id}`}
+                    className="bg-white rounded-xl border border-slate-100 p-5 hover:shadow-lg hover:border-slate-200 transition-all group cursor-pointer"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-4 flex-1">
@@ -253,7 +259,22 @@ export default function Proposals() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-mono text-slate-400">{proposal.proposal_number}</span>
-                            <Badge variant="outline" className={status.color}>{status.label}</Badge>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <button className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border", status.color)}>
+                                  {status.label}
+                                  <ChevronDown className="w-3 h-3" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                                {Object.entries(statusConfig).map(([key, config]) => (
+                                  <DropdownMenuItem key={key} onClick={() => handleStatusChange(proposal, key)}>
+                                    <config.icon className={cn("w-4 h-4 mr-2", config.color.split(' ')[1])} />
+                                    {config.label}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                             {isExpired && proposal.status !== 'approved' && (
                               <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">Expired</Badge>
                             )}
@@ -275,7 +296,7 @@ export default function Proposals() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
                         <div className="text-right">
                           <p className="text-2xl font-bold text-slate-900">${proposal.total?.toLocaleString() || '0'}</p>
                           <p className="text-xs text-slate-500">{proposal.items?.length || 0} items</p>

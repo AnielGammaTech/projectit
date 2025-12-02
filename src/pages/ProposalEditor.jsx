@@ -397,12 +397,13 @@ export default function ProposalEditor() {
           {/* Main Content */}
           <div className="lg:col-span-8 space-y-5">
             {/* Title */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-slate-200 p-4">
+              <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">Proposal Title</Label>
               <Input
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Proposal Title"
-                className="text-xl font-semibold border-0 bg-transparent px-0 h-auto focus-visible:ring-0 placeholder:text-slate-300"
+                placeholder="Enter proposal title..."
+                className="text-2xl font-bold border-slate-200 h-14 focus-visible:ring-[#0069AF] placeholder:text-slate-300"
               />
             </motion.div>
 

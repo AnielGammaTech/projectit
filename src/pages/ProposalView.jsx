@@ -83,7 +83,7 @@ export default function ProposalView() {
           <div className="p-8 border-b border-slate-200">
             <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-slate-900 mb-1">PROPOSAL</h1>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">PROPOSAL</p>
                 <p className="text-slate-500 font-mono">{proposal.proposal_number}</p>
               </div>
               <div className="text-right">
@@ -102,9 +102,13 @@ export default function ProposalView() {
             </div>
           </div>
 
-          {/* Customer & Title */}
+          {/* Title */}
+          <div className="p-8 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+            <h1 className="text-3xl font-bold text-slate-900">{proposal.title || 'Untitled Proposal'}</h1>
+          </div>
+
+          {/* Customer Info */}
           <div className="p-8 border-b border-slate-200">
-            <h2 className="text-2xl font-semibold text-slate-900 mb-6">{proposal.title}</h2>
             <div className="grid grid-cols-2 gap-8">
               <div>
                 <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Prepared For</h3>
@@ -122,39 +126,96 @@ export default function ProposalView() {
             </div>
           </div>
 
-          {/* Line Items */}
+          {/* Line Items by Area */}
           <div className="p-8 border-b border-slate-200">
             <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Items & Services</h3>
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-3 text-sm font-semibold text-slate-600">Description</th>
-                  <th className="text-right py-3 text-sm font-semibold text-slate-600 w-20">Qty</th>
-                  <th className="text-right py-3 text-sm font-semibold text-slate-600 w-28">Unit Price</th>
-                  <th className="text-right py-3 text-sm font-semibold text-slate-600 w-28">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {proposal.items?.map((item, idx) => {
-                  const lineTotal = (item.quantity || 0) * (item.unit_price || 0);
-                  const afterDiscount = lineTotal * (1 - (item.discount_percent || 0) / 100);
-                  return (
-                    <tr key={idx} className="border-b border-slate-100">
-                      <td className="py-4">
-                        <p className="font-medium text-slate-900">{item.name}</p>
-                        {item.description && <p className="text-sm text-slate-500">{item.description}</p>}
-                        {item.discount_percent > 0 && (
-                          <p className="text-xs text-emerald-600">{item.discount_percent}% discount applied</p>
-                        )}
-                      </td>
-                      <td className="text-right py-4 text-slate-600">{item.quantity}</td>
-                      <td className="text-right py-4 text-slate-600">${item.unit_price?.toFixed(2)}</td>
-                      <td className="text-right py-4 font-medium text-slate-900">${afterDiscount.toFixed(2)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            
+            {proposal.areas?.length > 0 ? (
+              proposal.areas.map((area, areaIdx) => (
+                <div key={areaIdx} className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h4 className="font-semibold text-slate-800">{area.name}</h4>
+                    {area.is_optional && (
+                      <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Optional</span>
+                    )}
+                  </div>
+                  {area.client_description && (
+                    <p className="text-sm text-slate-600 mb-3 italic">{area.client_description}</p>
+                  )}
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-slate-200">
+                        <th className="text-left py-2 text-sm font-semibold text-slate-600">Item</th>
+                        <th className="text-right py-2 text-sm font-semibold text-slate-600 w-20">Qty</th>
+                        <th className="text-right py-2 text-sm font-semibold text-slate-600 w-28">Unit Price</th>
+                        <th className="text-right py-2 text-sm font-semibold text-slate-600 w-28">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {area.items?.map((item, idx) => {
+                        const lineTotal = (item.quantity || 0) * (item.unit_price || 0);
+                        return (
+                          <tr key={idx} className="border-b border-slate-100">
+                            <td className="py-3">
+                              <div className="flex items-start gap-3">
+                                {item.image_url && (
+                                  <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded object-cover print:w-10 print:h-10" />
+                                )}
+                                <div>
+                                  <p className="font-medium text-slate-900">{item.name}</p>
+                                  {item.description && <p className="text-sm text-slate-500">{item.description}</p>}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="text-right py-3 text-slate-600">{item.quantity}</td>
+                            <td className="text-right py-3 text-slate-600">${(item.unit_price || 0).toFixed(2)}</td>
+                            <td className="text-right py-3 font-medium text-slate-900">${lineTotal.toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ))
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-3 text-sm font-semibold text-slate-600">Description</th>
+                    <th className="text-right py-3 text-sm font-semibold text-slate-600 w-20">Qty</th>
+                    <th className="text-right py-3 text-sm font-semibold text-slate-600 w-28">Unit Price</th>
+                    <th className="text-right py-3 text-sm font-semibold text-slate-600 w-28">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {proposal.items?.map((item, idx) => {
+                    const lineTotal = (item.quantity || 0) * (item.unit_price || 0);
+                    const afterDiscount = lineTotal * (1 - (item.discount_percent || 0) / 100);
+                    return (
+                      <tr key={idx} className="border-b border-slate-100">
+                        <td className="py-4">
+                          <div className="flex items-start gap-3">
+                            {item.image_url && (
+                              <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded object-cover" />
+                            )}
+                            <div>
+                              <p className="font-medium text-slate-900">{item.name}</p>
+                              {item.description && <p className="text-sm text-slate-500">{item.description}</p>}
+                              {item.discount_percent > 0 && (
+                                <p className="text-xs text-emerald-600">{item.discount_percent}% discount applied</p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="text-right py-4 text-slate-600">{item.quantity}</td>
+                        <td className="text-right py-4 text-slate-600">${item.unit_price?.toFixed(2)}</td>
+                        <td className="text-right py-4 font-medium text-slate-900">${afterDiscount.toFixed(2)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
 
             {/* Totals */}
             <div className="mt-6 flex justify-end">
