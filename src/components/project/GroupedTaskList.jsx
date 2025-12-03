@@ -320,27 +320,27 @@ export default function GroupedTaskList({
         const isExpanded = expandedGroups.has(group.id);
 
         return (
-          <div key={group.id} className="border border-slate-200 rounded-xl overflow-hidden">
+          <div key={group.id} className="rounded-xl overflow-hidden">
             <div
-              className="flex items-center gap-3 p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
+              className="flex items-center gap-3 p-3 cursor-pointer hover:bg-slate-50 transition-colors"
               onClick={() => toggleGroup(group.id)}
             >
-              {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-              <div className={cn("w-3 h-3 rounded-full", groupColors[group.color] || groupColors.slate)} />
-              <span className="font-medium text-slate-900 flex-1">{group.name}</span>
-              <span className="text-xs text-slate-500">{completedCount}/{groupTasks.length}</span>
+              <div className={cn("w-4 h-4 rounded-full", groupColors[group.color] || groupColors.slate)} />
+              <span className="font-medium text-slate-900">{group.name}</span>
+              <span className="text-xs text-slate-400">{completedCount}/{groupTasks.length}</span>
+              <div className="flex-1" />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100">
                     <MoreHorizontal className="w-3.5 h-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEditGroup(group); }}>
-                    <Edit2 className="w-4 h-4 mr-2" />Edit
+                    <Edit2 className="w-4 h-4 mr-2" />Edit Group
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDeleteGroup(group); }} className="text-red-600">
-                    <Trash2 className="w-4 h-4 mr-2" />Delete
+                    <Trash2 className="w-4 h-4 mr-2" />Delete Group
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -351,24 +351,28 @@ export default function GroupedTaskList({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="p-2 space-y-1.5 bg-white"
+                  className="space-y-1.5 pl-4"
                 >
-                  {groupTasks.length === 0 ? (
-                    <p className="text-xs text-slate-400 text-center py-3">No tasks in this group</p>
-                  ) : (
-                    groupTasks.map(task => (
-                      <TaskItem
-                        key={task.id}
-                        task={task}
-                        teamMembers={teamMembers}
-                        onStatusChange={onStatusChange}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        onTaskClick={onTaskClick}
-                        onTaskUpdate={onTaskUpdate}
-                      />
-                    ))
-                  )}
+                  {groupTasks.map(task => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      teamMembers={teamMembers}
+                      onStatusChange={onStatusChange}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      onTaskClick={onTaskClick}
+                      onTaskUpdate={onTaskUpdate}
+                    />
+                  ))}
+                  {/* Add task button inside group */}
+                  <button
+                    onClick={() => onAddTaskToGroup?.(group.id)}
+                    className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add a task
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
