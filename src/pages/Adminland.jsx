@@ -847,6 +847,274 @@ function CompanySettingsSection({ queryClient }) {
   );
 }
 
+// Email Templates Section
+function EmailTemplatesSection({ queryClient }) {
+  const [saving, setSaving] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [showVariables, setShowVariables] = useState(false);
+
+  const templateOptions = [
+    { key: 'proposal_sent', name: 'Proposal Sent', description: 'When a proposal is emailed to customer' },
+    { key: 'proposal_accepted', name: 'Proposal Accepted', description: 'When customer approves a proposal' },
+    { key: 'proposal_rejected', name: 'Proposal Rejected', description: 'When customer rejects a proposal' },
+    { key: 'task_assigned', name: 'Task Assigned', description: 'When a task is assigned to someone' },
+    { key: 'task_due_reminder', name: 'Task Due Reminder', description: 'Reminder before task is due' },
+    { key: 'task_overdue', name: 'Task Overdue', description: 'When a task becomes overdue' },
+    { key: 'project_status_change', name: 'Project Status Change', description: 'When project status changes' },
+    { key: 'part_received', name: 'Part Received', description: 'When a part is marked as received' },
+    { key: 'part_installed', name: 'Part Installed', description: 'When a part is installed' },
+    { key: 'invoice_created', name: 'Invoice Created', description: 'When an invoice is generated' },
+    { key: 'payment_received', name: 'Payment Received', description: 'When payment is received' },
+  ];
+
+  const availableVariables = {
+    proposal: ['{{proposal.number}}', '{{proposal.title}}', '{{proposal.total}}', '{{proposal.valid_until}}', '{{proposal.approval_link}}'],
+    customer: ['{{customer.name}}', '{{customer.email}}', '{{customer.company}}', '{{customer.phone}}'],
+    project: ['{{project.name}}', '{{project.status}}', '{{project.due_date}}', '{{project.progress}}'],
+    task: ['{{task.title}}', '{{task.description}}', '{{task.due_date}}', '{{task.priority}}', '{{task.assignee}}'],
+    part: ['{{part.name}}', '{{part.quantity}}', '{{part.status}}', '{{part.supplier}}'],
+    company: ['{{company.name}}', '{{company.email}}', '{{company.phone}}', '{{company.address}}', '{{company.logo_url}}'],
+    general: ['{{current_date}}', '{{current_time}}', '{{app_url}}'],
+  };
+
+  const { data: templates = [], refetch } = useQuery({
+    queryKey: ['emailTemplates'],
+    queryFn: () => base44.entities.EmailTemplate.list()
+  });
+
+  const [formData, setFormData] = useState({
+    template_key: '',
+    name: '',
+    subject: '',
+    html_body: '',
+    is_enabled: true
+  });
+
+  useEffect(() => {
+    if (selectedTemplate) {
+      const existing = templates.find(t => t.template_key === selectedTemplate);
+      const defaultTemplate = templateOptions.find(t => t.key === selectedTemplate);
+      if (existing) {
+        setFormData({
+          template_key: existing.template_key,
+          name: existing.name,
+          subject: existing.subject,
+          html_body: existing.html_body,
+          is_enabled: existing.is_enabled !== false
+        });
+      } else {
+        setFormData({
+          template_key: selectedTemplate,
+          name: defaultTemplate?.name || '',
+          subject: getDefaultSubject(selectedTemplate),
+          html_body: getDefaultBody(selectedTemplate),
+          is_enabled: true
+        });
+      }
+    }
+  }, [selectedTemplate, templates]);
+
+  const getDefaultSubject = (key) => {
+    const defaults = {
+      proposal_sent: 'Proposal: {{proposal.title}}',
+      proposal_accepted: 'Great news! Proposal {{proposal.number}} has been accepted',
+      proposal_rejected: 'Proposal {{proposal.number}} was declined',
+      task_assigned: 'New task assigned: {{task.title}}',
+      task_due_reminder: 'Reminder: {{task.title}} is due {{task.due_date}}',
+      task_overdue: 'Overdue: {{task.title}}',
+      project_status_change: 'Project Update: {{project.name}}',
+      part_received: 'Part Received: {{part.name}}',
+      part_installed: 'Part Installed: {{part.name}}',
+      invoice_created: 'Invoice Ready',
+      payment_received: 'Payment Received - Thank you!'
+    };
+    return defaults[key] || '';
+  };
+
+  const getDefaultBody = (key) => {
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #0069AF; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background: #f9fafb; }
+    .button { display: inline-block; background: #0069AF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; }
+    .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>{{company.name}}</h1>
+    </div>
+    <div class="content">
+      <p>Dear {{customer.name}},</p>
+      <p>Your content goes here...</p>
+      <p>Best regards,<br>{{company.name}}</p>
+    </div>
+    <div class="footer">
+      {{company.address}} | {{company.phone}} | {{company.email}}
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    const existing = templates.find(t => t.template_key === formData.template_key);
+    if (existing) {
+      await base44.entities.EmailTemplate.update(existing.id, formData);
+    } else {
+      await base44.entities.EmailTemplate.create(formData);
+    }
+    refetch();
+    setSaving(false);
+  };
+
+  const insertVariable = (variable) => {
+    setFormData(prev => ({
+      ...prev,
+      html_body: prev.html_body + variable
+    }));
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-semibold text-slate-900">Email & Notification Templates</h2>
+        <p className="text-sm text-slate-500">Customize email templates with HTML and variables</p>
+      </div>
+
+      <div className="grid lg:grid-cols-3 divide-x">
+        {/* Template List */}
+        <div className="lg:col-span-1 p-4 bg-slate-50">
+          <h3 className="text-sm font-medium text-slate-700 mb-3">Select Template</h3>
+          <div className="space-y-1">
+            {templateOptions.map((opt) => {
+              const exists = templates.find(t => t.template_key === opt.key);
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => setSelectedTemplate(opt.key)}
+                  className={cn(
+                    "w-full text-left p-3 rounded-lg transition-all",
+                    selectedTemplate === opt.key 
+                      ? "bg-[#0069AF] text-white" 
+                      : "hover:bg-white"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm">{opt.name}</span>
+                    {exists && (
+                      <Badge className={cn("text-xs", selectedTemplate === opt.key ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700")}>
+                        Customized
+                      </Badge>
+                    )}
+                  </div>
+                  <p className={cn("text-xs mt-0.5", selectedTemplate === opt.key ? "text-white/70" : "text-slate-500")}>
+                    {opt.description}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Template Editor */}
+        <div className="lg:col-span-2 p-6">
+          {selectedTemplate ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-slate-900">{formData.name}</h3>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox 
+                    checked={formData.is_enabled} 
+                    onCheckedChange={(checked) => setFormData(p => ({ ...p, is_enabled: checked }))} 
+                  />
+                  <span className="text-sm">Enabled</span>
+                </label>
+              </div>
+
+              <div>
+                <Label className="text-xs">Subject Line</Label>
+                <Input 
+                  value={formData.subject} 
+                  onChange={(e) => setFormData(p => ({ ...p, subject: e.target.value }))}
+                  className="mt-1 font-mono text-sm"
+                  placeholder="Email subject..."
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <Label className="text-xs">HTML Body</Label>
+                  <button 
+                    onClick={() => setShowVariables(!showVariables)}
+                    className="text-xs text-[#0069AF] hover:underline"
+                  >
+                    {showVariables ? 'Hide' : 'Show'} Available Variables
+                  </button>
+                </div>
+                
+                {showVariables && (
+                  <div className="mb-3 p-3 bg-slate-50 rounded-lg border text-xs">
+                    <p className="font-medium text-slate-700 mb-2">Click a variable to insert it:</p>
+                    {Object.entries(availableVariables).map(([category, vars]) => (
+                      <div key={category} className="mb-2">
+                        <span className="font-medium capitalize text-slate-600">{category}:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {vars.map(v => (
+                            <button
+                              key={v}
+                              onClick={() => insertVariable(v)}
+                              className="px-2 py-0.5 bg-white border rounded hover:bg-[#0069AF] hover:text-white hover:border-[#0069AF] transition-colors font-mono"
+                            >
+                              {v}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <Textarea 
+                  value={formData.html_body} 
+                  onChange={(e) => setFormData(p => ({ ...p, html_body: e.target.value }))}
+                  className="mt-1 font-mono text-xs h-72"
+                  placeholder="HTML content..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setFormData(p => ({ ...p, html_body: getDefaultBody(selectedTemplate), subject: getDefaultSubject(selectedTemplate) }))}
+                >
+                  Reset to Default
+                </Button>
+                <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                  {saving ? 'Saving...' : 'Save Template'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full text-slate-400">
+              <div className="text-center">
+                <Mail className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Select a template to customize</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function IntegrationsSection({ queryClient }) {
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
