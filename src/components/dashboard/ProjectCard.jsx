@@ -198,17 +198,7 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
           <p className="text-sm text-slate-500 mb-3 line-clamp-1">{project.client}</p>
         )}
 
-        {totalTasks > 0 && (
-          <div className="mb-3">
-            <div className="flex justify-between text-xs mb-1.5">
-              <span className="text-slate-500">Progress</span>
-              <span className="font-medium text-slate-700">{completedTasks}/{totalTasks}</span>
-            </div>
-            <Progress value={progress} className="h-1.5" />
-          </div>
-        )}
-
-        <div className="flex items-center gap-3 text-xs text-slate-500">
+        <div className="flex items-center justify-between text-xs text-slate-500">
           <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
             <PopoverTrigger asChild>
               <div 
@@ -229,9 +219,9 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
             </PopoverContent>
           </Popover>
           {totalTasks > 0 && (
-            <div className="flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{Math.round(progress)}%</span>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="font-medium text-slate-600">{completedTasks}/{totalTasks}</span>
             </div>
           )}
         </div>

@@ -310,8 +310,8 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {/* Stats Grid - Clean Style */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        {/* Stats Grid - Focused */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           <StatsCard
             title="Active Projects"
             value={activeProjects.length}
@@ -320,37 +320,26 @@ export default function Dashboard() {
             href={createPageUrl('Dashboard')}
           />
           <StatsCard
-            title="Low Stock Alerts"
-            value={0}
-            icon={AlertTriangle}
-            href={createPageUrl('Inventory')}
-          />
-          <StatsCard
-            title="Items Ready"
-            value={parts.filter(p => p.status === 'ready_to_install').length}
-            icon={Box}
+            title="Quotes to Convert"
+            value={approvedProposals.length}
+            subtitle={approvedProposals.length > 0 ? `$${approvedTotal.toLocaleString()}` : null}
+            icon={FileText}
             iconColor="bg-emerald-500"
-            href={createPageUrl('AllTasks') + '?tab=parts'}
+            href={createPageUrl('Proposals') + '?status=approved'}
           />
           <StatsCard
-            title="Total Customers"
-            value={proposals.reduce((acc, p) => {
-              if (p.customer_id && !acc.includes(p.customer_id)) acc.push(p.customer_id);
-              return acc;
-            }, []).length}
-            icon={FolderKanban}
-            href={createPageUrl('Customers')}
-          />
-          <StatsCard
-            title="Past Due Orders"
-            value={pendingParts.filter(p => p.due_date && new Date(p.due_date) < new Date()).length}
-            icon={Clock}
+            title="Parts Tracking"
+            value={pendingParts.length}
+            subtitle={parts.filter(p => p.status === 'ready_to_install').length > 0 ? `${parts.filter(p => p.status === 'ready_to_install').length} ready` : null}
+            icon={Box}
+            iconColor="bg-amber-500"
             href={createPageUrl('AllTasks') + '?tab=parts'}
           />
           <StatsCard
             title="Overdue Tasks"
             value={tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length}
             icon={AlertTriangle}
+            iconColor="bg-red-500"
             href={createPageUrl('AllTasks')}
           />
         </div>
