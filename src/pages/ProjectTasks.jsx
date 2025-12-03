@@ -4,12 +4,13 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { 
   ArrowLeft, Plus, Search, ChevronDown, ChevronRight, 
   CheckCircle2, Circle, Clock, ArrowUpCircle, 
   MoreHorizontal, Edit2, Trash2, Calendar as CalendarIcon,
   UserPlus, User, AlertTriangle, MessageCircle, Paperclip,
-  FolderPlus, Archive, CheckSquare, Square, X
+  FolderPlus, Archive, CheckSquare, Square, X, GripVertical
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -261,6 +262,23 @@ export default function ProjectTasks() {
     clearSelection();
   };
 
+  // Drag and drop handler
+  const handleDragEnd = async (result) => {
+    const { draggableId, destination, source } = result;
+    if (!destination) return;
+    
+    // Get the destination group ID (or empty string for ungrouped)
+    const destGroupId = destination.droppableId === 'ungrouped' ? '' : destination.droppableId;
+    const sourceGroupId = source.droppableId === 'ungrouped' ? '' : source.droppableId;
+    
+    // If dropped in same group, no update needed
+    if (destGroupId === sourceGroupId) return;
+    
+    // Update the task's group
+    await base44.entities.Task.update(draggableId, { group_id: destGroupId });
+    refetchTasks();
+  };
+
   const sortTasks = (taskList) => {
     return [...taskList].sort((a, b) => {
       if (a.status === 'completed' && b.status !== 'completed') return 1;
@@ -364,7 +382,7 @@ export default function ProjectTasks() {
     refetchTasks();
   };
 
-  const TaskRow = ({ task }) => {
+  const TaskRow = ({ task, dragHandleProps, isDragging }) => {
     const [dateOpen, setDateOpen] = useState(false);
     const status = statusConfig[task.status] || statusConfig.todo;
     const StatusIcon = status.icon;
@@ -373,17 +391,20 @@ export default function ProjectTasks() {
     const isSelected = selectedTasks.has(task.id);
 
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className={cn(
           "group flex items-center gap-3 p-3 bg-white rounded-xl border hover:shadow-md transition-all cursor-pointer",
           task.status === 'completed' || task.status === 'archived' ? "opacity-60 border-slate-100" : 
           dueDateInfo?.urgent ? "border-red-200 bg-red-50/30" : "border-slate-200",
-          isSelected && "ring-2 ring-indigo-500 bg-indigo-50/50"
+          isSelected && "ring-2 ring-indigo-500 bg-indigo-50/50",
+          isDragging && "shadow-lg ring-2 ring-indigo-400"
         )}
         onClick={() => selectionMode ? toggleTaskSelection(task.id) : setSelectedTask(task)}
       >
+        {/* Drag handle */}
+        <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing p-1 -ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <GripVertical className="w-4 h-4 text-slate-400" />
+        </div>
         {/* Selection checkbox */}
         {selectionMode && (
           <button 
@@ -547,7 +568,7 @@ export default function ProjectTasks() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
@@ -790,7 +811,8 @@ export default function ProjectTasks() {
           </Button>
         </div>
 
-        {/* Task Groups */}
+        {/* Task Groups with Drag and Drop */}
+        <DragDropContext onDragEnd={handleDragEnd}>
         <div className="space-y-4">
           {taskGroups.map((group) => {
             const groupTasks = getTasksForGroup(group.id);
@@ -823,53 +845,95 @@ export default function ProjectTasks() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="px-4 pb-4 space-y-2"
-                    >
-                      {groupTasks.length === 0 ? (
-                        <p className="text-sm text-slate-400 text-center py-4">No tasks in this group</p>
-                      ) : (
-                        groupTasks.map(task => <TaskRow key={task.id} task={task} />)
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {isExpanded && (
+                  <Droppable droppableId={group.id}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={cn(
+                          "px-4 pb-4 space-y-2 min-h-[60px] transition-colors",
+                          snapshot.isDraggingOver && "bg-indigo-50/50"
+                        )}
+                      >
+                        {groupTasks.length === 0 && !snapshot.isDraggingOver ? (
+                          <p className="text-sm text-slate-400 text-center py-4">Drop tasks here or add new ones</p>
+                        ) : (
+                          groupTasks.map((task, index) => (
+                            <Draggable key={task.id} draggableId={task.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                >
+                                  <TaskRow 
+                                    task={task} 
+                                    dragHandleProps={provided.dragHandleProps}
+                                    isDragging={snapshot.isDragging}
+                                  />
+                                </div>
+                              )}
+                            </Draggable>
+                          ))
+                        )}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                )}
               </div>
             );
           })}
 
           {/* Ungrouped */}
-          {ungroupedTasks.length > 0 && (
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-              <div
-                className="flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
-                onClick={() => toggleGroup('ungrouped')}
-              >
-                {expandedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                <span className="font-semibold text-slate-500 flex-1">Ungrouped</span>
-                <span className="text-sm text-slate-500">
-                  {ungroupedTasks.filter(t => t.status === 'completed').length}/{ungroupedTasks.length}
-                </span>
-              </div>
-              <AnimatePresence>
-                {expandedGroups.has('ungrouped') && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="px-4 pb-4 space-y-2"
-                  >
-                    {ungroupedTasks.map(task => <TaskRow key={task.id} task={task} />)}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div
+              className="flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
+              onClick={() => toggleGroup('ungrouped')}
+            >
+              {expandedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+              <span className="font-semibold text-slate-500 flex-1">Ungrouped</span>
+              <span className="text-sm text-slate-500">
+                {ungroupedTasks.filter(t => t.status === 'completed').length}/{ungroupedTasks.length}
+              </span>
             </div>
-          )}
+            {expandedGroups.has('ungrouped') && (
+              <Droppable droppableId="ungrouped">
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className={cn(
+                      "px-4 pb-4 space-y-2 min-h-[60px] transition-colors",
+                      snapshot.isDraggingOver && "bg-indigo-50/50"
+                    )}
+                  >
+                    {ungroupedTasks.length === 0 && !snapshot.isDraggingOver ? (
+                      <p className="text-sm text-slate-400 text-center py-4">Drop tasks here</p>
+                    ) : (
+                      ungroupedTasks.map((task, index) => (
+                        <Draggable key={task.id} draggableId={task.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                            >
+                              <TaskRow 
+                                task={task} 
+                                dragHandleProps={provided.dragHandleProps}
+                                isDragging={snapshot.isDragging}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))
+                    )}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            )}
+          </div>
 
           {filteredTasks.length === 0 && taskGroups.length === 0 && (
             <div className="text-center py-12 text-slate-500">
@@ -879,6 +943,7 @@ export default function ProjectTasks() {
             </div>
           )}
         </div>
+        </DragDropContext>
       </div>
 
       {/* Modals */}
