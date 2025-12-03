@@ -52,15 +52,10 @@ const groupColors = {
 };
 
 const adminMenuItems = [
-  { id: 'people', label: 'Manage people', icon: Users, description: 'Add, edit, and remove team members' },
-  { id: 'admins', label: 'Add/remove administrators', icon: Shield, description: 'Control who has admin access' },
-  { id: 'groups', label: 'Manage groups', icon: UserPlus, description: 'Create and manage user groups' },
-  { id: 'permissions', label: 'Manage permissions', icon: Package, description: 'Control feature access by group' },
-  { id: 'branding', label: 'Branding & Logo', icon: Building2, description: 'Configure company branding and logos' },
-  { id: 'proposals', label: 'Proposal settings', icon: Building2, description: 'Configure default proposal settings' },
-  { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'Connect external services like HaloPSA' },
-  { id: 'tools', label: 'Rename project tools', icon: FolderKanban, description: 'Customize tool names' },
-  { id: 'settings', label: 'App settings', icon: Settings, description: 'General app configuration' },
+  { id: 'people', label: 'People & Teams', icon: Users, description: 'Manage team members, groups, and admin access' },
+  { id: 'permissions', label: 'Permissions', icon: Shield, description: 'Control feature access by group' },
+  { id: 'company', label: 'Company Settings', icon: Building2, description: 'Branding, proposal defaults, and company info' },
+  { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'Connect external services' },
 ];
 
 export default function Adminland() {
