@@ -284,6 +284,12 @@ export default function Layout({ children, currentPageName }) {
                   Notification Settings
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to={createPageUrl('SecuritySettings')} className="cursor-pointer">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Security Settings
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
                 <LogOut className="w-4 h-4 mr-2" />

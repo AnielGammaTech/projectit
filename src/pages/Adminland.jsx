@@ -37,6 +37,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -53,9 +55,10 @@ const groupColors = {
 
 const adminMenuItems = [
   { id: 'people', label: 'People & Teams', icon: Users, description: 'Manage team members, groups, and admin access' },
-  { id: 'permissions', label: 'Permissions', icon: Shield, description: 'Control feature access by group' },
+  { id: 'roles', label: 'Roles & Permissions', icon: Shield, description: 'Custom roles and granular access control', page: 'RolesPermissions' },
   { id: 'company', label: 'Company Settings', icon: Building2, description: 'Branding, proposal defaults, and company info' },
   { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'Connect external services' },
+  { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Track user actions and system changes', page: 'AuditLogs' },
 ];
 
 export default function Adminland() {
@@ -68,8 +71,6 @@ export default function Adminland() {
     switch (activeSection) {
       case 'people':
         return <PeopleSection queryClient={queryClient} />;
-      case 'permissions':
-        return <PermissionsSection queryClient={queryClient} />;
       case 'company':
         return <CompanySettingsSection queryClient={queryClient} />;
       case 'integrations':
@@ -107,24 +108,48 @@ export default function Adminland() {
             
             <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
               {adminMenuItems.map((item, idx) => (
-                <motion.button
-                  key={item.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  onClick={() => setActiveSection(item.id)}
-                  className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors group text-left border-b last:border-b-0"
-                >
-                  <div className="p-2 rounded-lg bg-[#0069AF] group-hover:bg-[#133F5C] transition-colors">
-                    <item.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <span className="text-[#0069AF] group-hover:text-[#133F5C] font-medium transition-colors block">
-                      {item.label}
-                    </span>
-                    <span className="text-sm text-slate-500">{item.description}</span>
-                  </div>
-                </motion.button>
+                item.page ? (
+                  <Link
+                    key={item.id}
+                    to={createPageUrl(item.page)}
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors group text-left border-b last:border-b-0"
+                    >
+                      <div className="p-2 rounded-lg bg-[#0069AF] group-hover:bg-[#133F5C] transition-colors">
+                        <item.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <span className="text-[#0069AF] group-hover:text-[#133F5C] font-medium transition-colors block">
+                          {item.label}
+                        </span>
+                        <span className="text-sm text-slate-500">{item.description}</span>
+                      </div>
+                    </motion.div>
+                  </Link>
+                ) : (
+                  <motion.button
+                    key={item.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    onClick={() => setActiveSection(item.id)}
+                    className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors group text-left border-b last:border-b-0"
+                  >
+                    <div className="p-2 rounded-lg bg-[#0069AF] group-hover:bg-[#133F5C] transition-colors">
+                      <item.icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-[#0069AF] group-hover:text-[#133F5C] font-medium transition-colors block">
+                        {item.label}
+                      </span>
+                      <span className="text-sm text-slate-500">{item.description}</span>
+                    </div>
+                  </motion.button>
+                )
               ))}
             </div>
           </motion.div>
