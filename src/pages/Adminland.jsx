@@ -1047,23 +1047,12 @@ function IntegrationsSection({ queryClient }) {
       state: 'state',
       zip: 'zip'
     },
-    // Email (SendGrid)
-    sendgrid_enabled: false,
-    sendgrid_api_key: '',
-    sendgrid_from_email: '',
-    sendgrid_from_name: '',
-    email_notifications_enabled: true,
-    email_proposal_sent: true,
-    email_proposal_approved: true,
-    email_proposal_rejected: true,
-    email_task_assigned: true,
-    email_task_due_reminder: true,
-    email_part_status_changed: false,
-    // Slack
-    slack_enabled: false,
-    slack_webhook_url: '',
-    slack_notify_proposals: true,
-    slack_notify_projects: true,
+    // Email (Emailit)
+    emailit_enabled: false,
+    emailit_api_key: '',
+    emailit_from_email: '',
+    emailit_from_name: '',
+    emailit_reply_to: '',
     // SMS (Twilio)
     twilio_enabled: false,
     twilio_account_sid: '',
