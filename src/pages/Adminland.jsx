@@ -1856,8 +1856,8 @@ function IntegrationsSection({ queryClient }) {
                 <Mail className="w-5 h-5 text-blue-600" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-slate-900">Emailit</h3>
-                <p className="text-xs text-slate-500">Send emails to customers</p>
+                <h3 className="font-semibold text-slate-900">Emailit SMTP</h3>
+                <p className="text-xs text-slate-500">Transactional email delivery</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -1869,163 +1869,135 @@ function IntegrationsSection({ queryClient }) {
           </button>
           
           {selectedIntegration === 'emailit' && (
-          <div className="p-4 space-y-4 bg-white">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox 
-                checked={formData.emailit_enabled} 
-                onCheckedChange={(checked) => setFormData(p => ({ ...p, emailit_enabled: checked }))} 
-              />
-              <span className="text-sm font-medium">Enable Emailit Integration</span>
-            </label>
+          <div className="p-4 bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox 
+                  checked={formData.emailit_enabled} 
+                  onCheckedChange={(checked) => setFormData(p => ({ ...p, emailit_enabled: checked }))} 
+                />
+                <span className="text-sm font-medium">Enable</span>
+              </label>
+              <a href="https://app.emailit.com" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                Open Emailit Dashboard →
+              </a>
+            </div>
 
             {formData.emailit_enabled && (
-              <div className="space-y-4 pt-4 border-t border-slate-200">
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-xs text-blue-700">
-                    <strong>Setup Instructions:</strong>
-                  </p>
-                  <ol className="text-xs text-blue-700 mt-1 list-decimal list-inside space-y-1">
-                    <li>Create and verify a sending domain in your <a href="https://app.emailit.com" target="_blank" rel="noopener noreferrer" className="underline">Emailit dashboard</a></li>
-                    <li>Create an SMTP credential (not API type)</li>
-                    <li>Enter your API key below and use an email from your verified domain</li>
-                  </ol>
-                </div>
-                
-                <div>
-                  <Label className="text-xs">API Key (SMTP Credential)</Label>
-                  <Input 
-                    type="password"
-                    value={formData.emailit_smtp_password} 
-                    onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_password: e.target.value }))} 
-                    placeholder="Your Emailit API key" 
-                    className="mt-1" 
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">Create an SMTP type credential in Emailit dashboard</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs">SMTP Host</Label>
+                    <Label className="text-xs">API Key</Label>
                     <Input 
-                      value={formData.emailit_smtp_host} 
-                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_host: e.target.value }))} 
-                      placeholder="smtp.emailit.com" 
-                      className="mt-1 bg-slate-50" 
-                      disabled
+                      type="password"
+                      value={formData.emailit_smtp_password} 
+                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_password: e.target.value }))} 
+                      placeholder="SMTP credential key" 
+                      className="mt-1 h-9" 
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">SMTP Port</Label>
+                    <Label className="text-xs">Port</Label>
                     <select 
                       value={formData.emailit_smtp_port} 
                       onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_port: e.target.value }))}
-                      className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                      className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
                     >
-                      <option value="587">587 (Recommended)</option>
+                      <option value="587">587 (TLS)</option>
+                      <option value="465">465 (SSL)</option>
                       <option value="25">25</option>
-                      <option value="2525">2525</option>
-                      <option value="2587">2587</option>
                     </select>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs">From Email</Label>
                     <Input 
                       type="email"
                       value={formData.emailit_from_email} 
                       onChange={(e) => setFormData(p => ({ ...p, emailit_from_email: e.target.value }))} 
-                      placeholder="noreply@yourverifieddomain.com" 
-                      className="mt-1" 
+                      placeholder="noreply@domain.com" 
+                      className="mt-1 h-9" 
                     />
-                    <p className="text-[10px] text-slate-400 mt-1">Must be from your verified sending domain</p>
                   </div>
                   <div>
                     <Label className="text-xs">From Name</Label>
                     <Input 
                       value={formData.emailit_from_name} 
                       onChange={(e) => setFormData(p => ({ ...p, emailit_from_name: e.target.value }))} 
-                      placeholder="Your Company Name" 
-                      className="mt-1" 
+                      placeholder="Company Name" 
+                      className="mt-1 h-9" 
                     />
                   </div>
-                </div>
-                
-                <div>
-                  <Label className="text-xs">Reply-To Email (Optional)</Label>
-                  <Input 
-                    type="email"
-                    value={formData.emailit_reply_to} 
-                    onChange={(e) => setFormData(p => ({ ...p, emailit_reply_to: e.target.value }))} 
-                    placeholder="support@yourcompany.com" 
-                    className="mt-1" 
-                  />
                 </div>
 
-                <div className="pt-3 border-t border-slate-200 space-y-3">
-                  <h4 className="text-sm font-medium text-slate-700">Send Test Email</h4>
-                  <div className="flex items-center gap-3">
-                    <Input 
-                      type="email"
-                      value={formData.emailit_test_to || ''}
-                      onChange={(e) => setFormData(p => ({ ...p, emailit_test_to: e.target.value }))} 
-                      placeholder="Enter email to send test to..."
-                      className="flex-1"
+                <div className="flex gap-3 items-center pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox 
+                      checked={formData.emailit_secure !== false} 
+                      onCheckedChange={(checked) => setFormData(p => ({ ...p, emailit_secure: checked }))} 
                     />
-                    <Button 
-                      onClick={async () => {
-                        if (!formData.emailit_smtp_password || !formData.emailit_from_email) {
-                          setEmailTestResult({ success: false, message: 'Please enter API key and from email first' });
-                          return;
-                        }
-                        if (!formData.emailit_test_to) {
-                          setEmailTestResult({ success: false, message: 'Please enter an email address to send the test to' });
-                          return;
-                        }
-                        setTestingEmail(true);
-                        setEmailTestResult(null);
-                        try {
-                          await handleSave();
-                          const response = await base44.functions.invoke('sendEmailit', { 
-                            testOnly: true,
-                            to: formData.emailit_test_to,
-                            subject: 'Test Email from IT Projects',
-                            html: '<h1>Test Email</h1><p>This is a test email to verify your Emailit integration is working correctly.</p>'
-                          });
-                          if (response.data?.success) {
-                            setEmailTestResult({ success: true, message: `Test email sent to ${formData.emailit_test_to}! Check your inbox.` });
-                          } else {
-                            setEmailTestResult({ success: false, message: response.data?.error || 'Failed to send test email' });
-                          }
-                        } catch (error) {
-                          setEmailTestResult({ success: false, message: error.response?.data?.error || error.message || 'Failed to send test email' });
-                        }
-                        setTestingEmail(false);
-                      }} 
-                      disabled={testingEmail || !formData.emailit_test_to}
-                      variant="outline"
-                      className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                    >
-                      {testingEmail ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        'Send Test'
-                      )}
-                    </Button>
-                  </div>
+                    <span className="text-xs">Use TLS/SSL</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox 
+                      checked={formData.emailit_auth !== false} 
+                      onCheckedChange={(checked) => setFormData(p => ({ ...p, emailit_auth: checked }))} 
+                    />
+                    <span className="text-xs">Authentication</span>
+                  </label>
+                </div>
+
+                <div className="flex gap-2 pt-2 border-t">
+                  <Input 
+                    type="email"
+                    value={formData.emailit_test_to || ''}
+                    onChange={(e) => setFormData(p => ({ ...p, emailit_test_to: e.target.value }))} 
+                    placeholder="Test email address..."
+                    className="flex-1 h-9"
+                  />
+                  <Button 
+                    onClick={async () => {
+                      if (!formData.emailit_smtp_password || !formData.emailit_from_email) {
+                        setEmailTestResult({ success: false, message: 'Enter API key and from email' });
+                        return;
+                      }
+                      if (!formData.emailit_test_to) {
+                        setEmailTestResult({ success: false, message: 'Enter test email address' });
+                        return;
+                      }
+                      setTestingEmail(true);
+                      setEmailTestResult(null);
+                      try {
+                        await handleSave();
+                        const response = await base44.functions.invoke('sendEmailit', { 
+                          testOnly: true,
+                          to: formData.emailit_test_to,
+                          subject: 'Test Email from IT Projects',
+                          html: '<h1>Test Email</h1><p>Your Emailit integration is working correctly.</p>'
+                        });
+                        setEmailTestResult(response.data?.success 
+                          ? { success: true, message: 'Sent!' } 
+                          : { success: false, message: response.data?.error || 'Failed' }
+                        );
+                      } catch (error) {
+                        setEmailTestResult({ success: false, message: error.response?.data?.error || 'Failed' });
+                      }
+                      setTestingEmail(false);
+                    }} 
+                    disabled={testingEmail || !formData.emailit_test_to}
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 h-9"
+                  >
+                    {testingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Test'}
+                  </Button>
                 </div>
                 
                 {emailTestResult && (
-                  <div className={cn(
-                    "p-3 rounded-lg text-sm",
-                    emailTestResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
-                  )}>
-                    <p>{emailTestResult.message}</p>
-                  </div>
+                  <p className={cn("text-xs", emailTestResult.success ? "text-emerald-600" : "text-red-600")}>
+                    {emailTestResult.message}
+                  </p>
                 )}
               </div>
             )}
