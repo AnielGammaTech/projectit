@@ -586,8 +586,8 @@ export default function ProjectTasks() {
               <p className="text-sm text-slate-500">{project?.name} • {completedTasks}/{tasks.length} completed</p>
             </div>
           </div>
-          <Button onClick={() => setShowGroupModal(true)} variant="outline" size="sm">
-            <FolderPlus className="w-4 h-4 mr-2" />
+          <Button onClick={() => setShowGroupModal(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white">
+            <Plus className="w-4 h-4 mr-2" />
             New Group
           </Button>
         </div>
