@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileStack, Bell, FileText, DollarSign, AlertTriangle, Clock, X } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileStack, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -203,12 +203,6 @@ export default function Dashboard() {
                 Templates
               </Button>
             </Link>
-            <Link to={createPageUrl('NotificationSettings')}>
-              <Button variant="outline" size="sm">
-                <Bell className="w-4 h-4 mr-2" />
-                Notifications
-              </Button>
-            </Link>
             <Button
               onClick={() => setShowProjectModal(true)}
               className="bg-[#0069AF] hover:bg-[#133F5C] shadow-lg shadow-[#0069AF]/20"
@@ -320,32 +314,32 @@ export default function Dashboard() {
           <StatsCard
             title="Active Projects"
             value={activeProjects.length}
-            icon={FolderKanban}
-            color="bg-indigo-600"
+            icon={Briefcase}
+            color="bg-[#133F5C]"
             subtitle={`${projects.filter(p => p.status === 'completed').length} done`}
             href={createPageUrl('Dashboard')}
           />
           <StatsCard
             title="Approved Proposals"
             value={`$${approvedTotal.toLocaleString()}`}
-            icon={DollarSign}
-            color="bg-emerald-600"
+            icon={TrendingUp}
+            color="bg-emerald-500"
             subtitle={`${approvedProposals.length} approved`}
             href={createPageUrl('Proposals')}
           />
           <StatsCard
             title="Parts"
             value={pendingParts.length}
-            icon={Package}
-            color="bg-amber-600"
+            icon={Box}
+            color="bg-orange-500"
             subtitle="pending"
             href={createPageUrl('AllTasks') + '?tab=parts'}
           />
           <StatsCard
             title="Quote Requests"
             value={pendingQuotes.length}
-            icon={FileText}
-            color="bg-violet-600"
+            icon={ClipboardList}
+            color="bg-violet-500"
             subtitle="pending"
             href={createPageUrl('QuoteRequests')}
           />

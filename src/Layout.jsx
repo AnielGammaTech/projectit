@@ -20,7 +20,8 @@ import {
   Clock,
   TrendingUp,
   PieChart,
-  ChevronDown
+  ChevronDown,
+  Bell
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import GlobalSearch from '@/components/GlobalSearch';
@@ -294,32 +295,32 @@ export default function Layout({ children, currentPageName }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="top" className="w-56 z-[100]">
               <DropdownMenuItem asChild>
-                <Link to={createPageUrl('Profile')} className="cursor-pointer">
-                  <User className="w-4 h-4 mr-2" />
-                  My Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to={createPageUrl('NotificationSettings')} className="cursor-pointer">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Notification Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to={createPageUrl('SecuritySettings')} className="cursor-pointer">
-                  <Shield className="w-4 h-4 mr-2" />
-                  Security Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </aside>
+                                  <Link to={createPageUrl('NotificationSettings')} className="cursor-pointer">
+                                    <Bell className="w-4 h-4 mr-2" />
+                                    My Notifications
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link to={createPageUrl('Profile')} className="cursor-pointer">
+                                    <User className="w-4 h-4 mr-2" />
+                                    My Profile
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link to={createPageUrl('SecuritySettings')} className="cursor-pointer">
+                                    <Shield className="w-4 h-4 mr-2" />
+                                    Security Settings
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
+                                  <LogOut className="w-4 h-4 mr-2" />
+                                  Sign Out
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </aside>
 
       {/* Main Content */}
       <main className="lg:pl-64 pt-16 lg:pt-0">
