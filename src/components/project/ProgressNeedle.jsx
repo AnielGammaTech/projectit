@@ -3,19 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Check, X } from 'lucide-react';
+import { Check, X, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const stages = [
-  { label: 'Not Started', min: 0, max: 0, color: 'bg-slate-500' },
-  { label: 'Just Started', min: 1, max: 24, color: 'bg-red-500' },
-  { label: 'In Progress', min: 25, max: 49, color: 'bg-amber-500' },
-  { label: 'On Track', min: 50, max: 74, color: 'bg-yellow-500' },
-  { label: 'Almost Done', min: 75, max: 99, color: 'bg-lime-500' },
-  { label: 'Complete', min: 100, max: 100, color: 'bg-emerald-500' },
-];
 
 export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser }) {
   const queryClient = useQueryClient();
@@ -23,6 +14,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
   const [note, setNote] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [showNoteInput, setShowNoteInput] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const trackRef = useRef(null);
 
   const { data: updates = [] } = useQuery({
@@ -48,16 +40,22 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
       queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
       setNote('');
       setShowNoteInput(false);
+      setIsExpanded(false);
     }
   });
 
-  const getCurrentStage = () => {
-    return stages.find(s => localValue >= s.min && localValue <= s.max) || stages[0];
+  const getColor = () => {
+    if (localValue < 25) return 'bg-red-500';
+    if (localValue < 50) return 'bg-amber-500';
+    if (localValue < 75) return 'bg-yellow-500';
+    if (localValue < 100) return 'bg-lime-500';
+    return 'bg-emerald-500';
   };
 
   const handleMouseDown = (e) => {
     e.preventDefault();
     setIsDragging(true);
+    setIsExpanded(true);
     updateValue(e);
   };
 
@@ -83,6 +81,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   const handleTouchStart = (e) => {
     setIsDragging(true);
+    setIsExpanded(true);
     updateValue(e);
   };
 
@@ -121,105 +120,115 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
     setLocalValue(value);
     setShowNoteInput(false);
     setNote('');
+    setIsExpanded(false);
   };
 
-  const currentStage = getCurrentStage();
-
   return (
-    <div className="bg-slate-900 rounded-2xl p-5 shadow-xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-slate-400 text-sm font-medium">Project Progress</span>
-        <span className={cn(
-          "px-2.5 py-1 rounded-full text-xs font-semibold",
-          currentStage.color,
-          "text-white"
-        )}>
-          {currentStage.label}
-        </span>
-      </div>
-
-      {/* Progress Track */}
-      <div className="relative mb-3">
-        {/* Track Background */}
-        <div 
-          ref={trackRef}
-          className="h-3 bg-slate-700 rounded-full cursor-pointer relative overflow-hidden"
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-        >
-          {/* Gradient Fill */}
-          <motion.div 
-            className="absolute inset-y-0 left-0 rounded-full"
-            style={{
-              background: 'linear-gradient(90deg, #ef4444 0%, #f59e0b 25%, #eab308 50%, #84cc16 75%, #22c55e 100%)',
-              width: `${localValue}%`,
-            }}
-            animate={{ width: `${localValue}%` }}
-            transition={{ duration: isDragging ? 0 : 0.2 }}
-          />
+    <motion.div 
+      className={cn(
+        "bg-white rounded-xl border border-slate-200 shadow-sm transition-all duration-200",
+        isExpanded ? "p-4" : "p-3 hover:shadow-md cursor-pointer"
+      )}
+      onMouseEnter={() => !showNoteInput && setIsExpanded(true)}
+      onMouseLeave={() => !showNoteInput && !isDragging && setIsExpanded(false)}
+      layout
+    >
+      {/* Compact View */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Progress</span>
+          <span className={cn("text-sm font-bold", localValue === 100 ? "text-emerald-600" : "text-slate-900")}>
+            {localValue}%
+          </span>
         </div>
         
-        {/* Draggable Handle */}
-        <motion.div
-          className={cn(
-            "absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full shadow-lg cursor-grab active:cursor-grabbing",
-            "bg-white border-2 border-slate-300",
-            "flex items-center justify-center",
-            isDragging && "scale-110 shadow-xl border-slate-400"
-          )}
-          style={{ left: `calc(${localValue}% - 12px)` }}
-          animate={{ 
-            left: `calc(${localValue}% - 12px)`,
-            scale: isDragging ? 1.15 : 1
-          }}
-          transition={{ duration: isDragging ? 0 : 0.2 }}
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-        >
-          <div className="w-2 h-2 rounded-full bg-slate-400" />
-        </motion.div>
-      </div>
-
-      {/* Percentage Display */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-baseline gap-1">
-          <span className="text-3xl font-bold text-white">{localValue}</span>
-          <span className="text-slate-400 text-lg">%</span>
-        </div>
-        
-        {lastUpdate && !showNoteInput && (
-          <div className="text-right">
-            <p className="text-slate-500 text-xs flex items-center gap-1">
-              Updated {formatDistanceToNow(new Date(lastUpdate.created_date), { addSuffix: true })}
-              {lastUpdate.note && <MessageSquare className="w-3 h-3" />}
-            </p>
+        {/* Track */}
+        <div className="flex-1 relative">
+          <div 
+            ref={trackRef}
+            className={cn(
+              "h-2 bg-slate-100 rounded-full cursor-pointer relative overflow-hidden transition-all",
+              isExpanded && "h-3"
+            )}
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+          >
+            <motion.div 
+              className={cn("absolute inset-y-0 left-0 rounded-full", getColor())}
+              animate={{ width: `${localValue}%` }}
+              transition={{ duration: isDragging ? 0 : 0.2 }}
+            />
           </div>
+          
+          {/* Handle - only show when expanded */}
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className={cn(
+                  "absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 shadow-md cursor-grab active:cursor-grabbing",
+                  getColor().replace('bg-', 'border-')
+                )}
+                style={{ left: `calc(${localValue}% - 8px)` }}
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
+              />
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Last update info - compact */}
+        {lastUpdate && !isExpanded && (
+          <span className="text-xs text-slate-400 whitespace-nowrap hidden sm:block">
+            {formatDistanceToNow(new Date(lastUpdate.created_date), { addSuffix: true })}
+          </span>
+        )}
+        
+        {!isExpanded && (
+          <ChevronDown className="w-4 h-4 text-slate-300" />
         )}
       </div>
 
-      {/* Quick Presets */}
-      {!showNoteInput && (
-        <div className="flex gap-1.5 mt-4">
-          {[0, 25, 50, 75, 100].map(preset => (
-            <button
-              key={preset}
-              onClick={() => {
-                setLocalValue(preset);
-                if (preset !== value) setShowNoteInput(true);
-              }}
-              className={cn(
-                "flex-1 py-1.5 rounded-lg text-xs font-medium transition-all",
-                localValue === preset 
-                  ? "bg-slate-700 text-white" 
-                  : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white"
+      {/* Expanded content */}
+      <AnimatePresence>
+        {isExpanded && !showNoteInput && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+              <div className="flex gap-1">
+                {[0, 25, 50, 75, 100].map(preset => (
+                  <button
+                    key={preset}
+                    onClick={() => {
+                      setLocalValue(preset);
+                      if (preset !== value) setShowNoteInput(true);
+                    }}
+                    className={cn(
+                      "px-2 py-1 rounded text-xs font-medium transition-all",
+                      localValue === preset 
+                        ? "bg-slate-900 text-white" 
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    )}
+                  >
+                    {preset}%
+                  </button>
+                ))}
+              </div>
+              {lastUpdate && (
+                <span className="text-xs text-slate-400">
+                  Updated {formatDistanceToNow(new Date(lastUpdate.created_date), { addSuffix: true })}
+                </span>
               )}
-            >
-              {preset}%
-            </button>
-          ))}
-        </div>
-      )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Note Input */}
       <AnimatePresence>
@@ -228,37 +237,39 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="mt-4 overflow-hidden"
+            className="overflow-hidden"
           >
-            <Textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Add a note about this update (optional)..."
-              className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[60px] text-sm resize-none"
-              autoFocus
-            />
-            <div className="flex gap-2 mt-3">
-              <Button 
-                onClick={() => saveMutation.mutate()} 
-                disabled={saveMutation.isPending}
-                size="sm"
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-              >
-                <Check className="w-4 h-4 mr-1.5" />
-                Save Progress
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={handleCancel}
-                className="text-slate-400 hover:text-white hover:bg-slate-700 px-3"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+            <div className="mt-3 pt-3 border-t border-slate-100">
+              <Textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Add a note (optional)..."
+                className="min-h-[50px] text-sm resize-none"
+                autoFocus
+              />
+              <div className="flex gap-2 mt-2">
+                <Button 
+                  onClick={() => saveMutation.mutate()} 
+                  disabled={saveMutation.isPending}
+                  size="sm"
+                  className="flex-1 bg-slate-900 hover:bg-slate-800 h-8"
+                >
+                  <Check className="w-3.5 h-3.5 mr-1" />
+                  Save
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={handleCancel}
+                  className="h-8 px-2"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
