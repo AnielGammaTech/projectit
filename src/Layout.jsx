@@ -217,7 +217,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-[#0F2F44] to-[#133F5C] z-50 transition-transform duration-300 lg:translate-x-0",
+        "fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-[#0F2F44] to-[#133F5C] z-50 transition-transform duration-300 lg:translate-x-0 flex flex-col",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-6">
@@ -258,7 +258,7 @@ export default function Layout({ children, currentPageName }) {
           </button>
         </div>
 
-        <nav className="px-3 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+        <nav className="px-3 flex-1 overflow-y-auto">
           {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
             const Icon = item.icon;
 
@@ -288,7 +288,7 @@ export default function Layout({ children, currentPageName }) {
                     <ChevronDown className={cn("w-4 h-4 transition-transform", isExpanded && "rotate-180")} />
                   </button>
                   {isExpanded && (
-                    <div className="ml-4 pl-4 border-l border-white/20 mb-2 space-y-1">
+                    <div className="ml-8 mb-1 space-y-0.5">
                       {item.submenu.map((subItem) => {
                         const SubIcon = subItem.icon;
                         const subTypeParam = subItem.params ? new URLSearchParams(subItem.params).get('type') : null;
@@ -342,8 +342,8 @@ export default function Layout({ children, currentPageName }) {
         </nav>
 
         {/* User Profile at Bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-white/10">
-          <div className="space-y-1">
+        <div className="mt-auto p-3 border-t border-white/10">
+          <div className="space-y-0.5">
             <Link
               to={createPageUrl('ActivityFeed')}
               className="flex items-center justify-between px-3 py-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
