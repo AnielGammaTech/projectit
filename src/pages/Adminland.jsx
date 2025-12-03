@@ -933,6 +933,57 @@ function CompanySettingsSection({ queryClient }) {
             <span className="text-sm">Show item images on proposals</span>
           </label>
         </div>
+          </>
+        )}
+
+        {/* Tax Rates Tab */}
+        {activeTab === 'taxes' && (
+          <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+            <h3 className="font-semibold text-slate-900">Tax Rates by Location</h3>
+            <p className="text-xs text-slate-500">Set tax rates for specific locations. Customers can have a default tax rate assigned.</p>
+            
+            {formData.tax_rates_by_location?.length > 0 && (
+              <div className="space-y-2">
+                {formData.tax_rates_by_location.map((rate, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{rate.name}</p>
+                      <p className="text-xs text-slate-500">
+                        {[rate.city, rate.state, rate.zip].filter(Boolean).join(', ') || 'No location specified'}
+                      </p>
+                    </div>
+                    <Badge className="bg-blue-100 text-blue-700">{rate.rate}%</Badge>
+                    <Button variant="ghost" size="sm" onClick={() => removeTaxRate(idx)} className="text-red-500 hover:text-red-700">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="grid grid-cols-5 gap-2 pt-2 border-t">
+              <div>
+                <Label className="text-xs">Name</Label>
+                <Input value={newTaxRate.name} onChange={(e) => setNewTaxRate(p => ({ ...p, name: e.target.value }))} placeholder="e.g., Texas" className="mt-1 h-9" />
+              </div>
+              <div>
+                <Label className="text-xs">State</Label>
+                <Input value={newTaxRate.state} onChange={(e) => setNewTaxRate(p => ({ ...p, state: e.target.value }))} placeholder="TX" className="mt-1 h-9" />
+              </div>
+              <div>
+                <Label className="text-xs">City</Label>
+                <Input value={newTaxRate.city} onChange={(e) => setNewTaxRate(p => ({ ...p, city: e.target.value }))} placeholder="Austin" className="mt-1 h-9" />
+              </div>
+              <div>
+                <Label className="text-xs">Rate %</Label>
+                <Input type="number" step="0.01" value={newTaxRate.rate} onChange={(e) => setNewTaxRate(p => ({ ...p, rate: parseFloat(e.target.value) || 0 }))} className="mt-1 h-9" />
+              </div>
+              <div className="flex items-end">
+                <Button onClick={addTaxRate} size="sm" className="w-full bg-[#0069AF] hover:bg-[#133F5C]">Add</Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
