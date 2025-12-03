@@ -57,6 +57,7 @@ const adminMenuItems = [
   { id: 'people', label: 'People & Teams', icon: Users, description: 'Manage team members, groups, and admin access' },
   { id: 'roles', label: 'Roles & Permissions', icon: Shield, description: 'Custom roles and granular access control', page: 'RolesPermissions' },
   { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automate actions based on triggers', page: 'Workflows' },
+  { id: 'templates', label: 'Email & Notification Templates', icon: Mail, description: 'Customize email templates with HTML and variables' },
   { id: 'company', label: 'Company Settings', icon: Building2, description: 'Branding, proposal defaults, and company info' },
   { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'Connect external services' },
   { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Track user actions and system changes', page: 'AuditLogs' },
@@ -76,6 +77,8 @@ export default function Adminland() {
         return <CompanySettingsSection queryClient={queryClient} />;
       case 'integrations':
         return <IntegrationsSection queryClient={queryClient} />;
+      case 'templates':
+        return <EmailTemplatesSection queryClient={queryClient} />;
       default:
         return null;
     }

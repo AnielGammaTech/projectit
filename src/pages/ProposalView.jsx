@@ -2,13 +2,90 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Download, Send, CheckCircle2, Printer } from 'lucide-react';
+import { ArrowLeft, Download, Send, CheckCircle2, Printer, XCircle, Frown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+
+// Confetti component for approved proposals
+function Confetti() {
+  const [particles, setParticles] = useState([]);
+  
+  useEffect(() => {
+    const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
+    const newParticles = [];
+    for (let i = 0; i < 100; i++) {
+      newParticles.push({
+        id: i,
+        x: Math.random() * 100,
+        delay: Math.random() * 3,
+        duration: 3 + Math.random() * 2,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: 6 + Math.random() * 8,
+        rotation: Math.random() * 360
+      });
+    }
+    setParticles(newParticles);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          initial={{ y: -20, x: `${p.x}vw`, opacity: 1, rotate: 0 }}
+          animate={{ y: '110vh', opacity: 0, rotate: p.rotation + 720 }}
+          transition={{ duration: p.duration, delay: p.delay, ease: 'linear' }}
+          style={{ 
+            position: 'absolute',
+            width: p.size,
+            height: p.size,
+            backgroundColor: p.color,
+            borderRadius: Math.random() > 0.5 ? '50%' : '2px'
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Sad faces for rejected proposals
+function SadFaces() {
+  const [faces, setFaces] = useState([]);
+  
+  useEffect(() => {
+    const newFaces = [];
+    for (let i = 0; i < 20; i++) {
+      newFaces.push({
+        id: i,
+        x: Math.random() * 100,
+        delay: Math.random() * 2,
+        duration: 4 + Math.random() * 2,
+        size: 20 + Math.random() * 20
+      });
+    }
+    setFaces(newFaces);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {faces.map((f) => (
+        <motion.div
+          key={f.id}
+          initial={{ y: -50, x: `${f.x}vw`, opacity: 0.8 }}
+          animate={{ y: '110vh', opacity: 0 }}
+          transition={{ duration: f.duration, delay: f.delay, ease: 'linear' }}
+          style={{ position: 'absolute' }}
+        >
+          <Frown style={{ width: f.size, height: f.size, color: '#ef4444' }} />
+        </motion.div>
+      ))}
+    </div>
+  );
+}
 
 const statusColors = {
   draft: 'bg-slate-100 text-slate-700',
@@ -23,6 +100,8 @@ export default function ProposalView() {
   const urlParams = new URLSearchParams(window.location.search);
   const proposalId = urlParams.get('id');
   const printRef = useRef(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showSadFaces, setShowSadFaces] = useState(false);
 
   const { data: proposal, isLoading } = useQuery({
     queryKey: ['proposal', proposalId],
@@ -44,6 +123,17 @@ export default function ProposalView() {
   const handlePrint = () => {
     window.print();
   };
+
+  // Show celebration or sad animation based on status
+  useEffect(() => {
+    if (proposal?.status === 'approved' && !showConfetti) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 6000);
+    } else if (proposal?.status === 'rejected' && !showSadFaces) {
+      setShowSadFaces(true);
+      setTimeout(() => setShowSadFaces(false), 5000);
+    }
+  }, [proposal?.status]);
 
   if (isLoading) {
     return (
@@ -68,6 +158,12 @@ export default function ProposalView() {
 
   return (
     <div className="min-h-screen bg-slate-100">
+      {/* Confetti for approved proposals */}
+      {showConfetti && <Confetti />}
+      
+      {/* Sad faces for rejected proposals */}
+      {showSadFaces && <SadFaces />}
+
       {/* Toolbar - Hidden in print */}
       <div className="print:hidden bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
