@@ -492,8 +492,24 @@ export default function Customers() {
               </div>
               {!formData.is_company && !addingContactTo && (
                 <div>
-                  <Label>Company</Label>
-                  <Input value={formData.company} onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))} className="mt-1" />
+                  <Label>Link to Company</Label>
+                  <select
+                    value={formData.company_id || ''}
+                    onChange={(e) => {
+                      const company = companies.find(c => c.id === e.target.value);
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        company_id: e.target.value,
+                        company: company?.name || ''
+                      }));
+                    }}
+                    className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">No company (standalone contact)</option>
+                    {companies.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
                 </div>
               )}
             </div>
