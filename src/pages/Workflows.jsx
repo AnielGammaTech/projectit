@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { 
   Zap, Plus, Edit2, Trash2, MoreHorizontal, Play, Pause,
   Mail, Bell, ListTodo, Users, FileText, Clock, CheckCircle2,
-  ArrowRight, Activity, History
+  ArrowRight, Activity, History, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +38,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import AIWorkflowSuggestions from '@/components/workflows/AIWorkflowSuggestions';
 
 const triggerTypes = {
   project_status_change: { label: 'Project Status Change', icon: Activity, color: 'bg-blue-500' },
@@ -133,6 +134,10 @@ export default function Workflows() {
             <TabsTrigger value="workflows" className="gap-2">
               <Zap className="w-4 h-4" />
               Workflows ({workflows.length})
+            </TabsTrigger>
+            <TabsTrigger value="suggestions" className="gap-2">
+              <Sparkles className="w-4 h-4" />
+              Suggestions
             </TabsTrigger>
             <TabsTrigger value="history" className="gap-2">
               <History className="w-4 h-4" />
@@ -231,6 +236,18 @@ export default function Workflows() {
                   );
                 })
               )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="suggestions">
+            <div className="bg-white rounded-2xl border p-6">
+              <AIWorkflowSuggestions 
+                existingWorkflows={workflows}
+                onCreateWorkflow={async (workflow) => {
+                  await base44.entities.Workflow.create(workflow);
+                  refetch();
+                }}
+              />
             </div>
           </TabsContent>
 
