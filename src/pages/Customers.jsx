@@ -197,8 +197,13 @@ export default function Customers() {
   };
 
   const handleBulkDelete = async () => {
-    for (const id of selectedIds) {
-      await base44.entities.Customer.delete(id);
+    const ids = Array.from(selectedIds);
+    for (let i = 0; i < ids.length; i++) {
+      await base44.entities.Customer.delete(ids[i]);
+      // Small delay to avoid rate limiting
+      if (i < ids.length - 1) {
+        await new Promise(r => setTimeout(r, 100));
+      }
     }
     refetch();
     clearSelection();
