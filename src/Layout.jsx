@@ -289,7 +289,7 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" side="top" className="w-56">
+            <DropdownMenuContent align="start" side="top" className="w-56 z-[100]">
               <DropdownMenuItem asChild>
                 <Link to={createPageUrl('Profile')} className="cursor-pointer">
                   <User className="w-4 h-4 mr-2" />
