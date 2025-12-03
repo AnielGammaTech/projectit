@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { useQuery } from '@tanstack/react-query';
 import { 
   LayoutDashboard, 
   ListTodo, 
@@ -64,6 +65,17 @@ export default function Layout({ children, currentPageName }) {
   const [showSearch, setShowSearch] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
 
+  const { data: appSettings } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: async () => {
+      const settings = await base44.entities.ProposalSettings.filter({ setting_key: 'main' });
+      return settings[0] || {};
+    }
+  });
+
+  const appName = appSettings?.app_name || 'IT Projects';
+  const appLogoUrl = appSettings?.app_logo_url;
+
   // Global keyboard shortcut for search
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -102,10 +114,14 @@ export default function Layout({ children, currentPageName }) {
             <Menu className="w-5 h-5" />
           </Button>
           <div className="flex items-center gap-2 ml-3">
-            <div className="w-8 h-8 rounded-lg bg-[#133F5C] flex items-center justify-center">
-              <Wrench className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-semibold text-slate-900">IT Projects</span>
+            {appLogoUrl ? (
+              <img src={appLogoUrl} alt="" className="w-8 h-8 rounded-lg object-contain" />
+            ) : (
+              <div className="w-8 h-8 rounded-lg bg-[#133F5C] flex items-center justify-center">
+                <Wrench className="w-4 h-4 text-white" />
+              </div>
+            )}
+            <span className="font-semibold text-slate-900">{appName}</span>
           </div>
         </div>
         <button
@@ -166,15 +182,19 @@ export default function Layout({ children, currentPageName }) {
       )}>
         <div className="p-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#74C7FF]/20 flex items-center justify-center">
-                <Wrench className="w-5 h-5 text-[#74C7FF]" />
+              <div className="flex items-center gap-3">
+                {appLogoUrl ? (
+                  <img src={appLogoUrl} alt="" className="w-10 h-10 rounded-xl object-contain bg-white/10 p-1" />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-[#74C7FF]/20 flex items-center justify-center">
+                    <Wrench className="w-5 h-5 text-[#74C7FF]" />
+                  </div>
+                )}
+                <div>
+                  <h1 className="font-bold text-white">{appName}</h1>
+                  <p className="text-xs text-[#74C7FF]/70">Management Tool</p>
+                </div>
               </div>
-              <div>
-                <h1 className="font-bold text-white">IT Projects</h1>
-                <p className="text-xs text-[#74C7FF]/70">Management Tool</p>
-              </div>
-            </div>
             <Button 
               variant="ghost" 
               size="icon"
