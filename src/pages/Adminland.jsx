@@ -686,6 +686,8 @@ function PermissionsSection({ queryClient }) {
 // Consolidated Company Settings Section (combines Branding + Proposal Settings)
 function CompanySettingsSection({ queryClient }) {
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState('branding');
   const [formData, setFormData] = useState({
     proposal_prefix: 'P-',
     default_valid_days: 30,
