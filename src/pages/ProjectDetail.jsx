@@ -446,12 +446,13 @@ export default function ProjectDetail() {
           className="mb-6"
         >
           <ProgressNeedle 
-            projectId={projectId} 
-            value={project.progress || 0} 
-            onSave={handleProgressUpdate} 
-            currentUser={currentUser}
-            onStatusChange={(status) => handleQuickUpdate('status', status)}
-          />
+              projectId={projectId} 
+              value={project.progress || 0} 
+              onSave={handleProgressUpdate} 
+              currentUser={currentUser}
+              onStatusChange={(status) => handleQuickUpdate('status', status)}
+              halopsaTicketId={project.halopsa_ticket_id}
+            />
         </motion.div>
 
         {/* Cards Grid */}

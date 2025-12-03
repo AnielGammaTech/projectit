@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, projectId, ticketId, summary, details, clientId } = body;
+    const { action, projectId, ticketId, summary, details, clientId, note, noteIsPrivate } = body;
 
     // Get HaloPSA credentials
     const haloClientId = Deno.env.get("HALOPSA_CLIENT_ID");
@@ -73,12 +73,12 @@ Deno.serve(async (req) => {
     const accessToken = tokenData.access_token;
 
     if (action === 'create') {
-      // Create a new ticket in HaloPSA
+      // Create a new ticket in HaloPSA with Gamma Default ticket type
       const ticketData = [{
         summary: summary || 'New Project Ticket',
         details: details || '',
         client_id: clientId ? parseInt(clientId.replace('halo_', '')) : undefined,
-        tickettype_id: 1 // Default ticket type
+        tickettype_name: 'Gamma Default'
       }];
 
       const createResponse = await fetch(`${apiBaseUrl}/Tickets`, {
@@ -169,8 +169,45 @@ Deno.serve(async (req) => {
         message: 'Ticket unlinked from project'
       });
 
+    } else if (action === 'addNote') {
+      // Add a private note to an existing ticket
+      if (!ticketId || !note) {
+        return Response.json({ 
+          error: 'Ticket ID and note are required' 
+        }, { status: 400 });
+      }
+
+      const actionData = [{
+        ticket_id: parseInt(ticketId),
+        note: note,
+        hiddenfromuser: noteIsPrivate !== false, // Default to private
+        outcome: 'note'
+      }];
+
+      const noteResponse = await fetch(`${apiBaseUrl}/Actions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(actionData)
+      });
+
+      if (!noteResponse.ok) {
+        const errorText = await noteResponse.text();
+        return Response.json({ 
+          error: 'Failed to add note to ticket',
+          details: errorText
+        }, { status: 500 });
+      }
+
+      return Response.json({
+        success: true,
+        message: 'Private note added to ticket'
+      });
+
     } else {
-      return Response.json({ error: 'Invalid action. Use: create, link, or unlink' }, { status: 400 });
+      return Response.json({ error: 'Invalid action. Use: create, link, unlink, or addNote' }, { status: 400 });
     }
 
   } catch (error) {

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { Check, X, PartyPopper } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,7 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser, onStatusChange }) {
+export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser, onStatusChange, halopsaTicketId }) {
   const queryClient = useQueryClient();
   const [localValue, setLocalValue] = useState(value);
   const [note, setNote] = useState('');
@@ -35,6 +36,22 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   const lastUpdate = updates[0];
 
+  // Push note to HaloPSA ticket
+  const pushToHalo = async (noteText, progressValue) => {
+    if (!halopsaTicketId) return;
+    try {
+      const haloNote = `[Progress Update: ${progressValue}%] ${noteText || 'Progress updated'}`;
+      await base44.functions.invoke('haloPSATicket', {
+        action: 'addNote',
+        ticketId: halopsaTicketId,
+        note: haloNote,
+        noteIsPrivate: true
+      });
+    } catch (err) {
+      console.error('Failed to push note to HaloPSA:', err);
+    }
+  };
+
   const saveMutation = useMutation({
     mutationFn: async (skipCompletionCheck = false) => {
       // Check if hitting 100% for the first time
@@ -51,6 +68,10 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
         author_email: currentUser?.email,
         author_name: currentUser?.full_name || currentUser?.email
       });
+      
+      // Push to HaloPSA as private note
+      await pushToHalo(note, localValue);
+      
       onSave(localValue);
     },
     onSuccess: () => {
@@ -63,13 +84,18 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
   });
 
   const handleCompletionConfirm = async () => {
+    const completionNote = note || 'Project completed and ready for billing';
     await base44.entities.ProgressUpdate.create({
       project_id: projectId,
       progress_value: 100,
-      note: note || 'Project completed and ready for billing',
+      note: completionNote,
       author_email: currentUser?.email,
       author_name: currentUser?.full_name || currentUser?.email
     });
+    
+    // Push to HaloPSA
+    await pushToHalo(completionNote, 100);
+    
     onSave(100);
     onStatusChange?.('completed');
     queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
@@ -88,6 +114,10 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
       author_email: currentUser?.email,
       author_name: currentUser?.full_name || currentUser?.email
     });
+    
+    // Push to HaloPSA
+    await pushToHalo(note, 100);
+    
     onSave(100);
     queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
     setNote('');
