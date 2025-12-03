@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -1084,8 +1085,8 @@ function IntegrationsSection({ queryClient }) {
   });
 
   const handleTestConnection = async () => {
-    if (!formData.halopsa_url) {
-      setSyncResult({ success: false, message: 'Please enter your HaloPSA URL first' });
+    if (!formData.halopsa_auth_url) { // Changed from halopsa_url to halopsa_auth_url based on the form field
+      setSyncResult({ success: false, message: 'Please enter your HaloPSA Authorisation Server URL first' });
       return;
     }
     
@@ -1117,8 +1118,8 @@ function IntegrationsSection({ queryClient }) {
   };
 
   const handleSyncCustomers = async () => {
-    if (!formData.halopsa_url) {
-      setSyncResult({ success: false, message: 'Please enter your HaloPSA URL first' });
+    if (!formData.halopsa_auth_url) { // Changed from halopsa_url to halopsa_auth_url
+      setSyncResult({ success: false, message: 'Please enter your HaloPSA Authorisation Server URL first' });
       return;
     }
     
