@@ -224,8 +224,11 @@ export default function Layout({ children, currentPageName }) {
                     <div className="ml-4 pl-4 border-l border-white/20 mb-2 space-y-1">
                       {item.submenu.map((subItem) => {
                         const SubIcon = subItem.icon;
-                        const isSubActive = (subItem.page === currentPageName && (!subItem.params || window.location.search.includes(subItem.params?.replace('?', '')))) ||
-                          (subItem.page === 'ReportBuilder' && currentPageName === 'ReportBuilder');
+                        const subTypeParam = subItem.params ? new URLSearchParams(subItem.params).get('type') : null;
+                        const currentType = new URLSearchParams(window.location.search).get('type');
+                        const isSubActive = (subItem.page === currentPageName && subTypeParam === currentType) ||
+                          (subItem.page === 'ReportBuilder' && currentPageName === 'ReportBuilder') ||
+                          (subItem.page === currentPageName && !subItem.params && !currentType);
                         return (
                           <Link
                             key={subItem.name}
