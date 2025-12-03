@@ -852,6 +852,7 @@ function EmailTemplatesSection({ queryClient }) {
   const [saving, setSaving] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [showVariables, setShowVariables] = useState(false);
+  const [viewMode, setViewMode] = useState('split'); // 'code', 'preview', 'split'
 
   const templateOptions = [
     { key: 'proposal_sent', name: 'Proposal Sent', description: 'When a proposal is emailed to customer' },
@@ -981,6 +982,47 @@ function EmailTemplatesSection({ queryClient }) {
     }));
   };
 
+  // Replace variables with sample data for preview
+  const getPreviewHtml = () => {
+    let html = formData.html_body;
+    const sampleData = {
+      '{{proposal.number}}': 'P-0042',
+      '{{proposal.title}}': 'Network Infrastructure Upgrade',
+      '{{proposal.total}}': '$12,500.00',
+      '{{proposal.valid_until}}': 'December 15, 2025',
+      '{{proposal.approval_link}}': '#',
+      '{{customer.name}}': 'John Smith',
+      '{{customer.email}}': 'john@example.com',
+      '{{customer.company}}': 'Acme Corp',
+      '{{customer.phone}}': '(555) 123-4567',
+      '{{project.name}}': 'Office Renovation',
+      '{{project.status}}': 'In Progress',
+      '{{project.due_date}}': 'January 15, 2026',
+      '{{project.progress}}': '65%',
+      '{{task.title}}': 'Install Network Switches',
+      '{{task.description}}': 'Install and configure 3 network switches',
+      '{{task.due_date}}': 'December 10, 2025',
+      '{{task.priority}}': 'High',
+      '{{task.assignee}}': 'Mike Johnson',
+      '{{part.name}}': 'Cisco Switch 24-Port',
+      '{{part.quantity}}': '3',
+      '{{part.status}}': 'Received',
+      '{{part.supplier}}': 'Tech Distributors',
+      '{{company.name}}': 'Your Company',
+      '{{company.email}}': 'info@yourcompany.com',
+      '{{company.phone}}': '(555) 987-6543',
+      '{{company.address}}': '123 Business Ave, Suite 100',
+      '{{company.logo_url}}': '',
+      '{{current_date}}': new Date().toLocaleDateString(),
+      '{{current_time}}': new Date().toLocaleTimeString(),
+      '{{app_url}}': window.location.origin,
+    };
+    Object.entries(sampleData).forEach(([key, value]) => {
+      html = html.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value);
+    });
+    return html;
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b">
@@ -988,9 +1030,9 @@ function EmailTemplatesSection({ queryClient }) {
         <p className="text-sm text-slate-500">Customize email templates with HTML and variables</p>
       </div>
 
-      <div className="grid lg:grid-cols-3 divide-x">
+      <div className="grid lg:grid-cols-4 divide-x">
         {/* Template List */}
-        <div className="lg:col-span-1 p-4 bg-slate-50">
+        <div className="lg:col-span-1 p-4 bg-slate-50 max-h-[700px] overflow-y-auto">
           <h3 className="text-sm font-medium text-slate-700 mb-3">Select Template</h3>
           <div className="space-y-1">
             {templateOptions.map((opt) => {
@@ -1010,7 +1052,7 @@ function EmailTemplatesSection({ queryClient }) {
                     <span className="font-medium text-sm">{opt.name}</span>
                     {exists && (
                       <Badge className={cn("text-xs", selectedTemplate === opt.key ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700")}>
-                        Customized
+                        ✓
                       </Badge>
                     )}
                   </div>
@@ -1024,55 +1066,81 @@ function EmailTemplatesSection({ queryClient }) {
         </div>
 
         {/* Template Editor */}
-        <div className="lg:col-span-2 p-6">
+        <div className="lg:col-span-3 flex flex-col">
           {selectedTemplate ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-slate-900">{formData.name}</h3>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox 
-                    checked={formData.is_enabled} 
-                    onCheckedChange={(checked) => setFormData(p => ({ ...p, is_enabled: checked }))} 
-                  />
-                  <span className="text-sm">Enabled</span>
-                </label>
-              </div>
-
-              <div>
-                <Label className="text-xs">Subject Line</Label>
-                <Input 
-                  value={formData.subject} 
-                  onChange={(e) => setFormData(p => ({ ...p, subject: e.target.value }))}
-                  className="mt-1 font-mono text-sm"
-                  placeholder="Email subject..."
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <Label className="text-xs">HTML Body</Label>
-                  <button 
-                    onClick={() => setShowVariables(!showVariables)}
-                    className="text-xs text-[#0069AF] hover:underline"
-                  >
-                    {showVariables ? 'Hide' : 'Show'} Available Variables
-                  </button>
+            <>
+              {/* Header */}
+              <div className="p-4 border-b bg-slate-50 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <h3 className="font-semibold text-slate-900">{formData.name}</h3>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox 
+                      checked={formData.is_enabled} 
+                      onCheckedChange={(checked) => setFormData(p => ({ ...p, is_enabled: checked }))} 
+                    />
+                    <span className="text-sm">Enabled</span>
+                  </label>
                 </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex border rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => setViewMode('code')}
+                      className={cn("px-3 py-1.5 text-xs font-medium transition-colors", viewMode === 'code' ? "bg-[#0069AF] text-white" : "bg-white hover:bg-slate-100")}
+                    >
+                      Code
+                    </button>
+                    <button
+                      onClick={() => setViewMode('split')}
+                      className={cn("px-3 py-1.5 text-xs font-medium transition-colors border-x", viewMode === 'split' ? "bg-[#0069AF] text-white" : "bg-white hover:bg-slate-100")}
+                    >
+                      Split
+                    </button>
+                    <button
+                      onClick={() => setViewMode('preview')}
+                      className={cn("px-3 py-1.5 text-xs font-medium transition-colors", viewMode === 'preview' ? "bg-[#0069AF] text-white" : "bg-white hover:bg-slate-100")}
+                    >
+                      Preview
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div className="px-4 py-3 border-b">
+                <div className="flex items-center gap-3">
+                  <Label className="text-xs text-slate-500 w-16">Subject:</Label>
+                  <Input 
+                    value={formData.subject} 
+                    onChange={(e) => setFormData(p => ({ ...p, subject: e.target.value }))}
+                    className="flex-1 font-mono text-sm h-9"
+                    placeholder="Email subject..."
+                  />
+                </div>
+              </div>
+
+              {/* Variables Panel */}
+              <div className="px-4 py-2 border-b bg-amber-50">
+                <button 
+                  onClick={() => setShowVariables(!showVariables)}
+                  className="text-xs text-amber-700 hover:text-amber-900 font-medium flex items-center gap-1"
+                >
+                  <span>{showVariables ? '▼' : '▶'}</span>
+                  Available Variables (click to insert)
+                </button>
                 
                 {showVariables && (
-                  <div className="mb-3 p-3 bg-slate-50 rounded-lg border text-xs">
-                    <p className="font-medium text-slate-700 mb-2">Click a variable to insert it:</p>
+                  <div className="mt-2 text-xs grid grid-cols-2 gap-2">
                     {Object.entries(availableVariables).map(([category, vars]) => (
-                      <div key={category} className="mb-2">
-                        <span className="font-medium capitalize text-slate-600">{category}:</span>
+                      <div key={category} className="bg-white rounded-lg p-2 border border-amber-200">
+                        <span className="font-semibold capitalize text-amber-800">{category}</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {vars.map(v => (
                             <button
                               key={v}
                               onClick={() => insertVariable(v)}
-                              className="px-2 py-0.5 bg-white border rounded hover:bg-[#0069AF] hover:text-white hover:border-[#0069AF] transition-colors font-mono"
+                              className="px-1.5 py-0.5 bg-amber-100 border border-amber-300 rounded hover:bg-[#0069AF] hover:text-white hover:border-[#0069AF] transition-colors font-mono text-[10px]"
                             >
-                              {v}
+                              {v.replace(/[{}]/g, '')}
                             </button>
                           ))}
                         </div>
@@ -1080,29 +1148,61 @@ function EmailTemplatesSection({ queryClient }) {
                     ))}
                   </div>
                 )}
-
-                <Textarea 
-                  value={formData.html_body} 
-                  onChange={(e) => setFormData(p => ({ ...p, html_body: e.target.value }))}
-                  className="mt-1 font-mono text-xs h-72"
-                  placeholder="HTML content..."
-                />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t">
+              {/* Editor / Preview Area */}
+              <div className="flex-1 flex overflow-hidden" style={{ minHeight: '400px' }}>
+                {/* Code Editor */}
+                {(viewMode === 'code' || viewMode === 'split') && (
+                  <div className={cn("flex flex-col", viewMode === 'split' ? "w-1/2 border-r" : "w-full")}>
+                    <div className="px-3 py-1.5 bg-slate-800 text-slate-400 text-xs font-mono">HTML</div>
+                    <textarea 
+                      value={formData.html_body} 
+                      onChange={(e) => setFormData(p => ({ ...p, html_body: e.target.value }))}
+                      className="flex-1 font-mono text-xs p-3 bg-slate-900 text-slate-100 resize-none focus:outline-none"
+                      placeholder="HTML content..."
+                      spellCheck={false}
+                    />
+                  </div>
+                )}
+
+                {/* Live Preview */}
+                {(viewMode === 'preview' || viewMode === 'split') && (
+                  <div className={cn("flex flex-col bg-slate-100", viewMode === 'split' ? "w-1/2" : "w-full")}>
+                    <div className="px-3 py-1.5 bg-slate-200 text-slate-600 text-xs font-medium flex items-center justify-between">
+                      <span>Preview (with sample data)</span>
+                      <span className="text-slate-400">Variables are replaced with examples</span>
+                    </div>
+                    <div className="flex-1 overflow-auto p-4">
+                      <div className="bg-white rounded-lg shadow-sm border max-w-2xl mx-auto">
+                        <iframe
+                          srcDoc={getPreviewHtml()}
+                          className="w-full h-[500px] border-0"
+                          title="Email Preview"
+                          sandbox="allow-same-origin"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Actions */}
+              <div className="px-4 py-3 border-t bg-slate-50 flex justify-between">
                 <Button 
                   variant="outline" 
+                  size="sm"
                   onClick={() => setFormData(p => ({ ...p, html_body: getDefaultBody(selectedTemplate), subject: getDefaultSubject(selectedTemplate) }))}
                 >
                   Reset to Default
                 </Button>
-                <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                <Button onClick={handleSave} disabled={saving} size="sm" className="bg-[#0069AF] hover:bg-[#133F5C]">
                   {saving ? 'Saving...' : 'Save Template'}
                 </Button>
               </div>
-            </div>
+            </>
           ) : (
-            <div className="flex items-center justify-center h-full text-slate-400">
+            <div className="flex items-center justify-center h-full text-slate-400 py-20">
               <div className="text-center">
                 <Mail className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>Select a template to customize</p>
