@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Users, UserPlus, Settings, Shield, Edit2, Trash2, 
   Plus, MoreHorizontal, Mail, Phone, Package, ArrowLeft,
-  Building2, Tags, FolderKanban, GitMerge,
+  Building2, Tags, FolderKanban, GitMerge, DollarSign,
   RefreshCw, Loader2, ChevronDown, ChevronRight
 } from 'lucide-react';
 import {
@@ -1135,6 +1135,13 @@ function IntegrationsSection({ queryClient }) {
   const [testingEmail, setTestingEmail] = useState(false);
   const [emailTestResult, setEmailTestResult] = useState(null);
   
+  // QuickBooks state
+  const [qbTesting, setQbTesting] = useState(false);
+  const [qbSyncing, setQbSyncing] = useState(false);
+  const [qbResult, setQbResult] = useState(null);
+  const [showCustomerMapping, setShowCustomerMapping] = useState(false);
+  const [qbCustomers, setQbCustomers] = useState([]);
+  
   const [formData, setFormData] = useState({
     halopsa_enabled: false,
     halopsa_url: '',
@@ -1189,8 +1196,14 @@ function IntegrationsSection({ queryClient }) {
     twilio_account_sid: '',
     twilio_auth_token: '',
     twilio_phone_number: '',
-    sms_notifications_enabled: false
-  });
+    sms_notifications_enabled: false,
+    // QuickBooks
+    quickbooks_enabled: false,
+    quickbooks_realm_id: '',
+    quickbooks_sync_customers: true,
+    quickbooks_sync_invoices: true,
+    quickbooks_customer_mapping: []
+    });
 
   const { data: settings = [], refetch } = useQuery({
     queryKey: ['integrationSettings'],
@@ -1320,10 +1333,75 @@ function IntegrationsSection({ queryClient }) {
         twilio_account_sid: settings[0].twilio_account_sid || '',
         twilio_auth_token: settings[0].twilio_auth_token || '',
         twilio_phone_number: settings[0].twilio_phone_number || '',
-        sms_notifications_enabled: settings[0].sms_notifications_enabled || false
+        sms_notifications_enabled: settings[0].sms_notifications_enabled || false,
+        // QuickBooks
+        quickbooks_enabled: settings[0].quickbooks_enabled || false,
+        quickbooks_realm_id: settings[0].quickbooks_realm_id || '',
+        quickbooks_sync_customers: settings[0].quickbooks_sync_customers !== false,
+        quickbooks_sync_invoices: settings[0].quickbooks_sync_invoices !== false,
+        quickbooks_customer_mapping: settings[0].quickbooks_customer_mapping || []
       });
     }
   }, [settings]);
+
+  // Fetch local customers for mapping
+  const { data: localCustomers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => base44.entities.Customer.list('name')
+  });
+
+  const handleQbTest = async () => {
+    setQbTesting(true);
+    setQbResult(null);
+    try {
+      await handleSave();
+      const response = await base44.functions.invoke('quickbooksSync', { action: 'test' });
+      if (response.data?.success) {
+        setQbResult({ success: true, message: response.data.message });
+        if (response.data.customers) {
+          setQbCustomers(response.data.customers);
+        }
+      } else {
+        setQbResult({ success: false, message: response.data?.error || 'Connection failed' });
+      }
+    } catch (error) {
+      setQbResult({ success: false, message: error.response?.data?.error || 'Connection failed. Check your credentials.' });
+    }
+    setQbTesting(false);
+  };
+
+  const handleQbSyncCustomers = async () => {
+    setQbSyncing(true);
+    setQbResult(null);
+    try {
+      const response = await base44.functions.invoke('quickbooksSync', { action: 'syncCustomers' });
+      if (response.data?.success) {
+        setQbResult({ success: true, message: response.data.message });
+        if (response.data.customers) {
+          setQbCustomers(response.data.customers);
+        }
+        queryClient.invalidateQueries({ queryKey: ['customers'] });
+      } else {
+        setQbResult({ success: false, message: response.data?.error || 'Sync failed' });
+      }
+    } catch (error) {
+      setQbResult({ success: false, message: error.response?.data?.error || 'Sync failed' });
+    }
+    setQbSyncing(false);
+  };
+
+  const handleMapCustomer = (localId, qbId, qbName) => {
+    const existingMapping = formData.quickbooks_customer_mapping || [];
+    const newMapping = existingMapping.filter(m => m.local_customer_id !== localId);
+    if (qbId) {
+      newMapping.push({ local_customer_id: localId, quickbooks_customer_id: qbId, quickbooks_customer_name: qbName });
+    }
+    setFormData(prev => ({ ...prev, quickbooks_customer_mapping: newMapping }));
+  };
+
+  const getQbMappingForCustomer = (localId) => {
+    return formData.quickbooks_customer_mapping?.find(m => m.local_customer_id === localId);
+  };
 
   const handleHuduTest = async () => {
     if (!formData.hudu_base_url || !formData.hudu_api_key) {
@@ -1941,6 +2019,185 @@ function IntegrationsSection({ queryClient }) {
                   />
                   <span className="text-sm">Enable SMS for urgent task reminders</span>
                 </label>
+              </div>
+            )}
+          </div>
+          )}
+        </div>
+
+        {/* QuickBooks Online Card */}
+        <div className="border rounded-xl overflow-hidden">
+          <button
+            onClick={() => setSelectedIntegration(selectedIntegration === 'quickbooks' ? null : 'quickbooks')}
+            className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-green-600" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-slate-900">QuickBooks Online</h3>
+                <p className="text-xs text-slate-500">Sync customers and invoices with QuickBooks</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant={formData.quickbooks_enabled ? "default" : "outline"} className={formData.quickbooks_enabled ? "bg-emerald-500" : ""}>
+                {formData.quickbooks_enabled ? 'Enabled' : 'Disabled'}
+              </Badge>
+              {selectedIntegration === 'quickbooks' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+            </div>
+          </button>
+          
+          {selectedIntegration === 'quickbooks' && (
+          <div className="p-4 space-y-4 bg-white">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox 
+                checked={formData.quickbooks_enabled} 
+                onCheckedChange={(checked) => setFormData(p => ({ ...p, quickbooks_enabled: checked }))} 
+              />
+              <span className="text-sm font-medium">Enable QuickBooks Integration</span>
+            </label>
+
+            {formData.quickbooks_enabled && (
+              <div className="space-y-4 pt-4 border-t border-slate-200">
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-xs text-green-700">
+                    <strong>Setup:</strong> Create an app at <a href="https://developer.intuit.com" target="_blank" rel="noopener noreferrer" className="underline">developer.intuit.com</a>. 
+                    Set up OAuth 2.0 credentials and add the Client ID and Secret as environment variables: <code className="bg-green-100 px-1 rounded">QUICKBOOKS_CLIENT_ID</code> and <code className="bg-green-100 px-1 rounded">QUICKBOOKS_CLIENT_SECRET</code>.
+                  </p>
+                </div>
+                
+                <div>
+                  <Label className="text-xs">Company ID (Realm ID)</Label>
+                  <Input 
+                    value={formData.quickbooks_realm_id} 
+                    onChange={(e) => setFormData(p => ({ ...p, quickbooks_realm_id: e.target.value }))} 
+                    placeholder="Enter your QuickBooks Company ID" 
+                    className="mt-1" 
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Found in QuickBooks under Company Settings or in the URL when logged in</p>
+                </div>
+
+                <div className="flex gap-4 pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox 
+                      checked={formData.quickbooks_sync_customers} 
+                      onCheckedChange={(checked) => setFormData(p => ({ ...p, quickbooks_sync_customers: checked }))} 
+                    />
+                    <span className="text-sm">Sync Customers</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox 
+                      checked={formData.quickbooks_sync_invoices} 
+                      onCheckedChange={(checked) => setFormData(p => ({ ...p, quickbooks_sync_invoices: checked }))} 
+                    />
+                    <span className="text-sm">Sync Invoices</span>
+                  </label>
+                </div>
+
+                {/* Customer Mapping Section */}
+                <div className="pt-2 border-t border-slate-200">
+                  <button 
+                    onClick={() => setShowCustomerMapping(!showCustomerMapping)}
+                    className="flex items-center gap-2 text-sm text-green-600 hover:text-green-700"
+                  >
+                    <Users className="w-4 h-4" />
+                    {showCustomerMapping ? 'Hide' : 'Show'} Customer Mapping
+                  </button>
+                  
+                  {showCustomerMapping && (
+                    <div className="mt-3 p-3 bg-slate-50 rounded-lg border space-y-3">
+                      <p className="text-xs text-slate-500">Map your local customers to QuickBooks customers. Click "Fetch QuickBooks Customers" first to load the list.</p>
+                      
+                      {qbCustomers.length > 0 && (
+                        <div className="max-h-64 overflow-y-auto space-y-2">
+                          {localCustomers.filter(c => c.is_company).map(customer => {
+                            const mapping = getQbMappingForCustomer(customer.id);
+                            return (
+                              <div key={customer.id} className="flex items-center gap-3 p-2 bg-white rounded-lg border">
+                                <div className="flex-1">
+                                  <p className="font-medium text-sm text-slate-900">{customer.name}</p>
+                                  <p className="text-xs text-slate-500">{customer.email}</p>
+                                </div>
+                                <select
+                                  value={mapping?.quickbooks_customer_id || ''}
+                                  onChange={(e) => {
+                                    const qbCust = qbCustomers.find(q => q.Id === e.target.value);
+                                    handleMapCustomer(customer.id, e.target.value, qbCust?.DisplayName || '');
+                                  }}
+                                  className="text-sm border rounded-md px-2 py-1 w-48"
+                                >
+                                  <option value="">-- Select QB Customer --</option>
+                                  {qbCustomers.map(qb => (
+                                    <option key={qb.Id} value={qb.Id}>{qb.DisplayName}</option>
+                                  ))}
+                                </select>
+                                {mapping && (
+                                  <Badge className="bg-green-100 text-green-700">Mapped</Badge>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      
+                      {qbCustomers.length === 0 && (
+                        <p className="text-sm text-slate-400 text-center py-4">
+                          Click "Test Connection" to fetch QuickBooks customers
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
+                  <Button 
+                    onClick={handleQbTest} 
+                    disabled={qbTesting || qbSyncing}
+                    variant="outline"
+                    className="border-green-300 text-green-600 hover:bg-green-50"
+                  >
+                    {qbTesting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Testing...
+                      </>
+                    ) : (
+                      'Test Connection'
+                    )}
+                  </Button>
+                  <Button 
+                    onClick={handleQbSyncCustomers} 
+                    disabled={qbSyncing || qbTesting}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {qbSyncing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Sync Customers
+                      </>
+                    )}
+                  </Button>
+                  {settings[0]?.quickbooks_last_sync && (
+                    <span className="text-xs text-slate-500">
+                      Last sync: {new Date(settings[0].quickbooks_last_sync).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+                
+                {qbResult && (
+                  <div className={cn(
+                    "p-3 rounded-lg text-sm",
+                    qbResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+                  )}>
+                    <p>{qbResult.message}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
