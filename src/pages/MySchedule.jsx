@@ -159,13 +159,6 @@ export default function MySchedule() {
             )}
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Your Schedule</h1>
-          
-          <a 
-            href="#" 
-            className="text-sm text-[#0069AF] hover:underline mt-2 inline-block"
-          >
-            Add this Schedule to HEY Calendar, Google Calendar, Outlook, or iCal...
-          </a>
         </motion.div>
 
         {/* Calendar Navigation */}
