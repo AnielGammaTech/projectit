@@ -282,51 +282,32 @@ export default function Layout({ children, currentPageName }) {
         </nav>
 
         {/* User Profile at Bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white/10 transition-colors">
-                {currentUser?.avatar_url ? (
-                  <img src={currentUser.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" />
-                ) : (
-                  <div className="w-9 h-9 rounded-full bg-[#74C7FF] flex items-center justify-center text-[#133F5C] text-sm font-medium">
-                    {getInitials(currentUser?.full_name || currentUser?.email)}
-                  </div>
-                )}
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-white truncate">{currentUser?.full_name || 'User'}</p>
-                  <p className="text-xs text-white/60 truncate">{currentUser?.email}</p>
-                </div>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" side="top" className="w-56 z-[100]">
-              <DropdownMenuItem asChild>
-                                  <Link to={createPageUrl('NotificationSettings')} className="cursor-pointer">
-                                    <Bell className="w-4 h-4 mr-2" />
-                                    My Notifications
-                                  </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                  <Link to={createPageUrl('Profile')} className="cursor-pointer">
-                                    <User className="w-4 h-4 mr-2" />
-                                    My Profile
-                                  </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                  <Link to={createPageUrl('SecuritySettings')} className="cursor-pointer">
-                                    <Shield className="w-4 h-4 mr-2" />
-                                    Security Settings
-                                  </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
-                                  <LogOut className="w-4 h-4 mr-2" />
-                                  Sign Out
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </aside>
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-white/10">
+          <div className="space-y-1">
+            <Link
+              to={createPageUrl('NotificationSettings')}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
+            >
+              <Bell className="w-4 h-4" />
+              My Notifications
+            </Link>
+            <Link
+              to={createPageUrl('Profile')}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
+            >
+              <User className="w-4 h-4" />
+              My Profile
+            </Link>
+            <button
+              onClick={() => base44.auth.logout()}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              Log Out
+            </button>
+          </div>
+        </div>
+        </aside>
 
       {/* Main Content */}
       <main className="lg:pl-64 pt-16 lg:pt-0">
