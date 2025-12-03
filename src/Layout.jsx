@@ -58,6 +58,11 @@ export default function Layout({ children, currentPageName }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState({});
+
+  const toggleSubmenu = (itemName) => {
+    setExpandedMenus(prev => ({ ...prev, [itemName]: !prev[itemName] }));
+  };
 
   // Global keyboard shortcut for search
   useEffect(() => {
