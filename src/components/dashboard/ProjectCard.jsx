@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, CheckCircle2, ArrowRight, Palette } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, Palette, Pin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -65,7 +65,7 @@ const statusOptions = [
   { value: 'completed', label: 'Completed' }
 ];
 
-export default function ProjectCard({ project, tasks = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, groups = [] }) {
+export default function ProjectCard({ project, tasks = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, onPinToggle, groups = [], isPinned = false, dragHandleProps = {} }) {
   const navigate = useNavigate();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -96,6 +96,17 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
     >
       {/* Hover actions */}
       <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Pin button */}
+        <button 
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPinToggle?.(project); }}
+          className={cn(
+            "p-1.5 rounded-lg backdrop-blur shadow-sm transition-all",
+            isPinned ? "bg-amber-100 text-amber-600" : "bg-white/90 hover:bg-white text-slate-500"
+          )}
+          title={isPinned ? "Unpin" : "Pin to top"}
+        >
+          <Pin className={cn("w-3.5 h-3.5", isPinned && "fill-current")} />
+        </button>
         {/* Color picker */}
         <Popover open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
           <PopoverTrigger asChild>
@@ -154,10 +165,12 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
       </div>
 
       <div 
+        {...dragHandleProps}
         onClick={() => navigate(createPageUrl('ProjectDetail') + `?id=${project.id}`)}
         className={cn(
           "bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 border-l-4 cursor-pointer",
-          colorClass
+          colorClass,
+          isPinned && "ring-2 ring-amber-200 bg-amber-50/30"
         )}
       >
         <div className="flex items-start justify-between mb-3">
