@@ -3,13 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, X, PartyPopper, ChevronDown } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Check, X, PartyPopper } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -23,13 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const statusConfig = {
-  planning: { label: 'Planning', color: 'bg-amber-100 text-amber-700' },
-  on_hold: { label: 'On Hold', color: 'bg-slate-100 text-slate-700' },
-  completed: { label: 'Completed', color: 'bg-emerald-100 text-emerald-700' }
-};
-
-export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser, onStatusChange, halopsaTicketId, projectStatus = 'planning' }) {
+export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser, onStatusChange, halopsaTicketId }) {
   const queryClient = useQueryClient();
   const [localValue, setLocalValue] = useState(value);
   const [note, setNote] = useState('');
@@ -232,34 +220,9 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
           transition={{ duration: 0.2 }}
         >
           <div className={cn("px-4 py-3 w-full transition-all duration-200")}>
-            {/* Top row with label, status and percentage */}
+            {/* Top row with label and percentage */}
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Progress</span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className={cn(
-                      "flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-colors hover:opacity-80",
-                      statusConfig[projectStatus]?.color || statusConfig.planning.color
-                    )}>
-                      {statusConfig[projectStatus]?.label || 'Planning'}
-                      <ChevronDown className="w-3 h-3" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    {Object.entries(statusConfig).map(([key, config]) => (
-                      <DropdownMenuItem 
-                        key={key} 
-                        onClick={() => onStatusChange?.(key)}
-                        className={cn("text-xs", projectStatus === key && "bg-slate-100")}
-                      >
-                        <span className={cn("w-2 h-2 rounded-full mr-2", config.color.split(' ')[0])} />
-                        {config.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Progress</span>
               <motion.div 
                 className={cn(
                   "flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-bold text-white",
