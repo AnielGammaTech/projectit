@@ -912,27 +912,31 @@ export default function ProjectTasks() {
                       snapshot.isDraggingOver && "bg-indigo-50/50"
                     )}
                   >
-                    {ungroupedTasks.length === 0 && !snapshot.isDraggingOver ? (
-                      <p className="text-sm text-slate-400 text-center py-4">Drop tasks here</p>
-                    ) : (
-                      ungroupedTasks.map((task, index) => (
-                        <Draggable key={task.id} draggableId={task.id} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                            >
-                              <TaskRow 
-                                task={task} 
-                                dragHandleProps={provided.dragHandleProps}
-                                isDragging={snapshot.isDragging}
-                              />
-                            </div>
-                          )}
-                        </Draggable>
-                      ))
-                    )}
+                    {ungroupedTasks.map((task, index) => (
+                      <Draggable key={task.id} draggableId={task.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                          >
+                            <TaskRow 
+                              task={task} 
+                              dragHandleProps={provided.dragHandleProps}
+                              isDragging={snapshot.isDragging}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
                     {provided.placeholder}
+                    {/* Add task button */}
+                    <button
+                      onClick={() => { setQuickTaskGroup(''); document.querySelector('input[placeholder="Add a new task..."]')?.focus(); }}
+                      className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add a task
+                    </button>
                   </div>
                 )}
               </Droppable>
