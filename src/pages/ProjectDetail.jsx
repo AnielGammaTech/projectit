@@ -432,6 +432,21 @@ export default function ProjectDetail() {
           </div>
         </motion.div>
 
+        {/* Progress Needle */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-6"
+        >
+          <ProgressNeedle 
+            projectId={projectId} 
+            value={project.progress || 0} 
+            onSave={handleProgressUpdate} 
+            currentUser={currentUser}
+          />
+        </motion.div>
+
         {/* Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Tasks Card - Clickable */}
