@@ -24,26 +24,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!config?.emailit_smtp_host || !config?.emailit_smtp_username || !config?.emailit_smtp_password) {
+    if (!config?.emailit_smtp_password) {
       return Response.json({ 
         success: false, 
-        error: 'Emailit SMTP settings are not configured. Please set up SMTP host, username, and password in Adminland.' 
+        error: 'Emailit API key (SMTP password) is not configured. Please enter your API key in Adminland.' 
       });
     }
 
     if (!config?.emailit_from_email) {
       return Response.json({ 
         success: false, 
-        error: 'From email is not configured. Please set up the from email in Adminland.' 
+        error: 'From email is not configured. Please set up the from email in Adminland (must be from a verified sending domain).' 
       });
     }
 
+    // Emailit SMTP configuration:
+    // Host: smtp.emailit.com
+    // Port: 587 (or 25, 2525, 2587)
+    // Encryption: TLS (STARTTLS)
+    // Username: always "emailit"
+    // Password: your API credential
     const client = new SMTPClient({
-      user: config.emailit_smtp_username,
-      password: config.emailit_smtp_password,
-      host: config.emailit_smtp_host,
+      user: 'emailit',  // Emailit requires username to always be "emailit"
+      password: config.emailit_smtp_password,  // This is the API key/credential
+      host: config.emailit_smtp_host || 'smtp.emailit.com',
       port: parseInt(config.emailit_smtp_port) || 587,
-      tls: true,
+      tls: true,  // Use STARTTLS
     });
 
     const fromAddress = config.emailit_from_name 
@@ -54,7 +60,7 @@ Deno.serve(async (req) => {
       from: fromAddress,
       to: to,
       subject: subject,
-      text: text || '',
+      text: text || (html ? '' : 'No content'),
       attachment: [
         { data: html || '<p>No content</p>', alternative: true }
       ]
@@ -73,9 +79,22 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Email error:', error);
+    
+    // Provide more helpful error messages
+    let errorMessage = error.message || 'Failed to send email';
+    
+    if (errorMessage.includes('authentication') || errorMessage.includes('535')) {
+      errorMessage = 'Authentication failed. Please check your API key is correct and has SMTP type.';
+    } else if (errorMessage.includes('553') || errorMessage.includes('domain')) {
+      errorMessage = 'Email rejected. Make sure your from email uses a verified sending domain in Emailit.';
+    } else if (errorMessage.includes('connect') || errorMessage.includes('ECONNREFUSED')) {
+      errorMessage = 'Could not connect to SMTP server. Check your host and port settings.';
+    }
+    
     return Response.json({ 
       success: false, 
-      error: error.message || 'Failed to send email'
+      error: errorMessage,
+      details: error.message
     }, { status: 500 });
   }
 });

@@ -1432,10 +1432,27 @@ function IntegrationsSection({ queryClient }) {
               <div className="space-y-4 pt-4 border-t border-slate-200">
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-xs text-blue-700">
-                    <strong>SMTP Setup:</strong> Use the SMTP credentials from your Emailit dashboard. Host: <code className="bg-blue-100 px-1 rounded">smtp.emailit.com</code>, Username: <code className="bg-blue-100 px-1 rounded">emailit</code>, Password: Your API key
+                    <strong>Setup Instructions:</strong>
                   </p>
+                  <ol className="text-xs text-blue-700 mt-1 list-decimal list-inside space-y-1">
+                    <li>Create and verify a sending domain in your <a href="https://app.emailit.com" target="_blank" rel="noopener noreferrer" className="underline">Emailit dashboard</a></li>
+                    <li>Create an SMTP credential (not API type)</li>
+                    <li>Enter your API key below and use an email from your verified domain</li>
+                  </ol>
                 </div>
                 
+                <div>
+                  <Label className="text-xs">API Key (SMTP Credential)</Label>
+                  <Input 
+                    type="password"
+                    value={formData.emailit_smtp_password} 
+                    onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_password: e.target.value }))} 
+                    placeholder="Your Emailit API key" 
+                    className="mt-1" 
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Create an SMTP type credential in Emailit dashboard</p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-xs">SMTP Host</Label>
@@ -1443,7 +1460,8 @@ function IntegrationsSection({ queryClient }) {
                       value={formData.emailit_smtp_host} 
                       onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_host: e.target.value }))} 
                       placeholder="smtp.emailit.com" 
-                      className="mt-1" 
+                      className="mt-1 bg-slate-50" 
+                      disabled
                     />
                   </div>
                   <div>
@@ -1453,33 +1471,11 @@ function IntegrationsSection({ queryClient }) {
                       onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_port: e.target.value }))}
                       className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
                     >
-                      <option value="25">25 (STARTTLS)</option>
-                      <option value="587">587 (STARTTLS)</option>
-                      <option value="2525">2525 (STARTTLS)</option>
-                      <option value="2587">2587 (STARTTLS)</option>
+                      <option value="587">587 (Recommended)</option>
+                      <option value="25">25</option>
+                      <option value="2525">2525</option>
+                      <option value="2587">2587</option>
                     </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs">SMTP Username</Label>
-                    <Input 
-                      value={formData.emailit_smtp_username} 
-                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_username: e.target.value }))} 
-                      placeholder="emailit" 
-                      className="mt-1" 
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">SMTP Password (API Key)</Label>
-                    <Input 
-                      type="password"
-                      value={formData.emailit_smtp_password} 
-                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_password: e.target.value }))} 
-                      placeholder="Your API key" 
-                      className="mt-1" 
-                    />
                   </div>
                 </div>
                 
@@ -1490,9 +1486,10 @@ function IntegrationsSection({ queryClient }) {
                       type="email"
                       value={formData.emailit_from_email} 
                       onChange={(e) => setFormData(p => ({ ...p, emailit_from_email: e.target.value }))} 
-                      placeholder="proposals@yourcompany.com" 
+                      placeholder="noreply@yourverifieddomain.com" 
                       className="mt-1" 
                     />
+                    <p className="text-[10px] text-slate-400 mt-1">Must be from your verified sending domain</p>
                   </div>
                   <div>
                     <Label className="text-xs">From Name</Label>
@@ -1528,7 +1525,7 @@ function IntegrationsSection({ queryClient }) {
                     />
                     <Button 
                       onClick={async () => {
-                        if (!formData.emailit_api_key || !formData.emailit_from_email) {
+                        if (!formData.emailit_smtp_password || !formData.emailit_from_email) {
                           setEmailTestResult({ success: false, message: 'Please enter API key and from email first' });
                           return;
                         }
