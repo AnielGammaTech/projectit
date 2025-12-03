@@ -258,7 +258,7 @@ export default function Layout({ children, currentPageName }) {
           </button>
         </div>
 
-        <nav className="px-3">
+        <nav className="px-3 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
           {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
             const Icon = item.icon;
 
