@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Package, Plus, Search, AlertTriangle, CheckCircle2, 
   ArrowDownCircle, Edit2, Trash2, MoreHorizontal, Image,
-  Printer, QrCode, ShoppingCart, Scan, X, Loader2, Sparkles, Wand2
+  Printer, QrCode, ShoppingCart, Scan, X, Loader2, Sparkles, Wand2, Layers
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -45,6 +45,8 @@ export default function Inventory() {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
   const [showAISearchModal, setShowAISearchModal] = useState(false);
+  const [showBundleModal, setShowBundleModal] = useState(false);
+  const [editingBundle, setEditingBundle] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -66,6 +68,11 @@ export default function Inventory() {
   const { data: items = [] } = useQuery({
     queryKey: ['inventoryItems'],
     queryFn: () => base44.entities.InventoryItem.list('name')
+  });
+
+  const { data: bundles = [] } = useQuery({
+    queryKey: ['serviceBundles'],
+    queryFn: () => base44.entities.ServiceBundle.list('name')
   });
 
   const { data: projects = [] } = useQuery({
@@ -174,21 +181,33 @@ export default function Inventory() {
             )}
             {canEdit && (
               <>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAISearchModal(true)}
-                  className="border-purple-300 text-purple-600 hover:bg-purple-50"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  AI Quick Add
-                </Button>
-                <Button
-                  onClick={() => { setEditingItem(null); setShowItemModal(true); }}
-                  className="bg-[#0069AF] hover:bg-[#133F5C]"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add {activeTab === 'products' ? 'Product' : 'Service'}
-                </Button>
+                {activeTab !== 'bundles' && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAISearchModal(true)}
+                    className="border-purple-300 text-purple-600 hover:bg-purple-50"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    AI Quick Add
+                  </Button>
+                )}
+                {activeTab === 'bundles' ? (
+                  <Button
+                    onClick={() => { setEditingBundle(null); setShowBundleModal(true); }}
+                    className="bg-[#0069AF] hover:bg-[#133F5C]"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Bundle
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => { setEditingItem(null); setShowItemModal(true); }}
+                    className="bg-[#0069AF] hover:bg-[#133F5C]"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add {activeTab === 'products' ? 'Product' : 'Service'}
+                  </Button>
+                )}
               </>
             )}
           </div>
@@ -210,6 +229,14 @@ export default function Inventory() {
             className={activeTab === 'services' ? 'bg-[#0069AF]' : ''}
           >
             Services ({services.length})
+          </Button>
+          <Button 
+            variant={activeTab === 'bundles' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('bundles')}
+            className={activeTab === 'bundles' ? 'bg-[#0069AF]' : ''}
+          >
+            <Layers className="w-4 h-4 mr-2" />
+            Bundles ({bundles.length})
           </Button>
         </div>
 
@@ -377,7 +404,7 @@ export default function Inventory() {
               );
             })}
           </div>
-          {filteredItems.length === 0 && (
+          {filteredItems.length === 0 && activeTab !== 'bundles' && (
             <div className="p-12 text-center">
               <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
               <h3 className="text-lg font-medium text-slate-900 mb-2">No items found</h3>
@@ -385,6 +412,90 @@ export default function Inventory() {
             </div>
           )}
         </div>
+
+        {/* Bundles Tab Content */}
+        {activeTab === 'bundles' && (
+          <div className="bg-white rounded-xl border mt-6">
+            <div className="grid grid-cols-12 gap-4 p-4 border-b bg-slate-50 text-sm font-medium text-slate-600">
+              <div className="col-span-4">Bundle</div>
+              <div className="col-span-3">Items</div>
+              <div className="col-span-2">Category</div>
+              <div className="col-span-1 text-right">Total</div>
+              <div className="col-span-2 text-right">Actions</div>
+            </div>
+            <div className="divide-y">
+              {bundles.filter(b => b.name?.toLowerCase().includes(searchQuery.toLowerCase())).map((bundle) => (
+                <div 
+                  key={bundle.id} 
+                  onClick={() => { if (canEdit) { setEditingBundle(bundle); setShowBundleModal(true); }}}
+                  className={cn("grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors", canEdit && "cursor-pointer")}
+                >
+                  <div className="col-span-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                        <Layers className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900">{bundle.name}</p>
+                        {bundle.description && <p className="text-xs text-slate-500">{bundle.description}</p>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-span-3">
+                    <p className="text-sm text-slate-600">{bundle.items?.length || 0} items</p>
+                    <p className="text-xs text-slate-400 truncate">
+                      {bundle.items?.slice(0, 2).map(i => i.name).join(', ')}{bundle.items?.length > 2 ? '...' : ''}
+                    </p>
+                  </div>
+                  <div className="col-span-2 text-sm text-slate-500">
+                    {bundle.category || '-'}
+                  </div>
+                  <div className="col-span-1 text-right text-sm font-medium text-emerald-600">
+                    ${bundle.total_price || bundle.items?.reduce((s, i) => s + (i.quantity || 1) * (i.unit_price || 0), 0) || 0}
+                  </div>
+                  <div className="col-span-2 flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                    {canEdit && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setEditingBundle(bundle); setShowBundleModal(true); }}>
+                            <Edit2 className="w-4 h-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={async () => { 
+                              await base44.entities.ServiceBundle.delete(bundle.id); 
+                              queryClient.invalidateQueries({ queryKey: ['serviceBundles'] }); 
+                            }} 
+                            className="text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {bundles.length === 0 && (
+              <div className="p-12 text-center">
+                <Layers className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+                <h3 className="text-lg font-medium text-slate-900 mb-2">No bundles yet</h3>
+                <p className="text-slate-500 mb-4">Create bundles to quickly add multiple items to proposals</p>
+                {canEdit && (
+                  <Button onClick={() => { setEditingBundle(null); setShowBundleModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                    <Plus className="w-4 h-4 mr-2" /> Create Bundle
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Item Modal */}
@@ -426,6 +537,15 @@ export default function Inventory() {
           setEditingItem(item);
           setShowItemModal(true);
         }}
+      />
+
+      {/* Bundle Modal */}
+      <BundleModal
+        open={showBundleModal}
+        onClose={() => { setShowBundleModal(false); setEditingBundle(null); }}
+        bundle={editingBundle}
+        inventoryItems={items}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ['serviceBundles'] })}
       />
 
       {/* Delete Confirm */}
@@ -905,6 +1025,221 @@ Be specific with actual product names and real pricing from the market.`,
             </div>
           )}
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function BundleModal({ open, onClose, bundle, inventoryItems, onSaved }) {
+  const [formData, setFormData] = useState({
+    name: '', description: '', category: '', items: [], total_price: '', is_active: true
+  });
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (bundle) {
+      setFormData({
+        name: bundle.name || '',
+        description: bundle.description || '',
+        category: bundle.category || '',
+        items: bundle.items || [],
+        total_price: bundle.total_price || '',
+        is_active: bundle.is_active !== false
+      });
+    } else {
+      setFormData({ name: '', description: '', category: '', items: [], total_price: '', is_active: true });
+    }
+  }, [bundle, open]);
+
+  const addItem = (item) => {
+    const exists = formData.items.find(i => i.inventory_item_id === item.id);
+    if (exists) return;
+    setFormData(prev => ({
+      ...prev,
+      items: [...prev.items, {
+        inventory_item_id: item.id,
+        name: item.name,
+        description: item.description || '',
+        quantity: 1,
+        unit_price: item.sell_price || item.unit_cost || 0,
+        is_primary: prev.items.length === 0
+      }]
+    }));
+    setSearchQuery('');
+  };
+
+  const updateItem = (index, updates) => {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.map((item, i) => i === index ? { ...item, ...updates } : item)
+    }));
+  };
+
+  const removeItem = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const setPrimary = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.map((item, i) => ({ ...item, is_primary: i === index }))
+    }));
+  };
+
+  const calculatedTotal = formData.items.reduce((sum, i) => sum + (i.quantity || 1) * (i.unit_price || 0), 0);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const data = {
+      ...formData,
+      total_price: formData.total_price ? Number(formData.total_price) : calculatedTotal
+    };
+    if (bundle) {
+      await base44.entities.ServiceBundle.update(bundle.id, data);
+    } else {
+      await base44.entities.ServiceBundle.create(data);
+    }
+    onSaved();
+    onClose();
+  };
+
+  const filteredInventory = inventoryItems.filter(item =>
+    item.name?.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    !formData.items.find(i => i.inventory_item_id === item.id)
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Layers className="w-5 h-5 text-purple-600" />
+            {bundle ? 'Edit Bundle' : 'Create Bundle'}
+          </DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Bundle Name *</Label>
+              <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} required className="mt-1" />
+            </div>
+            <div>
+              <Label>Category</Label>
+              <Input value={formData.category} onChange={(e) => setFormData(p => ({ ...p, category: e.target.value }))} className="mt-1" />
+            </div>
+          </div>
+
+          <div>
+            <Label>Description</Label>
+            <Textarea value={formData.description} onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))} className="mt-1" />
+          </div>
+
+          {/* Add Items */}
+          <div>
+            <Label>Bundle Items</Label>
+            <div className="relative mt-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products or services to add..."
+                className="pl-10"
+              />
+            </div>
+            {searchQuery && filteredInventory.length > 0 && (
+              <div className="mt-1 border rounded-lg max-h-40 overflow-y-auto">
+                {filteredInventory.slice(0, 5).map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => addItem(item)}
+                    className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center justify-between"
+                  >
+                    <span className="text-sm">{item.name}</span>
+                    <span className="text-xs text-slate-500">${item.sell_price || item.unit_cost || 0}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Items List */}
+          {formData.items.length > 0 && (
+            <div className="border rounded-lg divide-y">
+              {formData.items.map((item, idx) => (
+                <div key={idx} className="p-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPrimary(idx)}
+                    className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0",
+                      item.is_primary ? "border-purple-500 bg-purple-500" : "border-slate-300"
+                    )}
+                  >
+                    {item.is_primary && <CheckCircle2 className="w-3 h-3 text-white" />}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-slate-900 truncate">
+                      {item.name}
+                      {item.is_primary && <Badge className="ml-2 text-[10px] bg-purple-100 text-purple-700">Primary</Badge>}
+                    </p>
+                  </div>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })}
+                    className="w-16 h-8 text-center"
+                  />
+                  <span className="text-xs text-slate-500">×</span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={item.unit_price}
+                    onChange={(e) => updateItem(idx, { unit_price: Number(e.target.value) })}
+                    className="w-24 h-8"
+                  />
+                  <span className="text-sm font-medium w-20 text-right">${((item.quantity || 1) * (item.unit_price || 0)).toFixed(2)}</span>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(idx)}>
+                    <X className="w-4 h-4 text-red-500" />
+                  </Button>
+                </div>
+              ))}
+              <div className="p-3 bg-slate-50 flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-600">Calculated Total:</span>
+                <span className="text-lg font-bold text-slate-900">${calculatedTotal.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+
+          {formData.items.length === 0 && (
+            <div className="border-2 border-dashed rounded-lg p-8 text-center text-slate-400">
+              <Layers className="w-8 h-8 mx-auto mb-2" />
+              <p>Search and add items to this bundle</p>
+            </div>
+          )}
+
+          <div>
+            <Label>Override Total Price (optional)</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={formData.total_price}
+              onChange={(e) => setFormData(p => ({ ...p, total_price: e.target.value }))}
+              placeholder={`Leave empty to use calculated: $${calculatedTotal.toFixed(2)}`}
+              className="mt-1"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={formData.items.length === 0} className="bg-[#0069AF] hover:bg-[#133F5C]">
+              {bundle ? 'Update Bundle' : 'Create Bundle'}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
