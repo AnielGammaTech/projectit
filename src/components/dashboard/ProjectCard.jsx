@@ -13,7 +13,6 @@ import { cn } from '@/lib/utils';
 
 const statusColors = {
   planning: 'bg-amber-50 text-amber-700 border-amber-200',
-  in_progress: 'bg-blue-50 text-blue-700 border-blue-200',
   on_hold: 'bg-slate-50 text-slate-700 border-slate-200',
   completed: 'bg-emerald-50 text-emerald-700 border-emerald-200'
 };
@@ -60,16 +59,8 @@ const colorOptions = [
   { name: 'rose', bg: 'bg-rose-500' }
 ];
 
-const priorityDots = {
-  low: 'bg-slate-400',
-  medium: 'bg-amber-400',
-  high: 'bg-orange-500',
-  urgent: 'bg-red-500'
-};
-
 const statusOptions = [
   { value: 'planning', label: 'Planning' },
-  { value: 'in_progress', label: 'In Progress' },
   { value: 'on_hold', label: 'On Hold' },
   { value: 'completed', label: 'Completed' }
 ];
@@ -171,7 +162,6 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${priorityDots[project.priority]}`} />
             <DropdownMenu open={statusOpen} onOpenChange={setStatusOpen}>
               <DropdownMenuTrigger asChild>
                 <Badge 
