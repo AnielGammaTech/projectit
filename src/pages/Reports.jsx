@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { 
   BarChart3, PieChart, TrendingUp, Calendar, Users, Package, 
   CheckCircle2, Clock, AlertTriangle, Download, Filter, Timer,
-  DollarSign, FileText, Activity, Bell, ChevronDown, ShoppingCart, Truck
+  DollarSign, FileText, Activity, Bell, ChevronDown, ShoppingCart, Truck, Sparkles
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -17,6 +17,7 @@ import { Progress } from '@/components/ui/progress';
 import { format, subDays, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, LineChart, Line } from 'recharts';
 import { cn } from '@/lib/utils';
+import AIReportAssistant from '@/components/reports/AIReportAssistant';
 
 const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
@@ -72,6 +73,11 @@ export default function Reports() {
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.list()
+  });
+
+  const { data: proposals = [] } = useQuery({
+    queryKey: ['proposals'],
+    queryFn: () => base44.entities.Proposal.list('-created_date')
   });
 
   // Filter by date range
@@ -547,6 +553,18 @@ export default function Reports() {
             </CardContent>
           </Card>
         )}
+
+        {/* AI Assistant - Always Visible */}
+        <div className="mt-6">
+          <AIReportAssistant 
+            projects={projects}
+            proposals={proposals}
+            tasks={tasks}
+            timeEntries={timeEntries}
+            customers={customers}
+            teamMembers={teamMembers}
+          />
+        </div>
       </div>
     </div>
   );
