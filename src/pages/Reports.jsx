@@ -21,7 +21,10 @@ import { cn } from '@/lib/utils';
 const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
 export default function Reports() {
-  const [reportType, setReportType] = useState('financial');
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialType = urlParams.get('type') || 'financial';
+  
+  const [reportType, setReportType] = useState(initialType);
   const [dateRange, setDateRange] = useState('30');
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
@@ -29,6 +32,12 @@ export default function Reports() {
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
+  
+  // Update reportType when URL changes
+  useEffect(() => {
+    const type = urlParams.get('type');
+    if (type) setReportType(type);
+  }, [window.location.search]);
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
