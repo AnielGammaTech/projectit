@@ -39,6 +39,8 @@ import {
 
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
+  { name: 'My Assignments', icon: ListTodo, page: 'MyAssignments' },
+  { name: 'My Schedule', icon: Clock, page: 'MySchedule' },
   { name: 'All Tasks', icon: ListTodo, page: 'AllTasks' },
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Proposals', icon: FileText, page: 'Proposals' },
