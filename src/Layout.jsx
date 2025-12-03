@@ -19,7 +19,8 @@ import {
   Activity,
   Clock,
   TrendingUp,
-  PieChart
+  PieChart,
+  ChevronDown
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import GlobalSearch from '@/components/GlobalSearch';
@@ -41,10 +42,16 @@ const navItems = [
   { name: 'Proposals', icon: FileText, page: 'Proposals' },
   { name: 'Billing', icon: Wallet, page: 'Billing' },
   { name: 'Catalog', icon: Package, page: 'Inventory' },
-  { name: 'Activity', icon: Activity, page: 'Reports', params: '?type=activity' },
-  { name: 'Timesheets', icon: Clock, page: 'Reports', params: '?type=timesheets' },
-  { name: 'Financial', icon: TrendingUp, page: 'Reports', params: '?type=financial' },
-  { name: 'Report Builder', icon: PieChart, page: 'ReportBuilder' },
+  { 
+    name: 'Reporting', 
+    icon: PieChart, 
+    submenu: [
+      { name: 'Activity', icon: Activity, page: 'Reports', params: '?type=activity' },
+      { name: 'Timesheets', icon: Clock, page: 'Reports', params: '?type=timesheets' },
+      { name: 'Financial', icon: TrendingUp, page: 'Reports', params: '?type=financial' },
+      { name: 'Report Builder', icon: PieChart, page: 'ReportBuilder' },
+    ]
+  },
   { name: 'Workflows', icon: Zap, page: 'Workflows', adminOnly: true },
   { name: 'Adminland', icon: Shield, page: 'Adminland', adminOnly: true },
 ];
@@ -185,29 +192,84 @@ export default function Layout({ children, currentPageName }) {
         </div>
 
         <nav className="px-3">
-                      {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
-                        const isActive = currentPageName === item.page || 
-                          (item.params && window.location.search === item.params);
-                        const Icon = item.icon;
+          {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
+            const Icon = item.icon;
 
+            // Handle submenu items
+            if (item.submenu) {
+              const isExpanded = expandedMenus[item.name];
+              const isSubmenuActive = item.submenu.some(sub => 
+                (sub.page === currentPageName && (!sub.params || window.location.search === sub.params)) ||
+                (sub.page === 'ReportBuilder' && currentPageName === 'ReportBuilder')
+              );
+
+              return (
+                <div key={item.name}>
+                  <button
+                    onClick={() => setExpandedMenus(prev => ({ ...prev, [item.name]: !prev[item.name] }))}
+                    className={cn(
+                      "w-full flex items-center justify-between px-4 py-2.5 rounded-xl mb-1 transition-all",
+                      isSubmenuActive 
+                        ? "bg-[#74C7FF]/20 text-white font-medium" 
+                        : "text-white/70 hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={cn("w-5 h-5", isSubmenuActive && "text-[#74C7FF]")} />
+                      {item.name}
+                    </div>
+                    <ChevronDown className={cn("w-4 h-4 transition-transform", isExpanded && "rotate-180")} />
+                  </button>
+                  {isExpanded && (
+                    <div className="ml-4 pl-4 border-l border-white/20 mb-2 space-y-1">
+                      {item.submenu.map((subItem) => {
+                        const SubIcon = subItem.icon;
+                        const isSubActive = (subItem.page === currentPageName && (!subItem.params || window.location.search === subItem.params)) ||
+                          (subItem.page === 'ReportBuilder' && currentPageName === 'ReportBuilder');
                         return (
                           <Link
-                            key={item.name}
-                            to={createPageUrl(item.page) + (item.params || '')}
+                            key={subItem.name}
+                            to={createPageUrl(subItem.page) + (subItem.params || '')}
                             onClick={() => setSidebarOpen(false)}
                             className={cn(
-                              "flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition-all",
-                              isActive 
+                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
+                              isSubActive 
                                 ? "bg-[#74C7FF]/20 text-white font-medium" 
-                                : "text-white/70 hover:bg-white/10 hover:text-white"
+                                : "text-white/60 hover:bg-white/10 hover:text-white"
                             )}
                           >
-                            <Icon className={cn("w-5 h-5", isActive && "text-[#74C7FF]")} />
-                            {item.name}
+                            <SubIcon className={cn("w-4 h-4", isSubActive && "text-[#74C7FF]")} />
+                            {subItem.name}
                           </Link>
                         );
                       })}
-                    </nav>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            const isActive = currentPageName === item.page || 
+              (item.params && window.location.search === item.params);
+
+            return (
+              <Link
+                key={item.name}
+                to={createPageUrl(item.page) + (item.params || '')}
+                onClick={() => setSidebarOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition-all",
+                  isActive 
+                    ? "bg-[#74C7FF]/20 text-white font-medium" 
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                <Icon className={cn("w-5 h-5", isActive && "text-[#74C7FF]")} />
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
 
         {/* User Profile at Bottom */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
