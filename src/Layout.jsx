@@ -193,28 +193,65 @@ export default function Layout({ children, currentPageName }) {
         </div>
 
         <nav className="px-3">
-          {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
-            const isActive = currentPageName === item.page;
-            const Icon = item.icon;
+                      {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
+                        const isActive = currentPageName === item.page;
+                        const Icon = item.icon;
+                        const isExpanded = expandedMenus[item.name];
 
-            return (
-              <Link
-                key={item.name}
-                to={createPageUrl(item.page)}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                                "flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all",
-                                isActive 
-                                  ? "bg-[#74C7FF]/20 text-white font-medium" 
-                                  : "text-white/70 hover:bg-white/10 hover:text-white"
+                        if (item.hasSubmenu) {
+                          return (
+                            <div key={item.name}>
+                              <button
+                                onClick={() => toggleSubmenu(item.name)}
+                                className={cn(
+                                  "w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl mb-1 transition-all",
+                                  isActive 
+                                    ? "bg-[#74C7FF]/20 text-white font-medium" 
+                                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                                )}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <Icon className={cn("w-5 h-5", isActive && "text-[#74C7FF]")} />
+                                  {item.name}
+                                </div>
+                                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                              </button>
+                              {isExpanded && (
+                                <div className="ml-6 space-y-1 mb-2">
+                                  {item.submenu.map((subItem) => (
+                                    <Link
+                                      key={subItem.name}
+                                      to={createPageUrl(subItem.page) + (subItem.params || '')}
+                                      onClick={() => setSidebarOpen(false)}
+                                      className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                                    >
+                                      {subItem.name}
+                                    </Link>
+                                  ))}
+                                </div>
                               )}
-              >
-                <Icon className={cn("w-5 h-5", isActive && "text-[#74C7FF]")} />
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <Link
+                            key={item.name}
+                            to={createPageUrl(item.page)}
+                            onClick={() => setSidebarOpen(false)}
+                            className={cn(
+                                            "flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all",
+                                            isActive 
+                                              ? "bg-[#74C7FF]/20 text-white font-medium" 
+                                              : "text-white/70 hover:bg-white/10 hover:text-white"
+                                          )}
+                          >
+                            <Icon className={cn("w-5 h-5", isActive && "text-[#74C7FF]")} />
+                            {item.name}
+                          </Link>
+                        );
+                      })}
+                    </nav>
 
         {/* User Profile at Bottom */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
