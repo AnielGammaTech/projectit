@@ -379,7 +379,7 @@ export default function Layout({ children, currentPageName }) {
             </button>
           </div>
         </div>
-        </aside>
+      </aside>
 
       {/* Main Content */}
       <main className="lg:pl-64 pt-16 lg:pt-0">
