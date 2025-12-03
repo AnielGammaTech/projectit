@@ -1,20 +1,43 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, X } from 'lucide-react';
+import { Check, X, ChevronDown, PartyPopper } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
-export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser }) {
+const statusOptions = [
+  { value: 'planning', label: 'Planning', color: 'bg-amber-500' },
+  { value: 'on_hold', label: 'On Hold', color: 'bg-slate-400' },
+  { value: 'completed', label: 'Completed', color: 'bg-emerald-500' },
+];
+
+export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser, status = 'planning', onStatusChange }) {
   const queryClient = useQueryClient();
   const [localValue, setLocalValue] = useState(value);
   const [note, setNote] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [pendingSave, setPendingSave] = useState(false);
   const trackRef = useRef(null);
 
   const { data: updates = [] } = useQuery({
@@ -26,7 +49,14 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
   const lastUpdate = updates[0];
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (skipCompletionCheck = false) => {
+      // Check if hitting 100% for the first time
+      if (localValue === 100 && value !== 100 && !skipCompletionCheck) {
+        setPendingSave(true);
+        setShowCompletionDialog(true);
+        return;
+      }
+      
       await base44.entities.ProgressUpdate.create({
         project_id: projectId,
         progress_value: localValue,
@@ -37,11 +67,49 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
       onSave(localValue);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
-      setNote('');
-      setShowNoteInput(false);
+      if (!pendingSave) {
+        queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
+        setNote('');
+        setShowNoteInput(false);
+      }
     }
   });
+
+  const handleCompletionConfirm = async () => {
+    await base44.entities.ProgressUpdate.create({
+      project_id: projectId,
+      progress_value: 100,
+      note: note || 'Project completed and ready for billing',
+      author_email: currentUser?.email,
+      author_name: currentUser?.full_name || currentUser?.email
+    });
+    onSave(100);
+    onStatusChange?.('completed');
+    queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
+    setNote('');
+    setShowNoteInput(false);
+    setShowCompletionDialog(false);
+    setPendingSave(false);
+  };
+
+  const handleCompletionCancel = async () => {
+    // Save progress without changing status
+    await base44.entities.ProgressUpdate.create({
+      project_id: projectId,
+      progress_value: 100,
+      note: note,
+      author_email: currentUser?.email,
+      author_name: currentUser?.full_name || currentUser?.email
+    });
+    onSave(100);
+    queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
+    setNote('');
+    setShowNoteInput(false);
+    setShowCompletionDialog(false);
+    setPendingSave(false);
+  };
+
+  const currentStatus = statusOptions.find(s => s.value === status) || statusOptions[0];
 
   const getColor = () => {
     if (localValue < 30) return { bg: 'bg-slate-400', hex: '#94a3b8' };
@@ -123,34 +191,59 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
   const color = getColor();
 
   return (
-    <div className="flex justify-center">
-      <motion.div 
-        className="bg-white rounded-xl border border-slate-200 shadow-sm inline-flex items-center gap-3 max-w-md w-full"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => !isDragging && !showNoteInput && setIsHovered(false)}
-        animate={{ 
-          boxShadow: isActive ? '0 4px 20px rgba(0,0,0,0.08)' : '0 1px 2px rgba(0,0,0,0.04)'
-        }}
-        transition={{ duration: 0.2 }}
-      >
-        <div className={cn("px-4 py-3 w-full transition-all duration-200")}>
-          {/* Compact inline layout */}
-          <div className="flex items-center gap-3">
-            {/* Percentage */}
-            <motion.div 
-              className={cn(
-                "flex items-center justify-center w-12 h-8 rounded-lg text-sm font-bold text-white",
-                color.bg
-              )}
-              animate={{ scale: isDragging ? 1.05 : 1 }}
-            >
-              {localValue}
-            </motion.div>
+    <>
+      <div className="flex justify-center">
+        <motion.div 
+          className="bg-white rounded-xl border border-slate-200 shadow-sm max-w-lg w-full"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => !isDragging && !showNoteInput && setIsHovered(false)}
+          animate={{ 
+            boxShadow: isActive ? '0 4px 20px rgba(0,0,0,0.08)' : '0 1px 2px rgba(0,0,0,0.04)'
+          }}
+          transition={{ duration: 0.2 }}
+        >
+          <div className={cn("px-4 py-3 w-full transition-all duration-200")}>
+            {/* Top row with status and percentage */}
+            <div className="flex items-center justify-between mb-2">
+              {/* Status Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-slate-50 transition-colors">
+                    <div className={cn("w-2 h-2 rounded-full", currentStatus.color)} />
+                    <span className="text-xs font-medium text-slate-600">{currentStatus.label}</span>
+                    <ChevronDown className="w-3 h-3 text-slate-400" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {statusOptions.map((opt) => (
+                    <DropdownMenuItem 
+                      key={opt.value} 
+                      onClick={() => onStatusChange?.(opt.value)}
+                      className="text-xs"
+                    >
+                      <div className={cn("w-2 h-2 rounded-full mr-2", opt.color)} />
+                      {opt.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Percentage */}
+              <motion.div 
+                className={cn(
+                  "flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-bold text-white",
+                  color.bg
+                )}
+                animate={{ scale: isDragging ? 1.05 : 1 }}
+              >
+                {localValue}%
+              </motion.div>
+            </div>
 
             {/* Slider Track */}
             <div 
               ref={trackRef}
-              className="flex-1 relative cursor-pointer h-8 flex items-center"
+              className="relative cursor-pointer h-6 flex items-center"
               onMouseDown={handleMouseDown}
               onTouchStart={handleTouchStart}
             >
@@ -189,44 +282,77 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                 />
               </motion.div>
             </div>
-          </div>
 
-          {/* Note Input */}
-          <AnimatePresence>
-            {showNoteInput && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                className="flex items-center gap-2 overflow-hidden"
-              >
-                <input
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Note..."
-                  className="w-24 h-8 px-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-300"
-                  autoFocus
-                />
-                <motion.button 
-                  onClick={() => saveMutation.mutate()} 
-                  disabled={saveMutation.isPending}
-                  whileTap={{ scale: 0.95 }}
-                  className="h-8 px-3 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors flex items-center gap-1"
+            {/* Note Input */}
+            <AnimatePresence>
+              {showNoteInput && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
                 >
-                  <Check className="w-3 h-3" />
-                </motion.button>
-                <motion.button 
-                  onClick={handleCancel}
-                  whileTap={{ scale: 0.95 }}
-                  className="h-8 w-8 rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200 flex items-center justify-center"
-                >
-                  <X className="w-3 h-3" />
-                </motion.button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
-    </div>
+                  <div className="mt-3 pt-3 border-t border-slate-100">
+                    <Textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="Add a note about this progress update..."
+                      className="min-h-[70px] text-sm resize-none bg-slate-50 border-slate-200 focus:bg-white rounded-lg"
+                      autoFocus
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <motion.button 
+                        onClick={() => saveMutation.mutate()} 
+                        disabled={saveMutation.isPending}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex-1 h-8 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        Save
+                      </motion.button>
+                      <motion.button 
+                        onClick={handleCancel}
+                        whileTap={{ scale: 0.95 }}
+                        className="h-8 px-3 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Completion Dialog */}
+      <AlertDialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-2">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                <PartyPopper className="w-6 h-6 text-emerald-600" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-center">Project at 100%!</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Is this project completed and ready to be billed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel onClick={handleCompletionCancel} className="flex-1">
+              Not yet
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleCompletionConfirm}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+            >
+              Yes, mark complete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
