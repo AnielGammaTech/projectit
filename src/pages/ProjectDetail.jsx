@@ -57,6 +57,7 @@ import FilesViewModal from '@/components/modals/FilesViewModal';
 import ProjectActivityFeed from '@/components/project/ProjectActivityFeed';
 import UpcomingDueDates from '@/components/project/UpcomingDueDates';
 import TimeTracker from '@/components/project/TimeTracker';
+import HaloPSATicketLink from '@/components/project/HaloPSATicketLink';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
 import { cn } from '@/lib/utils';
 
@@ -394,15 +395,19 @@ export default function ProjectDetail() {
             </div>
 
             <div className="flex items-center gap-3">
-                            <TimeTracker 
-                              projectId={projectId} 
-                              currentUser={currentUser} 
-                              timeBudgetHours={project.time_budget_hours || 0} 
-                            />
-                            <Button variant="outline" onClick={() => setShowProjectModal(true)}>
-                              <Edit2 className="w-4 h-4 mr-2" />
-                              Edit
-                            </Button>
+                              <HaloPSATicketLink 
+                                project={project} 
+                                onUpdate={refetchProject}
+                              />
+                              <TimeTracker 
+                                projectId={projectId} 
+                                currentUser={currentUser} 
+                                timeBudgetHours={project.time_budget_hours || 0} 
+                              />
+                              <Button variant="outline" onClick={() => setShowProjectModal(true)}>
+                                <Edit2 className="w-4 h-4 mr-2" />
+                                Edit
+                              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon">
