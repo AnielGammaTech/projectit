@@ -134,9 +134,13 @@ export default function Adminland() {
   );
 }
 
-function TeamSection({ queryClient }) {
+// Consolidated People & Teams Section
+function PeopleSection({ queryClient }) {
+  const [activeTab, setActiveTab] = useState('members');
   const [showModal, setShowModal] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [editingGroup, setEditingGroup] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const { data: members = [] } = useQuery({
@@ -144,7 +148,12 @@ function TeamSection({ queryClient }) {
     queryFn: () => base44.entities.TeamMember.list('name')
   });
 
-  const handleSave = async (data) => {
+  const { data: groups = [] } = useQuery({
+    queryKey: ['userGroups'],
+    queryFn: () => base44.entities.UserGroup.list('name')
+  });
+
+  const handleSaveMember = async (data) => {
     if (editing) {
       await base44.entities.TeamMember.update(editing.id, data);
     } else {
@@ -155,69 +164,217 @@ function TeamSection({ queryClient }) {
     setEditing(null);
   };
 
+  const handleSaveGroup = async (data) => {
+    if (editingGroup) {
+      await base44.entities.UserGroup.update(editingGroup.id, data);
+    } else {
+      await base44.entities.UserGroup.create(data);
+    }
+    queryClient.invalidateQueries({ queryKey: ['userGroups'] });
+    setShowGroupModal(false);
+    setEditingGroup(null);
+  };
+
   const handleDelete = async () => {
-    await base44.entities.TeamMember.delete(deleteConfirm.id);
-    queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+    if (deleteConfirm.type === 'member') {
+      await base44.entities.TeamMember.delete(deleteConfirm.item.id);
+      queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+    } else {
+      await base44.entities.UserGroup.delete(deleteConfirm.item.id);
+      queryClient.invalidateQueries({ queryKey: ['userGroups'] });
+    }
     setDeleteConfirm(null);
   };
 
+  const toggleAdmin = async (member) => {
+    const newRole = member.role === 'Admin' ? '' : 'Admin';
+    await base44.entities.TeamMember.update(member.id, { ...member, role: newRole });
+    queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+  };
+
+  const admins = members.filter(m => m.role === 'Admin');
+
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-6 border-b flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-900">Manage People</h2>
-          <p className="text-sm text-slate-500">{members.length} team members</p>
-        </div>
-        <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Member
-        </Button>
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-semibold text-slate-900">People & Teams</h2>
+        <p className="text-sm text-slate-500">Manage team members, groups, and admin access</p>
       </div>
-      <div className="divide-y">
-        {members.map((member) => (
-          <div key={member.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
-            <div className="flex items-center gap-4">
-              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white font-medium", member.avatar_color || avatarColors[0])}>
-                {member.name?.charAt(0)?.toUpperCase()}
-              </div>
-              <div>
-                <p className="font-medium text-slate-900">{member.name}</p>
-                <div className="flex items-center gap-3 text-sm text-slate-500">
-                  <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{member.email}</span>
-                  {member.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{member.phone}</span>}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {member.role && <Badge variant="outline">{member.role}</Badge>}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => { setEditing(member); setShowModal(true); }}>
-                    <Edit2 className="w-4 h-4 mr-2" />Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setDeleteConfirm(member)} className="text-red-600">
-                    <Trash2 className="w-4 h-4 mr-2" />Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+      
+      {/* Tabs */}
+      <div className="flex border-b">
+        {[
+          { id: 'members', label: 'Team Members', count: members.length },
+          { id: 'groups', label: 'Groups', count: groups.length },
+          { id: 'admins', label: 'Administrators', count: admins.length }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
+              activeTab === tab.id ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+            )}
+          >
+            {tab.label} ({tab.count})
+          </button>
         ))}
-        {members.length === 0 && (
-          <div className="p-8 text-center text-slate-500">No team members yet</div>
-        )}
       </div>
 
-      <TeamMemberModal open={showModal} onClose={() => { setShowModal(false); setEditing(null); }} member={editing} onSave={handleSave} />
+      {/* Team Members Tab */}
+      {activeTab === 'members' && (
+        <div>
+          <div className="p-4 border-b bg-slate-50 flex justify-end">
+            <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Member
+            </Button>
+          </div>
+          <div className="divide-y">
+            {members.map((member) => (
+              <div key={member.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
+                <div className="flex items-center gap-4">
+                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white font-medium", member.avatar_color || avatarColors[0])}>
+                    {member.name?.charAt(0)?.toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900">{member.name}</p>
+                    <div className="flex items-center gap-3 text-sm text-slate-500">
+                      <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{member.email}</span>
+                      {member.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{member.phone}</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {member.role && <Badge variant="outline">{member.role}</Badge>}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => { setEditing(member); setShowModal(true); }}>
+                        <Edit2 className="w-4 h-4 mr-2" />Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'member', item: member })} className="text-red-600">
+                        <Trash2 className="w-4 h-4 mr-2" />Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            ))}
+            {members.length === 0 && (
+              <div className="p-8 text-center text-slate-500">No team members yet</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Groups Tab */}
+      {activeTab === 'groups' && (
+        <div>
+          <div className="p-4 border-b bg-slate-50 flex justify-end">
+            <Button onClick={() => { setEditingGroup(null); setShowGroupModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Group
+            </Button>
+          </div>
+          <div className="divide-y">
+            {groups.map((group) => (
+              <div key={group.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
+                <div className="flex items-center gap-4">
+                  <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", groupColors[group.color] || 'bg-indigo-500')}>
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900">{group.name}</p>
+                    <p className="text-sm text-slate-500">{group.member_emails?.length || 0} members</p>
+                  </div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => { setEditingGroup(group); setShowGroupModal(true); }}>
+                      <Edit2 className="w-4 h-4 mr-2" />Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'group', item: group })} className="text-red-600">
+                      <Trash2 className="w-4 h-4 mr-2" />Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ))}
+            {groups.length === 0 && (
+              <div className="p-8 text-center text-slate-500">No groups yet</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Admins Tab */}
+      {activeTab === 'admins' && (
+        <div className="p-4 space-y-4">
+          {admins.length > 0 && (
+            <div className="p-4 bg-slate-50 rounded-xl">
+              <h3 className="text-sm font-medium text-slate-700 mb-3">Current Administrators</h3>
+              <div className="space-y-2">
+                {admins.map(member => (
+                  <div key={member.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-sm", member.avatar_color || avatarColors[0])}>
+                        {member.name?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900">{member.name}</p>
+                        <p className="text-xs text-slate-500">{member.email}</p>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => toggleAdmin(member)}>
+                      Remove Admin
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="p-4 bg-slate-50 rounded-xl">
+            <h3 className="text-sm font-medium text-slate-700 mb-3">Make Admin</h3>
+            <div className="space-y-2">
+              {members.filter(m => m.role !== 'Admin').map(member => (
+                <div key={member.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-sm", member.avatar_color || avatarColors[0])}>
+                      {member.name?.charAt(0)?.toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900">{member.name}</p>
+                      <p className="text-xs text-slate-500">{member.email}</p>
+                    </div>
+                  </div>
+                  <Button size="sm" className="bg-[#0069AF] hover:bg-[#133F5C]" onClick={() => toggleAdmin(member)}>
+                    Make Admin
+                  </Button>
+                </div>
+              ))}
+              {members.filter(m => m.role !== 'Admin').length === 0 && (
+                <p className="text-slate-500 text-center py-4">All team members are admins</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <TeamMemberModal open={showModal} onClose={() => { setShowModal(false); setEditing(null); }} member={editing} onSave={handleSaveMember} />
+      <UserGroupModal open={showGroupModal} onClose={() => { setShowGroupModal(false); setEditingGroup(null); }} group={editingGroup} members={members} onSave={handleSaveGroup} />
 
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete team member?</AlertDialogTitle>
-            <AlertDialogDescription>This will remove {deleteConfirm?.name} from the team.</AlertDialogDescription>
+            <AlertDialogTitle>Delete {deleteConfirm?.type}?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
