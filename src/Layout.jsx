@@ -199,7 +199,7 @@ export default function Layout({ children, currentPageName }) {
             if (item.submenu) {
               const isExpanded = expandedMenus[item.name];
               const isSubmenuActive = item.submenu.some(sub => 
-                (sub.page === currentPageName && (!sub.params || window.location.search === sub.params)) ||
+                (sub.page === currentPageName) ||
                 (sub.page === 'ReportBuilder' && currentPageName === 'ReportBuilder')
               );
 
