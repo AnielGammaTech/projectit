@@ -157,6 +157,15 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
                 </div>
               </div>
             )}
+            {part.est_delivery_date && (
+              <div>
+                <p className="text-slate-500">Est. Delivery</p>
+                <p className="font-medium flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" />
+                  {format(new Date(part.est_delivery_date), 'MMM d, yyyy')}
+                </p>
+              </div>
+            )}
             {part.due_date && (
               <div>
                 <p className="text-slate-500">Due Date</p>
