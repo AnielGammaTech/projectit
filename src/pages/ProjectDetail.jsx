@@ -444,6 +444,8 @@ export default function ProjectDetail() {
             value={project.progress || 0} 
             onSave={handleProgressUpdate} 
             currentUser={currentUser}
+            status={project.status}
+            onStatusChange={(status) => handleQuickUpdate('status', status)}
           />
         </motion.div>
 
