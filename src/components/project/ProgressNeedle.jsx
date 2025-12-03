@@ -2,16 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, X, ChevronDown, PartyPopper } from 'lucide-react';
+import { Check, X, PartyPopper } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,13 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const statusOptions = [
-  { value: 'planning', label: 'Planning', color: 'bg-amber-500' },
-  { value: 'on_hold', label: 'On Hold', color: 'bg-slate-400' },
-  { value: 'completed', label: 'Completed', color: 'bg-emerald-500' },
-];
-
-export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser, status = 'planning', onStatusChange }) {
+export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser, onStatusChange }) {
   const queryClient = useQueryClient();
   const [localValue, setLocalValue] = useState(value);
   const [note, setNote] = useState('');
@@ -109,7 +96,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
     setPendingSave(false);
   };
 
-  const currentStatus = statusOptions.find(s => s.value === status) || statusOptions[0];
+
 
   const getColor = () => {
     if (localValue < 30) return { bg: 'bg-slate-400', hex: '#94a3b8' };
@@ -203,32 +190,9 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
           transition={{ duration: 0.2 }}
         >
           <div className={cn("px-4 py-3 w-full transition-all duration-200")}>
-            {/* Top row with status and percentage */}
+            {/* Top row with label and percentage */}
             <div className="flex items-center justify-between mb-2">
-              {/* Status Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-slate-50 transition-colors">
-                    <div className={cn("w-2 h-2 rounded-full", currentStatus.color)} />
-                    <span className="text-xs font-medium text-slate-600">{currentStatus.label}</span>
-                    <ChevronDown className="w-3 h-3 text-slate-400" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {statusOptions.map((opt) => (
-                    <DropdownMenuItem 
-                      key={opt.value} 
-                      onClick={() => onStatusChange?.(opt.value)}
-                      className="text-xs"
-                    >
-                      <div className={cn("w-2 h-2 rounded-full mr-2", opt.color)} />
-                      {opt.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Percentage */}
+              <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Progress</span>
               <motion.div 
                 className={cn(
                   "flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-bold text-white",
