@@ -310,39 +310,48 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {/* Stats Grid - Clickable */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Stats Grid - Clean Style */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           <StatsCard
             title="Active Projects"
             value={activeProjects.length}
             icon={Briefcase}
-            color="bg-[#133F5C]"
-            subtitle={`${projects.filter(p => p.status === 'completed').length} done`}
+            iconColor="bg-[#0069AF]"
             href={createPageUrl('Dashboard')}
           />
           <StatsCard
-            title="Approved Proposals"
-            value={`$${approvedTotal.toLocaleString()}`}
-            icon={TrendingUp}
-            color="bg-emerald-500"
-            subtitle={`${approvedProposals.length} approved`}
-            href={createPageUrl('Proposals')}
+            title="Low Stock Alerts"
+            value={0}
+            icon={AlertTriangle}
+            href={createPageUrl('Inventory')}
           />
           <StatsCard
-            title="Parts"
-            value={pendingParts.length}
+            title="Items Ready"
+            value={parts.filter(p => p.status === 'ready_to_install').length}
             icon={Box}
-            color="bg-orange-500"
-            subtitle="pending"
+            iconColor="bg-emerald-500"
             href={createPageUrl('AllTasks') + '?tab=parts'}
           />
           <StatsCard
-            title="Quote Requests"
-            value={pendingQuotes.length}
-            icon={ClipboardList}
-            color="bg-violet-500"
-            subtitle="pending"
-            href={createPageUrl('QuoteRequests')}
+            title="Total Customers"
+            value={proposals.reduce((acc, p) => {
+              if (p.customer_id && !acc.includes(p.customer_id)) acc.push(p.customer_id);
+              return acc;
+            }, []).length}
+            icon={FolderKanban}
+            href={createPageUrl('Customers')}
+          />
+          <StatsCard
+            title="Past Due Orders"
+            value={pendingParts.filter(p => p.due_date && new Date(p.due_date) < new Date()).length}
+            icon={Clock}
+            href={createPageUrl('AllTasks') + '?tab=parts'}
+          />
+          <StatsCard
+            title="Overdue Tasks"
+            value={tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length}
+            icon={AlertTriangle}
+            href={createPageUrl('AllTasks')}
           />
         </div>
 
