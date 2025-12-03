@@ -425,35 +425,42 @@ export default function GroupedTaskList({
         </div>
       )}
 
-      {/* Add Group */}
+      {/* New Group Button */}
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="w-full border-dashed">
+          <Button className="bg-emerald-500 hover:bg-emerald-600 text-white">
             <Plus className="w-4 h-4 mr-1.5" />
-            Add Group
+            New Group
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-64">
-          <div className="space-y-3">
-            <Input
-              value={newGroupName}
-              onChange={(e) => setNewGroupName(e.target.value)}
-              placeholder="Group name"
-            />
-            <div className="flex gap-1.5">
-              {Object.keys(groupColors).map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setNewGroupColor(color)}
-                  className={cn(
-                    "w-6 h-6 rounded-full transition-all",
-                    groupColors[color],
-                    newGroupColor === color ? "ring-2 ring-offset-2 ring-indigo-500" : ""
-                  )}
-                />
-              ))}
+        <PopoverContent className="w-72">
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs text-slate-500">Group Name</Label>
+              <Input
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                placeholder="e.g., Phase 1, Network Setup"
+                className="mt-1"
+              />
             </div>
-            <Button onClick={handleCreateGroup} size="sm" className="w-full bg-indigo-600 hover:bg-indigo-700">
+            <div>
+              <Label className="text-xs text-slate-500">Color</Label>
+              <div className="flex gap-2 mt-2">
+                {Object.keys(groupColors).map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => setNewGroupColor(color)}
+                    className={cn(
+                      "w-7 h-7 rounded-full transition-all hover:scale-110",
+                      groupColors[color],
+                      newGroupColor === color ? "ring-2 ring-offset-2 ring-[#0069AF]" : ""
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+            <Button onClick={handleCreateGroup} size="sm" className="w-full bg-[#0069AF] hover:bg-[#133F5C]">
               Create Group
             </Button>
           </div>
