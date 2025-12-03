@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format, formatDistanceToNow } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Send, User, Calendar, Clock, AlertTriangle, Edit2, Trash2, Paperclip, X, FileText, Image, Loader2 } from 'lucide-react';
+import { Send, User, Calendar as CalendarIcon, Clock, AlertTriangle, Edit2, Trash2, Paperclip, X, FileText, Image, Loader2, CheckSquare, MoreHorizontal, Bell, StickyNote, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AITaskAssistant from '@/components/tasks/AITaskAssistant';
 
@@ -56,9 +61,20 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   const [mentionSearch, setMentionSearch] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [notifyOnComplete, setNotifyOnComplete] = useState([]);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
+
+  // Initialize notes from task
+  useEffect(() => {
+    if (task) {
+      setNotes(task.notes || '');
+      setNotifyOnComplete(task.notify_on_complete || []);
+    }
+  }, [task?.id]);
 
   const { data: comments = [], refetch: refetchComments } = useQuery({
     queryKey: ['taskComments', task?.id],
@@ -165,55 +181,229 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
   };
 
+  const handleUpdateTask = async (updates) => {
+    await base44.entities.Task.update(task.id, updates);
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+  };
+
+  const handleAssign = async (email) => {
+    const member = teamMembers.find(m => m.email === email);
+    await handleUpdateTask({
+      assigned_to: email,
+      assigned_name: member?.name || email
+    });
+  };
+
+  const handleDueDateChange = async (date) => {
+    await handleUpdateTask({
+      due_date: date ? format(date, 'yyyy-MM-dd') : ''
+    });
+    setDatePickerOpen(false);
+  };
+
+  const handleNotesChange = async () => {
+    await handleUpdateTask({ notes });
+  };
+
+  const handleToggleNotify = async (email) => {
+    const current = task.notify_on_complete || [];
+    const updated = current.includes(email) 
+      ? current.filter(e => e !== email)
+      : [...current, email];
+    await handleUpdateTask({ notify_on_complete: updated });
+    setNotifyOnComplete(updated);
+  };
+
+  const handleStatusToggle = async () => {
+    const newStatus = task.status === 'completed' ? 'todo' : 'completed';
+    await handleUpdateTask({ status: newStatus });
+  };
+
   if (!task) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
-        <DialogHeader className="pb-4 border-b">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <DialogTitle className="text-xl mb-2">{task.title}</DialogTitle>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className={priorityColors[task.priority]}>
-                  {task.priority}
-                </Badge>
-                <Badge variant="outline" className="bg-slate-100">
-                  {statusLabels[task.status]}
-                </Badge>
-              </div>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => onEdit(task)}>
-              <Edit2 className="w-4 h-4" />
-            </Button>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col bg-[#1a1a2e] text-white border-slate-700">
+        {/* Header with checkbox and title */}
+        <div className="flex items-start gap-4 pb-4 border-b border-slate-700">
+          <button 
+            onClick={handleStatusToggle}
+            className={cn(
+              "w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all mt-1",
+              task.status === 'completed' 
+                ? "bg-emerald-600 border-emerald-600" 
+                : "border-slate-500 hover:border-emerald-500"
+            )}
+          >
+            {task.status === 'completed' && <CheckSquare className="w-5 h-5" />}
+          </button>
+          <div className="flex-1">
+            <h2 className={cn(
+              "text-xl font-semibold",
+              task.status === 'completed' && "line-through text-slate-400"
+            )}>
+              {task.title}
+            </h2>
           </div>
-        </DialogHeader>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-700">
+                <MoreHorizontal className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
+              <DropdownMenuItem onClick={() => onEdit(task)} className="text-white hover:bg-slate-700">
+                <Edit2 className="w-4 h-4 mr-2" />Edit Task
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-red-400 hover:bg-slate-700">
+                <Trash2 className="w-4 h-4 mr-2" />Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <div className="flex-1 overflow-y-auto py-4 space-y-4">
-          {/* Task Details */}
+          {/* Task Properties Grid */}
           <div className="space-y-3">
-            {task.description && (
-              <p className="text-slate-600">{task.description}</p>
-            )}
-            
-            <div className="flex flex-wrap gap-4 text-sm">
-              {task.assigned_name && (
-                <div className="flex items-center gap-1.5 text-slate-600">
-                  <User className="w-4 h-4" />
-                  <span>{task.assigned_name}</span>
-                </div>
-              )}
-              {task.due_date && (
-                <div className="flex items-center gap-1.5 text-slate-600">
-                  <Calendar className="w-4 h-4" />
-                  <span>{format(new Date(task.due_date), 'MMM d, yyyy')}</span>
-                </div>
-              )}
+            {/* Assigned to */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-400 w-32 text-right">Assigned to</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 hover:bg-slate-700/50 rounded-lg px-2 py-1 transition-colors">
+                    {task.assigned_name ? (
+                      <>
+                        <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(task.assigned_to))}>
+                          {getInitials(task.assigned_name)}
+                        </div>
+                        <span className="text-sm">{task.assigned_name}</span>
+                      </>
+                    ) : (
+                      <span className="text-sm text-slate-500 flex items-center gap-1">
+                        <UserPlus className="w-4 h-4" /> Click to assign...
+                      </span>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-slate-800 border-slate-700">
+                  {teamMembers.map(m => (
+                    <DropdownMenuItem key={m.id} onClick={() => handleAssign(m.email)} className="text-white hover:bg-slate-700">
+                      <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(m.email))}>
+                        {getInitials(m.name)}
+                      </div>
+                      {m.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Due on */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-400 w-32 text-right">Due on</span>
+              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                <PopoverTrigger asChild>
+                  <button className="flex items-center gap-2 hover:bg-slate-700/50 rounded-lg px-2 py-1 transition-colors">
+                    {task.due_date ? (
+                      <>
+                        <div className="w-5 h-5 rounded bg-orange-600 flex items-center justify-center">
+                          <CalendarIcon className="w-3 h-3" />
+                        </div>
+                        <span className="text-sm">{format(new Date(task.due_date), 'EEE, MMM d')}</span>
+                      </>
+                    ) : (
+                      <span className="text-sm text-slate-500">Set due date...</span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700">
+                  <Calendar
+                    mode="single"
+                    selected={task.due_date ? new Date(task.due_date) : undefined}
+                    onSelect={handleDueDateChange}
+                    initialFocus
+                    className="bg-slate-800"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* When done, notify */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-400 w-32 text-right">When done, notify</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 hover:bg-slate-700/50 rounded-lg px-2 py-1 transition-colors">
+                    {notifyOnComplete.length > 0 ? (
+                      <div className="flex -space-x-1">
+                        {notifyOnComplete.slice(0, 3).map((email, idx) => {
+                          const member = teamMembers.find(m => m.email === email);
+                          return (
+                            <div key={idx} className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[8px] border border-slate-800", getColorForEmail(email))}>
+                              {getInitials(member?.name || email)}
+                            </div>
+                          );
+                        })}
+                        {notifyOnComplete.length > 3 && (
+                          <span className="text-xs text-slate-400 ml-1">+{notifyOnComplete.length - 3}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-slate-500">Type names to notify...</span>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-slate-800 border-slate-700">
+                  {teamMembers.map(m => (
+                    <DropdownMenuItem 
+                      key={m.id} 
+                      onClick={() => handleToggleNotify(m.email)} 
+                      className="text-white hover:bg-slate-700"
+                    >
+                      <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(m.email))}>
+                        {getInitials(m.name)}
+                      </div>
+                      {m.name}
+                      {notifyOnComplete.includes(m.email) && (
+                        <CheckSquare className="w-4 h-4 ml-auto text-emerald-500" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Notes */}
+            <div className="flex items-start gap-4">
+              <span className="text-sm text-slate-400 w-32 text-right pt-2">Notes</span>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                onBlur={handleNotesChange}
+                placeholder="Add extra details or attach a file..."
+                className="flex-1 bg-transparent border-none text-sm text-slate-300 placeholder:text-slate-500 min-h-[60px] resize-none focus-visible:ring-0"
+              />
+            </div>
+
+            {/* Added by */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-400 w-32 text-right">Added by</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-300">{task.created_by || 'Unknown'}</span>
+                <span className="text-sm text-slate-500">on {format(new Date(task.created_date), 'MMMM d')}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Separator with avatar */}
+          <div className="flex items-center gap-3 py-4 border-t border-slate-700">
+            <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white text-sm", getColorForEmail(currentUser?.email))}>
+              {getInitials(currentUser?.full_name)}
             </div>
           </div>
 
           {/* AI Assistant */}
-          <div className="border-t pt-4">
+          <div className="border-t border-slate-700 pt-4">
             <AITaskAssistant 
               task={task} 
               project={project}
@@ -237,9 +427,9 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
           </div>
 
           {/* Attachments Section */}
-          <div className="border-t pt-4">
+          <div className="border-t border-slate-700 pt-4">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-slate-900 flex items-center gap-2">
+              <h4 className="font-semibold text-slate-300 flex items-center gap-2">
                 <Paperclip className="w-4 h-4" />
                 Attachments ({task.attachments?.length || 0})
               </h4>
@@ -248,6 +438,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 size="sm" 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
+                className="border-slate-600 text-slate-300 hover:bg-slate-700"
               >
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4 mr-1" />}
                 Add
@@ -264,12 +455,12 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 {task.attachments.map((att, idx) => {
                   const FileIcon = getFileIcon(att.type);
                   return (
-                    <div key={idx} className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg group">
-                      <FileIcon className="w-4 h-4 text-slate-500" />
-                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm text-indigo-600 hover:underline truncate">
+                    <div key={idx} className="flex items-center gap-3 p-2 bg-slate-700/50 rounded-lg group">
+                      <FileIcon className="w-4 h-4 text-slate-400" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm text-blue-400 hover:underline truncate">
                         {att.name}
                       </a>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveAttachment(idx)}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white" onClick={() => handleRemoveAttachment(idx)}>
                         <X className="w-3 h-3" />
                       </Button>
                     </div>
@@ -277,13 +468,13 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 })}
               </div>
             ) : (
-              <p className="text-sm text-slate-400 text-center py-2">No attachments</p>
+              <p className="text-sm text-slate-500 text-center py-2">No attachments</p>
             )}
           </div>
 
           {/* Comments Section */}
-          <div className="border-t pt-4">
-            <h4 className="font-semibold text-slate-900 mb-4">Comments ({comments.length})</h4>
+          <div className="border-t border-slate-700 pt-4">
+            <h4 className="font-semibold text-slate-300 mb-4">Comments ({comments.length})</h4>
             
             <div className="space-y-4 mb-4">
               {comments.map((c) => (
@@ -293,15 +484,15 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-slate-900 text-sm">{c.author_name}</span>
-                      <span className="text-xs text-slate-400">
+                      <span className="font-medium text-slate-200 text-sm">{c.author_name}</span>
+                      <span className="text-xs text-slate-500">
                         {formatDistanceToNow(new Date(c.created_date), { addSuffix: true })}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-600 whitespace-pre-wrap bg-slate-50 rounded-lg px-3 py-2">
+                    <p className="text-sm text-slate-300 whitespace-pre-wrap bg-slate-700/50 rounded-lg px-3 py-2">
                       {c.content.split(/(@\w+(?:\s\w+)?)/g).map((part, i) => 
                         part.startsWith('@') ? (
-                          <span key={i} className="text-indigo-600 font-medium">{part}</span>
+                          <span key={i} className="text-blue-400 font-medium">{part}</span>
                         ) : part
                       )}
                     </p>
@@ -310,37 +501,38 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
               ))}
 
               {comments.length === 0 && (
-                <p className="text-sm text-slate-400 text-center py-4">No comments yet</p>
+                <p className="text-sm text-slate-500 text-center py-4">No comments yet</p>
               )}
             </div>
           </div>
         </div>
 
         {/* Comment Input */}
-        <div className="border-t pt-4 relative">
-          <div className="flex gap-2">
+        <div className="border-t border-slate-700 pt-4 relative">
+          <div className="flex gap-2 items-start">
+            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-xs shrink-0", getColorForEmail(currentUser?.email))}>
+              {getInitials(currentUser?.full_name)}
+            </div>
             <div className="flex-1 relative">
               <Textarea
                 ref={textareaRef}
                 value={comment}
                 onChange={handleCommentChange}
-                placeholder="Add a comment... Use @ to mention team members"
-                className="min-h-[80px] resize-none"
+                placeholder="Add a comment here..."
+                className="min-h-[60px] resize-none bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
               />
               
               {/* Mentions Dropdown */}
               {showMentions && filteredMembers.length > 0 && (
-                <div className="absolute bottom-full left-0 mb-1 w-64 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto z-50">
+                <div className="absolute bottom-full left-0 mb-1 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-48 overflow-y-auto z-50">
                   {filteredMembers.map((member) => (
                     <button
                       key={member.id}
                       onClick={() => insertMention(member)}
-                      className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2"
+                      className="w-full px-3 py-2 text-left hover:bg-slate-700 flex items-center gap-2 text-white"
                     >
-                      <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <span className="text-xs font-medium text-indigo-600">
-                          {member.name?.charAt(0)?.toUpperCase()}
-                        </span>
+                      <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[10px]", getColorForEmail(member.email))}>
+                        {getInitials(member.name)}
                       </div>
                       <span className="text-sm">{member.name}</span>
                     </button>
@@ -351,7 +543,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
             <Button 
               onClick={handleSubmitComment} 
               disabled={!comment.trim() || addCommentMutation.isPending}
-              className="bg-indigo-600 hover:bg-indigo-700"
+              className="bg-blue-600 hover:bg-blue-700"
             >
               <Send className="w-4 h-4" />
             </Button>
