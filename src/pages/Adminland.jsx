@@ -760,64 +760,108 @@ function CompanySettingsSection({ queryClient }) {
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploading(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setFormData(prev => ({ ...prev, company_logo_url: file_url }));
+    setUploading(false);
   };
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">Proposal Settings</h2>
-          <p className="text-sm text-slate-500">Configure defaults for all proposals</p>
+          <h2 className="text-xl font-semibold text-slate-900">Company Settings</h2>
+          <p className="text-sm text-slate-500">Branding, proposal defaults, and company info</p>
         </div>
         <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
           {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
-      <div className="p-6 space-y-6">
-        {/* Company Info */}
-        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-          <h3 className="font-semibold text-slate-900">Company Information</h3>
-          <div className="flex items-start gap-4">
-            <div>
-              {formData.company_logo_url ? (
-                <div className="relative">
-                  <img src={formData.company_logo_url} alt="Logo" className="w-20 h-20 object-contain rounded-lg border" />
-                  <button 
-                    onClick={() => setFormData(p => ({ ...p, company_logo_url: '' }))}
-                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs"
-                  >×</button>
-                </div>
-              ) : (
-                <label className="w-20 h-20 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#0069AF]">
-                  <Building2 className="w-6 h-6 text-slate-400" />
-                  <span className="text-[10px] text-slate-400 mt-1">Logo</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-                </label>
-              )}
-            </div>
-            <div className="flex-1 grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Company Name</Label>
-                <Input value={formData.company_name} onChange={(e) => setFormData(p => ({ ...p, company_name: e.target.value }))} className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs">Email</Label>
-                <Input value={formData.company_email} onChange={(e) => setFormData(p => ({ ...p, company_email: e.target.value }))} className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs">Phone</Label>
-                <Input value={formData.company_phone} onChange={(e) => setFormData(p => ({ ...p, company_phone: e.target.value }))} className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs">Address</Label>
-                <Input value={formData.company_address} onChange={(e) => setFormData(p => ({ ...p, company_address: e.target.value }))} className="mt-1" />
-              </div>
-            </div>
-          </div>
-        </div>
+      
+      {/* Tabs */}
+      <div className="flex border-b">
+        {[
+          { id: 'branding', label: 'Branding & Logo' },
+          { id: 'proposals', label: 'Proposal Defaults' },
+          { id: 'taxes', label: 'Tax Rates' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
+              activeTab === tab.id ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
+      <div className="p-6 space-y-6">
+        {/* Branding Tab */}
+        {activeTab === 'branding' && (
+          <>
+            <div className="p-4 bg-slate-50 rounded-xl">
+              <h3 className="font-semibold text-slate-900 mb-4">Company Logo</h3>
+              <div className="flex items-start gap-6">
+                <div className="flex-shrink-0">
+                  {formData.company_logo_url ? (
+                    <div className="relative">
+                      <img src={formData.company_logo_url} alt="Logo" className="w-32 h-32 object-contain rounded-lg border bg-white p-2" />
+                      <button 
+                        onClick={() => setFormData(p => ({ ...p, company_logo_url: '' }))}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm hover:bg-red-600"
+                      >×</button>
+                    </div>
+                  ) : (
+                    <label className="w-32 h-32 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#0069AF] hover:bg-white transition-colors">
+                      {uploading ? (
+                        <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+                      ) : (
+                        <>
+                          <Building2 className="w-8 h-8 text-slate-400 mb-1" />
+                          <span className="text-xs text-slate-400">Upload Logo</span>
+                        </>
+                      )}
+                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={uploading} />
+                    </label>
+                  )}
+                </div>
+                <div className="flex-1 space-y-3">
+                  <p className="text-sm text-slate-600">Upload your company logo to appear on proposals and other documents.</p>
+                  <p className="text-xs text-slate-400">Recommended: PNG or SVG, at least 200x200px</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+              <h3 className="font-semibold text-slate-900">Company Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs">Company Name</Label>
+                  <Input value={formData.company_name} onChange={(e) => setFormData(p => ({ ...p, company_name: e.target.value }))} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Email</Label>
+                  <Input value={formData.company_email} onChange={(e) => setFormData(p => ({ ...p, company_email: e.target.value }))} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Phone</Label>
+                  <Input value={formData.company_phone} onChange={(e) => setFormData(p => ({ ...p, company_phone: e.target.value }))} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Address</Label>
+                  <Input value={formData.company_address} onChange={(e) => setFormData(p => ({ ...p, company_address: e.target.value }))} className="mt-1" />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Proposals Tab */}
+        {activeTab === 'proposals' && (
+          <>
         {/* Proposal Defaults */}
         <div className="p-4 bg-slate-50 rounded-xl space-y-4">
           <h3 className="font-semibold text-slate-900">Proposal Defaults</h3>
