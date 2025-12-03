@@ -126,21 +126,6 @@ export default function ProjectTasks() {
     enabled: !!projectId
   });
 
-  // Push task updates to HaloPSA
-  const pushTaskToHalo = async (message) => {
-    if (!project?.halopsa_ticket_id) return;
-    try {
-      await base44.functions.invoke('haloPSATicket', {
-        action: 'addNote',
-        ticketId: project.halopsa_ticket_id,
-        note: message,
-        noteIsPrivate: true
-      });
-    } catch (err) {
-      console.error('Failed to push to HaloPSA:', err);
-    }
-  };
-
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks', projectId],
     queryFn: () => base44.entities.Task.filter({ project_id: projectId }),
@@ -333,14 +318,6 @@ export default function ProjectTasks() {
 
   const handleStatusChange = async (task, status) => {
     await base44.entities.Task.update(task.id, { status });
-    
-    // Push to HaloPSA when task is completed
-    if (status === 'completed') {
-      const dueInfo = task.due_date ? ` | Due: ${format(new Date(task.due_date), 'MMM d, yyyy')}` : '';
-      const assigneeInfo = task.assigned_name ? ` | Assigned to: ${task.assigned_name}` : '';
-      await pushTaskToHalo(`[Task Completed] "${task.title}"${assigneeInfo}${dueInfo} | Completed: ${format(new Date(), 'MMM d, yyyy h:mm a')}`);
-    }
-    
     refetchTasks();
   };
 
@@ -386,16 +363,10 @@ export default function ProjectTasks() {
 
   const handleTaskAssign = async (task, email) => {
     const member = teamMembers.find(m => m.email === email);
-    const assigneeName = member?.name || email;
     await base44.entities.Task.update(task.id, {
       assigned_to: email,
-      assigned_name: assigneeName
+      assigned_name: member?.name || email
     });
-    
-    // Push to HaloPSA
-    const dueInfo = task.due_date ? ` | Due: ${format(new Date(task.due_date), 'MMM d, yyyy')}` : '';
-    await pushTaskToHalo(`[Task Assigned] "${task.title}" assigned to ${assigneeName}${dueInfo}`);
-    
     refetchTasks();
   };
 
