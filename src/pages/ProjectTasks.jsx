@@ -93,12 +93,10 @@ export default function ProjectTasks() {
   const [viewFilter, setViewFilter] = useState('all');
   const [expandedGroups, setExpandedGroups] = useState(new Set());
   
-  // Quick create state
-  const [quickTaskTitle, setQuickTaskTitle] = useState('');
-  const [quickTaskDueDate, setQuickTaskDueDate] = useState(null);
-  const [quickTaskAssignee, setQuickTaskAssignee] = useState(null);
-  const [quickTaskGroup, setQuickTaskGroup] = useState('');
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  // Inline task creation state
+  const [inlineTaskGroupId, setInlineTaskGroupId] = useState(null);
+  const [inlineTaskData, setInlineTaskData] = useState({ title: '', assigned_to: '', due_date: null, description: '' });
+  const [inlineDatePickerOpen, setInlineDatePickerOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   // Modals
@@ -290,27 +288,31 @@ export default function ProjectTasks() {
   const ungroupedTasks = sortTasks(filteredTasks.filter(t => !t.group_id));
   const getTasksForGroup = (groupId) => sortTasks(filteredTasks.filter(t => t.group_id === groupId));
 
-  const handleQuickCreate = async (e) => {
-    e.preventDefault();
-    if (!quickTaskTitle.trim() || isCreating) return;
+  const handleInlineCreate = async (groupId) => {
+    if (!inlineTaskData.title.trim() || isCreating) return;
     
     setIsCreating(true);
+    const member = teamMembers.find(m => m.email === inlineTaskData.assigned_to);
     await base44.entities.Task.create({
-      title: quickTaskTitle.trim(),
+      title: inlineTaskData.title.trim(),
       project_id: projectId,
       status: 'todo',
       priority: 'medium',
-      group_id: quickTaskGroup || '',
-      due_date: quickTaskDueDate ? format(quickTaskDueDate, 'yyyy-MM-dd') : '',
-      assigned_to: quickTaskAssignee?.email || '',
-      assigned_name: quickTaskAssignee?.name || ''
+      group_id: groupId || '',
+      due_date: inlineTaskData.due_date ? format(inlineTaskData.due_date, 'yyyy-MM-dd') : '',
+      assigned_to: inlineTaskData.assigned_to || '',
+      assigned_name: member?.name || '',
+      description: inlineTaskData.description || ''
     });
-    setQuickTaskTitle('');
-    setQuickTaskDueDate(null);
-    setQuickTaskAssignee(null);
-    setQuickTaskGroup('');
+    setInlineTaskData({ title: '', assigned_to: '', due_date: null, description: '' });
+    setInlineTaskGroupId(null);
     setIsCreating(false);
     refetchTasks();
+  };
+
+  const cancelInlineCreate = () => {
+    setInlineTaskGroupId(null);
+    setInlineTaskData({ title: '', assigned_to: '', due_date: null, description: '' });
   };
 
   const handleStatusChange = async (task, status) => {
