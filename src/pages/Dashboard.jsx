@@ -163,6 +163,48 @@ export default function Dashboard() {
     refetchProjects();
   };
 
+  const handlePinToggle = (project) => {
+    setPinnedProjectIds(prev => {
+      const newPinned = prev.includes(project.id) 
+        ? prev.filter(id => id !== project.id)
+        : [project.id, ...prev];
+      localStorage.setItem('pinnedProjects', JSON.stringify(newPinned));
+      return newPinned;
+    });
+  };
+
+  const handleDragEnd = (result) => {
+    const { destination, source, draggableId } = result;
+    if (!destination) return;
+    
+    // If dropped on pinned area, pin it
+    if (destination.droppableId === 'pinned' && source.droppableId !== 'pinned') {
+      setPinnedProjectIds(prev => {
+        const newPinned = [draggableId, ...prev.filter(id => id !== draggableId)];
+        localStorage.setItem('pinnedProjects', JSON.stringify(newPinned));
+        return newPinned;
+      });
+    }
+    // If dragged from pinned to unpinned area
+    else if (source.droppableId === 'pinned' && destination.droppableId !== 'pinned') {
+      setPinnedProjectIds(prev => {
+        const newPinned = prev.filter(id => id !== draggableId);
+        localStorage.setItem('pinnedProjects', JSON.stringify(newPinned));
+        return newPinned;
+      });
+    }
+    // Reorder within pinned
+    else if (source.droppableId === 'pinned' && destination.droppableId === 'pinned') {
+      setPinnedProjectIds(prev => {
+        const newPinned = [...prev];
+        newPinned.splice(source.index, 1);
+        newPinned.splice(destination.index, 0, draggableId);
+        localStorage.setItem('pinnedProjects', JSON.stringify(newPinned));
+        return newPinned;
+      });
+    }
+  };
+
   const handleTaskComplete = async (task) => {
     await base44.entities.Task.update(task.id, { ...task, status: 'completed' });
     refetchTasks();
