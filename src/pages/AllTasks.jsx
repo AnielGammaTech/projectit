@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { ListTodo, Filter, Search, Plus, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, User, FolderKanban, Package, Edit2 } from 'lucide-react';
+import { ListTodo, Filter, Search, Plus, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, User, FolderKanban, Package, Edit2, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -10,9 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format, isPast, isToday, isTomorrow, addDays } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import TaskModal from '@/components/modals/TaskModal';
 import PartModal from '@/components/modals/PartModal';
+import PartDetailModal from '@/components/modals/PartDetailModal';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -40,6 +43,7 @@ export default function AllTasks() {
   const [currentUser, setCurrentUser] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [editingPart, setEditingPart] = useState(null);
+  const [selectedPart, setSelectedPart] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showPartModal, setShowPartModal] = useState(false);
   const queryClient = useQueryClient();
@@ -100,8 +104,16 @@ export default function AllTasks() {
     part.assigned_to === currentUser?.email && part.due_date
   );
 
-  // Filter parts
+  // Get active project IDs (not archived or completed)
+  const activeProjectIds = projects
+    .filter(p => p.status !== 'archived' && p.status !== 'completed')
+    .map(p => p.id);
+
+  // Filter parts - only show parts from active projects
   const filteredParts = parts.filter(part => {
+    // Only include parts from active projects
+    if (!activeProjectIds.includes(part.project_id)) return false;
+    
     const matchesSearch = part.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          part.part_number?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || part.status === statusFilter;
@@ -128,6 +140,17 @@ export default function AllTasks() {
     queryClient.invalidateQueries({ queryKey: ['allParts'] });
     setShowPartModal(false);
     setEditingPart(null);
+    setSelectedPart(null);
+  };
+
+  const handleSetDeliveryDate = async (part, date) => {
+    await base44.entities.Part.update(part.id, { est_delivery_date: format(date, 'yyyy-MM-dd') });
+    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+  };
+
+  const handlePartStatusChange = async (part, status) => {
+    await base44.entities.Part.update(part.id, { status });
+    queryClient.invalidateQueries({ queryKey: ['allParts'] });
   };
 
   const getDueDateLabel = (date) => {
@@ -512,6 +535,7 @@ export default function AllTasks() {
             {filteredParts.length > 0 ? (
               filteredParts.map((part, idx) => {
                 const dueInfo = part.due_date ? getDueDateLabel(part.due_date) : null;
+                const deliveryInfo = part.est_delivery_date ? getDueDateLabel(part.est_delivery_date) : null;
                 
                 return (
                   <motion.div
@@ -519,7 +543,7 @@ export default function AllTasks() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.02 }}
-                    onClick={() => { setEditingPart(part); setShowPartModal(true); }}
+                    onClick={() => setSelectedPart(part)}
                     className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group"
                   >
                     <div className="flex items-start gap-4">
@@ -531,7 +555,29 @@ export default function AllTasks() {
                         <div className="flex items-start justify-between gap-2">
                           <h4 className="font-medium text-slate-900">{part.name}</h4>
                           <div className="flex items-center gap-2">
-                            <Edit2 className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            {/* Quick set delivery date button */}
+                            {!part.est_delivery_date && (part.status === 'ordered' || part.status === 'needed') && (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Truck className="w-3 h-3 mr-1" />
+                                    Set ETA
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+                                  <CalendarPicker
+                                    mode="single"
+                                    selected={undefined}
+                                    onSelect={(date) => date && handleSetDeliveryDate(part, date)}
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            )}
                             <Link to={createPageUrl('ProjectDetail') + `?id=${part.project_id}`} onClick={(e) => e.stopPropagation()}>
                               <Badge variant="outline" className="shrink-0 hover:bg-slate-100">
                                 <FolderKanban className="w-3 h-3 mr-1" />
@@ -547,7 +593,7 @@ export default function AllTasks() {
 
                         <div className="flex flex-wrap items-center gap-3 mt-3">
                           <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200">
-                            {part.status}
+                            {part.status?.replace('_', ' ')}
                           </Badge>
 
                           {part.quantity > 1 && (
@@ -559,6 +605,13 @@ export default function AllTasks() {
                               <User className="w-3.5 h-3.5" />
                               <span>{part.assigned_name}</span>
                             </div>
+                          )}
+
+                          {deliveryInfo && (
+                            <Badge variant="outline" className="bg-cyan-50 text-cyan-700 border-cyan-200">
+                              <Truck className="w-3 h-3 mr-1" />
+                              ETA: {deliveryInfo.label}
+                            </Badge>
                           )}
 
                           {dueInfo && (
@@ -585,7 +638,7 @@ export default function AllTasks() {
               >
                 <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
                 <h3 className="text-lg font-medium text-slate-900 mb-2">No parts found</h3>
-                <p className="text-slate-500">{statusFilter !== 'all' ? 'Try adjusting your filters' : 'Parts will appear here when added to projects'}</p>
+                <p className="text-slate-500">{statusFilter !== 'all' ? 'Try adjusting your filters' : 'Parts will appear here when added to active projects'}</p>
               </motion.div>
             )}
           </div>
@@ -611,6 +664,17 @@ export default function AllTasks() {
         projectId={editingPart?.project_id}
         teamMembers={teamMembers}
         onSave={handleSavePart}
+      />
+
+      {/* Part Detail Modal */}
+      <PartDetailModal
+        open={!!selectedPart}
+        onClose={() => setSelectedPart(null)}
+        part={selectedPart}
+        teamMembers={teamMembers}
+        currentUser={currentUser}
+        onEdit={(part) => { setSelectedPart(null); setEditingPart(part); setShowPartModal(true); }}
+        onStatusChange={handlePartStatusChange}
       />
     </div>
   );

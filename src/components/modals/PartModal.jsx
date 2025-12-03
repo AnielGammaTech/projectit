@@ -21,7 +21,8 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
     notes: '',
     assigned_to: '',
     assigned_name: '',
-    due_date: ''
+    due_date: '',
+    est_delivery_date: ''
   });
 
   useEffect(() => {
@@ -36,7 +37,8 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
         notes: part.notes || '',
         assigned_to: part.assigned_to || '',
         assigned_name: part.assigned_name || '',
-        due_date: part.due_date || ''
+        due_date: part.due_date || '',
+        est_delivery_date: part.est_delivery_date || ''
       });
     } else {
       setFormData({
@@ -49,6 +51,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
         notes: '',
         assigned_to: '',
         assigned_name: '',
+        est_delivery_date: '',
         due_date: ''
       });
     }
@@ -189,6 +192,25 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
                 </PopoverContent>
               </Popover>
             </div>
+          </div>
+
+          <div>
+            <Label>Est. Delivery Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full mt-1.5 justify-start font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.est_delivery_date ? format(new Date(formData.est_delivery_date), 'PPP') : 'Pick delivery date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={formData.est_delivery_date ? new Date(formData.est_delivery_date) : undefined}
+                  onSelect={(date) => setFormData(prev => ({ ...prev, est_delivery_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div>
