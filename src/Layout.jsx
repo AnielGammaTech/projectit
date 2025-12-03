@@ -135,24 +135,24 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-50 transition-transform duration-300 lg:translate-x-0",
+        "fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-[#0F2F44] to-[#133F5C] z-50 transition-transform duration-300 lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#133F5C] flex items-center justify-center shadow-lg shadow-[#133F5C]/20">
-                <Wrench className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-[#74C7FF]/20 flex items-center justify-center">
+                <Wrench className="w-5 h-5 text-[#74C7FF]" />
               </div>
               <div>
-                <h1 className="font-bold text-slate-900">IT Projects</h1>
-                <p className="text-xs text-slate-500">Management Tool</p>
+                <h1 className="font-bold text-white">IT Projects</h1>
+                <p className="text-xs text-[#74C7FF]/70">Management Tool</p>
               </div>
             </div>
             <Button 
               variant="ghost" 
               size="icon"
-              className="lg:hidden"
+              className="lg:hidden text-white hover:bg-white/10"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="w-5 h-5" />
@@ -164,11 +164,11 @@ export default function Layout({ children, currentPageName }) {
         <div className="px-3 mb-4">
           <button
             onClick={() => setShowSearch(true)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white/70"
           >
             <Search className="w-4 h-4" />
             <span className="text-sm">Search...</span>
-            <kbd className="ml-auto text-[10px] px-1.5 py-0.5 bg-white rounded border">⌘K</kbd>
+            <kbd className="ml-auto text-[10px] px-1.5 py-0.5 bg-white/10 rounded text-white/50">⌘K</kbd>
           </button>
         </div>
 
@@ -185,11 +185,11 @@ export default function Layout({ children, currentPageName }) {
                 className={cn(
                                 "flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all",
                                 isActive 
-                                  ? "bg-[#74C7FF]/20 text-[#133F5C] font-medium" 
-                                  : "text-[#0F2F44]/70 hover:bg-[#74C7FF]/10 hover:text-[#133F5C]"
+                                  ? "bg-[#74C7FF]/20 text-white font-medium" 
+                                  : "text-white/70 hover:bg-white/10 hover:text-white"
                               )}
               >
-                <Icon className={cn("w-5 h-5", isActive && "text-[#0069AF]")} />
+                <Icon className={cn("w-5 h-5", isActive && "text-[#74C7FF]")} />
                 {item.name}
               </Link>
             );
@@ -197,20 +197,20 @@ export default function Layout({ children, currentPageName }) {
         </nav>
 
         {/* User Profile at Bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+              <button className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white/10 transition-colors">
                 {currentUser?.avatar_url ? (
                   <img src={currentUser.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" />
                 ) : (
-                  <div className="w-9 h-9 rounded-full bg-[#0069AF] flex items-center justify-center text-white text-sm font-medium">
+                  <div className="w-9 h-9 rounded-full bg-[#74C7FF] flex items-center justify-center text-[#133F5C] text-sm font-medium">
                     {getInitials(currentUser?.full_name || currentUser?.email)}
                   </div>
                 )}
                 <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-slate-900 truncate">{currentUser?.full_name || 'User'}</p>
-                  <p className="text-xs text-slate-500 truncate">{currentUser?.email}</p>
+                  <p className="text-sm font-medium text-white truncate">{currentUser?.full_name || 'User'}</p>
+                  <p className="text-xs text-white/60 truncate">{currentUser?.email}</p>
                 </div>
               </button>
             </DropdownMenuTrigger>
