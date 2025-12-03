@@ -784,14 +784,74 @@ export default function ProjectTasks() {
                           </Draggable>
                         ))}
                         {provided.placeholder}
-                        {/* Add task button */}
-                        <button
-                          onClick={() => { setQuickTaskGroup(group.id); document.querySelector('input[placeholder="Add a new task..."]')?.focus(); }}
-                          className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add a task
-                        </button>
+                        
+                        {/* Inline Task Creation Form */}
+                        {inlineTaskGroupId === group.id ? (
+                          <div className="bg-white rounded-xl border-2 border-emerald-200 p-4 space-y-3 shadow-sm">
+                            <Input
+                              value={inlineTaskData.title}
+                              onChange={(e) => setInlineTaskData(p => ({ ...p, title: e.target.value }))}
+                              placeholder="Task name"
+                              className="h-10 border-slate-200"
+                              autoFocus
+                              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleInlineCreate(group.id); } }}
+                            />
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-xs text-slate-500 mb-1 block">Assigned to</label>
+                                <Select value={inlineTaskData.assigned_to} onValueChange={(v) => setInlineTaskData(p => ({ ...p, assigned_to: v }))}>
+                                  <SelectTrigger className="h-9 text-sm">
+                                    <SelectValue placeholder="Assign..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {teamMembers.map((m) => (
+                                      <SelectItem key={m.id} value={m.email}>{m.name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <label className="text-xs text-slate-500 mb-1 block">Due on</label>
+                                <Popover open={inlineDatePickerOpen} onOpenChange={setInlineDatePickerOpen}>
+                                  <PopoverTrigger asChild>
+                                    <Button variant="outline" size="sm" className="w-full h-9 justify-start text-sm font-normal">
+                                      <CalendarIcon className="w-4 h-4 mr-2 text-slate-400" />
+                                      {inlineTaskData.due_date ? format(inlineTaskData.due_date, 'MMM d') : 'Select date'}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                      mode="single"
+                                      selected={inlineTaskData.due_date}
+                                      onSelect={(date) => { setInlineTaskData(p => ({ ...p, due_date: date })); setInlineDatePickerOpen(false); }}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                            </div>
+                            <Textarea
+                              value={inlineTaskData.description}
+                              onChange={(e) => setInlineTaskData(p => ({ ...p, description: e.target.value }))}
+                              placeholder="Add notes..."
+                              className="min-h-[60px] text-sm"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={cancelInlineCreate}>Cancel</Button>
+                              <Button size="sm" onClick={() => handleInlineCreate(group.id)} disabled={!inlineTaskData.title.trim() || isCreating} className="bg-emerald-600 hover:bg-emerald-700">
+                                Add Task
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setInlineTaskGroupId(group.id)}
+                            className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add a task
+                          </button>
+                        )}
                       </div>
                     )}
                   </Droppable>
@@ -840,14 +900,74 @@ export default function ProjectTasks() {
                       </Draggable>
                     ))}
                     {provided.placeholder}
-                    {/* Add task button */}
-                    <button
-                      onClick={() => { setQuickTaskGroup(''); document.querySelector('input[placeholder="Add a new task..."]')?.focus(); }}
-                      className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add a task
-                    </button>
+                    
+                    {/* Inline Task Creation Form for Ungrouped */}
+                    {inlineTaskGroupId === 'ungrouped' ? (
+                      <div className="bg-white rounded-xl border-2 border-emerald-200 p-4 space-y-3 shadow-sm">
+                        <Input
+                          value={inlineTaskData.title}
+                          onChange={(e) => setInlineTaskData(p => ({ ...p, title: e.target.value }))}
+                          placeholder="Task name"
+                          className="h-10 border-slate-200"
+                          autoFocus
+                          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleInlineCreate(''); } }}
+                        />
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs text-slate-500 mb-1 block">Assigned to</label>
+                            <Select value={inlineTaskData.assigned_to} onValueChange={(v) => setInlineTaskData(p => ({ ...p, assigned_to: v }))}>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue placeholder="Assign..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {teamMembers.map((m) => (
+                                  <SelectItem key={m.id} value={m.email}>{m.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <label className="text-xs text-slate-500 mb-1 block">Due on</label>
+                            <Popover open={inlineDatePickerOpen} onOpenChange={setInlineDatePickerOpen}>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="w-full h-9 justify-start text-sm font-normal">
+                                  <CalendarIcon className="w-4 h-4 mr-2 text-slate-400" />
+                                  {inlineTaskData.due_date ? format(inlineTaskData.due_date, 'MMM d') : 'Select date'}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                  mode="single"
+                                  selected={inlineTaskData.due_date}
+                                  onSelect={(date) => { setInlineTaskData(p => ({ ...p, due_date: date })); setInlineDatePickerOpen(false); }}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </div>
+                        <Textarea
+                          value={inlineTaskData.description}
+                          onChange={(e) => setInlineTaskData(p => ({ ...p, description: e.target.value }))}
+                          placeholder="Add notes..."
+                          className="min-h-[60px] text-sm"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={cancelInlineCreate}>Cancel</Button>
+                          <Button size="sm" onClick={() => handleInlineCreate('')} disabled={!inlineTaskData.title.trim() || isCreating} className="bg-emerald-600 hover:bg-emerald-700">
+                            Add Task
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setInlineTaskGroupId('ungrouped')}
+                        className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add a task
+                      </button>
+                    )}
                   </div>
                 )}
               </Droppable>
