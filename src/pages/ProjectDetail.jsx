@@ -395,10 +395,39 @@ export default function ProjectDetail() {
             </div>
 
             <div className="flex items-center gap-3">
-                              <HaloPSATicketLink 
-                                project={project} 
-                                onUpdate={refetchProject}
-                              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn(
+                    "h-9 text-xs font-medium",
+                    project.status === 'planning' && "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100",
+                    project.status === 'on_hold' && "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100",
+                    project.status === 'completed' && "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                  )}>
+                    {project.status === 'planning' && 'Planning'}
+                    {project.status === 'on_hold' && 'On Hold'}
+                    {project.status === 'completed' && 'Completed'}
+                    {!['planning', 'on_hold', 'completed'].includes(project.status) && 'Planning'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => handleQuickUpdate('status', 'planning')}>
+                    <span className="w-2 h-2 rounded-full bg-amber-500 mr-2" />
+                    Planning
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleQuickUpdate('status', 'on_hold')}>
+                    <span className="w-2 h-2 rounded-full bg-slate-500 mr-2" />
+                    On Hold
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleQuickUpdate('status', 'completed')}>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
+                    Completed
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <HaloPSATicketLink 
+                project={project} 
+                onUpdate={refetchProject}
+              />
                               <TimeTracker 
                                 projectId={projectId} 
                                 currentUser={currentUser} 
@@ -445,8 +474,7 @@ export default function ProjectDetail() {
           transition={{ delay: 0.15 }}
           className="mb-6"
         >
-          <div className="flex items-center justify-center gap-3">
-            <ProgressNeedle 
+          <ProgressNeedle 
               projectId={projectId} 
               value={project.progress || 0} 
               onSave={handleProgressUpdate} 
@@ -454,36 +482,6 @@ export default function ProjectDetail() {
               onStatusChange={(status) => handleQuickUpdate('status', status)}
               halopsaTicketId={project.halopsa_ticket_id}
             />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className={cn(
-                  "h-8 text-xs font-medium",
-                  project.status === 'planning' && "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100",
-                  project.status === 'on_hold' && "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100",
-                  project.status === 'completed' && "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                )}>
-                  {project.status === 'planning' && 'Planning'}
-                  {project.status === 'on_hold' && 'On Hold'}
-                  {project.status === 'completed' && 'Completed'}
-                  {!['planning', 'on_hold', 'completed'].includes(project.status) && 'Planning'}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => handleQuickUpdate('status', 'planning')}>
-                  <span className="w-2 h-2 rounded-full bg-amber-500 mr-2" />
-                  Planning
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleQuickUpdate('status', 'on_hold')}>
-                  <span className="w-2 h-2 rounded-full bg-slate-500 mr-2" />
-                  On Hold
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleQuickUpdate('status', 'completed')}>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
-                  Completed
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
         </motion.div>
 
         {/* Cards Grid */}
