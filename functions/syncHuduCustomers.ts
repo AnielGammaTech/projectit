@@ -95,13 +95,19 @@ Deno.serve(async (req) => {
     // Get existing customers
     const existingCustomers = await base44.entities.Customer.list();
     const existingByExternalId = {};
+    const existingByEmail = {};
     const existingByName = {};
+    
     existingCustomers.forEach(c => {
-      if (c.external_id && c.source === 'hudu') {
+      if (c.external_id) {
         existingByExternalId[c.external_id] = c;
       }
-      // Also index by name for matching existing customers without external_id
-      if (c.name && !c.external_id) {
+      // Also index by email for matching
+      if (c.email) {
+        existingByEmail[c.email.toLowerCase().trim()] = c;
+      }
+      // Also index by name for matching existing customers
+      if (c.name) {
         existingByName[c.name.toLowerCase().trim()] = c;
       }
     });
@@ -113,23 +119,37 @@ Deno.serve(async (req) => {
     for (const company of companies) {
       const externalId = `hudu_${company.id}`;
       let existing = existingByExternalId[externalId];
+      let wasMatched = false;
       
-      // Try to match by name if no external_id match
       const companyName = company[fieldMapping.name] || company.name || '';
+      const companyEmail = company[fieldMapping.email] || '';
+      
+      // Try to match by email first if no external_id match
+      if (!existing && companyEmail) {
+        const emailKey = companyEmail.toLowerCase().trim();
+        if (existingByEmail[emailKey]) {
+          existing = existingByEmail[emailKey];
+          wasMatched = true;
+        }
+      }
+      
+      // Try to match by name if still no match
       if (!existing && companyName) {
         const nameKey = companyName.toLowerCase().trim();
         if (existingByName[nameKey]) {
           existing = existingByName[nameKey];
-          matched++;
+          wasMatched = true;
         }
       }
+      
+      if (wasMatched) matched++;
 
       // Build customer data using field mapping
       const customerData = {
-        name: company[fieldMapping.name] || company.name || 'Unknown Company',
-        email: company[fieldMapping.email] || '',
+        name: companyName || 'Unknown Company',
+        email: companyEmail,
         phone: company[fieldMapping.phone] || '',
-        company: company[fieldMapping.name] || company.name || '',
+        company: companyName,
         address: company[fieldMapping.address] || '',
         city: company[fieldMapping.city] || '',
         state: company[fieldMapping.state] || '',

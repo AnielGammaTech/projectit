@@ -183,8 +183,26 @@ Deno.serve(async (req) => {
     // Get existing customers to check for duplicates
     const existingCustomers = await base44.entities.Customer.list();
 
+    // Build lookup maps for efficient matching
+    const existingByExternalId = {};
+    const existingByEmail = {};
+    const existingByName = {};
+    
+    existingCustomers.forEach(c => {
+      if (c.external_id) {
+        existingByExternalId[c.external_id] = c;
+      }
+      if (c.email) {
+        existingByEmail[c.email.toLowerCase().trim()] = c;
+      }
+      if (c.name) {
+        existingByName[c.name.toLowerCase().trim()] = c;
+      }
+    });
+
     let created = 0;
     let updated = 0;
+    let matched = 0;
 
     // Helper to get nested field value
     const getField = (obj, fieldPath) => {
@@ -201,9 +219,12 @@ Deno.serve(async (req) => {
     for (const haloClient of haloClients) {
       const externalId = `halo_${haloClient.id}`;
       
+      const customerName = getField(haloClient, fieldMapping.name) || haloClient.name || haloClient.client_name || 'Unknown';
+      const customerEmail = getField(haloClient, fieldMapping.email) || haloClient.email || haloClient.main_email || '';
+      
       const customerData = {
-        name: getField(haloClient, fieldMapping.name) || haloClient.name || haloClient.client_name || 'Unknown',
-        email: getField(haloClient, fieldMapping.email) || haloClient.email || haloClient.main_email || '',
+        name: customerName,
+        email: customerEmail,
         phone: getField(haloClient, fieldMapping.phone) || haloClient.main_phone || haloClient.phone_number || '',
         address: getField(haloClient, fieldMapping.address) || haloClient.address || '',
         city: getField(haloClient, fieldMapping.city) || haloClient.city || '',
@@ -214,8 +235,20 @@ Deno.serve(async (req) => {
         source: 'halo_psa'
       };
 
-      // Check if customer already exists
-      const existingCustomer = existingCustomers.find(c => c.external_id === externalId);
+      // Check if customer already exists by external_id first
+      let existingCustomer = existingByExternalId[externalId];
+      
+      // If not found by external_id, try matching by email
+      if (!existingCustomer && customerEmail) {
+        existingCustomer = existingByEmail[customerEmail.toLowerCase().trim()];
+        if (existingCustomer) matched++;
+      }
+      
+      // If still not found, try matching by name (exact match)
+      if (!existingCustomer && customerName) {
+        existingCustomer = existingByName[customerName.toLowerCase().trim()];
+        if (existingCustomer) matched++;
+      }
       
       if (existingCustomer) {
         await base44.entities.Customer.update(existingCustomer.id, customerData);
@@ -235,9 +268,10 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      message: `Synced ${created} new customers, updated ${updated} existing`,
+      message: `Synced ${created} new customers, updated ${updated} existing (${matched} matched by name/email)`,
       created,
       updated,
+      matched,
       total: haloClients.length
     });
 
