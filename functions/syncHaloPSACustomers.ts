@@ -114,7 +114,8 @@ Deno.serve(async (req) => {
     }
 
     // Fetch clients from HaloPSA
-    const clientsUrl = `${apiBaseUrl}/Client?count=500&includeactive=true`;
+    // HaloPSA uses lowercase endpoints and different parameter names
+    const clientsUrl = `${apiBaseUrl}/client?count=500`;
     
     let clientsResponse;
     try {

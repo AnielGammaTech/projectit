@@ -27,46 +27,69 @@ Deno.serve(async (req) => {
     if (!config?.emailit_smtp_password) {
       return Response.json({ 
         success: false, 
-        error: 'Emailit API key is not configured. Please enter your API key in Adminland.' 
+        error: 'SMTP password/API key is not configured. Please enter it in Adminland.' 
       });
     }
 
     if (!config?.emailit_from_email) {
       return Response.json({ 
         success: false, 
-        error: 'From email is not configured. Please set up the from email in Adminland (must be from a verified sending domain).' 
+        error: 'From email is not configured. Please set up the from email in Adminland.' 
       });
     }
 
     const port = parseInt(config.emailit_smtp_port) || 587;
-          const host = config.emailit_smtp_host || 'smtp.emailit.com';
-          const useSecure = config.emailit_secure !== false;
-          const useAuth = config.emailit_auth !== false;
+    const host = config.emailit_smtp_host || 'smtp.emailit.com';
 
-          // Create transporter using nodemailer
-          const transportConfig = {
-            host: host,
-            port: port,
-            secure: port === 465, // Use implicit TLS for port 465
-            tls: {
-              rejectUnauthorized: false
-            }
-          };
+    // Build transporter config - standard SMTP setup
+    const transportConfig = {
+      host: host,
+      port: port,
+      secure: port === 465, // true for 465, false for other ports
+      auth: {
+        user: config.emailit_smtp_username || '',
+        pass: config.emailit_smtp_password
+      },
+      tls: {
+        rejectUnauthorized: false,
+        ciphers: 'SSLv3'
+      },
+      debug: true,
+      logger: true
+    };
 
-          // Add STARTTLS for non-465 ports if secure is enabled
-          if (useSecure && port !== 465) {
-            transportConfig.requireTLS = true;
+    // For port 587, use STARTTLS
+    if (port === 587) {
+      transportConfig.secure = false;
+      transportConfig.requireTLS = true;
+    }
+
+    // For port 25, no TLS required
+    if (port === 25) {
+      transportConfig.secure = false;
+      transportConfig.requireTLS = false;
+    }
+
+    const transporter = nodemailer.createTransport(transportConfig);
+
+    // Verify connection first if testing
+    if (testOnly) {
+      try {
+        await transporter.verify();
+      } catch (verifyError) {
+        return Response.json({ 
+          success: false, 
+          error: `SMTP connection failed: ${verifyError.message}`,
+          config: {
+            host,
+            port,
+            user: config.emailit_smtp_username || '(not set)',
+            secure: transportConfig.secure,
+            requireTLS: transportConfig.requireTLS
           }
-
-          // Add authentication if enabled
-                if (useAuth) {
-                  transportConfig.auth = {
-                    user: config.emailit_smtp_username || 'emailit',
-                    pass: config.emailit_smtp_password,
-                  };
-                }
-
-          const transporter = nodemailer.createTransport(transportConfig);
+        });
+      }
+    }
 
     const fromAddress = config.emailit_from_name 
       ? `${config.emailit_from_name} <${config.emailit_from_email}>`
@@ -76,19 +99,20 @@ Deno.serve(async (req) => {
       from: fromAddress,
       to: to,
       subject: subject,
-      text: text || '',
-      html: html || '<p>No content</p>',
+      text: text || (html ? '' : 'No content'),
+      html: html || undefined
     };
 
     if (config.emailit_reply_to) {
       mailOptions.replyTo = config.emailit_reply_to;
     }
 
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
 
     return Response.json({ 
       success: true, 
-      message: testOnly ? 'Test email sent successfully!' : 'Email sent successfully'
+      message: testOnly ? 'Test email sent successfully!' : 'Email sent successfully',
+      messageId: info.messageId
     });
 
   } catch (error) {
