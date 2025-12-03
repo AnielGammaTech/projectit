@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus, Upload, Loader2, MessageSquare, Send } from 'lucide-react';
+import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus, Upload, Loader2, MessageSquare, Send, CheckSquare, Square, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -54,6 +54,11 @@ export default function Customers() {
 
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCommunication, setShowCommunication] = useState(false);
+  
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
 
   const { data: customers = [], refetch } = useQuery({
     queryKey: ['customers'],
@@ -164,6 +169,42 @@ export default function Customers() {
     setDeleteConfirm({ open: false, customer: null });
   };
 
+  // Multi-select handlers
+  const toggleSelection = (id) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+    if (newSelected.size === 0) setSelectionMode(false);
+  };
+
+  const selectAll = () => {
+    const allIds = [...companies, ...standaloneContacts].map(c => c.id);
+    if (selectedIds.size === allIds.length) {
+      setSelectedIds(new Set());
+      setSelectionMode(false);
+    } else {
+      setSelectedIds(new Set(allIds));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+  };
+
+  const handleBulkDelete = async () => {
+    for (const id of selectedIds) {
+      await base44.entities.Customer.delete(id);
+    }
+    refetch();
+    clearSelection();
+    setBulkDeleteConfirm(false);
+  };
+
   const handleImport = async () => {
     setImporting(true);
     const lines = importData.trim().split('\n');
@@ -220,6 +261,34 @@ export default function Customers() {
           </div>
         </motion.div>
 
+        {/* Bulk Action Bar */}
+        {selectionMode && selectedIds.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-600 text-white rounded-xl p-3 mb-4 flex items-center justify-between shadow-lg"
+          >
+            <div className="flex items-center gap-3">
+              <button onClick={clearSelection} className="p-1 hover:bg-red-500 rounded">
+                <X className="w-4 h-4" />
+              </button>
+              <span className="font-medium">{selectedIds.size} selected</span>
+              <button onClick={selectAll} className="text-sm underline hover:no-underline">
+                {selectedIds.size === (companies.length + standaloneContacts.length) ? 'Deselect all' : 'Select all'}
+              </button>
+            </div>
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              className="bg-white text-red-600 hover:bg-red-50"
+              onClick={() => setBulkDeleteConfirm(true)}
+            >
+              <Trash2 className="w-4 h-4 mr-1.5" />
+              Delete Selected
+            </Button>
+          </motion.div>
+        )}
+
         <div className="bg-white rounded-2xl border border-slate-100 p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -231,6 +300,15 @@ export default function Customers() {
                 className="pl-10"
               />
             </div>
+            <Button 
+              variant={selectionMode ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
+              className={cn("h-10", selectionMode && "bg-red-600 hover:bg-red-700")}
+            >
+              <CheckSquare className="w-4 h-4 mr-2" />
+              {selectionMode ? 'Done' : 'Select'}
+            </Button>
             <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
               <button
                 onClick={() => setViewFilter('all')}
@@ -300,11 +378,26 @@ export default function Customers() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.02 }}
-                      className="bg-white rounded-xl border border-slate-100 overflow-hidden"
+                      className={cn(
+                        "bg-white rounded-xl border overflow-hidden",
+                        selectedIds.has(company.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-100"
+                      )}
                     >
                       <div className="p-5 hover:bg-slate-50/50 transition-all">
                         <div className="flex items-start justify-between">
                           <div className="flex items-start gap-4">
+                            {selectionMode && (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); toggleSelection(company.id); }}
+                                className="mt-1 p-1"
+                              >
+                                {selectedIds.has(company.id) ? (
+                                  <CheckSquare className="w-5 h-5 text-red-600" />
+                                ) : (
+                                  <Square className="w-5 h-5 text-slate-300" />
+                                )}
+                              </button>
+                            )}
                             <button onClick={() => toggleCompany(company.id)} className="mt-1">
                               {isExpanded ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
                             </button>
@@ -404,10 +497,25 @@ export default function Customers() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.02 }}
-                    className="bg-white rounded-xl border border-slate-100 p-5 hover:shadow-md transition-all"
+                    className={cn(
+                      "bg-white rounded-xl border p-5 hover:shadow-md transition-all",
+                      selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-100"
+                    )}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4">
+                        {selectionMode && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); toggleSelection(customer.id); }}
+                            className="mt-1 p-1"
+                          >
+                            {selectedIds.has(customer.id) ? (
+                              <CheckSquare className="w-5 h-5 text-red-600" />
+                            ) : (
+                              <Square className="w-5 h-5 text-slate-300" />
+                            )}
+                          </button>
+                        )}
                         <div className="w-12 h-12 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-semibold text-lg">
                           {customer.name?.charAt(0).toUpperCase()}
                         </div>
@@ -564,6 +672,24 @@ export default function Customers() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={bulkDeleteConfirm} onOpenChange={setBulkDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} customers?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all selected customers. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} className="bg-red-600 hover:bg-red-700">
+              Delete {selectedIds.size} Customers
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
