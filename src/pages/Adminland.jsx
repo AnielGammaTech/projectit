@@ -559,7 +559,9 @@ function CompanySettingsSection({ queryClient }) {
     company_address: '',
     company_phone: '',
     company_email: '',
-    company_logo_url: ''
+    company_logo_url: '',
+    app_name: '',
+    app_logo_url: ''
   });
   const [newTaxRate, setNewTaxRate] = useState({ name: '', state: '', city: '', zip: '', rate: 0 });
 
@@ -571,20 +573,22 @@ function CompanySettingsSection({ queryClient }) {
   useEffect(() => {
     if (settings[0]) {
       setFormData({
-        proposal_prefix: settings[0].proposal_prefix || 'P-',
-        default_valid_days: settings[0].default_valid_days || 30,
-        default_sales_tax_percent: settings[0].default_sales_tax_percent || 0,
-        tax_rates_by_location: settings[0].tax_rates_by_location || [],
-        default_markup_type: settings[0].default_markup_type || 'percentage',
-        default_markup_value: settings[0].default_markup_value || 20,
-        default_terms_conditions: settings[0].default_terms_conditions || '',
-        show_item_images: settings[0].show_item_images !== false,
-        company_name: settings[0].company_name || '',
-        company_address: settings[0].company_address || '',
-        company_phone: settings[0].company_phone || '',
-        company_email: settings[0].company_email || '',
-        company_logo_url: settings[0].company_logo_url || ''
-      });
+          proposal_prefix: settings[0].proposal_prefix || 'P-',
+          default_valid_days: settings[0].default_valid_days || 30,
+          default_sales_tax_percent: settings[0].default_sales_tax_percent || 0,
+          tax_rates_by_location: settings[0].tax_rates_by_location || [],
+          default_markup_type: settings[0].default_markup_type || 'percentage',
+          default_markup_value: settings[0].default_markup_value || 20,
+          default_terms_conditions: settings[0].default_terms_conditions || '',
+          show_item_images: settings[0].show_item_images !== false,
+          company_name: settings[0].company_name || '',
+          company_address: settings[0].company_address || '',
+          company_phone: settings[0].company_phone || '',
+          company_email: settings[0].company_email || '',
+          company_logo_url: settings[0].company_logo_url || '',
+          app_name: settings[0].app_name || '',
+          app_logo_url: settings[0].app_logo_url || ''
+        });
     }
   }, [settings]);
 
@@ -660,8 +664,51 @@ function CompanySettingsSection({ queryClient }) {
         {/* Branding Tab */}
         {activeTab === 'branding' && (
           <>
+            {/* App Branding */}
+            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-200">
+              <h3 className="font-semibold text-slate-900 mb-4">App Branding</h3>
+              <p className="text-sm text-slate-600 mb-4">Customize the app name and logo shown in the sidebar.</p>
+              <div className="flex items-start gap-6">
+                <div className="flex-shrink-0">
+                  {formData.app_logo_url ? (
+                    <div className="relative">
+                      <img src={formData.app_logo_url} alt="App Logo" className="w-20 h-20 object-contain rounded-lg border bg-white p-2" />
+                      <button 
+                        onClick={() => setFormData(p => ({ ...p, app_logo_url: '' }))}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm hover:bg-red-600"
+                      >×</button>
+                    </div>
+                  ) : (
+                    <label className="w-20 h-20 border-2 border-dashed border-indigo-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#0069AF] hover:bg-white transition-colors">
+                      {uploading ? (
+                        <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                      ) : (
+                        <>
+                          <Building2 className="w-6 h-6 text-indigo-400 mb-1" />
+                          <span className="text-[10px] text-indigo-400">Upload</span>
+                        </>
+                      )}
+                      <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                        setFormData(prev => ({ ...prev, app_logo_url: file_url }));
+                        setUploading(false);
+                      }} disabled={uploading} />
+                    </label>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs">App Name</Label>
+                  <Input value={formData.app_name || ''} onChange={(e) => setFormData(p => ({ ...p, app_name: e.target.value }))} placeholder="IT Projects" className="mt-1" />
+                  <p className="text-xs text-slate-400 mt-1">This name appears in the sidebar header</p>
+                </div>
+              </div>
+            </div>
+
             <div className="p-4 bg-slate-50 rounded-xl">
-              <h3 className="font-semibold text-slate-900 mb-4">Company Logo</h3>
+              <h3 className="font-semibold text-slate-900 mb-4">Company Logo (Proposals)</h3>
               <div className="flex items-start gap-6">
                 <div className="flex-shrink-0">
                   {formData.company_logo_url ? (
