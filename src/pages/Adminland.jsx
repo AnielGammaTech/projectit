@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -1558,10 +1557,10 @@ function IntegrationsSection({ queryClient }) {
           )}
         </div>
 
-        {/* SendGrid Email Card */}
+        {/* Emailit Card */}
         <div className="border rounded-xl overflow-hidden">
           <button
-            onClick={() => setSelectedIntegration(selectedIntegration === 'sendgrid' ? null : 'sendgrid')}
+            onClick={() => setSelectedIntegration(selectedIntegration === 'emailit' ? null : 'emailit')}
             className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -1569,53 +1568,54 @@ function IntegrationsSection({ queryClient }) {
                 <Mail className="w-5 h-5 text-blue-600" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-slate-900">Email (SendGrid)</h3>
-                <p className="text-xs text-slate-500">Send emails to customers for proposals, notifications</p>
+                <h3 className="font-semibold text-slate-900">Emailit</h3>
+                <p className="text-xs text-slate-500">Send emails to customers</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant={formData.sendgrid_enabled ? "default" : "outline"} className={formData.sendgrid_enabled ? "bg-emerald-500" : ""}>
-                {formData.sendgrid_enabled ? 'Enabled' : 'Disabled'}
+              <Badge variant={formData.emailit_enabled ? "default" : "outline"} className={formData.emailit_enabled ? "bg-emerald-500" : ""}>
+                {formData.emailit_enabled ? 'Enabled' : 'Disabled'}
               </Badge>
-              {selectedIntegration === 'sendgrid' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+              {selectedIntegration === 'emailit' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
             </div>
           </button>
           
-          {selectedIntegration === 'sendgrid' && (
+          {selectedIntegration === 'emailit' && (
           <div className="p-4 space-y-4 bg-white">
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox 
-                checked={formData.sendgrid_enabled} 
-                onCheckedChange={(checked) => setFormData(p => ({ ...p, sendgrid_enabled: checked }))} 
+                checked={formData.emailit_enabled} 
+                onCheckedChange={(checked) => setFormData(p => ({ ...p, emailit_enabled: checked }))} 
               />
-              <span className="text-sm font-medium">Enable SendGrid Email Integration</span>
+              <span className="text-sm font-medium">Enable Emailit Integration</span>
             </label>
 
-            {formData.sendgrid_enabled && (
+            {formData.emailit_enabled && (
               <div className="space-y-4 pt-4 border-t border-slate-200">
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-xs text-blue-700">
-                    <strong>Setup:</strong> Create a free SendGrid account at <a href="https://sendgrid.com" target="_blank" rel="noopener noreferrer" className="underline">sendgrid.com</a>. Go to <strong>Settings → API Keys</strong> to create a key with "Mail Send" permissions. Also verify your sender email under <strong>Sender Authentication</strong>.
+                    <strong>Setup:</strong> Get your API key from your Emailit dashboard at <a href="https://emailit.com" target="_blank" rel="noopener noreferrer" className="underline">emailit.com</a>.
                   </p>
                 </div>
                 
+                <div>
+                  <Label className="text-xs">API Key</Label>
+                  <Input 
+                    type="password"
+                    value={formData.emailit_api_key} 
+                    onChange={(e) => setFormData(p => ({ ...p, emailit_api_key: e.target.value }))} 
+                    placeholder="Your Emailit API key" 
+                    className="mt-1 font-mono text-sm" 
+                  />
+                </div>
+                
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <Label className="text-xs">SendGrid API Key</Label>
-                    <Input 
-                      type="password"
-                      value={formData.sendgrid_api_key} 
-                      onChange={(e) => setFormData(p => ({ ...p, sendgrid_api_key: e.target.value }))} 
-                      placeholder="SG.xxxxxxxxxxxx" 
-                      className="mt-1 font-mono text-sm" 
-                    />
-                  </div>
                   <div>
-                    <Label className="text-xs">From Email (Verified Sender)</Label>
+                    <Label className="text-xs">From Email</Label>
                     <Input 
                       type="email"
-                      value={formData.sendgrid_from_email} 
-                      onChange={(e) => setFormData(p => ({ ...p, sendgrid_from_email: e.target.value }))} 
+                      value={formData.emailit_from_email} 
+                      onChange={(e) => setFormData(p => ({ ...p, emailit_from_email: e.target.value }))} 
                       placeholder="proposals@yourcompany.com" 
                       className="mt-1" 
                     />
@@ -1623,66 +1623,29 @@ function IntegrationsSection({ queryClient }) {
                   <div>
                     <Label className="text-xs">From Name</Label>
                     <Input 
-                      value={formData.sendgrid_from_name} 
-                      onChange={(e) => setFormData(p => ({ ...p, sendgrid_from_name: e.target.value }))} 
+                      value={formData.emailit_from_name} 
+                      onChange={(e) => setFormData(p => ({ ...p, emailit_from_name: e.target.value }))} 
                       placeholder="Your Company Name" 
                       className="mt-1" 
                     />
                   </div>
                 </div>
-
-                <div className="pt-3 border-t">
-                  <h4 className="text-sm font-medium text-slate-700 mb-3">Email Notifications</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50">
-                      <Checkbox 
-                        checked={formData.email_proposal_sent} 
-                        onCheckedChange={(checked) => setFormData(p => ({ ...p, email_proposal_sent: checked }))} 
-                      />
-                      <span className="text-sm">Proposal sent to customer</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50">
-                      <Checkbox 
-                        checked={formData.email_proposal_approved} 
-                        onCheckedChange={(checked) => setFormData(p => ({ ...p, email_proposal_approved: checked }))} 
-                      />
-                      <span className="text-sm">Proposal approved notification</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50">
-                      <Checkbox 
-                        checked={formData.email_proposal_rejected} 
-                        onCheckedChange={(checked) => setFormData(p => ({ ...p, email_proposal_rejected: checked }))} 
-                      />
-                      <span className="text-sm">Proposal rejected notification</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50">
-                      <Checkbox 
-                        checked={formData.email_task_assigned} 
-                        onCheckedChange={(checked) => setFormData(p => ({ ...p, email_task_assigned: checked }))} 
-                      />
-                      <span className="text-sm">Task assigned to team member</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50">
-                      <Checkbox 
-                        checked={formData.email_task_due_reminder} 
-                        onCheckedChange={(checked) => setFormData(p => ({ ...p, email_task_due_reminder: checked }))} 
-                      />
-                      <span className="text-sm">Task due date reminders</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50">
-                      <Checkbox 
-                        checked={formData.email_part_status_changed} 
-                        onCheckedChange={(checked) => setFormData(p => ({ ...p, email_part_status_changed: checked }))} 
-                      />
-                      <span className="text-sm">Part status changes</span>
-                    </label>
-                  </div>
+                
+                <div>
+                  <Label className="text-xs">Reply-To Email (Optional)</Label>
+                  <Input 
+                    type="email"
+                    value={formData.emailit_reply_to} 
+                    onChange={(e) => setFormData(p => ({ ...p, emailit_reply_to: e.target.value }))} 
+                    placeholder="support@yourcompany.com" 
+                    className="mt-1" 
+                  />
                 </div>
 
                 <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
                   <Button 
                     onClick={async () => {
-                      if (!formData.sendgrid_api_key || !formData.sendgrid_from_email) {
+                      if (!formData.emailit_api_key || !formData.emailit_from_email) {
                         setEmailTestResult({ success: false, message: 'Please enter API key and from email first' });
                         return;
                       }
@@ -1690,11 +1653,11 @@ function IntegrationsSection({ queryClient }) {
                       setEmailTestResult(null);
                       try {
                         await handleSave();
-                        const response = await base44.functions.invoke('sendEmail', { 
+                        const response = await base44.functions.invoke('sendEmailit', { 
                           testOnly: true,
-                          to: formData.sendgrid_from_email,
+                          to: formData.emailit_from_email,
                           subject: 'Test Email from IT Projects',
-                          body: 'This is a test email to verify your SendGrid integration is working correctly.'
+                          html: '<h1>Test Email</h1><p>This is a test email to verify your Emailit integration is working correctly.</p>'
                         });
                         if (response.data?.success) {
                           setEmailTestResult({ success: true, message: 'Test email sent successfully! Check your inbox.' });
@@ -1729,85 +1692,6 @@ function IntegrationsSection({ queryClient }) {
                     <p>{emailTestResult.message}</p>
                   </div>
                 )}
-              </div>
-            )}
-          </div>
-          )}
-        </div>
-
-        {/* Slack Card */}
-        <div className="border rounded-xl overflow-hidden">
-          <button
-            onClick={() => setSelectedIntegration(selectedIntegration === 'slack' ? null : 'slack')}
-            className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                <svg className="w-5 h-5 text-purple-600" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
-                </svg>
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-slate-900">Slack</h3>
-                <p className="text-xs text-slate-500">Get notifications in your Slack channel</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant={formData.slack_enabled ? "default" : "outline"} className={formData.slack_enabled ? "bg-emerald-500" : ""}>
-                {formData.slack_enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
-              {selectedIntegration === 'slack' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-            </div>
-          </button>
-          
-          {selectedIntegration === 'slack' && (
-          <div className="p-4 space-y-4 bg-white">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox 
-                checked={formData.slack_enabled} 
-                onCheckedChange={(checked) => setFormData(p => ({ ...p, slack_enabled: checked }))} 
-              />
-              <span className="text-sm font-medium">Enable Slack Notifications</span>
-            </label>
-
-            {formData.slack_enabled && (
-              <div className="space-y-4 pt-4 border-t border-slate-200">
-                <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                  <p className="text-xs text-purple-700">
-                    <strong>Setup:</strong> In Slack, go to your workspace settings → <strong>Apps → Incoming Webhooks</strong>. Create a new webhook for your desired channel and paste the URL below.
-                  </p>
-                </div>
-                
-                <div>
-                  <Label className="text-xs">Slack Webhook URL</Label>
-                  <Input 
-                    type="password"
-                    value={formData.slack_webhook_url} 
-                    onChange={(e) => setFormData(p => ({ ...p, slack_webhook_url: e.target.value }))} 
-                    placeholder="https://hooks.slack.com/services/..." 
-                    className="mt-1 font-mono text-sm" 
-                  />
-                </div>
-
-                <div className="pt-3 border-t">
-                  <h4 className="text-sm font-medium text-slate-700 mb-3">Notification Types</h4>
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50">
-                      <Checkbox 
-                        checked={formData.slack_notify_proposals} 
-                        onCheckedChange={(checked) => setFormData(p => ({ ...p, slack_notify_proposals: checked }))} 
-                      />
-                      <span className="text-sm">Proposal approved/rejected</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50">
-                      <Checkbox 
-                        checked={formData.slack_notify_projects} 
-                        onCheckedChange={(checked) => setFormData(p => ({ ...p, slack_notify_projects: checked }))} 
-                      />
-                      <span className="text-sm">New project created</span>
-                    </label>
-                  </div>
-                </div>
               </div>
             )}
           </div>
