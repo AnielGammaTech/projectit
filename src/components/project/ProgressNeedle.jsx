@@ -43,16 +43,11 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
     }
   });
 
-  const getGradient = () => {
-    return 'linear-gradient(90deg, #ef4444 0%, #f59e0b 30%, #eab308 50%, #84cc16 70%, #22c55e 100%)';
-  };
-
-  const getThumbColor = () => {
-    if (localValue < 25) return '#ef4444';
-    if (localValue < 50) return '#f59e0b';
-    if (localValue < 75) return '#eab308';
-    if (localValue < 100) return '#84cc16';
-    return '#22c55e';
+  const getColor = () => {
+    if (localValue < 30) return { bg: 'bg-slate-400', hex: '#94a3b8' };
+    if (localValue < 60) return { bg: 'bg-blue-500', hex: '#3b82f6' };
+    if (localValue < 90) return { bg: 'bg-indigo-500', hex: '#6366f1' };
+    return { bg: 'bg-emerald-500', hex: '#10b981' };
   };
 
   const handleMouseDown = (e) => {
@@ -125,161 +120,113 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   const isActive = isHovered || isDragging || showNoteInput;
 
+  const color = getColor();
+
   return (
-    <motion.div 
-      className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => !isDragging && !showNoteInput && setIsHovered(false)}
-      animate={{ 
-        boxShadow: isActive ? '0 8px 30px rgba(0,0,0,0.12)' : '0 1px 3px rgba(0,0,0,0.05)',
-        borderColor: isActive ? 'rgba(148, 163, 184, 0.4)' : 'rgba(226, 232, 240, 0.6)'
-      }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className={cn("px-3 py-2.5 transition-all duration-300", isActive && "pb-3")}>
-        {/* Header Row */}
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Progress</span>
-          <motion.div 
-            className="flex items-baseline gap-0.5"
-            animate={{ scale: isDragging ? 1.05 : 1 }}
-          >
-            <span className="text-lg font-bold text-slate-900">{localValue}</span>
-            <span className="text-xs font-medium text-slate-400">%</span>
-          </motion.div>
-        </div>
-
-        {/* Slider Track */}
-        <div 
-          ref={trackRef}
-          className="relative cursor-pointer group"
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-        >
-          {/* Track Background */}
-          <motion.div 
-            className="h-2 bg-slate-100 rounded-full overflow-hidden"
-            animate={{ height: isActive ? 10 : 8 }}
-            transition={{ duration: 0.2 }}
-          >
-            {/* Gradient Track */}
-            <div 
-              className="h-full rounded-full opacity-20"
-              style={{ background: getGradient() }}
-            />
-          </motion.div>
-
-          {/* Progress Fill */}
-          <motion.div 
-            className="absolute top-0 left-0 h-full rounded-full"
-            style={{ 
-              background: getGradient(),
-              width: `${localValue}%`
-            }}
-            animate={{ 
-              height: isActive ? 10 : 8,
-              width: `${localValue}%`
-            }}
-            transition={{ duration: isDragging ? 0 : 0.15, ease: 'easeOut' }}
-          />
-
-          {/* Thumb */}
-          <motion.div
-            className="absolute top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
-            style={{ left: `${localValue}%` }}
-            animate={{ 
-              left: `${localValue}%`,
-              scale: isDragging ? 1.3 : isActive ? 1.1 : 0.9,
-              opacity: isActive ? 1 : 0.7
-            }}
-            transition={{ duration: isDragging ? 0 : 0.15 }}
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
-          >
-            <div 
-              className="w-5 h-5 -ml-2.5 rounded-full shadow-lg border-[3px] border-white"
-              style={{ 
-                background: getThumbColor(),
-                boxShadow: isDragging 
-                  ? `0 0 0 4px ${getThumbColor()}30, 0 4px 12px rgba(0,0,0,0.2)` 
-                  : '0 2px 8px rgba(0,0,0,0.15)'
-              }}
-            />
-            {/* Value tooltip on drag */}
-            <AnimatePresence>
-              {isDragging && (
-                <motion.div
-                  initial={{ opacity: 0, y: 5, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 5, scale: 0.9 }}
-                  className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-900 text-white text-xs font-medium rounded-md whitespace-nowrap"
-                >
-                  {localValue}%
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45" />
-                </motion.div>
+    <div className="flex justify-center">
+      <motion.div 
+        className="bg-white rounded-xl border border-slate-200 shadow-sm inline-flex items-center gap-3 max-w-md w-full"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => !isDragging && !showNoteInput && setIsHovered(false)}
+        animate={{ 
+          boxShadow: isActive ? '0 4px 20px rgba(0,0,0,0.08)' : '0 1px 2px rgba(0,0,0,0.04)'
+        }}
+        transition={{ duration: 0.2 }}
+      >
+        <div className={cn("px-4 py-3 w-full transition-all duration-200")}>
+          {/* Compact inline layout */}
+          <div className="flex items-center gap-3">
+            {/* Percentage */}
+            <motion.div 
+              className={cn(
+                "flex items-center justify-center w-12 h-8 rounded-lg text-sm font-bold text-white",
+                color.bg
               )}
-            </AnimatePresence>
-          </motion.div>
-        </div>
-
-        {/* Last update info */}
-        <AnimatePresence>
-          {isActive && !showNoteInput && lastUpdate && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="mt-2 text-right"
+              animate={{ scale: isDragging ? 1.05 : 1 }}
             >
-              <span className="text-[10px] text-slate-400">
-                Updated {formatDistanceToNow(new Date(lastUpdate.created_date), { addSuffix: true })}
-              </span>
+              {localValue}
             </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* Note Input */}
-        <AnimatePresence>
-          {showNoteInput && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
+            {/* Slider Track */}
+            <div 
+              ref={trackRef}
+              className="flex-1 relative cursor-pointer h-8 flex items-center"
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
             >
-              <div className="mt-3 pt-3 border-t border-slate-100">
-                <Textarea
+              {/* Track Background */}
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                {/* Progress Fill */}
+                <motion.div 
+                  className={cn("h-full rounded-full", color.bg)}
+                  animate={{ width: `${localValue}%` }}
+                  transition={{ duration: isDragging ? 0 : 0.15, ease: 'easeOut' }}
+                />
+              </div>
+
+              {/* Thumb */}
+              <motion.div
+                className="absolute top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+                style={{ left: `${localValue}%` }}
+                animate={{ 
+                  left: `${localValue}%`,
+                  scale: isDragging ? 1.2 : isActive ? 1 : 0.85
+                }}
+                transition={{ duration: isDragging ? 0 : 0.15 }}
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
+              >
+                <div 
+                  className={cn(
+                    "w-4 h-4 -ml-2 rounded-md shadow-sm border-2 border-white transition-colors",
+                    color.bg
+                  )}
+                  style={{ 
+                    boxShadow: isDragging 
+                      ? `0 0 0 3px ${color.hex}25, 0 2px 8px rgba(0,0,0,0.15)` 
+                      : '0 1px 4px rgba(0,0,0,0.1)'
+                  }}
+                />
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Note Input */}
+          <AnimatePresence>
+            {showNoteInput && (
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                className="flex items-center gap-2 overflow-hidden"
+              >
+                <input
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Add a note (optional)..."
-                  className="min-h-[50px] text-xs resize-none bg-slate-50 border-slate-200 focus:bg-white rounded-lg"
+                  placeholder="Note..."
+                  className="w-24 h-8 px-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-300"
                   autoFocus
                 />
-                <div className="flex gap-2 mt-3">
-                  <motion.button 
-                    onClick={() => saveMutation.mutate()} 
-                    disabled={saveMutation.isPending}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-medium shadow-md shadow-emerald-200 hover:shadow-lg hover:shadow-emerald-300 transition-shadow flex items-center justify-center gap-1.5 disabled:opacity-50"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    Save
-                  </motion.button>
-                  <motion.button 
-                    onClick={handleCancel}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
+                <motion.button 
+                  onClick={() => saveMutation.mutate()} 
+                  disabled={saveMutation.isPending}
+                  whileTap={{ scale: 0.95 }}
+                  className="h-8 px-3 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors flex items-center gap-1"
+                >
+                  <Check className="w-3 h-3" />
+                </motion.button>
+                <motion.button 
+                  onClick={handleCancel}
+                  whileTap={{ scale: 0.95 }}
+                  className="h-8 w-8 rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200 flex items-center justify-center"
+                >
+                  <X className="w-3 h-3" />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
   );
 }
