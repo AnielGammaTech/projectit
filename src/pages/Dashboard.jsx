@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -27,6 +28,10 @@ export default function Dashboard() {
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [showArchived, setShowArchived] = useState(false);
   const [prefillData, setPrefillData] = useState(null);
+  const [pinnedProjectIds, setPinnedProjectIds] = useState(() => {
+    const saved = localStorage.getItem('pinnedProjects');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -111,6 +116,10 @@ export default function Dashboard() {
     p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.client?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const pinnedProjects = filteredProjects.filter(p => pinnedProjectIds.includes(p.id))
+    .sort((a, b) => pinnedProjectIds.indexOf(a.id) - pinnedProjectIds.indexOf(b.id));
+  const unpinnedProjects = filteredProjects.filter(p => !pinnedProjectIds.includes(p.id));
 
   // Group projects
   const groupedProjects = filteredProjects.reduce((acc, project) => {
@@ -383,48 +392,142 @@ export default function Dashboard() {
             </div>
 
             {filteredProjects.length > 0 ? (
-              <div className="space-y-4">
-                {sortedGroups.map(group => {
-                  const groupProjects = groupedProjects[group];
-                  const isCollapsed = collapsedGroups[group];
-                  const showGroupHeader = sortedGroups.length > 1 || group !== 'Ungrouped';
-
-                  return (
-                    <div key={group}>
-                      {showGroupHeader && (
-                        <button
-                          onClick={() => toggleGroup(group)}
-                          className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 mb-3"
-                        >
-                          {isCollapsed ? (
-                            <ChevronRight className="w-4 h-4" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4" />
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <div className="space-y-4">
+                  {/* Pinned Projects Section */}
+                  {pinnedProjects.length > 0 && (
+                    <Droppable droppableId="pinned" direction="horizontal">
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={cn(
+                            "mb-6 p-4 rounded-2xl border-2 border-dashed transition-all",
+                            snapshot.isDraggingOver ? "border-amber-400 bg-amber-50" : "border-amber-200 bg-amber-50/50"
                           )}
-                          {group} ({groupProjects.length})
-                        </button>
-                      )}
-                      {!isCollapsed && (
-                        <div className="grid sm:grid-cols-2 gap-4">
-                          {groupProjects.map((project, idx) => (
-                            <ProjectCard
-                              key={project.id}
-                              project={project}
-                              tasks={getTasksForProject(project.id)}
-                              index={idx}
-                              groups={allGroups}
-                              onColorChange={handleProjectColorChange}
-                              onGroupChange={handleProjectGroupChange}
-                              onStatusChange={handleProjectStatusChange}
-                              onDueDateChange={handleProjectDueDateChange}
-                            />
-                          ))}
+                        >
+                          <div className="flex items-center gap-2 mb-3">
+                            <Pin className="w-4 h-4 text-amber-600" />
+                            <span className="text-sm font-semibold text-amber-700">Pinned Projects</span>
+                          </div>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            {pinnedProjects.map((project, idx) => (
+                              <Draggable key={project.id} draggableId={project.id} index={idx}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    style={provided.draggableProps.style}
+                                  >
+                                    <ProjectCard
+                                      project={project}
+                                      tasks={getTasksForProject(project.id)}
+                                      index={idx}
+                                      groups={allGroups}
+                                      onColorChange={handleProjectColorChange}
+                                      onGroupChange={handleProjectGroupChange}
+                                      onStatusChange={handleProjectStatusChange}
+                                      onDueDateChange={handleProjectDueDateChange}
+                                      onPinToggle={handlePinToggle}
+                                      isPinned={true}
+                                      dragHandleProps={provided.dragHandleProps}
+                                    />
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                          </div>
+                          {provided.placeholder}
                         </div>
                       )}
-                    </div>
-                  );
-                })}
-              </div>
+                    </Droppable>
+                  )}
+
+                  {/* Drop zone when no pinned projects */}
+                  {pinnedProjects.length === 0 && (
+                    <Droppable droppableId="pinned">
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={cn(
+                            "mb-4 p-4 rounded-2xl border-2 border-dashed text-center transition-all",
+                            snapshot.isDraggingOver ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-slate-50/50"
+                          )}
+                        >
+                          <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
+                            <Pin className="w-4 h-4" />
+                            <span>Drag projects here to pin them</span>
+                          </div>
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  )}
+
+                  {/* Unpinned Projects */}
+                  <Droppable droppableId="unpinned">
+                    {(provided) => (
+                      <div ref={provided.innerRef} {...provided.droppableProps}>
+                        {sortedGroups.map(group => {
+                          const groupProjects = (groupedProjects[group] || []).filter(p => !pinnedProjectIds.includes(p.id));
+                          if (groupProjects.length === 0) return null;
+                          const isCollapsed = collapsedGroups[group];
+                          const showGroupHeader = sortedGroups.length > 1 || group !== 'Ungrouped';
+
+                          return (
+                            <div key={group} className="mb-4">
+                              {showGroupHeader && (
+                                <button
+                                  onClick={() => toggleGroup(group)}
+                                  className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 mb-3"
+                                >
+                                  {isCollapsed ? (
+                                    <ChevronRight className="w-4 h-4" />
+                                  ) : (
+                                    <ChevronDown className="w-4 h-4" />
+                                  )}
+                                  {group} ({groupProjects.length})
+                                </button>
+                              )}
+                              {!isCollapsed && (
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                  {groupProjects.map((project, idx) => (
+                                    <Draggable key={project.id} draggableId={project.id} index={idx}>
+                                      {(provided, snapshot) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          style={provided.draggableProps.style}
+                                        >
+                                          <ProjectCard
+                                            project={project}
+                                            tasks={getTasksForProject(project.id)}
+                                            index={idx}
+                                            groups={allGroups}
+                                            onColorChange={handleProjectColorChange}
+                                            onGroupChange={handleProjectGroupChange}
+                                            onStatusChange={handleProjectStatusChange}
+                                            onDueDateChange={handleProjectDueDateChange}
+                                            onPinToggle={handlePinToggle}
+                                            isPinned={false}
+                                            dragHandleProps={provided.dragHandleProps}
+                                          />
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </div>
+              </DragDropContext>
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
