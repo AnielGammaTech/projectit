@@ -1376,6 +1376,9 @@ function IntegrationsSection({ queryClient }) {
     halopsa_tenant: '',
     halopsa_sync_customers: true,
     halopsa_sync_tickets: false,
+    halopsa_two_way_sync: false,
+    halopsa_auto_push_updates: false,
+    halopsa_webhook_secret: '',
     halopsa_field_mapping: {
       name: 'name',
       email: 'email',
@@ -1507,6 +1510,9 @@ function IntegrationsSection({ queryClient }) {
         halopsa_tenant: settings[0].halopsa_tenant || '',
         halopsa_sync_customers: settings[0].halopsa_sync_customers !== false,
         halopsa_sync_tickets: settings[0].halopsa_sync_tickets || false,
+        halopsa_two_way_sync: settings[0].halopsa_two_way_sync || false,
+        halopsa_auto_push_updates: settings[0].halopsa_auto_push_updates || false,
+        halopsa_webhook_secret: settings[0].halopsa_webhook_secret || '',
         halopsa_field_mapping: settings[0].halopsa_field_mapping || {
           name: 'name',
           email: 'email',
@@ -1781,6 +1787,52 @@ function IntegrationsSection({ queryClient }) {
                 </div>
                 <div>
                   <span className="font-medium">Tenant:</span> HALOPSA_TENANT ✓
+                </div>
+              </div>
+            </div>
+
+            {/* Two-Way Sync Settings */}
+            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <h4 className="text-sm font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                <RefreshCw className="w-4 h-4" />
+                Two-Way Sync Settings
+              </h4>
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox 
+                    checked={formData.halopsa_two_way_sync} 
+                    onCheckedChange={(checked) => setFormData(p => ({ ...p, halopsa_two_way_sync: checked }))} 
+                  />
+                  <span className="text-sm">Enable Two-Way Sync</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox 
+                    checked={formData.halopsa_auto_push_updates} 
+                    onCheckedChange={(checked) => setFormData(p => ({ ...p, halopsa_auto_push_updates: checked }))} 
+                  />
+                  <span className="text-sm">Auto-push project/task updates to HaloPSA</span>
+                </label>
+                
+                <div className="pt-3 border-t border-purple-200">
+                  <Label className="text-xs text-purple-700">Webhook Secret (for incoming HaloPSA webhooks)</Label>
+                  <Input 
+                    value={formData.halopsa_webhook_secret || ''} 
+                    onChange={(e) => setFormData(p => ({ ...p, halopsa_webhook_secret: e.target.value }))} 
+                    placeholder="Enter a secret key for webhook authentication" 
+                    className="mt-1" 
+                  />
+                  <p className="text-[10px] text-purple-600 mt-1">
+                    Set this same secret in HaloPSA webhook configuration. The webhook URL is: <code className="bg-purple-100 px-1 rounded">/api/functions/haloPSAWebhook?secret=YOUR_SECRET</code>
+                  </p>
+                </div>
+
+                <div className="p-3 bg-white rounded-lg border border-purple-200 text-xs text-purple-700">
+                  <p className="font-medium mb-1">How Two-Way Sync Works:</p>
+                  <ul className="list-disc list-inside space-y-1 text-purple-600">
+                    <li><strong>HaloPSA → Base44:</strong> Set up a webhook in HaloPSA to call our endpoint when tickets change</li>
+                    <li><strong>Base44 → HaloPSA:</strong> Project/task updates are pushed as notes or status changes</li>
+                    <li>Progress updates are synced as private notes on linked tickets</li>
+                  </ul>
                 </div>
               </div>
             </div>
