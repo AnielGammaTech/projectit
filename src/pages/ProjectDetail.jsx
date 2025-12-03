@@ -61,31 +61,15 @@ import { cn } from '@/lib/utils';
 
 const statusColors = {
   planning: 'bg-amber-50 text-amber-700 border-amber-200',
-  in_progress: 'bg-blue-50 text-blue-700 border-blue-200',
   on_hold: 'bg-slate-50 text-slate-700 border-slate-200',
   completed: 'bg-emerald-50 text-emerald-700 border-emerald-200'
 };
 
 const statusOptions = [
   { value: 'planning', label: 'Planning' },
-  { value: 'in_progress', label: 'In Progress' },
   { value: 'on_hold', label: 'On Hold' },
   { value: 'completed', label: 'Completed' }
 ];
-
-const priorityOptions = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'urgent', label: 'Urgent' }
-];
-
-const priorityColors = {
-  low: 'bg-slate-100 text-slate-600 border-slate-200',
-  medium: 'bg-blue-50 text-blue-700 border-blue-200',
-  high: 'bg-orange-50 text-orange-700 border-orange-200',
-  urgent: 'bg-red-50 text-red-700 border-red-200'
-};
 
 export default function ProjectDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -381,22 +365,6 @@ export default function ProjectDetail() {
                     {statusOptions.map((opt) => (
                       <DropdownMenuItem key={opt.value} onClick={() => handleQuickUpdate('status', opt.value)}>
                         <Badge className={cn("mr-2", statusColors[opt.value])}>{opt.label}</Badge>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Inline Priority Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80 transition-all", priorityColors[project.priority])}>
-                      {project.priority} priority
-                    </Badge>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {priorityOptions.map((opt) => (
-                      <DropdownMenuItem key={opt.value} onClick={() => handleQuickUpdate('priority', opt.value)}>
-                        <Badge className={cn("mr-2", priorityColors[opt.value])}>{opt.label}</Badge>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
