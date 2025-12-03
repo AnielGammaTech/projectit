@@ -29,6 +29,9 @@ const WIDGET_TYPES = {
   ai_summary: { icon: Sparkles, label: 'AI Project Summary', color: 'bg-indigo-500' },
   my_tasks: { icon: ListTodo, label: 'My Tasks', color: 'bg-emerald-500' },
   team_load: { icon: Users, label: 'Team Workload', color: 'bg-pink-500' },
+  overdue_parts: { icon: Package, label: 'Overdue Parts', color: 'bg-red-500' },
+  project_progress: { icon: TrendingUp, label: 'Project Progress', color: 'bg-teal-500' },
+  billing_summary: { icon: Clock, label: 'Billable Hours', color: 'bg-orange-500' },
 };
 
 // Metrics Widget
@@ -283,8 +286,94 @@ function TeamWorkloadWidget({ tasks, teamMembers }) {
   );
 }
 
+// Overdue Parts Widget
+function OverduePartsWidget({ parts }) {
+  const overdueParts = parts
+    .filter(p => p.due_date && isPast(new Date(p.due_date)) && p.status !== 'installed')
+    .slice(0, 5);
+
+  return (
+    <div className="space-y-2">
+      {overdueParts.length === 0 ? (
+        <p className="text-sm text-slate-500 text-center py-4">No overdue parts</p>
+      ) : (
+        overdueParts.map((part) => (
+          <div key={part.id} className="flex items-center gap-2 p-2 bg-red-50 rounded-lg">
+            <Package className="w-4 h-4 text-red-500" />
+            <span className="flex-1 text-xs text-slate-700 truncate">{part.name}</span>
+            <Badge className="text-[10px] bg-red-100 text-red-700">
+              {format(new Date(part.due_date), 'MMM d')}
+            </Badge>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+// Project Progress Widget
+function ProjectProgressWidget({ projects }) {
+  const activeProjects = projects
+    .filter(p => p.status !== 'archived' && p.status !== 'completed')
+    .slice(0, 5);
+
+  return (
+    <div className="space-y-3">
+      {activeProjects.length === 0 ? (
+        <p className="text-sm text-slate-500 text-center py-4">No active projects</p>
+      ) : (
+        activeProjects.map((project) => (
+          <div key={project.id} className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-700 truncate flex-1">{project.name}</span>
+              <span className="text-xs font-medium text-slate-600">{project.progress || 0}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-teal-500 rounded-full transition-all"
+                style={{ width: `${project.progress || 0}%` }}
+              />
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+// Billable Hours Widget
+function BillableHoursWidget({ timeEntries }) {
+  const pendingHours = timeEntries
+    .filter(t => t.billing_status === 'pending')
+    .reduce((sum, t) => sum + (t.duration_minutes || 0), 0) / 60;
+
+  const readyToBill = timeEntries
+    .filter(t => t.billing_status === 'ready_to_bill')
+    .reduce((sum, t) => sum + (t.duration_minutes || 0), 0) / 60;
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="p-3 bg-orange-50 rounded-lg text-center">
+          <p className="text-xl font-bold text-orange-700">{pendingHours.toFixed(1)}h</p>
+          <p className="text-[10px] text-orange-600">Pending</p>
+        </div>
+        <div className="p-3 bg-emerald-50 rounded-lg text-center">
+          <p className="text-xl font-bold text-emerald-700">{readyToBill.toFixed(1)}h</p>
+          <p className="text-[10px] text-emerald-600">Ready to Bill</p>
+        </div>
+      </div>
+      <Link to={createPageUrl('Billing')}>
+        <Button variant="ghost" size="sm" className="w-full text-xs">
+          View billing →
+        </Button>
+      </Link>
+    </div>
+  );
+}
+
 // Main Widget Component
-function DashboardWidget({ type, onRemove, projects, tasks, parts, activities, teamMembers, currentUser }) {
+function DashboardWidget({ type, onRemove, projects, tasks, parts, activities, teamMembers, currentUser, timeEntries }) {
   const config = WIDGET_TYPES[type];
   const Icon = config?.icon || BarChart3;
 
@@ -302,6 +391,12 @@ function DashboardWidget({ type, onRemove, projects, tasks, parts, activities, t
         return <MyTasksWidget tasks={tasks} currentUser={currentUser} />;
       case 'team_load':
         return <TeamWorkloadWidget tasks={tasks} teamMembers={teamMembers} />;
+      case 'overdue_parts':
+        return <OverduePartsWidget parts={parts} />;
+      case 'project_progress':
+        return <ProjectProgressWidget projects={projects} />;
+      case 'billing_summary':
+        return <BillableHoursWidget timeEntries={timeEntries} />;
       default:
         return null;
     }
@@ -419,6 +514,11 @@ export default function DashboardWidgets() {
     queryFn: () => base44.entities.TeamMember.list()
   });
 
+  const { data: timeEntries = [] } = useQuery({
+    queryKey: ['timeEntries'],
+    queryFn: () => base44.entities.TimeEntry.list()
+  });
+
   const handleAddWidget = (type) => {
     if (!pinnedWidgets.includes(type)) {
       setPinnedWidgets([...pinnedWidgets, type]);
@@ -451,6 +551,7 @@ export default function DashboardWidgets() {
             activities={activities}
             teamMembers={teamMembers}
             currentUser={currentUser}
+            timeEntries={timeEntries}
           />
         ))}
       </div>

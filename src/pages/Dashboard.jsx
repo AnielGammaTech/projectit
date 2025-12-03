@@ -442,7 +442,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Sidebar - My Tasks & Activity */}
+          {/* Sidebar - My Tasks */}
           <div className="space-y-6">
             <MyTasksCard 
               tasks={tasks} 
@@ -450,10 +450,6 @@ export default function Dashboard() {
               projects={projects}
               currentUserEmail={currentUser?.email}
               onTaskComplete={handleTaskComplete}
-            />
-            <ActivityTimeline 
-              proposals={proposals}
-              projects={projects}
             />
           </div>
         </div>
