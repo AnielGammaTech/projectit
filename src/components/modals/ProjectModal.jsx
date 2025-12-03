@@ -20,8 +20,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     name: '',
     description: '',
     client: '',
+    customer_id: '',
     status: 'planning',
-    priority: 'medium',
     start_date: '',
     due_date: '',
     color: 'slate',
@@ -51,8 +51,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         name: project.name || '',
         description: project.description || '',
         client: project.client || '',
+        customer_id: project.customer_id || '',
         status: project.status || 'planning',
-        priority: project.priority || 'medium',
         start_date: project.start_date || '',
         due_date: project.due_date || '',
         color: project.color || 'slate',
@@ -68,7 +68,6 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         client: prefillData.client || '',
         customer_id: prefillData.customer_id || '',
         status: 'planning',
-        priority: 'medium',
         start_date: '',
         due_date: '',
         color: 'slate',
@@ -90,8 +89,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         name: '',
         description: '',
         client: '',
+        customer_id: '',
         status: 'planning',
-        priority: 'medium',
         start_date: '',
         due_date: '',
         color: 'slate',
@@ -244,36 +243,18 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
 
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Status</Label>
-              <Select value={formData.status} onValueChange={(v) => setFormData(prev => ({ ...prev, status: v }))}>
-                <SelectTrigger className="mt-1.5">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="planning">Planning</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="on_hold">On Hold</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Priority</Label>
-              <Select value={formData.priority} onValueChange={(v) => setFormData(prev => ({ ...prev, priority: v }))}>
-                <SelectTrigger className="mt-1.5">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label>Status</Label>
+            <Select value={formData.status} onValueChange={(v) => setFormData(prev => ({ ...prev, status: v }))}>
+              <SelectTrigger className="mt-1.5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="planning">Planning</SelectItem>
+                <SelectItem value="on_hold">On Hold</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
