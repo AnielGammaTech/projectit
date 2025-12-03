@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2 } from 'lucide-react';
+import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2, Sun, Moon, Monitor, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,13 @@ const avatarColors = [
   'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
 ];
 
+const themeOptions = [
+  { value: 'light', label: 'Light', icon: Sun, description: 'Light background with dark text' },
+  { value: 'dark', label: 'Dark', icon: Moon, description: 'Dark background with light text' },
+  { value: 'system', label: 'System', icon: Monitor, description: 'Follow your system preferences' },
+  { value: 'high_contrast', label: 'High Contrast', icon: Palette, description: 'Enhanced visibility' }
+];
+
 export default function Profile() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +32,8 @@ export default function Profile() {
   const [formData, setFormData] = useState({
     full_name: '',
     avatar_url: '',
-    avatar_color: 'bg-blue-500'
+    avatar_color: 'bg-blue-500',
+    theme: 'light'
   });
 
   useEffect(() => {
@@ -33,7 +42,8 @@ export default function Profile() {
       setFormData({
         full_name: user.full_name || '',
         avatar_url: user.avatar_url || '',
-        avatar_color: user.avatar_color || 'bg-blue-500'
+        avatar_color: user.avatar_color || 'bg-blue-500',
+        theme: user.theme || 'light'
       });
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -174,6 +184,50 @@ export default function Profile() {
               >
                 {saving ? 'Saving...' : 'Save Changes'}
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Theme Settings */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="w-5 h-5 text-[#0069AF]" />
+                Appearance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Label className="mb-4 block">Theme</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {themeOptions.map(option => {
+                  const Icon = option.icon;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => setFormData(prev => ({ ...prev, theme: option.value }))}
+                      className={cn(
+                        "flex items-start gap-3 p-4 rounded-xl border-2 transition-all text-left",
+                        formData.theme === option.value
+                          ? "border-[#0069AF] bg-blue-50"
+                          : "border-slate-200 hover:border-slate-300"
+                      )}
+                    >
+                      <div className={cn(
+                        "p-2 rounded-lg",
+                        formData.theme === option.value ? "bg-[#0069AF] text-white" : "bg-slate-100 text-slate-600"
+                      )}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-slate-900">{option.label}</div>
+                        <div className="text-xs text-slate-500">{option.description}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-slate-400 mt-3">
+                Theme settings are saved to your profile and will apply across all your devices.
+              </p>
             </CardContent>
           </Card>
 

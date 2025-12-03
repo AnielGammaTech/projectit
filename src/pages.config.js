@@ -32,6 +32,8 @@ import Workflows from './pages/Workflows';
 import ReportBuilder from './pages/ReportBuilder';
 import ProjectTimeline from './pages/ProjectTimeline';
 import ActivityFeed from './pages/ActivityFeed';
+import MyAssignments from './pages/MyAssignments';
+import MySchedule from './pages/MySchedule';
 import __Layout from './Layout.jsx';
 
 
@@ -70,6 +72,8 @@ export const PAGES = {
     "ReportBuilder": ReportBuilder,
     "ProjectTimeline": ProjectTimeline,
     "ActivityFeed": ActivityFeed,
+    "MyAssignments": MyAssignments,
+    "MySchedule": MySchedule,
 }
 
 export const pagesConfig = {

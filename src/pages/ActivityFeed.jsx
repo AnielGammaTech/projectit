@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { 
   Activity, Filter, Search, CheckCircle2, MessageSquare, 
@@ -58,10 +58,15 @@ export default function ActivityFeed() {
   const [projectFilter, setProjectFilter] = useState('all');
   const [userFilter, setUserFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [filterTab, setFilterTab] = useState('everything'); // 'everything', 'projects', 'people'
   const [currentUser, setCurrentUser] = useState(null);
+  const [showingFor, setShowingFor] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    base44.auth.me().then(user => {
+      setCurrentUser(user);
+      setShowingFor(user);
+    }).catch(() => {});
   }, []);
 
   const { data: activities = [], isLoading } = useQuery({
@@ -110,74 +115,102 @@ export default function ActivityFeed() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="text-center mb-8"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-200">
-              <Activity className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">Activity Feed</h1>
-              <p className="text-sm text-slate-500">All activity across your projects</p>
-            </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-4">Latest Activity</h1>
+          
+          {/* Filter Tabs */}
+          <div className="flex justify-center gap-2 mb-4">
+            <button
+              onClick={() => setFilterTab('everything')}
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium transition-all",
+                filterTab === 'everything'
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+              )}
+            >
+              Everything
+            </button>
+            <button
+              onClick={() => setFilterTab('projects')}
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium transition-all",
+                filterTab === 'projects'
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+              )}
+            >
+              Filter by projects
+            </button>
+            <button
+              onClick={() => setFilterTab('people')}
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium transition-all",
+                filterTab === 'people'
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+              )}
+            >
+              Filter by people
+            </button>
           </div>
+
+          {/* Showing for user */}
+          {showingFor && (
+            <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
+              <span>Showing activity for</span>
+              <span className="px-3 py-1 bg-slate-100 rounded-full font-medium">
+                {showingFor.full_name || showingFor.email}
+              </span>
+              <button 
+                onClick={() => setShowingFor(null)}
+                className="text-[#0069AF] hover:underline"
+              >
+                Change
+              </button>
+            </div>
+          )}
         </motion.div>
 
-        {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl border border-slate-100 p-4 mb-6 shadow-sm"
-        >
-          <div className="flex flex-wrap gap-4">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                placeholder="Search activities..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+        {/* Additional Filters for projects/people tabs */}
+        {filterTab !== 'everything' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-2xl border border-slate-100 p-4 mb-6 shadow-sm"
+          >
+            <div className="flex flex-wrap gap-4">
+              {filterTab === 'projects' && (
+                <Select value={projectFilter} onValueChange={setProjectFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Projects</SelectItem>
+                    {projects.map(project => (
+                      <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {filterTab === 'people' && (
+                <Select value={userFilter} onValueChange={setUserFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Person" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All People</SelectItem>
+                    {teamMembers.map(member => (
+                      <SelectItem key={member.id} value={member.email}>{member.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
-
-            <Select value={projectFilter} onValueChange={setProjectFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Projects" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Projects</SelectItem>
-                {projects.map(project => (
-                  <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={userFilter} onValueChange={setUserFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Users" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Users</SelectItem>
-                {teamMembers.map(member => (
-                  <SelectItem key={member.id} value={member.email}>{member.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {activityTypes.map(type => (
-                  <SelectItem key={type} value={type}>{type.replace(/_/g, ' ')}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Activity List */}
         {isLoading ? (
@@ -205,79 +238,96 @@ export default function ActivityFeed() {
             <p className="text-slate-500">Activity will appear here as you work on projects</p>
           </motion.div>
         ) : (
-          <div className="space-y-6">
-            {Object.entries(groupedActivities).map(([date, dayActivities]) => (
-              <motion.div
-                key={date}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
-                    {format(new Date(date), 'EEEE, MMM d')}
+          <div className="space-y-8">
+            {Object.entries(groupedActivities).map(([date, dayActivities]) => {
+              const dateObj = new Date(date);
+              const isActivityToday = isToday(dateObj);
+              const isActivityYesterday = format(dateObj, 'yyyy-MM-dd') === format(new Date(Date.now() - 86400000), 'yyyy-MM-dd');
+              
+              let dateLabel = format(dateObj, 'EEEE').toUpperCase();
+              if (isActivityToday) dateLabel = 'TODAY';
+              if (isActivityYesterday) dateLabel = 'YESTERDAY';
+
+              return (
+                <motion.div
+                  key={date}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  {/* Date Label */}
+                  <div className="flex justify-center mb-4">
+                    <span className="px-4 py-1.5 bg-slate-200 rounded-full text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                      {dateLabel}
+                    </span>
                   </div>
-                  <div className="flex-1 h-px bg-slate-200" />
-                  <Badge variant="outline" className="text-xs">
-                    {dayActivities.length} {dayActivities.length === 1 ? 'event' : 'events'}
-                  </Badge>
-                </div>
 
-                <div className="space-y-2">
-                  {dayActivities.map((activity, idx) => {
-                    const config = activityIcons[activity.action] || activityIcons.task_updated;
-                    const Icon = config.icon;
+                  <div className="space-y-4">
+                    {dayActivities.map((activity, idx) => {
+                      const config = activityIcons[activity.action] || activityIcons.task_updated;
+                      const Icon = config.icon;
+                      const projectName = getProjectName(activity.project_id);
+                      const project = projects.find(p => p.id === activity.project_id);
 
-                    return (
-                      <motion.div
-                        key={activity.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.02 }}
-                        className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all group"
-                      >
-                        <div className="flex items-start gap-4">
-                          <div className={cn("p-2 rounded-xl", config.bg)}>
-                            <Icon className={cn("w-4 h-4", config.color)} />
+                      return (
+                        <motion.div
+                          key={activity.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.02 }}
+                        >
+                          {/* Project Header */}
+                          <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+                            {project?.client && `${project.client} - `}{projectName}
                           </div>
 
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <p className="text-sm text-slate-900">
-                                  <span className="font-medium">{activity.actor_name || 'Someone'}</span>
-                                  {' '}
-                                  <span className="text-slate-600">{activity.description}</span>
-                                </p>
-                                <div className="flex items-center gap-3 mt-1.5">
-                                  <Link 
-                                    to={createPageUrl('ProjectDetail') + `?id=${activity.project_id}`}
-                                    className="flex items-center gap-1 text-xs text-[#0069AF] hover:underline"
-                                  >
-                                    <FolderKanban className="w-3 h-3" />
-                                    {getProjectName(activity.project_id)}
-                                    <ArrowRight className="w-3 h-3" />
-                                  </Link>
-                                  <span className="text-xs text-slate-400">
-                                    {formatDistanceToNow(new Date(activity.created_date), { addSuffix: true })}
-                                  </span>
-                                </div>
-                              </div>
-
+                          <div className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all">
+                            <div className="flex items-start gap-4">
+                              {/* Avatar */}
                               <div className={cn(
-                                "w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium",
+                                "w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium shrink-0",
                                 getColorForEmail(activity.actor_email)
                               )}>
                                 {getInitials(activity.actor_name)}
                               </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <p className="text-sm text-slate-900">
+                                      On{' '}
+                                      <Link 
+                                        to={createPageUrl('ProjectDetail') + `?id=${activity.project_id}`}
+                                        className="text-[#0069AF] hover:underline font-medium"
+                                      >
+                                        {projectName}
+                                      </Link>
+                                      , <span className="font-medium">{activity.actor_name}</span>{' '}
+                                      <span className="text-slate-600">{activity.description}</span>
+                                    </p>
+                                    
+                                    {/* If it's a task completion, show the task */}
+                                    {activity.action === 'task_completed' && activity.entity_id && (
+                                      <div className="flex items-center gap-2 mt-2 text-sm text-slate-600">
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                        <span>{activity.description.replace('completed task "', '').replace('"', '')}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  <span className="text-xs text-slate-400 shrink-0 ml-4">
+                                    {format(new Date(activity.created_date), 'h:mma').toLowerCase()}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            ))}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>
