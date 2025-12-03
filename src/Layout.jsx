@@ -15,7 +15,8 @@ import {
   LogOut,
   Search,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Zap
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import GlobalSearch from '@/components/GlobalSearch';
@@ -46,10 +47,10 @@ const navItems = [
       { name: 'Activity', page: 'Reports', params: '?type=activity' },
       { name: 'Timesheets', page: 'Reports', params: '?type=timesheets' },
       { name: 'Financial', page: 'Reports', params: '?type=financial' },
-      { name: 'Overdue Appointments', page: 'Reports', params: '?type=overdue' },
-      { name: 'Notification History', page: 'Reports', params: '?type=notifications' },
+      { name: 'Report Builder', page: 'ReportBuilder' },
     ]
   },
+  { name: 'Workflows', icon: Zap, page: 'Workflows', adminOnly: true },
   { name: 'Adminland', icon: Shield, page: 'Adminland', adminOnly: true },
 ];
 
