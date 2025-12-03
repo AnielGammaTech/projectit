@@ -28,6 +28,8 @@ import Billing from './pages/Billing';
 import AuditLogs from './pages/AuditLogs';
 import RolesPermissions from './pages/RolesPermissions';
 import SecuritySettings from './pages/SecuritySettings';
+import Workflows from './pages/Workflows';
+import ReportBuilder from './pages/ReportBuilder';
 import __Layout from './Layout.jsx';
 
 
@@ -62,6 +64,8 @@ export const PAGES = {
     "AuditLogs": AuditLogs,
     "RolesPermissions": RolesPermissions,
     "SecuritySettings": SecuritySettings,
+    "Workflows": Workflows,
+    "ReportBuilder": ReportBuilder,
 }
 
 export const pagesConfig = {
