@@ -1620,46 +1620,60 @@ function IntegrationsSection({ queryClient }) {
                   />
                 </div>
 
-                <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
-                  <Button 
-                    onClick={async () => {
-                      if (!formData.emailit_api_key || !formData.emailit_from_email) {
-                        setEmailTestResult({ success: false, message: 'Please enter API key and from email first' });
-                        return;
-                      }
-                      setTestingEmail(true);
-                      setEmailTestResult(null);
-                      try {
-                        await handleSave();
-                        const response = await base44.functions.invoke('sendEmailit', { 
-                          testOnly: true,
-                          to: formData.emailit_from_email,
-                          subject: 'Test Email from IT Projects',
-                          html: '<h1>Test Email</h1><p>This is a test email to verify your Emailit integration is working correctly.</p>'
-                        });
-                        if (response.data?.success) {
-                          setEmailTestResult({ success: true, message: 'Test email sent successfully! Check your inbox.' });
-                        } else {
-                          setEmailTestResult({ success: false, message: response.data?.error || 'Failed to send test email' });
+                <div className="pt-3 border-t border-slate-200 space-y-3">
+                  <h4 className="text-sm font-medium text-slate-700">Send Test Email</h4>
+                  <div className="flex items-center gap-3">
+                    <Input 
+                      type="email"
+                      value={formData.emailit_test_to || ''}
+                      onChange={(e) => setFormData(p => ({ ...p, emailit_test_to: e.target.value }))} 
+                      placeholder="Enter email to send test to..."
+                      className="flex-1"
+                    />
+                    <Button 
+                      onClick={async () => {
+                        if (!formData.emailit_api_key || !formData.emailit_from_email) {
+                          setEmailTestResult({ success: false, message: 'Please enter API key and from email first' });
+                          return;
                         }
-                      } catch (error) {
-                        setEmailTestResult({ success: false, message: error.response?.data?.error || 'Failed to send test email' });
-                      }
-                      setTestingEmail(false);
-                    }} 
-                    disabled={testingEmail}
-                    variant="outline"
-                    className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                  >
-                    {testingEmail ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      'Send Test Email'
-                    )}
-                  </Button>
+                        if (!formData.emailit_test_to) {
+                          setEmailTestResult({ success: false, message: 'Please enter an email address to send the test to' });
+                          return;
+                        }
+                        setTestingEmail(true);
+                        setEmailTestResult(null);
+                        try {
+                          await handleSave();
+                          const response = await base44.functions.invoke('sendEmailit', { 
+                            testOnly: true,
+                            to: formData.emailit_test_to,
+                            subject: 'Test Email from IT Projects',
+                            html: '<h1>Test Email</h1><p>This is a test email to verify your Emailit integration is working correctly.</p>'
+                          });
+                          if (response.data?.success) {
+                            setEmailTestResult({ success: true, message: `Test email sent to ${formData.emailit_test_to}! Check your inbox.` });
+                          } else {
+                            setEmailTestResult({ success: false, message: response.data?.error || 'Failed to send test email' });
+                          }
+                        } catch (error) {
+                          setEmailTestResult({ success: false, message: error.response?.data?.error || error.message || 'Failed to send test email' });
+                        }
+                        setTestingEmail(false);
+                      }} 
+                      disabled={testingEmail || !formData.emailit_test_to}
+                      variant="outline"
+                      className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                    >
+                      {testingEmail ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Send Test'
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 
                 {emailTestResult && (
