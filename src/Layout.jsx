@@ -6,7 +6,6 @@ import {
   Menu,
   X,
   Wrench,
-  BarChart3,
   FileText,
   Package,
   Shield,
@@ -14,9 +13,13 @@ import {
   Settings,
   LogOut,
   Search,
-  ChevronDown,
-  ChevronRight,
-  Zap
+  Zap,
+  Wallet,
+  Users,
+  Activity,
+  Clock,
+  TrendingUp,
+  PieChart
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import GlobalSearch from '@/components/GlobalSearch';
@@ -34,22 +37,14 @@ import {
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
   { name: 'All Tasks', icon: ListTodo, page: 'AllTasks' },
-  { name: 'Customers', icon: User, page: 'Customers' },
+  { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Proposals', icon: FileText, page: 'Proposals' },
-  { name: 'Billing', icon: BarChart3, page: 'Billing' },
+  { name: 'Billing', icon: Wallet, page: 'Billing' },
   { name: 'Catalog', icon: Package, page: 'Inventory' },
-  { 
-    name: 'Reporting', 
-    icon: BarChart3, 
-    page: 'Reports',
-    hasSubmenu: true,
-    submenu: [
-      { name: 'Activity', page: 'Reports', params: '?type=activity' },
-      { name: 'Timesheets', page: 'Reports', params: '?type=timesheets' },
-      { name: 'Financial', page: 'Reports', params: '?type=financial' },
-      { name: 'Report Builder', page: 'ReportBuilder' },
-    ]
-  },
+  { name: 'Activity', icon: Activity, page: 'Reports', params: '?type=activity' },
+  { name: 'Timesheets', icon: Clock, page: 'Reports', params: '?type=timesheets' },
+  { name: 'Financial', icon: TrendingUp, page: 'Reports', params: '?type=financial' },
+  { name: 'Report Builder', icon: PieChart, page: 'ReportBuilder' },
   { name: 'Workflows', icon: Zap, page: 'Workflows', adminOnly: true },
   { name: 'Adminland', icon: Shield, page: 'Adminland', adminOnly: true },
 ];
@@ -60,10 +55,6 @@ export default function Layout({ children, currentPageName }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
-
-  const toggleSubmenu = (itemName) => {
-    setExpandedMenus(prev => ({ ...prev, [itemName]: !prev[itemName] }));
-  };
 
   // Global keyboard shortcut for search
   useEffect(() => {
@@ -195,57 +186,21 @@ export default function Layout({ children, currentPageName }) {
 
         <nav className="px-3">
                       {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
-                        const isActive = currentPageName === item.page;
+                        const isActive = currentPageName === item.page || 
+                          (item.params && window.location.search === item.params);
                         const Icon = item.icon;
-                        const isExpanded = expandedMenus[item.name];
-
-                        if (item.hasSubmenu) {
-                          return (
-                            <div key={item.name}>
-                              <button
-                                onClick={() => toggleSubmenu(item.name)}
-                                className={cn(
-                                  "w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl mb-1 transition-all",
-                                  isActive 
-                                    ? "bg-[#74C7FF]/20 text-white font-medium" 
-                                    : "text-white/70 hover:bg-white/10 hover:text-white"
-                                )}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <Icon className={cn("w-5 h-5", isActive && "text-[#74C7FF]")} />
-                                  {item.name}
-                                </div>
-                                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                              </button>
-                              {isExpanded && (
-                                <div className="ml-6 space-y-1 mb-2">
-                                  {item.submenu.map((subItem) => (
-                                    <Link
-                                      key={subItem.name}
-                                      to={createPageUrl(subItem.page) + (subItem.params || '')}
-                                      onClick={() => setSidebarOpen(false)}
-                                      className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-                                    >
-                                      {subItem.name}
-                                    </Link>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        }
 
                         return (
                           <Link
                             key={item.name}
-                            to={createPageUrl(item.page)}
+                            to={createPageUrl(item.page) + (item.params || '')}
                             onClick={() => setSidebarOpen(false)}
                             className={cn(
-                                            "flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all",
-                                            isActive 
-                                              ? "bg-[#74C7FF]/20 text-white font-medium" 
-                                              : "text-white/70 hover:bg-white/10 hover:text-white"
-                                          )}
+                              "flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition-all",
+                              isActive 
+                                ? "bg-[#74C7FF]/20 text-white font-medium" 
+                                : "text-white/70 hover:bg-white/10 hover:text-white"
+                            )}
                           >
                             <Icon className={cn("w-5 h-5", isActive && "text-[#74C7FF]")} />
                             {item.name}
