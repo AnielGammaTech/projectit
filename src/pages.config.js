@@ -23,6 +23,7 @@ import Customers from './pages/Customers';
 import ProposalReports from './pages/ProposalReports';
 import ProposalEditor from './pages/ProposalEditor';
 import ChangeOrderEditor from './pages/ChangeOrderEditor';
+import ProjectBilling from './pages/ProjectBilling';
 import __Layout from './Layout.jsx';
 
 
@@ -52,6 +53,7 @@ export const PAGES = {
     "ProposalReports": ProposalReports,
     "ProposalEditor": ProposalEditor,
     "ChangeOrderEditor": ChangeOrderEditor,
+    "ProjectBilling": ProjectBilling,
 }
 
 export const pagesConfig = {

@@ -403,7 +403,14 @@ export default function ProjectDetail() {
                 </DropdownMenu>
               </div>
               <h1 className="text-2xl font-bold text-slate-900 mb-2">{project.name}</h1>
-              {project.client && <p className="text-slate-500 mb-4">{project.client}</p>}
+              {project.client && (
+                <Link 
+                  to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')} 
+                  className="text-[#0069AF] hover:underline mb-4 inline-block"
+                >
+                  {project.client} →
+                </Link>
+              )}
               {project.description && <p className="text-slate-600 mb-4">{project.description}</p>}
 
               <div className="flex flex-wrap gap-4 text-sm">
