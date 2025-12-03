@@ -16,6 +16,7 @@ import ProjectCard from '@/components/dashboard/ProjectCard';
 // Filter out in_progress and medium priority from dashboard display
 // These values are removed from the system
 import MyTasksCard from '@/components/dashboard/MyTasksCard';
+import ActivityTimeline from '@/components/dashboard/ActivityTimeline';
 import ProjectModal from '@/components/modals/ProjectModal';
 
 export default function Dashboard() {
@@ -432,14 +433,18 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Sidebar - My Tasks */}
-          <div>
+          {/* Sidebar - My Tasks & Activity */}
+          <div className="space-y-6">
             <MyTasksCard 
               tasks={tasks} 
               parts={parts} 
               projects={projects}
               currentUserEmail={currentUser?.email}
               onTaskComplete={handleTaskComplete}
+            />
+            <ActivityTimeline 
+              proposals={proposals}
+              projects={projects}
             />
           </div>
         </div>

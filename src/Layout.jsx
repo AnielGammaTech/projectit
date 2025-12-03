@@ -131,6 +131,12 @@ export default function Layout({ children, currentPageName }) {
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
+              <Link to={createPageUrl('NotificationSettings')} className="cursor-pointer">
+                <Bell className="w-4 h-4 mr-2" />
+                My Notifications
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
               <Link to={createPageUrl('Profile')} className="cursor-pointer">
                 <User className="w-4 h-4 mr-2" />
                 My Profile
