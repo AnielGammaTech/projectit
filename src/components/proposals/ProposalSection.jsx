@@ -35,7 +35,9 @@ export default function ProposalSection({
   onDuplicateItem,
   onAddFromInventory,
   onAddCustomItem,
+  onAddBundle,
   inventory = [],
+  bundles = [],
   markupType = 'percentage',
   markupValue = 20
 }) {
@@ -47,6 +49,12 @@ export default function ProposalSection({
   const filteredInventory = inventory.filter(item =>
     item.name?.toLowerCase().includes(searchInventory.toLowerCase()) ||
     item.sku?.toLowerCase().includes(searchInventory.toLowerCase())
+  );
+
+  const [searchBundle, setSearchBundle] = useState('');
+  const filteredBundles = bundles.filter(b =>
+    b.name?.toLowerCase().includes(searchBundle.toLowerCase()) &&
+    b.is_active !== false
   );
 
   const sectionTotal = (area.items || []).reduce((sum, item) => 
@@ -172,7 +180,10 @@ export default function ProposalSection({
             {area.items?.length > 0 && (
               <div className="divide-y divide-slate-100">
                 {area.items.map((item, itemIndex) => (
-                  <div key={itemIndex} className="px-4 py-3 flex items-start gap-3 hover:bg-slate-50/50">
+                  <div key={itemIndex} className={cn(
+                    "px-4 py-3 flex items-start gap-3 hover:bg-slate-50/50",
+                    item.type === 'bundle_item' && "pl-10 bg-purple-50/30"
+                  )}>
                     {/* Image or placeholder */}
                     {item.image_url ? (
                       <img src={item.image_url} alt="" className="w-14 h-14 rounded-lg object-contain bg-white border p-1" />
@@ -183,12 +194,20 @@ export default function ProposalSection({
                     )}
                     
                     <div className="flex-1 space-y-1 min-w-0">
-                      <input
-                        value={item.name}
-                        onChange={(e) => onUpdateItem(itemIndex, 'name', e.target.value)}
-                        className="w-full font-medium text-slate-900 border-0 p-0 focus:ring-0 focus:outline-none text-sm"
-                        placeholder="Item name"
-                      />
+                      <div className="flex items-center gap-2">
+                        {item.type === 'bundle_primary' && (
+                          <Badge className="text-[10px] bg-purple-100 text-purple-700 border-purple-200">Bundle</Badge>
+                        )}
+                        {item.type === 'bundle_item' && (
+                          <span className="text-purple-400 text-xs">↳</span>
+                        )}
+                        <input
+                          value={item.name}
+                          onChange={(e) => onUpdateItem(itemIndex, 'name', e.target.value)}
+                          className="flex-1 font-medium text-slate-900 border-0 p-0 focus:ring-0 focus:outline-none text-sm"
+                          placeholder="Item name"
+                        />
+                      </div>
                       <input
                         value={item.description || ''}
                         onChange={(e) => onUpdateItem(itemIndex, 'description', e.target.value)}
@@ -326,6 +345,51 @@ export default function ProposalSection({
                 <Plus className="w-4 h-4 mr-1.5" />
                 Custom Item
               </Button>
+
+              {bundles.length > 0 && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-purple-600">
+                      <Layers className="w-4 h-4 mr-1.5" />
+                      Add Bundle
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-2" align="start">
+                    <div className="relative mb-2">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        placeholder="Search bundles..."
+                        value={searchBundle}
+                        onChange={(e) => setSearchBundle(e.target.value)}
+                        className="pl-8 h-9"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      {filteredBundles.map(bundle => (
+                        <button
+                          key={bundle.id}
+                          onClick={() => { onAddBundle?.(bundle); setSearchBundle(''); }}
+                          className="w-full flex items-center gap-2 p-2 rounded hover:bg-purple-50 text-left"
+                        >
+                          <div className="w-8 h-8 rounded bg-purple-100 flex items-center justify-center">
+                            <Layers className="w-4 h-4 text-purple-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{bundle.name}</p>
+                            <p className="text-xs text-slate-400">{bundle.items?.length || 0} items</p>
+                          </div>
+                          <span className="text-sm font-medium text-purple-600">
+                            ${bundle.total_price || bundle.items?.reduce((s, i) => s + (i.quantity || 1) * (i.unit_price || 0), 0) || 0}
+                          </span>
+                        </button>
+                      ))}
+                      {filteredBundles.length === 0 && (
+                        <p className="text-center text-slate-400 text-sm py-4">No bundles found</p>
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
 
               {area.items?.length > 0 && (
                 <Button 
