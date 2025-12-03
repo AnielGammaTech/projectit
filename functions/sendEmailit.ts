@@ -59,12 +59,12 @@ Deno.serve(async (req) => {
           }
 
           // Add authentication if enabled
-          if (useAuth) {
-            transportConfig.auth = {
-              user: 'emailit',
-              pass: config.emailit_smtp_password,
-            };
-          }
+                if (useAuth) {
+                  transportConfig.auth = {
+                    user: config.emailit_smtp_username || 'emailit',
+                    pass: config.emailit_smtp_password,
+                  };
+                }
 
           const transporter = nodemailer.createTransport(transportConfig);
 

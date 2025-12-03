@@ -1889,14 +1889,23 @@ function IntegrationsSection({ queryClient }) {
 
             {formData.emailit_enabled && (
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <Label className="text-xs">API Key</Label>
+                    <Label className="text-xs">Username</Label>
+                    <Input 
+                      value={formData.emailit_smtp_username} 
+                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_username: e.target.value }))} 
+                      placeholder="emailit or custom" 
+                      className="mt-1 h-9" 
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">API Key / Password</Label>
                     <Input 
                       type="password"
                       value={formData.emailit_smtp_password} 
                       onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_password: e.target.value }))} 
-                      placeholder="SMTP credential key" 
+                      placeholder="SMTP credential" 
                       className="mt-1 h-9" 
                     />
                   </div>
