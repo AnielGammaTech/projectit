@@ -452,6 +452,7 @@ export default function ProjectDetail() {
               currentUser={currentUser}
               onStatusChange={(status) => handleQuickUpdate('status', status)}
               halopsaTicketId={project.halopsa_ticket_id}
+              projectStatus={project.status}
             />
         </motion.div>
 
