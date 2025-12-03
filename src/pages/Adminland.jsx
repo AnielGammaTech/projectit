@@ -67,23 +67,13 @@ export default function Adminland() {
   const renderSection = () => {
     switch (activeSection) {
       case 'people':
-        return <TeamSection queryClient={queryClient} />;
-      case 'admins':
-        return <AdminsSection queryClient={queryClient} />;
-      case 'groups':
-        return <UserGroupsSection queryClient={queryClient} />;
+        return <PeopleSection queryClient={queryClient} />;
       case 'permissions':
         return <PermissionsSection queryClient={queryClient} />;
-      case 'branding':
-        return <BrandingSection queryClient={queryClient} />;
-      case 'proposals':
-        return <ProposalSettingsSection queryClient={queryClient} />;
+      case 'company':
+        return <CompanySettingsSection queryClient={queryClient} />;
       case 'integrations':
         return <IntegrationsSection queryClient={queryClient} />;
-      case 'tools':
-        return <ToolsSection queryClient={queryClient} />;
-      case 'settings':
-        return <AppSettingsSection queryClient={queryClient} />;
       default:
         return null;
     }
