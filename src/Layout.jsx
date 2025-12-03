@@ -33,6 +33,7 @@ const navItems = [
   { name: 'All Tasks', icon: ListTodo, page: 'AllTasks' },
   { name: 'Customers', icon: User, page: 'Customers' },
   { name: 'Proposals', icon: FileText, page: 'Proposals' },
+  { name: 'Billing', icon: BarChart3, page: 'Billing' },
   { name: 'Catalog', icon: Package, page: 'Inventory' },
   { name: 'Reports', icon: BarChart3, page: 'Reports' },
   { name: 'Adminland', icon: Shield, page: 'Adminland', adminOnly: true },

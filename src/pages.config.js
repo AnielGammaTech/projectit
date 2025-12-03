@@ -24,6 +24,7 @@ import ProposalReports from './pages/ProposalReports';
 import ProposalEditor from './pages/ProposalEditor';
 import ChangeOrderEditor from './pages/ChangeOrderEditor';
 import ProjectBilling from './pages/ProjectBilling';
+import Billing from './pages/Billing';
 import __Layout from './Layout.jsx';
 
 
@@ -54,6 +55,7 @@ export const PAGES = {
     "ProposalEditor": ProposalEditor,
     "ChangeOrderEditor": ChangeOrderEditor,
     "ProjectBilling": ProjectBilling,
+    "Billing": Billing,
 }
 
 export const pagesConfig = {
