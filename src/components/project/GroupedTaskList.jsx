@@ -380,16 +380,16 @@ export default function GroupedTaskList({
         );
       })}
 
-      {/* Ungrouped */}
+      {/* Ungrouped Tasks */}
       {ungroupedTasks.length > 0 && (
-        <div className="border border-slate-200 rounded-xl overflow-hidden">
+        <div className="rounded-xl overflow-hidden">
           <div
-            className="flex items-center gap-3 p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"
+            className="flex items-center gap-3 p-3 cursor-pointer hover:bg-slate-50 transition-colors"
             onClick={() => toggleGroup('ungrouped')}
           >
-            {expandedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-            <span className="font-medium text-slate-500 flex-1">Ungrouped</span>
-            <span className="text-xs text-slate-500">{ungroupedTasks.filter(t => t.status === 'completed').length}/{ungroupedTasks.length}</span>
+            <div className="w-4 h-4 rounded-full bg-slate-300" />
+            <span className="font-medium text-slate-500">Ungrouped</span>
+            <span className="text-xs text-slate-400">{ungroupedTasks.filter(t => t.status === 'completed').length}/{ungroupedTasks.length}</span>
           </div>
           <AnimatePresence>
             {expandedGroups.has('ungrouped') && (
@@ -397,7 +397,7 @@ export default function GroupedTaskList({
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="p-2 space-y-1.5 bg-white"
+                className="space-y-1.5 pl-4"
               >
                 {ungroupedTasks.map(task => (
                   <TaskItem
@@ -411,6 +411,14 @@ export default function GroupedTaskList({
                     onTaskUpdate={onTaskUpdate}
                   />
                 ))}
+                {/* Add task button */}
+                <button
+                  onClick={() => onAddTaskToGroup?.(null)}
+                  className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add a task
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
