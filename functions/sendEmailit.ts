@@ -38,18 +38,24 @@ Deno.serve(async (req) => {
       });
     }
 
+    const port = parseInt(config.emailit_smtp_port) || 587;
+    
     // Emailit SMTP configuration:
     // Host: smtp.emailit.com
-    // Port: 587 (or 25, 2525, 2587)
-    // Encryption: TLS (STARTTLS)
+    // Port: 587 (recommended), 25, 2525, or 2587
+    // Encryption: STARTTLS
     // Username: always "emailit"
     // Password: your API credential
     const client = new SMTPClient({
-      user: 'emailit',  // Emailit requires username to always be "emailit"
-      password: config.emailit_smtp_password,  // This is the API key/credential
+      user: 'emailit',
+      password: config.emailit_smtp_password,
       host: config.emailit_smtp_host || 'smtp.emailit.com',
-      port: parseInt(config.emailit_smtp_port) || 587,
-      tls: true,  // Use STARTTLS
+      port: port,
+      ssl: false,  // Don't use implicit SSL
+      tls: {
+        ciphers: 'SSLv3'
+      },
+      timeout: 30000,
     });
 
     const fromAddress = config.emailit_from_name 
