@@ -358,17 +358,21 @@ export default function Customers() {
                       {isExpanded && contacts.length > 0 && (
                         <div className="border-t bg-slate-50/50 divide-y">
                           {contacts.map(contact => (
-                            <div key={contact.id} className="px-5 py-3 pl-16 flex items-center justify-between">
+                            <div 
+                              key={contact.id} 
+                              className="px-5 py-3 pl-16 flex items-center justify-between hover:bg-slate-100/50 cursor-pointer transition-colors"
+                              onClick={() => setSelectedCustomer(contact)}
+                            >
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm">
                                   {contact.name?.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                  <p className="font-medium text-slate-900 text-sm">{contact.name}</p>
+                                  <p className="font-medium text-slate-900 text-sm hover:text-[#0069AF]">{contact.name}</p>
                                   <p className="text-xs text-slate-500">{contact.email}</p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                 <Button variant="ghost" size="sm" onClick={() => { setEditingCustomer(contact); setShowModal(true); }}>
                                   <Edit2 className="w-3.5 h-3.5" />
                                 </Button>
