@@ -53,17 +53,16 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // Clean up URLs - remove trailing slashes
-    authUrl = authUrl.replace(/\/+$/, '');
-    apiUrl = apiUrl.replace(/\/+$/, '');
+    // Clean up URLs - remove trailing slashes and /api suffix if present
+    authUrl = authUrl.replace(/\/+$/, '').replace(/\/auth\/?$/, '').replace(/\/api\/?$/, '');
+    apiUrl = apiUrl.replace(/\/+$/, '').replace(/\/api\/?$/, '');
 
     // Build token URL: Auth URL + /auth/token
-    // The Auth URL is typically just the base (e.g., https://company.halopsa.com)
-    // We need to call /auth/token on it
+    // HaloPSA hosted uses: https://yourcompany.halopsa.com/auth/token
     let tokenUrl = `${authUrl}/auth/token`;
 
-    // Build API base URL: API URL + /api
-    // The Resource Server URL is typically just the base (e.g., https://company.haloservicedesk.com)
+    // Build API base URL
+    // HaloPSA uses: https://yourcompany.halopsa.com/api/Client (capital C)
     let apiBaseUrl = `${apiUrl}/api`;
     
     const tokenBody = new URLSearchParams({
@@ -114,8 +113,8 @@ Deno.serve(async (req) => {
     }
 
     // Fetch clients from HaloPSA
-    // HaloPSA uses lowercase endpoints and different parameter names
-    const clientsUrl = `${apiBaseUrl}/client?count=500`;
+    // HaloPSA API endpoint is /api/Client (capital C is important!)
+    const clientsUrl = `${apiBaseUrl}/Client?count=500`;
     
     let clientsResponse;
     try {
@@ -136,7 +135,14 @@ Deno.serve(async (req) => {
       const errorText = await clientsResponse.text();
       return Response.json({ 
         error: `Failed to fetch clients (${clientsResponse.status})`,
-        details: errorText
+        details: errorText,
+        debug: {
+          clientsUrl,
+          apiBaseUrl,
+          apiUrl,
+          authUrl,
+          hint: 'Make sure Resource Server URL is correct. For hosted HaloPSA, both Auth and Resource URLs are usually the same (e.g., https://yourcompany.halopsa.com)'
+        }
       }, { status: 500 });
     }
 
