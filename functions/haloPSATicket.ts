@@ -206,8 +206,76 @@ Deno.serve(async (req) => {
         message: 'Private note added to ticket'
       });
 
+    } else if (action === 'updateTicket') {
+      // Update ticket status/summary/details
+      if (!ticketId) {
+        return Response.json({ error: 'Ticket ID required' }, { status: 400 });
+      }
+
+      const { status, newSummary, newDetails } = body;
+      
+      const ticketUpdate = [{
+        id: parseInt(ticketId)
+      }];
+
+      if (newSummary) ticketUpdate[0].summary = newSummary;
+      if (newDetails) ticketUpdate[0].details = newDetails;
+      if (status) {
+        // Map Base44 status to HaloPSA status_id
+        const statusMap = {
+          'planning': 1,
+          'on_hold': 23,
+          'completed': 9
+        };
+        if (statusMap[status]) {
+          ticketUpdate[0].status_id = statusMap[status];
+        }
+      }
+
+      const updateResponse = await fetch(`${apiBaseUrl}/Tickets`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(ticketUpdate)
+      });
+
+      if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        return Response.json({ 
+          error: 'Failed to update ticket',
+          details: errorText
+        }, { status: 500 });
+      }
+
+      return Response.json({
+        success: true,
+        message: 'Ticket updated successfully'
+      });
+
+    } else if (action === 'getTicket') {
+      // Fetch ticket details from HaloPSA
+      if (!ticketId) {
+        return Response.json({ error: 'Ticket ID required' }, { status: 400 });
+      }
+
+      const ticketResponse = await fetch(`${apiBaseUrl}/Tickets/${ticketId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!ticketResponse.ok) {
+        return Response.json({ error: 'Ticket not found' }, { status: 404 });
+      }
+
+      const ticket = await ticketResponse.json();
+      return Response.json({ success: true, ticket });
+
     } else {
-      return Response.json({ error: 'Invalid action. Use: create, link, unlink, or addNote' }, { status: 400 });
+      return Response.json({ error: 'Invalid action. Use: create, link, unlink, addNote, updateTicket, or getTicket' }, { status: 400 });
     }
 
   } catch (error) {

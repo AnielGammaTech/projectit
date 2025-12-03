@@ -39,7 +39,6 @@ import {
 
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
-  { name: 'Activity Feed', icon: Activity, page: 'ActivityFeed' },
   { name: 'All Tasks', icon: ListTodo, page: 'AllTasks' },
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Proposals', icon: FileText, page: 'Proposals' },
@@ -73,6 +72,26 @@ export default function Layout({ children, currentPageName }) {
       return settings[0] || {};
     }
   });
+
+  // Check for user-related activity (tasks assigned, mentions, etc.)
+  const { data: userActivity = [] } = useQuery({
+    queryKey: ['userActivity', currentUser?.email],
+    queryFn: async () => {
+      if (!currentUser?.email) return [];
+      const activities = await base44.entities.ProjectActivity.list('-created_date', 50);
+      // Filter for activities involving this user (not created by them)
+      return activities.filter(a => 
+        a.actor_email !== currentUser.email && 
+        (a.description?.includes(currentUser.full_name) || 
+         a.description?.includes(currentUser.email) ||
+         a.description?.toLowerCase().includes('assigned'))
+      );
+    },
+    enabled: !!currentUser?.email,
+    refetchInterval: 30000 // Refresh every 30 seconds
+  });
+
+  const hasNewActivity = userActivity.length > 0;
 
   const appName = appSettings?.app_name || 'IT Projects';
   const appLogoUrl = appSettings?.app_logo_url;
@@ -147,6 +166,17 @@ export default function Layout({ children, currentPageName }) {
               <p className="text-xs text-slate-500">{currentUser?.email}</p>
             </div>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to={createPageUrl('ActivityFeed')} className="cursor-pointer flex items-center justify-between">
+                <div className="flex items-center">
+                  <Activity className="w-4 h-4 mr-2" />
+                  Activity Feed
+                </div>
+                {hasNewActivity && (
+                  <span className="w-2 h-2 rounded-full bg-red-500" />
+                )}
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to={createPageUrl('NotificationSettings')} className="cursor-pointer">
                 <Bell className="w-4 h-4 mr-2" />
@@ -305,6 +335,18 @@ export default function Layout({ children, currentPageName }) {
         {/* User Profile at Bottom */}
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-white/10">
           <div className="space-y-1">
+            <Link
+              to={createPageUrl('ActivityFeed')}
+              className="flex items-center justify-between px-3 py-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
+            >
+              <div className="flex items-center gap-3">
+                <Activity className="w-4 h-4" />
+                Activity Feed
+              </div>
+              {hasNewActivity && (
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+              )}
+            </Link>
             <Link
               to={createPageUrl('NotificationSettings')}
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
