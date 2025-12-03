@@ -1047,9 +1047,12 @@ function IntegrationsSection({ queryClient }) {
       state: 'state',
       zip: 'zip'
     },
-    // Email (Emailit)
+    // Email (Emailit SMTP)
     emailit_enabled: false,
-    emailit_api_key: '',
+    emailit_smtp_host: 'smtp.emailit.com',
+    emailit_smtp_port: '587',
+    emailit_smtp_username: '',
+    emailit_smtp_password: '',
     emailit_from_email: '',
     emailit_from_name: '',
     emailit_reply_to: '',
@@ -1173,9 +1176,12 @@ function IntegrationsSection({ queryClient }) {
           state: 'state',
           zip: 'zip'
         },
-        // Email (Emailit)
+        // Email (Emailit SMTP)
         emailit_enabled: settings[0].emailit_enabled || false,
-        emailit_api_key: settings[0].emailit_api_key || '',
+        emailit_smtp_host: settings[0].emailit_smtp_host || 'smtp.emailit.com',
+        emailit_smtp_port: settings[0].emailit_smtp_port || '587',
+        emailit_smtp_username: settings[0].emailit_smtp_username || '',
+        emailit_smtp_password: settings[0].emailit_smtp_password || '',
         emailit_from_email: settings[0].emailit_from_email || '',
         emailit_from_name: settings[0].emailit_from_name || '',
         emailit_reply_to: settings[0].emailit_reply_to || '',
@@ -1572,19 +1578,55 @@ function IntegrationsSection({ queryClient }) {
               <div className="space-y-4 pt-4 border-t border-slate-200">
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-xs text-blue-700">
-                    <strong>Setup:</strong> Get your API key from your Emailit dashboard at <a href="https://emailit.com" target="_blank" rel="noopener noreferrer" className="underline">emailit.com</a>.
+                    <strong>SMTP Setup:</strong> Use the SMTP credentials from your Emailit dashboard. Host: <code className="bg-blue-100 px-1 rounded">smtp.emailit.com</code>, Username: <code className="bg-blue-100 px-1 rounded">emailit</code>, Password: Your API key
                   </p>
                 </div>
                 
-                <div>
-                  <Label className="text-xs">API Key</Label>
-                  <Input 
-                    type="password"
-                    value={formData.emailit_api_key} 
-                    onChange={(e) => setFormData(p => ({ ...p, emailit_api_key: e.target.value }))} 
-                    placeholder="Your Emailit API key" 
-                    className="mt-1 font-mono text-sm" 
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs">SMTP Host</Label>
+                    <Input 
+                      value={formData.emailit_smtp_host} 
+                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_host: e.target.value }))} 
+                      placeholder="smtp.emailit.com" 
+                      className="mt-1" 
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">SMTP Port</Label>
+                    <select 
+                      value={formData.emailit_smtp_port} 
+                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_port: e.target.value }))}
+                      className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="25">25 (STARTTLS)</option>
+                      <option value="587">587 (STARTTLS)</option>
+                      <option value="2525">2525 (STARTTLS)</option>
+                      <option value="2587">2587 (STARTTLS)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs">SMTP Username</Label>
+                    <Input 
+                      value={formData.emailit_smtp_username} 
+                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_username: e.target.value }))} 
+                      placeholder="emailit" 
+                      className="mt-1" 
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">SMTP Password (API Key)</Label>
+                    <Input 
+                      type="password"
+                      value={formData.emailit_smtp_password} 
+                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_password: e.target.value }))} 
+                      placeholder="Your API key" 
+                      className="mt-1" 
+                    />
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">

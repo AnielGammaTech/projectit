@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { SMTPClient } from 'npm:emailjs@4.0.3';
 
 Deno.serve(async (req) => {
   try {
@@ -16,66 +17,65 @@ Deno.serve(async (req) => {
     const settings = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
     const config = settings[0];
 
-    if (!config?.emailit_enabled || !config?.emailit_api_key) {
+    if (!config?.emailit_enabled) {
       return Response.json({ 
         success: false, 
-        error: 'Emailit integration is not configured. Please set up API key in Adminland.' 
+        error: 'Emailit integration is not enabled. Please enable it in Adminland.' 
       });
     }
 
-    const fromEmail = config.emailit_from_name 
+    if (!config?.emailit_smtp_host || !config?.emailit_smtp_username || !config?.emailit_smtp_password) {
+      return Response.json({ 
+        success: false, 
+        error: 'Emailit SMTP settings are not configured. Please set up SMTP host, username, and password in Adminland.' 
+      });
+    }
+
+    if (!config?.emailit_from_email) {
+      return Response.json({ 
+        success: false, 
+        error: 'From email is not configured. Please set up the from email in Adminland.' 
+      });
+    }
+
+    const client = new SMTPClient({
+      user: config.emailit_smtp_username,
+      password: config.emailit_smtp_password,
+      host: config.emailit_smtp_host,
+      port: parseInt(config.emailit_smtp_port) || 587,
+      tls: true,
+    });
+
+    const fromAddress = config.emailit_from_name 
       ? `${config.emailit_from_name} <${config.emailit_from_email}>`
       : config.emailit_from_email;
 
-    const emailPayload = {
-      from: fromEmail,
+    const message = {
+      from: fromAddress,
       to: to,
       subject: subject,
-      html: html || '',
-      text: text || ''
+      text: text || '',
+      attachment: [
+        { data: html || '<p>No content</p>', alternative: true }
+      ]
     };
 
     if (config.emailit_reply_to) {
-      emailPayload.reply_to = config.emailit_reply_to;
+      message['reply-to'] = config.emailit_reply_to;
     }
 
-    const response = await fetch('https://api.emailit.com/v1/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${config.emailit_api_key}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(emailPayload)
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorMessage = 'Failed to send email';
-      try {
-        const errorData = JSON.parse(errorText);
-        errorMessage = errorData.message || errorData.error || errorMessage;
-      } catch {
-        errorMessage = errorText || errorMessage;
-      }
-      return Response.json({ 
-        success: false, 
-        error: errorMessage,
-        status: response.status
-      });
-    }
-
-    const result = await response.json();
+    await client.sendAsync(message);
 
     return Response.json({ 
       success: true, 
-      message: testOnly ? 'Test email sent successfully!' : 'Email sent successfully',
-      data: result
+      message: testOnly ? 'Test email sent successfully!' : 'Email sent successfully'
     });
 
   } catch (error) {
+    console.error('Email error:', error);
     return Response.json({ 
       success: false, 
-      error: error.message 
+      error: error.message || 'Failed to send email'
     }, { status: 500 });
   }
 });
