@@ -30,6 +30,7 @@ import RolesPermissions from './pages/RolesPermissions';
 import SecuritySettings from './pages/SecuritySettings';
 import Workflows from './pages/Workflows';
 import ReportBuilder from './pages/ReportBuilder';
+import ProjectTimeline from './pages/ProjectTimeline';
 import __Layout from './Layout.jsx';
 
 
@@ -66,6 +67,7 @@ export const PAGES = {
     "SecuritySettings": SecuritySettings,
     "Workflows": Workflows,
     "ReportBuilder": ReportBuilder,
+    "ProjectTimeline": ProjectTimeline,
 }
 
 export const pagesConfig = {
