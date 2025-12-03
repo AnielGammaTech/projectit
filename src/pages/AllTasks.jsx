@@ -104,10 +104,14 @@ export default function AllTasks() {
     part.assigned_to === currentUser?.email && part.due_date
   );
 
-  // Get active project IDs (not archived or completed)
+  // Get active project IDs (not archived or completed) - also filter out deleted projects
+  const projectIds = projects.map(p => p.id);
   const activeProjectIds = projects
     .filter(p => p.status !== 'archived' && p.status !== 'completed')
     .map(p => p.id);
+  
+  // Parts from active projects only
+  const activeProjectParts = parts.filter(p => activeProjectIds.includes(p.project_id));
 
   // Filter parts - only show parts from active projects
   const filteredParts = parts.filter(part => {
@@ -201,7 +205,7 @@ export default function AllTasks() {
             >
               <Package className="w-4 h-4" />
               Parts
-              <span className={cn("text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-amber-600" : "bg-amber-100 text-amber-700")}>{parts.length}</span>
+              <span className={cn("text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-amber-600" : "bg-amber-100 text-amber-700")}>{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
             </button>
           </div>
         </motion.div>
@@ -502,7 +506,7 @@ export default function AllTasks() {
               { key: 'received', label: 'Received', color: 'text-amber-500', bg: 'bg-amber-100' },
               { key: 'installed', label: 'Installed', color: 'text-emerald-500', bg: 'bg-emerald-100' }
             ].map((status) => {
-              const count = parts.filter(p => p.status === status.key).length;
+              const count = activeProjectParts.filter(p => p.status === status.key).length;
               return (
                 <motion.div
                   key={status.key}
