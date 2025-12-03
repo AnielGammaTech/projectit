@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
+import DashboardWidgets from '@/components/dashboard/DashboardWidgets';
 
 // Filter out in_progress and medium priority from dashboard display
 // These values are removed from the system

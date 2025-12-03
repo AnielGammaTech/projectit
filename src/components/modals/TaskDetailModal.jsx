@@ -8,6 +8,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Send, User, Calendar, Clock, AlertTriangle, Edit2, Trash2, Paperclip, X, FileText, Image, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import AITaskAssistant from '@/components/tasks/AITaskAssistant';
 
 const priorityColors = {
   low: 'bg-slate-100 text-slate-600',
@@ -49,7 +50,7 @@ const getFileIcon = (type) => {
   return FileText;
 };
 
-export default function TaskDetailModal({ open, onClose, task, teamMembers = [], onEdit, currentUser }) {
+export default function TaskDetailModal({ open, onClose, task, teamMembers = [], onEdit, currentUser, project }) {
   const [comment, setComment] = useState('');
   const [showMentions, setShowMentions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState('');
@@ -209,6 +210,30 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 </div>
               )}
             </div>
+          </div>
+
+          {/* AI Assistant */}
+          <div className="border-t pt-4">
+            <AITaskAssistant 
+              task={task} 
+              project={project}
+              onSubTasksGenerated={async (subTasks) => {
+                for (const st of subTasks) {
+                  await base44.entities.Task.create({
+                    title: st.title,
+                    description: st.description || '',
+                    project_id: task.project_id,
+                    status: 'todo',
+                    priority: 'medium'
+                  });
+                }
+                queryClient.invalidateQueries({ queryKey: ['tasks'] });
+              }}
+              onPriorityUpdate={async (priority) => {
+                await base44.entities.Task.update(task.id, { priority });
+                queryClient.invalidateQueries({ queryKey: ['tasks'] });
+              }}
+            />
           </div>
 
           {/* Attachments Section */}
