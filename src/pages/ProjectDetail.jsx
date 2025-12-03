@@ -615,6 +615,31 @@ export default function ProjectDetail() {
           </motion.div>
           </Link>
 
+          {/* Billing Card - Clickable */}
+          <Link to={createPageUrl('ProjectBilling') + `?id=${projectId}`}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
+          >
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-green-100/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-emerald-600 shadow-lg shadow-emerald-200">
+                  <Clock className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">Billing</h3>
+                  <p className="text-sm text-slate-500">Time & parts billing</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4">
+              <p className="text-sm text-slate-500 text-center">Track billable time & materials</p>
+            </div>
+          </motion.div>
+          </Link>
+
           {/* Calendar Card */}
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
