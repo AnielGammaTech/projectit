@@ -136,23 +136,16 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
       }}
       transition={{ duration: 0.2 }}
     >
-      <div className={cn("p-4 transition-all duration-300", isActive && "pb-5")}>
+      <div className={cn("px-3 py-2.5 transition-all duration-300", isActive && "pb-3")}>
         {/* Header Row */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Progress</span>
-            {lastUpdate && !isActive && (
-              <span className="text-[10px] text-slate-300">
-                • {formatDistanceToNow(new Date(lastUpdate.created_date), { addSuffix: true })}
-              </span>
-            )}
-          </div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Progress</span>
           <motion.div 
             className="flex items-baseline gap-0.5"
-            animate={{ scale: isDragging ? 1.1 : 1 }}
+            animate={{ scale: isDragging ? 1.05 : 1 }}
           >
-            <span className="text-2xl font-bold text-slate-900">{localValue}</span>
-            <span className="text-sm font-medium text-slate-400">%</span>
+            <span className="text-lg font-bold text-slate-900">{localValue}</span>
+            <span className="text-xs font-medium text-slate-400">%</span>
           </motion.div>
         </div>
 
@@ -229,42 +222,18 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
           </motion.div>
         </div>
 
-        {/* Quick Presets */}
+        {/* Last update info */}
         <AnimatePresence>
-          {isActive && !showNoteInput && (
+          {isActive && !showNoteInput && lastUpdate && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="flex items-center justify-between mt-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mt-2 text-right"
             >
-              <div className="flex gap-1.5">
-                {[0, 25, 50, 75, 100].map(preset => (
-                  <motion.button
-                    key={preset}
-                    onClick={() => {
-                      setLocalValue(preset);
-                      if (preset !== value) setShowNoteInput(true);
-                    }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={cn(
-                      "w-10 h-7 rounded-lg text-xs font-semibold transition-all",
-                      localValue === preset 
-                        ? "bg-slate-900 text-white shadow-md" 
-                        : "bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                    )}
-                  >
-                    {preset}
-                  </motion.button>
-                ))}
-              </div>
-              {lastUpdate && (
-                <span className="text-xs text-slate-400">
-                  Updated {formatDistanceToNow(new Date(lastUpdate.created_date), { addSuffix: true })}
-                </span>
-              )}
+              <span className="text-[10px] text-slate-400">
+                Updated {formatDistanceToNow(new Date(lastUpdate.created_date), { addSuffix: true })}
+              </span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -278,32 +247,33 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="mt-4 pt-4 border-t border-slate-100">
+              <div className="mt-3 pt-3 border-t border-slate-100">
                 <Textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Add a note about this update..."
-                  className="min-h-[60px] text-sm resize-none bg-slate-50 border-slate-200 focus:bg-white"
+                  placeholder="Add a note (optional)..."
+                  className="min-h-[50px] text-xs resize-none bg-slate-50 border-slate-200 focus:bg-white rounded-lg"
                   autoFocus
                 />
                 <div className="flex gap-2 mt-3">
-                  <Button 
+                  <motion.button 
                     onClick={() => saveMutation.mutate()} 
                     disabled={saveMutation.isPending}
-                    size="sm"
-                    className="flex-1 bg-slate-900 hover:bg-slate-800 h-9 rounded-lg font-medium"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-medium shadow-md shadow-emerald-200 hover:shadow-lg hover:shadow-emerald-300 transition-shadow flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
-                    <Check className="w-4 h-4 mr-1.5" />
-                    Save Progress
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
+                    <Check className="w-3.5 h-3.5" />
+                    Save
+                  </motion.button>
+                  <motion.button 
                     onClick={handleCancel}
-                    className="h-9 px-3 rounded-lg"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center"
                   >
-                    <X className="w-4 h-4" />
-                  </Button>
+                    <X className="w-3.5 h-3.5" />
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
