@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, Plus, Edit2, Trash2, CheckCircle2, Circle, C
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import {
   DropdownMenu,
