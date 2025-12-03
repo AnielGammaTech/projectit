@@ -260,6 +260,7 @@ export default function GroupedTaskList({
   onEditGroup,
   onDeleteGroup,
   onTaskUpdate,
+  onAddTaskToGroup,
   currentUserEmail
 }) {
   const [expandedGroups, setExpandedGroups] = useState(new Set(['ungrouped', ...groups.map(g => g.id)]));
