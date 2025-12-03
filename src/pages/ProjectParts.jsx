@@ -22,7 +22,9 @@ import {
   FileCheck,
   PackageCheck,
   Wrench,
-  Check
+  Check,
+  Truck,
+  MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +45,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { format } from 'date-fns';
+import { format, isToday, isPast } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarPicker } from '@/components/ui/calendar';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import PartModal from '@/components/modals/PartModal';
 import PartDetailModal from '@/components/modals/PartDetailModal';
@@ -94,6 +99,9 @@ export default function ProjectParts() {
   // Multi-select state
   const [selectedParts, setSelectedParts] = useState(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
+  
+  // Receive dialog state
+  const [receiveDialog, setReceiveDialog] = useState({ open: false, part: null, installer: '', location: '' });
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -278,15 +286,29 @@ export default function ProjectParts() {
     refetchParts();
   };
 
-  const handleReceivePart = async (part, installerEmail) => {
-    const member = teamMembers.find(m => m.email === installerEmail);
+  const handleSetDeliveryDate = async (part, date) => {
+    await base44.entities.Part.update(part.id, { est_delivery_date: format(date, 'yyyy-MM-dd') });
+    refetchParts();
+  };
+
+  const openReceiveDialog = (part, installerEmail) => {
+    setReceiveDialog({ open: true, part, installer: installerEmail, location: '' });
+  };
+
+  const handleConfirmReceive = async () => {
+    const { part, installer, location } = receiveDialog;
+    if (!part || !installer) return;
+    
+    const member = teamMembers.find(m => m.email === installer);
     await base44.entities.Part.update(part.id, {
       status: 'ready_to_install',
-      installer_email: installerEmail,
-      installer_name: member?.name || installerEmail,
-      received_date: format(new Date(), 'yyyy-MM-dd')
+      installer_email: installer,
+      installer_name: member?.name || installer,
+      received_date: format(new Date(), 'yyyy-MM-dd'),
+      notes: location ? `${part.notes || ''}\n📍 Location: ${location}`.trim() : part.notes
     });
     refetchParts();
+    setReceiveDialog({ open: false, part: null, installer: '', location: '' });
   };
 
   const handleMarkInstalled = async (part) => {
@@ -532,6 +554,7 @@ export default function ProjectParts() {
             {otherParts.length > 0 ? (
               filteredParts.map((part, idx) => {
                 const isSelected = selectedParts.has(part.id);
+                const isDeliveryDue = part.est_delivery_date && (isToday(new Date(part.est_delivery_date)) || isPast(new Date(part.est_delivery_date)));
                 return (
                 <motion.div
                   key={part.id}
@@ -627,6 +650,19 @@ export default function ProjectParts() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         )}
+                        {part.est_delivery_date && (
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "flex items-center gap-1",
+                              isDeliveryDue ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-cyan-50 text-cyan-700 border-cyan-200"
+                            )}
+                          >
+                            <Truck className="w-3 h-3" />
+                            ETA: {format(new Date(part.est_delivery_date), 'MMM d')}
+                            {isDeliveryDue && " ⚠️"}
+                          </Badge>
+                        )}
                         {part.due_date && (
                           <div className="flex items-center gap-1.5 text-sm text-slate-500">
                             <Calendar className="w-3.5 h-3.5" />
@@ -636,6 +672,30 @@ export default function ProjectParts() {
                       </div>
                     </div>
                     <div className="flex gap-1 items-center">
+                      {/* Quick set ETA button */}
+                      {!part.est_delivery_date && (part.status === 'ordered' || part.status === 'needed') && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Truck className="w-3.5 h-3.5 mr-1" />
+                              Set ETA
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+                            <CalendarPicker
+                              mode="single"
+                              selected={undefined}
+                              onSelect={(date) => date && handleSetDeliveryDate(part, date)}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                      
                       {/* Receive Button - shows for ordered parts */}
                       {part.status === 'ordered' && (
                         <DropdownMenu>
@@ -643,17 +703,22 @@ export default function ProjectParts() {
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="h-8 border-amber-300 text-amber-700 hover:bg-amber-50"
+                              className={cn(
+                                "h-8",
+                                isDeliveryDue 
+                                  ? "border-orange-400 text-orange-700 bg-orange-50 hover:bg-orange-100 animate-pulse" 
+                                  : "border-amber-300 text-amber-700 hover:bg-amber-50"
+                              )}
                               onClick={(e) => e.stopPropagation()}
                             >
                               <PackageCheck className="w-4 h-4 mr-1.5" />
-                              Receive
+                              {isDeliveryDue ? "Check Delivery" : "Receive"}
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
                             <div className="px-2 py-1.5 text-xs text-slate-500 font-medium">Assign installer:</div>
                             {teamMembers.map((member) => (
-                              <DropdownMenuItem key={member.id} onClick={() => handleReceivePart(part, member.email)}>
+                              <DropdownMenuItem key={member.id} onClick={() => openReceiveDialog(part, member.email)}>
                                 <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
                                   {getInitials(member.name)}
                                 </div>
@@ -681,7 +746,7 @@ export default function ProjectParts() {
                           <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
                             <div className="px-2 py-1.5 text-xs text-slate-500 font-medium">Assign installer:</div>
                             {teamMembers.map((member) => (
-                              <DropdownMenuItem key={member.id} onClick={() => handleReceivePart(part, member.email)}>
+                              <DropdownMenuItem key={member.id} onClick={() => openReceiveDialog(part, member.email)}>
                                 <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
                                   {getInitials(member.name)}
                                 </div>
@@ -750,6 +815,41 @@ export default function ProjectParts() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Receive Part Dialog with Location */}
+      <AlertDialog open={receiveDialog.open} onOpenChange={(open) => !open && setReceiveDialog({ open: false, part: null, installer: '', location: '' })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <PackageCheck className="w-5 h-5 text-amber-600" />
+              Receive Part
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium text-slate-900">{receiveDialog.part?.name}</span>
+              {receiveDialog.part?.part_number && <span className="text-slate-500"> (#{receiveDialog.part?.part_number})</span>}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+              <MapPin className="w-4 h-4" />
+              Where is the item stored? (optional)
+            </label>
+            <Textarea
+              value={receiveDialog.location}
+              onChange={(e) => setReceiveDialog(prev => ({ ...prev, location: e.target.value }))}
+              placeholder="e.g., Warehouse shelf B3, Office storage closet, Customer site..."
+              className="h-20"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmReceive} className="bg-amber-600 hover:bg-amber-700">
+              <PackageCheck className="w-4 h-4 mr-2" />
+              Confirm Received
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
