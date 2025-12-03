@@ -223,23 +223,23 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col bg-[#1a1a2e] text-white border-slate-700">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header with checkbox and title */}
-        <div className="flex items-start gap-4 pb-4 border-b border-slate-700">
+        <div className="flex items-start gap-4 pb-4 border-b border-slate-200">
           <button 
             onClick={handleStatusToggle}
             className={cn(
               "w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all mt-1",
               task.status === 'completed' 
-                ? "bg-emerald-600 border-emerald-600" 
-                : "border-slate-500 hover:border-emerald-500"
+                ? "bg-emerald-600 border-emerald-600 text-white" 
+                : "border-slate-300 hover:border-emerald-500"
             )}
           >
             {task.status === 'completed' && <CheckSquare className="w-5 h-5" />}
           </button>
           <div className="flex-1">
             <h2 className={cn(
-              "text-xl font-semibold",
+              "text-xl font-semibold text-slate-900",
               task.status === 'completed' && "line-through text-slate-400"
             )}>
               {task.title}
@@ -247,15 +247,15 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-700">
+              <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900">
                 <MoreHorizontal className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
-              <DropdownMenuItem onClick={() => onEdit(task)} className="text-white hover:bg-slate-700">
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(task)}>
                 <Edit2 className="w-4 h-4 mr-2" />Edit Task
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-400 hover:bg-slate-700">
+              <DropdownMenuItem className="text-red-600">
                 <Trash2 className="w-4 h-4 mr-2" />Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -267,27 +267,27 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
           <div className="space-y-3">
             {/* Assigned to */}
             <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-400 w-32 text-right">Assigned to</span>
+              <span className="text-sm text-slate-500 w-32 text-right">Assigned to</span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 hover:bg-slate-700/50 rounded-lg px-2 py-1 transition-colors">
+                  <button className="flex items-center gap-2 hover:bg-slate-100 rounded-lg px-2 py-1 transition-colors">
                     {task.assigned_name ? (
                       <>
                         <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(task.assigned_to))}>
                           {getInitials(task.assigned_name)}
                         </div>
-                        <span className="text-sm">{task.assigned_name}</span>
+                        <span className="text-sm text-slate-700">{task.assigned_name}</span>
                       </>
                     ) : (
-                      <span className="text-sm text-slate-500 flex items-center gap-1">
+                      <span className="text-sm text-slate-400 flex items-center gap-1">
                         <UserPlus className="w-4 h-4" /> Click to assign...
                       </span>
                     )}
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-slate-800 border-slate-700">
+                <DropdownMenuContent>
                   {teamMembers.map(m => (
-                    <DropdownMenuItem key={m.id} onClick={() => handleAssign(m.email)} className="text-white hover:bg-slate-700">
+                    <DropdownMenuItem key={m.id} onClick={() => handleAssign(m.email)}>
                       <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(m.email))}>
                         {getInitials(m.name)}
                       </div>
@@ -300,29 +300,28 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
             {/* Due on */}
             <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-400 w-32 text-right">Due on</span>
+              <span className="text-sm text-slate-500 w-32 text-right">Due on</span>
               <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                 <PopoverTrigger asChild>
-                  <button className="flex items-center gap-2 hover:bg-slate-700/50 rounded-lg px-2 py-1 transition-colors">
+                  <button className="flex items-center gap-2 hover:bg-slate-100 rounded-lg px-2 py-1 transition-colors">
                     {task.due_date ? (
                       <>
-                        <div className="w-5 h-5 rounded bg-orange-600 flex items-center justify-center">
+                        <div className="w-5 h-5 rounded bg-orange-500 flex items-center justify-center text-white">
                           <CalendarIcon className="w-3 h-3" />
                         </div>
-                        <span className="text-sm">{format(new Date(task.due_date), 'EEE, MMM d')}</span>
+                        <span className="text-sm text-slate-700">{format(new Date(task.due_date), 'EEE, MMM d')}</span>
                       </>
                     ) : (
-                      <span className="text-sm text-slate-500">Set due date...</span>
+                      <span className="text-sm text-slate-400">Set due date...</span>
                     )}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700">
+                <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
                     selected={task.due_date ? new Date(task.due_date) : undefined}
                     onSelect={handleDueDateChange}
                     initialFocus
-                    className="bg-slate-800"
                   />
                 </PopoverContent>
               </Popover>
@@ -330,42 +329,41 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
             {/* When done, notify */}
             <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-400 w-32 text-right">When done, notify</span>
+              <span className="text-sm text-slate-500 w-32 text-right">When done, notify</span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 hover:bg-slate-700/50 rounded-lg px-2 py-1 transition-colors">
+                  <button className="flex items-center gap-2 hover:bg-slate-100 rounded-lg px-2 py-1 transition-colors">
                     {notifyOnComplete.length > 0 ? (
                       <div className="flex -space-x-1">
                         {notifyOnComplete.slice(0, 3).map((email, idx) => {
                           const member = teamMembers.find(m => m.email === email);
                           return (
-                            <div key={idx} className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[8px] border border-slate-800", getColorForEmail(email))}>
+                            <div key={idx} className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[8px] border-2 border-white", getColorForEmail(email))}>
                               {getInitials(member?.name || email)}
                             </div>
                           );
                         })}
                         {notifyOnComplete.length > 3 && (
-                          <span className="text-xs text-slate-400 ml-1">+{notifyOnComplete.length - 3}</span>
+                          <span className="text-xs text-slate-500 ml-1">+{notifyOnComplete.length - 3}</span>
                         )}
                       </div>
                     ) : (
-                      <span className="text-sm text-slate-500">Type names to notify...</span>
+                      <span className="text-sm text-slate-400">Type names to notify...</span>
                     )}
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-slate-800 border-slate-700">
+                <DropdownMenuContent>
                   {teamMembers.map(m => (
                     <DropdownMenuItem 
                       key={m.id} 
-                      onClick={() => handleToggleNotify(m.email)} 
-                      className="text-white hover:bg-slate-700"
+                      onClick={() => handleToggleNotify(m.email)}
                     >
                       <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(m.email))}>
                         {getInitials(m.name)}
                       </div>
                       {m.name}
                       {notifyOnComplete.includes(m.email) && (
-                        <CheckSquare className="w-4 h-4 ml-auto text-emerald-500" />
+                        <CheckSquare className="w-4 h-4 ml-auto text-emerald-600" />
                       )}
                     </DropdownMenuItem>
                   ))}
@@ -375,35 +373,35 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
             {/* Notes */}
             <div className="flex items-start gap-4">
-              <span className="text-sm text-slate-400 w-32 text-right pt-2">Notes</span>
+              <span className="text-sm text-slate-500 w-32 text-right pt-2">Notes</span>
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 onBlur={handleNotesChange}
                 placeholder="Add extra details or attach a file..."
-                className="flex-1 bg-transparent border-none text-sm text-slate-300 placeholder:text-slate-500 min-h-[60px] resize-none focus-visible:ring-0"
+                className="flex-1 border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 min-h-[60px] resize-none"
               />
             </div>
 
             {/* Added by */}
             <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-400 w-32 text-right">Added by</span>
+              <span className="text-sm text-slate-500 w-32 text-right">Added by</span>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-300">{task.created_by || 'Unknown'}</span>
-                <span className="text-sm text-slate-500">on {format(new Date(task.created_date), 'MMMM d')}</span>
+                <span className="text-sm text-slate-700">{task.created_by || 'Unknown'}</span>
+                <span className="text-sm text-slate-400">on {format(new Date(task.created_date), 'MMMM d')}</span>
               </div>
             </div>
           </div>
 
           {/* Separator with avatar */}
-          <div className="flex items-center gap-3 py-4 border-t border-slate-700">
+          <div className="flex items-center gap-3 py-4 border-t border-slate-200">
             <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white text-sm", getColorForEmail(currentUser?.email))}>
               {getInitials(currentUser?.full_name)}
             </div>
           </div>
 
           {/* AI Assistant */}
-          <div className="border-t border-slate-700 pt-4">
+          <div className="border-t border-slate-200 pt-4">
             <AITaskAssistant 
               task={task} 
               project={project}
@@ -427,9 +425,9 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
           </div>
 
           {/* Attachments Section */}
-          <div className="border-t border-slate-700 pt-4">
+          <div className="border-t border-slate-200 pt-4">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-slate-300 flex items-center gap-2">
+              <h4 className="font-semibold text-slate-900 flex items-center gap-2">
                 <Paperclip className="w-4 h-4" />
                 Attachments ({task.attachments?.length || 0})
               </h4>
@@ -438,7 +436,6 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 size="sm" 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="border-slate-600 text-slate-300 hover:bg-slate-700"
               >
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4 mr-1" />}
                 Add
@@ -455,12 +452,12 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 {task.attachments.map((att, idx) => {
                   const FileIcon = getFileIcon(att.type);
                   return (
-                    <div key={idx} className="flex items-center gap-3 p-2 bg-slate-700/50 rounded-lg group">
-                      <FileIcon className="w-4 h-4 text-slate-400" />
-                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm text-blue-400 hover:underline truncate">
+                    <div key={idx} className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg group">
+                      <FileIcon className="w-4 h-4 text-slate-500" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm text-indigo-600 hover:underline truncate">
                         {att.name}
                       </a>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white" onClick={() => handleRemoveAttachment(idx)}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => handleRemoveAttachment(idx)}>
                         <X className="w-3 h-3" />
                       </Button>
                     </div>
@@ -468,13 +465,13 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 })}
               </div>
             ) : (
-              <p className="text-sm text-slate-500 text-center py-2">No attachments</p>
+              <p className="text-sm text-slate-400 text-center py-2">No attachments</p>
             )}
           </div>
 
           {/* Comments Section */}
-          <div className="border-t border-slate-700 pt-4">
-            <h4 className="font-semibold text-slate-300 mb-4">Comments ({comments.length})</h4>
+          <div className="border-t border-slate-200 pt-4">
+            <h4 className="font-semibold text-slate-900 mb-4">Comments ({comments.length})</h4>
             
             <div className="space-y-4 mb-4">
               {comments.map((c) => (
@@ -484,15 +481,15 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-slate-200 text-sm">{c.author_name}</span>
-                      <span className="text-xs text-slate-500">
+                      <span className="font-medium text-slate-900 text-sm">{c.author_name}</span>
+                      <span className="text-xs text-slate-400">
                         {formatDistanceToNow(new Date(c.created_date), { addSuffix: true })}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-300 whitespace-pre-wrap bg-slate-700/50 rounded-lg px-3 py-2">
+                    <p className="text-sm text-slate-600 whitespace-pre-wrap bg-slate-50 rounded-lg px-3 py-2">
                       {c.content.split(/(@\w+(?:\s\w+)?)/g).map((part, i) => 
                         part.startsWith('@') ? (
-                          <span key={i} className="text-blue-400 font-medium">{part}</span>
+                          <span key={i} className="text-indigo-600 font-medium">{part}</span>
                         ) : part
                       )}
                     </p>
@@ -501,14 +498,14 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
               ))}
 
               {comments.length === 0 && (
-                <p className="text-sm text-slate-500 text-center py-4">No comments yet</p>
+                <p className="text-sm text-slate-400 text-center py-4">No comments yet</p>
               )}
             </div>
           </div>
         </div>
 
         {/* Comment Input */}
-        <div className="border-t border-slate-700 pt-4 relative">
+        <div className="border-t border-slate-200 pt-4 relative">
           <div className="flex gap-2 items-start">
             <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-xs shrink-0", getColorForEmail(currentUser?.email))}>
               {getInitials(currentUser?.full_name)}
@@ -519,22 +516,22 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 value={comment}
                 onChange={handleCommentChange}
                 placeholder="Add a comment here..."
-                className="min-h-[60px] resize-none bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                className="min-h-[60px] resize-none"
               />
               
               {/* Mentions Dropdown */}
               {showMentions && filteredMembers.length > 0 && (
-                <div className="absolute bottom-full left-0 mb-1 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-48 overflow-y-auto z-50">
+                <div className="absolute bottom-full left-0 mb-1 w-64 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto z-50">
                   {filteredMembers.map((member) => (
                     <button
                       key={member.id}
                       onClick={() => insertMention(member)}
-                      className="w-full px-3 py-2 text-left hover:bg-slate-700 flex items-center gap-2 text-white"
+                      className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2"
                     >
-                      <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[10px]", getColorForEmail(member.email))}>
+                      <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(member.email))}>
                         {getInitials(member.name)}
                       </div>
-                      <span className="text-sm">{member.name}</span>
+                      <span className="text-sm text-slate-700">{member.name}</span>
                     </button>
                   ))}
                 </div>
@@ -543,7 +540,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
             <Button 
               onClick={handleSubmitComment} 
               disabled={!comment.trim() || addCommentMutation.isPending}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-indigo-600 hover:bg-indigo-700"
             >
               <Send className="w-4 h-4" />
             </Button>
