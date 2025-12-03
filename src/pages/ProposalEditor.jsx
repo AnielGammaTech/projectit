@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Save, Send, Plus, Eye, Calendar, User, Mail, Phone, FileText,
-  Search, Building2, ChevronDown, Sparkles, Wand2, Package, Loader2
+  Search, Building2, ChevronDown, Sparkles, Wand2, Package, Loader2, Layers
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,6 +102,11 @@ export default function ProposalEditor() {
   const { data: inventory = [] } = useQuery({
     queryKey: ['inventory'],
     queryFn: () => base44.entities.InventoryItem.list()
+  });
+
+  const { data: bundles = [] } = useQuery({
+    queryKey: ['serviceBundles'],
+    queryFn: () => base44.entities.ServiceBundle.list()
   });
 
   const { data: projects = [] } = useQuery({
@@ -535,7 +540,47 @@ export default function ProposalEditor() {
                       onDuplicateItem={(itemIdx) => duplicateItemInArea(areaIndex, itemIdx)}
                       onAddFromInventory={(item) => addItemToArea(areaIndex, item)}
                       onAddCustomItem={() => { setEditingAreaIndex(areaIndex); setShowCustomItemModal(true); }}
+                      onAddBundle={(bundle) => {
+                        // Add primary item first, then sub-items with indentation
+                        const primaryItem = bundle.items?.find(i => i.is_primary);
+                        const subItems = bundle.items?.filter(i => !i.is_primary) || [];
+                        const itemsToAdd = [];
+                        
+                        if (primaryItem) {
+                          itemsToAdd.push({
+                            type: 'bundle_primary',
+                            bundle_id: bundle.id,
+                            name: primaryItem.name,
+                            description: primaryItem.description,
+                            quantity: primaryItem.quantity || 1,
+                            unit_cost: primaryItem.unit_price || 0,
+                            unit_price: calculateMarkup(primaryItem.unit_price || 0)
+                          });
+                        }
+                        
+                        subItems.forEach(item => {
+                          itemsToAdd.push({
+                            type: 'bundle_item',
+                            bundle_id: bundle.id,
+                            name: item.name,
+                            description: item.description,
+                            quantity: item.quantity || 1,
+                            unit_cost: item.unit_price || 0,
+                            unit_price: calculateMarkup(item.unit_price || 0)
+                          });
+                        });
+                        
+                        setFormData(prev => ({
+                          ...prev,
+                          areas: prev.areas.map((a, i) => 
+                            i === areaIndex 
+                              ? { ...a, items: [...(a.items || []), ...itemsToAdd] }
+                              : a
+                          )
+                        }));
+                      }}
                       inventory={inventory}
+                      bundles={bundles}
                       markupType={markupType}
                       markupValue={markupValue}
                     />
