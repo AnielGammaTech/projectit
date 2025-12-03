@@ -908,7 +908,7 @@ function EmailTemplatesSection({ queryClient }) {
           template_key: selectedTemplate,
           name: defaultTemplate?.name || '',
           subject: getDefaultSubject(selectedTemplate),
-          html_body: getDefaultBody(selectedTemplate),
+          html_body: getDefaultBodyForKey(selectedTemplate),
           is_enabled: true
         });
       }
@@ -984,7 +984,7 @@ function EmailTemplatesSection({ queryClient }) {
 
   // Replace variables with sample data for preview
   const getPreviewHtml = () => {
-    let html = formData.html_body;
+    let html = formData.html_body || '';
     const sampleData = {
       '{{proposal.number}}': 'P-0042',
       '{{proposal.title}}': 'Network Infrastructure Upgrade',
@@ -1021,6 +1021,84 @@ function EmailTemplatesSection({ queryClient }) {
       html = html.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value);
     });
     return html;
+  };
+
+  // Get pretty default body for proposal_accepted with celebration
+  const getDefaultBodyForKey = (key) => {
+    if (key === 'proposal_accepted') {
+      return `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f0fdf4; }
+    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .header { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; padding: 40px 20px; text-align: center; }
+    .header h1 { margin: 0; font-size: 28px; }
+    .celebration { text-align: center; padding: 20px; }
+    .celebration img { max-width: 200px; border-radius: 12px; }
+    .content { padding: 30px; }
+    .highlight-box { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #22c55e; }
+    .details { background: #f8fafc; border-radius: 8px; padding: 15px; margin: 15px 0; }
+    .details-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+    .details-row:last-child { border-bottom: none; }
+    .label { color: #64748b; font-size: 14px; }
+    .value { font-weight: 600; color: #1e293b; }
+    .total { font-size: 24px; color: #22c55e; font-weight: bold; }
+    .button { display: inline-block; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+    .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; background: #f8fafc; }
+    .confetti { font-size: 32px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="confetti">🎉 🎊 🎉</div>
+      <h1>Proposal Accepted!</h1>
+      <p style="margin: 10px 0 0 0; opacity: 0.9;">Great news - your proposal has been approved!</p>
+    </div>
+    <div class="celebration">
+      <img src="https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif" alt="Celebration" />
+    </div>
+    <div class="content">
+      <div class="highlight-box">
+        <h2 style="margin: 0 0 10px 0; color: #166534;">✨ {{proposal.title}}</h2>
+        <p style="margin: 0; color: #166534;">Proposal #{{proposal.number}} has been approved by {{customer.name}}</p>
+      </div>
+      
+      <div class="details">
+        <div class="details-row">
+          <span class="label">Customer</span>
+          <span class="value">{{customer.name}}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Company</span>
+          <span class="value">{{customer.company}}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Approved On</span>
+          <span class="value">{{current_date}}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Total Amount</span>
+          <span class="value total">{{proposal.total}}</span>
+        </div>
+      </div>
+
+      <p>Time to celebrate! 🥳 The customer has signed off and you're ready to move forward with this project.</p>
+      
+      <center>
+        <a href="{{app_url}}" class="button">View Proposal Details →</a>
+      </center>
+    </div>
+    <div class="footer">
+      <p>{{company.name}} | {{company.address}}</p>
+      <p>{{company.phone}} | {{company.email}}</p>
+    </div>
+  </div>
+</body>
+</html>`;
+    }
+    return getDefaultBody(key);
   };
 
   return (
@@ -1174,12 +1252,12 @@ function EmailTemplatesSection({ queryClient }) {
                       <span className="text-slate-400">Variables are replaced with examples</span>
                     </div>
                     <div className="flex-1 overflow-auto p-4">
-                      <div className="bg-white rounded-lg shadow-sm border max-w-2xl mx-auto">
+                      <div className="bg-white rounded-lg shadow-sm border max-w-2xl mx-auto overflow-hidden">
                         <iframe
-                          srcDoc={getPreviewHtml()}
-                          className="w-full h-[500px] border-0"
+                          srcDoc={`<!DOCTYPE html><html><head><meta charset="UTF-8"><base target="_blank"></head><body style="margin:0;padding:0;">${getPreviewHtml()}</body></html>`}
+                          className="w-full border-0"
+                          style={{ height: '500px', minHeight: '500px' }}
                           title="Email Preview"
-                          sandbox="allow-same-origin"
                         />
                       </div>
                     </div>
@@ -1192,7 +1270,7 @@ function EmailTemplatesSection({ queryClient }) {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => setFormData(p => ({ ...p, html_body: getDefaultBody(selectedTemplate), subject: getDefaultSubject(selectedTemplate) }))}
+                  onClick={() => setFormData(p => ({ ...p, html_body: getDefaultBodyForKey(selectedTemplate), subject: getDefaultSubject(selectedTemplate) }))}
                 >
                   Reset to Default
                 </Button>
