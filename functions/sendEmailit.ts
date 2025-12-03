@@ -39,22 +39,34 @@ Deno.serve(async (req) => {
     }
 
     const port = parseInt(config.emailit_smtp_port) || 587;
-    const host = config.emailit_smtp_host || 'smtp.emailit.com';
-    
-    // Create transporter using nodemailer
-    // Emailit SMTP: host=smtp.emailit.com, port=587, user="emailit", pass=API_KEY
-    const transporter = nodemailer.createTransport({
-      host: host,
-      port: port,
-      secure: false, // Use STARTTLS, not implicit TLS
-      auth: {
-        user: 'emailit',
-        pass: config.emailit_smtp_password,
-      },
-      tls: {
-        rejectUnauthorized: false // Accept self-signed certificates
-      }
-    });
+          const host = config.emailit_smtp_host || 'smtp.emailit.com';
+          const useSecure = config.emailit_secure !== false;
+          const useAuth = config.emailit_auth !== false;
+
+          // Create transporter using nodemailer
+          const transportConfig = {
+            host: host,
+            port: port,
+            secure: port === 465, // Use implicit TLS for port 465
+            tls: {
+              rejectUnauthorized: false
+            }
+          };
+
+          // Add STARTTLS for non-465 ports if secure is enabled
+          if (useSecure && port !== 465) {
+            transportConfig.requireTLS = true;
+          }
+
+          // Add authentication if enabled
+          if (useAuth) {
+            transportConfig.auth = {
+              user: 'emailit',
+              pass: config.emailit_smtp_password,
+            };
+          }
+
+          const transporter = nodemailer.createTransport(transportConfig);
 
     const fromAddress = config.emailit_from_name 
       ? `${config.emailit_from_name} <${config.emailit_from_email}>`

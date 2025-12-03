@@ -1360,6 +1360,8 @@ function IntegrationsSection({ queryClient }) {
     emailit_from_email: '',
     emailit_from_name: '',
     emailit_reply_to: '',
+    emailit_secure: true,
+    emailit_auth: true,
     // SMS (Twilio)
     twilio_enabled: false,
     twilio_account_sid: '',
@@ -1489,6 +1491,8 @@ function IntegrationsSection({ queryClient }) {
         emailit_from_email: settings[0].emailit_from_email || '',
         emailit_from_name: settings[0].emailit_from_name || '',
         emailit_reply_to: settings[0].emailit_reply_to || '',
+        emailit_secure: settings[0].emailit_secure !== false,
+        emailit_auth: settings[0].emailit_auth !== false,
         // Twilio
         twilio_enabled: settings[0].twilio_enabled || false,
         twilio_account_sid: settings[0].twilio_account_sid || '',
