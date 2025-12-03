@@ -156,21 +156,7 @@ export default function ActivityFeed() {
             </button>
           </div>
 
-          {/* Showing for user */}
-          {showingFor && (
-            <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
-              <span>Showing activity for</span>
-              <span className="px-3 py-1 bg-slate-100 rounded-full font-medium">
-                {showingFor.full_name || showingFor.email}
-              </span>
-              <button 
-                onClick={() => setShowingFor(null)}
-                className="text-[#0069AF] hover:underline"
-              >
-                Change
-              </button>
-            </div>
-          )}
+
         </motion.div>
 
         {/* Additional Filters for projects/people tabs */}
