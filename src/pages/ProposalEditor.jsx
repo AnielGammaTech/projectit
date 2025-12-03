@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import ProposalSection from '@/components/proposals/ProposalSection';
 import ProposalSummary from '@/components/proposals/ProposalSummary';
 import CustomItemModal from '@/components/proposals/CustomItemModal';
+import AIProposalGenerator from '@/components/proposals/AIProposalGenerator';
 
 const statusConfig = {
   draft: { label: 'Draft', color: 'bg-slate-100 text-slate-600 border-slate-200' },
@@ -46,6 +47,7 @@ export default function ProposalEditor() {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showCustomItemModal, setShowCustomItemModal] = useState(false);
   const [showAISearchModal, setShowAISearchModal] = useState(false);
+  const [showAIGeneratorModal, setShowAIGeneratorModal] = useState(false);
   const [editingAreaIndex, setEditingAreaIndex] = useState(null);
   const [expandedAreas, setExpandedAreas] = useState({});
   
@@ -560,6 +562,14 @@ export default function ProposalEditor() {
                   <Sparkles className="w-4 h-4 mr-2" />
                   AI Quick Add
                 </Button>
+                <Button 
+                  onClick={() => setShowAIGeneratorModal(true)} 
+                  variant="outline" 
+                  className="border-purple-300 text-purple-600 hover:bg-purple-50 h-10"
+                >
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  AI Generate
+                </Button>
               </div>
             </motion.div>
           </div>
@@ -719,8 +729,48 @@ export default function ProposalEditor() {
         markupType={markupType}
         markupValue={markupValue}
       />
+
+      {/* AI Proposal Generator */}
+      <AIProposalGenerator
+        open={showAIGeneratorModal}
+        onClose={() => setShowAIGeneratorModal(false)}
+        customer={formData.customer_name ? { name: formData.customer_name, email: formData.customer_email, company: formData.customer_company } : null}
+        project={projects.find(p => p.id === formData.project_id)}
+        inventory={inventory}
+        onGenerated={(generatedProposal) => {
+          // Apply the generated proposal
+          setFormData(prev => ({
+            ...prev,
+            title: generatedProposal.title || prev.title,
+            areas: generatedProposal.areas?.map(area => ({
+              name: area.name,
+              description: area.description,
+              is_optional: false,
+              items: area.items?.map(item => ({
+                type: 'custom',
+                name: item.name,
+                description: item.description,
+                quantity: item.quantity || 1,
+                unit_cost: item.unit_price || 0,
+                unit_price: calculateMarkup(item.unit_price || 0),
+              })) || []
+            })) || prev.areas,
+            terms_conditions: generatedProposal.terms || prev.terms_conditions
+          }));
+          // Expand all areas
+          const expanded = {};
+          generatedProposal.areas?.forEach((_, idx) => { expanded[idx] = true; });
+          setExpandedAreas(expanded);
+        }}
+      />
     </div>
   );
+
+  function calculateMarkup(cost) {
+    if (markupType === 'percentage') return cost * (1 + markupValue / 100);
+    if (markupType === 'fixed') return cost + markupValue;
+    return cost;
+  }
 }
 
 function AIProposalSearchModal({ open, onClose, onAddItem, markupType, markupValue }) {
