@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus, Upload, Loader2 } from 'lucide-react';
+import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus, Upload, Loader2, MessageSquare, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
+import CustomerCommunication from '@/components/customers/CustomerCommunication';
 
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,6 +53,7 @@ export default function Customers() {
   const queryClient = useQueryClient();
 
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [showCommunication, setShowCommunication] = useState(false);
 
   const { data: customers = [], refetch } = useQuery({
     queryKey: ['customers'],
@@ -606,6 +608,37 @@ export default function Customers() {
           
           {selectedCustomer && (
             <div className="space-y-6 mt-4">
+              {/* Quick Actions */}
+              <div className="flex gap-2 mb-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 gap-2"
+                  onClick={() => setShowCommunication(true)}
+                >
+                  <Mail className="w-4 h-4" /> Send Email
+                </Button>
+                {selectedCustomer.phone && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-2"
+                    onClick={() => setShowCommunication(true)}
+                  >
+                    <MessageSquare className="w-4 h-4" /> Send SMS
+                  </Button>
+                )}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={() => window.location.href = `tel:${selectedCustomer.phone}`}
+                  disabled={!selectedCustomer.phone}
+                >
+                  <Phone className="w-4 h-4" />
+                </Button>
+              </div>
+
               {/* Contact Info */}
               <div className="p-4 bg-slate-50 rounded-xl space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -741,6 +774,25 @@ export default function Customers() {
                 </div>
               )}
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Communication Modal */}
+      <Dialog open={showCommunication} onOpenChange={setShowCommunication}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="w-5 h-5 text-[#0069AF]" />
+              Contact {selectedCustomer?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedCustomer && (
+            <CustomerCommunication 
+              customer={selectedCustomer} 
+              proposals={proposals}
+              onClose={() => setShowCommunication(false)} 
+            />
           )}
         </DialogContent>
       </Dialog>
