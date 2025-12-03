@@ -42,7 +42,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 
-import ProgressNeedle from '@/components/project/ProgressNeedle';
+import ProgressNeedle from '@/components/project/ProgressNeedle.jsx';
 import TeamAvatars from '@/components/project/TeamAvatars';
 import TaskModal from '@/components/modals/TaskModal';
 import TaskDetailModal from '@/components/modals/TaskDetailModal';
