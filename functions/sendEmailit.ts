@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
-import { SMTPClient } from 'npm:emailjs@4.0.3';
+import nodemailer from 'npm:nodemailer@6.9.8';
 
 Deno.serve(async (req) => {
   try {
@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     if (!config?.emailit_smtp_password) {
       return Response.json({ 
         success: false, 
-        error: 'Emailit API key (SMTP password) is not configured. Please enter your API key in Adminland.' 
+        error: 'Emailit API key is not configured. Please enter your API key in Adminland.' 
       });
     }
 
@@ -39,44 +39,40 @@ Deno.serve(async (req) => {
     }
 
     const port = parseInt(config.emailit_smtp_port) || 587;
+    const host = config.emailit_smtp_host || 'smtp.emailit.com';
     
-    // Emailit SMTP configuration:
-    // Host: smtp.emailit.com
-    // Port: 587 (recommended), 25, 2525, or 2587
-    // Encryption: STARTTLS
-    // Username: always "emailit"
-    // Password: your API credential
-    const client = new SMTPClient({
-      user: 'emailit',
-      password: config.emailit_smtp_password,
-      host: config.emailit_smtp_host || 'smtp.emailit.com',
+    // Create transporter using nodemailer
+    // Emailit SMTP: host=smtp.emailit.com, port=587, user="emailit", pass=API_KEY
+    const transporter = nodemailer.createTransport({
+      host: host,
       port: port,
-      ssl: false,  // Don't use implicit SSL
-      tls: {
-        ciphers: 'SSLv3'
+      secure: false, // Use STARTTLS, not implicit TLS
+      auth: {
+        user: 'emailit',
+        pass: config.emailit_smtp_password,
       },
-      timeout: 30000,
+      tls: {
+        rejectUnauthorized: false // Accept self-signed certificates
+      }
     });
 
     const fromAddress = config.emailit_from_name 
       ? `${config.emailit_from_name} <${config.emailit_from_email}>`
       : config.emailit_from_email;
 
-    const message = {
+    const mailOptions = {
       from: fromAddress,
       to: to,
       subject: subject,
-      text: text || (html ? '' : 'No content'),
-      attachment: [
-        { data: html || '<p>No content</p>', alternative: true }
-      ]
+      text: text || '',
+      html: html || '<p>No content</p>',
     };
 
     if (config.emailit_reply_to) {
-      message['reply-to'] = config.emailit_reply_to;
+      mailOptions.replyTo = config.emailit_reply_to;
     }
 
-    await client.sendAsync(message);
+    await transporter.sendMail(mailOptions);
 
     return Response.json({ 
       success: true, 
@@ -89,12 +85,14 @@ Deno.serve(async (req) => {
     // Provide more helpful error messages
     let errorMessage = error.message || 'Failed to send email';
     
-    if (errorMessage.includes('authentication') || errorMessage.includes('535')) {
-      errorMessage = 'Authentication failed. Please check your API key is correct and has SMTP type.';
-    } else if (errorMessage.includes('553') || errorMessage.includes('domain')) {
+    if (errorMessage.includes('Invalid login') || errorMessage.includes('535') || errorMessage.includes('authentication')) {
+      errorMessage = 'Authentication failed. Please check your API key is correct and has SMTP type (not API type).';
+    } else if (errorMessage.includes('553') || errorMessage.includes('domain') || errorMessage.includes('sender')) {
       errorMessage = 'Email rejected. Make sure your from email uses a verified sending domain in Emailit.';
-    } else if (errorMessage.includes('connect') || errorMessage.includes('ECONNREFUSED')) {
-      errorMessage = 'Could not connect to SMTP server. Check your host and port settings.';
+    } else if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('ETIMEDOUT') || errorMessage.includes('connect')) {
+      errorMessage = 'Could not connect to SMTP server. The server may be temporarily unavailable.';
+    } else if (errorMessage.includes('ENOTFOUND')) {
+      errorMessage = 'Could not resolve SMTP hostname. Check your host setting.';
     }
     
     return Response.json({ 
