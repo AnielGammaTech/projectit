@@ -13,7 +13,9 @@ import {
   User,
   Settings,
   LogOut,
-  Search
+  Search,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import GlobalSearch from '@/components/GlobalSearch';
