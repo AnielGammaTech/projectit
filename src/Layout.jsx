@@ -35,7 +35,19 @@ const navItems = [
   { name: 'Proposals', icon: FileText, page: 'Proposals' },
   { name: 'Billing', icon: BarChart3, page: 'Billing' },
   { name: 'Catalog', icon: Package, page: 'Inventory' },
-  { name: 'Reports', icon: BarChart3, page: 'Reports' },
+  { 
+    name: 'Reporting', 
+    icon: BarChart3, 
+    page: 'Reports',
+    hasSubmenu: true,
+    submenu: [
+      { name: 'Activity', page: 'Reports', params: '?type=activity' },
+      { name: 'Timesheets', page: 'Reports', params: '?type=timesheets' },
+      { name: 'Financial', page: 'Reports', params: '?type=financial' },
+      { name: 'Overdue Appointments', page: 'Reports', params: '?type=overdue' },
+      { name: 'Notification History', page: 'Reports', params: '?type=notifications' },
+    ]
+  },
   { name: 'Adminland', icon: Shield, page: 'Adminland', adminOnly: true },
 ];
 
