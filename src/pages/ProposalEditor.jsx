@@ -457,15 +457,6 @@ export default function ProposalEditor() {
                 {linkCopied ? 'Copied!' : 'Copy Link'}
               </Button>
             )}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowActivityPanel(!showActivityPanel)}
-              className={cn(showActivityPanel && "bg-slate-100")}
-            >
-              <History className="w-4 h-4 mr-1.5" />
-              Activity
-            </Button>
             <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>
               <Save className="w-4 h-4 mr-1.5" />
               Save Now
@@ -523,21 +514,17 @@ export default function ProposalEditor() {
 
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="grid lg:grid-cols-12 gap-6">
-          {/* Activity Panel - Slide in from right */}
+          {/* Activity Panel - Inline expandable */}
           {showActivityPanel && proposalId && (
-            <div className="fixed right-0 top-14 bottom-0 w-96 bg-white border-l border-slate-200 shadow-xl z-30 overflow-hidden flex flex-col">
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                  <History className="w-4 h-4" />
-                  Activity Log
-                </h3>
-                <Button variant="ghost" size="sm" onClick={() => setShowActivityPanel(false)}>✕</Button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4">
-                <ProposalActivityFeed proposalId={proposalId} />
-              </div>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-white rounded-xl border border-slate-200 p-5 -mt-2"
+            >
+              <ProposalActivityFeed proposalId={proposalId} />
               {proposal?.approval_token && (
-                <div className="p-4 border-t border-slate-100 bg-slate-50">
+                <div className="mt-4 pt-4 border-t border-slate-100">
                   <p className="text-xs text-slate-500 mb-2">Customer Approval Link:</p>
                   <div className="flex gap-2">
                     <Input 
@@ -568,7 +555,7 @@ export default function ProposalEditor() {
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* Main Content */}
