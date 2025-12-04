@@ -853,107 +853,147 @@ export default function ProposalEditor() {
 
       {/* Customer Modal */}
       <Dialog open={showCustomerModal} onOpenChange={(open) => { setShowCustomerModal(open); if (!open) { setShowNewCustomerForm(false); setNewCustomer({ first_name: '', last_name: '', email: '', phone: '', company: '', address: '' }); setCustomerSearch(''); } }}>
-        <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="text-xl font-semibold text-center">
-              {showNewCustomerForm ? 'New Client' : 'Select Client'}
-            </DialogTitle>
-          </DialogHeader>
-          
+        <DialogContent className="sm:max-w-xl p-0 overflow-hidden">
           {showNewCustomerForm ? (
-            <div className="px-6 pb-6">
-              <div className="flex justify-center mb-5">
-                <RadioGroup value={customerType} onValueChange={setCustomerType} className="flex gap-6">
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="person" id="person" className="text-[#f97316] border-slate-300" />
-                    <Label htmlFor="person" className="cursor-pointer">Person</Label>
+            <>
+              <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100">
+                <DialogTitle className="text-lg font-semibold">New Client</DialogTitle>
+              </DialogHeader>
+              <div className="px-6 py-5">
+                <div className="flex justify-center mb-5">
+                  <RadioGroup value={customerType} onValueChange={setCustomerType} className="flex gap-6">
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="person" id="person" className="text-[#0069AF] border-slate-300" />
+                      <Label htmlFor="person" className="cursor-pointer">Person</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="company" id="company" className="text-[#0069AF] border-slate-300" />
+                      <Label htmlFor="company" className="cursor-pointer">Company</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div className="space-y-4">
+                  {customerType === 'person' ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs text-slate-500 mb-1.5 block">First Name</Label>
+                        <Input value={newCustomer.first_name} onChange={(e) => setNewCustomer(prev => ({ ...prev, first_name: e.target.value }))} className="h-10" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-500 mb-1.5 block">Last Name</Label>
+                        <Input value={newCustomer.last_name} onChange={(e) => setNewCustomer(prev => ({ ...prev, last_name: e.target.value }))} className="h-10" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <Label className="text-xs text-slate-500 mb-1.5 block">Company Name</Label>
+                      <Input value={newCustomer.company} onChange={(e) => setNewCustomer(prev => ({ ...prev, company: e.target.value }))} className="h-10" />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs text-slate-500 mb-1.5 block">Email</Label>
+                      <Input type="email" value={newCustomer.email} onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))} className="h-10" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-500 mb-1.5 block">Phone</Label>
+                      <Input value={newCustomer.phone} onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))} className="h-10" />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="company" id="company" className="text-[#f97316] border-slate-300" />
-                    <Label htmlFor="company" className="cursor-pointer">Company</Label>
+
+                  <div>
+                    <Label className="text-xs text-slate-500 mb-1.5 block">Address (Optional)</Label>
+                    <Input value={newCustomer.address} onChange={(e) => setNewCustomer(prev => ({ ...prev, address: e.target.value }))} className="h-10" />
                   </div>
-                </RadioGroup>
+                </div>
+              </div>
+              <div className="flex gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50">
+                <Button variant="outline" onClick={() => setShowNewCustomerForm(false)} className="flex-1">Cancel</Button>
+                <Button onClick={handleCreateCustomer} className="flex-1 bg-[#0069AF] hover:bg-[#005a94]">Create Client</Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="px-6 pt-6 pb-4">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input 
+                    placeholder="Search clients by name, email, or company..." 
+                    className="pl-12 h-12 text-base bg-slate-50 border-slate-200 focus:bg-white" 
+                    value={customerSearch}
+                    onChange={(e) => setCustomerSearch(e.target.value)}
+                    autoFocus
+                  />
+                </div>
               </div>
 
-              <div className="space-y-4">
-                {customerType === 'person' ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                      <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-slate-500 z-10">First Name</Label>
-                      <Input value={newCustomer.first_name} onChange={(e) => setNewCustomer(prev => ({ ...prev, first_name: e.target.value }))} className="h-11 pt-1" />
-                    </div>
-                    <div className="relative">
-                      <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-slate-500 z-10">Last Name</Label>
-                      <Input value={newCustomer.last_name} onChange={(e) => setNewCustomer(prev => ({ ...prev, last_name: e.target.value }))} className="h-11 pt-1" />
-                    </div>
+              <div className="px-6 pb-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowNewCustomerForm(true)} 
+                  className="w-full h-12 border-dashed border-2 hover:border-[#0069AF] hover:bg-[#0069AF]/5 text-slate-600 hover:text-[#0069AF]"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Create New Client
+                </Button>
+              </div>
+
+              <div className="max-h-80 overflow-y-auto px-3 pb-4">
+                {filteredCustomers.length > 0 ? (
+                  <div className="space-y-1">
+                    {filteredCustomers.map(customer => (
+                      <button
+                        key={customer.id}
+                        onClick={() => handleCustomerSelect(customer)}
+                        className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-100 text-left transition-all group"
+                      >
+                        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#0069AF] to-[#133F5C] flex items-center justify-center text-white font-semibold text-base flex-shrink-0">
+                          {(customer.company || customer.name)?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-slate-900 truncate">
+                            {customer.company || customer.name}
+                          </p>
+                          <div className="flex items-center gap-2 text-sm text-slate-500">
+                            {customer.company && customer.name && (
+                              <span className="truncate">{customer.name}</span>
+                            )}
+                            {customer.email && (
+                              <>
+                                {customer.company && customer.name && <span>·</span>}
+                                <span className="truncate">{customer.email}</span>
+                              </>
+                            )}
+                          </div>
+                          {customer.phone && (
+                            <p className="text-xs text-slate-400 mt-0.5">{customer.phone}</p>
+                          )}
+                        </div>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-8 h-8 rounded-full bg-[#0069AF] flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : customerSearch ? (
+                  <div className="text-center py-12">
+                    <Search className="w-10 h-10 mx-auto text-slate-300 mb-3" />
+                    <p className="text-slate-500 font-medium">No clients found for "{customerSearch}"</p>
+                    <p className="text-sm text-slate-400 mt-1">Try a different search or create a new client</p>
                   </div>
                 ) : (
-                  <div className="relative">
-                    <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-slate-500 z-10">Company Name</Label>
-                    <Input value={newCustomer.company} onChange={(e) => setNewCustomer(prev => ({ ...prev, company: e.target.value }))} className="h-11 pt-1" />
+                  <div className="text-center py-12">
+                    <User className="w-10 h-10 mx-auto text-slate-300 mb-3" />
+                    <p className="text-slate-500 font-medium">No clients yet</p>
+                    <p className="text-sm text-slate-400 mt-1">Create your first client to get started</p>
                   </div>
                 )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-slate-500 z-10">Email</Label>
-                    <Input type="email" value={newCustomer.email} onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))} className="h-11 pt-1" />
-                  </div>
-                  <div className="relative">
-                    <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-slate-500 z-10">Phone Number</Label>
-                    <Input value={newCustomer.phone} onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))} className="h-11 pt-1" />
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <Label className="absolute -top-2 left-3 bg-white px-1 text-xs text-slate-500 z-10">Address (Optional)</Label>
-                  <Input value={newCustomer.address} onChange={(e) => setNewCustomer(prev => ({ ...prev, address: e.target.value }))} className="h-11 pt-1" />
-                </div>
               </div>
-
-              <div className="flex gap-3 mt-6 pt-4 border-t">
-                <Button variant="ghost" onClick={() => setShowNewCustomerForm(false)} className="flex-1">Cancel</Button>
-                <Button onClick={handleCreateCustomer} className="flex-1 bg-[#f97316] hover:bg-[#ea580c]">Next</Button>
-              </div>
-            </div>
-          ) : (
-            <div className="px-6 pb-6">
-              <Button variant="outline" onClick={() => setShowNewCustomerForm(true)} className="w-full mb-4 h-11 border-dashed">
-                <Plus className="w-4 h-4 mr-2" />
-                Create New Client
-              </Button>
-              
-              <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input 
-                  placeholder="Search clients..." 
-                  className="pl-9 h-10" 
-                  value={customerSearch}
-                  onChange={(e) => setCustomerSearch(e.target.value)}
-                />
-              </div>
-
-              <div className="max-h-64 overflow-y-auto space-y-1">
-                {filteredCustomers.map(customer => (
-                  <button
-                    key={customer.id}
-                    onClick={() => handleCustomerSelect(customer)}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 text-left transition-colors"
-                  >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0069AF] to-[#133F5C] flex items-center justify-center text-white font-medium text-sm">
-                      {customer.name?.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-slate-900 text-sm truncate">{customer.name}</p>
-                      <p className="text-xs text-slate-500 truncate">{customer.email}</p>
-                    </div>
-                  </button>
-                ))}
-                {filteredCustomers.length === 0 && (
-                  <p className="text-center text-slate-400 py-6 text-sm">No clients found</p>
-                )}
-              </div>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
