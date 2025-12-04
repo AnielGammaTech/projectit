@@ -41,6 +41,7 @@ const statusConfig = {
   viewed: { label: 'Viewed', color: 'bg-amber-100 text-amber-700 border-amber-200', icon: Eye },
   approved: { label: 'Approved', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: CheckCircle2 },
   rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700 border-red-200', icon: XCircle },
+  changes_requested: { label: 'Changes Requested', color: 'bg-amber-100 text-amber-700 border-amber-200', icon: Edit2 },
   expired: { label: 'Expired', color: 'bg-slate-100 text-slate-500 border-slate-200', icon: Clock }
 };
 
