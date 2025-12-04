@@ -64,8 +64,6 @@ const navItems = [
       { name: 'Report Builder', icon: PieChart, page: 'ReportBuilder' },
     ]
   },
-  { name: 'Workflows', icon: Zap, page: 'Workflows', adminOnly: true },
-  { name: 'Adminland', icon: Shield, page: 'Adminland', adminOnly: true },
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -161,8 +159,8 @@ export default function Layout({ children, currentPageName }) {
             </Link>
 
             {/* Desktop Nav Items */}
-            <nav className="hidden lg:flex items-center gap-1">
-              {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
+            <nav className="hidden lg:flex items-center gap-0.5">
+              {navItems.map((item) => {
                 const Icon = item.icon;
 
                 if (item.submenu) {
@@ -175,22 +173,39 @@ export default function Layout({ children, currentPageName }) {
                     <DropdownMenu key={item.name}>
                       <DropdownMenuTrigger asChild>
                         <button className={cn(
-                          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all",
+                          "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group",
                           isSubmenuActive 
-                            ? "text-slate-900 font-medium" 
-                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            ? "text-indigo-600 bg-indigo-50 font-medium" 
+                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                         )}>
+                          <Icon className={cn(
+                            "w-4 h-4 transition-colors",
+                            isSubmenuActive ? "text-indigo-500" : "text-slate-400 group-hover:text-slate-600"
+                          )} />
                           {item.name}
-                          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                          <ChevronDown className={cn(
+                            "w-3.5 h-3.5 transition-colors",
+                            isSubmenuActive ? "text-indigo-400" : "text-slate-400"
+                          )} />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-48">
+                      <DropdownMenuContent align="start" className="w-52 p-1">
                         {item.submenu.map((subItem) => {
                           const SubIcon = subItem.icon;
+                          const subTypeParam = subItem.params ? new URLSearchParams(subItem.params).get('type') : null;
+                          const currentType = new URLSearchParams(window.location.search).get('type');
+                          const isSubActive = (subItem.page === currentPageName && subTypeParam === currentType) ||
+                            (subItem.page === 'ReportBuilder' && currentPageName === 'ReportBuilder');
                           return (
                             <DropdownMenuItem key={subItem.name} asChild>
-                              <Link to={createPageUrl(subItem.page) + (subItem.params || '')} className="cursor-pointer">
-                                <SubIcon className="w-4 h-4 mr-2" />
+                              <Link 
+                                to={createPageUrl(subItem.page) + (subItem.params || '')} 
+                                className={cn(
+                                  "cursor-pointer flex items-center gap-2 px-3 py-2 rounded-md",
+                                  isSubActive && "bg-indigo-50 text-indigo-600"
+                                )}
+                              >
+                                <SubIcon className={cn("w-4 h-4", isSubActive ? "text-indigo-500" : "text-slate-400")} />
                                 {subItem.name}
                               </Link>
                             </DropdownMenuItem>
@@ -208,12 +223,16 @@ export default function Layout({ children, currentPageName }) {
                     key={item.name}
                     to={createPageUrl(item.page) + (item.params || '')}
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm transition-all",
+                      "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group",
                       isActive 
-                        ? "text-slate-900 font-medium" 
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                        ? "text-indigo-600 bg-indigo-50 font-medium" 
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     )}
                   >
+                    <Icon className={cn(
+                      "w-4 h-4 transition-colors",
+                      isActive ? "text-indigo-500" : "text-slate-400 group-hover:text-slate-600"
+                    )} />
                     {item.name}
                   </Link>
                 );
@@ -249,7 +268,7 @@ export default function Layout({ children, currentPageName }) {
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-white text-sm font-medium hover:bg-slate-700 transition-colors">
+                <button className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-sm">
                   {currentUser?.avatar_url ? (
                     <img src={currentUser.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
                   ) : (
@@ -257,29 +276,51 @@ export default function Layout({ children, currentPageName }) {
                   )}
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{currentUser?.full_name || 'User'}</p>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-3 py-2 border-b border-slate-100">
+                  <p className="text-sm font-medium text-slate-900">{currentUser?.full_name || 'User'}</p>
                   <p className="text-xs text-slate-500">{currentUser?.email}</p>
                 </div>
+                <div className="py-1">
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl('Profile')} className="cursor-pointer">
+                      <User className="w-4 h-4 mr-2 text-slate-500" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl('NotificationSettings')} className="cursor-pointer">
+                      <Bell className="w-4 h-4 mr-2 text-slate-500" />
+                      Notifications
+                    </Link>
+                  </DropdownMenuItem>
+                </div>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <div className="py-1">
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl('Adminland')} className="cursor-pointer">
+                          <Shield className="w-4 h-4 mr-2 text-indigo-500" />
+                          Adminland
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl('Workflows')} className="cursor-pointer">
+                          <Zap className="w-4 h-4 mr-2 text-amber-500" />
+                          Workflows
+                        </Link>
+                      </DropdownMenuItem>
+                    </div>
+                  </>
+                )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to={createPageUrl('Profile')} className="cursor-pointer">
-                    <User className="w-4 h-4 mr-2" />
-                    My Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to={createPageUrl('NotificationSettings')} className="cursor-pointer">
-                    <Bell className="w-4 h-4 mr-2" />
-                    Notifications
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </DropdownMenuItem>
+                <div className="py-1">
+                  <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -315,7 +356,7 @@ export default function Layout({ children, currentPageName }) {
           </Button>
         </div>
         <nav className="flex-1 overflow-y-auto p-3">
-          {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
 
             if (item.submenu) {
