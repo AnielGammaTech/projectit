@@ -40,19 +40,9 @@ import {
 
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
-  { 
-    name: 'My Stuff', 
-    icon: User, 
-    submenu: [
-      { name: 'My Assignments', icon: ListTodo, page: 'MyAssignments' },
-      { name: 'My Schedule', icon: Clock, page: 'MySchedule' },
-      { name: 'My Proposals', icon: FileText, page: 'Proposals', params: '?created_by=me' },
-    ]
-  },
-  { name: 'All Tasks', icon: ListTodo, page: 'AllTasks' },
+  { name: 'Activity', icon: Activity, page: 'AllTasks' },
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Proposals', icon: FileText, page: 'Proposals' },
-  { name: 'Billing', icon: Wallet, page: 'Billing' },
   { name: 'Catalog', icon: Package, page: 'Inventory' },
   { 
     name: 'Reporting', 
@@ -175,17 +165,17 @@ export default function Layout({ children, currentPageName }) {
                         <button className={cn(
                           "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group",
                           isSubmenuActive 
-                            ? "text-indigo-600 bg-indigo-50 font-medium" 
+                            ? "text-[#0069AF] bg-[#0069AF]/10 font-medium" 
                             : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                         )}>
                           <Icon className={cn(
                             "w-4 h-4 transition-colors",
-                            isSubmenuActive ? "text-indigo-500" : "text-slate-400 group-hover:text-slate-600"
+                            isSubmenuActive ? "text-[#0069AF]" : "text-slate-400 group-hover:text-slate-600"
                           )} />
                           {item.name}
                           <ChevronDown className={cn(
                             "w-3.5 h-3.5 transition-colors",
-                            isSubmenuActive ? "text-indigo-400" : "text-slate-400"
+                            isSubmenuActive ? "text-[#0069AF]" : "text-slate-400"
                           )} />
                         </button>
                       </DropdownMenuTrigger>
@@ -202,10 +192,10 @@ export default function Layout({ children, currentPageName }) {
                                 to={createPageUrl(subItem.page) + (subItem.params || '')} 
                                 className={cn(
                                   "cursor-pointer flex items-center gap-2 px-3 py-2 rounded-md",
-                                  isSubActive && "bg-indigo-50 text-indigo-600"
+                                  isSubActive && "bg-[#0069AF]/10 text-[#0069AF]"
                                 )}
                               >
-                                <SubIcon className={cn("w-4 h-4", isSubActive ? "text-indigo-500" : "text-slate-400")} />
+                                <SubIcon className={cn("w-4 h-4", isSubActive ? "text-[#0069AF]" : "text-slate-400")} />
                                 {subItem.name}
                               </Link>
                             </DropdownMenuItem>
@@ -225,13 +215,13 @@ export default function Layout({ children, currentPageName }) {
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group",
                       isActive 
-                        ? "text-indigo-600 bg-indigo-50 font-medium" 
+                        ? "text-[#0069AF] bg-[#0069AF]/10 font-medium" 
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     )}
-                  >
+                    >
                     <Icon className={cn(
                       "w-4 h-4 transition-colors",
-                      isActive ? "text-indigo-500" : "text-slate-400 group-hover:text-slate-600"
+                      isActive ? "text-[#0069AF]" : "text-slate-400 group-hover:text-slate-600"
                     )} />
                     {item.name}
                   </Link>
@@ -268,7 +258,7 @@ export default function Layout({ children, currentPageName }) {
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-sm">
+                <button className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0069AF] to-[#133F5C] flex items-center justify-center text-white text-sm font-medium hover:from-[#0058A3] hover:to-[#0F2F44] transition-all shadow-sm">
                   {currentUser?.avatar_url ? (
                     <img src={currentUser.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
                   ) : (
@@ -281,6 +271,27 @@ export default function Layout({ children, currentPageName }) {
                   <p className="text-sm font-medium text-slate-900">{currentUser?.full_name || 'User'}</p>
                   <p className="text-xs text-slate-500">{currentUser?.email}</p>
                 </div>
+                <div className="py-1">
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl('MyAssignments')} className="cursor-pointer">
+                      <ListTodo className="w-4 h-4 mr-2 text-[#0069AF]" />
+                      My Assignments
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl('MySchedule')} className="cursor-pointer">
+                      <Clock className="w-4 h-4 mr-2 text-[#0069AF]" />
+                      My Schedule
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl('Billing')} className="cursor-pointer">
+                      <Wallet className="w-4 h-4 mr-2 text-emerald-500" />
+                      Billing
+                    </Link>
+                  </DropdownMenuItem>
+                </div>
+                <DropdownMenuSeparator />
                 <div className="py-1">
                   <DropdownMenuItem asChild>
                     <Link to={createPageUrl('Profile')} className="cursor-pointer">
@@ -301,7 +312,7 @@ export default function Layout({ children, currentPageName }) {
                     <div className="py-1">
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl('Adminland')} className="cursor-pointer">
-                          <Shield className="w-4 h-4 mr-2 text-indigo-500" />
+                          <Shield className="w-4 h-4 mr-2 text-[#0069AF]" />
                           Adminland
                         </Link>
                       </DropdownMenuItem>
