@@ -556,7 +556,16 @@ export default function ProjectDetail() {
           </div>
         </motion.div>
 
-
+              {/* Sidebar - Calendar, Tasks, Parts */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="hidden lg:block"
+              >
+                <ProjectSidebar projectId={projectId} tasks={tasks} parts={parts} />
+              </motion.div>
+            </div>
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
