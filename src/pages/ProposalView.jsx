@@ -101,17 +101,37 @@ const statusColors = {
 export default function ProposalView() {
   const urlParams = new URLSearchParams(window.location.search);
   const proposalId = urlParams.get('id');
+  const token = urlParams.get('token');
   const printRef = useRef(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSadFaces, setShowSadFaces] = useState(false);
+  const [showChangeRequest, setShowChangeRequest] = useState(false);
+  const [changeNotes, setChangeNotes] = useState('');
+  const [processing, setProcessing] = useState(false);
 
-  const { data: proposal, isLoading } = useQuery({
-    queryKey: ['proposal', proposalId],
+  // Log view on mount
+  useEffect(() => {
+    if (proposalId || token) {
+      base44.functions.invoke('logProposalView', { 
+        proposalId, 
+        token, 
+        action: 'viewed' 
+      }).catch(err => console.error('Failed to log view', err));
+    }
+  }, [proposalId, token]);
+
+  const { data: proposal, isLoading, refetch } = useQuery({
+    queryKey: ['proposal', proposalId || token],
     queryFn: async () => {
-      const proposals = await base44.entities.Proposal.filter({ id: proposalId });
+      let proposals;
+      if (token) {
+        proposals = await base44.entities.Proposal.filter({ approval_token: token });
+      } else {
+        proposals = await base44.entities.Proposal.filter({ id: proposalId });
+      }
       return proposals[0];
     },
-    enabled: !!proposalId
+    enabled: !!proposalId || !!token
   });
 
   const { data: proposalSettings } = useQuery({
