@@ -231,7 +231,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
         window.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, [isDragging, localValue, value]);
+  }, [isDragging]);
 
   useEffect(() => {
     setLocalValue(value);
