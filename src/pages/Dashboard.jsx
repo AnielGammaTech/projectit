@@ -398,12 +398,13 @@ export default function Dashboard() {
             href={createPageUrl('AllTasks') + '?tab=parts'}
           />
           <StatsCard
-            title="Overdue Tasks"
-            value={tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length}
-            icon={AlertTriangle}
-            iconColor="bg-red-500"
-            href={createPageUrl('AllTasks')}
-          />
+                            title="All Tasks"
+                            value={tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}
+                            subtitle={tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length > 0 ? `${tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length} overdue` : null}
+                            icon={ClipboardList}
+                            iconColor="bg-[#0069AF]"
+                            href={createPageUrl('AllTasks')}
+                          />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
