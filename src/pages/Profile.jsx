@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2, Sun, Moon, Monitor, Palette } from 'lucide-react';
+import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2, Sun, Moon, Monitor, Palette, Bell, CheckCircle2, AtSign, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -25,6 +29,7 @@ const themeOptions = [
 ];
 
 export default function Profile() {
+  const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -48,6 +53,29 @@ export default function Profile() {
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
+
+  // Fetch user notifications
+  const { data: notifications = [], refetch: refetchNotifications } = useQuery({
+    queryKey: ['userNotifications', currentUser?.email],
+    queryFn: () => base44.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
+    enabled: !!currentUser?.email
+  });
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  const markAsRead = useMutation({
+    mutationFn: (notificationId) => base44.entities.UserNotification.update(notificationId, { is_read: true }),
+    onSuccess: () => refetchNotifications()
+  });
+
+  const markAllAsRead = useMutation({
+    mutationFn: async () => {
+      for (const n of notifications.filter(n => !n.is_read)) {
+        await base44.entities.UserNotification.update(n.id, { is_read: true });
+      }
+    },
+    onSuccess: () => refetchNotifications()
+  });
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -184,6 +212,100 @@ export default function Profile() {
               >
                 {saving ? 'Saving...' : 'Save Changes'}
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Notifications */}
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-[#0069AF]" />
+                  Notifications
+                  {unreadCount > 0 && (
+                    <Badge className="bg-red-500 text-white">{unreadCount}</Badge>
+                  )}
+                </CardTitle>
+                {unreadCount > 0 && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => markAllAsRead.mutate()}
+                    className="text-xs text-slate-500"
+                  >
+                    Mark all as read
+                  </Button>
+                )}
+              </div>
+              <CardDescription>Mentions and updates from your team</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {notifications.length > 0 ? (
+                <ScrollArea className="h-64">
+                  <div className="space-y-2">
+                    {notifications.map(notification => (
+                      <div
+                        key={notification.id}
+                        className={cn(
+                          "p-3 rounded-lg border transition-all",
+                          notification.is_read 
+                            ? "bg-white border-slate-100" 
+                            : "bg-blue-50 border-blue-100"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-3">
+                            <div className={cn(
+                              "p-2 rounded-lg",
+                              notification.type === 'mention' && "bg-indigo-100 text-indigo-600",
+                              notification.type === 'progress_update' && "bg-emerald-100 text-emerald-600",
+                              notification.type === 'task_assigned' && "bg-blue-100 text-blue-600"
+                            )}>
+                              {notification.type === 'mention' && <AtSign className="w-4 h-4" />}
+                              {notification.type === 'progress_update' && <MessageCircle className="w-4 h-4" />}
+                              {notification.type === 'task_assigned' && <CheckCircle2 className="w-4 h-4" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-900">{notification.title}</p>
+                              <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{notification.message}</p>
+                              {notification.from_user_name && (
+                                <p className="text-xs text-slate-400 mt-1">From: {notification.from_user_name}</p>
+                              )}
+                              <p className="text-[10px] text-slate-400 mt-1">
+                                {format(new Date(notification.created_date), 'MMM d, h:mm a')}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {notification.link && (
+                              <Link to={notification.link}>
+                                <Button variant="ghost" size="sm" className="text-xs h-7">
+                                  View
+                                </Button>
+                              </Link>
+                            )}
+                            {!notification.is_read && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => markAsRead.mutate(notification.id)}
+                                className="text-xs h-7"
+                              >
+                                <CheckCircle2 className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <div className="text-center py-8">
+                  <Bell className="w-10 h-10 text-slate-200 mx-auto mb-2" />
+                  <p className="text-sm text-slate-500">No notifications yet</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
