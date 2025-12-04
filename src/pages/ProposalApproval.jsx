@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
+import { base44 } from '@/api/base44Client';
 
 export default function ProposalApproval() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -32,24 +33,19 @@ export default function ProposalApproval() {
 
     const fetchProposal = async () => {
       try {
-        const response = await fetch(`/api/logProposalView?token=${encodeURIComponent(token)}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await response.json();
+        // Use SDK to invoke the backend function
+        const response = await base44.functions.invoke('logProposalView', { token, action: 'fetch' });
+        const data = response.data;
         
         if (data.error) {
           setError(data.error);
         } else {
           setProposal(data.proposal);
-          // Log view
-          fetch('/api/logProposalView', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token, action: 'viewed' })
-          }).catch(() => {});
+          // Log view in background
+          base44.functions.invoke('logProposalView', { token, action: 'viewed' }).catch(() => {});
         }
       } catch (err) {
+        console.error('Fetch error:', err);
         setError('Failed to load proposal');
       } finally {
         setIsLoading(false);
@@ -108,16 +104,12 @@ export default function ProposalApproval() {
     try {
       const signatureData = canvasRef.current.toDataURL();
       
-      await fetch('/api/logProposalView', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token, 
-          action: 'approved',
-          signerName: signerName,
-          signatureData: signatureData,
-          details: `Approved and signed by ${signerName}`
-        })
+      await base44.functions.invoke('logProposalView', {
+        token, 
+        action: 'approved',
+        signerName: signerName,
+        signatureData: signatureData,
+        details: `Approved and signed by ${signerName}`
       });
       
       setSubmitted(true);

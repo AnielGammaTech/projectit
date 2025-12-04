@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
       status: 204,
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Base44-App-Id',
       },
     });
@@ -15,18 +15,12 @@ Deno.serve(async (req) => {
 
   try {
     const base44 = createClientFromRequest(req);
-    const url = new URL(req.url);
     
-    // Handle GET request to fetch proposal by token (public access)
-    if (req.method === 'GET') {
-      const token = url.searchParams.get('token');
-      if (!token) {
-        return Response.json({ error: 'Token required' }, { 
-          status: 400,
-          headers: { 'Access-Control-Allow-Origin': '*' }
-        });
-      }
-      
+    const body = await req.json();
+    const { proposalId, token, action = 'viewed', details = '', signerName, signatureData } = body;
+
+    // Handle fetch action - return proposal data for public view
+    if (action === 'fetch' && token) {
       const proposals = await base44.asServiceRole.entities.Proposal.filter({ approval_token: token });
       const proposal = proposals[0];
       
@@ -62,9 +56,6 @@ Deno.serve(async (req) => {
         headers: { 'Access-Control-Allow-Origin': '*' }
       });
     }
-    
-    const body = await req.json();
-    const { proposalId, token, action = 'viewed', details = '', signerName, signatureData } = body;
 
     let proposal;
     if (token) {
