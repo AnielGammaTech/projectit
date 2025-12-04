@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings, LayoutGrid, List, Star } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -20,6 +20,23 @@ import DashboardWidgets from '@/components/dashboard/DashboardWidgets';
 import MyTasksCard from '@/components/dashboard/MyTasksCard';
 import ActivityTimeline from '@/components/dashboard/ActivityTimeline';
 import ProjectModal from '@/components/modals/ProjectModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function Dashboard() {
     const [showProjectModal, setShowProjectModal] = useState(false);
@@ -36,6 +53,10 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
   const [listFilter, setListFilter] = useState('all'); // 'all', 'pinned', 'projects', 'teams', 'clients', 'archived'
   const [dismissedAlert, setDismissedAlert] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedProjects, setSelectedProjects] = useState([]);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [showBulkArchiveConfirm, setShowBulkArchiveConfirm] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -227,6 +248,46 @@ export default function Dashboard() {
   const handleTaskComplete = async (task) => {
     await base44.entities.Task.update(task.id, { ...task, status: 'completed' });
     refetchTasks();
+  };
+
+  const toggleProjectSelection = (projectId) => {
+    setSelectedProjects(prev => 
+      prev.includes(projectId) ? prev.filter(id => id !== projectId) : [...prev, projectId]
+    );
+  };
+
+  const selectAllProjects = () => {
+    if (selectedProjects.length === filteredProjects.length) {
+      setSelectedProjects([]);
+    } else {
+      setSelectedProjects(filteredProjects.map(p => p.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    for (const projectId of selectedProjects) {
+      await base44.entities.Project.update(projectId, {
+        status: 'deleted',
+        deleted_date: new Date().toISOString()
+      });
+    }
+    setSelectedProjects([]);
+    setSelectionMode(false);
+    setShowBulkDeleteConfirm(false);
+    refetchProjects();
+  };
+
+  const handleBulkArchive = async () => {
+    for (const projectId of selectedProjects) {
+      await base44.entities.Project.update(projectId, {
+        status: 'archived',
+        archived_date: new Date().toISOString()
+      });
+    }
+    setSelectedProjects([]);
+    setSelectionMode(false);
+    setShowBulkArchiveConfirm(false);
+    refetchProjects();
   };
 
   const handleCreateProject = async (data, template, extractedParts) => {
@@ -458,6 +519,19 @@ export default function Dashboard() {
                 </button>
               </div>
               <div className="flex items-center gap-2">
+                {/* Selection Mode Toggle */}
+                {!showArchived && (
+                  <button
+                    onClick={() => { setSelectionMode(!selectionMode); setSelectedProjects([]); }}
+                    className={cn(
+                      "p-1.5 rounded-md transition-all",
+                      selectionMode ? "bg-[#0069AF] text-white" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                    )}
+                    title="Select multiple projects"
+                  >
+                    <CheckSquare className="w-4 h-4" />
+                  </button>
+                )}
                 {/* View Mode Toggle */}
                 <div className="flex items-center bg-slate-100 rounded-lg p-1">
                   <button
@@ -490,6 +564,54 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+
+            {/* Bulk Actions Bar */}
+            {selectionMode && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-3 bg-[#0069AF]/10 rounded-xl border border-[#0069AF]/20 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={selectAllProjects}
+                    className="flex items-center gap-2 text-sm font-medium text-[#0069AF] hover:text-[#133F5C]"
+                  >
+                    {selectedProjects.length === filteredProjects.length ? (
+                      <CheckSquare className="w-4 h-4" />
+                    ) : (
+                      <Square className="w-4 h-4" />
+                    )}
+                    {selectedProjects.length === filteredProjects.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                  <span className="text-sm text-slate-600">
+                    {selectedProjects.length} selected
+                  </span>
+                </div>
+                {selectedProjects.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowBulkArchiveConfirm(true)}
+                      className="text-amber-600 border-amber-300 hover:bg-amber-50"
+                    >
+                      <Archive className="w-4 h-4 mr-1" />
+                      Archive
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowBulkDeleteConfirm(true)}
+                      className="text-red-600 border-red-300 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                )}
+              </motion.div>
+            )}
 
             {filteredProjects.length > 0 ? (
               viewMode === 'list' ? (
