@@ -268,7 +268,7 @@ export default function Dashboard() {
                 New Project
               </Button>
             </div>
-          </motion.div>
+        </motion.div>
 
         {/* Urgent Tasks Alert */}
         {!dismissedAlert && myUrgentTasks.length > 0 && (
