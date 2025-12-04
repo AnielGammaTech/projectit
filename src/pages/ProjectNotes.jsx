@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import MeetingUpdateModal from '@/components/modals/MeetingUpdateModal';
+import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 
 const typeConfig = {
   note: { icon: StickyNote, color: 'bg-slate-100 text-slate-700', label: 'Note' },
@@ -121,13 +122,9 @@ export default function ProjectNotes() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Link */}
-        <Link to={createPageUrl('ProjectDetail') + `?id=${projectId}`} className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-6 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to {project.name}
-        </Link>
-
+      <ProjectNavHeader project={project} currentPage="ProjectNotes" />
+      
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">

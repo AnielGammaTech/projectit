@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 
 const folderColors = [
   { name: 'slate', bg: 'bg-slate-100', text: 'text-slate-600' },
@@ -181,13 +182,9 @@ export default function ProjectFiles() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/30">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Link */}
-        <Link to={createPageUrl('ProjectDetail') + `?id=${projectId}`} className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-6 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to {project.name}
-        </Link>
-
+      <ProjectNavHeader project={project} currentPage="ProjectFiles" />
+      
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">

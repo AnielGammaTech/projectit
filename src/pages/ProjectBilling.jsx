@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 
 const billingStatusConfig = {
   pending: { label: 'Pending', color: 'bg-slate-100 text-slate-600', icon: Clock },
@@ -114,18 +115,13 @@ export default function ProjectBilling() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ProjectNavHeader project={project} currentPage="ProjectBilling" />
+      
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Link to={createPageUrl('ProjectDetail') + `?id=${projectId}`} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5 text-slate-600" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">Billing</h1>
-              <p className="text-sm text-slate-500">{project.name}</p>
-            </div>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900">Billing</h1>
+          <p className="text-sm text-slate-500">Track billable time and materials</p>
         </div>
 
         {/* Summary Cards */}
