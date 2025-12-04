@@ -83,6 +83,11 @@ export default function Dashboard() {
     queryFn: () => base44.entities.ProjectTemplate.list()
   });
 
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => base44.entities.TeamMember.list()
+  });
+
   const { data: quoteRequests = [] } = useQuery({
     queryKey: ['quoteRequests'],
     queryFn: () => base44.entities.QuoteRequest.list()
@@ -644,19 +649,20 @@ export default function Dashboard() {
                                     style={provided.draggableProps.style}
                                   >
                                     <ProjectCard
-                                                project={project}
-                                                tasks={getTasksForProject(project.id)}
-                                                parts={getPartsForProject(project.id)}
-                                                index={idx}
-                                                groups={allGroups}
-                                                onColorChange={handleProjectColorChange}
-                                                onGroupChange={handleProjectGroupChange}
-                                                onStatusChange={handleProjectStatusChange}
-                                                onDueDateChange={handleProjectDueDateChange}
-                                                onPinToggle={handlePinToggle}
-                                                isPinned={true}
-                                                dragHandleProps={provided.dragHandleProps}
-                                              />
+                                                                                      project={project}
+                                                                                      tasks={getTasksForProject(project.id)}
+                                                                                      parts={getPartsForProject(project.id)}
+                                                                                      index={idx}
+                                                                                      groups={allGroups}
+                                                                                      onColorChange={handleProjectColorChange}
+                                                                                      onGroupChange={handleProjectGroupChange}
+                                                                                      onStatusChange={handleProjectStatusChange}
+                                                                                      onDueDateChange={handleProjectDueDateChange}
+                                                                                      onPinToggle={handlePinToggle}
+                                                                                      isPinned={true}
+                                                                                      dragHandleProps={provided.dragHandleProps}
+                                                                                      teamMembers={teamMembers}
+                                                                                    />
                                   </div>
                                 )}
                               </Draggable>
@@ -726,19 +732,20 @@ export default function Dashboard() {
                                           style={provided.draggableProps.style}
                                         >
                                           <ProjectCard
-                                            project={project}
-                                            tasks={getTasksForProject(project.id)}
-                                            parts={getPartsForProject(project.id)}
-                                            index={idx}
-                                            groups={allGroups}
-                                            onColorChange={handleProjectColorChange}
-                                            onGroupChange={handleProjectGroupChange}
-                                            onStatusChange={handleProjectStatusChange}
-                                            onDueDateChange={handleProjectDueDateChange}
-                                            onPinToggle={handlePinToggle}
-                                            isPinned={false}
-                                            dragHandleProps={provided.dragHandleProps}
-                                          />
+                                                                                            project={project}
+                                                                                            tasks={getTasksForProject(project.id)}
+                                                                                            parts={getPartsForProject(project.id)}
+                                                                                            index={idx}
+                                                                                            groups={allGroups}
+                                                                                            onColorChange={handleProjectColorChange}
+                                                                                            onGroupChange={handleProjectGroupChange}
+                                                                                            onStatusChange={handleProjectStatusChange}
+                                                                                            onDueDateChange={handleProjectDueDateChange}
+                                                                                            onPinToggle={handlePinToggle}
+                                                                                            isPinned={false}
+                                                                                            dragHandleProps={provided.dragHandleProps}
+                                                                                            teamMembers={teamMembers}
+                                                                                          />
                                         </div>
                                       )}
                                     </Draggable>
