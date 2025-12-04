@@ -79,7 +79,8 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
   const { data: progressUpdates = [] } = useQuery({
     queryKey: ['progressUpdates', project.id],
     queryFn: () => base44.entities.ProgressUpdate.filter({ project_id: project.id }, '-created_date', 1),
-    enabled: !!project.id
+    enabled: !!project.id,
+    staleTime: 30000 // 30 seconds to prevent excessive refetching
   });
 
   const lastUpdate = progressUpdates[0];

@@ -195,11 +195,12 @@ Provide 2-3 sentences focusing on priorities and recommendations. Be concise and
   };
 
   useEffect(() => {
-    if (projects.length > 0 && !hasGeneratedRef.current) {
+    if (projects.length > 0 && !hasGeneratedRef.current && !loading) {
       hasGeneratedRef.current = true;
       generateSummary();
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projects.length]);
 
   return (
     <div className="space-y-3">
