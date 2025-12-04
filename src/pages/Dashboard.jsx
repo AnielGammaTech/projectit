@@ -35,6 +35,7 @@ export default function Dashboard() {
   });
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
   const [listFilter, setListFilter] = useState('all'); // 'all', 'pinned', 'projects', 'teams', 'clients', 'archived'
+  const [dismissedAlert, setDismissedAlert] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(user => {
@@ -97,8 +98,6 @@ export default function Dashboard() {
     queryKey: ['proposals'],
     queryFn: () => base44.entities.Proposal.list('-created_date')
   });
-
-  const [dismissedAlert, setDismissedAlert] = useState(false);
 
   const pendingQuotes = quoteRequests.filter(q => !['received'].includes(q.status));
   const approvedProposals = proposals.filter(p => p.status === 'approved');
