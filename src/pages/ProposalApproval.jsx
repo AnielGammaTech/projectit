@@ -166,7 +166,7 @@ export default function ProposalApproval() {
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-slate-900 mb-2">Proposal Not Found</h1>
-          <p className="text-slate-500">{error?.message || 'This proposal link is invalid or has expired.'}</p>
+          <p className="text-slate-500">{error || 'This proposal link is invalid or has expired.'}</p>
         </div>
       </div>
     );
