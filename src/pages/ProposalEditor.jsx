@@ -429,51 +429,12 @@ export default function ProposalEditor() {
 
       {/* Top Navigation */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to={createPageUrl('Proposals')} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5 text-slate-600" />
+            <Link to={createPageUrl('Proposals')} className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1">
+              <ArrowLeft className="w-4 h-4" />
+              Proposals
             </Link>
-            <div className="h-6 w-px bg-slate-200" />
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs font-mono bg-slate-50">{formData.proposal_number}</Badge>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className={cn(
-                    "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border cursor-pointer hover:opacity-80",
-                    statusConfig[formData.status]?.color || "bg-slate-100 text-slate-600"
-                  )}>
-                    {statusConfig[formData.status]?.label || formData.status}
-                    <ChevronDown className="w-3 h-3" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {Object.entries(statusConfig).map(([key, config]) => (
-                    <DropdownMenuItem key={key} onClick={async () => {
-                      setFormData(prev => ({ ...prev, status: key }));
-                      // Auto-save when status changes
-                      if (proposalId) {
-                        const updates = { status: key };
-                        if (key === 'sent') updates.sent_date = new Date().toISOString();
-                        await base44.entities.Proposal.update(proposalId, updates);
-                        // Log activity
-                        await base44.entities.ProposalActivity.create({
-                          proposal_id: proposalId,
-                          action: key === 'sent' ? 'sent' : 'updated',
-                          actor_name: currentUser?.full_name || 'User',
-                          actor_email: currentUser?.email,
-                          details: `Status changed to ${config.label}`
-                        });
-                        queryClient.invalidateQueries({ queryKey: ['proposalActivity', proposalId] });
-                      }
-                    }}>
-                      <span className={cn("w-2 h-2 rounded-full mr-2", config.color.split(' ')[0])}></span>
-                      {config.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400 mr-2">
@@ -612,51 +573,165 @@ export default function ProposalEditor() {
 
           {/* Main Content */}
           <div className={cn("lg:col-span-8 space-y-5", showActivityPanel && "lg:col-span-8")}>
-            {/* Title */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-slate-200 p-4">
-              <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">Proposal Title</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter proposal title..."
-                className="w-full text-2xl font-bold border border-slate-200 rounded-lg h-14 px-4 focus:outline-none focus:ring-2 focus:ring-[#0069AF] placeholder:text-slate-300"
-              />
+            {/* Title Header - New Design */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-slate-200 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-2xl font-bold text-slate-900">Proposal #{formData.proposal_number}</span>
+                    <span className="text-2xl text-slate-400">·</span>
+                    <span className="text-2xl font-bold text-slate-900">${totals.total.toFixed(2)}</span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium cursor-pointer hover:opacity-80",
+                          formData.status === 'approved' ? "bg-emerald-100 text-emerald-700" :
+                          formData.status === 'sent' ? "bg-blue-100 text-blue-700" :
+                          formData.status === 'viewed' ? "bg-amber-100 text-amber-700" :
+                          formData.status === 'rejected' ? "bg-red-100 text-red-700" :
+                          formData.status === 'changes_requested' ? "bg-orange-100 text-orange-700" :
+                          "bg-slate-100 text-slate-600"
+                        )}>
+                          <span className={cn(
+                            "w-2 h-2 rounded-full",
+                            formData.status === 'approved' ? "bg-emerald-500" :
+                            formData.status === 'sent' ? "bg-blue-500" :
+                            formData.status === 'viewed' ? "bg-amber-500" :
+                            formData.status === 'rejected' ? "bg-red-500" :
+                            formData.status === 'changes_requested' ? "bg-orange-500" :
+                            "bg-slate-400"
+                          )} />
+                          {statusConfig[formData.status]?.label || formData.status}
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        {Object.entries(statusConfig).map(([key, config]) => (
+                          <DropdownMenuItem key={key} onClick={async () => {
+                            setFormData(prev => ({ ...prev, status: key }));
+                            if (proposalId) {
+                              const updates = { status: key };
+                              if (key === 'sent') updates.sent_date = new Date().toISOString();
+                              await base44.entities.Proposal.update(proposalId, updates);
+                              await base44.entities.ProposalActivity.create({
+                                proposal_id: proposalId,
+                                action: key === 'sent' ? 'sent' : 'updated',
+                                actor_name: currentUser?.full_name || 'User',
+                                actor_email: currentUser?.email,
+                                details: `Status changed to ${config.label}`
+                              });
+                              queryClient.invalidateQueries({ queryKey: ['proposalActivity', proposalId] });
+                            }
+                          }}>
+                            <span className={cn("w-2 h-2 rounded-full mr-2", config.color.split(' ')[0])}></span>
+                            {config.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Enter proposal title..."
+                    className="text-slate-500 text-base bg-transparent border-none focus:outline-none w-full placeholder:text-slate-300"
+                  />
+                </div>
+              </div>
             </motion.div>
 
-            {/* Customer Card */}
+            {/* Salesperson Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.03 }}
+              className="bg-slate-50 rounded-xl border border-slate-200 px-5 py-3"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-500">Salesperson</span>
+                <span className="font-semibold text-slate-900">{currentUser?.full_name || 'Not assigned'}</span>
+              </div>
+            </motion.div>
+
+            {/* Client & Location Cards */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="bg-white rounded-xl border border-slate-200 p-4"
+              className="grid grid-cols-2 gap-4"
             >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider">Client</h3>
-                <Button variant="ghost" size="sm" onClick={() => setShowCustomerModal(true)} className="text-[#0069AF] h-7 text-xs">
-                  {formData.customer_name ? 'Change' : '+ Add Client'}
-                </Button>
+              {/* Client Card */}
+              <div className="bg-white rounded-xl border border-slate-200 p-4 relative">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-slate-400 mb-2">Client</p>
+                    {formData.customer_name ? (
+                      <>
+                        <p className="font-semibold text-slate-900">{formData.customer_company || formData.customer_name}</p>
+                        {formData.customer_company && <p className="text-sm text-slate-600">{formData.customer_name}</p>}
+                        <p className="text-sm text-slate-500">{formData.customer_email}</p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-slate-400">No client selected</p>
+                    )}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setShowCustomerModal(true)} 
+                    className="text-slate-400 hover:text-slate-600 h-8 w-8"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              {formData.customer_name ? (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0069AF] to-[#133F5C] flex items-center justify-center text-white font-semibold">
-                    {formData.customer_name.charAt(0)}
+
+              {/* Location Card */}
+              <div className="bg-white rounded-xl border border-slate-200 p-4 relative overflow-hidden">
+                <div className="flex">
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-400 mb-2">Location</p>
+                    {formData.customer_address ? (
+                      <>
+                        <p className="font-semibold text-slate-900">{formData.customer_address.split(',')[0]}</p>
+                        <p className="text-sm text-slate-500">{formData.customer_address.split(',').slice(1).join(',').trim()}</p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-slate-400">No address</p>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-900 truncate">{formData.customer_name}</p>
-                    <p className="text-sm text-slate-500 truncate">{formData.customer_email}</p>
-                  </div>
-                  {formData.customer_phone && (
-                    <span className="text-xs text-slate-400">{formData.customer_phone}</span>
+                  {formData.customer_address && (
+                    <div className="w-24 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
+                      <img 
+                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(formData.customer_address)}&zoom=14&size=200x160&markers=color:red%7C${encodeURIComponent(formData.customer_address)}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8`}
+                        alt="Location"
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    </div>
                   )}
                 </div>
-              ) : (
-                <div className="text-center py-4 border-2 border-dashed border-slate-200 rounded-lg">
-                  <User className="w-6 h-6 mx-auto text-slate-300 mb-1" />
-                  <p className="text-sm text-slate-400">No client selected</p>
-                </div>
-              )}
+              </div>
             </motion.div>
+
+            {/* Proposal History Accordion */}
+            {proposalId && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.07 }}
+                className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+              >
+                <button 
+                  onClick={() => setShowActivityPanel(!showActivityPanel)}
+                  className="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition-colors"
+                >
+                  <h3 className="text-lg font-semibold text-slate-900">Proposal History</h3>
+                  <ChevronDown className={cn("w-5 h-5 text-slate-400 transition-transform", showActivityPanel && "rotate-180")} />
+                </button>
+              </motion.div>
+            )}
 
             {/* Line Items */}
             <motion.div
