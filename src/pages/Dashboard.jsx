@@ -3,10 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square, Save, LayoutTemplate } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -59,17 +61,65 @@ export default function Dashboard() {
   const [showBulkArchiveConfirm, setShowBulkArchiveConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeLetter, setActiveLetter] = useState(null);
-  const PROJECTS_PER_PAGE = 25;
-
-  // Dashboard Views
-  const [currentView, setCurrentView] = useState(null);
-  const [viewName, setViewName] = useState('');
+  
+  // Custom Views
   const [showSaveViewModal, setShowSaveViewModal] = useState(false);
+  const [viewName, setViewName] = useState('');
+  const [selectedView, setSelectedView] = useState('default');
+  
+  const PROJECTS_PER_PAGE = 25;
 
   const { data: dashboardViews = [], refetch: refetchViews } = useQuery({
     queryKey: ['dashboardViews'],
-    queryFn: () => base44.entities.DashboardView.filter({ user_id: currentUser?.id })
+    queryFn: () => base44.entities.DashboardView.list()
   });
+
+  const handleSaveView = async () => {
+    if (!viewName.trim()) return;
+    
+    const config = {
+      layout: viewMode,
+      filters: {
+        listFilter,
+        searchQuery,
+        showArchived
+      },
+      pinnedProjectIds
+    };
+
+    await base44.entities.DashboardView.create({
+      name: viewName,
+      user_id: currentUser?.id,
+      config,
+      is_default: false
+    });
+
+    refetchViews();
+    setShowSaveViewModal(false);
+    setViewName('');
+  };
+
+  const handleLoadView = (viewId) => {
+    if (viewId === 'default') {
+      setViewMode('cards');
+      setListFilter('all');
+      setSearchQuery('');
+      setShowArchived(false);
+      setSelectedView('default');
+      return;
+    }
+
+    const view = dashboardViews.find(v => v.id === viewId);
+    if (view?.config) {
+      setViewMode(view.config.layout || 'cards');
+      setListFilter(view.config.filters?.listFilter || 'all');
+      setSearchQuery(view.config.filters?.searchQuery || '');
+      setShowArchived(view.config.filters?.showArchived || false);
+      // Note: pinnedProjectIds are usually global per user, but we could support per-view pinning if desired.
+      // For now, let's keep pinning global as it's stored in localStorage.
+      setSelectedView(viewId);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -141,9 +191,8 @@ export default function Dashboard() {
   const approvedProposals = proposals.filter(p => p.status === 'approved');
   const approvedTotal = approvedProposals.reduce((sum, p) => sum + (p.total || 0), 0);
 
-  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
-  const archivedProjects = projects.filter(p => (p.status === 'archived' || p.status === 'completed') && p.status !== 'deleted');
-  const deletedProjects = projects.filter(p => p.status === 'deleted');
+  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived');
+  const archivedProjects = projects.filter(p => p.status === 'archived' || p.status === 'completed');
   // Only count tasks and parts from active projects
   const activeProjectIds = activeProjects.map(p => p.id);
   const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
@@ -307,44 +356,6 @@ export default function Dashboard() {
     refetchProjects();
   };
 
-  const handleRestoreProject = async (project) => {
-    await base44.entities.Project.update(project.id, {
-      status: 'planning', // Default back to planning
-      deleted_date: null
-    });
-    refetchProjects();
-  };
-
-  const handleSaveView = async () => {
-    if (!viewName.trim()) return;
-    
-    const viewConfig = {
-      filters: { status: listFilter },
-      layout: viewMode,
-      pinned: pinnedProjectIds,
-      collapsed: collapsedGroups
-    };
-
-    await base44.entities.DashboardView.create({
-      name: viewName,
-      user_id: currentUser.id,
-      config: viewConfig,
-      is_default: false
-    });
-
-    setViewName('');
-    setShowSaveViewModal(false);
-    refetchViews();
-  };
-
-  const applyView = (view) => {
-    setCurrentView(view);
-    if (view.config.layout) setViewMode(view.config.layout);
-    if (view.config.pinned) setPinnedProjectIds(view.config.pinned);
-    if (view.config.filters?.status) setListFilter(view.config.filters.status);
-    if (view.config.collapsed) setCollapsedGroups(view.config.collapsed);
-  };
-
   const handleBulkArchive = async () => {
     for (const projectId of selectedProjects) {
       await base44.entities.Project.update(projectId, {
@@ -363,14 +374,7 @@ export default function Dashboard() {
     const allProjects = await base44.entities.Project.list('-project_number', 1);
     const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
     
-    // Ensure customer_id is correctly passed
-    const projectData = {
-      ...data,
-      project_number: nextNumber,
-      customer_id: data.customer_id || prefillData?.customer_id || null
-    };
-    
-    const newProject = await base44.entities.Project.create(projectData);
+    const newProject = await base44.entities.Project.create({ ...data, project_number: nextNumber });
     
     if (template?.default_tasks?.length) {
       for (const task of template.default_tasks) {
@@ -594,6 +598,34 @@ export default function Dashboard() {
                 </button>
               </div>
               <div className="flex items-center gap-2">
+                {/* Custom Views */}
+                <div className="flex items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-9">
+                        <LayoutTemplate className="w-4 h-4 mr-2 text-slate-500" />
+                        {selectedView === 'default' ? 'Default View' : dashboardViews.find(v => v.id === selectedView)?.name || 'Custom View'}
+                        <ChevronDown className="w-3 h-3 ml-2 text-slate-400" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => handleLoadView('default')}>
+                        Default View
+                      </DropdownMenuItem>
+                      {dashboardViews.map(view => (
+                        <DropdownMenuItem key={view.id} onClick={() => handleLoadView(view.id)}>
+                          {view.name}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setShowSaveViewModal(true)}>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Current View...
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
                 {/* Selection Mode Toggle */}
                 {!showArchived && (
                   <button
@@ -638,7 +670,7 @@ export default function Dashboard() {
                   />
                 </div>
               </div>
-            </div>
+              </div>
 
             {/* Bulk Actions Bar */}
             {selectionMode && (
@@ -681,7 +713,7 @@ export default function Dashboard() {
                       className="text-red-600 border-red-300 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4 mr-1" />
-                      Delete
+                      Move to Trash
                     </Button>
                   </div>
                 )}
@@ -769,7 +801,6 @@ export default function Dashboard() {
                         { key: 'clients', label: 'With Clients' },
                         { key: 'all', label: 'All' },
                         { key: 'archived', label: 'Archived' },
-                        { key: 'deleted', label: 'Trash' },
                       ].map(filter => (
                         <button
                           key={filter.key}
@@ -798,11 +829,6 @@ export default function Dashboard() {
                         projectsToShow = projectsToShow.filter(p => p.client);
                       } else if (listFilter === 'archived') {
                         projectsToShow = archivedProjects.filter(p =>
-                          p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          p.client?.toLowerCase().includes(searchQuery.toLowerCase())
-                        );
-                      } else if (listFilter === 'deleted') {
-                        projectsToShow = deletedProjects.filter(p =>
                           p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           p.client?.toLowerCase().includes(searchQuery.toLowerCase())
                         );
