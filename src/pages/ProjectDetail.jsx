@@ -794,7 +794,7 @@ export default function ProjectDetail() {
               <ProjectActivityFeed projectId={projectId} progressUpdates={progressUpdates} />
             </div>
           </div>
-        </motion.div>
+      </motion.div>
 
       {/* Modals */}
       <ProjectModal
