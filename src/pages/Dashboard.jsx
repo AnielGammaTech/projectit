@@ -560,6 +560,7 @@ export default function Dashboard() {
                         )}
                         </Droppable>
                         </div>
+                        </DragDropContext>
                         ) : (
               <motion.div
                 initial={{ opacity: 0 }}
