@@ -160,6 +160,7 @@ function DeadlinesWidget({ tasks, projects }) {
 function AISummaryWidget({ projects, tasks }) {
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
   const generateSummary = async () => {
     setLoading(true);
@@ -193,10 +194,11 @@ Provide 2-3 sentences focusing on priorities and recommendations. Be concise and
   };
 
   useEffect(() => {
-    if (projects.length > 0) {
+    if (projects.length > 0 && !hasGenerated) {
+      setHasGenerated(true);
       generateSummary();
     }
-  }, [projects.length]);
+  }, [projects.length, hasGenerated]);
 
   return (
     <div className="space-y-3">
