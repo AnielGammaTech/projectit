@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
       status: 204,
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Base44-App-Id',
       },
     });
@@ -15,8 +15,56 @@ Deno.serve(async (req) => {
 
   try {
     const base44 = createClientFromRequest(req);
+    const url = new URL(req.url);
+    
+    // Handle GET request to fetch proposal by token (public access)
+    if (req.method === 'GET') {
+      const token = url.searchParams.get('token');
+      if (!token) {
+        return Response.json({ error: 'Token required' }, { 
+          status: 400,
+          headers: { 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+      
+      const proposals = await base44.asServiceRole.entities.Proposal.filter({ approval_token: token });
+      const proposal = proposals[0];
+      
+      if (!proposal) {
+        return Response.json({ error: 'Proposal not found' }, { 
+          status: 404,
+          headers: { 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+      
+      // Return proposal data (excluding sensitive internal data)
+      return Response.json({ 
+        proposal: {
+          id: proposal.id,
+          proposal_number: proposal.proposal_number,
+          title: proposal.title,
+          customer_name: proposal.customer_name,
+          customer_company: proposal.customer_company,
+          customer_email: proposal.customer_email,
+          status: proposal.status,
+          items: proposal.items,
+          areas: proposal.areas,
+          subtotal: proposal.subtotal,
+          tax_total: proposal.tax_total,
+          total: proposal.total,
+          terms_conditions: proposal.terms_conditions,
+          valid_until: proposal.valid_until,
+          signature_data: proposal.signature_data,
+          signer_name: proposal.signer_name,
+          signed_date: proposal.signed_date
+        }
+      }, {
+        headers: { 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+    
     const body = await req.json();
-    const { proposalId, token, action = 'viewed', details = '' } = body;
+    const { proposalId, token, action = 'viewed', details = '', signerName, signatureData } = body;
 
     let proposal;
     if (token) {
@@ -56,6 +104,8 @@ Deno.serve(async (req) => {
     } else if (action === 'approved') {
       await base44.asServiceRole.entities.Proposal.update(proposal.id, {
         status: 'approved',
+        signature_data: signatureData || null,
+        signer_name: signerName || proposal.customer_name,
         signed_date: new Date().toISOString()
       });
     } else if (action === 'rejected') {
