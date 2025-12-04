@@ -13,6 +13,7 @@ import { differenceInDays, isPast, isToday } from 'date-fns';
 
 export default function ProjectInsightsWidget({ projectId, tasks: propTasks, parts: propParts, compact = false }) {
   const [expanded, setExpanded] = useState(false);
+  const [expandedInsights, setExpandedInsights] = useState({});
   
   const { data: fetchedTasks = [] } = useQuery({
     queryKey: ['tasks', projectId],
@@ -232,7 +233,7 @@ export default function ProjectInsightsWidget({ projectId, tasks: propTasks, par
       <div className="p-4 space-y-3">
         {insights.slice(0, 4).map((insight, idx) => {
           const Icon = insight.icon;
-          const [showTasks, setShowTasks] = useState(false);
+          const isExpanded = expandedInsights[idx];
           return (
             <motion.div
               key={idx}
@@ -241,7 +242,7 @@ export default function ProjectInsightsWidget({ projectId, tasks: propTasks, par
               transition={{ delay: idx * 0.1 }}
             >
               <div
-                onClick={() => insight.tasks && setShowTasks(!showTasks)}
+                onClick={() => insight.tasks && setExpandedInsights(prev => ({ ...prev, [idx]: !prev[idx] }))}
                 className={cn(
                   "flex items-start gap-3 p-3 rounded-xl transition-all hover:shadow-sm",
                   insight.bg,
@@ -256,10 +257,10 @@ export default function ProjectInsightsWidget({ projectId, tasks: propTasks, par
                   <p className="text-xs text-slate-500">{insight.description}</p>
                 </div>
                 {insight.tasks && (
-                  <ChevronDown className={cn("w-4 h-4 text-slate-400 mt-1 transition-transform", showTasks && "rotate-180")} />
+                  <ChevronDown className={cn("w-4 h-4 text-slate-400 mt-1 transition-transform", isExpanded && "rotate-180")} />
                 )}
               </div>
-              {showTasks && insight.tasks && (
+              {isExpanded && insight.tasks && (
                 <div className="mt-2 ml-10 space-y-1">
                   {insight.tasks.slice(0, 5).map(task => (
                     <Link
