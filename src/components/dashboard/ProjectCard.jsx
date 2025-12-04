@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -90,11 +90,28 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
   const progress = project.progress || (totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0);
   const colorClass = cardColors[project.color] || cardColors.slate;
   
+  // Calculate AI health score
+  const unassignedTasks = tasks.filter(t => !t.assigned_to && t.status !== 'completed' && t.status !== 'archived').length;
+  const overdueTasks = tasks.filter(t => {
+    if (t.status === 'completed' || t.status === 'archived' || !t.due_date) return false;
+    const dueDate = new Date(t.due_date);
+    return dueDate < new Date() && dueDate.toDateString() !== new Date().toDateString();
+  }).length;
+  const totalActive = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length;
+  const totalIssues = unassignedTasks + overdueTasks;
+  const healthScore = totalActive > 0 ? Math.max(0, 100 - Math.round((totalIssues / totalActive) * 100)) : 100;
+  
   // Health-based colors for progress ring
   const getHealthColor = () => {
     if (healthStatus === 'issue') return 'text-red-500';
     if (healthStatus === 'concern') return 'text-amber-500';
     return 'text-emerald-500';
+  };
+  
+  const getHealthScoreColor = () => {
+    if (healthScore >= 80) return { bg: 'bg-emerald-50', text: 'text-emerald-600', icon: 'text-emerald-500' };
+    if (healthScore >= 60) return { bg: 'bg-amber-50', text: 'text-amber-600', icon: 'text-amber-500' };
+    return { bg: 'bg-red-50', text: 'text-red-600', icon: 'text-red-500' };
   };
 
   const handleColorSelect = (color) => {
@@ -297,6 +314,13 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
             <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg">
               <CircleDot className="w-3.5 h-3.5 text-slate-400" />
               <span className="text-xs font-medium text-slate-500">No items yet</span>
+            </div>
+          )}
+          {/* AI Health Score Widget */}
+          {totalActive > 0 && (
+            <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-lg ml-auto", getHealthScoreColor().bg)}>
+              <Sparkles className={cn("w-3.5 h-3.5", getHealthScoreColor().icon)} />
+              <span className={cn("text-xs font-bold", getHealthScoreColor().text)}>{healthScore}%</span>
             </div>
           )}
         </div>
