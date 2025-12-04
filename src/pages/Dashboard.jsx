@@ -22,9 +22,10 @@ import ActivityTimeline from '@/components/dashboard/ActivityTimeline';
 import ProjectModal from '@/components/modals/ProjectModal';
 
 export default function Dashboard() {
-  const [showProjectModal, setShowProjectModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentUser, setCurrentUser] = useState(null);
+    const [showProjectModal, setShowProjectModal] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentUser, setCurrentUser] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [showArchived, setShowArchived] = useState(false);
   const [prefillData, setPrefillData] = useState(null);
@@ -34,7 +35,10 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    base44.auth.me().then(user => {
+      setCurrentUser(user);
+      setIsAdmin(user?.role === 'admin');
+    }).catch(() => {});
     
     // Check for proposal-based project creation
     const urlParams = new URLSearchParams(window.location.search);
@@ -250,20 +254,40 @@ export default function Dashboard() {
             <p className="text-slate-500 mt-1">Welcome back{currentUser?.full_name ? `, ${currentUser.full_name.split(' ')[0]}` : ''}! Here's your project overview.</p>
           </div>
           <div className="flex items-center gap-2">
-            <Link to={createPageUrl('Templates')}>
-              <Button variant="outline" size="sm">
-                <FileStack className="w-4 h-4 mr-2" />
-                Templates
+              <Link to={createPageUrl('Templates')}>
+                <Button variant="outline" size="sm">
+                  <FileStack className="w-4 h-4 mr-2" />
+                  Templates
+                </Button>
+              </Link>
+              <Button
+                onClick={() => setShowProjectModal(true)}
+                className="bg-[#0069AF] hover:bg-[#133F5C] shadow-lg shadow-[#0069AF]/20"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Project
               </Button>
-            </Link>
-            <Button
-              onClick={() => setShowProjectModal(true)}
-              className="bg-[#0069AF] hover:bg-[#133F5C] shadow-lg shadow-[#0069AF]/20"
+            </div>
+          </motion.div>
+
+          {/* Adminland Corner Link (Admin Only) */}
+          {isAdmin && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="fixed bottom-6 right-6 z-30"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              New Project
-            </Button>
-          </div>
+              <Link to={createPageUrl('Adminland')}>
+                <Button 
+                  variant="outline" 
+                  className="bg-[#133F5C] hover:bg-[#0F2F44] text-white border-[#133F5C] shadow-lg gap-2"
+                >
+                  <Settings className="w-4 h-4" />
+                  Adminland
+                </Button>
+              </Link>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Urgent Tasks Alert */}
