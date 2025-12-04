@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -160,9 +160,10 @@ function DeadlinesWidget({ tasks, projects }) {
 function AISummaryWidget({ projects, tasks }) {
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
-  const [hasGenerated, setHasGenerated] = useState(false);
+  const hasGeneratedRef = React.useRef(false);
 
   const generateSummary = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       const activeProjects = projects.filter(p => p.status !== 'archived').slice(0, 5);
@@ -194,11 +195,11 @@ Provide 2-3 sentences focusing on priorities and recommendations. Be concise and
   };
 
   useEffect(() => {
-    if (projects.length > 0 && !hasGenerated) {
-      setHasGenerated(true);
+    if (projects.length > 0 && !hasGeneratedRef.current) {
+      hasGeneratedRef.current = true;
       generateSummary();
     }
-  }, [projects.length, hasGenerated]);
+  }, []);
 
   return (
     <div className="space-y-3">
