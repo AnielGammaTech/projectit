@@ -68,6 +68,7 @@ import ProjectInsightsWidget from '@/components/dashboard/ProjectInsightsWidget'
 import ProjectSidebar from '@/components/project/ProjectSidebar';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
+import ArchiveProjectModal from '@/components/modals/ArchiveProjectModal';
 import { cn } from '@/lib/utils';
 
 const statusColors = {
@@ -105,6 +106,7 @@ export default function ProjectDetail() {
   const [editingGroup, setEditingGroup] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: null, item: null });
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
 
   const { data: project, isLoading: loadingProject, refetch: refetchProject } = useQuery({
     queryKey: ['project', projectId],
@@ -301,8 +303,16 @@ export default function ProjectDetail() {
   };
 
   // Archive project
-  const handleArchiveProject = async () => {
-    await base44.entities.Project.update(projectId, { ...project, status: 'archived' });
+  const handleArchiveProject = async (archiveData) => {
+    await base44.entities.Project.update(projectId, { 
+      ...project, 
+      status: 'archived',
+      archive_reason: archiveData.reason,
+      archive_type: archiveData.archiveType,
+      archived_date: new Date().toISOString()
+    });
+    await logActivity(projectId, 'project_archived', `archived project: ${archiveData.reason}`, currentUser);
+    setShowArchiveModal(false);
     window.location.href = createPageUrl('Dashboard');
   };
 
@@ -466,10 +476,10 @@ export default function ProjectDetail() {
                     <Copy className="w-4 h-4 mr-2" />
                     Save as Template
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleArchiveProject}>
-                    <Archive className="w-4 h-4 mr-2" />
-                    Archive Project
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowArchiveModal(true)}>
+                      <Archive className="w-4 h-4 mr-2" />
+                      Archive Project
+                    </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleDeleteProject} className="text-red-600">
                     <Trash2 className="w-4 h-4 mr-2" />
@@ -827,6 +837,14 @@ export default function ProjectDetail() {
         onClose={() => setShowFilesView(false)}
         projectId={projectId}
         currentUser={currentUser}
+      />
+
+      {/* Archive Project Modal */}
+      <ArchiveProjectModal
+        open={showArchiveModal}
+        onClose={() => setShowArchiveModal(false)}
+        project={project}
+        onConfirm={handleArchiveProject}
       />
 
       {/* Delete Confirmation */}
