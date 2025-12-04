@@ -78,6 +78,9 @@ export default function AllTasks() {
   };
 
   const filteredTasks = tasks.filter(task => {
+    // Only show tasks from active projects (exclude archived)
+    if (!activeProjectIds.includes(task.project_id)) return false;
+    
     const matchesSearch = task.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
@@ -93,6 +96,10 @@ export default function AllTasks() {
     
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
   }).sort((a, b) => {
+    // Sort completed tasks to the bottom
+    if (a.status === 'completed' && b.status !== 'completed') return 1;
+    if (a.status !== 'completed' && b.status === 'completed') return -1;
+    
     if (viewMode === 'mine_due') {
       return new Date(a.due_date) - new Date(b.due_date);
     }
@@ -125,8 +132,10 @@ export default function AllTasks() {
     return matchesSearch && matchesStatus && matchesAssignee;
   });
 
-  const myTasksCount = tasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed').length;
-  const myTasksWithDueCount = tasks.filter(t => t.assigned_to === currentUser?.email && t.due_date && t.status !== 'completed').length;
+  // Only count tasks from active projects
+  const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
+  const myTasksCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed').length;
+  const myTasksWithDueCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.due_date && t.status !== 'completed').length;
 
   const handleSaveTask = async (data) => {
     if (editingTask) {
@@ -233,7 +242,7 @@ export default function AllTasks() {
                   "px-2 py-0.5 rounded-full text-xs",
                   viewMode === 'all' ? "bg-white/20" : "bg-slate-200"
                 )}>
-                  {tasks.filter(t => t.status !== 'completed').length}
+                  {activeTasks.filter(t => t.status !== 'completed').length}
                 </span>
               </button>
               <button

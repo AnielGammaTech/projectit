@@ -102,8 +102,8 @@ export default function Dashboard() {
   const approvedProposals = proposals.filter(p => p.status === 'approved');
   const approvedTotal = approvedProposals.reduce((sum, p) => sum + (p.total || 0), 0);
 
-  // Get user's overdue and due today tasks
-  const myUrgentTasks = tasks.filter(t => {
+  // Get user's overdue and due today tasks (only from active projects)
+  const myUrgentTasks = activeTasks.filter(t => {
     if (t.assigned_to !== currentUser?.email) return false;
     if (t.status === 'completed' || t.status === 'archived') return false;
     if (!t.due_date) return false;
@@ -119,8 +119,12 @@ export default function Dashboard() {
 
   const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived');
   const archivedProjects = projects.filter(p => p.status === 'archived' || p.status === 'completed');
-  const completedTasks = tasks.filter(t => t.status === 'completed');
-  const pendingParts = parts.filter(p => p.status === 'needed' || p.status === 'ordered');
+  // Only count tasks and parts from active projects
+  const activeProjectIds = activeProjects.map(p => p.id);
+  const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
+  const activeParts = parts.filter(p => activeProjectIds.includes(p.project_id));
+  const completedTasks = activeTasks.filter(t => t.status === 'completed');
+  const pendingParts = activeParts.filter(p => p.status === 'needed' || p.status === 'ordered');
 
   const displayProjects = showArchived ? archivedProjects : activeProjects;
   const filteredProjects = displayProjects.filter(p =>
