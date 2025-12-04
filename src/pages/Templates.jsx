@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase } from 'lucide-react';
+import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import {
@@ -17,6 +19,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +42,9 @@ export default function Templates() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [activeTab, setActiveTab] = useState('project');
   const [newTemplateType, setNewTemplateType] = useState('project');
+  const [createFromTemplate, setCreateFromTemplate] = useState(null);
+  const [projectName, setProjectName] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
@@ -61,24 +73,40 @@ export default function Templates() {
     setDeleteConfirm(null);
   };
 
-  const handleCreateProject = async (template) => {
+  const handleOpenCreateModal = (template) => {
+    setCreateFromTemplate(template);
+    setProjectName(`New Project from ${template.name}`);
+  };
+
+  const handleCreateProject = async () => {
+    if (!createFromTemplate || !projectName.trim()) return;
+    
+    setCreating(true);
+    
+    // Get highest project number and increment
+    const allProjects = await base44.entities.Project.list('-project_number', 1);
+    const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
+    
     const newProject = await base44.entities.Project.create({
-      name: `New Project from ${template.name}`,
-      status: 'planning'
+      name: projectName.trim(),
+      status: 'planning',
+      project_number: nextNumber
     });
     
-    if (template.default_tasks?.length) {
-      for (const task of template.default_tasks) {
+    if (createFromTemplate.default_tasks?.length) {
+      for (const task of createFromTemplate.default_tasks) {
         await base44.entities.Task.create({ ...task, project_id: newProject.id, status: 'todo' });
       }
     }
     
-    if (template.default_parts?.length) {
-      for (const part of template.default_parts) {
+    if (createFromTemplate.default_parts?.length) {
+      for (const part of createFromTemplate.default_parts) {
         await base44.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
       }
     }
     
+    setCreating(false);
+    setCreateFromTemplate(null);
     window.location.href = createPageUrl('ProjectDetail') + `?id=${newProject.id}`;
   };
 
@@ -109,7 +137,7 @@ export default function Templates() {
             ? "border-[#0F2F44]/30 bg-[#0F2F44]/5 hover:border-[#0F2F44] hover:bg-[#0F2F44]/10" 
             : "border-emerald-400/30 bg-emerald-50/50 hover:border-emerald-500 hover:bg-emerald-50"
         )}
-        onClick={() => handleCreateProject(template)}
+        onClick={() => handleOpenCreateModal(template)}
       >
         {/* Menu Button */}
         <DropdownMenu>
@@ -306,6 +334,60 @@ export default function Templates() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Create Project from Template Modal */}
+      <Dialog open={!!createFromTemplate} onOpenChange={(open) => !open && setCreateFromTemplate(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Project from Template</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="projectName">Project Name</Label>
+            <Input
+              id="projectName"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              placeholder="Enter project name..."
+              className="mt-2"
+              autoFocus
+            />
+            {createFromTemplate && (
+              <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+                <p className="text-sm text-slate-600 mb-2">This template includes:</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1 text-sm text-slate-700">
+                    <ListTodo className="w-4 h-4 text-indigo-500" />
+                    {createFromTemplate.default_tasks?.length || 0} tasks
+                  </div>
+                  <div className="flex items-center gap-1 text-sm text-slate-700">
+                    <Package className="w-4 h-4 text-amber-500" />
+                    {createFromTemplate.default_parts?.length || 0} parts
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateFromTemplate(null)} disabled={creating}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateProject} 
+              disabled={!projectName.trim() || creating}
+              className="bg-[#0F2F44] hover:bg-[#1a4a6e]"
+            >
+              {creating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Project'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
