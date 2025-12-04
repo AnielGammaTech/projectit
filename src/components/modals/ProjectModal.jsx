@@ -64,11 +64,18 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
       });
       setExtractedParts([]);
     } else if (prefillData) {
+      // Try to find customer by name if ID is missing
+      let customerId = prefillData.customer_id || '';
+      if (!customerId && prefillData.client && customers.length > 0) {
+        const found = customers.find(c => c.name?.toLowerCase() === prefillData.client.toLowerCase() || c.company?.toLowerCase() === prefillData.client.toLowerCase());
+        if (found) customerId = found.id;
+      }
+
       setFormData({
         name: prefillData.name || '',
         description: '',
         client: prefillData.client || '',
-        customer_id: prefillData.customer_id || '',
+        customer_id: customerId,
         status: 'planning',
         start_date: '',
         due_date: '',
