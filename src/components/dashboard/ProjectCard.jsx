@@ -334,75 +334,17 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
           </Tooltip>
         </TooltipProvider>
 
-        {/* Quick Stats Widgets */}
-        <div className="mb-2 flex items-center gap-1.5 flex-wrap">
-          {/* AI Health Score Widget with Tooltip */}
-          {totalActive > 0 && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-lg cursor-help", getHealthScoreColor().bg)} onClick={(e) => e.stopPropagation()}>
-                    <Sparkles className={cn("w-3.5 h-3.5", getHealthScoreColor().icon)} />
-                    <span className={cn("text-xs font-bold", getHealthScoreColor().text)}>{healthScore}%</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs p-3">
-                  <div className="space-y-2">
-                    <p className="font-semibold text-sm">AI Health Score</p>
-                    <div className="space-y-1">
-                      {getHealthReasons().map((reason, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs">
-                          {reason.includes('overdue') ? (
-                            <AlertTriangle className="w-3 h-3 text-red-500" />
-                          ) : reason.includes('unassigned') ? (
-                            <Users className="w-3 h-3 text-amber-500" />
-                          ) : (
-                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                          )}
-                          <span>{reason}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          {pendingTasks > 0 && (
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 rounded-lg">
-              <ListTodo className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="text-xs font-medium text-indigo-700">{pendingTasks} tasks</span>
-            </div>
-          )}
-          {pendingParts > 0 && (
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 rounded-lg">
-              <Package className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-xs font-medium text-amber-700">{pendingParts} parts</span>
-            </div>
-          )}
-          {completedTasks > 0 && (
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 rounded-lg">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="text-xs font-medium text-emerald-700">{completedTasks} done</span>
-            </div>
-          )}
-          {pendingTasks === 0 && pendingParts === 0 && completedTasks === 0 && totalActive === 0 && (
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg">
-              <CircleDot className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-xs font-medium text-slate-500">No items yet</span>
-            </div>
-          )}
-        </div>
-
+        {/* Stats Row - Clean Layout */}
         <div className="flex items-center justify-between text-xs text-slate-500">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Date */}
             <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
               <PopoverTrigger asChild>
                 <div 
                   className="flex items-center gap-1 cursor-pointer hover:text-indigo-600 transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <Calendar className="w-3.5 h-3.5" />
+                  <Calendar className="w-3 h-3" />
                   <span>{project.due_date ? format(new Date(project.due_date), 'MMM d') : 'Set date'}</span>
                 </div>
               </PopoverTrigger>
@@ -415,43 +357,104 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
                 />
               </PopoverContent>
             </Popover>
+            
+            {/* Divider */}
+            <span className="text-slate-200">•</span>
+            
+            {/* Tasks count */}
+            <div className="flex items-center gap-1">
+              <ListTodo className="w-3 h-3" />
+              <span>{pendingTasks}/{totalTasks}</span>
+            </div>
+            
+            {/* Parts if any */}
+            {pendingParts > 0 && (
+              <>
+                <span className="text-slate-200">•</span>
+                <div className="flex items-center gap-1">
+                  <Package className="w-3 h-3 text-amber-500" />
+                  <span>{pendingParts}</span>
+                </div>
+              </>
+            )}
+            
+            {/* HaloPSA Ticket */}
             {project.halopsa_ticket_id && (
-              <a
-                href={project.halopsa_ticket_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 text-indigo-600 hover:text-indigo-700 transition-colors"
-              >
-                <Ticket className="w-3.5 h-3.5" />
-                <span>#{project.halopsa_ticket_id}</span>
-              </a>
+              <>
+                <span className="text-slate-200">•</span>
+                <a
+                  href={project.halopsa_ticket_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1 text-indigo-600 hover:text-indigo-700"
+                >
+                  <Ticket className="w-3 h-3" />
+                  <span>#{project.halopsa_ticket_id}</span>
+                </a>
+              </>
             )}
           </div>
           
-          {/* Team Member Count */}
-          {projectTeam.length > 0 && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div 
-                    className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-full text-xs text-slate-600 hover:bg-slate-200 transition-colors cursor-default"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Users className="w-3.5 h-3.5" />
-                    <span>{projectTeam.length} team member{projectTeam.length > 1 ? 's' : ''}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <div className="text-xs space-y-1">
-                    {projectTeam.map((m, i) => (
-                      <p key={i} className="font-medium">{m.name || m.email}</p>
-                    ))}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          {/* Right side - Team & Health */}
+          <div className="flex items-center gap-2">
+            {/* AI Health Score */}
+            {totalActive > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className={cn("flex items-center gap-1 px-1.5 py-0.5 rounded cursor-help", getHealthScoreColor().bg)} onClick={(e) => e.stopPropagation()}>
+                      <Sparkles className={cn("w-3 h-3", getHealthScoreColor().icon)} />
+                      <span className={cn("text-[10px] font-bold", getHealthScoreColor().text)}>{healthScore}%</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs p-3">
+                    <div className="space-y-2">
+                      <p className="font-semibold text-sm">AI Health Score</p>
+                      <div className="space-y-1">
+                        {getHealthReasons().map((reason, i) => (
+                          <div key={i} className="flex items-center gap-2 text-xs">
+                            {reason.includes('overdue') ? (
+                              <AlertTriangle className="w-3 h-3 text-red-500" />
+                            ) : reason.includes('unassigned') ? (
+                              <Users className="w-3 h-3 text-amber-500" />
+                            ) : (
+                              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                            )}
+                            <span>{reason}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
+            {/* Team */}
+            {projectTeam.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div 
+                      className="flex items-center gap-1 text-slate-400 cursor-default"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Users className="w-3 h-3" />
+                      <span>{projectTeam.length}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <div className="text-xs space-y-1">
+                      {projectTeam.map((m, i) => (
+                        <p key={i} className="font-medium">{m.name || m.email}</p>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
