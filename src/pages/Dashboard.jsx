@@ -255,35 +255,35 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Banner with Header */}
+        {/* Welcome Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 bg-gradient-to-r from-[#0F2F44] to-[#1a5a7a] rounded-2xl p-5 text-white"
+          className="mb-6"
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold">Welcome back, {currentUser?.full_name?.split(' ')[0] || 'there'}! 👋</h1>
-              <p className="text-white/70 text-sm mt-1">
+              <h1 className="text-2xl font-bold text-[#133F5C]">Welcome back, {currentUser?.full_name?.split(' ')[0] || 'there'}! 👋</h1>
+              <p className="text-slate-500 text-sm mt-1">
                 💡 Why do programmers prefer dark mode? Because light attracts bugs!
               </p>
             </div>
             <div className="flex items-start gap-6">
               <div className="text-right text-sm">
-                <p className="font-medium">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                <p className="text-white/70">{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} • Naples, FL</p>
-                <p className="text-white/70">🌴 Sunny, 78°F</p>
+                <p className="font-medium text-slate-700">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                <p className="text-slate-500">{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} • Naples, FL</p>
+                <p className="text-slate-500">🌴 Sunny, 78°F</p>
               </div>
               <div className="flex flex-col items-end gap-1">
                 <Button
                   onClick={() => setShowProjectModal(true)}
                   size="lg"
-                  className="bg-white text-[#0F2F44] hover:bg-white/90 shadow-lg text-base px-6 py-3 h-12 font-semibold"
+                  className="bg-[#0F2F44] hover:bg-[#1a4a6e] shadow-lg text-base px-6 py-3 h-12"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   New Project
                 </Button>
-                <Link to={createPageUrl('Templates')} className="text-xs text-white/60 hover:text-white transition-colors">
+                <Link to={createPageUrl('Templates')} className="text-xs text-slate-400 hover:text-[#0F2F44] transition-colors">
                   or use a template →
                 </Link>
               </div>
