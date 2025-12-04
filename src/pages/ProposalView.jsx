@@ -221,6 +221,18 @@ export default function ProposalView() {
             Back to Proposals
           </Link>
           <div className="flex gap-2">
+            {proposal.status !== 'approved' && proposal.status !== 'rejected' && (
+              <>
+                <Button variant="outline" className="text-red-600 hover:bg-red-50 border-red-200" onClick={handleDeny} disabled={processing}>
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Decline
+                </Button>
+                <Button variant="outline" className="text-amber-600 hover:bg-amber-50 border-amber-200" onClick={() => setShowChangeRequest(true)} disabled={processing}>
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Request Changes
+                </Button>
+              </>
+            )}
             <Button variant="outline" onClick={handlePrint}>
               <Printer className="w-4 h-4 mr-2" />
               Print / Save PDF
