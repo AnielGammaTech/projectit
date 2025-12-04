@@ -289,36 +289,37 @@ export default function RolesPermissions() {
                       </div>
                       <p className="text-sm text-slate-500 mt-1">{role.description}</p>
                     </div>
-                    {!role.is_system && (
-                      <div className="flex gap-1">
+                    <div className="flex gap-1">
+                      {!role.is_system ? (
+                        <>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={(e) => { e.stopPropagation(); setEditingRole(role); setShowRoleModal(true); }}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-red-500 hover:text-red-600"
+                            onClick={(e) => { e.stopPropagation(); setDeleteConfirm(role); }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </>
+                      ) : (
                         <Button 
                           variant="ghost" 
                           size="icon" 
                           className="h-8 w-8"
-                          onClick={() => { setEditingRole(role); setShowRoleModal(true); }}
+                          onClick={(e) => { e.stopPropagation(); handleDuplicateRole(role); }}
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Copy className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-red-500 hover:text-red-600"
-                          onClick={() => setDeleteConfirm(role)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    )}
-                    {role.is_system && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        onClick={() => handleDuplicateRole(role)}
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                    )}
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2 mb-4 text-sm text-slate-600">
