@@ -27,12 +27,17 @@ export default function ProposalApproval() {
   const { data: proposal, isLoading } = useQuery({
     queryKey: ['proposalByToken', token],
     queryFn: async () => {
-      const proposals = await base44.entities.Proposal.filter({ approval_token: token });
-      return proposals[0];
+      // Use backend function to fetch proposal (works without auth)
+      const response = await base44.functions.invoke('logProposalView', null, {
+        method: 'GET',
+        params: { token }
+      });
+      return response?.data?.proposal;
     },
     enabled: !!token,
-    staleTime: Infinity, // Don't refetch automatically
-    refetchOnWindowFocus: false
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    retry: false
   });
 
   // Log view on mount using backend function - only once
@@ -94,19 +99,14 @@ export default function ProposalApproval() {
     setSubmitting(true);
     const signatureData = canvasRef.current.toDataURL();
     
-    await base44.entities.Proposal.update(proposal.id, {
-      status: 'approved',
-      signature_data: signatureData,
-      signer_name: signerName,
-      signed_date: new Date().toISOString()
-    });
-
-    // Log approval activity
+    // Use backend function to approve (works without auth)
     await base44.functions.invoke('logProposalView', { 
       token, 
       action: 'approved',
+      signerName: signerName,
+      signatureData: signatureData,
       details: `Approved and signed by ${signerName}`
-    }).catch(err => console.error('Failed to log approval', err));
+    });
     
     setSubmitted(true);
     setSubmitting(false);
