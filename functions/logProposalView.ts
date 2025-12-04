@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       });
     }
 
-  try {
+    // Handle POST request
     const body = await req.json();
     const { proposalId, token, action = 'viewed', details = '', signerName, signatureData } = body;
 
@@ -71,7 +71,6 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Proposal not found' }, { status: 404, headers: corsHeaders });
       }
       
-      // Return proposal data (excluding sensitive internal data)
       return Response.json({ 
         proposal: {
           id: proposal.id,
@@ -151,10 +150,14 @@ Deno.serve(async (req) => {
     }, { headers: corsHeaders });
 
   } catch (error) {
-    // Return HTML error page for any errors
-    return new Response(renderErrorPage('Error', error.message || 'An unexpected error occurred.'), {
-      headers: { 'Content-Type': 'text/html' }
-    });
+    // For GET requests, return HTML error page
+    if (req.method === 'GET') {
+      return new Response(renderErrorPage('Error', error.message || 'An unexpected error occurred.'), {
+        headers: { 'Content-Type': 'text/html' }
+      });
+    }
+    // For POST requests, return JSON error
+    return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
   }
 });
 
@@ -216,7 +219,7 @@ function renderProposalPage(proposal, token, baseUrl) {
       <div class="flex-1">
         <p class="font-medium text-slate-900">${item.name || ''}</p>
         ${item.description ? `<p class="text-sm text-slate-500">${item.description}</p>` : ''}
-        <p class="text-xs text-slate-400 mt-1">${item.quantity || 0} × $${(item.unit_price || 0).toFixed(2)}</p>
+        <p class="text-xs text-slate-400 mt-1">${item.quantity || 0} x $${(item.unit_price || 0).toFixed(2)}</p>
       </div>
       <p class="font-semibold text-slate-900">$${lineTotal.toFixed(2)}</p>
     </div>`;
@@ -232,7 +235,6 @@ function renderProposalPage(proposal, token, baseUrl) {
 </head>
 <body class="min-h-screen bg-slate-50 py-8 px-4">
   <div class="max-w-3xl mx-auto">
-    <!-- Header -->
     <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
       <div class="bg-[#133F5C] text-white p-6">
         <div class="flex items-center gap-3 mb-2">
@@ -258,10 +260,9 @@ function renderProposalPage(proposal, token, baseUrl) {
       </div>
     </div>
 
-    <!-- Line Items -->
     <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
       <h2 class="font-semibold text-slate-900 mb-4">Items & Services</h2>
-      <div class="space-y-3">${itemsHtml}</div>
+      <div class="space-y-3">${itemsHtml || '<p class="text-slate-400">No items</p>'}</div>
       <div class="mt-4 pt-4 border-t border-slate-200">
         <div class="flex justify-between text-2xl font-bold">
           <span>Total</span>
@@ -276,7 +277,6 @@ function renderProposalPage(proposal, token, baseUrl) {
       <p class="text-sm text-slate-600 whitespace-pre-wrap">${proposal.terms_conditions}</p>
     </div>` : ''}
 
-    <!-- Signature Section -->
     <div class="bg-white rounded-2xl shadow-lg p-6">
       <h2 class="font-semibold text-slate-900 mb-4">Approve & Sign</h2>
       <form id="approvalForm" class="space-y-4">
@@ -345,7 +345,7 @@ function renderProposalPage(proposal, token, baseUrl) {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
-      btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Submitting...';
+      btn.innerHTML = 'Submitting...';
 
       try {
         const response = await fetch('${apiUrl}', {
@@ -365,12 +365,12 @@ function renderProposalPage(proposal, token, baseUrl) {
         } else {
           alert('Error: ' + (data.error || 'Failed to submit'));
           btn.disabled = false;
-          btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Approve Proposal';
+          btn.innerHTML = 'Approve Proposal';
         }
       } catch (err) {
         alert('Error submitting: ' + err.message);
         btn.disabled = false;
-        btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Approve Proposal';
+        btn.innerHTML = 'Approve Proposal';
       }
     });
   </script>
