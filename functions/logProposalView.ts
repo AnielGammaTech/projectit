@@ -12,48 +12,51 @@ Deno.serve(async (req) => {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
-  // Create service role client - this function is public for proposal approvals
-  const base44 = createClient({ 
-    appId: Deno.env.get('BASE44_APP_ID'),
-    serviceRoleToken: Deno.env.get('BASE44_SERVICE_ROLE_TOKEN')
-  });
+  try {
+    // Create service role client - this function is public for proposal approvals
+    const base44 = createClient({ 
+      appId: Deno.env.get('BASE44_APP_ID'),
+      serviceRoleToken: Deno.env.get('BASE44_SERVICE_ROLE_TOKEN')
+    });
 
-  // Handle GET request - serve HTML page
-  if (req.method === 'GET') {
-    const url = new URL(req.url);
-    const token = url.searchParams.get('token');
-    
-    if (!token) {
-      return new Response('Missing token', { status: 400 });
-    }
+    // Handle GET request - serve HTML page
+    if (req.method === 'GET') {
+      const url = new URL(req.url);
+      const token = url.searchParams.get('token');
+      
+      if (!token) {
+        return new Response(renderErrorPage('Missing Token', 'No proposal token was provided.'), {
+          headers: { 'Content-Type': 'text/html' }
+        });
+      }
 
-    const proposals = await base44.entities.Proposal.filter({ approval_token: token });
-    const proposal = proposals[0];
+      const proposals = await base44.entities.Proposal.filter({ approval_token: token });
+      const proposal = proposals[0];
 
-    if (!proposal) {
-      return new Response(renderErrorPage('Proposal Not Found', 'This proposal link is invalid or has expired.'), {
+      if (!proposal) {
+        return new Response(renderErrorPage('Proposal Not Found', 'This proposal link is invalid or has expired.'), {
+          headers: { 'Content-Type': 'text/html' }
+        });
+      }
+
+      // Mark as viewed if sent
+      if (proposal.status === 'sent') {
+        await base44.entities.Proposal.update(proposal.id, {
+          status: 'viewed',
+          viewed_date: new Date().toISOString()
+        });
+        await base44.entities.ProposalActivity.create({
+          proposal_id: proposal.id,
+          action: 'viewed',
+          actor_name: proposal.customer_name || 'Customer',
+          details: 'Proposal viewed by customer'
+        });
+      }
+
+      return new Response(renderProposalPage(proposal, token, req.url), {
         headers: { 'Content-Type': 'text/html' }
       });
     }
-
-    // Mark as viewed if sent
-    if (proposal.status === 'sent') {
-      await base44.entities.Proposal.update(proposal.id, {
-        status: 'viewed',
-        viewed_date: new Date().toISOString()
-      });
-      await base44.entities.ProposalActivity.create({
-        proposal_id: proposal.id,
-        action: 'viewed',
-        actor_name: proposal.customer_name || 'Customer',
-        details: 'Proposal viewed by customer'
-      });
-    }
-
-    return new Response(renderProposalPage(proposal, token, req.url), {
-      headers: { 'Content-Type': 'text/html' }
-    });
-  }
 
   try {
     const body = await req.json();
