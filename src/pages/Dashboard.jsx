@@ -38,10 +38,14 @@ export default function Dashboard() {
   const [dismissedAlert, setDismissedAlert] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
     base44.auth.me().then(user => {
-      setCurrentUser(user);
-      setIsAdmin(user?.role === 'admin');
+      if (mounted) {
+        setCurrentUser(user);
+        setIsAdmin(user?.role === 'admin');
+      }
     }).catch(() => {});
+    return () => { mounted = false; };
     
     // Check for proposal-based project creation
     const urlParams = new URLSearchParams(window.location.search);
