@@ -6,13 +6,25 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+
+// Get the function URL from the current origin
+const getFunctionUrl = () => {
+  const host = window.location.host;
+  // Extract app identifier from host for function URL
+  if (host.includes('base44.com')) {
+    return `https://${host}/api/functions/logProposalView`;
+  }
+  // For dev/preview environments
+  return `/api/functions/logProposalView`;
+};
 
 export default function ProposalApproval() {
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
   
+  const [proposal, setProposal] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [signerName, setSignerName] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -21,38 +33,49 @@ export default function ProposalApproval() {
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
 
-  // Fetch proposal directly from entity using approval_token
-  const { data: proposal, isLoading, error } = useQuery({
-    queryKey: ['proposalApproval', token],
-    queryFn: async () => {
-      if (!token) throw new Error('No token provided');
-      const proposals = await base44.entities.Proposal.filter({ approval_token: token });
-      if (!proposals || proposals.length === 0) throw new Error('Proposal not found');
-      return proposals[0];
-    },
-    enabled: !!token,
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    retry: false
-  });
-
-  // Log view once proposal is loaded
+  // Fetch proposal via backend function (no auth required)
   useEffect(() => {
-    if (proposal && token && proposal.status === 'sent') {
-      base44.entities.Proposal.update(proposal.id, { 
-        status: 'viewed', 
-        viewed_date: new Date().toISOString() 
-      }).catch(() => {});
-      
-      base44.entities.ProposalActivity.create({
-        proposal_id: proposal.id,
-        action: 'viewed',
-        actor_name: proposal.customer_name || 'Customer',
-        actor_email: proposal.customer_email || '',
-        details: 'Proposal viewed by customer'
-      }).catch(() => {});
+    if (!token) {
+      setIsLoading(false);
+      setError('No token provided');
+      return;
     }
-  }, [proposal?.id]);
+
+    const fetchProposal = async () => {
+      try {
+        const response = await fetch(getFunctionUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, action: 'fetch' })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+          setError(data.error);
+        } else if (data.proposal) {
+          setProposal(data.proposal);
+          // Log view if proposal was just sent
+          if (data.proposal.status === 'sent') {
+            fetch(getFunctionUrl(), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token, action: 'viewed' })
+            }).catch(() => {});
+          }
+        } else {
+          setError('Proposal not found');
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+        setError('Failed to load proposal');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProposal();
+  }, [token]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -103,24 +126,25 @@ export default function ProposalApproval() {
     try {
       const signatureData = canvasRef.current.toDataURL();
       
-      // Update proposal directly
-      await base44.entities.Proposal.update(proposal.id, {
-        status: 'approved',
-        signature_data: signatureData,
-        signer_name: signerName,
-        signed_date: new Date().toISOString()
-      });
-
-      // Log activity
-      await base44.entities.ProposalActivity.create({
-        proposal_id: proposal.id,
-        action: 'approved',
-        actor_name: signerName,
-        actor_email: proposal.customer_email || '',
-        details: `Approved and signed by ${signerName}`
+      // Submit via backend function (no auth required)
+      const response = await fetch(getFunctionUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          token, 
+          action: 'approved',
+          signerName,
+          signatureData,
+          details: `Approved and signed by ${signerName}`
+        })
       });
       
-      setSubmitted(true);
+      const data = await response.json();
+      if (data.success) {
+        setSubmitted(true);
+      } else {
+        console.error('Submit error:', data.error);
+      }
     } catch (err) {
       console.error('Failed to submit:', err);
     } finally {
