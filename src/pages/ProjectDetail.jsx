@@ -388,8 +388,13 @@ export default function ProjectDetail() {
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              {/* Status + Title Row */}
-              <div className="flex items-center gap-3 mb-1 flex-wrap">
+              {/* Status + Project Number Row */}
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                {project.project_number && (
+                  <span className="px-2 py-0.5 bg-slate-800 text-white rounded text-xs font-mono font-semibold">
+                    #{project.project_number}
+                  </span>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className={cn(

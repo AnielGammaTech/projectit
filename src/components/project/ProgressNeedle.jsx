@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, X, PartyPopper, MessageCircle, CircleDot, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Check, X, PartyPopper, MessageCircle, CircleDot, AlertTriangle, CheckCircle2, History, AtSign } from 'lucide-react';
+import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -40,12 +42,23 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
   const [projectHealth, setProjectHealth] = useState('good');
+  const [showHistory, setShowHistory] = useState(false);
+  const [mentionSearch, setMentionSearch] = useState('');
+  const [showMentions, setShowMentions] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const textareaRef = useRef(null);
   const trackRef = useRef(null);
 
   const { data: updates = [] } = useQuery({
     queryKey: ['progressUpdates', projectId],
-    queryFn: () => base44.entities.ProgressUpdate.filter({ project_id: projectId }, '-created_date', 1),
+    queryFn: () => base44.entities.ProgressUpdate.filter({ project_id: projectId }, '-created_date', 50),
     enabled: !!projectId
+  });
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => base44.entities.TeamMember.list(),
+    enabled: showUpdateModal
   });
 
   const lastUpdate = updates[0];
@@ -221,9 +234,69 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
     setProjectHealth('good');
   };
 
-  const handleSaveUpdate = () => {
+  const handleSaveUpdate = async () => {
+    // Extract mentions from note and create notifications
+    const mentionRegex = /@(\w+(?:\s+\w+)?)/g;
+    const mentions = note.match(mentionRegex) || [];
+    
+    for (const mention of mentions) {
+      const name = mention.slice(1).trim();
+      const member = teamMembers.find(m => 
+        m.name?.toLowerCase().includes(name.toLowerCase()) ||
+        m.email?.toLowerCase().includes(name.toLowerCase())
+      );
+      if (member?.email && member.email !== currentUser?.email) {
+        await base44.entities.UserNotification.create({
+          user_email: member.email,
+          type: 'mention',
+          title: 'You were mentioned in a progress update',
+          message: note,
+          project_id: projectId,
+          from_user_email: currentUser?.email,
+          from_user_name: currentUser?.full_name || currentUser?.email,
+          link: `/ProjectDetail?id=${projectId}`,
+          is_read: false
+        });
+      }
+    }
+    
     saveMutation.mutate();
   };
+
+  const handleNoteChange = (e) => {
+    const value = e.target.value;
+    const position = e.target.selectionStart;
+    setNote(value);
+    setCursorPosition(position);
+    
+    // Check for @ trigger
+    const textBeforeCursor = value.slice(0, position);
+    const atIndex = textBeforeCursor.lastIndexOf('@');
+    if (atIndex !== -1) {
+      const textAfterAt = textBeforeCursor.slice(atIndex + 1);
+      if (!textAfterAt.includes(' ') || textAfterAt.split(' ').length <= 2) {
+        setMentionSearch(textAfterAt);
+        setShowMentions(true);
+        return;
+      }
+    }
+    setShowMentions(false);
+  };
+
+  const insertMention = (member) => {
+    const textBeforeCursor = note.slice(0, cursorPosition);
+    const atIndex = textBeforeCursor.lastIndexOf('@');
+    const textAfterCursor = note.slice(cursorPosition);
+    const newNote = textBeforeCursor.slice(0, atIndex) + `@${member.name} ` + textAfterCursor;
+    setNote(newNote);
+    setShowMentions(false);
+    textareaRef.current?.focus();
+  };
+
+  const filteredMembers = teamMembers.filter(m => 
+    m.name?.toLowerCase().includes(mentionSearch.toLowerCase()) ||
+    m.email?.toLowerCase().includes(mentionSearch.toLowerCase())
+  ).slice(0, 5);
 
   const isActive = isHovered || isDragging;
 
@@ -354,24 +427,82 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               </div>
             </div>
 
-            {/* Note Input */}
-            <div>
-              <label className="text-sm font-medium text-slate-700 mb-2 block">Add a Note (optional)</label>
+            {/* Note Input with @ mentions */}
+            <div className="relative">
+              <label className="text-sm font-medium text-slate-700 mb-2 block flex items-center gap-2">
+                Add a Note (optional)
+                <span className="text-xs text-slate-400 font-normal">Type @ to mention someone</span>
+              </label>
               <Textarea
+                ref={textareaRef}
                 value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="What's the latest on this project?"
+                onChange={handleNoteChange}
+                placeholder="What's the latest on this project? Use @ to mention team members..."
                 className="min-h-[80px] text-sm resize-none"
               />
+              {showMentions && filteredMembers.length > 0 && (
+                <div className="absolute z-50 bottom-full mb-1 left-0 w-full bg-white rounded-lg border border-slate-200 shadow-lg overflow-hidden">
+                  {filteredMembers.map(member => (
+                    <button
+                      key={member.id}
+                      onClick={() => insertMention(member)}
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 text-left"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-600">
+                        {member.name?.[0] || member.email?.[0]}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">{member.name}</p>
+                        <p className="text-xs text-slate-500">{member.email}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Last Update Note */}
-            {lastUpdateNote && (
-              <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
-                <p className="text-[10px] font-medium text-indigo-500 uppercase mb-1">Last Update</p>
-                <p className="text-sm text-indigo-700">{lastUpdateNote}</p>
-              </div>
-            )}
+            {/* Progress History */}
+            <div>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-indigo-600 transition-colors"
+              >
+                <History className="w-4 h-4" />
+                Update History ({updates.length})
+              </button>
+              
+              {showHistory && updates.length > 0 && (
+                <ScrollArea className="mt-3 h-48 rounded-xl border border-slate-200 bg-slate-50">
+                  <div className="p-3 space-y-3">
+                    {updates.map((update, idx) => (
+                      <div key={update.id} className="bg-white rounded-lg p-3 border border-slate-100">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-600">
+                              {update.author_name?.[0] || '?'}
+                            </div>
+                            <span className="text-xs font-medium text-slate-700">{update.author_name || 'Unknown'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-indigo-600">{update.progress_value}%</span>
+                            <span className="text-[10px] text-slate-400">
+                              {format(new Date(update.created_date), 'MMM d, h:mm a')}
+                            </span>
+                          </div>
+                        </div>
+                        {update.note && (
+                          <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap">{update.note}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+              
+              {showHistory && updates.length === 0 && (
+                <p className="mt-2 text-sm text-slate-400">No updates yet</p>
+              )}
+            </div>
 
             {/* Actions */}
             <div className="flex gap-2 pt-2">
