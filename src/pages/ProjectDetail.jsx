@@ -534,11 +534,7 @@ export default function ProjectDetail() {
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
-              {tasks.length > 0 && (
-                <div className="mt-4">
-                  <Progress value={taskProgress} className="h-2" />
-                </div>
-              )}
+
             </div>
             <div className="p-4">
               <div className="flex items-center justify-center gap-4 text-sm">

@@ -150,9 +150,10 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [] }) {
             {upcomingTasks.map(task => {
               const dueInfo = getDueDateLabel(task.due_date);
               return (
-                <div 
+                <Link 
                   key={task.id}
-                  className="p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+                  to={createPageUrl('ProjectTasks') + `?id=${projectId}&taskId=${task.id}`}
+                  className="block p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 hover:shadow-sm transition-all cursor-pointer"
                 >
                   <div className="flex items-start gap-2">
                     <div className={cn(
@@ -173,8 +174,9 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [] }) {
                         )}
                       </div>
                     </div>
+                    <ChevronRight className="w-4 h-4 text-slate-300 mt-0.5" />
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

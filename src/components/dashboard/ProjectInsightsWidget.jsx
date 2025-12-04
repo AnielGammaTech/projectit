@@ -232,26 +232,49 @@ export default function ProjectInsightsWidget({ projectId, tasks: propTasks, par
       <div className="p-4 space-y-3">
         {insights.slice(0, 4).map((insight, idx) => {
           const Icon = insight.icon;
+          const [showTasks, setShowTasks] = useState(false);
           return (
             <motion.div
               key={idx}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className={cn(
-                "flex items-start gap-3 p-3 rounded-xl transition-all cursor-pointer hover:shadow-sm",
-                insight.bg
-              )}
             >
-              <div className={cn("p-1.5 rounded-lg bg-white/80", insight.color)}>
-                <Icon className="w-4 h-4" />
+              <div
+                onClick={() => insight.tasks && setShowTasks(!showTasks)}
+                className={cn(
+                  "flex items-start gap-3 p-3 rounded-xl transition-all hover:shadow-sm",
+                  insight.bg,
+                  insight.tasks && "cursor-pointer"
+                )}
+              >
+                <div className={cn("p-1.5 rounded-lg bg-white/80", insight.color)}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-slate-900">{insight.title}</p>
+                  <p className="text-xs text-slate-500">{insight.description}</p>
+                </div>
+                {insight.tasks && (
+                  <ChevronDown className={cn("w-4 h-4 text-slate-400 mt-1 transition-transform", showTasks && "rotate-180")} />
+                )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-slate-900">{insight.title}</p>
-                <p className="text-xs text-slate-500">{insight.description}</p>
-              </div>
-              {insight.tasks && (
-                <ArrowRight className="w-4 h-4 text-slate-400 mt-1" />
+              {showTasks && insight.tasks && (
+                <div className="mt-2 ml-10 space-y-1">
+                  {insight.tasks.slice(0, 5).map(task => (
+                    <Link
+                      key={task.id}
+                      to={createPageUrl('ProjectTasks') + `?id=${projectId}&taskId=${task.id}`}
+                      className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-100 hover:border-slate-300 transition-all text-sm"
+                    >
+                      <span className="flex-1 truncate text-slate-700">{task.title}</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                    </Link>
+                  ))}
+                  {insight.tasks.length > 5 && (
+                    <p className="text-xs text-slate-400 pl-2">+{insight.tasks.length - 5} more</p>
+                  )}
+                </div>
               )}
             </motion.div>
           );
