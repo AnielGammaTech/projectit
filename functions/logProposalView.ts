@@ -151,7 +151,10 @@ Deno.serve(async (req) => {
     }, { headers: corsHeaders });
 
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
+    // Return HTML error page for any errors
+    return new Response(renderErrorPage('Error', error.message || 'An unexpected error occurred.'), {
+      headers: { 'Content-Type': 'text/html' }
+    });
   }
 });
 
