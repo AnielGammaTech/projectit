@@ -940,7 +940,7 @@ export default function Dashboard() {
                               )}
                               {!isCollapsed && (
                                 <div className="grid sm:grid-cols-2 gap-4">
-                                  {groupProjects.map((project, idx) => (
+                                  {groupProjects.slice((currentPage - 1) * PROJECTS_PER_PAGE, currentPage * PROJECTS_PER_PAGE).map((project, idx) => (
                                     <Draggable key={project.id} draggableId={project.id} index={idx}>
                                       {(provided, snapshot) => (
                                         <div
