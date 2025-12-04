@@ -239,8 +239,8 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
         <motion.div 
           className="bg-slate-50 rounded-xl border border-slate-200 w-full cursor-pointer hover:border-slate-300 transition-colors"
           onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => !isDragging && setIsHovered(false)}
-          onClick={() => !isDragging && setShowUpdateModal(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onClick={() => setShowUpdateModal(true)}
           animate={{ 
             boxShadow: isActive ? '0 4px 20px rgba(0,0,0,0.08)' : '0 1px 2px rgba(0,0,0,0.04)'
           }}
@@ -263,54 +263,28 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                   "flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-bold text-white",
                   color.bg
                 )}
-                animate={{ scale: isDragging ? 1.05 : 1 }}
               >
                 {localValue}%
               </motion.div>
             </div>
 
-            {/* Slider Track */}
-            <div 
-              ref={trackRef}
-              className="relative h-6 flex items-center"
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={handleMouseDown}
-              onTouchStart={handleTouchStart}
-            >
-              {/* Track Background */}
+            {/* Static Progress Display */}
+            <div className="relative h-6 flex items-center">
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                {/* Progress Fill */}
-                <motion.div 
+                <div 
                   className={cn("h-full rounded-full", color.bg)}
-                  animate={{ width: `${localValue}%` }}
-                  transition={{ duration: isDragging ? 0 : 0.15, ease: 'easeOut' }}
+                  style={{ width: `${localValue}%` }}
                 />
               </div>
-
-              {/* Thumb */}
-              <motion.div
-                className="absolute top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+              <div 
+                className="absolute top-1/2 -translate-y-1/2"
                 style={{ left: `${localValue}%` }}
-                animate={{ 
-                  left: `${localValue}%`,
-                  scale: isDragging ? 1.2 : isActive ? 1 : 0.85
-                }}
-                transition={{ duration: isDragging ? 0 : 0.15 }}
-                onMouseDown={handleMouseDown}
-                onTouchStart={handleTouchStart}
               >
                 <div 
-                  className={cn(
-                    "w-4 h-4 -ml-2 rounded-md shadow-sm border-2 border-white transition-colors",
-                    color.bg
-                  )}
-                  style={{ 
-                    boxShadow: isDragging 
-                      ? `0 0 0 3px ${color.hex}25, 0 2px 8px rgba(0,0,0,0.15)` 
-                      : '0 1px 4px rgba(0,0,0,0.1)'
-                  }}
+                  className={cn("w-4 h-4 -ml-2 rounded-md shadow-sm border-2 border-white", color.bg)}
+                  style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}
                 />
-              </motion.div>
+              </div>
             </div>
           </div>
         </motion.div>
