@@ -20,27 +20,31 @@ export default function ProposalApproval() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [viewLogged, setViewLogged] = useState(false);
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
 
-  const { data: proposal, isLoading, refetch } = useQuery({
+  const { data: proposal, isLoading } = useQuery({
     queryKey: ['proposalByToken', token],
     queryFn: async () => {
       const proposals = await base44.entities.Proposal.filter({ approval_token: token });
       return proposals[0];
     },
-    enabled: !!token
+    enabled: !!token,
+    staleTime: Infinity, // Don't refetch automatically
+    refetchOnWindowFocus: false
   });
 
-  // Log view on mount using backend function
+  // Log view on mount using backend function - only once
   useEffect(() => {
-    if (proposal && token) {
+    if (proposal && token && !viewLogged) {
+      setViewLogged(true);
       base44.functions.invoke('logProposalView', { 
         token, 
         action: 'viewed' 
       }).catch(err => console.error('Failed to log view', err));
     }
-  }, [proposal, token]);
+  }, [proposal, token, viewLogged]);
 
   useEffect(() => {
     if (canvasRef.current) {
