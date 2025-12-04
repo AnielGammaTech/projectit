@@ -23,10 +23,13 @@ import {
   PieChart,
   ChevronDown,
   Bell,
-  Globe
+  Globe,
+  Inbox
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import GlobalSearch from '@/components/GlobalSearch';
+import NotificationToast from '@/components/NotificationToast';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
@@ -46,6 +49,7 @@ const navItems = [
     submenu: [
       { name: 'My Assignments', icon: ListTodo, page: 'MyAssignments' },
       { name: 'My Schedule', icon: Clock, page: 'MySchedule' },
+      { name: 'My Notifications', icon: Inbox, page: 'Profile', showBadge: true },
     ]
   },
   { name: 'Activity', icon: ListTodo, page: 'AllTasks' },
@@ -70,6 +74,8 @@ export default function Layout({ children, currentPageName }) {
     const [currentUser, setCurrentUser] = useState(null);
     const [showSearch, setShowSearch] = useState(false);
     const [expandedMenus, setExpandedMenus] = useState({});
+    const [newNotification, setNewNotification] = useState(null);
+    const lastNotificationIdRef = useRef(null);
 
   const { data: appSettings } = useQuery({
     queryKey: ['appSettings'],
@@ -79,25 +85,30 @@ export default function Layout({ children, currentPageName }) {
     }
   });
 
-  // Check for user-related activity (tasks assigned, mentions, etc.)
-  const { data: userActivity = [] } = useQuery({
-    queryKey: ['userActivity', currentUser?.email],
-    queryFn: async () => {
-      if (!currentUser?.email) return [];
-      const activities = await base44.entities.ProjectActivity.list('-created_date', 50);
-      // Filter for activities involving this user (not created by them)
-      return activities.filter(a => 
-        a.actor_email !== currentUser.email && 
-        (a.description?.includes(currentUser.full_name) || 
-         a.description?.includes(currentUser.email) ||
-         a.description?.toLowerCase().includes('assigned'))
-      );
-    },
+  // Fetch user notifications
+  const { data: userNotifications = [] } = useQuery({
+    queryKey: ['layoutNotifications', currentUser?.email],
+    queryFn: () => base44.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
     enabled: !!currentUser?.email,
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 10000 // Check every 10 seconds for new notifications
   });
 
-  const hasNewActivity = userActivity.length > 0;
+  const unreadNotifications = userNotifications.filter(n => !n.is_read);
+  const unreadCount = unreadNotifications.length;
+
+  // Show toast for new notifications
+  useEffect(() => {
+    if (unreadNotifications.length > 0) {
+      const latestNotification = unreadNotifications[0];
+      if (lastNotificationIdRef.current !== latestNotification.id) {
+        // Only show toast if this is a genuinely new notification (not on initial load)
+        if (lastNotificationIdRef.current !== null) {
+          setNewNotification(latestNotification);
+        }
+        lastNotificationIdRef.current = latestNotification.id;
+      }
+    }
+  }, [unreadNotifications]);
 
   const appName = appSettings?.app_name || 'IT Projects';
   const appLogoUrl = appSettings?.app_logo_url;
@@ -171,7 +182,7 @@ export default function Layout({ children, currentPageName }) {
                     <DropdownMenu key={item.name}>
                       <DropdownMenuTrigger asChild>
                         <button className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group",
+                          "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group relative",
                           isSubmenuActive 
                             ? "text-[#B4E1FF] bg-white/10 font-medium" 
                             : "text-white/80 hover:text-white hover:bg-white/10"
@@ -181,6 +192,11 @@ export default function Layout({ children, currentPageName }) {
                             isSubmenuActive ? "text-[#B4E1FF]" : "text-white/60 group-hover:text-white"
                           )} />
                           {item.name}
+                          {item.name === 'My Stuff' && unreadCount > 0 && (
+                            <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[18px] text-center animate-pulse">
+                              {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                          )}
                           <ChevronDown className={cn(
                             "w-3.5 h-3.5 transition-colors",
                             isSubmenuActive ? "text-[#B4E1FF]" : "text-white/60"
@@ -205,6 +221,11 @@ export default function Layout({ children, currentPageName }) {
                               >
                                 <SubIcon className={cn("w-4 h-4", isSubActive ? "text-[#0069AF]" : "text-slate-400")} />
                                 {subItem.name}
+                                {subItem.showBadge && unreadCount > 0 && (
+                                  <span className="ml-auto px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[18px] text-center">
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                  </span>
+                                )}
                               </Link>
                             </DropdownMenuItem>
                           );
@@ -416,6 +437,16 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Global Search */}
       <GlobalSearch isOpen={showSearch} onClose={() => setShowSearch(false)} />
+
+      {/* Notification Toast */}
+      <AnimatePresence>
+        {newNotification && (
+          <NotificationToast 
+            notification={newNotification} 
+            onDismiss={() => setNewNotification(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
   }
