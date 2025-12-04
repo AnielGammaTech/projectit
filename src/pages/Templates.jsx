@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle } from 'lucide-react';
+import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { createPageUrl } from '@/utils';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +17,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TemplateModal from '@/components/modals/TemplateModal';
 
 export default function Templates() {
@@ -23,17 +31,24 @@ export default function Templates() {
   const [showModal, setShowModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [activeTab, setActiveTab] = useState('project');
+  const [newTemplateType, setNewTemplateType] = useState('project');
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
     queryFn: () => base44.entities.ProjectTemplate.list('-created_date')
   });
 
+  // Separate templates by type
+  const projectTemplates = templates.filter(t => t.template_type !== 'todo');
+  const todoTemplates = templates.filter(t => t.template_type === 'todo');
+
   const handleSave = async (data) => {
+    const templateData = { ...data, template_type: newTemplateType };
     if (editingTemplate) {
-      await base44.entities.ProjectTemplate.update(editingTemplate.id, data);
+      await base44.entities.ProjectTemplate.update(editingTemplate.id, templateData);
     } else {
-      await base44.entities.ProjectTemplate.create(data);
+      await base44.entities.ProjectTemplate.create(templateData);
     }
     queryClient.invalidateQueries({ queryKey: ['templates'] });
     setShowModal(false);
@@ -49,18 +64,15 @@ export default function Templates() {
   const handleCreateProject = async (template) => {
     const newProject = await base44.entities.Project.create({
       name: `New Project from ${template.name}`,
-      status: 'planning',
-      priority: 'medium'
+      status: 'planning'
     });
     
-    // Create default tasks
     if (template.default_tasks?.length) {
       for (const task of template.default_tasks) {
         await base44.entities.Task.create({ ...task, project_id: newProject.id, status: 'todo' });
       }
     }
     
-    // Create default parts
     if (template.default_parts?.length) {
       for (const part of template.default_parts) {
         await base44.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
@@ -70,121 +82,204 @@ export default function Templates() {
     window.location.href = createPageUrl('ProjectDetail') + `?id=${newProject.id}`;
   };
 
-  const templateColors = [
-    'from-violet-500 to-purple-600',
-    'from-blue-500 to-cyan-500',
-    'from-emerald-500 to-teal-500',
-    'from-orange-500 to-red-500',
-    'from-pink-500 to-rose-500',
-    'from-indigo-500 to-blue-500',
-    'from-amber-500 to-orange-500',
-    'from-green-500 to-emerald-500'
-  ];
+  const handleNewTemplate = (type) => {
+    setNewTemplateType(type);
+    setEditingTemplate(null);
+    setShowModal(true);
+  };
+
+  const handleEditTemplate = (template) => {
+    setNewTemplateType(template.template_type || 'project');
+    setEditingTemplate(template);
+    setShowModal(true);
+  };
+
+  const TemplateCard = ({ template, index }) => {
+    const isProject = template.template_type !== 'todo';
+    
+    return (
+      <motion.div
+        key={template.id}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: index * 0.03 }}
+        className={cn(
+          "relative group rounded-2xl border-2 border-dashed p-5 transition-all cursor-pointer hover:shadow-lg",
+          isProject 
+            ? "border-[#0F2F44]/30 bg-[#0F2F44]/5 hover:border-[#0F2F44] hover:bg-[#0F2F44]/10" 
+            : "border-emerald-400/30 bg-emerald-50/50 hover:border-emerald-500 hover:bg-emerald-50"
+        )}
+        onClick={() => handleCreateProject(template)}
+      >
+        {/* Menu Button */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button 
+              onClick={(e) => e.stopPropagation()}
+              className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-sm"
+            >
+              <MoreHorizontal className="w-4 h-4 text-slate-500" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditTemplate(template); }}>
+              <Edit2 className="w-4 h-4 mr-2" />
+              Edit Template
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setDeleteConfirm(template); }} className="text-red-600">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Template Icon */}
+        <div className={cn(
+          "w-10 h-10 rounded-xl flex items-center justify-center mb-3",
+          isProject ? "bg-[#0F2F44]" : "bg-emerald-500"
+        )}>
+          {isProject ? (
+            <FolderKanban className="w-5 h-5 text-white" />
+          ) : (
+            <CheckSquare className="w-5 h-5 text-white" />
+          )}
+        </div>
+
+        {/* Template Name */}
+        <h3 className={cn(
+          "font-semibold text-base mb-1 line-clamp-2",
+          isProject ? "text-[#0F2F44]" : "text-emerald-700"
+        )}>
+          {template.name}
+        </h3>
+
+        {/* Description */}
+        {template.description && (
+          <p className="text-sm text-slate-500 line-clamp-2 mb-3">{template.description}</p>
+        )}
+
+        {/* Stats */}
+        <div className="flex items-center gap-2 mt-auto">
+          <div className={cn(
+            "flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium",
+            isProject ? "bg-[#0F2F44]/10 text-[#0F2F44]" : "bg-emerald-100 text-emerald-700"
+          )}>
+            <ListTodo className="w-3 h-3" />
+            {template.default_tasks?.length || 0}
+          </div>
+          {isProject && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 text-amber-700 text-xs font-medium">
+              <Package className="w-3 h-3" />
+              {template.default_parts?.length || 0}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    );
+  };
+
+  const NewTemplateCard = ({ type }) => {
+    const isProject = type === 'project';
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        onClick={() => handleNewTemplate(type)}
+        className={cn(
+          "relative rounded-2xl border-2 border-dashed p-5 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[180px]",
+          isProject 
+            ? "border-[#0F2F44]/20 hover:border-[#0F2F44] hover:bg-[#0F2F44]/5" 
+            : "border-emerald-300/50 hover:border-emerald-500 hover:bg-emerald-50/50"
+        )}
+      >
+        <div className={cn(
+          "w-12 h-12 rounded-xl flex items-center justify-center mb-3",
+          isProject ? "bg-[#0F2F44]/10" : "bg-emerald-100"
+        )}>
+          <Plus className={cn("w-6 h-6", isProject ? "text-[#0F2F44]" : "text-emerald-600")} />
+        </div>
+        <span className={cn("font-medium", isProject ? "text-[#0F2F44]" : "text-emerald-700")}>
+          New Template
+        </span>
+      </motion.div>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-[#0a1929]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          className="text-center mb-10"
         >
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Templates</h1>
-            <p className="text-slate-500 mt-1">Create reusable project templates</p>
-          </div>
-          <Button
-            onClick={() => { setEditingTemplate(null); setShowModal(true); }}
-            className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Template
-          </Button>
+          <h1 className="text-4xl font-bold text-white tracking-tight mb-3">Project Templates</h1>
+          <p className="text-slate-400 max-w-2xl mx-auto">
+            Save yourself time by creating project templates with frequently-used tools, to-do lists, files, and more. 
+            Anyone on your account who can create projects can use and edit these templates.
+          </p>
         </motion.div>
 
-        {templates.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {templates.map((template, idx) => {
-              const colorClass = templateColors[idx % templateColors.length];
-              return (
-                <motion.div
-                  key={template.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-all group"
-                >
-                  {/* Colored Header */}
-                  <div className={`bg-gradient-to-r ${colorClass} p-4`}>
-                    <div className="flex items-start justify-between">
-                      <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur">
-                        <FileStack className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => { setEditingTemplate(template); setShowModal(true); }}
-                          className="h-8 w-8 text-white/80 hover:text-white hover:bg-white/20"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => setDeleteConfirm(template)}
-                          className="h-8 w-8 text-white/80 hover:text-white hover:bg-white/20"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-5">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">{template.name}</h3>
-                    {template.description && (
-                      <p className="text-sm text-slate-500 mb-4 line-clamp-2">{template.description}</p>
-                    )}
-
-                    <div className="flex gap-3 mb-4">
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <ListTodo className="w-3 h-3" />
-                        {template.default_tasks?.length || 0} tasks
-                      </Badge>
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Package className="w-3 h-3" />
-                        {template.default_parts?.length || 0} parts
-                      </Badge>
-                    </div>
-
-                    <Button 
-                      onClick={() => handleCreateProject(template)}
-                      className={`w-full bg-gradient-to-r ${colorClass} hover:opacity-90 text-white`}
-                    >
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      Create Project
-                    </Button>
-                  </div>
-                </motion.div>
-              );
-            })}
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="flex justify-center mb-8">
+            <TabsList className="bg-[#0F2F44] p-1">
+              <TabsTrigger 
+                value="project" 
+                className="data-[state=active]:bg-[#74C7FF] data-[state=active]:text-[#0F2F44] text-white/70 px-6"
+              >
+                <Briefcase className="w-4 h-4 mr-2" />
+                Project Templates
+              </TabsTrigger>
+              <TabsTrigger 
+                value="todo" 
+                className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white text-white/70 px-6"
+              >
+                <CheckSquare className="w-4 h-4 mr-2" />
+                To-Do Templates
+              </TabsTrigger>
+            </TabsList>
           </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-white rounded-2xl border border-slate-100 p-12 text-center"
-          >
-            <FileStack className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No templates yet</h3>
-            <p className="text-slate-500 mb-6">Create templates to quickly set up new projects</p>
-            <Button onClick={() => setShowModal(true)} className="bg-indigo-600 hover:bg-indigo-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Template
-            </Button>
-          </motion.div>
-        )}
+
+          {/* Project Templates */}
+          <TabsContent value="project">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <NewTemplateCard type="project" />
+              {projectTemplates.map((template, idx) => (
+                <TemplateCard key={template.id} template={template} index={idx} />
+              ))}
+            </div>
+            {projectTemplates.length === 0 && (
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center text-slate-400 mt-8"
+              >
+                No project templates yet. Create one to get started!
+              </motion.p>
+            )}
+          </TabsContent>
+
+          {/* To-Do Templates */}
+          <TabsContent value="todo">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <NewTemplateCard type="todo" />
+              {todoTemplates.map((template, idx) => (
+                <TemplateCard key={template.id} template={template} index={idx} />
+              ))}
+            </div>
+            {todoTemplates.length === 0 && (
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center text-slate-400 mt-8"
+              >
+                No to-do templates yet. Create one to get started!
+              </motion.p>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       <TemplateModal
@@ -192,6 +287,7 @@ export default function Templates() {
         onClose={() => { setShowModal(false); setEditingTemplate(null); }}
         template={editingTemplate}
         onSave={handleSave}
+        templateType={newTemplateType}
       />
 
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
