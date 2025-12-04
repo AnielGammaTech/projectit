@@ -769,17 +769,13 @@ export default function ProjectDetail() {
           </Link>
 
           {/* Calendar Card */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.55 }}
-                      >
-                        <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
-                      </motion.div>
-
-
-
-                      </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+          >
+            <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
+          </motion.div>
         </div>
 
         {/* Activity Feed - Full Width Below */}
