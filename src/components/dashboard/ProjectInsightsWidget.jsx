@@ -207,30 +207,24 @@ export default function ProjectInsightsWidget({ projectId, tasks: propTasks, par
 
   // Full widget view
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
-    >
-      <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-indigo-50/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-violet-600 shadow-lg shadow-violet-200">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900">AI Insights</h3>
-              <p className="text-sm text-slate-500">Project health analysis</p>
-            </div>
+    <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-indigo-50/50">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-violet-600 shadow-lg shadow-violet-200">
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <div className="text-right">
-            <div className={cn("text-2xl font-bold", getHealthColor(healthScore))}>{healthScore}%</div>
-            <div className="text-xs text-slate-500">Health</div>
+          <div>
+            <h3 className="font-semibold text-slate-900 text-sm">AI Insights</h3>
+            <p className="text-xs text-slate-500">Project health analysis</p>
           </div>
+        </div>
+        <div className="text-right">
+          <div className={cn("text-xl font-bold", getHealthColor(healthScore))}>{healthScore}%</div>
+          <div className="text-[10px] text-slate-500">Health</div>
         </div>
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className="space-y-2">
         {insights.slice(0, 4).map((insight, idx) => {
           const Icon = insight.icon;
           const isExpanded = expandedInsights[idx];
