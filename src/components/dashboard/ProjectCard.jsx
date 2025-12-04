@@ -465,6 +465,36 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
               </a>
             )}
           </div>
+          
+          {/* Team Member Avatars */}
+          {projectTeam.length > 0 && (
+            <div className="flex items-center -space-x-2" onClick={(e) => e.stopPropagation()}>
+              {projectTeam.slice(0, 4).map((member, i) => (
+                <TooltipProvider key={i}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div 
+                        className={cn(
+                          "w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white border-2 border-white",
+                          ["bg-indigo-500", "bg-emerald-500", "bg-amber-500", "bg-rose-500", "bg-cyan-500"][i % 5]
+                        )}
+                      >
+                        {getInitials(member.name || member.email)}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p className="text-xs">{member.name || member.email}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))}
+              {projectTeam.length > 4 && (
+                <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-600 border-2 border-white">
+                  +{projectTeam.length - 4}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
