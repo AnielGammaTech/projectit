@@ -458,7 +458,7 @@ export default function ProposalEditor() {
                 variant="outline" 
                 size="sm"
                 onClick={() => {
-                  const link = `${window.location.origin}/ProposalApproval?token=${proposal.approval_token}`;
+                  const link = `${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`;
                   navigator.clipboard.writeText(link);
                   setLinkCopied(true);
                   setTimeout(() => setLinkCopied(false), 2000);
@@ -495,7 +495,7 @@ export default function ProposalEditor() {
                   return;
                 }
                 await handleSave();
-                const approvalLink = `${window.location.origin}/ProposalApproval?token=${proposal?.approval_token}`;
+                const approvalLink = `${window.location.origin}/api/functions/logProposalView?token=${proposal?.approval_token}`;
                 await base44.integrations.Core.SendEmail({
                   to: formData.customer_email,
                   subject: `Proposal: ${formData.title}`,
@@ -545,32 +545,32 @@ export default function ProposalEditor() {
                 <div className="mt-4 pt-4 border-t border-slate-100">
                   <p className="text-xs text-slate-500 mb-2">Customer Approval Link:</p>
                   <div className="flex gap-2">
-                    <Input 
-                      value={`${window.location.origin}/ProposalApproval?token=${proposal.approval_token}`}
-                      readOnly
-                      className="text-xs h-8"
-                    />
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="h-8"
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/ProposalApproval?token=${proposal.approval_token}`);
-                        setLinkCopied(true);
-                        setTimeout(() => setLinkCopied(false), 2000);
-                      }}
-                    >
-                      {linkCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="h-8"
-                      onClick={() => window.open(`/ProposalApproval?token=${proposal.approval_token}`, '_blank')}
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                    </Button>
-                  </div>
+                      <Input 
+                        value={`${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`}
+                        readOnly
+                        className="text-xs h-8"
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="h-8"
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`);
+                          setLinkCopied(true);
+                          setTimeout(() => setLinkCopied(false), 2000);
+                        }}
+                      >
+                        {linkCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="h-8"
+                        onClick={() => window.open(`/api/functions/logProposalView?token=${proposal.approval_token}`, '_blank')}
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                    </div>
                 </div>
               )}
             </motion.div>
