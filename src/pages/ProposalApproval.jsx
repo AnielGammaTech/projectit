@@ -6,15 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 export default function ProposalApproval() {
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
   
-  const [proposal, setProposal] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [signerName, setSignerName] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -23,37 +21,38 @@ export default function ProposalApproval() {
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
 
-  // Fetch proposal on mount
+  // Fetch proposal directly from entity using approval_token
+  const { data: proposal, isLoading, error } = useQuery({
+    queryKey: ['proposalApproval', token],
+    queryFn: async () => {
+      if (!token) throw new Error('No token provided');
+      const proposals = await base44.entities.Proposal.filter({ approval_token: token });
+      if (!proposals || proposals.length === 0) throw new Error('Proposal not found');
+      return proposals[0];
+    },
+    enabled: !!token,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    retry: false
+  });
+
+  // Log view once proposal is loaded
   useEffect(() => {
-    if (!token) {
-      setIsLoading(false);
-      setError('No token provided');
-      return;
+    if (proposal && token && proposal.status === 'sent') {
+      base44.entities.Proposal.update(proposal.id, { 
+        status: 'viewed', 
+        viewed_date: new Date().toISOString() 
+      }).catch(() => {});
+      
+      base44.entities.ProposalActivity.create({
+        proposal_id: proposal.id,
+        action: 'viewed',
+        actor_name: proposal.customer_name || 'Customer',
+        actor_email: proposal.customer_email || '',
+        details: 'Proposal viewed by customer'
+      }).catch(() => {});
     }
-
-    const fetchProposal = async () => {
-      try {
-        // Use SDK to invoke the backend function
-        const response = await base44.functions.invoke('logProposalView', { token, action: 'fetch' });
-        const data = response.data;
-        
-        if (data.error) {
-          setError(data.error);
-        } else {
-          setProposal(data.proposal);
-          // Log view in background
-          base44.functions.invoke('logProposalView', { token, action: 'viewed' }).catch(() => {});
-        }
-      } catch (err) {
-        console.error('Fetch error:', err);
-        setError('Failed to load proposal');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProposal();
-  }, [token]);
+  }, [proposal?.id]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -98,17 +97,26 @@ export default function ProposalApproval() {
   };
 
   const handleSubmit = async () => {
-    if (!signerName || !agreed) return;
+    if (!signerName || !agreed || !proposal) return;
     
     setSubmitting(true);
     try {
       const signatureData = canvasRef.current.toDataURL();
       
-      await base44.functions.invoke('logProposalView', {
-        token, 
+      // Update proposal directly
+      await base44.entities.Proposal.update(proposal.id, {
+        status: 'approved',
+        signature_data: signatureData,
+        signer_name: signerName,
+        signed_date: new Date().toISOString()
+      });
+
+      // Log activity
+      await base44.entities.ProposalActivity.create({
+        proposal_id: proposal.id,
         action: 'approved',
-        signerName: signerName,
-        signatureData: signatureData,
+        actor_name: signerName,
+        actor_email: proposal.customer_email || '',
         details: `Approved and signed by ${signerName}`
       });
       
@@ -128,14 +136,22 @@ export default function ProposalApproval() {
     );
   }
 
-  if (!proposal || error) {
+  if (error || (!isLoading && !proposal)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-slate-900 mb-2">Proposal Not Found</h1>
-          <p className="text-slate-500">{error || 'This proposal link is invalid or has expired.'}</p>
+          <p className="text-slate-500">{error?.message || 'This proposal link is invalid or has expired.'}</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!proposal) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0069AF]" />
       </div>
     );
   }
