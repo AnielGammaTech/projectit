@@ -57,6 +57,9 @@ export default function Dashboard() {
   const [selectedProjects, setSelectedProjects] = useState([]);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [showBulkArchiveConfirm, setShowBulkArchiveConfirm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [activeLetter, setActiveLetter] = useState(null);
+  const PROJECTS_PER_PAGE = 25;
 
   useEffect(() => {
     let mounted = true;
