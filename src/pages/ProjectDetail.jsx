@@ -25,7 +25,8 @@ import {
   Folder,
   File,
   Users,
-  Globe
+  Globe,
+  RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -381,6 +382,39 @@ export default function ProjectDetail() {
       <ProjectNavHeader project={project} currentPage="ProjectDetail" />
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        {/* Archived Banner */}
+        {(project.status === 'archived' || project.status === 'completed') && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-6 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <Archive className="w-5 h-5 text-amber-600" />
+              <div>
+                <p className="font-semibold text-amber-800">This project is archived</p>
+                {project.archive_reason && (
+                  <p className="text-sm text-amber-600">{project.archive_reason}</p>
+                )}
+              </div>
+            </div>
+            <Button
+              onClick={async () => {
+                await base44.entities.Project.update(projectId, { 
+                  status: 'planning',
+                  archive_reason: '',
+                  archive_type: '',
+                  archived_date: ''
+                });
+                refetchProject();
+              }}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              Restore Project
+            </Button>
+          </motion.div>
+        )}
 
         {/* Project Header - Compact */}
         <motion.div
