@@ -445,9 +445,12 @@ export default function ProposalEditor() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleSave} disabled={saving}>
+            <span className="text-xs text-slate-400 mr-2">
+              {saving ? 'Saving...' : 'All changes saved'}
+            </span>
+            <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>
               <Save className="w-4 h-4 mr-1.5" />
-              {saving ? 'Saving...' : 'Save'}
+              Save Now
             </Button>
             <Link to={proposalId ? createPageUrl('ProposalView') + `?id=${proposalId}` : '#'}>
               <Button variant="outline" size="sm" disabled={!proposalId}>
