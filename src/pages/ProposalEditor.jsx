@@ -150,7 +150,7 @@ export default function ProposalEditor() {
         areas = [{ name: 'Items', items: proposal.items }];
       }
       
-      setFormData({
+      const initialData = {
         proposal_number: proposal.proposal_number || '',
         title: proposal.title || '',
         customer_name: proposal.customer_name || '',
@@ -164,8 +164,12 @@ export default function ProposalEditor() {
         terms_conditions: proposal.terms_conditions || '',
         valid_until: proposal.valid_until || format(addDays(new Date(), 30), 'yyyy-MM-dd'),
         sales_tax_percent: proposal.sales_tax_percent || 0,
-        status: proposal.status || 'draft'
-      });
+        status: proposal.status || 'draft',
+        change_request_notes: proposal.change_request_notes
+      };
+      
+      setFormData(initialData);
+      setLastSavedData(JSON.stringify(initialData));
       
       const expanded = {};
       areas.forEach((_, idx) => { expanded[idx] = true; });
@@ -177,6 +181,23 @@ export default function ProposalEditor() {
       setFormData(prev => ({ ...prev, proposal_number: proposalNumber }));
     }
   }, [proposal, proposalId, allProposals, proposalSettings]);
+
+  // Auto-save effect
+  useEffect(() => {
+    if (!proposalId || saving || !lastSavedData) return;
+
+    const currentDataString = JSON.stringify(formData);
+    if (currentDataString === lastSavedData) return;
+
+    const timer = setTimeout(async () => {
+      setSaving(true);
+      await handleSave(true); // silent save
+      setLastSavedData(currentDataString);
+      setSaving(false);
+    }, 2000); // Auto-save after 2 seconds of inactivity
+
+    return () => clearTimeout(timer);
+  }, [formData, proposalId, saving, lastSavedData]);
 
   const handleCustomerSelect = (customer) => {
     setFormData(prev => ({
