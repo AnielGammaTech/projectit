@@ -307,6 +307,44 @@ export default function Dashboard() {
     refetchProjects();
   };
 
+  const handleRestoreProject = async (project) => {
+    await base44.entities.Project.update(project.id, {
+      status: 'planning', // Default back to planning
+      deleted_date: null
+    });
+    refetchProjects();
+  };
+
+  const handleSaveView = async () => {
+    if (!viewName.trim()) return;
+    
+    const viewConfig = {
+      filters: { status: listFilter },
+      layout: viewMode,
+      pinned: pinnedProjectIds,
+      collapsed: collapsedGroups
+    };
+
+    await base44.entities.DashboardView.create({
+      name: viewName,
+      user_id: currentUser.id,
+      config: viewConfig,
+      is_default: false
+    });
+
+    setViewName('');
+    setShowSaveViewModal(false);
+    refetchViews();
+  };
+
+  const applyView = (view) => {
+    setCurrentView(view);
+    if (view.config.layout) setViewMode(view.config.layout);
+    if (view.config.pinned) setPinnedProjectIds(view.config.pinned);
+    if (view.config.filters?.status) setListFilter(view.config.filters.status);
+    if (view.config.collapsed) setCollapsedGroups(view.config.collapsed);
+  };
+
   const handleBulkArchive = async () => {
     for (const projectId of selectedProjects) {
       await base44.entities.Project.update(projectId, {
