@@ -255,14 +255,6 @@ export default function Layout({ children, currentPageName }) {
               <Search className="w-5 h-5 text-white/70" />
             </button>
 
-            {/* Activity Bell */}
-            <Link to={createPageUrl('ActivityFeed')} className="relative p-2 hover:bg-white/10 rounded-lg">
-              <Bell className="w-5 h-5 text-white/70" />
-              {hasNewActivity && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#74C7FF]" />
-              )}
-            </Link>
-
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
