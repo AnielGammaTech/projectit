@@ -400,6 +400,19 @@ export default function ProposalEditor() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
+      {/* Changes Requested Alert */}
+      {formData.status === 'changes_requested' && (
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-3">
+          <div className="max-w-7xl mx-auto flex items-start gap-3">
+            <Sparkles className="w-5 h-5 text-amber-600 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-800">Customer Requested Changes</p>
+              <p className="text-amber-700 text-sm mt-1">{proposal?.change_request_notes || 'No notes provided.'}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Navigation */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
