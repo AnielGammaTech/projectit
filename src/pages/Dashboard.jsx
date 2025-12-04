@@ -102,6 +102,17 @@ export default function Dashboard() {
   const approvedProposals = proposals.filter(p => p.status === 'approved');
   const approvedTotal = approvedProposals.reduce((sum, p) => sum + (p.total || 0), 0);
 
+  const [dismissedAlert, setDismissedAlert] = useState(false);
+
+  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived');
+  const archivedProjects = projects.filter(p => p.status === 'archived' || p.status === 'completed');
+  // Only count tasks and parts from active projects
+  const activeProjectIds = activeProjects.map(p => p.id);
+  const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
+  const activeParts = parts.filter(p => activeProjectIds.includes(p.project_id));
+  const completedTasks = activeTasks.filter(t => t.status === 'completed');
+  const pendingParts = activeParts.filter(p => p.status === 'needed' || p.status === 'ordered');
+
   // Get user's overdue and due today tasks (only from active projects)
   const myUrgentTasks = activeTasks.filter(t => {
     if (t.assigned_to !== currentUser?.email) return false;
@@ -114,17 +125,6 @@ export default function Dashboard() {
   const overdueTasks = myUrgentTasks.filter(t => isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date)));
   const dueTodayTasks = myUrgentTasks.filter(t => isToday(new Date(t.due_date)));
   const dueTomorrowTasks = myUrgentTasks.filter(t => isTomorrow(new Date(t.due_date)));
-
-  const [dismissedAlert, setDismissedAlert] = useState(false);
-
-  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived');
-  const archivedProjects = projects.filter(p => p.status === 'archived' || p.status === 'completed');
-  // Only count tasks and parts from active projects
-  const activeProjectIds = activeProjects.map(p => p.id);
-  const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
-  const activeParts = parts.filter(p => activeProjectIds.includes(p.project_id));
-  const completedTasks = activeTasks.filter(t => t.status === 'completed');
-  const pendingParts = activeParts.filter(p => p.status === 'needed' || p.status === 'ordered');
 
   const displayProjects = showArchived ? archivedProjects : activeProjects;
   const filteredProjects = displayProjects.filter(p =>
