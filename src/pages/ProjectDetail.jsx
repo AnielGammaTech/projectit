@@ -438,21 +438,22 @@ export default function ProjectDetail() {
             </div>
 
             {/* Actions Row */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <HaloPSATicketLink 
-                project={project} 
-                onUpdate={refetchProject}
-              />
-              <TimeTracker 
-                projectId={projectId} 
-                currentUser={currentUser} 
-                timeBudgetHours={project.time_budget_hours || 0} 
-              />
-              <Button variant="outline" size="sm" onClick={() => setShowProjectModal(true)}>
-                <Edit2 className="w-4 h-4 mr-1" />
-                Edit
-              </Button>
-              <DropdownMenu>
+            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <HaloPSATicketLink 
+                  project={project} 
+                  onUpdate={refetchProject}
+                />
+                <TimeTracker 
+                  projectId={projectId} 
+                  currentUser={currentUser} 
+                  timeBudgetHours={project.time_budget_hours || 0} 
+                />
+                <Button variant="outline" size="sm" onClick={() => setShowProjectModal(true)}>
+                  <Edit2 className="w-4 h-4 mr-1" />
+                  Edit
+                </Button>
+                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon" className="h-8 w-8">
                     <MoreHorizontal className="w-4 h-4" />
@@ -477,10 +478,25 @@ export default function ProjectDetail() {
                     Delete Project
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </motion.div>
+                </DropdownMenu>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full max-w-xs">
+                <ProgressNeedle 
+                  projectId={projectId} 
+                  value={project.progress || 0} 
+                  onSave={handleProgressUpdate} 
+                  currentUser={currentUser}
+                  onStatusChange={(status) => handleQuickUpdate('status', status)}
+                  halopsaTicketId={project.halopsa_ticket_id}
+                  hasUpdates={progressUpdates.length > 0}
+                  lastUpdateNote={progressUpdates[0]?.note}
+                />
+                </div>
+                </div>
+                </div>
+                </motion.div>
 
       {/* Cards Grid with Sidebar */}
       <div className="grid lg:grid-cols-[1fr_280px] gap-6">
