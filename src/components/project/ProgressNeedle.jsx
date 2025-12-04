@@ -213,11 +213,16 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   const handleCancel = () => {
     setLocalValue(value);
-    setShowNoteInput(false);
+    setShowUpdateModal(false);
     setNote('');
+    setProjectHealth('good');
   };
 
-  const isActive = isHovered || isDragging || showNoteInput;
+  const handleSaveUpdate = () => {
+    saveMutation.mutate();
+  };
+
+  const isActive = isHovered || isDragging;
 
   const color = getColor();
 
