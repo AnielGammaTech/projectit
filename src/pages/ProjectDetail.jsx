@@ -439,18 +439,23 @@ export default function ProjectDetail() {
                 />
               </div>
 
-              {/* Progress Needle - Moved here */}
+              {/* Update Bar + AI Insights Row */}
               <div className="mt-4 pt-4 border-t border-slate-100">
-                <ProgressNeedle 
-                  projectId={projectId} 
-                  value={project.progress || 0} 
-                  onSave={handleProgressUpdate} 
-                  currentUser={currentUser}
-                  onStatusChange={(status) => handleQuickUpdate('status', status)}
-                  halopsaTicketId={project.halopsa_ticket_id}
-                  hasUpdates={progressUpdates.length > 0}
-                  lastUpdateNote={progressUpdates[0]?.note}
-                />
+                <div className="flex items-start gap-4">
+                  <div className="flex-1">
+                    <ProgressNeedle 
+                      projectId={projectId} 
+                      value={project.progress || 0} 
+                      onSave={handleProgressUpdate} 
+                      currentUser={currentUser}
+                      onStatusChange={(status) => handleQuickUpdate('status', status)}
+                      halopsaTicketId={project.halopsa_ticket_id}
+                      hasUpdates={progressUpdates.length > 0}
+                      lastUpdateNote={progressUpdates[0]?.note}
+                    />
+                  </div>
+                  <ProjectInsightsWidget projectId={projectId} tasks={tasks} parts={parts} compact />
+                </div>
               </div>
             </div>
 
@@ -710,14 +715,7 @@ export default function ProjectDetail() {
                         <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
                       </motion.div>
 
-          {/* AI Insights Widget */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <ProjectInsightsWidget projectId={projectId} />
-          </motion.div>
+
 
                       </div>
 

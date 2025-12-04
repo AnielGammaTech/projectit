@@ -1,27 +1,33 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   AlertTriangle, UserX, Clock, RotateCcw, TrendingUp, CheckCircle2,
-  Sparkles, ArrowRight
+  Sparkles, ArrowRight, ChevronDown, X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { differenceInDays, isPast, isToday } from 'date-fns';
 
-export default function ProjectInsightsWidget({ projectId }) {
-  const { data: tasks = [] } = useQuery({
+export default function ProjectInsightsWidget({ projectId, tasks: propTasks, parts: propParts, compact = false }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  const { data: fetchedTasks = [] } = useQuery({
     queryKey: ['tasks', projectId],
     queryFn: () => base44.entities.Task.filter({ project_id: projectId }),
-    enabled: !!projectId
+    enabled: !!projectId && !propTasks
   });
 
-  const { data: parts = [] } = useQuery({
+  const { data: fetchedParts = [] } = useQuery({
     queryKey: ['parts', projectId],
     queryFn: () => base44.entities.Part.filter({ project_id: projectId }),
-    enabled: !!projectId
+    enabled: !!projectId && !propParts
   });
+
+  const tasks = propTasks || fetchedTasks;
+  const parts = propParts || fetchedParts;
 
   // Analyze tasks for insights
   const insights = [];
@@ -111,6 +117,94 @@ export default function ProjectInsightsWidget({ projectId }) {
     return 'text-red-500';
   };
 
+  const getHealthBgColor = (score) => {
+    if (score >= 80) return 'bg-emerald-100 border-emerald-200';
+    if (score >= 60) return 'bg-amber-100 border-amber-200';
+    return 'bg-red-100 border-red-200';
+  };
+
+  const hasIssues = insights.length > 0 && insights[0].type !== 'success';
+  const issueCount = insights.filter(i => i.type !== 'success').length;
+
+  // Compact view for header
+  if (compact) {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => hasIssues && setExpanded(!expanded)}
+          className={cn(
+            "flex items-center gap-2 px-3 py-2 rounded-xl border transition-all",
+            hasIssues ? "cursor-pointer hover:shadow-md" : "cursor-default",
+            getHealthBgColor(healthScore)
+          )}
+        >
+          <div className={cn("text-lg font-bold", getHealthColor(healthScore))}>
+            {healthScore}%
+          </div>
+          <div className="text-xs text-slate-600">Health</div>
+          {hasIssues && (
+            <>
+              <div className="w-px h-4 bg-slate-300 mx-1" />
+              <div className="flex items-center gap-1">
+                {insights[0].type === 'critical' && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
+                {insights[0].type === 'warning' && <UserX className="w-3.5 h-3.5 text-amber-500" />}
+                {insights[0].type === 'info' && <Clock className="w-3.5 h-3.5 text-blue-500" />}
+                <span className="text-xs font-medium text-slate-700">{issueCount}</span>
+                <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 transition-transform", expanded && "rotate-180")} />
+              </div>
+            </>
+          )}
+          {!hasIssues && <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-1" />}
+        </button>
+
+        {/* Expanded dropdown */}
+        <AnimatePresence>
+          {expanded && hasIssues && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl border border-slate-200 shadow-xl z-50 overflow-hidden"
+            >
+              <div className="p-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-violet-500" />
+                  <span className="font-semibold text-sm text-slate-900">AI Insights</span>
+                </div>
+                <button onClick={() => setExpanded(false)} className="p-1 hover:bg-slate-200 rounded">
+                  <X className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
+              <div className="p-2 space-y-2 max-h-64 overflow-y-auto">
+                {insights.filter(i => i.type !== 'success').map((insight, idx) => {
+                  const Icon = insight.icon;
+                  return (
+                    <div
+                      key={idx}
+                      className={cn(
+                        "flex items-start gap-2 p-2.5 rounded-lg",
+                        insight.bg
+                      )}
+                    >
+                      <div className={cn("p-1 rounded-md bg-white/80", insight.color)}>
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-xs text-slate-900">{insight.title}</p>
+                        <p className="text-[10px] text-slate-500">{insight.description}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // Full widget view
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
