@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { CheckCircle2, FileText, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,48 +6,58 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 export default function ProposalApproval() {
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
-  const queryClient = useQueryClient();
   
+  const [proposal, setProposal] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [signerName, setSignerName] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [viewLogged, setViewLogged] = useState(false);
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
 
-  const { data: proposal, isLoading } = useQuery({
-    queryKey: ['proposalByToken', token],
-    queryFn: async () => {
-      // Use backend function to fetch proposal (works without auth)
-      const response = await base44.functions.invoke('logProposalView', null, {
-        method: 'GET',
-        params: { token }
-      });
-      return response?.data?.proposal;
-    },
-    enabled: !!token,
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    retry: false
-  });
-
-  // Log view on mount using backend function - only once
+  // Fetch proposal on mount
   useEffect(() => {
-    if (proposal && token && !viewLogged) {
-      setViewLogged(true);
-      base44.functions.invoke('logProposalView', { 
-        token, 
-        action: 'viewed' 
-      }).catch(err => console.error('Failed to log view', err));
+    if (!token) {
+      setIsLoading(false);
+      setError('No token provided');
+      return;
     }
-  }, [proposal, token, viewLogged]);
+
+    const fetchProposal = async () => {
+      try {
+        const response = await fetch(`/api/logProposalView?token=${encodeURIComponent(token)}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.json();
+        
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setProposal(data.proposal);
+          // Log view
+          fetch('/api/logProposalView', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, action: 'viewed' })
+          }).catch(() => {});
+        }
+      } catch (err) {
+        setError('Failed to load proposal');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProposal();
+  }, [token]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -97,19 +105,27 @@ export default function ProposalApproval() {
     if (!signerName || !agreed) return;
     
     setSubmitting(true);
-    const signatureData = canvasRef.current.toDataURL();
-    
-    // Use backend function to approve (works without auth)
-    await base44.functions.invoke('logProposalView', { 
-      token, 
-      action: 'approved',
-      signerName: signerName,
-      signatureData: signatureData,
-      details: `Approved and signed by ${signerName}`
-    });
-    
-    setSubmitted(true);
-    setSubmitting(false);
+    try {
+      const signatureData = canvasRef.current.toDataURL();
+      
+      await fetch('/api/logProposalView', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token, 
+          action: 'approved',
+          signerName: signerName,
+          signatureData: signatureData,
+          details: `Approved and signed by ${signerName}`
+        })
+      });
+      
+      setSubmitted(true);
+    } catch (err) {
+      console.error('Failed to submit:', err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -120,13 +136,13 @@ export default function ProposalApproval() {
     );
   }
 
-  if (!proposal) {
+  if (!proposal || error) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-slate-900 mb-2">Proposal Not Found</h1>
-          <p className="text-slate-500">This proposal link is invalid or has expired.</p>
+          <p className="text-slate-500">{error || 'This proposal link is invalid or has expired.'}</p>
         </div>
       </div>
     );
