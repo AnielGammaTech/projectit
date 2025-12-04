@@ -54,7 +54,8 @@ export default function HaloPSATicketLink({ project, onUpdate }) {
       projectId: project.id,
       summary: summary || project.name,
       details: details || project.description,
-      clientId: project.customer_id
+      clientId: project.customer_id,
+      clientName: project.client
     });
   };
 
@@ -145,6 +146,12 @@ export default function HaloPSATicketLink({ project, onUpdate }) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {project?.client && (
+              <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                <p className="text-xs text-indigo-600 font-medium mb-1">Customer</p>
+                <p className="text-sm font-semibold text-indigo-900">{project.client}</p>
+              </div>
+            )}
             <div>
               <label className="text-sm font-medium mb-1 block">Summary</label>
               <Input

@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, projectId, ticketId, summary, details, clientId, note, noteIsPrivate } = body;
+    const { action, projectId, ticketId, summary, details, clientId, clientName, note, noteIsPrivate } = body;
 
     // Get HaloPSA credentials
     const haloClientId = Deno.env.get("HALOPSA_CLIENT_ID");
@@ -73,11 +73,47 @@ Deno.serve(async (req) => {
     const accessToken = tokenData.access_token;
 
     if (action === 'create') {
+      // Look up client in HaloPSA if we have a customer_id or client name
+      let haloClientId = null;
+      
+      if (clientId) {
+        // Check if it's a HaloPSA ID format (halo_xxx)
+        if (clientId.startsWith('halo_')) {
+          haloClientId = parseInt(clientId.replace('halo_', ''));
+        } else {
+          // Try to find the customer in our database and get their HaloPSA ID
+          const customers = await base44.entities.Customer.filter({ id: clientId });
+          if (customers[0]?.halopsa_id) {
+            haloClientId = parseInt(customers[0].halopsa_id);
+          }
+        }
+      }
+      
+      // If no HaloPSA client ID found and we have a client name, search in HaloPSA
+      if (!haloClientId && clientName) {
+        const searchResponse = await fetch(`${apiBaseUrl}/Client?search=${encodeURIComponent(clientName)}&count=5`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (searchResponse.ok) {
+          const searchResults = await searchResponse.json();
+          const clients = searchResults.clients || searchResults;
+          if (Array.isArray(clients) && clients.length > 0) {
+            // Try to find exact match first
+            const exactMatch = clients.find(c => c.name?.toLowerCase() === clientName.toLowerCase());
+            haloClientId = exactMatch ? exactMatch.id : clients[0].id;
+          }
+        }
+      }
+
       // Create a new ticket in HaloPSA with Gamma Default ticket type
       const ticketData = [{
         summary: summary || 'New Project Ticket',
         details: details || '',
-        client_id: clientId ? parseInt(clientId.replace('halo_', '')) : undefined,
+        client_id: haloClientId || undefined,
         tickettype_name: 'Gamma Default'
       }];
 
