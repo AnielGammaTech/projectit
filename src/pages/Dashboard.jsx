@@ -976,12 +976,48 @@ export default function Dashboard() {
                           );
                         })}
                         {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-              </DragDropContext>
-              )
+                        </div>
+                        )}
+                        </Droppable>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-slate-100">
+                        <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                        Previous
+                        </button>
+                        <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={cn(
+                              "w-8 h-8 rounded-lg text-sm font-medium transition-all",
+                              currentPage === page 
+                                ? "bg-[#0069AF] text-white" 
+                                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                            )}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                        </div>
+                        <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                        Next
+                        </button>
+                        </div>
+                        )}
+                        </div>
+                        </DragDropContext>
+                        )
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
