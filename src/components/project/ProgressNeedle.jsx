@@ -329,11 +329,40 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Progress Display */}
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-              <span className="text-sm text-slate-600">New Progress</span>
-              <div className={cn("px-3 py-1 rounded-lg text-white font-bold", color.bg)}>
-                {localValue}%
+            {/* Progress Slider in Modal */}
+            <div className="p-4 bg-slate-50 rounded-xl">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-slate-600">Progress</span>
+                <div className={cn("px-3 py-1 rounded-lg text-white font-bold text-sm", color.bg)}>
+                  {localValue}%
+                </div>
+              </div>
+              <div 
+                ref={trackRef}
+                className="relative h-8 flex items-center cursor-pointer"
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
+              >
+                {/* Track Background */}
+                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <motion.div 
+                    className={cn("h-full rounded-full", color.bg)}
+                    animate={{ width: `${localValue}%` }}
+                    transition={{ duration: isDragging ? 0 : 0.15, ease: 'easeOut' }}
+                  />
+                </div>
+                {/* Thumb */}
+                <motion.div
+                  className="absolute top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+                  style={{ left: `${localValue}%` }}
+                  animate={{ left: `${localValue}%`, scale: isDragging ? 1.15 : 1 }}
+                  transition={{ duration: isDragging ? 0 : 0.15 }}
+                >
+                  <div 
+                    className={cn("w-5 h-5 -ml-2.5 rounded-full shadow-md border-2 border-white", color.bg)}
+                    style={{ boxShadow: isDragging ? `0 0 0 4px ${color.hex}25, 0 2px 8px rgba(0,0,0,0.2)` : '0 2px 6px rgba(0,0,0,0.15)' }}
+                  />
+                </motion.div>
               </div>
             </div>
 
