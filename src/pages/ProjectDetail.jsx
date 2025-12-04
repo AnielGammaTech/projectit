@@ -19,7 +19,13 @@ import {
   Trash2,
   FileText,
   Clock,
-  GanttChart
+  GanttChart,
+  Truck,
+  CircleDot,
+  Folder,
+  File,
+  Users,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -133,6 +139,40 @@ export default function ProjectDetail() {
     queryKey: ['templates'],
     queryFn: () => base44.entities.ProjectTemplate.list()
   });
+
+  const { data: projectNotes = [] } = useQuery({
+    queryKey: ['projectNotes', projectId],
+    queryFn: () => base44.entities.ProjectNote.filter({ project_id: projectId }),
+    enabled: !!projectId
+  });
+
+  const { data: projectFiles = [] } = useQuery({
+    queryKey: ['projectFiles', projectId],
+    queryFn: () => base44.entities.ProjectFile.filter({ project_id: projectId }),
+    enabled: !!projectId
+  });
+
+  const { data: fileFolders = [] } = useQuery({
+    queryKey: ['fileFolders', projectId],
+    queryFn: () => base44.entities.FileFolder.filter({ project_id: projectId }),
+    enabled: !!projectId
+  });
+
+  const { data: progressUpdates = [] } = useQuery({
+    queryKey: ['progressUpdates', projectId],
+    queryFn: () => base44.entities.ProgressUpdate.filter({ project_id: projectId }, '-created_date', 10),
+    enabled: !!projectId
+  });
+
+  const { data: appSettings } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: async () => {
+      const settings = await base44.entities.ProposalSettings.filter({ setting_key: 'main' });
+      return settings[0] || {};
+    }
+  });
+
+  const appLogoUrl = appSettings?.app_logo_url;
 
   // Tasks
   const handleSaveTask = async (data) => {
@@ -326,11 +366,16 @@ export default function ProjectDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Link */}
-        <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-6 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Link>
+        {/* Back Link with Logo */}
+        <div className="flex items-center justify-between mb-6">
+          <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-slate-600 hover:text-slate-900 transition-colors">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
+          {appLogoUrl && (
+            <img src={appLogoUrl} alt="" className="w-8 h-8 rounded-lg object-contain" />
+          )}
+        </div>
 
         {/* Project Header */}
         <motion.div
@@ -392,38 +437,23 @@ export default function ProjectDetail() {
                   onUpdate={handleTeamUpdate}
                 />
               </div>
+
+              {/* Progress Needle - Moved here */}
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <ProgressNeedle 
+                  projectId={projectId} 
+                  value={project.progress || 0} 
+                  onSave={handleProgressUpdate} 
+                  currentUser={currentUser}
+                  onStatusChange={(status) => handleQuickUpdate('status', status)}
+                  halopsaTicketId={project.halopsa_ticket_id}
+                  hasUpdates={progressUpdates.length > 0}
+                  lastUpdateNote={progressUpdates[0]?.note}
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className={cn(
-                    "h-9 text-xs font-medium",
-                    project.status === 'planning' && "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100",
-                    project.status === 'on_hold' && "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100",
-                    project.status === 'completed' && "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                  )}>
-                    {project.status === 'planning' && 'Planning'}
-                    {project.status === 'on_hold' && 'On Hold'}
-                    {project.status === 'completed' && 'Completed'}
-                    {!['planning', 'on_hold', 'completed'].includes(project.status) && 'Planning'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleQuickUpdate('status', 'planning')}>
-                    <span className="w-2 h-2 rounded-full bg-amber-500 mr-2" />
-                    Planning
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleQuickUpdate('status', 'on_hold')}>
-                    <span className="w-2 h-2 rounded-full bg-slate-500 mr-2" />
-                    On Hold
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleQuickUpdate('status', 'completed')}>
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
-                    Completed
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
               <HaloPSATicketLink 
                 project={project} 
                 onUpdate={refetchProject}
@@ -467,31 +497,17 @@ export default function ProjectDetail() {
           </div>
         </motion.div>
 
-        {/* Progress Needle */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mb-6"
-        >
-          <ProgressNeedle 
-              projectId={projectId} 
-              value={project.progress || 0} 
-              onSave={handleProgressUpdate} 
-              currentUser={currentUser}
-              onStatusChange={(status) => handleQuickUpdate('status', status)}
-              halopsaTicketId={project.halopsa_ticket_id}
-            />
-        </motion.div>
+
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Tasks Card - Clickable */}
+          <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
           >
             <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-indigo-100/50">
               <div className="flex items-center justify-between">
@@ -506,7 +522,7 @@ export default function ProjectDetail() {
                 </div>
                 <Button
                   size="sm"
-                  onClick={(e) => { e.stopPropagation(); setEditingTask(null); setShowTaskModal(true); }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingTask(null); setShowTaskModal(true); }}
                   className="bg-indigo-600 hover:bg-indigo-700 shadow-md"
                 >
                   <Plus className="w-4 h-4" />
@@ -518,21 +534,22 @@ export default function ProjectDetail() {
                 </div>
               )}
             </div>
-            <div className="p-4 flex gap-2">
-              <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`} className="flex-1">
-                <Button variant="outline" size="sm" className="w-full">
-                  <ListTodo className="w-4 h-4 mr-2" />
-                  List View
-                </Button>
-              </Link>
-              <Link to={createPageUrl('ProjectTimeline') + `?id=${projectId}`} className="flex-1">
-                <Button variant="outline" size="sm" className="w-full">
-                  <GanttChart className="w-4 h-4 mr-2" />
-                  Timeline
-                </Button>
-              </Link>
+            <div className="p-4">
+              <div className="flex items-center justify-center gap-4 text-sm">
+                <div className="flex items-center gap-1.5 text-emerald-600">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span className="font-medium">{completedTasks}</span>
+                  <span className="text-slate-400">done</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-slate-600">
+                  <CircleDot className="w-4 h-4" />
+                  <span className="font-medium">{tasks.length - completedTasks}</span>
+                  <span className="text-slate-400">remaining</span>
+                </div>
+              </div>
             </div>
           </motion.div>
+          </Link>
 
           {/* Parts Card - Clickable */}
           <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`}>
@@ -563,17 +580,28 @@ export default function ProjectDetail() {
               </div>
             </div>
             <div className="p-4">
-              <p className="text-sm text-slate-500 text-center">Click to view all parts</p>
-              {parts.filter(p => p.assigned_to).length > 0 && (
-                <p className="text-xs text-slate-400 text-center mt-1">
-                  {parts.filter(p => p.assigned_to).length} assigned
-                </p>
-              )}
+              <div className="flex items-center justify-center gap-4 text-sm">
+                <div className="flex items-center gap-1.5 text-blue-600">
+                  <Package className="w-4 h-4" />
+                  <span className="font-medium">{parts.filter(p => p.status === 'ordered').length}</span>
+                  <span className="text-slate-400">ordered</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-amber-600">
+                  <Truck className="w-4 h-4" />
+                  <span className="font-medium">{parts.filter(p => p.status === 'received' || p.status === 'ready_to_install').length}</span>
+                  <span className="text-slate-400">received</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-emerald-600">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span className="font-medium">{parts.filter(p => p.status === 'installed').length}</span>
+                  <span className="text-slate-400">installed</span>
+                </div>
+              </div>
             </div>
           </motion.div>
           </Link>
 
-          {/* Notes & Messages Card - Clickable */}
+          {/* Messages & Meetings Card - Clickable */}
           <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -587,13 +615,24 @@ export default function ProjectDetail() {
                   <MessageSquare className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900">Notes & Messages</h3>
+                  <h3 className="font-semibold text-slate-900">Messages & Meetings</h3>
                   <p className="text-sm text-slate-500">Project communication</p>
                 </div>
               </div>
             </div>
             <div className="p-4">
-              <p className="text-sm text-slate-500 text-center">Click to view notes & messages</p>
+              <div className="flex items-center justify-center gap-4 text-sm">
+                <div className="flex items-center gap-1.5 text-violet-600">
+                  <MessageSquare className="w-4 h-4" />
+                  <span className="font-medium">{projectNotes.filter(n => n.type === 'message' || n.type === 'note').length}</span>
+                  <span className="text-slate-400">messages</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-emerald-600">
+                  <Users className="w-4 h-4" />
+                  <span className="font-medium">{projectNotes.filter(n => n.type === 'update').length}</span>
+                  <span className="text-slate-400">meetings</span>
+                </div>
+              </div>
             </div>
           </motion.div>
           </Link>
@@ -618,7 +657,20 @@ export default function ProjectDetail() {
               </div>
             </div>
             <div className="p-4">
-              <p className="text-sm text-slate-500 text-center">Click to view files</p>
+              <div className="flex items-center justify-center gap-4 text-sm">
+                {fileFolders.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-teal-600">
+                    <Folder className="w-4 h-4" />
+                    <span className="font-medium">{fileFolders.length}</span>
+                    <span className="text-slate-400">folders</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1.5 text-slate-600">
+                  <File className="w-4 h-4" />
+                  <span className="font-medium">{projectFiles.length}</span>
+                  <span className="text-slate-400">files</span>
+                </div>
+              </div>
             </div>
           </motion.div>
           </Link>
@@ -659,24 +711,25 @@ export default function ProjectDetail() {
 
                       </div>
 
-          {/* Activity Feed */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="lg:col-span-2"
-          >
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-indigo-50/30">
-                <h3 className="font-semibold text-slate-900 text-lg">Recent Activity</h3>
-                <p className="text-sm text-slate-500">Track all project updates and changes</p>
-              </div>
-              <div className="p-6">
-                <ProjectActivityFeed projectId={projectId} />
-              </div>
+        </div>
+
+        {/* Activity Feed - Full Width Below */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mt-6"
+        >
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-indigo-50/30">
+              <h3 className="font-semibold text-slate-900 text-lg">Recent Activity</h3>
+              <p className="text-sm text-slate-500">Track all project updates and changes</p>
             </div>
-          </motion.div>
+            <div className="p-6">
+              <ProjectActivityFeed projectId={projectId} progressUpdates={progressUpdates} />
+            </div>
           </div>
+        </motion.div>
 
       {/* Modals */}
       <ProjectModal
