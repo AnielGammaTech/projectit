@@ -442,7 +442,7 @@ export default function ProjectDetail() {
                   {project.client} →
                 </Link>
               )}
-              {project.description && <p className="text-slate-600 mb-4">{project.description}</p>}
+              {project.description && <p className="text-slate-600 mb-2">{project.description}</p>}
 
               <div className="flex flex-wrap gap-4 text-sm">
                 {project.start_date && (
@@ -452,15 +452,15 @@ export default function ProjectDetail() {
                   </div>
                 )}
                 {project.due_date && (
-                                    <div className="flex items-center gap-1.5 text-slate-600">
-                                      <Calendar className="w-4 h-4" />
-                                      <span>Due: {format(new Date(project.due_date), 'MMM d, yyyy')}</span>
-                                    </div>
-                                  )}
-                                </div>
+                  <div className="flex items-center gap-1.5 text-slate-600">
+                    <Calendar className="w-4 h-4" />
+                    <span>Due: {format(new Date(project.due_date), 'MMM d, yyyy')}</span>
+                  </div>
+                )}
+              </div>
 
-                                {/* Team Avatars */}
-              <div className="mt-4 pt-4 border-t border-slate-100">
+                {/* Team Avatars */}
+              <div className="mt-3">
                 <TeamAvatars
                   members={project.team_members || []}
                   teamMembers={teamMembers}
@@ -468,47 +468,18 @@ export default function ProjectDetail() {
                 />
               </div>
 
-              {/* Update Bar + Mini Widgets Row */}
-              <div className="mt-4 pt-4 border-t border-slate-100">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1">
-                    <ProgressNeedle 
-                      projectId={projectId} 
-                      value={project.progress || 0} 
-                      onSave={handleProgressUpdate} 
-                      currentUser={currentUser}
-                      onStatusChange={(status) => handleQuickUpdate('status', status)}
-                      halopsaTicketId={project.halopsa_ticket_id}
-                      hasUpdates={progressUpdates.length > 0}
-                      lastUpdateNote={progressUpdates[0]?.note}
-                    />
-                  </div>
-                  
-                  {/* Mini Widgets - Uniform Style */}
-                  <div className="flex items-center gap-2">
-                    <ProjectInsightsWidget projectId={projectId} tasks={tasks} parts={parts} compact />
-                    
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-50 border border-indigo-100">
-                      <ListTodo className="w-4 h-4 text-indigo-500" />
-                      <span className="text-lg font-bold text-indigo-600">{tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}</span>
-                      <span className="text-xs text-indigo-500">Tasks</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100">
-                      <Package className="w-4 h-4 text-amber-500" />
-                      <span className="text-lg font-bold text-amber-600">{parts.filter(p => p.status !== 'installed').length}</span>
-                      <span className="text-xs text-amber-500">Parts</span>
-                    </div>
-                    
-                    {project.due_date && (
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 border border-slate-200">
-                        <Calendar className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm font-bold text-slate-700">{format(new Date(project.due_date), 'MMM d')}</span>
-                        <span className="text-xs text-slate-500">Due</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+              {/* Progress Bar */}
+              <div className="mt-3 pt-3 border-t border-slate-100">
+                <ProgressNeedle 
+                  projectId={projectId} 
+                  value={project.progress || 0} 
+                  onSave={handleProgressUpdate} 
+                  currentUser={currentUser}
+                  onStatusChange={(status) => handleQuickUpdate('status', status)}
+                  halopsaTicketId={project.halopsa_ticket_id}
+                  hasUpdates={progressUpdates.length > 0}
+                  lastUpdateNote={progressUpdates[0]?.note}
+                />
               </div>
             </div>
 
