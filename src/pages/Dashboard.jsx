@@ -362,11 +362,72 @@ export default function Dashboard() {
           </motion.div>
         )}
 
+        {/* Pinned Projects - Top Section */}
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="pinned" direction="horizontal">
+            {(provided, snapshot) => (
+              <motion.div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className={cn(
+                  "mb-6 p-4 rounded-2xl border-2 border-dashed transition-all min-h-[100px]",
+                  snapshot.isDraggingOver ? "border-amber-400 bg-amber-50" : pinnedProjects.length > 0 ? "border-amber-200 bg-amber-50/50" : "border-slate-200 bg-slate-50/50"
+                )}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Pin className="w-4 h-4 text-amber-600" />
+                  <span className="text-sm font-semibold text-amber-700">Pinned Projects</span>
+                  {pinnedProjects.length === 0 && (
+                    <span className="text-xs text-slate-400 ml-2">Drag projects here to pin them</span>
+                  )}
+                </div>
+                {pinnedProjects.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {pinnedProjects.map((project, idx) => (
+                      <Draggable key={project.id} draggableId={project.id} index={idx}>
+                        {(dragProvided) => (
+                          <div
+                            ref={dragProvided.innerRef}
+                            {...dragProvided.draggableProps}
+                            style={dragProvided.draggableProps.style}
+                          >
+                            <ProjectCard
+                              project={project}
+                              tasks={getTasksForProject(project.id)}
+                              index={idx}
+                              groups={allGroups}
+                              onColorChange={handleProjectColorChange}
+                              onGroupChange={handleProjectGroupChange}
+                              onStatusChange={handleProjectStatusChange}
+                              onDueDateChange={handleProjectDueDateChange}
+                              onPinToggle={handlePinToggle}
+                              isPinned={true}
+                              dragHandleProps={dragProvided.dragHandleProps}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center py-4 text-slate-400">
+                    <span className="text-sm">No pinned projects yet</span>
+                  </div>
+                )}
+                {provided.placeholder}
+              </motion.div>
+            )}
+          </Droppable>
+        </DragDropContext>
+
         {/* Customizable Widgets */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          transition={{ delay: 0.2 }}
           className="mb-8"
         >
           <DashboardWidgets />
