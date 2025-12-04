@@ -953,6 +953,44 @@ export default function Dashboard() {
           Adminland
         </Link>
       )}
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedProjects.length} project{selectedProjects.length > 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              These projects will be moved to the trash. You can restore them later from Adminland → Deleted Projects.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} className="bg-red-600 hover:bg-red-700">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Projects
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Archive Confirmation */}
+      <AlertDialog open={showBulkArchiveConfirm} onOpenChange={setShowBulkArchiveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive {selectedProjects.length} project{selectedProjects.length > 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              These projects will be archived. You can restore them later from Adminland → Archived Projects.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkArchive} className="bg-amber-600 hover:bg-amber-700">
+              <Archive className="w-4 h-4 mr-2" />
+              Archive Projects
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
