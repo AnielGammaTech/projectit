@@ -163,6 +163,22 @@ export default function Dashboard() {
     .sort((a, b) => pinnedProjectIds.indexOf(a.id) - pinnedProjectIds.indexOf(b.id));
   const unpinnedProjects = filteredProjects.filter(p => !pinnedProjectIds.includes(p.id));
 
+  // Apply letter filter if active
+  const letterFilteredProjects = activeLetter 
+    ? unpinnedProjects.filter(p => (p.name || '')[0].toUpperCase() === activeLetter)
+    : unpinnedProjects;
+
+  // Pagination
+  const totalPages = Math.ceil(letterFilteredProjects.length / PROJECTS_PER_PAGE);
+  const paginatedProjects = letterFilteredProjects.slice(
+    (currentPage - 1) * PROJECTS_PER_PAGE,
+    currentPage * PROJECTS_PER_PAGE
+  );
+
+  // Get available letters for alphabet filter
+  const availableLetters = [...new Set(unpinnedProjects.map(p => (p.name || '?')[0].toUpperCase()))].sort();
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
   // Group projects
   const groupedProjects = filteredProjects.reduce((acc, project) => {
     const group = project.group || 'Ungrouped';
