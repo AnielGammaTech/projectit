@@ -142,6 +142,7 @@ export default function Dashboard() {
   });
 
   const getTasksForProject = (projectId) => tasks.filter(t => t.project_id === projectId);
+  const getPartsForProject = (projectId) => parts.filter(p => p.project_id === projectId);
 
   const toggleGroup = (group) => {
     setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -643,18 +644,19 @@ export default function Dashboard() {
                                     style={provided.draggableProps.style}
                                   >
                                     <ProjectCard
-                                      project={project}
-                                      tasks={getTasksForProject(project.id)}
-                                      index={idx}
-                                      groups={allGroups}
-                                      onColorChange={handleProjectColorChange}
-                                      onGroupChange={handleProjectGroupChange}
-                                      onStatusChange={handleProjectStatusChange}
-                                      onDueDateChange={handleProjectDueDateChange}
-                                      onPinToggle={handlePinToggle}
-                                      isPinned={true}
-                                      dragHandleProps={provided.dragHandleProps}
-                                    />
+                                                project={project}
+                                                tasks={getTasksForProject(project.id)}
+                                                parts={getPartsForProject(project.id)}
+                                                index={idx}
+                                                groups={allGroups}
+                                                onColorChange={handleProjectColorChange}
+                                                onGroupChange={handleProjectGroupChange}
+                                                onStatusChange={handleProjectStatusChange}
+                                                onDueDateChange={handleProjectDueDateChange}
+                                                onPinToggle={handlePinToggle}
+                                                isPinned={true}
+                                                dragHandleProps={provided.dragHandleProps}
+                                              />
                                   </div>
                                 )}
                               </Draggable>
@@ -726,6 +728,7 @@ export default function Dashboard() {
                                           <ProjectCard
                                             project={project}
                                             tasks={getTasksForProject(project.id)}
+                                            parts={getPartsForProject(project.id)}
                                             index={idx}
                                             groups={allGroups}
                                             onColorChange={handleProjectColorChange}
