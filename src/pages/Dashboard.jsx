@@ -255,21 +255,18 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Dashboard</h1>
             <p className="text-slate-500 mt-1">Welcome back{currentUser?.full_name ? `, ${currentUser.full_name.split(' ')[0]}` : ''}! Here's your project overview.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to={createPageUrl('Templates')}>
-              <Button variant="outline" size="sm">
-                <FileStack className="w-4 h-4 mr-2" />
-                Templates
-              </Button>
-            </Link>
+          <div className="flex flex-col items-end gap-1">
             <Button
               onClick={() => setShowProjectModal(true)}
               size="lg"
-              className="bg-[#0069AF] hover:bg-[#133F5C] shadow-lg shadow-[#0069AF]/20 text-base px-6 py-3 h-12"
+              className="bg-[#0F2F44] hover:bg-[#1a4a6e] shadow-lg text-base px-6 py-3 h-12"
             >
               <Plus className="w-5 h-5 mr-2" />
               New Project
             </Button>
+            <Link to={createPageUrl('Templates')} className="text-sm text-slate-500 hover:text-[#0F2F44] transition-colors">
+              or use a template →
+            </Link>
           </div>
         </motion.div>
 
@@ -467,21 +464,22 @@ export default function Dashboard() {
             {filteredProjects.length > 0 ? (
               viewMode === 'list' ? (
                 /* List View */
-                <div className="bg-[#0F2F44] rounded-2xl overflow-hidden">
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                   {/* List Header */}
-                  <div className="p-6 border-b border-[#1a4a6e]">
-                    <h2 className="text-2xl font-bold text-white text-center mb-4">All Projects</h2>
+                  <div className="p-6 border-b border-slate-100 bg-slate-50">
+                    <h2 className="text-2xl font-bold text-slate-900 text-center mb-4">All Projects</h2>
                     <div className="relative max-w-xl mx-auto mb-4">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
                         placeholder="Find a project..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="bg-[#1a4a6e] border-[#2a5a7e] text-white placeholder:text-slate-400 h-10 pr-10"
+                        className="pl-10 bg-white border-slate-200 h-10 pr-10"
                       />
                       {searchQuery && (
                         <button 
                           onClick={() => setSearchQuery('')}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -492,11 +490,9 @@ export default function Dashboard() {
                       {[
                         { key: 'alpha', label: 'A-Z' },
                         { key: 'pinned', label: 'Pinned' },
-                        { key: 'projects', label: 'Just Projects' },
-                        { key: 'teams', label: 'Just Teams' },
                         { key: 'clients', label: 'With Clients' },
-                        { key: 'all', label: 'All-access' },
-                        { key: 'archived', label: 'Archived & Trashed' },
+                        { key: 'all', label: 'All' },
+                        { key: 'archived', label: 'Archived' },
                       ].map(filter => (
                         <button
                           key={filter.key}
@@ -504,8 +500,8 @@ export default function Dashboard() {
                           className={cn(
                             "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
                             listFilter === filter.key
-                              ? "bg-[#B4E1FF] text-[#0F2F44]"
-                              : "bg-[#1a4a6e] text-slate-300 hover:bg-[#2a5a7e] hover:text-white"
+                              ? "bg-[#0F2F44] text-white"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                           )}
                         >
                           {filter.label}
@@ -514,7 +510,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   {/* Project List */}
-                  <div className="divide-y divide-[#1a4a6e]">
+                  <div className="divide-y divide-slate-100">
                     {(() => {
                       let projectsToShow = [...filteredProjects];
                       
@@ -547,21 +543,21 @@ export default function Dashboard() {
                               <Link
                                 key={project.id}
                                 to={createPageUrl('ProjectDetail') + `?id=${project.id}`}
-                                className="flex items-center gap-4 px-6 py-4 hover:bg-[#1a4a6e] transition-colors group"
+                                className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors group"
                               >
                                 {idx === 0 && (
-                                  <span className="w-6 text-slate-500 font-medium">{letter}</span>
+                                  <span className="w-6 text-slate-400 font-semibold">{letter}</span>
                                 )}
                                 {idx > 0 && <span className="w-6" />}
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <h3 className="font-semibold text-white truncate">{project.name}</h3>
+                                    <h3 className="font-semibold text-slate-900 truncate">{project.name}</h3>
                                     {project.client && (
-                                      <span className="text-[#B4E1FF] text-sm">{project.client}</span>
+                                      <span className="text-[#0F2F44]/60 text-sm">• {project.client}</span>
                                     )}
                                   </div>
                                   {project.description && (
-                                    <p className="text-sm text-slate-400 truncate">{project.description}</p>
+                                    <p className="text-sm text-slate-500 truncate">{project.description}</p>
                                   )}
                                 </div>
                                 <button
@@ -569,8 +565,8 @@ export default function Dashboard() {
                                   className={cn(
                                     "p-2 rounded-lg transition-all",
                                     pinnedProjectIds.includes(project.id)
-                                      ? "text-orange-400 hover:text-orange-300"
-                                      : "text-slate-500 hover:text-orange-400 opacity-0 group-hover:opacity-100"
+                                      ? "text-amber-500 hover:text-amber-600"
+                                      : "text-slate-300 hover:text-amber-500 opacity-0 group-hover:opacity-100"
                                   )}
                                 >
                                   <Star className={cn("w-5 h-5", pinnedProjectIds.includes(project.id) && "fill-current")} />
@@ -585,17 +581,17 @@ export default function Dashboard() {
                         <Link
                           key={project.id}
                           to={createPageUrl('ProjectDetail') + `?id=${project.id}`}
-                          className="flex items-center gap-4 px-6 py-4 hover:bg-[#1a4a6e] transition-colors group"
+                          className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors group"
                         >
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <h3 className="font-semibold text-white truncate">{project.name}</h3>
+                              <h3 className="font-semibold text-slate-900 truncate">{project.name}</h3>
                               {project.client && (
-                                <span className="text-[#B4E1FF] text-sm">{project.client}</span>
+                                <span className="text-[#0F2F44]/60 text-sm">• {project.client}</span>
                               )}
                             </div>
                             {project.description && (
-                              <p className="text-sm text-slate-400 truncate">{project.description}</p>
+                              <p className="text-sm text-slate-500 truncate">{project.description}</p>
                             )}
                           </div>
                           <button
@@ -603,8 +599,8 @@ export default function Dashboard() {
                             className={cn(
                               "p-2 rounded-lg transition-all",
                               pinnedProjectIds.includes(project.id)
-                                ? "text-orange-400 hover:text-orange-300"
-                                : "text-slate-500 hover:text-orange-400 opacity-0 group-hover:opacity-100"
+                                ? "text-amber-500 hover:text-amber-600"
+                                : "text-slate-300 hover:text-amber-500 opacity-0 group-hover:opacity-100"
                             )}
                           >
                             <Star className={cn("w-5 h-5", pinnedProjectIds.includes(project.id) && "fill-current")} />
