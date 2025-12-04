@@ -37,6 +37,7 @@ import MySchedule from './pages/MySchedule';
 import MyNotifications from './pages/MyNotifications';
 import ManagerDashboard from './pages/ManagerDashboard';
 import TechDashboard from './pages/TechDashboard';
+import ProposalAnalytics from './pages/ProposalAnalytics';
 import __Layout from './Layout.jsx';
 
 
@@ -80,6 +81,7 @@ export const PAGES = {
     "MyNotifications": MyNotifications,
     "ManagerDashboard": ManagerDashboard,
     "TechDashboard": TechDashboard,
+    "ProposalAnalytics": ProposalAnalytics,
 }
 
 export const pagesConfig = {
