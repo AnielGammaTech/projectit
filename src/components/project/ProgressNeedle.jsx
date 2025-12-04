@@ -63,6 +63,13 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   const lastUpdate = updates[0];
 
+  // Set initial health from last update
+  useEffect(() => {
+    if (lastUpdate?.health_status) {
+      setProjectHealth(lastUpdate.health_status);
+    }
+  }, [lastUpdate?.health_status]);
+
   // Push note to HaloPSA ticket
   const pushToHalo = async (noteText, progressValue) => {
     if (!halopsaTicketId) return;
@@ -92,6 +99,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
         project_id: projectId,
         progress_value: localValue,
         note: note,
+        health_status: projectHealth,
         author_email: currentUser?.email,
         author_name: currentUser?.full_name || currentUser?.email
       });
@@ -117,6 +125,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
       project_id: projectId,
       progress_value: 100,
       note: completionNote,
+      health_status: 'good',
       author_email: currentUser?.email,
       author_name: currentUser?.full_name || currentUser?.email
     });
@@ -140,6 +149,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
       project_id: projectId,
       progress_value: 100,
       note: note,
+      health_status: projectHealth,
       author_email: currentUser?.email,
       author_name: currentUser?.full_name || currentUser?.email
     });
@@ -475,23 +485,52 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                 <div className="mt-3 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50">
                   <div className="p-3 space-y-3">
                     {updates.map((update) => (
-                      <div key={update.id} className="bg-white rounded-lg p-3 border border-slate-100 overflow-hidden">
+                      <div key={update.id} className={cn(
+                        "rounded-lg p-3 border overflow-hidden",
+                        update.health_status === 'issue' ? "bg-red-50 border-red-200" :
+                        update.health_status === 'concern' ? "bg-amber-50 border-amber-200" :
+                        "bg-white border-slate-100"
+                      )}>
                         <div className="flex items-center justify-between mb-1 gap-2">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-600 flex-shrink-0">
+                            <div className={cn(
+                              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0",
+                              update.health_status === 'issue' ? "bg-red-100 text-red-600" :
+                              update.health_status === 'concern' ? "bg-amber-100 text-amber-600" :
+                              "bg-emerald-100 text-emerald-600"
+                            )}>
                               {update.author_name?.[0] || '?'}
                             </div>
                             <span className="text-xs font-medium text-slate-700 truncate">{update.author_name || 'Unknown'}</span>
+                            <span className={cn(
+                              "text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0",
+                              update.health_status === 'issue' ? "bg-red-100 text-red-700" :
+                              update.health_status === 'concern' ? "bg-amber-100 text-amber-700" :
+                              "bg-emerald-100 text-emerald-700"
+                            )}>
+                              {update.health_status === 'issue' ? 'Has Issues' :
+                               update.health_status === 'concern' ? 'Some Concerns' : 'On Track'}
+                            </span>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="text-xs font-bold text-indigo-600">{update.progress_value}%</span>
+                            <span className={cn(
+                              "text-xs font-bold",
+                              update.health_status === 'issue' ? "text-red-600" :
+                              update.health_status === 'concern' ? "text-amber-600" :
+                              "text-emerald-600"
+                            )}>{update.progress_value}%</span>
                             <span className="text-[10px] text-slate-400 whitespace-nowrap">
                               {format(new Date(update.created_date), 'MMM d, h:mm a')}
                             </span>
                           </div>
                         </div>
                         {update.note && (
-                          <p className="text-sm text-slate-600 mt-2 break-all whitespace-pre-wrap" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{update.note}</p>
+                          <p className={cn(
+                            "text-sm mt-2 break-all whitespace-pre-wrap",
+                            update.health_status === 'issue' ? "text-red-700" :
+                            update.health_status === 'concern' ? "text-amber-700" :
+                            "text-slate-600"
+                          )} style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{update.note}</p>
                         )}
                       </div>
                     ))}
