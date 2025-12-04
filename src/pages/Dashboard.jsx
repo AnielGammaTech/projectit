@@ -141,8 +141,9 @@ export default function Dashboard() {
   const approvedProposals = proposals.filter(p => p.status === 'approved');
   const approvedTotal = approvedProposals.reduce((sum, p) => sum + (p.total || 0), 0);
 
-  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived');
-  const archivedProjects = projects.filter(p => p.status === 'archived' || p.status === 'completed');
+  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
+  const archivedProjects = projects.filter(p => (p.status === 'archived' || p.status === 'completed') && p.status !== 'deleted');
+  const deletedProjects = projects.filter(p => p.status === 'deleted');
   // Only count tasks and parts from active projects
   const activeProjectIds = activeProjects.map(p => p.id);
   const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
