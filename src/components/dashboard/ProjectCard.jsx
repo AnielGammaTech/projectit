@@ -171,7 +171,7 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
       )}
 
       {/* Hover actions */}
-      <div className={cn("absolute top-2 right-2 z-10 flex gap-1 transition-opacity", selectionMode ? "opacity-0" : "opacity-0 group-hover:opacity-100")}
+      <div className={cn("absolute top-2 right-2 z-10 flex gap-1 transition-opacity", selectionMode ? "opacity-0" : "opacity-0 group-hover:opacity-100")}>
         {/* Pin button */}
         <button 
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPinToggle?.(project); }}
