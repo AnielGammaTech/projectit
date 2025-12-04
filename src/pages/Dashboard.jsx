@@ -280,6 +280,28 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
+        {/* Welcome Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6 bg-gradient-to-r from-[#0F2F44] to-[#1a5a7a] rounded-2xl p-5 text-white"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Welcome back, {currentUser?.full_name?.split(' ')[0] || 'there'}! 👋</h2>
+              <p className="text-white/70 text-sm mt-1">
+                💡 Why do programmers prefer dark mode? Because light attracts bugs!
+              </p>
+            </div>
+            <div className="text-right text-sm">
+              <p className="font-medium">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+              <p className="text-white/70">{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} • Naples, FL</p>
+              <p className="text-white/70">🌴 Sunny, 78°F</p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Urgent Tasks Alert */}
         {!dismissedAlert && myUrgentTasks.length > 0 && (
           <motion.div
@@ -375,28 +397,6 @@ export default function Dashboard() {
             </div>
           </motion.div>
         )}
-
-        {/* Welcome Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6 bg-gradient-to-r from-[#0F2F44] to-[#1a5a7a] rounded-2xl p-5 text-white"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">Welcome back, {currentUser?.full_name?.split(' ')[0] || 'there'}! 👋</h2>
-              <p className="text-white/70 text-sm mt-1">
-                💡 Why do programmers prefer dark mode? Because light attracts bugs!
-              </p>
-            </div>
-            <div className="text-right text-sm">
-              <p className="font-medium">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-              <p className="text-white/70">{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} • Naples, FL</p>
-              <p className="text-white/70">🌴 Sunny, 78°F</p>
-            </div>
-          </div>
-        </motion.div>
 
         {/* Customizable Widgets - Optional based on user settings */}
         {currentUser?.show_dashboard_widgets !== false && (
