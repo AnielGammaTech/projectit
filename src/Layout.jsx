@@ -49,7 +49,7 @@ const navItems = [
     submenu: [
       { name: 'My Assignments', icon: ListTodo, page: 'MyAssignments' },
       { name: 'My Schedule', icon: Clock, page: 'MySchedule' },
-      { name: 'My Notifications', icon: Inbox, page: 'Profile', showBadge: true },
+      { name: 'My Notifications', icon: Inbox, page: 'MyNotifications', showBadge: true },
     ]
   },
   { name: 'Activity', icon: ListTodo, page: 'AllTasks' },

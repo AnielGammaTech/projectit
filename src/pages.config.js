@@ -34,6 +34,7 @@ import ProjectTimeline from './pages/ProjectTimeline';
 import ActivityFeed from './pages/ActivityFeed';
 import MyAssignments from './pages/MyAssignments';
 import MySchedule from './pages/MySchedule';
+import MyNotifications from './pages/MyNotifications';
 import __Layout from './Layout.jsx';
 
 
@@ -74,6 +75,7 @@ export const PAGES = {
     "ActivityFeed": ActivityFeed,
     "MyAssignments": MyAssignments,
     "MySchedule": MySchedule,
+    "MyNotifications": MyNotifications,
 }
 
 export const pagesConfig = {
