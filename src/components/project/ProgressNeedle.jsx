@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, X, PartyPopper, MessageCircle } from 'lucide-react';
+import { Check, X, PartyPopper, MessageCircle, CircleDot, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -16,17 +16,30 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
+// Project health status options
+const healthOptions = [
+  { value: 'good', label: 'On Track', icon: CheckCircle2, color: 'bg-emerald-500', textColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+  { value: 'concern', label: 'Some Concerns', icon: CircleDot, color: 'bg-amber-500', textColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+  { value: 'issue', label: 'Has Issues', icon: AlertTriangle, color: 'bg-red-500', textColor: 'text-red-600', bgColor: 'bg-red-50' },
+];
 
 export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser, onStatusChange, halopsaTicketId, hasUpdates = false, lastUpdateNote = '' }) {
   const queryClient = useQueryClient();
   const [localValue, setLocalValue] = useState(value);
   const [note, setNote] = useState('');
   const [isDragging, setIsDragging] = useState(false);
-  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
-  const [showLastNote, setShowLastNote] = useState(false);
+  const [projectHealth, setProjectHealth] = useState('good');
   const trackRef = useRef(null);
 
   const { data: updates = [] } = useQuery({
