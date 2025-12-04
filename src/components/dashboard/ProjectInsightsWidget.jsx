@@ -108,8 +108,8 @@ export default function ProjectInsightsWidget({ projectId, tasks: propTasks, par
 
   // Calculate health score
   const totalActive = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length;
-  const issueCount = unassignedTasks.length + overdueTasks.length + staleTasks.length;
-  const healthScore = totalActive > 0 ? Math.max(0, 100 - Math.round((issueCount / totalActive) * 100)) : 100;
+  const totalIssues = unassignedTasks.length + overdueTasks.length + staleTasks.length;
+  const healthScore = totalActive > 0 ? Math.max(0, 100 - Math.round((totalIssues / totalActive) * 100)) : 100;
 
   const getHealthColor = (score) => {
     if (score >= 80) return 'text-emerald-500';
