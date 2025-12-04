@@ -206,7 +206,7 @@ export default function Templates() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1929]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <motion.div
@@ -214,8 +214,8 @@ export default function Templates() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <h1 className="text-4xl font-bold text-white tracking-tight mb-3">Project Templates</h1>
-          <p className="text-slate-400 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-3">Project Templates</h1>
+          <p className="text-slate-500 max-w-2xl mx-auto">
             Save yourself time by creating project templates with frequently-used tools, to-do lists, files, and more. 
             Anyone on your account who can create projects can use and edit these templates.
           </p>
@@ -224,17 +224,17 @@ export default function Templates() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex justify-center mb-8">
-            <TabsList className="bg-[#0F2F44] p-1">
+            <TabsList className="bg-slate-100 p-1">
               <TabsTrigger 
                 value="project" 
-                className="data-[state=active]:bg-[#74C7FF] data-[state=active]:text-[#0F2F44] text-white/70 px-6"
+                className="data-[state=active]:bg-[#0F2F44] data-[state=active]:text-white text-slate-600 px-6"
               >
                 <Briefcase className="w-4 h-4 mr-2" />
                 Project Templates
               </TabsTrigger>
               <TabsTrigger 
                 value="todo" 
-                className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white text-white/70 px-6"
+                className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white text-slate-600 px-6"
               >
                 <CheckSquare className="w-4 h-4 mr-2" />
                 To-Do Templates
@@ -254,7 +254,7 @@ export default function Templates() {
               <motion.p 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center text-slate-400 mt-8"
+                className="text-center text-slate-500 mt-8"
               >
                 No project templates yet. Create one to get started!
               </motion.p>
@@ -273,7 +273,7 @@ export default function Templates() {
               <motion.p 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center text-slate-400 mt-8"
+                className="text-center text-slate-500 mt-8"
               >
                 No to-do templates yet. Create one to get started!
               </motion.p>
