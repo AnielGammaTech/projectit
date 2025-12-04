@@ -86,7 +86,9 @@ export default function GlobalSearch({ isOpen, onClose }) {
     projects.filter(p => 
       p.name?.toLowerCase().includes(lowerQuery) ||
       p.client?.toLowerCase().includes(lowerQuery) ||
-      p.description?.toLowerCase().includes(lowerQuery)
+      p.description?.toLowerCase().includes(lowerQuery) ||
+      p.project_number?.toString().includes(lowerQuery) ||
+      p.halopsa_ticket_id?.includes(lowerQuery)
     ).forEach(p => searchResults.push({ type: 'project', item: p, url: createPageUrl('ProjectDetail') + `?id=${p.id}` }));
   }
 
@@ -225,7 +227,13 @@ export default function GlobalSearch({ isOpen, onClose }) {
                         {result.item.name || result.item.title || result.item.proposal_number}
                       </p>
                       <p className="text-sm text-slate-500 truncate">
-                        {result.type === 'project' && result.item.client}
+                        {result.type === 'project' && (
+                          <>
+                            {result.item.project_number && <span className="font-mono text-slate-400 mr-2">#{result.item.project_number}</span>}
+                            {result.item.client}
+                            {result.item.halopsa_ticket_id && <span className="ml-2 text-indigo-500">• Ticket #{result.item.halopsa_ticket_id}</span>}
+                          </>
+                        )}
                         {result.type === 'proposal' && result.item.customer_name}
                         {result.type === 'customer' && result.item.email}
                         {result.type === 'inventory' && (result.item.category || result.item.sku)}
