@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, X, PartyPopper } from 'lucide-react';
+import { Check, X, PartyPopper, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser, onStatusChange, halopsaTicketId }) {
+export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser, onStatusChange, halopsaTicketId, hasUpdates = false, lastUpdateNote = '' }) {
   const queryClient = useQueryClient();
   const [localValue, setLocalValue] = useState(value);
   const [note, setNote] = useState('');
@@ -26,6 +26,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
   const [isHovered, setIsHovered] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
+  const [showLastNote, setShowLastNote] = useState(false);
   const trackRef = useRef(null);
 
   const { data: updates = [] } = useQuery({
@@ -209,9 +210,9 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   return (
     <>
-      <div className="flex justify-center">
+      <div className="w-full">
         <motion.div 
-          className="bg-white rounded-xl border border-slate-200 shadow-sm max-w-lg w-full"
+          className="bg-slate-50 rounded-xl border border-slate-200 w-full"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => !isDragging && !showNoteInput && setIsHovered(false)}
           animate={{ 
@@ -222,7 +223,19 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
           <div className={cn("px-4 py-3 w-full transition-all duration-200")}>
             {/* Top row with label and percentage */}
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Progress</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Progress</span>
+                {hasUpdates && lastUpdateNote && (
+                  <button
+                    onClick={() => setShowLastNote(!showLastNote)}
+                    className="relative p-1 rounded-full hover:bg-slate-200 transition-colors"
+                    title="View last update note"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-indigo-500 rounded-full" />
+                  </button>
+                )}
+              </div>
               <motion.div 
                 className={cn(
                   "flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-bold text-white",
@@ -233,6 +246,20 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                 {localValue}%
               </motion.div>
             </div>
+
+            {/* Last Update Note Display */}
+            <AnimatePresence>
+              {showLastNote && lastUpdateNote && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-3 p-2 bg-indigo-50 rounded-lg border border-indigo-100"
+                >
+                  <p className="text-xs text-indigo-700">{lastUpdateNote}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Slider Track */}
             <div 

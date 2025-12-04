@@ -44,7 +44,7 @@ const getInitials = (name) => {
   return name.slice(0, 2).toUpperCase();
 };
 
-export default function ProjectActivityFeed({ projectId }) {
+export default function ProjectActivityFeed({ projectId, progressUpdates = [] }) {
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ['projectActivity', projectId],
     queryFn: () => base44.entities.ProjectActivity.filter({ project_id: projectId }, '-created_date', 20),
@@ -80,6 +80,21 @@ export default function ProjectActivityFeed({ projectId }) {
     );
   }
 
+  // Combine activities with progress updates
+  const allItems = [
+    ...activities.map(a => ({ ...a, itemType: 'activity' })),
+    ...progressUpdates.filter(p => p.note).map(p => ({
+      id: p.id,
+      action: 'progress_updated',
+      description: `updated progress to ${p.progress_value}%`,
+      actor_name: p.author_name,
+      actor_email: p.author_email,
+      created_date: p.created_date,
+      note: p.note,
+      itemType: 'progress'
+    }))
+  ].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 20);
+
   return (
     <div className="relative">
       {/* Timeline line */}
@@ -87,7 +102,7 @@ export default function ProjectActivityFeed({ projectId }) {
       
       <div className="space-y-1">
         <AnimatePresence>
-          {activities.map((activity, index) => {
+          {allItems.map((activity, index) => {
             const config = actionIcons[activity.action] || actionIcons.default;
             const Icon = config.icon;
 
@@ -125,6 +140,12 @@ export default function ProjectActivityFeed({ projectId }) {
                     )}
                     {activity.description}
                   </p>
+                  {/* Show note for progress updates */}
+                  {activity.note && (
+                    <div className="mt-1 p-2 bg-slate-50 rounded-lg border border-slate-100">
+                      <p className="text-xs text-slate-600 italic">"{activity.note}"</p>
+                    </div>
+                  )}
                   <div className="flex items-center gap-3 mt-1">
                     <span className="text-xs text-slate-400 font-medium">
                       {formatDistanceToNow(new Date(activity.created_date), { addSuffix: true })}
