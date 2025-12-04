@@ -224,7 +224,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
             {/* Top row with label and percentage */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Progress</span>
+                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Update Bar</span>
                 {hasUpdates && lastUpdateNote && (
                   <button
                     onClick={() => setShowLastNote(!showLastNote)}
