@@ -466,47 +466,28 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
             )}
           </div>
           
-          {/* Team Member Avatars */}
+          {/* Team Member Count */}
           {projectTeam.length > 0 && (
-            <div className="flex items-center gap-1">
-              {projectTeam.slice(0, 4).map((member, i) => (
-                <TooltipProvider key={i}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div 
-                        className={cn(
-                          "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm cursor-pointer hover:scale-110 transition-transform",
-                          ["bg-[#0069AF]", "bg-emerald-500", "bg-amber-500", "bg-rose-500", "bg-cyan-500"][i % 5]
-                        )}
-                      >
-                        {getInitials(member.name || member.email)}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p className="text-xs font-medium">{member.name || member.email}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
-              {projectTeam.length > 4 && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white shadow-sm cursor-pointer hover:scale-110 transition-transform">
-                        +{projectTeam.length - 4}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <div className="text-xs">
-                        {projectTeam.slice(4).map((m, i) => (
-                          <p key={i}>{m.name || m.email}</p>
-                        ))}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div 
+                    className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-full text-xs text-slate-600 hover:bg-slate-200 transition-colors cursor-default"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    <span>{projectTeam.length} team member{projectTeam.length > 1 ? 's' : ''}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <div className="text-xs space-y-1">
+                    {projectTeam.map((m, i) => (
+                      <p key={i} className="font-medium">{m.name || m.email}</p>
+                    ))}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </div>

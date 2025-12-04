@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Plus, X, Check } from 'lucide-react';
+import { Plus, X, Check, Users, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Popover,
@@ -42,6 +44,17 @@ export default function TeamAvatars({
 }) {
   const [open, setOpen] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState(members);
+  const [expandedGroups, setExpandedGroups] = useState({});
+
+  // Fetch user groups
+  const { data: userGroups = [] } = useQuery({
+    queryKey: ['userGroups'],
+    queryFn: () => base44.entities.UserGroup.list()
+  });
+
+  useEffect(() => {
+    setSelectedEmails(members);
+  }, [members]);
 
   const visibleMembers = members.slice(0, maxVisible);
   const extraCount = members.length - maxVisible;
@@ -52,6 +65,19 @@ export default function TeamAvatars({
         ? prev.filter(e => e !== email) 
         : [...prev, email]
     );
+  };
+
+  const handleAddGroup = (group) => {
+    if (!group.member_emails?.length) return;
+    setSelectedEmails(prev => {
+      const newEmails = [...prev];
+      group.member_emails.forEach(email => {
+        if (!newEmails.includes(email)) {
+          newEmails.push(email);
+        }
+      });
+      return newEmails;
+    });
   };
 
   const handleSave = () => {
@@ -77,12 +103,39 @@ export default function TeamAvatars({
             Set up people
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-0" align="start">
+        <PopoverContent className="w-72 p-0" align="start">
           <div className="p-3 border-b border-slate-100">
             <h4 className="font-medium text-sm">Project Members</h4>
             <p className="text-xs text-slate-500">Select who has access</p>
           </div>
-          <div className="max-h-64 overflow-y-auto p-2">
+          
+          {/* User Groups Section */}
+          {userGroups.length > 0 && (
+            <div className="p-2 border-b border-slate-100">
+              <p className="text-xs font-medium text-slate-500 px-2 mb-2">Add by Group</p>
+              <div className="space-y-1">
+                {userGroups.map((group) => (
+                  <button
+                    key={group.id}
+                    onClick={() => handleAddGroup(group)}
+                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-indigo-50 transition-colors text-left"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-indigo-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900 truncate">{group.name}</p>
+                      <p className="text-xs text-slate-500">{group.member_emails?.length || 0} members</p>
+                    </div>
+                    <Plus className="w-4 h-4 text-slate-400" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="max-h-48 overflow-y-auto p-2">
+            <p className="text-xs font-medium text-slate-500 px-2 mb-2">Individual Members</p>
             {teamMembers.length === 0 ? (
               <p className="text-sm text-slate-500 p-2 text-center">No team members yet</p>
             ) : (
