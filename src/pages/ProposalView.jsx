@@ -283,6 +283,15 @@ export default function ProposalView() {
           {/* Title */}
           <div className="p-8 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
             <h1 className="text-3xl font-bold text-slate-900">{proposal.title || 'Untitled Proposal'}</h1>
+            {proposal.status === 'changes_requested' && (
+              <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-amber-800">Changes Requested</p>
+                  <p className="text-amber-700 text-sm mt-1">{proposal.change_request_notes}</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Customer Info */}
