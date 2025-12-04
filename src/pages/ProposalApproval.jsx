@@ -32,14 +32,15 @@ export default function ProposalApproval() {
     enabled: !!token
   });
 
+  // Log view on mount using backend function
   useEffect(() => {
-    if (proposal && proposal.status === 'sent') {
-      base44.entities.Proposal.update(proposal.id, { 
-        status: 'viewed', 
-        viewed_date: new Date().toISOString() 
-      });
+    if (proposal && token) {
+      base44.functions.invoke('logProposalView', { 
+        token, 
+        action: 'viewed' 
+      }).catch(err => console.error('Failed to log view', err));
     }
-  }, [proposal]);
+  }, [proposal, token]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -95,6 +96,13 @@ export default function ProposalApproval() {
       signer_name: signerName,
       signed_date: new Date().toISOString()
     });
+
+    // Log approval activity
+    await base44.functions.invoke('logProposalView', { 
+      token, 
+      action: 'approved',
+      details: `Approved and signed by ${signerName}`
+    }).catch(err => console.error('Failed to log approval', err));
     
     setSubmitted(true);
     setSubmitting(false);
