@@ -567,8 +567,8 @@ export default function ProjectDetail() {
               </motion.div>
             </div>
 
-        {/* Cards Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Tasks Card - Clickable */}
           <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
           <motion.div
