@@ -504,7 +504,11 @@ export default function DashboardWidgets() {
   });
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    let mounted = true;
+    base44.auth.me().then(user => {
+      if (mounted) setCurrentUser(user);
+    }).catch(() => {});
+    return () => { mounted = false; };
   }, []);
 
   useEffect(() => {
