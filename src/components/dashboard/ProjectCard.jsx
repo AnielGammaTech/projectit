@@ -378,28 +378,6 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
                         </div>
                       ))}
                     </div>
-                    {projectTeam.length > 0 && (
-                      <>
-                        <div className="border-t border-slate-200 pt-2 mt-2">
-                          <p className="font-medium text-xs text-slate-500 mb-1.5">Team Members</p>
-                          <div className="flex flex-wrap gap-1">
-                            {projectTeam.map((member, i) => (
-                              <div key={i} className="flex items-center gap-1 bg-slate-100 rounded-full px-2 py-0.5">
-                                <div className="w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[8px] font-bold">
-                                  {getInitials(member.name || member.email)}
-                                </div>
-                                <span className="text-[10px] text-slate-600">{member.name || member.email.split('@')[0]}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    {projectTeam.length === 0 && (
-                      <div className="border-t border-slate-200 pt-2 mt-2">
-                        <p className="text-xs text-slate-400">No team members assigned</p>
-                      </div>
-                    )}
                   </div>
                 </TooltipContent>
               </Tooltip>
