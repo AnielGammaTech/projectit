@@ -7,194 +7,119 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
-    // Create service role client - this function is public for proposal approvals
     const base44 = createClient({ 
       appId: Deno.env.get('BASE44_APP_ID'),
       serviceRoleToken: Deno.env.get('BASE44_SERVICE_ROLE_TOKEN')
     });
 
-    // Handle GET request - serve HTML page
-    if (req.method === 'GET') {
-      const url = new URL(req.url);
-      const token = url.searchParams.get('token');
-      
+    // Handle POST requests - API calls
+    if (req.method === 'POST') {
+      const body = await req.json();
+      const { token, action = 'fetch', signerName, signatureData, details = '' } = body;
+
       if (!token) {
-        return new Response(renderErrorPage('Missing Token', 'No proposal token was provided.'), {
-          headers: { 'Content-Type': 'text/html' }
-        });
+        return Response.json({ error: 'Token required' }, { status: 400, headers: corsHeaders });
       }
 
       const proposals = await base44.entities.Proposal.filter({ approval_token: token });
       const proposal = proposals[0];
 
-      if (!proposal) {
-        return new Response(renderErrorPage('Proposal Not Found', 'This proposal link is invalid or has expired.'), {
-          headers: { 'Content-Type': 'text/html' }
-        });
-      }
-
-      // Mark as viewed if sent
-      if (proposal.status === 'sent') {
-        await base44.entities.Proposal.update(proposal.id, {
-          status: 'viewed',
-          viewed_date: new Date().toISOString()
-        });
-        await base44.entities.ProposalActivity.create({
-          proposal_id: proposal.id,
-          action: 'viewed',
-          actor_name: proposal.customer_name || 'Customer',
-          details: 'Proposal viewed by customer'
-        });
-      }
-
-      return new Response(renderProposalPage(proposal, token, req.url), {
-        headers: { 'Content-Type': 'text/html' }
-      });
-    }
-
-    // Handle POST request
-    const body = await req.json();
-    const { proposalId, token, action = 'viewed', details = '', signerName, signatureData } = body;
-
-    // Handle fetch action - return proposal data for public view
-    if (action === 'fetch' && token) {
-      const proposals = await base44.entities.Proposal.filter({ approval_token: token });
-      const proposal = proposals[0];
-      
       if (!proposal) {
         return Response.json({ error: 'Proposal not found' }, { status: 404, headers: corsHeaders });
       }
-      
-      return Response.json({ 
-        proposal: {
-          id: proposal.id,
-          proposal_number: proposal.proposal_number,
-          title: proposal.title,
-          customer_name: proposal.customer_name,
-          customer_company: proposal.customer_company,
-          customer_email: proposal.customer_email,
-          status: proposal.status,
-          items: proposal.items,
-          areas: proposal.areas,
-          subtotal: proposal.subtotal,
-          tax_total: proposal.tax_total,
-          total: proposal.total,
-          terms_conditions: proposal.terms_conditions,
-          valid_until: proposal.valid_until,
-          signature_data: proposal.signature_data,
-          signer_name: proposal.signer_name,
-          signed_date: proposal.signed_date
+
+      // Fetch action - return proposal data
+      if (action === 'fetch') {
+        // Mark as viewed if sent
+        if (proposal.status === 'sent') {
+          await base44.entities.Proposal.update(proposal.id, {
+            status: 'viewed',
+            viewed_date: new Date().toISOString()
+          });
+          await base44.entities.ProposalActivity.create({
+            proposal_id: proposal.id,
+            action: 'viewed',
+            actor_name: proposal.customer_name || 'Customer',
+            details: 'Proposal viewed by customer'
+          });
         }
-      }, { headers: corsHeaders });
+
+        return Response.json({ 
+          proposal: {
+            id: proposal.id,
+            proposal_number: proposal.proposal_number,
+            title: proposal.title,
+            customer_name: proposal.customer_name,
+            customer_company: proposal.customer_company,
+            status: proposal.status,
+            items: proposal.items,
+            total: proposal.total,
+            terms_conditions: proposal.terms_conditions,
+            valid_until: proposal.valid_until,
+            signer_name: proposal.signer_name,
+            signed_date: proposal.signed_date
+          }
+        }, { headers: corsHeaders });
+      }
+
+      const ip = req.headers.get("x-forwarded-for") || "unknown";
+
+      // Log activity
+      await base44.entities.ProposalActivity.create({
+        proposal_id: proposal.id,
+        action: action,
+        actor_name: signerName || proposal.customer_name || 'Customer',
+        actor_email: proposal.customer_email || '',
+        ip_address: ip,
+        details: details || `Proposal ${action}`
+      });
+
+      // Update status
+      if (action === 'approved') {
+        await base44.entities.Proposal.update(proposal.id, {
+          status: 'approved',
+          signature_data: signatureData || null,
+          signer_name: signerName || proposal.customer_name,
+          signed_date: new Date().toISOString()
+        });
+      } else if (action === 'rejected') {
+        await base44.entities.Proposal.update(proposal.id, { status: 'rejected' });
+      } else if (action === 'changes_requested') {
+        await base44.entities.Proposal.update(proposal.id, {
+          status: 'changes_requested',
+          change_request_notes: details
+        });
+      }
+
+      return Response.json({ success: true }, { headers: corsHeaders });
     }
 
-    let proposal;
-    if (token) {
-      const proposals = await base44.entities.Proposal.filter({ approval_token: token });
-      proposal = proposals[0];
-    } else if (proposalId) {
-      const proposals = await base44.entities.Proposal.filter({ id: proposalId });
-      proposal = proposals[0];
+    // GET request - simple redirect page
+    const url = new URL(req.url);
+    const token = url.searchParams.get('token');
+
+    if (!token) {
+      return new Response('Missing token', { status: 400 });
     }
 
-    if (!proposal) {
-      return Response.json({ error: 'Proposal not found' }, { status: 404, headers: corsHeaders });
-    }
+    // Return a minimal HTML page that loads the proposal
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Loading...</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#f8fafc;min-height:100vh}#app{max-width:700px;margin:0 auto;padding:20px}.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:16px;overflow:hidden}.header{background:#133F5C;color:#fff;padding:20px}.header h1{font-size:20px}.info{padding:16px;display:flex;justify-content:space-between;border-bottom:1px solid #eee}.info p{font-size:14px}.info .label{color:#888;font-size:12px}.items{padding:16px}.item{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eee}.item:last-child{border:none}.item-name{font-weight:500}.item-qty{color:#666;font-size:14px}.total{display:flex;justify-content:space-between;padding:16px;border-top:2px solid #eee;font-size:20px;font-weight:bold}.total span:last-child{color:#0069AF}form{padding:16px}input[type=text]{width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;margin-bottom:12px;font-size:16px}canvas{width:100%;height:100px;border:2px solid #ddd;border-radius:8px;touch-action:none}.clear{background:none;border:none;color:#666;font-size:14px;cursor:pointer;margin:8px 0}.check{display:flex;gap:8px;margin:16px 0;font-size:14px}.btn{width:100%;padding:14px;background:#0069AF;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:500;cursor:pointer}.btn:disabled{opacity:.5}.success{text-align:center;padding:40px}.success h1{color:#10b981;margin-bottom:8px}.error{text-align:center;padding:40px;color:#ef4444}.loading{text-align:center;padding:60px;color:#666}</style></head><body><div id="app"><div class="loading">Loading proposal...</div></div><script>const T='${token}',U=location.origin+'/api/functions/logProposalView';let P,C,X,D=false;async function load(){try{const r=await fetch(U,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:T,action:'fetch'})});const d=await r.json();if(d.error){show('error','Proposal not found');return}P=d.proposal;render()}catch(e){show('error','Failed to load')}}function show(t,m){document.getElementById('app').innerHTML='<div class="'+t+'"><h1>'+m+'</h1></div>'}function render(){if(P.status==='approved'){document.getElementById('app').innerHTML='<div class="card"><div class="success"><h1>✓ Approved</h1><p>Thank you for approving this proposal.</p>'+(P.signer_name?'<p style="color:#888;margin-top:8px">Signed by '+P.signer_name+'</p>':'')+'</div></div>';return}if(P.status==='rejected'){show('error','This proposal has been declined');return}let items='';(P.items||[]).forEach(i=>{items+='<div class="item"><div><div class="item-name">'+i.name+'</div><div class="item-qty">'+i.quantity+' x $'+(i.unit_price||0).toFixed(2)+'</div></div><div>$'+((i.quantity||0)*(i.unit_price||0)).toFixed(2)+'</div></div>'});document.getElementById('app').innerHTML='<div class="card"><div class="header"><p style="opacity:.7;font-size:14px">'+(P.proposal_number||'')+'</p><h1>'+(P.title||'Proposal')+'</h1></div><div class="info"><div><p class="label">Prepared For</p><p>'+(P.customer_name||'')+'</p></div><div style="text-align:right"><p class="label">Valid Until</p><p>'+(P.valid_until?new Date(P.valid_until).toLocaleDateString():'N/A')+'</p></div></div></div><div class="card"><div class="items">'+items+'</div><div class="total"><span>Total</span><span>$'+(P.total||0).toFixed(2)+'</span></div></div><div class="card"><form id="f"><input type="text" id="n" placeholder="Your full name" required><canvas id="c"></canvas><button type="button" class="clear" onclick="clr()">Clear signature</button><label class="check"><input type="checkbox" id="a" required><span>I agree and authorize work to proceed</span></label><button type="submit" class="btn" id="b">Approve Proposal</button></form></div>';C=document.getElementById('c');X=C.getContext('2d');C.width=C.offsetWidth*2;C.height=C.offsetHeight*2;X.scale(2,2);X.lineCap='round';X.strokeStyle='#333';X.lineWidth=2;C.onmousedown=C.ontouchstart=e=>{e.preventDefault();D=true;X.beginPath();let p=pos(e);X.moveTo(p.x,p.y)};C.onmousemove=C.ontouchmove=e=>{if(!D)return;e.preventDefault();let p=pos(e);X.lineTo(p.x,p.y);X.stroke()};C.onmouseup=C.onmouseleave=C.ontouchend=()=>D=false;document.getElementById('f').onsubmit=submit}function pos(e){let r=C.getBoundingClientRect();return{x:(e.touches?e.touches[0].clientX:e.clientX)-r.left,y:(e.touches?e.touches[0].clientY:e.clientY)-r.top}}function clr(){X.clearRect(0,0,C.width,C.height)}async function submit(e){e.preventDefault();let b=document.getElementById('b');b.disabled=true;b.textContent='Submitting...';try{let r=await fetch(U,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:T,action:'approved',signerName:document.getElementById('n').value,signatureData:C.toDataURL()})});let d=await r.json();if(d.success)location.reload();else{alert(d.error||'Error');b.disabled=false;b.textContent='Approve Proposal'}}catch(err){alert(err.message);b.disabled=false;b.textContent='Approve Proposal'}}load()</script></body></html>`;
 
-    // Get IP Address
-    const ip = req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown";
-
-    // Log activity
-    await base44.entities.ProposalActivity.create({
-      proposal_id: proposal.id,
-      action: action,
-      actor_name: signerName || proposal.customer_name || 'Customer',
-      actor_email: proposal.customer_email || '',
-      ip_address: ip,
-      details: details || `Proposal ${action} from ${ip}`
+    return new Response(html, { 
+      headers: { 'Content-Type': 'text/html' }
     });
 
-    // Update proposal status based on action
-    if (action === 'viewed' && proposal.status === 'sent') {
-      await base44.entities.Proposal.update(proposal.id, {
-        status: 'viewed',
-        viewed_date: new Date().toISOString()
-      });
-    } else if (action === 'approved') {
-      await base44.entities.Proposal.update(proposal.id, {
-        status: 'approved',
-        signature_data: signatureData || null,
-        signer_name: signerName || proposal.customer_name,
-        signed_date: new Date().toISOString()
-      });
-    } else if (action === 'rejected') {
-      await base44.entities.Proposal.update(proposal.id, {
-        status: 'rejected'
-      });
-    } else if (action === 'changes_requested') {
-      await base44.entities.Proposal.update(proposal.id, {
-        status: 'changes_requested',
-        change_request_notes: details
-      });
-    }
-
-    return Response.json({ 
-      success: true, 
-      proposal: { id: proposal.id, title: proposal.title, status: proposal.status } 
-    }, { headers: corsHeaders });
-
   } catch (error) {
-    // For GET requests, return HTML error page
     if (req.method === 'GET') {
-      return new Response(renderErrorPage('Error', error.message || 'An unexpected error occurred.'), {
+      return new Response('<h1>Error</h1><p>'+error.message+'</p>', { 
         headers: { 'Content-Type': 'text/html' }
       });
     }
-    // For POST requests, return JSON error
     return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
   }
 });
-
-function renderErrorPage(title, message) {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
-    <svg class="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.27 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-    </svg>
-    <h1 class="text-xl font-bold text-slate-900 mb-2">${title}</h1>
-    <p class="text-slate-500">${message}</p>
-  </div>
-</body>
-</html>`;
-}
-
-function renderProposalPage(proposal, token, baseUrl) {
-  const apiUrl = baseUrl.split('?')[0];
-  
-  if (proposal.status === 'approved') {
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Approved</title><link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"></head><body class="min-h-screen bg-gray-50 flex items-center justify-center p-4"><div class="bg-white rounded-xl shadow p-8 text-center max-w-md"><div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div><h1 class="text-2xl font-bold mb-2">Proposal Approved!</h1><p class="text-gray-500">Thank you. We'll be in touch shortly.</p>${proposal.signer_name ? `<p class="text-sm text-gray-400 mt-2">Signed by ${proposal.signer_name}</p>` : ''}</div></body></html>`;
-  }
-
-  if (proposal.status === 'rejected') {
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Declined</title><link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"></head><body class="min-h-screen bg-gray-50 flex items-center justify-center p-4"><div class="bg-white rounded-xl shadow p-8 text-center max-w-md"><h1 class="text-xl font-bold mb-2">Proposal Declined</h1><p class="text-gray-500">This proposal has been declined.</p></div></body></html>`;
-  }
-
-  const items = (proposal.items || []).slice(0, 20);
-  const itemsHtml = items.map(i => `<div class="flex justify-between py-2 border-b"><div><p class="font-medium">${(i.name||'').substring(0,50)}</p><p class="text-sm text-gray-500">${i.quantity||0} x $${(i.unit_price||0).toFixed(2)}</p></div><p class="font-semibold">$${((i.quantity||0)*(i.unit_price||0)).toFixed(2)}</p></div>`).join('');
-
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${(proposal.title||'Proposal').substring(0,30)}</title><link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"></head><body class="bg-gray-50 py-6 px-4"><div class="max-w-2xl mx-auto"><div class="bg-white rounded-xl shadow mb-4"><div class="bg-blue-900 text-white p-4 rounded-t-xl"><p class="text-sm opacity-80">${proposal.proposal_number||''}</p><h1 class="text-xl font-bold">${(proposal.title||'Proposal').substring(0,50)}</h1></div><div class="p-4 grid grid-cols-2 gap-4 text-sm"><div><p class="text-gray-400">Prepared For</p><p class="font-medium">${(proposal.customer_name||'').substring(0,30)}</p></div><div class="text-right"><p class="text-gray-400">Valid Until</p><p class="font-medium">${proposal.valid_until?new Date(proposal.valid_until).toLocaleDateString():'N/A'}</p></div></div></div><div class="bg-white rounded-xl shadow p-4 mb-4"><h2 class="font-semibold mb-3">Items</h2>${itemsHtml||'<p class="text-gray-400">No items</p>'}<div class="mt-3 pt-3 border-t flex justify-between text-xl font-bold"><span>Total</span><span class="text-blue-600">$${(proposal.total||0).toFixed(2)}</span></div></div><div class="bg-white rounded-xl shadow p-4"><h2 class="font-semibold mb-3">Approve & Sign</h2><form id="f"><input type="text" id="n" required class="w-full p-2 border rounded mb-3" placeholder="Your full name"><div class="border rounded mb-3"><canvas id="c" class="w-full h-24"></canvas></div><button type="button" onclick="clearSig()" class="text-sm text-gray-500 mb-3">Clear</button><label class="flex items-start gap-2 mb-3"><input type="checkbox" id="a" required class="mt-1"><span class="text-sm">I agree to the terms and authorize work to proceed.</span></label><button type="submit" id="b" class="w-full bg-blue-600 text-white p-3 rounded font-medium">Approve Proposal</button></form></div></div><script>const c=document.getElementById('c'),x=c.getContext('2d');let d=false;function r(){c.width=c.offsetWidth*2;c.height=c.offsetHeight*2;x.scale(2,2);x.lineCap='round';x.strokeStyle='#333';x.lineWidth=2}r();function g(e){const t=c.getBoundingClientRect();return{x:(e.touches?e.touches[0].clientX:e.clientX)-t.left,y:(e.touches?e.touches[0].clientY:e.clientY)-t.top}}c.onmousedown=c.ontouchstart=e=>{e.preventDefault();d=true;x.beginPath();const p=g(e);x.moveTo(p.x,p.y)};c.onmousemove=c.ontouchmove=e=>{if(!d)return;e.preventDefault();const p=g(e);x.lineTo(p.x,p.y);x.stroke()};c.onmouseup=c.onmouseleave=c.ontouchend=()=>d=false;function clearSig(){x.clearRect(0,0,c.width,c.height)}document.getElementById('f').onsubmit=async e=>{e.preventDefault();const b=document.getElementById('b');b.disabled=true;b.textContent='Submitting...';try{const r=await fetch('${apiUrl}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:'${token}',action:'approved',signerName:document.getElementById('n').value,signatureData:c.toDataURL()})});const j=await r.json();if(j.success)location.reload();else{alert(j.error||'Error');b.disabled=false;b.textContent='Approve Proposal'}}catch(err){alert(err.message);b.disabled=false;b.textContent='Approve Proposal'}}</script></body></html>`;
-}
