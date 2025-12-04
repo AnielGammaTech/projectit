@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings, LayoutGrid, List, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -33,6 +33,8 @@ export default function Dashboard() {
     const saved = localStorage.getItem('pinnedProjects');
     return saved ? JSON.parse(saved) : [];
   });
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
+  const [listFilter, setListFilter] = useState('all'); // 'all', 'pinned', 'projects', 'teams', 'clients', 'archived'
 
   useEffect(() => {
     base44.auth.me().then(user => {
@@ -253,21 +255,22 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Dashboard</h1>
             <p className="text-slate-500 mt-1">Welcome back{currentUser?.full_name ? `, ${currentUser.full_name.split(' ')[0]}` : ''}! Here's your project overview.</p>
           </div>
-          <div className="flex items-center gap-2">
-              <Link to={createPageUrl('Templates')}>
-                <Button variant="outline" size="sm">
-                  <FileStack className="w-4 h-4 mr-2" />
-                  Templates
-                </Button>
-              </Link>
-              <Button
-                onClick={() => setShowProjectModal(true)}
-                className="bg-[#0069AF] hover:bg-[#133F5C] shadow-lg shadow-[#0069AF]/20"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Project
+          <div className="flex items-center gap-3">
+            <Link to={createPageUrl('Templates')}>
+              <Button variant="outline" size="sm">
+                <FileStack className="w-4 h-4 mr-2" />
+                Templates
               </Button>
-            </div>
+            </Link>
+            <Button
+              onClick={() => setShowProjectModal(true)}
+              size="lg"
+              className="bg-[#0069AF] hover:bg-[#133F5C] shadow-lg shadow-[#0069AF]/20 text-base px-6 py-3 h-12"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              New Project
+            </Button>
+          </div>
         </motion.div>
 
         {/* Urgent Tasks Alert */}
@@ -427,18 +430,191 @@ export default function Dashboard() {
                   {showArchived ? 'Show Active' : `Archived (${archivedProjects.length})`}
                 </button>
               </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-48 bg-white h-9"
-                />
+              <div className="flex items-center gap-2">
+                {/* View Mode Toggle */}
+                <div className="flex items-center bg-slate-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('cards')}
+                    className={cn(
+                      "p-1.5 rounded-md transition-all",
+                      viewMode === 'cards' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+                    )}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={cn(
+                      "p-1.5 rounded-md transition-all",
+                      viewMode === 'list' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+                    )}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 w-48 bg-white h-9"
+                  />
+                </div>
               </div>
             </div>
 
             {filteredProjects.length > 0 ? (
+              viewMode === 'list' ? (
+                /* List View */
+                <div className="bg-[#0F2F44] rounded-2xl overflow-hidden">
+                  {/* List Header */}
+                  <div className="p-6 border-b border-[#1a4a6e]">
+                    <h2 className="text-2xl font-bold text-white text-center mb-4">All Projects</h2>
+                    <div className="relative max-w-xl mx-auto mb-4">
+                      <Input
+                        placeholder="Find a project..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="bg-[#1a4a6e] border-[#2a5a7e] text-white placeholder:text-slate-400 h-10 pr-10"
+                      />
+                      {searchQuery && (
+                        <button 
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    {/* Filter Pills */}
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {[
+                        { key: 'alpha', label: 'A-Z' },
+                        { key: 'pinned', label: 'Pinned' },
+                        { key: 'projects', label: 'Just Projects' },
+                        { key: 'teams', label: 'Just Teams' },
+                        { key: 'clients', label: 'With Clients' },
+                        { key: 'all', label: 'All-access' },
+                        { key: 'archived', label: 'Archived & Trashed' },
+                      ].map(filter => (
+                        <button
+                          key={filter.key}
+                          onClick={() => setListFilter(filter.key)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+                            listFilter === filter.key
+                              ? "bg-[#B4E1FF] text-[#0F2F44]"
+                              : "bg-[#1a4a6e] text-slate-300 hover:bg-[#2a5a7e] hover:text-white"
+                          )}
+                        >
+                          {filter.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Project List */}
+                  <div className="divide-y divide-[#1a4a6e]">
+                    {(() => {
+                      let projectsToShow = [...filteredProjects];
+                      
+                      // Apply filters
+                      if (listFilter === 'pinned') {
+                        projectsToShow = projectsToShow.filter(p => pinnedProjectIds.includes(p.id));
+                      } else if (listFilter === 'clients') {
+                        projectsToShow = projectsToShow.filter(p => p.client);
+                      } else if (listFilter === 'archived') {
+                        projectsToShow = archivedProjects.filter(p =>
+                          p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          p.client?.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                      } else if (listFilter === 'alpha') {
+                        projectsToShow = projectsToShow.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                      }
+
+                      // Group by first letter for alpha view
+                      if (listFilter === 'alpha') {
+                        const grouped = projectsToShow.reduce((acc, project) => {
+                          const letter = (project.name || '?')[0].toUpperCase();
+                          if (!acc[letter]) acc[letter] = [];
+                          acc[letter].push(project);
+                          return acc;
+                        }, {});
+
+                        return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([letter, projects]) => (
+                          <div key={letter}>
+                            {projects.map((project, idx) => (
+                              <Link
+                                key={project.id}
+                                to={createPageUrl('ProjectDetail') + `?id=${project.id}`}
+                                className="flex items-center gap-4 px-6 py-4 hover:bg-[#1a4a6e] transition-colors group"
+                              >
+                                {idx === 0 && (
+                                  <span className="w-6 text-slate-500 font-medium">{letter}</span>
+                                )}
+                                {idx > 0 && <span className="w-6" />}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="font-semibold text-white truncate">{project.name}</h3>
+                                    {project.client && (
+                                      <span className="text-[#B4E1FF] text-sm">{project.client}</span>
+                                    )}
+                                  </div>
+                                  {project.description && (
+                                    <p className="text-sm text-slate-400 truncate">{project.description}</p>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePinToggle(project); }}
+                                  className={cn(
+                                    "p-2 rounded-lg transition-all",
+                                    pinnedProjectIds.includes(project.id)
+                                      ? "text-orange-400 hover:text-orange-300"
+                                      : "text-slate-500 hover:text-orange-400 opacity-0 group-hover:opacity-100"
+                                  )}
+                                >
+                                  <Star className={cn("w-5 h-5", pinnedProjectIds.includes(project.id) && "fill-current")} />
+                                </button>
+                              </Link>
+                            ))}
+                          </div>
+                        ));
+                      }
+
+                      return projectsToShow.map(project => (
+                        <Link
+                          key={project.id}
+                          to={createPageUrl('ProjectDetail') + `?id=${project.id}`}
+                          className="flex items-center gap-4 px-6 py-4 hover:bg-[#1a4a6e] transition-colors group"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-white truncate">{project.name}</h3>
+                              {project.client && (
+                                <span className="text-[#B4E1FF] text-sm">{project.client}</span>
+                              )}
+                            </div>
+                            {project.description && (
+                              <p className="text-sm text-slate-400 truncate">{project.description}</p>
+                            )}
+                          </div>
+                          <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePinToggle(project); }}
+                            className={cn(
+                              "p-2 rounded-lg transition-all",
+                              pinnedProjectIds.includes(project.id)
+                                ? "text-orange-400 hover:text-orange-300"
+                                : "text-slate-500 hover:text-orange-400 opacity-0 group-hover:opacity-100"
+                            )}
+                          >
+                            <Star className={cn("w-5 h-5", pinnedProjectIds.includes(project.id) && "fill-current")} />
+                          </button>
+                        </Link>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              ) : (
               <DragDropContext onDragEnd={handleDragEnd}>
                 <div className="space-y-4">
                   {/* Pinned Projects Section */}
@@ -575,6 +751,7 @@ export default function Dashboard() {
                   </Droppable>
                 </div>
               </DragDropContext>
+              )
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}

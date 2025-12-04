@@ -130,7 +130,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 h-14 bg-[#133F5C] z-40 px-4">
+      <header className="fixed top-0 left-0 right-0 h-14 bg-[#B4E1FF] z-40 px-4">
         <div className="max-w-[1800px] mx-auto h-full flex items-center justify-between">
           {/* Left: Logo & Nav Items */}
           <div className="flex items-center gap-6">
@@ -153,7 +153,7 @@ export default function Layout({ children, currentPageName }) {
                   <Globe className="w-4 h-4 text-[#133F5C]" />
                 </div>
               )}
-              <span className="font-semibold text-white">{appName}</span>
+              <span className="font-semibold text-[#0F2F44]">{appName}</span>
             </Link>
 
             {/* Desktop Nav Items */}
@@ -173,17 +173,17 @@ export default function Layout({ children, currentPageName }) {
                         <button className={cn(
                           "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group",
                           isSubmenuActive 
-                            ? "text-[#74C7FF] bg-white/10 font-medium" 
-                            : "text-white/80 hover:text-white hover:bg-white/10"
+                            ? "text-[#0F2F44] bg-white/50 font-medium" 
+                            : "text-[#0F2F44]/80 hover:text-[#0F2F44] hover:bg-white/30"
                         )}>
                           <Icon className={cn(
                             "w-4 h-4 transition-colors",
-                            isSubmenuActive ? "text-[#74C7FF]" : "text-white/60 group-hover:text-white"
+                            isSubmenuActive ? "text-[#0F2F44]" : "text-[#0F2F44]/60 group-hover:text-[#0F2F44]"
                           )} />
                           {item.name}
                           <ChevronDown className={cn(
                             "w-3.5 h-3.5 transition-colors",
-                            isSubmenuActive ? "text-[#74C7FF]" : "text-white/60"
+                            isSubmenuActive ? "text-[#0F2F44]" : "text-[#0F2F44]/60"
                           )} />
                         </button>
                       </DropdownMenuTrigger>
@@ -223,13 +223,13 @@ export default function Layout({ children, currentPageName }) {
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group",
                       isActive 
-                        ? "text-[#74C7FF] bg-white/10 font-medium" 
-                        : "text-white/80 hover:text-white hover:bg-white/10"
+                        ? "text-[#0F2F44] bg-white/50 font-medium" 
+                        : "text-[#0F2F44]/80 hover:text-[#0F2F44] hover:bg-white/30"
                     )}
                     >
                     <Icon className={cn(
                       "w-4 h-4 transition-colors",
-                      isActive ? "text-[#74C7FF]" : "text-white/60 group-hover:text-white"
+                      isActive ? "text-[#0F2F44]" : "text-[#0F2F44]/60 group-hover:text-[#0F2F44]"
                     )} />
                     {item.name}
                   </Link>
@@ -242,22 +242,22 @@ export default function Layout({ children, currentPageName }) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowSearch(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white/70 text-sm"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/50 hover:bg-white/70 transition-colors text-[#0F2F44]/70 text-sm"
             >
               <Search className="w-4 h-4" />
               <span className="hidden md:inline">Search...</span>
-              <kbd className="hidden md:inline text-[10px] px-1.5 py-0.5 bg-white/20 rounded text-white/50 ml-2">⌘K</kbd>
+              <kbd className="hidden md:inline text-[10px] px-1.5 py-0.5 bg-[#0F2F44]/10 rounded text-[#0F2F44]/50 ml-2">⌘K</kbd>
             </button>
             <button
               onClick={() => setShowSearch(true)}
-              className="sm:hidden p-2 hover:bg-white/10 rounded-lg"
+              className="sm:hidden p-2 hover:bg-white/30 rounded-lg"
             >
-              <Search className="w-5 h-5 text-white/70" />
+              <Search className="w-5 h-5 text-[#0F2F44]/70" />
             </button>
 
             {/* Activity Bell */}
-            <Link to={createPageUrl('ActivityFeed')} className="relative p-2 hover:bg-white/10 rounded-lg">
-              <Bell className="w-5 h-5 text-white/70" />
+            <Link to={createPageUrl('ActivityFeed')} className="relative p-2 hover:bg-white/30 rounded-lg">
+              <Bell className="w-5 h-5 text-[#0F2F44]/70" />
               {hasNewActivity && (
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#74C7FF]" />
               )}
@@ -266,7 +266,7 @@ export default function Layout({ children, currentPageName }) {
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-8 h-8 rounded-full bg-[#74C7FF] flex items-center justify-center text-[#133F5C] text-sm font-medium hover:bg-[#5BB8F5] transition-all">
+                <button className="w-8 h-8 rounded-full bg-[#0F2F44] flex items-center justify-center text-white text-sm font-medium hover:bg-[#1a4a6e] transition-all">
                   {currentUser?.avatar_url ? (
                     <img src={currentUser.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
                   ) : (
