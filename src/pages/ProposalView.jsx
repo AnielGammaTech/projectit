@@ -482,6 +482,28 @@ export default function ProposalView() {
         }
         @page { margin: 0.5in; }
       `}</style>
+
+      {/* Change Request Modal */}
+      <Dialog open={showChangeRequest} onOpenChange={setShowChangeRequest}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request Changes</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-500 mb-2">Please describe the changes you would like to see in this proposal.</p>
+            <Textarea 
+              value={changeNotes} 
+              onChange={(e) => setChangeNotes(e.target.value)} 
+              placeholder="e.g., Can we remove the optional maintenance package?"
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowChangeRequest(false)}>Cancel</Button>
+            <Button onClick={handleRequestChanges} disabled={!changeNotes.trim() || processing}>Submit Request</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
