@@ -379,87 +379,55 @@ export default function ProjectDetail() {
           )}
         </div>
 
-        {/* Project Header + Sidebar Grid */}
-        <div className="grid lg:grid-cols-[1fr_300px] gap-6 mb-6">
-        {/* Project Header */}
+        {/* Project Header - Compact */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6"
+          className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-6"
         >
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-            <div className="flex-1">
-              {/* Project Number & Status Row */}
-              <div className="flex items-center gap-3 mb-2 flex-wrap">
-                {project.project_number && (
-                  <span className="px-2.5 py-1 bg-slate-800 text-white rounded-lg text-sm font-mono font-semibold">
-                    #{project.project_number}
-                  </span>
-                )}
-                {/* Inline Status Dropdown */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              {/* Status + Title Row */}
+              <div className="flex items-center gap-3 mb-1 flex-wrap">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium border-2 cursor-pointer hover:shadow-md transition-all flex items-center gap-2",
-                      project.status === 'planning' && "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100",
-                      project.status === 'on_hold' && "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200",
-                      project.status === 'completed' && "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                      "px-2 py-0.5 rounded text-xs font-medium cursor-pointer hover:opacity-80 transition-all",
+                      project.status === 'planning' && "bg-amber-100 text-amber-700",
+                      project.status === 'on_hold' && "bg-slate-100 text-slate-700",
+                      project.status === 'completed' && "bg-emerald-100 text-emerald-700"
                     )}>
-                      <span className={cn(
-                        "w-2 h-2 rounded-full",
-                        project.status === 'planning' && "bg-amber-500",
-                        project.status === 'on_hold' && "bg-slate-500",
-                        project.status === 'completed' && "bg-emerald-500"
-                      )} />
-                      {project.status === 'planning' && 'Planning'}
-                      {project.status === 'on_hold' && 'On Hold'}
-                      {project.status === 'completed' && 'Completed'}
+                      {project.status === 'planning' && 'planning'}
+                      {project.status === 'on_hold' && 'on hold'}
+                      {project.status === 'completed' && 'completed'}
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     {statusOptions.map((opt) => (
                       <DropdownMenuItem key={opt.value} onClick={() => handleQuickUpdate('status', opt.value)} className="cursor-pointer">
-                        <span className={cn(
-                          "w-2 h-2 rounded-full mr-2",
-                          opt.value === 'planning' && "bg-amber-500",
-                          opt.value === 'on_hold' && "bg-slate-500",
-                          opt.value === 'completed' && "bg-emerald-500"
-                        )} />
                         {opt.label}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
+
               {/* Project Title */}
-              <h1 className="text-2xl font-bold text-slate-900 mb-2">{project.name}</h1>
+              <h1 className="text-xl font-bold text-slate-900">{project.name}</h1>
+
               {project.client && (
                 <Link 
                   to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')} 
-                  className="text-[#0069AF] hover:underline mb-4 inline-block"
+                  className="text-[#0069AF] hover:underline text-sm"
                 >
                   {project.client} →
                 </Link>
               )}
-              {project.description && <p className="text-slate-600 mb-2">{project.description}</p>}
 
-              <div className="flex flex-wrap gap-4 text-sm">
-                {project.start_date && (
-                  <div className="flex items-center gap-1.5 text-slate-600">
-                    <Calendar className="w-4 h-4" />
-                    <span>Start: {format(new Date(project.start_date), 'MMM d, yyyy')}</span>
-                  </div>
-                )}
-                {project.due_date && (
-                  <div className="flex items-center gap-1.5 text-slate-600">
-                    <Calendar className="w-4 h-4" />
-                    <span>Due: {format(new Date(project.due_date), 'MMM d, yyyy')}</span>
-                  </div>
-                )}
-              </div>
+              {project.description && <p className="text-slate-600 text-sm mt-1">{project.description}</p>}
 
-                {/* Team Avatars */}
+              {/* Team Avatars */}
               <div className="mt-3">
                 <TeamAvatars
                   members={project.team_members || []}
@@ -467,79 +435,57 @@ export default function ProjectDetail() {
                   onUpdate={handleTeamUpdate}
                 />
               </div>
-
-              {/* Progress Bar */}
-              <div className="mt-3 pt-3 border-t border-slate-100">
-                <ProgressNeedle 
-                  projectId={projectId} 
-                  value={project.progress || 0} 
-                  onSave={handleProgressUpdate} 
-                  currentUser={currentUser}
-                  onStatusChange={(status) => handleQuickUpdate('status', status)}
-                  halopsaTicketId={project.halopsa_ticket_id}
-                  hasUpdates={progressUpdates.length > 0}
-                  lastUpdateNote={progressUpdates[0]?.note}
-                />
-              </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* Actions Row */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <HaloPSATicketLink 
                 project={project} 
                 onUpdate={refetchProject}
               />
-                              <TimeTracker 
-                                projectId={projectId} 
-                                currentUser={currentUser} 
-                                timeBudgetHours={project.time_budget_hours || 0} 
-                              />
-                              <Button variant="outline" onClick={() => setShowProjectModal(true)}>
-                                <Edit2 className="w-4 h-4 mr-2" />
-                                Edit
-                              </Button>
+              <TimeTracker 
+                projectId={projectId} 
+                currentUser={currentUser} 
+                timeBudgetHours={project.time_budget_hours || 0} 
+              />
+              <Button variant="outline" size="sm" onClick={() => setShowProjectModal(true)}>
+                <Edit2 className="w-4 h-4 mr-1" />
+                Edit
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" className="h-8 w-8">
                     <MoreHorizontal className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => window.location.href = createPageUrl('TimeReport') + `?project_id=${projectId}`}>
-                                            <Clock className="w-4 h-4 mr-2" />
-                                            Time Report
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={handleSaveAsTemplate}>
-                                            <Copy className="w-4 h-4 mr-2" />
-                                            Save as Template
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={handleArchiveProject}>
-                                            <Archive className="w-4 h-4 mr-2" />
-                                            Archive Project
-                                          </DropdownMenuItem>
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuItem onClick={handleDeleteProject} className="text-red-600">
-                                            <Trash2 className="w-4 h-4 mr-2" />
-                                            Delete Project
-                                          </DropdownMenuItem>
+                    <Clock className="w-4 h-4 mr-2" />
+                    Time Report
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSaveAsTemplate}>
+                    <Copy className="w-4 h-4 mr-2" />
+                    Save as Template
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleArchiveProject}>
+                    <Archive className="w-4 h-4 mr-2" />
+                    Archive Project
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleDeleteProject} className="text-red-600">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Project
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
         </motion.div>
 
-              {/* Sidebar - Calendar, Tasks, Parts */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="hidden lg:block"
-              >
-                <ProjectSidebar projectId={projectId} tasks={tasks} parts={parts} />
-              </motion.div>
-            </div>
-
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Cards Grid with Sidebar */}
+      <div className="grid lg:grid-cols-[1fr_280px] gap-6">
+        {/* Main Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Tasks Card - Clickable */}
           <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
           <motion.div
@@ -739,15 +685,18 @@ export default function ProjectDetail() {
           </motion.div>
           </Link>
 
-        {/* Calendar Card */}
+        </div>
+
+        {/* Sidebar - Calendar */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55 }}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="hidden lg:block"
         >
-          <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
+          <ProjectSidebar projectId={projectId} tasks={tasks} parts={parts} />
         </motion.div>
-      </div>
+        </div>
 
       {/* Activity Feed - Full Width Below */}
       <motion.div
