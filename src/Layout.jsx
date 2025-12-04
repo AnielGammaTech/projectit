@@ -133,17 +133,174 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-slate-200 z-40 flex items-center justify-between px-4">
-        <div className="flex items-center">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-2 ml-3">
+      {/* Top Navigation Bar */}
+      <header className="fixed top-0 left-0 right-0 h-14 bg-white border-b border-slate-200 z-40 px-4">
+        <div className="max-w-[1800px] mx-auto h-full flex items-center justify-between">
+          {/* Left: Logo & Nav Items */}
+          <div className="flex items-center gap-6">
+            {/* Mobile Menu Button */}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setMobileMenuOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+
+            {/* Logo */}
+            <Link to={createPageUrl('Dashboard')} className="flex items-center gap-2">
+              {appLogoUrl ? (
+                <img src={appLogoUrl} alt="" className="w-7 h-7 rounded-lg object-contain" />
+              ) : (
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
+                  <Globe className="w-4 h-4 text-white" />
+                </div>
+              )}
+              <span className="font-semibold text-slate-900">{appName}</span>
+            </Link>
+
+            {/* Desktop Nav Items */}
+            <nav className="hidden lg:flex items-center gap-1">
+              {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
+                const Icon = item.icon;
+
+                if (item.submenu) {
+                  const isSubmenuActive = item.submenu.some(sub => 
+                    (sub.page === currentPageName) ||
+                    (sub.page === 'ReportBuilder' && currentPageName === 'ReportBuilder')
+                  );
+
+                  return (
+                    <DropdownMenu key={item.name}>
+                      <DropdownMenuTrigger asChild>
+                        <button className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all",
+                          isSubmenuActive 
+                            ? "text-slate-900 font-medium" 
+                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                        )}>
+                          {item.name}
+                          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        {item.submenu.map((subItem) => {
+                          const SubIcon = subItem.icon;
+                          return (
+                            <DropdownMenuItem key={subItem.name} asChild>
+                              <Link to={createPageUrl(subItem.page) + (subItem.params || '')} className="cursor-pointer">
+                                <SubIcon className="w-4 h-4 mr-2" />
+                                {subItem.name}
+                              </Link>
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                }
+
+                const isActive = currentPageName === item.page;
+
+                return (
+                  <Link
+                    key={item.name}
+                    to={createPageUrl(item.page) + (item.params || '')}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm transition-all",
+                      isActive 
+                        ? "text-slate-900 font-medium" 
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                    )}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Right: Search & User */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowSearch(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500 text-sm"
+            >
+              <Search className="w-4 h-4" />
+              <span className="hidden md:inline">Search...</span>
+              <kbd className="hidden md:inline text-[10px] px-1.5 py-0.5 bg-white rounded border border-slate-200 text-slate-400 ml-2">⌘K</kbd>
+            </button>
+            <button
+              onClick={() => setShowSearch(true)}
+              className="sm:hidden p-2 hover:bg-slate-100 rounded-lg"
+            >
+              <Search className="w-5 h-5 text-slate-500" />
+            </button>
+
+            {/* Activity Bell */}
+            <Link to={createPageUrl('ActivityFeed')} className="relative p-2 hover:bg-slate-100 rounded-lg">
+              <Bell className="w-5 h-5 text-slate-500" />
+              {hasNewActivity && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" />
+              )}
+            </Link>
+
+            {/* User Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-white text-sm font-medium hover:bg-slate-700 transition-colors">
+                  {currentUser?.avatar_url ? (
+                    <img src={currentUser.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    getInitials(currentUser?.full_name || currentUser?.email)
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium">{currentUser?.full_name || 'User'}</p>
+                  <p className="text-xs text-slate-500">{currentUser?.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to={createPageUrl('Profile')} className="cursor-pointer">
+                    <User className="w-4 h-4 mr-2" />
+                    My Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to={createPageUrl('NotificationSettings')} className="cursor-pointer">
+                    <Bell className="w-4 h-4 mr-2" />
+                    Notifications
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Menu Drawer */}
+      <div className={cn(
+        "lg:hidden fixed top-0 left-0 h-full w-72 bg-white z-50 transition-transform duration-300 flex flex-col",
+        mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             {appLogoUrl ? (
               <img src={appLogoUrl} alt="" className="w-7 h-7 rounded-lg object-contain" />
             ) : (
@@ -153,160 +310,40 @@ export default function Layout({ children, currentPageName }) {
             )}
             <span className="font-semibold text-slate-900">{appName}</span>
           </div>
+          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+            <X className="w-5 h-5" />
+          </Button>
         </div>
-        <button
-          onClick={() => setShowSearch(true)}
-          className="p-2 hover:bg-slate-100 rounded-lg mr-2"
-        >
-          <Search className="w-5 h-5 text-slate-500" />
-        </button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="w-8 h-8 rounded-full bg-[#0069AF] flex items-center justify-center text-white text-sm font-medium">
-              {currentUser?.avatar_url ? (
-                <img src={currentUser.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
-              ) : (
-                getInitials(currentUser?.full_name || currentUser?.email)
-              )}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <div className="px-2 py-1.5">
-              <p className="text-sm font-medium">{currentUser?.full_name || 'User'}</p>
-              <p className="text-xs text-slate-500">{currentUser?.email}</p>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to={createPageUrl('ActivityFeed')} className="cursor-pointer flex items-center justify-between">
-                <div className="flex items-center">
-                  <Activity className="w-4 h-4 mr-2" />
-                  Activity Feed
-                </div>
-                {hasNewActivity && (
-                  <span className="w-2 h-2 rounded-full bg-red-500" />
-                )}
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to={createPageUrl('NotificationSettings')} className="cursor-pointer">
-                <Bell className="w-4 h-4 mr-2" />
-                My Notifications
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to={createPageUrl('Profile')} className="cursor-pointer">
-                <User className="w-4 h-4 mr-2" />
-                My Profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={cn(
-        "fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-50 transition-transform duration-300 lg:translate-x-0 flex flex-col",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
-        <div className="p-4 border-b border-slate-100">
-          <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {appLogoUrl ? (
-                  <img src={appLogoUrl} alt="" className="w-8 h-8 rounded-lg object-contain" />
-                ) : (
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
-                    <Globe className="w-4 h-4 text-white" />
-                  </div>
-                )}
-                <span className="font-semibold text-slate-900">{appName}</span>
-              </div>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="lg:hidden text-slate-600 hover:bg-slate-100"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Search Button in Sidebar */}
-        <div className="px-3 py-3">
-          <button
-            onClick={() => setShowSearch(true)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500"
-          >
-            <Search className="w-4 h-4" />
-            <span className="text-sm">Search...</span>
-            <kbd className="ml-auto text-[10px] px-1.5 py-0.5 bg-white rounded border border-slate-200 text-slate-400">⌘K</kbd>
-          </button>
-        </div>
-
-        <nav className="px-3 flex-1 overflow-y-auto">
+        <nav className="flex-1 overflow-y-auto p-3">
           {navItems.filter(item => !item.adminOnly || isAdmin).map((item) => {
             const Icon = item.icon;
 
-            // Handle submenu items
             if (item.submenu) {
               const isExpanded = expandedMenus[item.name];
-              const isSubmenuActive = item.submenu.some(sub => 
-                (sub.page === currentPageName) ||
-                (sub.page === 'ReportBuilder' && currentPageName === 'ReportBuilder')
-              );
-
               return (
                 <div key={item.name}>
                   <button
                     onClick={() => setExpandedMenus(prev => ({ ...prev, [item.name]: !prev[item.name] }))}
-                    className={cn(
-                      "w-full flex items-center justify-between px-3 py-2 rounded-lg mb-0.5 transition-all text-sm",
-                      isSubmenuActive 
-                        ? "bg-slate-100 text-slate-900 font-medium" 
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    )}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 text-sm"
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className={cn("w-4 h-4", isSubmenuActive && "text-slate-900")} />
+                      <Icon className="w-4 h-4" />
                       {item.name}
                     </div>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform text-slate-400", isExpanded && "rotate-180")} />
+                    <ChevronDown className={cn("w-4 h-4 transition-transform", isExpanded && "rotate-180")} />
                   </button>
                   {isExpanded && (
-                    <div className="ml-7 mb-1 space-y-0.5">
+                    <div className="ml-7 space-y-0.5">
                       {item.submenu.map((subItem) => {
                         const SubIcon = subItem.icon;
-                        const subTypeParam = subItem.params ? new URLSearchParams(subItem.params).get('type') : null;
-                        const currentType = new URLSearchParams(window.location.search).get('type');
-                        const isSubActive = (subItem.page === currentPageName && subTypeParam === currentType) ||
-                          (subItem.page === 'ReportBuilder' && currentPageName === 'ReportBuilder') ||
-                          (subItem.page === currentPageName && !subItem.params && !currentType);
                         return (
                           <Link
                             key={subItem.name}
                             to={createPageUrl(subItem.page) + (subItem.params || '')}
-                            onClick={() => setSidebarOpen(false)}
-                            className={cn(
-                              "flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-all",
-                              isSubActive 
-                                ? "bg-slate-100 text-slate-900 font-medium" 
-                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                            )}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                           >
-                            <SubIcon className={cn("w-4 h-4", isSubActive && "text-slate-700")} />
+                            <SubIcon className="w-4 h-4" />
                             {subItem.name}
                           </Link>
                         );
@@ -317,70 +354,23 @@ export default function Layout({ children, currentPageName }) {
               );
             }
 
-            const isActive = currentPageName === item.page || 
-              (item.params && window.location.search === item.params);
-
             return (
               <Link
                 key={item.name}
                 to={createPageUrl(item.page) + (item.params || '')}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-all text-sm",
-                  isActive 
-                    ? "bg-slate-100 text-slate-900 font-medium" 
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                )}
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 text-sm"
               >
-                <Icon className={cn("w-4 h-4", isActive && "text-slate-900")} />
+                <Icon className="w-4 h-4" />
                 {item.name}
               </Link>
             );
           })}
         </nav>
-
-        {/* User Profile at Bottom */}
-        <div className="mt-auto p-3 border-t border-slate-100">
-          <div className="space-y-0.5">
-            <Link
-              to={createPageUrl('ActivityFeed')}
-              className="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-sm"
-            >
-              <div className="flex items-center gap-3">
-                <Activity className="w-4 h-4" />
-                Activity Feed
-              </div>
-              {hasNewActivity && (
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              )}
-            </Link>
-            <Link
-              to={createPageUrl('NotificationSettings')}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-sm"
-            >
-              <Bell className="w-4 h-4" />
-              My Notifications
-            </Link>
-            <Link
-              to={createPageUrl('Profile')}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-sm"
-            >
-              <User className="w-4 h-4" />
-              My Profile
-            </Link>
-            <button
-              onClick={() => base44.auth.logout()}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-sm"
-            >
-              <LogOut className="w-4 h-4" />
-              Log Out
-            </button>
-          </div>
-        </div>
-      </aside>
+      </div>
 
       {/* Main Content */}
-      <main className="lg:pl-64 pt-16 lg:pt-0">
+      <main className="pt-14">
         {children}
       </main>
 
@@ -388,4 +378,4 @@ export default function Layout({ children, currentPageName }) {
       <GlobalSearch isOpen={showSearch} onClose={() => setShowSearch(false)} />
     </div>
   );
-}
+  }
