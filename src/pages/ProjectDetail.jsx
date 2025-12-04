@@ -517,9 +517,9 @@ export default function ProjectDetail() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-red-600">
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Project
+                    Move to Trash
                   </DropdownMenuItem>
-                </DropdownMenuContent>
+                  </DropdownMenuContent>
                 </DropdownMenu>
                 </div>
 
