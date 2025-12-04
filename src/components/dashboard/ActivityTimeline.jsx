@@ -72,7 +72,8 @@ export default function ActivityTimeline({ proposals = [], projects = [] }) {
     }
   });
 
-  projects.forEach(p => {
+  // Only show activity for active projects (not archived)
+  projects.filter(p => p.status !== 'archived').forEach(p => {
     events.push({
       id: `${p.id}-created`,
       type: 'project_created',
