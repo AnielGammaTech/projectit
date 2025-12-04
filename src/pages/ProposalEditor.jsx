@@ -61,6 +61,7 @@ export default function ProposalEditor() {
   // Markup settings
   const [markupType, setMarkupType] = useState('percentage');
   const [markupValue, setMarkupValue] = useState(20);
+  const [selectedSalesperson, setSelectedSalesperson] = useState(null);
 
   const [formData, setFormData] = useState({
     proposal_number: '',
@@ -88,7 +89,12 @@ export default function ProposalEditor() {
   const [customerSearch, setCustomerSearch] = useState('');
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    base44.auth.me().then(user => {
+      setCurrentUser(user);
+      if (!selectedSalesperson) {
+        setSelectedSalesperson({ name: user?.full_name, email: user?.email });
+      }
+    }).catch(() => {});
   }, []);
 
   const { data: proposal, isLoading } = useQuery({
@@ -119,6 +125,11 @@ export default function ProposalEditor() {
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
     queryFn: () => base44.entities.Project.list('-created_date')
+  });
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => base44.entities.TeamMember.list()
   });
 
   const { data: allProposals = [] } = useQuery({
@@ -369,8 +380,8 @@ export default function ProposalEditor() {
       subtotal: totals.subtotal,
       tax_total: totals.taxAmount,
       total: totals.total,
-      created_by_email: currentUser?.email,
-      created_by_name: currentUser?.full_name
+      created_by_email: selectedSalesperson?.email || currentUser?.email,
+      created_by_name: selectedSalesperson?.name || currentUser?.full_name
     };
 
     if (proposalId) {
@@ -637,7 +648,37 @@ export default function ProposalEditor() {
             >
               <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-500">Salesperson</span>
-                <span className="font-semibold text-slate-900">{currentUser?.full_name || 'Not assigned'}</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="font-semibold text-slate-900 hover:text-[#0069AF] flex items-center gap-1 transition-colors">
+                      {selectedSalesperson?.name || currentUser?.full_name || 'Not assigned'}
+                      <ChevronDown className="w-4 h-4 text-slate-400" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    {currentUser && (
+                      <DropdownMenuItem onClick={() => setSelectedSalesperson({ name: currentUser.full_name, email: currentUser.email })}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-[#0069AF] flex items-center justify-center text-white text-xs font-medium">
+                            {currentUser.full_name?.charAt(0)}
+                          </div>
+                          <span>{currentUser.full_name}</span>
+                          <span className="text-xs text-slate-400">(Me)</span>
+                        </div>
+                      </DropdownMenuItem>
+                    )}
+                    {teamMembers.filter(m => m.email !== currentUser?.email).map(member => (
+                      <DropdownMenuItem key={member.id} onClick={() => setSelectedSalesperson({ name: member.name, email: member.email })}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-xs font-medium">
+                            {member.name?.charAt(0)}
+                          </div>
+                          <span>{member.name}</span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </motion.div>
 
