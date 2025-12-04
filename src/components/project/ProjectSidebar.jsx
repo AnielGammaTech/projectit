@@ -72,7 +72,7 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [] }) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Mini Calendar */}
       <div className="bg-white rounded-xl border border-slate-200 p-4">
         <div className="flex items-center gap-2 mb-3">
@@ -186,59 +186,7 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [] }) {
         )}
       </div>
 
-      {/* Pending Parts */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Package className="w-4 h-4 text-amber-500" />
-            <h3 className="font-semibold text-slate-900 text-sm">Parts Status</h3>
-          </div>
-          <Link 
-            to={createPageUrl('ProjectParts') + `?id=${projectId}`}
-            className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
-          >
-            View all <ChevronRight className="w-3 h-3" />
-          </Link>
-        </div>
-        
-        {pendingParts.length > 0 ? (
-          <div className="space-y-2">
-            {pendingParts.map(part => {
-              const deliveryInfo = getDueDateLabel(part.est_delivery_date);
-              return (
-                <div 
-                  key={part.id}
-                  className="p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900 line-clamp-1">{part.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge className={cn("text-[10px] px-1.5 py-0", partStatusColors[part.status])}>
-                          {part.status?.replace('_', ' ')}
-                        </Badge>
-                        {deliveryInfo && (
-                          <span className={cn("text-[10px]", deliveryInfo.className)}>
-                            {deliveryInfo.label}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {part.quantity > 1 && (
-                      <span className="text-xs text-slate-400">×{part.quantity}</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-4">
-            <Package className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-            <p className="text-xs text-slate-500">No pending parts</p>
-          </div>
-        )}
-      </div>
+
     </div>
   );
 }
