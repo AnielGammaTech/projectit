@@ -269,90 +269,70 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
           <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
         </div>
 
-        <div className="flex items-center gap-2 mb-2">
-          {/* Progress Ring - Smaller */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="relative w-8 h-8 flex-shrink-0 cursor-help" onClick={(e) => e.stopPropagation()}>
-                  <svg className="w-8 h-8 -rotate-90" viewBox="0 0 36 36">
-                    <circle
-                      className="text-slate-100"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                      cx="18"
-                      cy="18"
-                      r="14"
-                    />
-                    <circle
-                      className={getHealthColor()}
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      strokeLinecap="round"
-                      fill="none"
-                      cx="18"
-                      cy="18"
-                      r="14"
-                      strokeDasharray={`${progress * 0.88} 100`}
-                    />
-                  </svg>
-                  <span className={cn(
-                    "absolute inset-0 flex items-center justify-center text-[9px] font-bold",
-                    healthStatus === 'issue' ? "text-red-600" :
-                    healthStatus === 'concern' ? "text-amber-600" : "text-emerald-600"
-                  )}>
-                    {Math.round(progress)}%
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs p-3">
-                <div className="space-y-2">
-                  <p className="font-semibold text-sm">Last Update</p>
-                  {lastUpdate ? (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <div className={cn(
-                          "px-2 py-0.5 rounded text-[10px] font-medium",
-                          healthStatus === 'issue' ? "bg-red-100 text-red-700" :
-                          healthStatus === 'concern' ? "bg-amber-100 text-amber-700" :
-                          "bg-emerald-100 text-emerald-700"
-                        )}>
-                          {healthStatus === 'issue' ? 'Has Issues' : healthStatus === 'concern' ? 'Some Concerns' : 'On Track'}
-                        </div>
-                        <span className="text-[10px] text-slate-400">
-                          {format(new Date(lastUpdate.created_date), 'MMM d, h:mm a')}
-                        </span>
-                      </div>
-                      {lastUpdate.note && (
-                        <div className="flex items-start gap-1.5 text-xs text-slate-600 bg-slate-50 rounded-lg p-2">
-                          <MessageCircle className="w-3 h-3 text-slate-400 mt-0.5 flex-shrink-0" />
-                          <span className="line-clamp-3">{lastUpdate.note}</span>
-                        </div>
-                      )}
-                      <p className="text-[10px] text-slate-400">by {lastUpdate.author_name || 'Unknown'}</p>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-400">No updates yet</p>
-                  )}
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
-              {project.name}
-            </h3>
-            {project.client && (
-              <p className="text-xs text-slate-500 line-clamp-1">{project.client}</p>
-            )}
-          </div>
+        <div className="mb-2">
+          <h3 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+            {project.name}
+          </h3>
+          {project.client && (
+            <p className="text-xs text-slate-500 line-clamp-1">{project.client}</p>
+          )}
         </div>
         
         {/* AI Short Description */}
         {project.description && (
           <p className="text-xs text-slate-500 line-clamp-2 mb-2">{project.description}</p>
         )}
+
+        {/* Progress Bar - Simple */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2 cursor-help" onClick={(e) => e.stopPropagation()}>
+                <div 
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    healthStatus === 'issue' ? "bg-red-500" :
+                    healthStatus === 'concern' ? "bg-amber-500" : "bg-emerald-500"
+                  )}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs p-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-sm">Progress</p>
+                  <span className="text-sm font-bold">{Math.round(progress)}%</span>
+                </div>
+                {lastUpdate ? (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "px-2 py-0.5 rounded text-[10px] font-medium",
+                        healthStatus === 'issue' ? "bg-red-100 text-red-700" :
+                        healthStatus === 'concern' ? "bg-amber-100 text-amber-700" :
+                        "bg-emerald-100 text-emerald-700"
+                      )}>
+                        {healthStatus === 'issue' ? 'Has Issues' : healthStatus === 'concern' ? 'Some Concerns' : 'On Track'}
+                      </div>
+                      <span className="text-[10px] text-slate-400">
+                        {format(new Date(lastUpdate.created_date), 'MMM d')}
+                      </span>
+                    </div>
+                    {lastUpdate.note && (
+                      <div className="flex items-start gap-1.5 text-xs text-slate-600 bg-slate-50 rounded-lg p-2">
+                        <MessageCircle className="w-3 h-3 text-slate-400 mt-0.5 flex-shrink-0" />
+                        <span className="line-clamp-3">{lastUpdate.note}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400">No updates yet</p>
+                )}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         {/* Quick Stats Widgets */}
         <div className="mb-2 flex items-center gap-1.5 flex-wrap">
