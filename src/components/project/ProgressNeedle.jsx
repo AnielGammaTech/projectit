@@ -236,58 +236,44 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
   return (
     <>
       <div className="w-full">
-        <motion.div 
-          className="bg-slate-50 rounded-xl border border-slate-200 w-full cursor-pointer hover:border-slate-300 transition-colors"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+        <div 
+          className="bg-white rounded-xl border border-slate-200 w-full cursor-pointer hover:border-indigo-300 hover:shadow-sm transition-all group"
           onClick={() => setShowUpdateModal(true)}
-          animate={{ 
-            boxShadow: isActive ? '0 4px 20px rgba(0,0,0,0.08)' : '0 1px 2px rgba(0,0,0,0.04)'
-          }}
-          transition={{ duration: 0.2 }}
         >
-          <div className={cn("px-4 py-3 w-full transition-all duration-200")}>
-            {/* Top row with label and percentage */}
-            <div className="flex items-center justify-between mb-2">
+          <div className="px-4 py-3 w-full">
+            {/* Top row with label, note indicator, and percentage */}
+            <div className="flex items-center justify-between mb-2.5">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Update Bar</span>
+                <span className="text-xs font-semibold text-slate-500">Progress</span>
                 {hasUpdates && lastUpdateNote && (
-                  <div className="relative">
-                    <MessageCircle className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-indigo-500 rounded-full" />
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 rounded-full">
+                    <MessageCircle className="w-3 h-3 text-indigo-500" />
+                    <span className="text-[10px] text-indigo-600 font-medium max-w-[120px] truncate">{lastUpdateNote}</span>
                   </div>
                 )}
               </div>
-              <motion.div 
-                className={cn(
-                  "flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-bold text-white",
-                  color.bg
-                )}
-              >
+              <div className={cn(
+                "px-2.5 py-1 rounded-lg text-sm font-bold text-white",
+                color.bg
+              )}>
                 {localValue}%
-              </motion.div>
+              </div>
             </div>
 
-            {/* Static Progress Display */}
-            <div className="relative h-6 flex items-center">
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            {/* Progress Bar - Clean Style */}
+            <div className="relative h-3 flex items-center">
+              <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
                 <div 
-                  className={cn("h-full rounded-full", color.bg)}
+                  className={cn("h-full rounded-full transition-all duration-300", color.bg)}
                   style={{ width: `${localValue}%` }}
                 />
               </div>
-              <div 
-                className="absolute top-1/2 -translate-y-1/2"
-                style={{ left: `${localValue}%` }}
-              >
-                <div 
-                  className={cn("w-4 h-4 -ml-2 rounded-md shadow-sm border-2 border-white", color.bg)}
-                  style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}
-                />
-              </div>
             </div>
+            
+            {/* Click hint */}
+            <p className="text-[10px] text-slate-400 mt-2 group-hover:text-indigo-500 transition-colors">Click to update progress</p>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Update Modal */}

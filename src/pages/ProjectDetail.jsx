@@ -387,31 +387,50 @@ export default function ProjectDetail() {
         >
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3 flex-wrap">
+              {/* Project Number & Status Row */}
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                {project.project_number && (
+                  <span className="px-2.5 py-1 bg-slate-800 text-white rounded-lg text-sm font-mono font-semibold">
+                    #{project.project_number}
+                  </span>
+                )}
                 {/* Inline Status Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80 transition-all", statusColors[project.status])}>
-                      {project.status?.replace('_', ' ')}
-                    </Badge>
+                    <button className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm font-medium border-2 cursor-pointer hover:shadow-md transition-all flex items-center gap-2",
+                      project.status === 'planning' && "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100",
+                      project.status === 'on_hold' && "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200",
+                      project.status === 'completed' && "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                    )}>
+                      <span className={cn(
+                        "w-2 h-2 rounded-full",
+                        project.status === 'planning' && "bg-amber-500",
+                        project.status === 'on_hold' && "bg-slate-500",
+                        project.status === 'completed' && "bg-emerald-500"
+                      )} />
+                      {project.status === 'planning' && 'Planning'}
+                      {project.status === 'on_hold' && 'On Hold'}
+                      {project.status === 'completed' && 'Completed'}
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     {statusOptions.map((opt) => (
-                      <DropdownMenuItem key={opt.value} onClick={() => handleQuickUpdate('status', opt.value)}>
-                        <Badge className={cn("mr-2", statusColors[opt.value])}>{opt.label}</Badge>
+                      <DropdownMenuItem key={opt.value} onClick={() => handleQuickUpdate('status', opt.value)} className="cursor-pointer">
+                        <span className={cn(
+                          "w-2 h-2 rounded-full mr-2",
+                          opt.value === 'planning' && "bg-amber-500",
+                          opt.value === 'on_hold' && "bg-slate-500",
+                          opt.value === 'completed' && "bg-emerald-500"
+                        )} />
+                        {opt.label}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-slate-900">{project.name}</h1>
-                {project.project_number && (
-                  <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-sm font-mono">
-                    #{project.project_number}
-                  </span>
-                )}
-              </div>
+              {/* Project Title */}
+              <h1 className="text-2xl font-bold text-slate-900 mb-2">{project.name}</h1>
               {project.client && (
                 <Link 
                   to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')} 
