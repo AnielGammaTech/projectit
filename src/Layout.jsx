@@ -218,28 +218,25 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-[#0F2F44] to-[#133F5C] z-50 transition-transform duration-300 lg:translate-x-0 flex flex-col",
+        "fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-50 transition-transform duration-300 lg:translate-x-0 flex flex-col",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-6">
+        <div className="p-4 border-b border-slate-100">
           <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {appLogoUrl ? (
-                  <img src={appLogoUrl} alt="" className="w-10 h-10 rounded-xl object-contain bg-white/10 p-1" />
+                  <img src={appLogoUrl} alt="" className="w-8 h-8 rounded-lg object-contain" />
                 ) : (
-                  <div className="w-10 h-10 rounded-xl bg-[#74C7FF]/20 flex items-center justify-center">
-                    <Wrench className="w-5 h-5 text-[#74C7FF]" />
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
+                    <Globe className="w-4 h-4 text-white" />
                   </div>
                 )}
-                <div>
-                  <h1 className="font-bold text-white">{appName}</h1>
-                  <p className="text-xs text-[#74C7FF]/70">Management Tool</p>
-                </div>
+                <span className="font-semibold text-slate-900">{appName}</span>
               </div>
             <Button 
               variant="ghost" 
               size="icon"
-              className="lg:hidden text-white hover:bg-white/10"
+              className="lg:hidden text-slate-600 hover:bg-slate-100"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="w-5 h-5" />
@@ -248,14 +245,14 @@ export default function Layout({ children, currentPageName }) {
         </div>
 
         {/* Search Button in Sidebar */}
-        <div className="px-3 mb-4">
+        <div className="px-3 py-3">
           <button
             onClick={() => setShowSearch(true)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white/70"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500"
           >
             <Search className="w-4 h-4" />
             <span className="text-sm">Search...</span>
-            <kbd className="ml-auto text-[10px] px-1.5 py-0.5 bg-white/10 rounded text-white/50">⌘K</kbd>
+            <kbd className="ml-auto text-[10px] px-1.5 py-0.5 bg-white rounded border border-slate-200 text-slate-400">⌘K</kbd>
           </button>
         </div>
 
@@ -276,20 +273,20 @@ export default function Layout({ children, currentPageName }) {
                   <button
                     onClick={() => setExpandedMenus(prev => ({ ...prev, [item.name]: !prev[item.name] }))}
                     className={cn(
-                      "w-full flex items-center justify-between px-4 py-2.5 rounded-xl mb-1 transition-all",
+                      "w-full flex items-center justify-between px-3 py-2 rounded-lg mb-0.5 transition-all text-sm",
                       isSubmenuActive 
-                        ? "bg-[#74C7FF]/20 text-white font-medium" 
-                        : "text-white/70 hover:bg-white/10 hover:text-white"
+                        ? "bg-slate-100 text-slate-900 font-medium" 
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className={cn("w-5 h-5", isSubmenuActive && "text-[#74C7FF]")} />
+                      <Icon className={cn("w-4 h-4", isSubmenuActive && "text-slate-900")} />
                       {item.name}
                     </div>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform", isExpanded && "rotate-180")} />
+                    <ChevronDown className={cn("w-4 h-4 transition-transform text-slate-400", isExpanded && "rotate-180")} />
                   </button>
                   {isExpanded && (
-                    <div className="ml-8 mb-1 space-y-0.5">
+                    <div className="ml-7 mb-1 space-y-0.5">
                       {item.submenu.map((subItem) => {
                         const SubIcon = subItem.icon;
                         const subTypeParam = subItem.params ? new URLSearchParams(subItem.params).get('type') : null;
@@ -303,13 +300,13 @@ export default function Layout({ children, currentPageName }) {
                             to={createPageUrl(subItem.page) + (subItem.params || '')}
                             onClick={() => setSidebarOpen(false)}
                             className={cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
+                              "flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-all",
                               isSubActive 
-                                ? "bg-[#74C7FF]/20 text-white font-medium" 
-                                : "text-white/60 hover:bg-white/10 hover:text-white"
+                                ? "bg-slate-100 text-slate-900 font-medium" 
+                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                             )}
                           >
-                            <SubIcon className={cn("w-4 h-4", isSubActive && "text-[#74C7FF]")} />
+                            <SubIcon className={cn("w-4 h-4", isSubActive && "text-slate-700")} />
                             {subItem.name}
                           </Link>
                         );
@@ -329,13 +326,13 @@ export default function Layout({ children, currentPageName }) {
                 to={createPageUrl(item.page) + (item.params || '')}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition-all",
+                  "flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-all text-sm",
                   isActive 
-                    ? "bg-[#74C7FF]/20 text-white font-medium" 
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                    ? "bg-slate-100 text-slate-900 font-medium" 
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
-                <Icon className={cn("w-5 h-5", isActive && "text-[#74C7FF]")} />
+                <Icon className={cn("w-4 h-4", isActive && "text-slate-900")} />
                 {item.name}
               </Link>
             );
@@ -343,37 +340,37 @@ export default function Layout({ children, currentPageName }) {
         </nav>
 
         {/* User Profile at Bottom */}
-        <div className="mt-auto p-3 border-t border-white/10">
+        <div className="mt-auto p-3 border-t border-slate-100">
           <div className="space-y-0.5">
             <Link
               to={createPageUrl('ActivityFeed')}
-              className="flex items-center justify-between px-3 py-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
+              className="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-sm"
             >
               <div className="flex items-center gap-3">
                 <Activity className="w-4 h-4" />
                 Activity Feed
               </div>
               {hasNewActivity && (
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
               )}
             </Link>
             <Link
               to={createPageUrl('NotificationSettings')}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-sm"
             >
               <Bell className="w-4 h-4" />
               My Notifications
             </Link>
             <Link
               to={createPageUrl('Profile')}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-sm"
             >
               <User className="w-4 h-4" />
               My Profile
             </Link>
             <button
               onClick={() => base44.auth.logout()}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-sm"
             >
               <LogOut className="w-4 h-4" />
               Log Out
