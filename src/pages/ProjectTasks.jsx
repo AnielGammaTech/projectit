@@ -35,6 +35,7 @@ import { cn } from '@/lib/utils';
 import TaskModal from '@/components/modals/TaskModal';
 import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import GroupModal from '@/components/modals/GroupModal';
+import TaskGroupCard from '@/components/project/TaskGroupCard';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -112,6 +113,7 @@ export default function ProjectTasks() {
   const [selectedTasks, setSelectedTasks] = useState(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [bulkDatePickerOpen, setBulkDatePickerOpen] = useState(false);
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'cards'
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -688,7 +690,7 @@ export default function ProjectTasks() {
         )}
 
         {/* Filters */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-4 mb-4 flex-wrap">
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
@@ -712,6 +714,27 @@ export default function ProjectTasks() {
               </button>
             ))}
           </div>
+          {/* View Mode Toggle */}
+          <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
+            <button
+              onClick={() => setViewMode('list')}
+              className={cn(
+                "text-xs font-medium py-1.5 px-3 rounded-md transition-all",
+                viewMode === 'list' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              List
+            </button>
+            <button
+              onClick={() => setViewMode('cards')}
+              className={cn(
+                "text-xs font-medium py-1.5 px-3 rounded-md transition-all",
+                viewMode === 'cards' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              Cards
+            </button>
+          </div>
           <Button 
             variant={selectionMode ? "default" : "outline"} 
             size="sm" 
@@ -723,7 +746,38 @@ export default function ProjectTasks() {
           </Button>
         </div>
 
-        {/* Task Groups with Drag and Drop */}
+        {/* Card View */}
+        {viewMode === 'cards' && (
+          <div className="overflow-x-auto pb-4">
+            <div className="flex gap-4 min-w-max">
+              {taskGroups.map((group) => {
+                const groupTasks = getTasksForGroup(group.id);
+                return (
+                  <TaskGroupCard
+                    key={group.id}
+                    group={group}
+                    tasks={groupTasks}
+                    onEditGroup={(g) => { setEditingGroup(g); setShowGroupModal(true); }}
+                    onDeleteGroup={(g) => setDeleteConfirm({ open: true, type: 'group', item: g })}
+                    onTaskClick={(task) => setSelectedTask(task)}
+                    onTaskStatusChange={handleStatusChange}
+                  />
+                );
+              })}
+              {ungroupedTasks.length > 0 && (
+                <TaskGroupCard
+                  group={{ name: 'Ungrouped', color: 'slate' }}
+                  tasks={ungroupedTasks}
+                  onTaskClick={(task) => setSelectedTask(task)}
+                  onTaskStatusChange={handleStatusChange}
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* List View - Task Groups with Drag and Drop */}
+        {viewMode === 'list' && (
         <DragDropContext onDragEnd={handleDragEnd}>
         <div className="space-y-4">
           {taskGroups.map((group) => {
@@ -984,6 +1038,7 @@ export default function ProjectTasks() {
           )}
         </div>
         </DragDropContext>
+        )}
       </div>
 
       {/* Modals */}

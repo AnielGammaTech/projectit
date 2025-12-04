@@ -64,6 +64,7 @@ import ProjectActivityFeed from '@/components/project/ProjectActivityFeed';
 import UpcomingDueDates from '@/components/project/UpcomingDueDates';
 import TimeTracker from '@/components/project/TimeTracker';
 import HaloPSATicketLink from '@/components/project/HaloPSATicketLink';
+import ProjectInsightsWidget from '@/components/dashboard/ProjectInsightsWidget';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
 import { cn } from '@/lib/utils';
 
@@ -708,6 +709,15 @@ export default function ProjectDetail() {
                       >
                         <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
                       </motion.div>
+
+          {/* AI Insights Widget */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <ProjectInsightsWidget projectId={projectId} />
+          </motion.div>
 
                       </div>
 
