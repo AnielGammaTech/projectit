@@ -633,6 +633,17 @@ export default function Dashboard() {
         onSave={handleCreateProject}
         prefillData={prefillData}
       />
-    </div>
-  );
-}
+
+      {/* Adminland Corner Link (Admin Only) */}
+      {isAdmin && (
+        <Link 
+          to={createPageUrl('Adminland')}
+          className="fixed bottom-6 right-6 z-30 flex items-center gap-2 px-4 py-2.5 bg-[#133F5C] hover:bg-[#0F2F44] text-white rounded-lg shadow-lg transition-all"
+        >
+          <Settings className="w-4 h-4" />
+          Adminland
+        </Link>
+      )}
+      </div>
+      );
+      }
