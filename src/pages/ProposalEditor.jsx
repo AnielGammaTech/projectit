@@ -352,8 +352,8 @@ export default function ProposalEditor() {
     return { subtotal, totalCost, taxAmount, total: subtotal + taxAmount };
   };
 
-  const handleSave = async () => {
-    setSaving(true);
+  const handleSave = async (silent = false) => {
+    if (!silent) setSaving(true);
     const totals = calculateTotals();
     const allItems = formData.areas.flatMap(area => area.items || []);
     
@@ -372,11 +372,13 @@ export default function ProposalEditor() {
     } else {
       const approvalToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
       const newProposal = await base44.entities.Proposal.create({ ...data, approval_token: approvalToken });
-      window.location.href = createPageUrl('ProposalEditor') + `?id=${newProposal.id}`;
+      if (!silent) window.location.href = createPageUrl('ProposalEditor') + `?id=${newProposal.id}`;
     }
     
-    queryClient.invalidateQueries({ queryKey: ['proposals'] });
-    setSaving(false);
+    if (!silent) {
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+      setSaving(false);
+    }
   };
 
   const totals = calculateTotals();
