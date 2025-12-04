@@ -9,7 +9,7 @@ import {
   Users, UserPlus, Settings, Shield, Edit2, Trash2, 
   Plus, MoreHorizontal, Mail, Phone, Package, ArrowLeft,
   Building2, Tags, FolderKanban, GitMerge, DollarSign,
-  RefreshCw, Loader2, ChevronDown, ChevronRight
+  RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar
 } from 'lucide-react';
 import {
   Dialog,
@@ -56,6 +56,7 @@ const groupColors = {
 const adminMenuItems = [
   { id: 'people', label: 'People & Teams', icon: Users, description: 'Manage team members, groups, and admin access' },
   { id: 'roles', label: 'Roles & Permissions', icon: Shield, description: 'Custom roles and granular access control', page: 'RolesPermissions' },
+  { id: 'trash', label: 'Archived Projects', icon: Trash2, description: 'View and restore archived projects' },
   { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automate actions based on triggers', page: 'Workflows' },
   { id: 'templates', label: 'Email & Notification Templates', icon: Mail, description: 'Customize email templates with HTML and variables' },
   { id: 'company', label: 'Company Settings', icon: Building2, description: 'Branding, proposal defaults, and company info' },
@@ -79,6 +80,8 @@ export default function Adminland() {
         return <IntegrationsSection queryClient={queryClient} />;
       case 'templates':
         return <EmailTemplatesSection queryClient={queryClient} />;
+      case 'trash':
+        return <ArchivedProjectsSection queryClient={queryClient} />;
       default:
         return null;
     }
@@ -1411,6 +1414,127 @@ function EmailTemplatesSection({ queryClient }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Archived Projects Section
+function ArchivedProjectsSection({ queryClient }) {
+  const { data: archivedProjects = [], refetch } = useQuery({
+    queryKey: ['archivedProjects'],
+    queryFn: async () => {
+      const projects = await base44.entities.Project.list('-archived_date');
+      return projects.filter(p => p.status === 'archived' || p.status === 'completed');
+    }
+  });
+
+  const handleRestore = async (project) => {
+    await base44.entities.Project.update(project.id, {
+      status: 'planning',
+      archive_reason: '',
+      archive_type: '',
+      archived_date: ''
+    });
+    refetch();
+    queryClient.invalidateQueries({ queryKey: ['projects'] });
+  };
+
+  const handlePermanentDelete = async (project) => {
+    if (confirm(`Are you sure you want to permanently delete "${project.name}"? This action cannot be undone.`)) {
+      // Delete related entities
+      const tasks = await base44.entities.Task.filter({ project_id: project.id });
+      const parts = await base44.entities.Part.filter({ project_id: project.id });
+      const notes = await base44.entities.ProjectNote.filter({ project_id: project.id });
+      
+      for (const task of tasks) await base44.entities.Task.delete(task.id);
+      for (const part of parts) await base44.entities.Part.delete(part.id);
+      for (const note of notes) await base44.entities.ProjectNote.delete(note.id);
+      
+      await base44.entities.Project.delete(project.id);
+      refetch();
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Unknown';
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 rounded-lg bg-amber-100">
+            <Archive className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Archived Projects</h2>
+            <p className="text-sm text-slate-500">{archivedProjects.length} archived project{archivedProjects.length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+      </div>
+
+      {archivedProjects.length === 0 ? (
+        <div className="p-12 text-center">
+          <Archive className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">No archived projects</h3>
+          <p className="text-slate-500">Archived projects will appear here</p>
+        </div>
+      ) : (
+        <div className="divide-y">
+          {archivedProjects.map((project) => (
+            <div key={project.id} className="p-4 hover:bg-slate-50 transition-colors">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    {project.project_number && (
+                      <span className="px-2 py-0.5 bg-slate-800 text-white rounded text-xs font-mono">
+                        #{project.project_number}
+                      </span>
+                    )}
+                    <h3 className="font-semibold text-slate-900">{project.name}</h3>
+                  </div>
+                  {project.client && (
+                    <p className="text-sm text-slate-500 mb-1">{project.client}</p>
+                  )}
+                  <div className="flex items-center gap-4 text-xs text-slate-400 mt-2">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>Archived {formatDate(project.archived_date)}</span>
+                    </div>
+                    {project.archive_type && (
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {project.archive_type.replace('_', ' ')}
+                      </Badge>
+                    )}
+                  </div>
+                  {project.archive_reason && (
+                    <p className="text-sm text-slate-500 mt-2 italic">"{project.archive_reason}"</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 ml-4">
+                  <Button
+                    onClick={() => handleRestore(project)}
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-1" />
+                    Restore
+                  </Button>
+                  <Button
+                    onClick={() => handlePermanentDelete(project)}
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
