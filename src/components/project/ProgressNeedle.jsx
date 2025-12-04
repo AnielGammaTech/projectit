@@ -159,9 +159,9 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
 
   const getColor = () => {
-    if (localValue < 30) return { bg: 'bg-slate-400', hex: '#94a3b8' };
-    if (localValue < 60) return { bg: 'bg-blue-500', hex: '#3b82f6' };
-    if (localValue < 90) return { bg: 'bg-indigo-500', hex: '#6366f1' };
+    // Color based on project health status
+    if (projectHealth === 'issue') return { bg: 'bg-red-500', hex: '#ef4444' };
+    if (projectHealth === 'concern') return { bg: 'bg-amber-500', hex: '#f59e0b' };
     return { bg: 'bg-emerald-500', hex: '#10b981' };
   };
 

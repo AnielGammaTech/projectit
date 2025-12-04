@@ -706,7 +706,17 @@ export default function ProjectDetail() {
           </motion.div>
           </Link>
 
-        </div>
+          {/* AI Project Assistant Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+          >
+            <ProjectInsightsWidget projectId={projectId} tasks={tasks} parts={parts} />
+          </motion.div>
+
+          </div>
 
         {/* Sidebar - Calendar */}
         <motion.div
