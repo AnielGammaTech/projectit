@@ -426,15 +426,15 @@ export default function Dashboard() {
           <StatsCard
             title="Parts Tracking"
             value={pendingParts.length}
-            subtitle={parts.filter(p => p.status === 'ready_to_install').length > 0 ? `${parts.filter(p => p.status === 'ready_to_install').length} ready` : null}
+            subtitle={activeParts.filter(p => p.status === 'ready_to_install').length > 0 ? `${activeParts.filter(p => p.status === 'ready_to_install').length} ready` : null}
             icon={Box}
             iconColor="bg-amber-500"
             href={createPageUrl('AllTasks') + '?tab=parts'}
           />
           <StatsCard
                             title="All Tasks"
-                            value={tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}
-                            subtitle={tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length > 0 ? `${tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length} overdue` : null}
+                            value={activeTasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}
+                            subtitle={activeTasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length > 0 ? `${activeTasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length} overdue` : null}
                             icon={ClipboardList}
                             iconColor="bg-[#0069AF]"
                             href={createPageUrl('AllTasks')}
