@@ -44,6 +44,7 @@ export default function ProposalEditor() {
   
   const [currentUser, setCurrentUser] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState(null);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showCustomItemModal, setShowCustomItemModal] = useState(false);
   const [showAISearchModal, setShowAISearchModal] = useState(false);
