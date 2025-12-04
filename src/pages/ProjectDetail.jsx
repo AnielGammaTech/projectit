@@ -543,7 +543,7 @@ export default function ProjectDetail() {
       {/* Cards Grid with Sidebar */}
       <div className="grid lg:grid-cols-[1fr_280px] gap-6">
         {/* Main Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-min">
           {/* Tasks Card - Clickable */}
           <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
           <motion.div
