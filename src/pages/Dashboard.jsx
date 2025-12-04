@@ -61,6 +61,16 @@ export default function Dashboard() {
   const [activeLetter, setActiveLetter] = useState(null);
   const PROJECTS_PER_PAGE = 25;
 
+  // Dashboard Views
+  const [currentView, setCurrentView] = useState(null);
+  const [viewName, setViewName] = useState('');
+  const [showSaveViewModal, setShowSaveViewModal] = useState(false);
+
+  const { data: dashboardViews = [], refetch: refetchViews } = useQuery({
+    queryKey: ['dashboardViews'],
+    queryFn: () => base44.entities.DashboardView.filter({ user_id: currentUser?.id })
+  });
+
   useEffect(() => {
     let mounted = true;
     base44.auth.me().then(user => {
