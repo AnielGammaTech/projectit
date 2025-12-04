@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase, Loader2 } from 'lucide-react';
+import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase, Loader2, Search, Building2, Users, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import {
@@ -44,7 +45,26 @@ export default function Templates() {
   const [newTemplateType, setNewTemplateType] = useState('project');
   const [createFromTemplate, setCreateFromTemplate] = useState(null);
   const [projectName, setProjectName] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState([]);
   const [creating, setCreating] = useState(false);
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => base44.entities.Customer.list('name')
+  });
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => base44.entities.TeamMember.list('name')
+  });
+
+  const filteredCustomers = customers.filter(c => 
+    c.is_company && 
+    (c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+     c.email?.toLowerCase().includes(customerSearch.toLowerCase()))
+  ).slice(0, 5);
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
@@ -75,7 +95,16 @@ export default function Templates() {
 
   const handleOpenCreateModal = (template) => {
     setCreateFromTemplate(template);
-    setProjectName(`New Project from ${template.name}`);
+    setProjectName('');
+    setSelectedCustomer(null);
+    setCustomerSearch('');
+    setSelectedTeamMembers([]);
+  };
+
+  const toggleTeamMember = (email) => {
+    setSelectedTeamMembers(prev => 
+      prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
+    );
   };
 
   const handleCreateProject = async () => {
@@ -90,7 +119,10 @@ export default function Templates() {
     const newProject = await base44.entities.Project.create({
       name: projectName.trim(),
       status: 'planning',
-      project_number: nextNumber
+      project_number: nextNumber,
+      customer_id: selectedCustomer?.id || '',
+      client: selectedCustomer?.name || '',
+      team_members: selectedTeamMembers
     });
     
     if (createFromTemplate.default_tasks?.length) {
@@ -337,22 +369,95 @@ export default function Templates() {
 
       {/* Create Project from Template Modal */}
       <Dialog open={!!createFromTemplate} onOpenChange={(open) => !open && setCreateFromTemplate(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Create Project from Template</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="projectName">Project Name</Label>
-            <Input
-              id="projectName"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              placeholder="Enter project name..."
-              className="mt-2"
-              autoFocus
-            />
+          <div className="py-4 space-y-4">
+            {/* Project Name */}
+            <div>
+              <Label htmlFor="projectName">Project Name *</Label>
+              <Input
+                id="projectName"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                placeholder="Enter project name..."
+                className="mt-1"
+                autoFocus
+              />
+            </div>
+
+            {/* Customer Selection */}
+            <div>
+              <Label>Customer</Label>
+              {selectedCustomer ? (
+                <div className="mt-1 flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-slate-500" />
+                    <span className="font-medium">{selectedCustomer.name}</span>
+                  </div>
+                  <button onClick={() => setSelectedCustomer(null)} className="text-slate-400 hover:text-slate-600">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      value={customerSearch}
+                      onChange={(e) => setCustomerSearch(e.target.value)}
+                      placeholder="Search customers..."
+                      className="pl-9"
+                    />
+                  </div>
+                  {customerSearch && filteredCustomers.length > 0 && (
+                    <div className="mt-1 border rounded-lg max-h-32 overflow-y-auto">
+                      {filteredCustomers.map(customer => (
+                        <button
+                          key={customer.id}
+                          onClick={() => { setSelectedCustomer(customer); setCustomerSearch(''); }}
+                          className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2"
+                        >
+                          <Building2 className="w-4 h-4 text-slate-400" />
+                          <span>{customer.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Team Members */}
+            <div>
+              <Label>Team Members</Label>
+              <div className="mt-1 border rounded-lg max-h-32 overflow-y-auto">
+                {teamMembers.length > 0 ? (
+                  teamMembers.map(member => (
+                    <label
+                      key={member.id}
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 cursor-pointer"
+                    >
+                      <Checkbox
+                        checked={selectedTeamMembers.includes(member.email)}
+                        onCheckedChange={() => toggleTeamMember(member.email)}
+                      />
+                      <span className="text-sm">{member.name}</span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="px-3 py-2 text-sm text-slate-500">No team members available</p>
+                )}
+              </div>
+              {selectedTeamMembers.length > 0 && (
+                <p className="text-xs text-slate-500 mt-1">{selectedTeamMembers.length} selected</p>
+              )}
+            </div>
+
+            {/* Template Info */}
             {createFromTemplate && (
-              <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+              <div className="p-3 bg-slate-50 rounded-lg">
                 <p className="text-sm text-slate-600 mb-2">This template includes:</p>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1 text-sm text-slate-700">
