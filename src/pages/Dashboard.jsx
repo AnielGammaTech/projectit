@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -269,26 +269,6 @@ export default function Dashboard() {
               </Button>
             </div>
           </motion.div>
-
-          {/* Adminland Corner Link (Admin Only) */}
-          {isAdmin && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="fixed bottom-6 right-6 z-30"
-            >
-              <Link to={createPageUrl('Adminland')}>
-                <Button 
-                  variant="outline" 
-                  className="bg-[#133F5C] hover:bg-[#0F2F44] text-white border-[#133F5C] shadow-lg gap-2"
-                >
-                  <Settings className="w-4 h-4" />
-                  Adminland
-                </Button>
-              </Link>
-            </motion.div>
-          )}
-        </motion.div>
 
         {/* Urgent Tasks Alert */}
         {!dismissedAlert && myUrgentTasks.length > 0 && (
