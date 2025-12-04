@@ -624,6 +624,6 @@ export default function Dashboard() {
           Adminland
         </Link>
       )}
-      </div>
-      );
-      }
+    </div>
+  );
+}
