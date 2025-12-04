@@ -472,26 +472,26 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               </button>
               
               {showHistory && updates.length > 0 && (
-                <ScrollArea className="mt-3 h-48 rounded-xl border border-slate-200 bg-slate-50">
+                <ScrollArea className="mt-3 max-h-48 rounded-xl border border-slate-200 bg-slate-50">
                   <div className="p-3 space-y-3">
                     {updates.map((update, idx) => (
                       <div key={update.id} className="bg-white rounded-lg p-3 border border-slate-100">
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-600">
+                            <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-600 flex-shrink-0">
                               {update.author_name?.[0] || '?'}
                             </div>
-                            <span className="text-xs font-medium text-slate-700">{update.author_name || 'Unknown'}</span>
+                            <span className="text-xs font-medium text-slate-700 truncate">{update.author_name || 'Unknown'}</span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-shrink-0">
                             <span className="text-xs font-bold text-indigo-600">{update.progress_value}%</span>
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
                               {format(new Date(update.created_date), 'MMM d, h:mm a')}
                             </span>
                           </div>
                         </div>
                         {update.note && (
-                          <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap">{update.note}</p>
+                          <p className="text-sm text-slate-600 mt-1 break-words overflow-hidden">{update.note}</p>
                         )}
                       </div>
                     ))}
