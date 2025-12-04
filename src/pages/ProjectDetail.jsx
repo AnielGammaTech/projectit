@@ -744,7 +744,7 @@ export default function ProjectDetail() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-fit"
           >
             <ProjectInsightsWidget projectId={projectId} tasks={tasks} parts={parts} />
           </motion.div>
