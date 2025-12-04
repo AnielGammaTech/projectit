@@ -632,6 +632,55 @@ export default function Dashboard() {
               </motion.div>
             )}
 
+            {/* Alphabet Quick Filter - shows when more than 25 projects */}
+            {unpinnedProjects.length > 25 && viewMode === 'cards' && !showArchived && (
+              <div className="mb-4 flex items-center gap-2">
+                <span className="text-xs text-slate-500 mr-2">Jump to:</span>
+                <div className="flex items-center gap-0.5 bg-white rounded-xl border border-slate-200 p-1.5">
+                  <button
+                    onClick={() => { setActiveLetter(null); setCurrentPage(1); }}
+                    className={cn(
+                      "px-2 py-1 rounded-lg text-xs font-medium transition-all",
+                      !activeLetter ? "bg-[#0069AF] text-white" : "text-slate-500 hover:bg-slate-100"
+                    )}
+                  >
+                    All
+                  </button>
+                  {alphabet.map(letter => {
+                    const hasProjects = availableLetters.includes(letter);
+                    const count = unpinnedProjects.filter(p => (p.name || '')[0].toUpperCase() === letter).length;
+                    return (
+                      <button
+                        key={letter}
+                        onClick={() => { if (hasProjects) { setActiveLetter(letter === activeLetter ? null : letter); setCurrentPage(1); }}}
+                        disabled={!hasProjects}
+                        className={cn(
+                          "w-7 h-7 rounded-lg text-xs font-medium transition-all relative group",
+                          activeLetter === letter 
+                            ? "bg-[#0069AF] text-white scale-110 shadow-lg z-10" 
+                            : hasProjects 
+                              ? "text-slate-700 hover:bg-slate-100 hover:scale-125 hover:shadow-lg hover:z-10" 
+                              : "text-slate-300 cursor-not-allowed"
+                        )}
+                      >
+                        {letter}
+                        {hasProjects && (
+                          <span className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            {count} project{count > 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {activeLetter && (
+                  <span className="text-sm text-slate-600">
+                    Showing {letterFilteredProjects.length} project{letterFilteredProjects.length !== 1 ? 's' : ''} starting with "{activeLetter}"
+                  </span>
+                )}
+              </div>
+            )}
+
             {filteredProjects.length > 0 ? (
               viewMode === 'list' ? (
                 /* List View */
