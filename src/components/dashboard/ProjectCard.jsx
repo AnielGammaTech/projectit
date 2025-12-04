@@ -186,6 +186,11 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
+            {project.project_number && (
+              <span className="px-2 py-0.5 bg-slate-800 text-white rounded text-[10px] font-mono font-bold">
+                #{project.project_number}
+              </span>
+            )}
             <DropdownMenu open={statusOpen} onOpenChange={setStatusOpen}>
               <DropdownMenuTrigger asChild>
                 <Badge 
@@ -249,16 +254,9 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
-                {project.name}
-              </h3>
-              {project.project_number && (
-                <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                  #{project.project_number}
-                </span>
-              )}
-            </div>
+            <h3 className="text-base font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+              {project.name}
+            </h3>
             {project.client && (
               <p className="text-sm text-slate-500 line-clamp-1">{project.client}</p>
             )}
