@@ -495,6 +495,7 @@ export default function Dashboard() {
             </div>
 
             {filteredProjects.length > 0 ? (
+              <DragDropContext onDragEnd={handleDragEnd}>
                 <div className="space-y-4">
 
                   {/* Unpinned Projects */}
