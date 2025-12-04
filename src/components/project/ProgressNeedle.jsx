@@ -92,7 +92,8 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
       if (!pendingSave) {
         queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
         setNote('');
-        setShowNoteInput(false);
+        setShowUpdateModal(false);
+        setProjectHealth('good');
       }
     }
   });
