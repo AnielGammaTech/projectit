@@ -893,6 +893,7 @@ export default function Dashboard() {
                                 >
                                   <Star className={cn("w-5 h-5", pinnedProjectIds.includes(project.id) && "fill-current")} />
                                 </button>
+                                )}
                               </Link>
                             ))}
                           </div>
