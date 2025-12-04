@@ -66,6 +66,7 @@ import TimeTracker from '@/components/project/TimeTracker';
 import HaloPSATicketLink from '@/components/project/HaloPSATicketLink';
 import ProjectInsightsWidget from '@/components/dashboard/ProjectInsightsWidget';
 import ProjectSidebar from '@/components/project/ProjectSidebar';
+import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
 import { cn } from '@/lib/utils';
 
@@ -360,24 +361,16 @@ export default function ProjectDetail() {
         </div>
       </div>
     );
-  }
+    }
 
-  const completedTasks = tasks.filter(t => t.status === 'completed').length;
-  const taskProgress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    const taskProgress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
 
-  return (
+    return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Link with Logo */}
-        <div className="flex items-center justify-between mb-6">
-          <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-slate-600 hover:text-slate-900 transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Link>
-          {appLogoUrl && (
-            <img src={appLogoUrl} alt="" className="w-8 h-8 rounded-lg object-contain" />
-          )}
-        </div>
+      <ProjectNavHeader project={project} currentPage="ProjectDetail" />
+
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         {/* Project Header - Compact */}
         <motion.div
