@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Sparkles, Users, AlertTriangle, Clock, MessageCircle } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Sparkles, Users, AlertTriangle, Clock, MessageCircle, CheckSquare, Square } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -68,7 +68,7 @@ const statusOptions = [
   { value: 'completed', label: 'Completed' }
 ];
 
-export default function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, onPinToggle, groups = [], isPinned = false, dragHandleProps = {}, teamMembers = [] }) {
+export default function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, onPinToggle, groups = [], isPinned = false, dragHandleProps = {}, teamMembers = [], selectionMode = false, isSelected = false, onSelectionToggle }) {
   const navigate = useNavigate();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -156,8 +156,22 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
       whileHover={{ y: -4 }}
       className="group relative"
     >
+      {/* Selection checkbox */}
+      {selectionMode && (
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSelectionToggle?.(project.id); }}
+          className="absolute top-2 left-2 z-10 p-1.5 rounded-lg bg-white/90 backdrop-blur shadow-sm transition-all"
+        >
+          {isSelected ? (
+            <CheckSquare className="w-4 h-4 text-[#0069AF]" />
+          ) : (
+            <Square className="w-4 h-4 text-slate-400" />
+          )}
+        </button>
+      )}
+
       {/* Hover actions */}
-      <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className={cn("absolute top-2 right-2 z-10 flex gap-1 transition-opacity", selectionMode ? "opacity-0" : "opacity-0 group-hover:opacity-100")}
         {/* Pin button */}
         <button 
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPinToggle?.(project); }}
@@ -228,11 +242,18 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
 
       <div 
         {...dragHandleProps}
-        onClick={() => navigate(createPageUrl('ProjectDetail') + `?id=${project.id}`)}
+        onClick={() => {
+          if (selectionMode) {
+            onSelectionToggle?.(project.id);
+          } else {
+            navigate(createPageUrl('ProjectDetail') + `?id=${project.id}`);
+          }
+        }}
         className={cn(
           "bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 border-l-4 cursor-pointer",
           colorClass,
-          isPinned && "ring-2 ring-amber-200 bg-amber-50/30"
+          isPinned && "ring-2 ring-amber-200 bg-amber-50/30",
+          isSelected && "ring-2 ring-[#0069AF] bg-[#0069AF]/5"
         )}
       >
         <div className="flex items-start justify-between mb-2">
