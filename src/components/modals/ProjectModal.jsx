@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CalendarIcon, Upload, Loader2, FileText, Users } from 'lucide-react';
+import { CalendarIcon, Upload, Loader2, FileText, Users, Search, Building2, User, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [uploading, setUploading] = useState(false);
   const [extractedParts, setExtractedParts] = useState([]);
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
   const { data: userGroups = [] } = useQuery({
     queryKey: ['userGroups'],
@@ -177,23 +179,105 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-                          <div>
+                          <div className="relative">
                             <Label htmlFor="client">Client</Label>
-                            <Select value={formData.client || formData.customer_id} onValueChange={(v) => {
-                              const customer = customers.find(c => c.id === v);
-                              setFormData(prev => ({ ...prev, client: customer?.name || '', customer_id: v }));
-                            }}>
-                              <SelectTrigger className="mt-1.5">
-                                <SelectValue placeholder="Select customer..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {customers.map(c => (
-                                  <SelectItem key={c.id} value={c.id}>
-                                    {c.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="relative mt-1.5">
+                              <div 
+                                className={cn(
+                                  "flex items-center gap-2 w-full h-10 px-3 rounded-md border bg-white cursor-pointer transition-all",
+                                  showCustomerDropdown ? "border-indigo-500 ring-2 ring-indigo-100" : "border-slate-200 hover:border-slate-300"
+                                )}
+                                onClick={() => setShowCustomerDropdown(!showCustomerDropdown)}
+                              >
+                                {formData.customer_id ? (
+                                  <>
+                                    <Building2 className="w-4 h-4 text-indigo-500" />
+                                    <span className="flex-1 text-sm truncate">{formData.client}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Search className="w-4 h-4 text-slate-400" />
+                                    <span className="flex-1 text-sm text-slate-400">Select customer...</span>
+                                  </>
+                                )}
+                              </div>
+                              
+                              {showCustomerDropdown && (
+                                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white rounded-lg border border-slate-200 shadow-lg max-h-64 overflow-hidden">
+                                  <div className="p-2 border-b border-slate-100">
+                                    <div className="relative">
+                                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                      <Input
+                                        value={customerSearch}
+                                        onChange={(e) => setCustomerSearch(e.target.value)}
+                                        placeholder="Search customers..."
+                                        className="pl-8 h-9 text-sm"
+                                        autoFocus
+                                        onClick={(e) => e.stopPropagation()}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="max-h-48 overflow-y-auto p-1">
+                                    {customers
+                                      .filter(c => 
+                                        c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                                        c.company?.toLowerCase().includes(customerSearch.toLowerCase())
+                                      )
+                                      .map(customer => (
+                                        <button
+                                          key={customer.id}
+                                          type="button"
+                                          onClick={() => {
+                                            setFormData(prev => ({ ...prev, client: customer.name || '', customer_id: customer.id }));
+                                            setShowCustomerDropdown(false);
+                                            setCustomerSearch('');
+                                          }}
+                                          className={cn(
+                                            "w-full flex items-center gap-3 p-2.5 rounded-md text-left transition-all",
+                                            formData.customer_id === customer.id 
+                                              ? "bg-indigo-50 text-indigo-700" 
+                                              : "hover:bg-slate-50"
+                                          )}
+                                        >
+                                          <div className={cn(
+                                            "w-8 h-8 rounded-full flex items-center justify-center",
+                                            customer.type === 'company' ? "bg-indigo-100" : "bg-slate-100"
+                                          )}>
+                                            {customer.type === 'company' ? (
+                                              <Building2 className="w-4 h-4 text-indigo-600" />
+                                            ) : (
+                                              <User className="w-4 h-4 text-slate-600" />
+                                            )}
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-sm truncate">{customer.name}</p>
+                                            {customer.company && customer.type !== 'company' && (
+                                              <p className="text-xs text-slate-500 truncate">{customer.company}</p>
+                                            )}
+                                          </div>
+                                          {formData.customer_id === customer.id && (
+                                            <Check className="w-4 h-4 text-indigo-600" />
+                                          )}
+                                        </button>
+                                      ))
+                                    }
+                                    {customers.filter(c => 
+                                      c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                                      c.company?.toLowerCase().includes(customerSearch.toLowerCase())
+                                    ).length === 0 && (
+                                      <p className="text-sm text-slate-500 text-center py-4">No customers found</p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            {/* Click outside to close */}
+                            {showCustomerDropdown && (
+                              <div 
+                                className="fixed inset-0 z-40" 
+                                onClick={() => setShowCustomerDropdown(false)}
+                              />
+                            )}
                           </div>
                           <div>
                             <Label htmlFor="time_budget_hours">Time Budget (hours)</Label>
