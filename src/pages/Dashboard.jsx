@@ -3,10 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square } from 'lucide-react';
+import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square, Save, LayoutTemplate } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -60,16 +62,6 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeLetter, setActiveLetter] = useState(null);
   const PROJECTS_PER_PAGE = 25;
-
-  // Dashboard Views
-  const [currentView, setCurrentView] = useState(null);
-  const [viewName, setViewName] = useState('');
-  const [showSaveViewModal, setShowSaveViewModal] = useState(false);
-
-  const { data: dashboardViews = [], refetch: refetchViews } = useQuery({
-    queryKey: ['dashboardViews'],
-    queryFn: () => base44.entities.DashboardView.filter({ user_id: currentUser?.id })
-  });
 
   useEffect(() => {
     let mounted = true;
@@ -141,9 +133,8 @@ export default function Dashboard() {
   const approvedProposals = proposals.filter(p => p.status === 'approved');
   const approvedTotal = approvedProposals.reduce((sum, p) => sum + (p.total || 0), 0);
 
-  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
-  const archivedProjects = projects.filter(p => (p.status === 'archived' || p.status === 'completed') && p.status !== 'deleted');
-  const deletedProjects = projects.filter(p => p.status === 'deleted');
+  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived');
+  const archivedProjects = projects.filter(p => p.status === 'archived' || p.status === 'completed');
   // Only count tasks and parts from active projects
   const activeProjectIds = activeProjects.map(p => p.id);
   const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
@@ -305,44 +296,6 @@ export default function Dashboard() {
     setSelectionMode(false);
     setShowBulkDeleteConfirm(false);
     refetchProjects();
-  };
-
-  const handleRestoreProject = async (project) => {
-    await base44.entities.Project.update(project.id, {
-      status: 'planning', // Default back to planning
-      deleted_date: null
-    });
-    refetchProjects();
-  };
-
-  const handleSaveView = async () => {
-    if (!viewName.trim()) return;
-    
-    const viewConfig = {
-      filters: { status: listFilter },
-      layout: viewMode,
-      pinned: pinnedProjectIds,
-      collapsed: collapsedGroups
-    };
-
-    await base44.entities.DashboardView.create({
-      name: viewName,
-      user_id: currentUser.id,
-      config: viewConfig,
-      is_default: false
-    });
-
-    setViewName('');
-    setShowSaveViewModal(false);
-    refetchViews();
-  };
-
-  const applyView = (view) => {
-    setCurrentView(view);
-    if (view.config.layout) setViewMode(view.config.layout);
-    if (view.config.pinned) setPinnedProjectIds(view.config.pinned);
-    if (view.config.filters?.status) setListFilter(view.config.filters.status);
-    if (view.config.collapsed) setCollapsedGroups(view.config.collapsed);
   };
 
   const handleBulkArchive = async () => {
