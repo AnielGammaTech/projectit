@@ -217,7 +217,11 @@ export default function Dashboard() {
   };
 
   const handleCreateProject = async (data, template, extractedParts) => {
-    const newProject = await base44.entities.Project.create(data);
+    // Get highest project number and increment
+    const allProjects = await base44.entities.Project.list('-project_number', 1);
+    const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
+    
+    const newProject = await base44.entities.Project.create({ ...data, project_number: nextNumber });
     
     if (template?.default_tasks?.length) {
       for (const task of template.default_tasks) {

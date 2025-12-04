@@ -404,7 +404,14 @@ export default function ProjectDetail() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <h1 className="text-2xl font-bold text-slate-900 mb-2">{project.name}</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl font-bold text-slate-900">{project.name}</h1>
+                {project.project_number && (
+                  <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-sm font-mono">
+                    #{project.project_number}
+                  </span>
+                )}
+              </div>
               {project.client && (
                 <Link 
                   to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')} 
