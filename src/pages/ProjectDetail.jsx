@@ -108,6 +108,7 @@ export default function ProjectDetail() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: null, item: null });
   const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: project, isLoading: loadingProject, refetch: refetchProject } = useQuery({
     queryKey: ['project', projectId],
@@ -317,16 +318,15 @@ export default function ProjectDetail() {
     window.location.href = createPageUrl('Dashboard');
   };
 
-  // Delete project
+  // Move project to trash (soft delete)
   const handleDeleteProject = async () => {
-    if (confirm('Are you sure you want to delete this project? This will also delete all tasks, parts, and notes.')) {
-      // Delete related items
-      for (const task of tasks) await base44.entities.Task.delete(task.id);
-      for (const part of parts) await base44.entities.Part.delete(part.id);
-      for (const group of taskGroups) await base44.entities.TaskGroup.delete(group.id);
-      await base44.entities.Project.delete(projectId);
-      window.location.href = createPageUrl('Dashboard');
-    }
+    await base44.entities.Project.update(projectId, {
+      status: 'deleted',
+      deleted_date: new Date().toISOString()
+    });
+    await logActivity(projectId, 'project_deleted', `moved project to trash`, currentUser);
+    setShowDeleteConfirm(false);
+    window.location.href = createPageUrl('Dashboard');
   };
 
   // Progress update
@@ -515,7 +515,7 @@ export default function ProjectDetail() {
                       Archive Project
                     </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleDeleteProject} className="text-red-600">
+                  <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-red-600">
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete Project
                   </DropdownMenuItem>
@@ -881,7 +881,7 @@ export default function ProjectDetail() {
         onConfirm={handleArchiveProject}
       />
 
-      {/* Delete Confirmation */}
+      {/* Delete Task/Part Confirmation */}
       <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, type: null, item: null })}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -898,7 +898,26 @@ export default function ProjectDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delete Project Confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this project?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{project?.name}" will be moved to the trash. You can restore it later from Adminland → Deleted Projects.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteProject} className="bg-red-600 hover:bg-red-700">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Project
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
-    </div>
-  );
-}
+      </div>
+      );
+      }

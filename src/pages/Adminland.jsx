@@ -56,7 +56,8 @@ const groupColors = {
 const adminMenuItems = [
   { id: 'people', label: 'People & Teams', icon: Users, description: 'Manage team members, groups, and admin access' },
   { id: 'roles', label: 'Roles & Permissions', icon: Shield, description: 'Custom roles and granular access control', page: 'RolesPermissions' },
-  { id: 'trash', label: 'Archived Projects', icon: Trash2, description: 'View and restore archived projects' },
+  { id: 'archived', label: 'Archived Projects', icon: Archive, description: 'View and restore archived projects' },
+  { id: 'trash', label: 'Deleted Projects', icon: Trash2, description: 'View and permanently delete or restore trashed projects' },
   { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automate actions based on triggers', page: 'Workflows' },
   { id: 'templates', label: 'Email & Notification Templates', icon: Mail, description: 'Customize email templates with HTML and variables' },
   { id: 'company', label: 'Company Settings', icon: Building2, description: 'Branding, proposal defaults, and company info' },
@@ -80,8 +81,10 @@ export default function Adminland() {
         return <IntegrationsSection queryClient={queryClient} />;
       case 'templates':
         return <EmailTemplatesSection queryClient={queryClient} />;
-      case 'trash':
+      case 'archived':
         return <ArchivedProjectsSection queryClient={queryClient} />;
+      case 'trash':
+        return <DeletedProjectsSection queryClient={queryClient} />;
       default:
         return null;
     }
@@ -1535,6 +1538,157 @@ function ArchivedProjectsSection({ queryClient }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// Deleted Projects (Trash) Section
+function DeletedProjectsSection({ queryClient }) {
+  const [restoreConfirm, setRestoreConfirm] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  const { data: deletedProjects = [], refetch } = useQuery({
+    queryKey: ['deletedProjects'],
+    queryFn: async () => {
+      const projects = await base44.entities.Project.list('-deleted_date');
+      return projects.filter(p => p.status === 'deleted');
+    }
+  });
+
+  const handleRestore = async (project) => {
+    await base44.entities.Project.update(project.id, {
+      status: 'planning',
+      deleted_date: ''
+    });
+    refetch();
+    queryClient.invalidateQueries({ queryKey: ['projects'] });
+    setRestoreConfirm(null);
+  };
+
+  const handlePermanentDelete = async (project) => {
+    // Delete related entities
+    const tasks = await base44.entities.Task.filter({ project_id: project.id });
+    const parts = await base44.entities.Part.filter({ project_id: project.id });
+    const notes = await base44.entities.ProjectNote.filter({ project_id: project.id });
+    
+    for (const task of tasks) await base44.entities.Task.delete(task.id);
+    for (const part of parts) await base44.entities.Part.delete(part.id);
+    for (const note of notes) await base44.entities.ProjectNote.delete(note.id);
+    
+    await base44.entities.Project.delete(project.id);
+    refetch();
+    setDeleteConfirm(null);
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Unknown';
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 rounded-lg bg-red-100">
+            <Trash2 className="w-5 h-5 text-red-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Deleted Projects</h2>
+            <p className="text-sm text-slate-500">{deletedProjects.length} deleted project{deletedProjects.length !== 1 ? 's' : ''} in trash</p>
+          </div>
+        </div>
+        <p className="text-xs text-slate-400 mt-2">Projects in trash can be restored or permanently deleted. Permanent deletion cannot be undone.</p>
+      </div>
+
+      {deletedProjects.length === 0 ? (
+        <div className="p-12 text-center">
+          <Trash2 className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Trash is empty</h3>
+          <p className="text-slate-500">Deleted projects will appear here</p>
+        </div>
+      ) : (
+        <div className="divide-y">
+          {deletedProjects.map((project) => (
+            <div key={project.id} className="p-4 hover:bg-slate-50 transition-colors">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    {project.project_number && (
+                      <span className="px-2 py-0.5 bg-slate-800 text-white rounded text-xs font-mono">
+                        #{project.project_number}
+                      </span>
+                    )}
+                    <h3 className="font-semibold text-slate-900">{project.name}</h3>
+                  </div>
+                  {project.client && (
+                    <p className="text-sm text-slate-500 mb-1">{project.client}</p>
+                  )}
+                  <div className="flex items-center gap-4 text-xs text-slate-400 mt-2">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>Deleted {formatDate(project.deleted_date)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 ml-4">
+                  <Button
+                    onClick={() => setRestoreConfirm(project)}
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-1" />
+                    Restore
+                  </Button>
+                  <Button
+                    onClick={() => setDeleteConfirm(project)}
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Restore Confirmation */}
+      <AlertDialog open={!!restoreConfirm} onOpenChange={() => setRestoreConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore project?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{restoreConfirm?.name}" will be restored to your active projects.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleRestore(restoreConfirm)} className="bg-emerald-600 hover:bg-emerald-700">
+              Restore
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Permanent Delete Confirmation */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently delete project?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{deleteConfirm?.name}" and all its tasks, parts, and notes. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handlePermanentDelete(deleteConfirm)} className="bg-red-600 hover:bg-red-700">
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
