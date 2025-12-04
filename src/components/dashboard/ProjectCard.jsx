@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, MessageCircle, Ticket, ExternalLink, Hash } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -67,7 +67,7 @@ const statusOptions = [
   { value: 'completed', label: 'Completed' }
 ];
 
-export default function ProjectCard({ project, tasks = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, onPinToggle, groups = [], isPinned = false, dragHandleProps = {} }) {
+export default function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, onPinToggle, groups = [], isPinned = false, dragHandleProps = {} }) {
   const navigate = useNavigate();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -81,11 +81,21 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
   });
 
   const lastUpdate = progressUpdates[0];
+  const healthStatus = lastUpdate?.health_status || 'good';
   
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
+  const pendingTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length;
   const totalTasks = tasks.length;
+  const pendingParts = parts.filter(p => p.status !== 'installed').length;
   const progress = project.progress || (totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0);
   const colorClass = cardColors[project.color] || cardColors.slate;
+  
+  // Health-based colors for progress ring
+  const getHealthColor = () => {
+    if (healthStatus === 'issue') return 'text-red-500';
+    if (healthStatus === 'concern') return 'text-amber-500';
+    return 'text-emerald-500';
+  };
 
   const handleColorSelect = (color) => {
     onColorChange?.(project, color);
@@ -221,7 +231,7 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
         </div>
 
         <div className="flex items-center gap-3 mb-3">
-          {/* Progress Ring */}
+          {/* Progress Ring with Health Color */}
           <div className="relative w-10 h-10 flex-shrink-0">
             <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
               <circle
@@ -234,11 +244,7 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
                 r="15"
               />
               <circle
-                className={cn(
-                  progress < 30 ? "text-slate-400" :
-                  progress < 60 ? "text-blue-500" :
-                  progress < 90 ? "text-indigo-500" : "text-emerald-500"
-                )}
+                className={getHealthColor()}
                 stroke="currentColor"
                 strokeWidth="3"
                 strokeLinecap="round"
@@ -249,7 +255,11 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
                 strokeDasharray={`${progress * 0.94} 100`}
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-700">
+            <span className={cn(
+              "absolute inset-0 flex items-center justify-center text-[10px] font-bold",
+              healthStatus === 'issue' ? "text-red-600" :
+              healthStatus === 'concern' ? "text-amber-600" : "text-emerald-600"
+            )}>
               {Math.round(progress)}%
             </span>
           </div>
@@ -263,18 +273,33 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
           </div>
         </div>
 
-        {/* Last Update with Author */}
-        {lastUpdate && lastUpdate.note && (
-          <div className="mb-3 p-2 bg-slate-50 rounded-lg border border-slate-100">
-            <div className="flex items-start gap-2">
-              <MessageCircle className="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-slate-600 line-clamp-2">{lastUpdate.note}</p>
-                <p className="text-[10px] text-slate-400 mt-1">— {lastUpdate.author_name}</p>
-              </div>
+        {/* Quick Stats Widgets */}
+        <div className="mb-3 flex items-center gap-2 flex-wrap">
+          {pendingTasks > 0 && (
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 rounded-lg">
+              <ListTodo className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="text-xs font-medium text-indigo-700">{pendingTasks} tasks</span>
             </div>
-          </div>
-        )}
+          )}
+          {pendingParts > 0 && (
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 rounded-lg">
+              <Package className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-xs font-medium text-amber-700">{pendingParts} parts</span>
+            </div>
+          )}
+          {completedTasks > 0 && (
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 rounded-lg">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-xs font-medium text-emerald-700">{completedTasks} done</span>
+            </div>
+          )}
+          {pendingTasks === 0 && pendingParts === 0 && completedTasks === 0 && (
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg">
+              <CircleDot className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-xs font-medium text-slate-500">No items yet</span>
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-3">
@@ -310,12 +335,6 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
               </a>
             )}
           </div>
-          {totalTasks > 0 && (
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="font-medium text-slate-600">{completedTasks}/{totalTasks}</span>
-            </div>
-          )}
         </div>
       </div>
     </motion.div>
