@@ -187,7 +187,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   const handleTouchEnd = () => {
     if (isDragging && localValue !== value) {
-      setShowNoteInput(true);
+      setShowUpdateModal(true);
     }
     setIsDragging(false);
   };
