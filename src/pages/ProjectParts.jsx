@@ -52,6 +52,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import PartModal from '@/components/modals/PartModal';
 import PartDetailModal from '@/components/modals/PartDetailModal';
+import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 
 const statusConfig = {
   needed: { label: 'Needed', color: 'bg-slate-100 text-slate-700 border-slate-200' },
@@ -333,12 +334,9 @@ export default function ProjectParts() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Link */}
-        <Link to={createPageUrl('ProjectDetail') + `?id=${projectId}`} className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-6 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to {project.name}
-        </Link>
+      <ProjectNavHeader project={project} currentPage="ProjectParts" />
+      
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         {/* Approved Proposal Banner */}
         {hasApprovedProposal && (
