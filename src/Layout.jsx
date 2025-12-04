@@ -49,7 +49,6 @@ const navItems = [
     submenu: [
       { name: 'My Assignments', icon: ListTodo, page: 'MyAssignments' },
       { name: 'My Schedule', icon: Clock, page: 'MySchedule' },
-      { name: 'My Notifications', icon: Inbox, page: 'MyNotifications', showBadge: true },
     ]
   },
   { name: 'Activity', icon: ListTodo, page: 'AllTasks' },
@@ -142,14 +141,14 @@ export default function Layout({ children, currentPageName }) {
     <div className="min-h-screen bg-slate-50">
       {/* Top Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 h-14 bg-[#0F2F44] z-40 px-4">
-        <div className="max-w-[1800px] mx-auto h-full flex items-center justify-between">
-          {/* Left: Logo & Nav Items */}
-          <div className="flex items-center gap-6">
+        <div className="max-w-[1800px] mx-auto h-full flex items-center">
+          {/* Left: Logo */}
+          <div className="flex items-center gap-4 flex-shrink-0">
             {/* Mobile Menu Button */}
             <Button 
               variant="ghost" 
               size="icon"
-              className="lg:hidden"
+              className="lg:hidden text-white"
               onClick={() => setMobileMenuOpen(true)}
             >
               <Menu className="w-5 h-5" />
@@ -164,11 +163,12 @@ export default function Layout({ children, currentPageName }) {
                   <Globe className="w-4 h-4 text-[#133F5C]" />
                 </div>
               )}
-              <span className="font-semibold text-white">{appName}</span>
+              <span className="font-semibold text-white hidden sm:inline">{appName}</span>
             </Link>
+          </div>
 
-            {/* Desktop Nav Items */}
-            <nav className="hidden lg:flex items-center gap-0.5">
+          {/* Center: Desktop Nav Items */}
+          <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
               {navItems.map((item) => {
                 const Icon = item.icon;
 
@@ -192,11 +192,6 @@ export default function Layout({ children, currentPageName }) {
                             isSubmenuActive ? "text-[#B4E1FF]" : "text-white/60 group-hover:text-white"
                           )} />
                           {item.name}
-                          {item.name === 'My Stuff' && unreadCount > 0 && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[18px] text-center animate-pulse">
-                              {unreadCount > 9 ? '9+' : unreadCount}
-                            </span>
-                          )}
                           <ChevronDown className={cn(
                             "w-3.5 h-3.5 transition-colors",
                             isSubmenuActive ? "text-[#B4E1FF]" : "text-white/60"
@@ -221,11 +216,6 @@ export default function Layout({ children, currentPageName }) {
                               >
                                 <SubIcon className={cn("w-4 h-4", isSubActive ? "text-[#0069AF]" : "text-slate-400")} />
                                 {subItem.name}
-                                {subItem.showBadge && unreadCount > 0 && (
-                                  <span className="ml-auto px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[18px] text-center">
-                                    {unreadCount > 9 ? '9+' : unreadCount}
-                                  </span>
-                                )}
                               </Link>
                             </DropdownMenuItem>
                           );
@@ -257,10 +247,9 @@ export default function Layout({ children, currentPageName }) {
                 );
               })}
             </nav>
-          </div>
 
-          {/* Right: Search & User */}
-          <div className="flex items-center gap-2">
+            {/* Right: Search, Notifications & User */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => setShowSearch(true)}
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white/70 text-sm"
@@ -275,6 +264,19 @@ export default function Layout({ children, currentPageName }) {
             >
               <Search className="w-5 h-5 text-white/70" />
             </button>
+
+            {/* Notifications Bell */}
+            <Link
+              to={createPageUrl('MyNotifications')}
+              className="relative p-2 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <Bell className="w-5 h-5 text-white/70" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[18px] text-center animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
 
             {/* User Menu */}
             <DropdownMenu>
