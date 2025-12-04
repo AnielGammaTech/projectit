@@ -780,7 +780,6 @@ export default function ProjectDetail() {
 
 
                       </div>
-
         </div>
 
         {/* Activity Feed - Full Width Below */}
