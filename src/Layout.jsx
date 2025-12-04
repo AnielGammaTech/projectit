@@ -22,7 +22,8 @@ import {
   TrendingUp,
   PieChart,
   ChevronDown,
-  Bell
+  Bell,
+  Globe
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import GlobalSearch from '@/components/GlobalSearch';
