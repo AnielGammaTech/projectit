@@ -579,26 +579,26 @@ export default function ProjectDetail() {
                 <Button
                   size="sm"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingPart(null); setShowPartModal(true); }}
-                  className="bg-amber-500 hover:bg-amber-600 shadow-md"
+                  className="bg-amber-500 hover:bg-amber-600 shadow-md flex-shrink-0"
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
             </div>
             <div className="p-4">
-              <div className="flex items-center justify-center gap-4 text-sm">
-                <div className="flex items-center gap-1.5 text-blue-600">
-                  <Package className="w-4 h-4" />
+              <div className="flex items-center justify-center gap-3 text-xs flex-wrap">
+                <div className="flex items-center gap-1 text-blue-600">
+                  <Package className="w-3.5 h-3.5" />
                   <span className="font-medium">{parts.filter(p => p.status === 'ordered').length}</span>
                   <span className="text-slate-400">ordered</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-amber-600">
-                  <Truck className="w-4 h-4" />
+                <div className="flex items-center gap-1 text-amber-600">
+                  <Truck className="w-3.5 h-3.5" />
                   <span className="font-medium">{parts.filter(p => p.status === 'received' || p.status === 'ready_to_install').length}</span>
                   <span className="text-slate-400">received</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-emerald-600">
-                  <CheckCircle2 className="w-4 h-4" />
+                <div className="flex items-center gap-1 text-emerald-600">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
                   <span className="font-medium">{parts.filter(p => p.status === 'installed').length}</span>
                   <span className="text-slate-400">installed</span>
                 </div>
