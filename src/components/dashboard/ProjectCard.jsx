@@ -292,6 +292,13 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
 
         {/* Quick Stats Widgets */}
         <div className="mb-3 flex items-center gap-2 flex-wrap">
+          {/* AI Health Score Widget */}
+          {totalActive > 0 && (
+            <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-lg", getHealthScoreColor().bg)}>
+              <Sparkles className={cn("w-3.5 h-3.5", getHealthScoreColor().icon)} />
+              <span className={cn("text-xs font-bold", getHealthScoreColor().text)}>{healthScore}%</span>
+            </div>
+          )}
           {pendingTasks > 0 && (
             <div className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 rounded-lg">
               <ListTodo className="w-3.5 h-3.5 text-indigo-500" />
@@ -310,17 +317,10 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
               <span className="text-xs font-medium text-emerald-700">{completedTasks} done</span>
             </div>
           )}
-          {pendingTasks === 0 && pendingParts === 0 && completedTasks === 0 && (
+          {pendingTasks === 0 && pendingParts === 0 && completedTasks === 0 && totalActive === 0 && (
             <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg">
               <CircleDot className="w-3.5 h-3.5 text-slate-400" />
               <span className="text-xs font-medium text-slate-500">No items yet</span>
-            </div>
-          )}
-          {/* AI Health Score Widget */}
-          {totalActive > 0 && (
-            <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-lg ml-auto", getHealthScoreColor().bg)}>
-              <Sparkles className={cn("w-3.5 h-3.5", getHealthScoreColor().icon)} />
-              <span className={cn("text-xs font-bold", getHealthScoreColor().text)}>{healthScore}%</span>
             </div>
           )}
         </div>
