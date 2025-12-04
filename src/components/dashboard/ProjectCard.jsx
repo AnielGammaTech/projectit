@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, CheckCircle2, ArrowRight, Palette, Pin } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -71,9 +73,18 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   
+  // Fetch latest progress update for this project
+  const { data: progressUpdates = [] } = useQuery({
+    queryKey: ['progressUpdates', project.id],
+    queryFn: () => base44.entities.ProgressUpdate.filter({ project_id: project.id }, '-created_date', 1),
+    enabled: !!project.id
+  });
+
+  const lastUpdate = progressUpdates[0];
+  
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
   const totalTasks = tasks.length;
-  const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+  const progress = project.progress || (totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0);
   const colorClass = cardColors[project.color] || cardColors.slate;
 
   const handleColorSelect = (color) => {
@@ -204,11 +215,60 @@ export default function ProjectCard({ project, tasks = [], index, onColorChange,
           <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
         </div>
 
-        <h3 className="text-base font-semibold text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors line-clamp-1">
-          {project.name}
-        </h3>
-        {project.client && (
-          <p className="text-sm text-slate-500 mb-3 line-clamp-1">{project.client}</p>
+        <div className="flex items-center gap-3 mb-3">
+          {/* Progress Ring */}
+          <div className="relative w-10 h-10 flex-shrink-0">
+            <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+              <circle
+                className="text-slate-100"
+                stroke="currentColor"
+                strokeWidth="3"
+                fill="none"
+                cx="18"
+                cy="18"
+                r="15"
+              />
+              <circle
+                className={cn(
+                  progress < 30 ? "text-slate-400" :
+                  progress < 60 ? "text-blue-500" :
+                  progress < 90 ? "text-indigo-500" : "text-emerald-500"
+                )}
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                fill="none"
+                cx="18"
+                cy="18"
+                r="15"
+                strokeDasharray={`${progress * 0.94} 100`}
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-700">
+              {Math.round(progress)}%
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+              {project.name}
+            </h3>
+            {project.client && (
+              <p className="text-sm text-slate-500 line-clamp-1">{project.client}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Last Update with Author */}
+        {lastUpdate && lastUpdate.note && (
+          <div className="mb-3 p-2 bg-slate-50 rounded-lg border border-slate-100">
+            <div className="flex items-start gap-2">
+              <MessageCircle className="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-slate-600 line-clamp-2">{lastUpdate.note}</p>
+                <p className="text-[10px] text-slate-400 mt-1">— {lastUpdate.author_name}</p>
+              </div>
+            </div>
+          </div>
         )}
 
         <div className="flex items-center justify-between text-xs text-slate-500">
