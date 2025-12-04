@@ -134,7 +134,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-40 flex items-center justify-between px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-slate-200 z-40 flex items-center justify-between px-4">
         <div className="flex items-center">
           <Button 
             variant="ghost" 
@@ -145,10 +145,10 @@ export default function Layout({ children, currentPageName }) {
           </Button>
           <div className="flex items-center gap-2 ml-3">
             {appLogoUrl ? (
-              <img src={appLogoUrl} alt="" className="w-8 h-8 rounded-lg object-contain" />
+              <img src={appLogoUrl} alt="" className="w-7 h-7 rounded-lg object-contain" />
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-[#133F5C] flex items-center justify-center">
-                <Wrench className="w-4 h-4 text-white" />
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
+                <Globe className="w-4 h-4 text-white" />
               </div>
             )}
             <span className="font-semibold text-slate-900">{appName}</span>
