@@ -73,6 +73,7 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [groupPickerOpen, setGroupPickerOpen] = useState(false);
   
   // Fetch latest progress update for this project
   const { data: progressUpdates = [] } = useQuery({
