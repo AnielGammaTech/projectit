@@ -77,6 +77,11 @@ export default function AllTasks() {
     return project?.name || 'Unknown Project';
   };
 
+  // Get active project IDs (not archived or completed)
+  const activeProjectIds = projects
+    .filter(p => p.status !== 'archived' && p.status !== 'completed')
+    .map(p => p.id);
+
   const filteredTasks = tasks.filter(task => {
     // Only show tasks from active projects (exclude archived)
     if (!activeProjectIds.includes(task.project_id)) return false;
@@ -111,12 +116,6 @@ export default function AllTasks() {
     part.assigned_to === currentUser?.email && part.due_date
   );
 
-  // Get active project IDs (not archived or completed) - also filter out deleted projects
-  const projectIds = projects.map(p => p.id);
-  const activeProjectIds = projects
-    .filter(p => p.status !== 'archived' && p.status !== 'completed')
-    .map(p => p.id);
-  
   // Parts from active projects only
   const activeProjectParts = parts.filter(p => activeProjectIds.includes(p.project_id));
 
