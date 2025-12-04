@@ -229,13 +229,18 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   const color = getColor();
 
+  // Get current health option for display
+  const currentHealth = healthOptions.find(h => h.value === projectHealth) || healthOptions[0];
+  const HealthIcon = currentHealth.icon;
+
   return (
     <>
       <div className="w-full">
         <motion.div 
-          className="bg-slate-50 rounded-xl border border-slate-200 w-full"
+          className="bg-slate-50 rounded-xl border border-slate-200 w-full cursor-pointer hover:border-slate-300 transition-colors"
           onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => !isDragging && !showNoteInput && setIsHovered(false)}
+          onMouseLeave={() => !isDragging && setIsHovered(false)}
+          onClick={() => !isDragging && setShowUpdateModal(true)}
           animate={{ 
             boxShadow: isActive ? '0 4px 20px rgba(0,0,0,0.08)' : '0 1px 2px rgba(0,0,0,0.04)'
           }}
@@ -247,14 +252,10 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Update Bar</span>
                 {hasUpdates && lastUpdateNote && (
-                  <button
-                    onClick={() => setShowLastNote(!showLastNote)}
-                    className="relative p-1 rounded-full hover:bg-slate-200 transition-colors"
-                    title="View last update note"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5 text-slate-500" />
+                  <div className="relative">
+                    <MessageCircle className="w-3.5 h-3.5 text-slate-400" />
                     <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-indigo-500 rounded-full" />
-                  </button>
+                  </div>
                 )}
               </div>
               <motion.div 
@@ -268,24 +269,11 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               </motion.div>
             </div>
 
-            {/* Last Update Note Display */}
-            <AnimatePresence>
-              {showLastNote && lastUpdateNote && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mb-3 p-2 bg-indigo-50 rounded-lg border border-indigo-100"
-                >
-                  <p className="text-xs text-indigo-700">{lastUpdateNote}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             {/* Slider Track */}
             <div 
               ref={trackRef}
-              className="relative cursor-pointer h-6 flex items-center"
+              className="relative h-6 flex items-center"
+              onClick={(e) => e.stopPropagation()}
               onMouseDown={handleMouseDown}
               onTouchStart={handleTouchStart}
             >
@@ -324,49 +312,101 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                 />
               </motion.div>
             </div>
-
-            {/* Note Input */}
-            <AnimatePresence>
-              {showNoteInput && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="mt-3 pt-3 border-t border-slate-100">
-                    <Textarea
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      placeholder="Add a note about this progress update..."
-                      className="min-h-[70px] text-sm resize-none bg-slate-50 border-slate-200 focus:bg-white rounded-lg"
-                      autoFocus
-                    />
-                    <div className="flex gap-2 mt-2">
-                      <motion.button 
-                        onClick={() => saveMutation.mutate()} 
-                        disabled={saveMutation.isPending}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex-1 h-8 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        Save
-                      </motion.button>
-                      <motion.button 
-                        onClick={handleCancel}
-                        whileTap={{ scale: 0.95 }}
-                        className="h-8 px-3 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </motion.button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </motion.div>
       </div>
+
+      {/* Update Modal */}
+      <Dialog open={showUpdateModal} onOpenChange={setShowUpdateModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className={cn("p-1.5 rounded-lg", color.bg)}>
+                <MessageCircle className="w-4 h-4 text-white" />
+              </div>
+              Progress Update
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Progress Display */}
+            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+              <span className="text-sm text-slate-600">New Progress</span>
+              <div className={cn("px-3 py-1 rounded-lg text-white font-bold", color.bg)}>
+                {localValue}%
+              </div>
+            </div>
+
+            {/* Project Health Status */}
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-2 block">Project Status</label>
+              <div className="grid grid-cols-3 gap-2">
+                {healthOptions.map((option) => {
+                  const Icon = option.icon;
+                  const isSelected = projectHealth === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => setProjectHealth(option.value)}
+                      className={cn(
+                        "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all",
+                        isSelected 
+                          ? cn(option.bgColor, "border-current", option.textColor)
+                          : "border-slate-200 hover:border-slate-300 bg-white"
+                      )}
+                    >
+                      <Icon className={cn("w-5 h-5", isSelected ? option.textColor : "text-slate-400")} />
+                      <span className={cn("text-xs font-medium", isSelected ? option.textColor : "text-slate-500")}>
+                        {option.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Note Input */}
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-2 block">Add a Note (optional)</label>
+              <Textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="What's the latest on this project?"
+                className="min-h-[80px] text-sm resize-none"
+              />
+            </div>
+
+            {/* Last Update Note */}
+            {lastUpdateNote && (
+              <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                <p className="text-[10px] font-medium text-indigo-500 uppercase mb-1">Last Update</p>
+                <p className="text-sm text-indigo-700">{lastUpdateNote}</p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-2">
+              <button 
+                onClick={handleCancel}
+                className="flex-1 h-10 rounded-lg bg-slate-100 text-slate-600 font-medium hover:bg-slate-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSaveUpdate}
+                disabled={saveMutation.isPending}
+                className={cn(
+                  "flex-1 h-10 rounded-lg text-white font-medium transition-colors flex items-center justify-center gap-2",
+                  "bg-[#0F2F44] hover:bg-[#1a4a6e]"
+                )}
+              >
+                <Check className="w-4 h-4" />
+                Save Update
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Completion Dialog */}
       <AlertDialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>
