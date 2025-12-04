@@ -730,14 +730,22 @@ export default function ProposalEditor() {
                     )}
                   </div>
                   {formData.customer_address && (
-                    <div className="w-24 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
+                    <a 
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.customer_address)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-24 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0 block hover:opacity-90 transition-opacity"
+                    >
                       <img 
-                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(formData.customer_address)}&zoom=14&size=200x160&markers=color:red%7C${encodeURIComponent(formData.customer_address)}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8`}
+                        src={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+ef4444(${encodeURIComponent(formData.customer_address.split(',')[0])})/-81.7787,26.1420,12/200x160?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw`}
                         alt="Location"
                         className="w-full h-full object-cover"
-                        onError={(e) => { e.target.style.display = 'none'; }}
+                        onError={(e) => { 
+                          e.target.onerror = null;
+                          e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-slate-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></div>';
+                        }}
                       />
-                    </div>
+                    </a>
                   )}
                 </div>
               </div>
