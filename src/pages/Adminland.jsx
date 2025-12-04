@@ -545,7 +545,7 @@ function UserGroupModal({ open, onClose, group, members, onSave }) {
 function CompanySettingsSection({ queryClient }) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState('branding');
+  const [expandedSections, setExpandedSections] = useState({ branding: true });
   const [formData, setFormData] = useState({
     proposal_prefix: 'P-',
     default_valid_days: 30,
@@ -628,6 +628,10 @@ function CompanySettingsSection({ queryClient }) {
     setUploading(false);
   };
 
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
@@ -639,36 +643,29 @@ function CompanySettingsSection({ queryClient }) {
           {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
-      
-      {/* Tabs */}
-      <div className="flex border-b">
-        {[
-          { id: 'branding', label: 'Branding & Logo' },
-          { id: 'proposals', label: 'Proposal Defaults' },
-          { id: 'taxes', label: 'Tax Rates' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
-              activeTab === tab.id ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
 
-      <div className="p-6 space-y-6">
-        {/* Branding Tab */}
-        {activeTab === 'branding' && (
-          <>
-            {/* App Branding */}
-            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-200">
-              <h3 className="font-semibold text-slate-900 mb-4">App Branding</h3>
-              <p className="text-sm text-slate-600 mb-4">Customize the app name and logo shown in the sidebar.</p>
-              <div className="flex items-start gap-6">
+      <div className="divide-y">
+        {/* App Branding Section */}
+        <div>
+          <button
+            onClick={() => toggleSection('branding')}
+            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-indigo-100">
+                <Building2 className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-slate-900">App Branding</h3>
+                <p className="text-xs text-slate-500">App name and logo shown in sidebar</p>
+              </div>
+            </div>
+            {expandedSections.branding ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </button>
+          
+          {expandedSections.branding && (
+            <div className="px-4 pb-4 space-y-4">
+              <div className="flex items-start gap-6 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
                 <div className="flex-shrink-0">
                   {formData.app_logo_url ? (
                     <div className="relative">
@@ -706,10 +703,30 @@ function CompanySettingsSection({ queryClient }) {
                 </div>
               </div>
             </div>
+          )}
+        </div>
 
-            <div className="p-4 bg-slate-50 rounded-xl">
-              <h3 className="font-semibold text-slate-900 mb-4">Company Logo (Proposals)</h3>
-              <div className="flex items-start gap-6">
+        {/* Company Logo Section */}
+        <div>
+          <button
+            onClick={() => toggleSection('companyLogo')}
+            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-slate-100">
+                <FolderKanban className="w-5 h-5 text-slate-600" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-slate-900">Company Logo (Proposals)</h3>
+                <p className="text-xs text-slate-500">Logo for proposals and documents</p>
+              </div>
+            </div>
+            {expandedSections.companyLogo ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </button>
+          
+          {expandedSections.companyLogo && (
+            <div className="px-4 pb-4">
+              <div className="flex items-start gap-6 p-4 bg-slate-50 rounded-xl">
                 <div className="flex-shrink-0">
                   {formData.company_logo_url ? (
                     <div className="relative">
@@ -739,37 +756,75 @@ function CompanySettingsSection({ queryClient }) {
                 </div>
               </div>
             </div>
+          )}
+        </div>
 
-            <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-              <h3 className="font-semibold text-slate-900">Company Information</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs">Company Name</Label>
-                  <Input value={formData.company_name} onChange={(e) => setFormData(p => ({ ...p, company_name: e.target.value }))} className="mt-1" />
-                </div>
-                <div>
-                  <Label className="text-xs">Email</Label>
-                  <Input value={formData.company_email} onChange={(e) => setFormData(p => ({ ...p, company_email: e.target.value }))} className="mt-1" />
-                </div>
-                <div>
-                  <Label className="text-xs">Phone</Label>
-                  <Input value={formData.company_phone} onChange={(e) => setFormData(p => ({ ...p, company_phone: e.target.value }))} className="mt-1" />
-                </div>
-                <div>
-                  <Label className="text-xs">Address</Label>
-                  <Input value={formData.company_address} onChange={(e) => setFormData(p => ({ ...p, company_address: e.target.value }))} className="mt-1" />
+        {/* Company Information Section */}
+        <div>
+          <button
+            onClick={() => toggleSection('companyInfo')}
+            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-emerald-100">
+                <Building2 className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-slate-900">Company Information</h3>
+                <p className="text-xs text-slate-500">Name, email, phone, and address</p>
+              </div>
+            </div>
+            {expandedSections.companyInfo ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </button>
+          
+          {expandedSections.companyInfo && (
+            <div className="px-4 pb-4">
+              <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs">Company Name</Label>
+                    <Input value={formData.company_name} onChange={(e) => setFormData(p => ({ ...p, company_name: e.target.value }))} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Email</Label>
+                    <Input value={formData.company_email} onChange={(e) => setFormData(p => ({ ...p, company_email: e.target.value }))} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Phone</Label>
+                    <Input value={formData.company_phone} onChange={(e) => setFormData(p => ({ ...p, company_phone: e.target.value }))} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Address</Label>
+                    <Input value={formData.company_address} onChange={(e) => setFormData(p => ({ ...p, company_address: e.target.value }))} className="mt-1" />
+                  </div>
                 </div>
               </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
 
-        {/* Proposals Tab */}
-        {activeTab === 'proposals' && (
-          <>
+        {/* Proposal Defaults Section */}
+        <div>
+          <button
+            onClick={() => toggleSection('proposals')}
+            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100">
+                <FolderKanban className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-slate-900">Proposal Defaults</h3>
+                <p className="text-xs text-slate-500">Number prefix, validity, tax, and markup</p>
+              </div>
+            </div>
+            {expandedSections.proposals ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </button>
+          
+          {expandedSections.proposals && (
+            <div className="px-4 pb-4 space-y-4">
         {/* Proposal Defaults */}
         <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-          <h3 className="font-semibold text-slate-900">Proposal Defaults</h3>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <Label className="text-xs">Proposal Number Prefix</Label>
@@ -838,13 +893,31 @@ function CompanySettingsSection({ queryClient }) {
             <span className="text-sm">Show item images on proposals</span>
           </label>
         </div>
-          </>
-        )}
+            </div>
+          )}
+        </div>
 
-        {/* Tax Rates Tab */}
-        {activeTab === 'taxes' && (
+        {/* Tax Rates Section */}
+        <div>
+          <button
+            onClick={() => toggleSection('taxes')}
+            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-100">
+                <DollarSign className="w-5 h-5 text-amber-600" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-slate-900">Tax Rates by Location</h3>
+                <p className="text-xs text-slate-500">Configure tax rates for different locations</p>
+              </div>
+            </div>
+            {expandedSections.taxes ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </button>
+          
+          {expandedSections.taxes && (
+          <div className="px-4 pb-4">
           <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-            <h3 className="font-semibold text-slate-900">Tax Rates by Location</h3>
             <p className="text-xs text-slate-500">Set tax rates for specific locations. Customers can have a default tax rate assigned.</p>
             
             {formData.tax_rates_by_location?.length > 0 && (
@@ -888,7 +961,9 @@ function CompanySettingsSection({ queryClient }) {
               </div>
             </div>
           </div>
-        )}
+          </div>
+          )}
+        </div>
       </div>
     </div>
   );
