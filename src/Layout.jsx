@@ -69,11 +69,11 @@ const navItems = [
 ];
 
 export default function Layout({ children, currentPageName }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [showSearch, setShowSearch] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState({});
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [showSearch, setShowSearch] = useState(false);
+    const [expandedMenus, setExpandedMenus] = useState({});
 
   const { data: appSettings } = useQuery({
     queryKey: ['appSettings'],
