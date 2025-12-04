@@ -228,12 +228,12 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
         {...dragHandleProps}
         onClick={() => navigate(createPageUrl('ProjectDetail') + `?id=${project.id}`)}
         className={cn(
-          "bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 border-l-4 cursor-pointer",
+          "bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 border-l-4 cursor-pointer",
           colorClass,
           isPinned && "ring-2 ring-amber-200 bg-amber-50/30"
         )}
       >
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">
             {project.project_number && (
               <span className="px-2 py-0.5 bg-slate-800 text-white rounded text-[10px] font-mono font-bold">
@@ -269,36 +269,36 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
           <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
         </div>
 
-        <div className="flex items-center gap-3 mb-3">
-          {/* Progress Ring with Health Color and Tooltip */}
+        <div className="flex items-center gap-2 mb-2">
+          {/* Progress Ring - Smaller */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="relative w-10 h-10 flex-shrink-0 cursor-help" onClick={(e) => e.stopPropagation()}>
-                  <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+                <div className="relative w-8 h-8 flex-shrink-0 cursor-help" onClick={(e) => e.stopPropagation()}>
+                  <svg className="w-8 h-8 -rotate-90" viewBox="0 0 36 36">
                     <circle
                       className="text-slate-100"
                       stroke="currentColor"
-                      strokeWidth="3"
+                      strokeWidth="4"
                       fill="none"
                       cx="18"
                       cy="18"
-                      r="15"
+                      r="14"
                     />
                     <circle
                       className={getHealthColor()}
                       stroke="currentColor"
-                      strokeWidth="3"
+                      strokeWidth="4"
                       strokeLinecap="round"
                       fill="none"
                       cx="18"
                       cy="18"
-                      r="15"
-                      strokeDasharray={`${progress * 0.94} 100`}
+                      r="14"
+                      strokeDasharray={`${progress * 0.88} 100`}
                     />
                   </svg>
                   <span className={cn(
-                    "absolute inset-0 flex items-center justify-center text-[10px] font-bold",
+                    "absolute inset-0 flex items-center justify-center text-[9px] font-bold",
                     healthStatus === 'issue' ? "text-red-600" :
                     healthStatus === 'concern' ? "text-amber-600" : "text-emerald-600"
                   )}>
@@ -340,17 +340,22 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
             </Tooltip>
           </TooltipProvider>
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+            <h3 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
               {project.name}
             </h3>
             {project.client && (
-              <p className="text-sm text-slate-500 line-clamp-1">{project.client}</p>
+              <p className="text-xs text-slate-500 line-clamp-1">{project.client}</p>
             )}
           </div>
         </div>
+        
+        {/* AI Short Description */}
+        {project.description && (
+          <p className="text-xs text-slate-500 line-clamp-2 mb-2">{project.description}</p>
+        )}
 
         {/* Quick Stats Widgets */}
-        <div className="mb-3 flex items-center gap-2 flex-wrap">
+        <div className="mb-2 flex items-center gap-1.5 flex-wrap">
           {/* AI Health Score Widget with Tooltip */}
           {totalActive > 0 && (
             <TooltipProvider>

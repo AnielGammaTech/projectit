@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2, Sun, Moon, Monitor, Palette, Bell, CheckCircle2, AtSign, MessageCircle } from 'lucide-react';
+import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2, Sun, Moon, Monitor, Palette, Bell, CheckCircle2, AtSign, MessageCircle, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
@@ -38,7 +39,8 @@ export default function Profile() {
     full_name: '',
     avatar_url: '',
     avatar_color: 'bg-blue-500',
-    theme: 'light'
+    theme: 'light',
+    show_dashboard_widgets: true
   });
 
   useEffect(() => {
@@ -48,7 +50,8 @@ export default function Profile() {
         full_name: user.full_name || '',
         avatar_url: user.avatar_url || '',
         avatar_color: user.avatar_color || 'bg-blue-500',
-        theme: user.theme || 'light'
+        theme: user.theme || 'light',
+        show_dashboard_widgets: user.show_dashboard_widgets !== false
       });
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -306,6 +309,28 @@ export default function Profile() {
                   <p className="text-sm text-slate-500">No notifications yet</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Dashboard Settings */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <LayoutGrid className="w-5 h-5 text-[#0069AF]" />
+                Dashboard
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Show Widgets</Label>
+                  <p className="text-xs text-slate-500 mt-1">Display customizable widgets on your dashboard</p>
+                </div>
+                <Switch
+                  checked={formData.show_dashboard_widgets}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, show_dashboard_widgets: checked }))}
+                />
+              </div>
             </CardContent>
           </Card>
 

@@ -376,15 +376,17 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {/* Customizable Widgets */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mb-8"
-        >
-          <DashboardWidgets />
-        </motion.div>
+        {/* Customizable Widgets - Optional based on user settings */}
+        {currentUser?.show_dashboard_widgets !== false && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-8"
+          >
+            <DashboardWidgets />
+          </motion.div>
+        )}
 
         {/* Stats Grid - Focused */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
