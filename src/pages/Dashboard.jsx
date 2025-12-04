@@ -804,6 +804,9 @@ export default function Dashboard() {
                                                                                       isPinned={true}
                                                                                       dragHandleProps={provided.dragHandleProps}
                                                                                       teamMembers={teamMembers}
+                                                                                      selectionMode={selectionMode}
+                                                                                      isSelected={selectedProjects.includes(project.id)}
+                                                                                      onSelectionToggle={toggleProjectSelection}
                                                                                     />
                                   </div>
                                 )}
@@ -887,6 +890,9 @@ export default function Dashboard() {
                                                                                             isPinned={false}
                                                                                             dragHandleProps={provided.dragHandleProps}
                                                                                             teamMembers={teamMembers}
+                                                                                            selectionMode={selectionMode}
+                                                                                            isSelected={selectedProjects.includes(project.id)}
+                                                                                            onSelectionToggle={toggleProjectSelection}
                                                                                           />
                                         </div>
                                       )}
