@@ -439,10 +439,10 @@ export default function ProjectDetail() {
                 />
               </div>
 
-              {/* Update Bar + AI Insights Row */}
+              {/* Update Bar + Mini Widgets Row */}
               <div className="mt-4 pt-4 border-t border-slate-100">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex-1 min-w-[300px]">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
                     <ProgressNeedle 
                       projectId={projectId} 
                       value={project.progress || 0} 
@@ -454,27 +454,31 @@ export default function ProjectDetail() {
                       lastUpdateNote={progressUpdates[0]?.note}
                     />
                   </div>
-                  <ProjectInsightsWidget projectId={projectId} tasks={tasks} parts={parts} compact />
                   
-                  {/* Mini Stats Widgets */}
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-50 border border-indigo-100">
-                    <ListTodo className="w-4 h-4 text-indigo-500" />
-                    <span className="text-sm font-semibold text-indigo-700">{tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}</span>
-                    <span className="text-xs text-indigo-500">Tasks</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100">
-                    <Package className="w-4 h-4 text-amber-500" />
-                    <span className="text-sm font-semibold text-amber-700">{parts.filter(p => p.status !== 'installed').length}</span>
-                    <span className="text-xs text-amber-500">Parts</span>
-                  </div>
-                  
-                  {project.due_date && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
-                      <Calendar className="w-4 h-4 text-slate-500" />
-                      <span className="text-sm font-medium text-slate-700">{format(new Date(project.due_date), 'MMM d')}</span>
+                  {/* Mini Widgets - Uniform Style */}
+                  <div className="flex items-center gap-2">
+                    <ProjectInsightsWidget projectId={projectId} tasks={tasks} parts={parts} compact />
+                    
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-50 border border-indigo-100">
+                      <ListTodo className="w-4 h-4 text-indigo-500" />
+                      <span className="text-lg font-bold text-indigo-600">{tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}</span>
+                      <span className="text-xs text-indigo-500">Tasks</span>
                     </div>
-                  )}
+                    
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100">
+                      <Package className="w-4 h-4 text-amber-500" />
+                      <span className="text-lg font-bold text-amber-600">{parts.filter(p => p.status !== 'installed').length}</span>
+                      <span className="text-xs text-amber-500">Parts</span>
+                    </div>
+                    
+                    {project.due_date && (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 border border-slate-200">
+                        <Calendar className="w-4 h-4 text-slate-500" />
+                        <span className="text-sm font-bold text-slate-700">{format(new Date(project.due_date), 'MMM d')}</span>
+                        <span className="text-xs text-slate-500">Due</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
