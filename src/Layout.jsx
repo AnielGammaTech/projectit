@@ -322,6 +322,18 @@ export default function Layout({ children, currentPageName }) {
                     <DropdownMenuSeparator />
                     <div className="py-1">
                       <DropdownMenuItem asChild>
+                        <Link to={createPageUrl('ManagerDashboard')} className="cursor-pointer">
+                          <Activity className="w-4 h-4 mr-2 text-indigo-500" />
+                          Manager Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl('TechDashboard')} className="cursor-pointer">
+                          <Clock className="w-4 h-4 mr-2 text-emerald-500" />
+                          Tech Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to={createPageUrl('Adminland')} className="cursor-pointer">
                           <Shield className="w-4 h-4 mr-2 text-[#0069AF]" />
                           Adminland

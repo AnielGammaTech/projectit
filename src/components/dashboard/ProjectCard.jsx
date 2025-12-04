@@ -337,30 +337,6 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
         {/* Stats Row - Clean Layout */}
         <div className="flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            {/* Date */}
-            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-              <PopoverTrigger asChild>
-                <div 
-                  className="flex items-center gap-1 cursor-pointer hover:text-indigo-600 transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Calendar className="w-3 h-3" />
-                  <span>{project.due_date ? format(new Date(project.due_date), 'MMM d') : 'Set date'}</span>
-                </div>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
-                <CalendarPicker
-                  mode="single"
-                  selected={project.due_date ? new Date(project.due_date) : undefined}
-                  onSelect={(date) => { onDueDateChange?.(project, date); setDatePickerOpen(false); }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            
-            {/* Divider */}
-            <span className="text-slate-200">•</span>
-            
             {/* Tasks count */}
             <div className="flex items-center gap-1">
               <ListTodo className="w-3 h-3" />

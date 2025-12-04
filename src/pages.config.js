@@ -35,6 +35,8 @@ import ActivityFeed from './pages/ActivityFeed';
 import MyAssignments from './pages/MyAssignments';
 import MySchedule from './pages/MySchedule';
 import MyNotifications from './pages/MyNotifications';
+import ManagerDashboard from './pages/ManagerDashboard';
+import TechDashboard from './pages/TechDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -76,6 +78,8 @@ export const PAGES = {
     "MyAssignments": MyAssignments,
     "MySchedule": MySchedule,
     "MyNotifications": MyNotifications,
+    "ManagerDashboard": ManagerDashboard,
+    "TechDashboard": TechDashboard,
 }
 
 export const pagesConfig = {
