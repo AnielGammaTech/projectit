@@ -907,14 +907,14 @@ export default function ProjectDetail() {
             <AlertDialogDescription>
               "{project?.name}" will be moved to the trash. You can restore it later from Adminland → Deleted Projects.
             </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteProject} className="bg-red-600 hover:bg-red-700">
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete Project
+              Move to Trash
             </AlertDialogAction>
-          </AlertDialogFooter>
+            </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
       </div>
