@@ -379,12 +379,14 @@ export default function ProjectDetail() {
           )}
         </div>
 
+        {/* Project Header + Sidebar Grid */}
+        <div className="grid lg:grid-cols-[1fr_300px] gap-6 mb-6">
         {/* Project Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-6"
+          className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6"
         >
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
             <div className="flex-1">
