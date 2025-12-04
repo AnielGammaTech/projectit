@@ -29,6 +29,7 @@ import ProposalSummary from '@/components/proposals/ProposalSummary';
 import CustomItemModal from '@/components/proposals/CustomItemModal';
 import AIProposalGenerator from '@/components/proposals/AIProposalGenerator';
 import ProposalActivityFeed from '@/components/proposals/ProposalActivityFeed';
+import ProposalVersionHistory, { saveProposalVersion } from '@/components/proposals/ProposalVersionHistory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const statusConfig = {
@@ -468,9 +469,15 @@ export default function ProposalEditor() {
                 {linkCopied ? 'Copied!' : 'Copy Link'}
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>
+            <Button variant="ghost" size="sm" onClick={async () => {
+              await handleSave(false);
+              if (proposalId) {
+                await saveProposalVersion(proposalId, formData, 'Manual save', currentUser?.email, currentUser?.full_name);
+                queryClient.invalidateQueries({ queryKey: ['proposalVersions', proposalId] });
+              }
+            }} disabled={saving}>
               <Save className="w-4 h-4 mr-1.5" />
-              Save Now
+              Save Version
             </Button>
             <Link to={proposalId ? createPageUrl('ProposalView') + `?id=${proposalId}` : '#'}>
               <Button variant="outline" size="sm" disabled={!proposalId}>
@@ -766,6 +773,23 @@ export default function ProposalEditor() {
                   <h3 className="text-lg font-semibold text-slate-900">Proposal History</h3>
                   <ChevronDown className={cn("w-5 h-5 text-slate-400 transition-transform", showActivityPanel && "rotate-180")} />
                 </button>
+              </motion.div>
+            )}
+
+            {/* Version History */}
+            {proposalId && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 }}
+              >
+                <ProposalVersionHistory 
+                  proposalId={proposalId} 
+                  currentProposal={formData}
+                  onRevert={() => {
+                    queryClient.invalidateQueries({ queryKey: ['proposal', proposalId] });
+                  }}
+                />
               </motion.div>
             )}
 
