@@ -146,6 +146,33 @@ export default function ProposalView() {
     window.print();
   };
 
+  const handleDeny = async () => {
+    if (confirm('Are you sure you want to decline this proposal?')) {
+      setProcessing(true);
+      await base44.entities.Proposal.update(proposal.id, { status: 'rejected' });
+      await base44.functions.invoke('logProposalView', { proposalId: proposal.id, action: 'rejected' });
+      refetch();
+      setProcessing(false);
+    }
+  };
+
+  const handleRequestChanges = async () => {
+    if (!changeNotes.trim()) return;
+    setProcessing(true);
+    await base44.entities.Proposal.update(proposal.id, { 
+      status: 'changes_requested', 
+      change_request_notes: changeNotes 
+    });
+    await base44.functions.invoke('logProposalView', { 
+      proposalId: proposal.id, 
+      action: 'changes_requested',
+      details: `Changes requested: ${changeNotes}`
+    });
+    refetch();
+    setShowChangeRequest(false);
+    setProcessing(false);
+  };
+
   // Show celebration or sad animation based on status
   useEffect(() => {
     if (proposal?.status === 'approved' && !showConfetti) {
