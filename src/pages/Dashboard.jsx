@@ -283,7 +283,7 @@ export default function Dashboard() {
                   <Plus className="w-5 h-5 mr-2" />
                   New Project
                 </Button>
-                <Link to={createPageUrl('Templates')} className="text-xs text-slate-400 hover:text-[#0F2F44] transition-colors">
+                <Link to={createPageUrl('Templates')} className="text-sm text-[#0069AF] hover:text-[#133F5C] font-medium transition-colors underline underline-offset-2">
                   or use a template →
                 </Link>
               </div>

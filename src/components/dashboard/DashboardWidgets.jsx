@@ -36,15 +36,21 @@ const WIDGET_TYPES = {
 
 // Metrics Widget
 function MetricsWidget({ projects, tasks, parts }) {
-  const activeProjects = projects.filter(p => p.status !== 'archived' && p.status !== 'completed').length;
-  const completedTasks = tasks.filter(t => t.status === 'completed').length;
-  const pendingParts = parts.filter(p => p.status !== 'installed').length;
-  const overdueTasks = tasks.filter(t => t.due_date && isPast(new Date(t.due_date)) && t.status !== 'completed').length;
+  const activeProjects = projects.filter(p => p.status !== 'archived' && p.status !== 'completed');
+  const activeProjectIds = activeProjects.map(p => p.id);
+  
+  // Only count tasks and parts from active projects
+  const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
+  const activeParts = parts.filter(p => activeProjectIds.includes(p.project_id));
+  
+  const completedTasks = activeTasks.filter(t => t.status === 'completed').length;
+  const pendingParts = activeParts.filter(p => p.status !== 'installed').length;
+  const overdueTasks = activeTasks.filter(t => t.due_date && isPast(new Date(t.due_date)) && t.status !== 'completed').length;
 
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="p-3 bg-blue-50 rounded-lg">
-        <p className="text-2xl font-bold text-blue-700">{activeProjects}</p>
+        <p className="text-2xl font-bold text-blue-700">{activeProjects.length}</p>
         <p className="text-xs text-blue-600">Active Projects</p>
       </div>
       <div className="p-3 bg-emerald-50 rounded-lg">
@@ -95,14 +101,18 @@ function ActivityWidget({ activities }) {
 
 // Deadlines Widget
 function DeadlinesWidget({ tasks, projects }) {
+  // Only show deadlines from active projects
+  const activeProjects = projects.filter(p => p.status !== 'archived' && p.status !== 'completed');
+  const activeProjectIds = activeProjects.map(p => p.id);
+  
   const upcomingItems = [
-    ...tasks.filter(t => t.due_date && t.status !== 'completed').map(t => ({
+    ...tasks.filter(t => t.due_date && t.status !== 'completed' && activeProjectIds.includes(t.project_id)).map(t => ({
       type: 'task',
       title: t.title,
       date: t.due_date,
       projectId: t.project_id
     })),
-    ...projects.filter(p => p.due_date && p.status !== 'completed').map(p => ({
+    ...activeProjects.filter(p => p.due_date).map(p => ({
       type: 'project',
       title: p.name,
       date: p.due_date,
@@ -214,9 +224,11 @@ Provide 2-3 sentences focusing on priorities and recommendations. Be concise and
 }
 
 // My Tasks Widget
-function MyTasksWidget({ tasks, currentUser }) {
+function MyTasksWidget({ tasks, currentUser, projects }) {
+  // Only show tasks from active projects
+  const activeProjectIds = projects.filter(p => p.status !== 'archived' && p.status !== 'completed').map(p => p.id);
   const myTasks = tasks
-    .filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed')
+    .filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed' && activeProjectIds.includes(t.project_id))
     .slice(0, 5);
 
   return (
@@ -251,9 +263,13 @@ function MyTasksWidget({ tasks, currentUser }) {
 }
 
 // Team Workload Widget
-function TeamWorkloadWidget({ tasks, teamMembers }) {
+function TeamWorkloadWidget({ tasks, teamMembers, projects }) {
+  // Only count tasks from active projects
+  const activeProjectIds = projects.filter(p => p.status !== 'archived' && p.status !== 'completed').map(p => p.id);
+  const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
+  
   const workload = teamMembers.map(member => {
-    const memberTasks = tasks.filter(t => t.assigned_to === member.email && t.status !== 'completed');
+    const memberTasks = activeTasks.filter(t => t.assigned_to === member.email && t.status !== 'completed');
     return {
       name: member.name,
       email: member.email,
@@ -287,9 +303,11 @@ function TeamWorkloadWidget({ tasks, teamMembers }) {
 }
 
 // Overdue Parts Widget
-function OverduePartsWidget({ parts }) {
+function OverduePartsWidget({ parts, projects }) {
+  // Only show parts from active projects
+  const activeProjectIds = projects.filter(p => p.status !== 'archived' && p.status !== 'completed').map(p => p.id);
   const overdueParts = parts
-    .filter(p => p.due_date && isPast(new Date(p.due_date)) && p.status !== 'installed')
+    .filter(p => p.due_date && isPast(new Date(p.due_date)) && p.status !== 'installed' && activeProjectIds.includes(p.project_id))
     .slice(0, 5);
 
   return (
@@ -388,11 +406,11 @@ function DashboardWidget({ type, onRemove, projects, tasks, parts, activities, t
       case 'ai_summary':
         return <AISummaryWidget projects={projects} tasks={tasks} />;
       case 'my_tasks':
-        return <MyTasksWidget tasks={tasks} currentUser={currentUser} />;
+        return <MyTasksWidget tasks={tasks} currentUser={currentUser} projects={projects} />;
       case 'team_load':
-        return <TeamWorkloadWidget tasks={tasks} teamMembers={teamMembers} />;
+        return <TeamWorkloadWidget tasks={tasks} teamMembers={teamMembers} projects={projects} />;
       case 'overdue_parts':
-        return <OverduePartsWidget parts={parts} />;
+        return <OverduePartsWidget parts={parts} projects={projects} />;
       case 'project_progress':
         return <ProjectProgressWidget projects={projects} />;
       case 'billing_summary':

@@ -19,12 +19,15 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
     return projects.find(p => p.id === projectId)?.name || 'Unknown';
   };
 
+  // Only show tasks and parts from active projects
+  const activeProjectIds = projects.filter(p => p.status !== 'archived' && p.status !== 'completed').map(p => p.id);
+
   const myTasks = tasks
-    .filter(t => t.assigned_to === currentUserEmail && t.status !== 'completed')
+    .filter(t => t.assigned_to === currentUserEmail && t.status !== 'completed' && activeProjectIds.includes(t.project_id))
     .slice(0, 5);
 
   const myParts = parts
-    .filter(p => p.assigned_to === currentUserEmail && p.status !== 'installed')
+    .filter(p => p.assigned_to === currentUserEmail && p.status !== 'installed' && activeProjectIds.includes(p.project_id))
     .slice(0, 3);
 
   const totalItems = myTasks.length + myParts.length;

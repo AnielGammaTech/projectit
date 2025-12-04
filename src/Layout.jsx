@@ -321,18 +321,31 @@ export default function Layout({ children, currentPageName }) {
                   <>
                     <DropdownMenuSeparator />
                     <div className="py-1">
-                      <DropdownMenuItem asChild>
-                        <Link to={createPageUrl('ManagerDashboard')} className="cursor-pointer">
-                          <Activity className="w-4 h-4 mr-2 text-indigo-500" />
-                          Manager Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to={createPageUrl('TechDashboard')} className="cursor-pointer">
-                          <Clock className="w-4 h-4 mr-2 text-emerald-500" />
-                          Tech Dashboard
-                        </Link>
-                      </DropdownMenuItem>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <div className="flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm">
+                            <div className="flex items-center">
+                              <TrendingUp className="w-4 h-4 mr-2 text-indigo-500" />
+                              TV Dashboards
+                            </div>
+                            <ChevronDown className="w-3 h-3 ml-2" />
+                          </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent side="left" align="start">
+                          <DropdownMenuItem asChild>
+                            <Link to={createPageUrl('ManagerDashboard')} className="cursor-pointer">
+                              <Activity className="w-4 h-4 mr-2 text-indigo-500" />
+                              Manager Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to={createPageUrl('TechDashboard')} className="cursor-pointer">
+                              <Clock className="w-4 h-4 mr-2 text-emerald-500" />
+                              Tech Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl('Adminland')} className="cursor-pointer">
                           <Shield className="w-4 h-4 mr-2 text-[#0069AF]" />
