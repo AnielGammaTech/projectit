@@ -556,12 +556,12 @@ export default function Dashboard() {
                           );
                         })}
                         {provided.placeholder}
-                        </div>
-                        )}
-                        </Droppable>
-                        </div>
-                        </DragDropContext>
-                        ) : (
+                      </div>
+                    )}
+                  </Droppable>
+                </div>
+              </DragDropContext>
+            ) : (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
