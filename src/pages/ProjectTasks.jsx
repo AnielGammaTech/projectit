@@ -36,6 +36,7 @@ import TaskModal from '@/components/modals/TaskModal';
 import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import GroupModal from '@/components/modals/GroupModal';
 import TaskGroupCard from '@/components/project/TaskGroupCard';
+import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -579,17 +580,14 @@ export default function ProjectTasks() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ProjectNavHeader project={project} currentPage="ProjectTasks" />
+      
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Link to={createPageUrl('ProjectDetail') + `?id=${projectId}`} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5 text-slate-600" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">Tasks</h1>
-              <p className="text-sm text-slate-500">{project?.name} • {completedTasks}/{tasks.length} completed</p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Tasks</h1>
+            <p className="text-sm text-slate-500">{completedTasks}/{tasks.length} completed</p>
           </div>
           <Button onClick={() => setShowGroupModal(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white">
             <Plus className="w-4 h-4 mr-2" />
