@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Sparkles } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Sparkles, Users, AlertTriangle, Clock, MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 const statusColors = {
@@ -67,7 +68,7 @@ const statusOptions = [
   { value: 'completed', label: 'Completed' }
 ];
 
-export default function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, onPinToggle, groups = [], isPinned = false, dragHandleProps = {} }) {
+export default function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, onPinToggle, groups = [], isPinned = false, dragHandleProps = {}, teamMembers = [] }) {
   const navigate = useNavigate();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -112,6 +113,27 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
     if (healthScore >= 80) return { bg: 'bg-emerald-50', text: 'text-emerald-600', icon: 'text-emerald-500' };
     if (healthScore >= 60) return { bg: 'bg-amber-50', text: 'text-amber-600', icon: 'text-amber-500' };
     return { bg: 'bg-red-50', text: 'text-red-600', icon: 'text-red-500' };
+  };
+
+  // Get health score reasons
+  const getHealthReasons = () => {
+    const reasons = [];
+    if (overdueTasks > 0) reasons.push(`${overdueTasks} overdue task${overdueTasks > 1 ? 's' : ''}`);
+    if (unassignedTasks > 0) reasons.push(`${unassignedTasks} unassigned task${unassignedTasks > 1 ? 's' : ''}`);
+    if (reasons.length === 0) reasons.push('All tasks on track');
+    return reasons;
+  };
+
+  // Get assigned team members
+  const projectTeam = (project.team_members || []).map(email => {
+    const member = teamMembers.find(m => m.email === email);
+    return member || { email, name: email.split('@')[0] };
+  });
+
+  const getInitials = (name) => {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
   };
 
   const handleColorSelect = (color) => {
@@ -248,38 +270,75 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
         </div>
 
         <div className="flex items-center gap-3 mb-3">
-          {/* Progress Ring with Health Color */}
-          <div className="relative w-10 h-10 flex-shrink-0">
-            <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
-              <circle
-                className="text-slate-100"
-                stroke="currentColor"
-                strokeWidth="3"
-                fill="none"
-                cx="18"
-                cy="18"
-                r="15"
-              />
-              <circle
-                className={getHealthColor()}
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                fill="none"
-                cx="18"
-                cy="18"
-                r="15"
-                strokeDasharray={`${progress * 0.94} 100`}
-              />
-            </svg>
-            <span className={cn(
-              "absolute inset-0 flex items-center justify-center text-[10px] font-bold",
-              healthStatus === 'issue' ? "text-red-600" :
-              healthStatus === 'concern' ? "text-amber-600" : "text-emerald-600"
-            )}>
-              {Math.round(progress)}%
-            </span>
-          </div>
+          {/* Progress Ring with Health Color and Tooltip */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="relative w-10 h-10 flex-shrink-0 cursor-help" onClick={(e) => e.stopPropagation()}>
+                  <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+                    <circle
+                      className="text-slate-100"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      fill="none"
+                      cx="18"
+                      cy="18"
+                      r="15"
+                    />
+                    <circle
+                      className={getHealthColor()}
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      fill="none"
+                      cx="18"
+                      cy="18"
+                      r="15"
+                      strokeDasharray={`${progress * 0.94} 100`}
+                    />
+                  </svg>
+                  <span className={cn(
+                    "absolute inset-0 flex items-center justify-center text-[10px] font-bold",
+                    healthStatus === 'issue' ? "text-red-600" :
+                    healthStatus === 'concern' ? "text-amber-600" : "text-emerald-600"
+                  )}>
+                    {Math.round(progress)}%
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs p-3">
+                <div className="space-y-2">
+                  <p className="font-semibold text-sm">Last Update</p>
+                  {lastUpdate ? (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className={cn(
+                          "px-2 py-0.5 rounded text-[10px] font-medium",
+                          healthStatus === 'issue' ? "bg-red-100 text-red-700" :
+                          healthStatus === 'concern' ? "bg-amber-100 text-amber-700" :
+                          "bg-emerald-100 text-emerald-700"
+                        )}>
+                          {healthStatus === 'issue' ? 'Has Issues' : healthStatus === 'concern' ? 'Some Concerns' : 'On Track'}
+                        </div>
+                        <span className="text-[10px] text-slate-400">
+                          {format(new Date(lastUpdate.created_date), 'MMM d, h:mm a')}
+                        </span>
+                      </div>
+                      {lastUpdate.note && (
+                        <div className="flex items-start gap-1.5 text-xs text-slate-600 bg-slate-50 rounded-lg p-2">
+                          <MessageCircle className="w-3 h-3 text-slate-400 mt-0.5 flex-shrink-0" />
+                          <span className="line-clamp-3">{lastUpdate.note}</span>
+                        </div>
+                      )}
+                      <p className="text-[10px] text-slate-400">by {lastUpdate.author_name || 'Unknown'}</p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400">No updates yet</p>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
               {project.name}
@@ -292,12 +351,59 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
 
         {/* Quick Stats Widgets */}
         <div className="mb-3 flex items-center gap-2 flex-wrap">
-          {/* AI Health Score Widget */}
+          {/* AI Health Score Widget with Tooltip */}
           {totalActive > 0 && (
-            <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-lg", getHealthScoreColor().bg)}>
-              <Sparkles className={cn("w-3.5 h-3.5", getHealthScoreColor().icon)} />
-              <span className={cn("text-xs font-bold", getHealthScoreColor().text)}>{healthScore}%</span>
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-lg cursor-help", getHealthScoreColor().bg)} onClick={(e) => e.stopPropagation()}>
+                    <Sparkles className={cn("w-3.5 h-3.5", getHealthScoreColor().icon)} />
+                    <span className={cn("text-xs font-bold", getHealthScoreColor().text)}>{healthScore}%</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs p-3">
+                  <div className="space-y-2">
+                    <p className="font-semibold text-sm">AI Health Score</p>
+                    <div className="space-y-1">
+                      {getHealthReasons().map((reason, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs">
+                          {reason.includes('overdue') ? (
+                            <AlertTriangle className="w-3 h-3 text-red-500" />
+                          ) : reason.includes('unassigned') ? (
+                            <Users className="w-3 h-3 text-amber-500" />
+                          ) : (
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                          )}
+                          <span>{reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {projectTeam.length > 0 && (
+                      <>
+                        <div className="border-t border-slate-200 pt-2 mt-2">
+                          <p className="font-medium text-xs text-slate-500 mb-1.5">Team Members</p>
+                          <div className="flex flex-wrap gap-1">
+                            {projectTeam.map((member, i) => (
+                              <div key={i} className="flex items-center gap-1 bg-slate-100 rounded-full px-2 py-0.5">
+                                <div className="w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[8px] font-bold">
+                                  {getInitials(member.name || member.email)}
+                                </div>
+                                <span className="text-[10px] text-slate-600">{member.name || member.email.split('@')[0]}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {projectTeam.length === 0 && (
+                      <div className="border-t border-slate-200 pt-2 mt-2">
+                        <p className="text-xs text-slate-400">No team members assigned</p>
+                      </div>
+                    )}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
           {pendingTasks > 0 && (
             <div className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 rounded-lg">
