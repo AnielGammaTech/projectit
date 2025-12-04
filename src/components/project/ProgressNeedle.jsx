@@ -115,9 +115,10 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
     onStatusChange?.('completed');
     queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
     setNote('');
-    setShowNoteInput(false);
+    setShowUpdateModal(false);
     setShowCompletionDialog(false);
     setPendingSave(false);
+    setProjectHealth('good');
   };
 
   const handleCompletionCancel = async () => {
@@ -136,9 +137,10 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
     onSave(100);
     queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
     setNote('');
-    setShowNoteInput(false);
+    setShowUpdateModal(false);
     setShowCompletionDialog(false);
     setPendingSave(false);
+    setProjectHealth('good');
   };
 
 
