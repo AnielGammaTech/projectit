@@ -4,7 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Save, Send, Plus, Eye, Calendar, User, Mail, Phone, FileText,
-  Search, Building2, ChevronDown, Sparkles, Wand2, Package, Loader2, Layers
+  Search, Building2, ChevronDown, Sparkles, Wand2, Package, Loader2, Layers,
+  Copy, Check, History, ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,8 @@ import ProposalSection from '@/components/proposals/ProposalSection';
 import ProposalSummary from '@/components/proposals/ProposalSummary';
 import CustomItemModal from '@/components/proposals/CustomItemModal';
 import AIProposalGenerator from '@/components/proposals/AIProposalGenerator';
+import ProposalActivityFeed from '@/components/proposals/ProposalActivityFeed';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const statusConfig = {
   draft: { label: 'Draft', color: 'bg-slate-100 text-slate-600 border-slate-200' },
@@ -34,6 +37,7 @@ const statusConfig = {
   viewed: { label: 'Viewed', color: 'bg-amber-100 text-amber-700 border-amber-200' },
   approved: { label: 'Approved', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
   rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700 border-red-200' },
+  changes_requested: { label: 'Changes Requested', color: 'bg-orange-100 text-orange-700 border-orange-200' },
   expired: { label: 'Expired', color: 'bg-slate-100 text-slate-500 border-slate-200' }
 };
 
@@ -51,6 +55,8 @@ export default function ProposalEditor() {
   const [showAIGeneratorModal, setShowAIGeneratorModal] = useState(false);
   const [editingAreaIndex, setEditingAreaIndex] = useState(null);
   const [expandedAreas, setExpandedAreas] = useState({});
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [showActivityPanel, setShowActivityPanel] = useState(false);
   
   // Markup settings
   const [markupType, setMarkupType] = useState('percentage');
@@ -372,6 +378,14 @@ export default function ProposalEditor() {
     } else {
       const approvalToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
       const newProposal = await base44.entities.Proposal.create({ ...data, approval_token: approvalToken });
+      // Log creation activity
+      await base44.entities.ProposalActivity.create({
+        proposal_id: newProposal.id,
+        action: 'created',
+        actor_name: currentUser?.full_name || 'User',
+        actor_email: currentUser?.email,
+        details: `Proposal "${data.title}" created`
+      });
       if (!silent) window.location.href = createPageUrl('ProposalEditor') + `?id=${newProposal.id}`;
     }
     
@@ -435,7 +449,24 @@ export default function ProposalEditor() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   {Object.entries(statusConfig).map(([key, config]) => (
-                    <DropdownMenuItem key={key} onClick={() => setFormData(prev => ({ ...prev, status: key }))}>
+                    <DropdownMenuItem key={key} onClick={async () => {
+                      setFormData(prev => ({ ...prev, status: key }));
+                      // Auto-save when status changes
+                      if (proposalId) {
+                        const updates = { status: key };
+                        if (key === 'sent') updates.sent_date = new Date().toISOString();
+                        await base44.entities.Proposal.update(proposalId, updates);
+                        // Log activity
+                        await base44.entities.ProposalActivity.create({
+                          proposal_id: proposalId,
+                          action: key === 'sent' ? 'sent' : 'updated',
+                          actor_name: currentUser?.full_name || 'User',
+                          actor_email: currentUser?.email,
+                          details: `Status changed to ${config.label}`
+                        });
+                        queryClient.invalidateQueries({ queryKey: ['proposalActivity', proposalId] });
+                      }
+                    }}>
                       <span className={cn("w-2 h-2 rounded-full mr-2", config.color.split(' ')[0])}></span>
                       {config.label}
                     </DropdownMenuItem>
@@ -448,6 +479,32 @@ export default function ProposalEditor() {
             <span className="text-xs text-slate-400 mr-2">
               {saving ? 'Saving...' : 'All changes saved'}
             </span>
+            {/* Copy Customer Link Button */}
+            {proposalId && proposal?.approval_token && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  const link = `${window.location.origin}/ProposalApproval?token=${proposal.approval_token}`;
+                  navigator.clipboard.writeText(link);
+                  setLinkCopied(true);
+                  setTimeout(() => setLinkCopied(false), 2000);
+                }}
+                className={cn(linkCopied && "bg-emerald-50 border-emerald-200 text-emerald-600")}
+              >
+                {linkCopied ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                {linkCopied ? 'Copied!' : 'Copy Link'}
+              </Button>
+            )}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowActivityPanel(!showActivityPanel)}
+              className={cn(showActivityPanel && "bg-slate-100")}
+            >
+              <History className="w-4 h-4 mr-1.5" />
+              Activity
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => handleSave(false)} disabled={saving}>
               <Save className="w-4 h-4 mr-1.5" />
               Save Now
@@ -461,7 +518,7 @@ export default function ProposalEditor() {
             <Button 
               size="sm" 
               className="bg-[#0069AF] hover:bg-[#005a94]"
-              disabled={!proposalId || !formData.customer_email || formData.status !== 'draft'}
+              disabled={!proposalId || !formData.customer_email}
               onClick={async () => {
                 if (!formData.customer_email) {
                   alert('Please add a customer with an email address before sending.');
@@ -483,7 +540,16 @@ export default function ProposalEditor() {
                   `
                 });
                 await base44.entities.Proposal.update(proposalId, { status: 'sent', sent_date: new Date().toISOString() });
+                // Log activity
+                await base44.entities.ProposalActivity.create({
+                  proposal_id: proposalId,
+                  action: 'sent',
+                  actor_name: currentUser?.full_name || 'User',
+                  actor_email: currentUser?.email,
+                  details: `Proposal sent to ${formData.customer_email}`
+                });
                 setFormData(prev => ({ ...prev, status: 'sent' }));
+                queryClient.invalidateQueries({ queryKey: ['proposalActivity', proposalId] });
                 alert('Proposal sent successfully!');
               }}
             >
@@ -496,8 +562,56 @@ export default function ProposalEditor() {
 
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="grid lg:grid-cols-12 gap-6">
+          {/* Activity Panel - Slide in from right */}
+          {showActivityPanel && proposalId && (
+            <div className="fixed right-0 top-14 bottom-0 w-96 bg-white border-l border-slate-200 shadow-xl z-30 overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                  <History className="w-4 h-4" />
+                  Activity Log
+                </h3>
+                <Button variant="ghost" size="sm" onClick={() => setShowActivityPanel(false)}>✕</Button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4">
+                <ProposalActivityFeed proposalId={proposalId} />
+              </div>
+              {proposal?.approval_token && (
+                <div className="p-4 border-t border-slate-100 bg-slate-50">
+                  <p className="text-xs text-slate-500 mb-2">Customer Approval Link:</p>
+                  <div className="flex gap-2">
+                    <Input 
+                      value={`${window.location.origin}/ProposalApproval?token=${proposal.approval_token}`}
+                      readOnly
+                      className="text-xs h-8"
+                    />
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="h-8"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/ProposalApproval?token=${proposal.approval_token}`);
+                        setLinkCopied(true);
+                        setTimeout(() => setLinkCopied(false), 2000);
+                      }}
+                    >
+                      {linkCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="h-8"
+                      onClick={() => window.open(`/ProposalApproval?token=${proposal.approval_token}`, '_blank')}
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Main Content */}
-          <div className="lg:col-span-8 space-y-5">
+          <div className={cn("lg:col-span-8 space-y-5", showActivityPanel && "lg:col-span-8")}>
             {/* Title */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-slate-200 p-4">
               <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">Proposal Title</label>
