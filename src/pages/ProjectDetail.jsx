@@ -65,6 +65,7 @@ import UpcomingDueDates from '@/components/project/UpcomingDueDates';
 import TimeTracker from '@/components/project/TimeTracker';
 import HaloPSATicketLink from '@/components/project/HaloPSATicketLink';
 import ProjectInsightsWidget from '@/components/dashboard/ProjectInsightsWidget';
+import ProjectSidebar from '@/components/project/ProjectSidebar';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
 import { cn } from '@/lib/utils';
 
