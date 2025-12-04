@@ -472,12 +472,12 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               </button>
               
               {showHistory && updates.length > 0 && (
-                <ScrollArea className="mt-3 max-h-48 rounded-xl border border-slate-200 bg-slate-50">
+                <div className="mt-3 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50">
                   <div className="p-3 space-y-3">
-                    {updates.map((update, idx) => (
-                      <div key={update.id} className="bg-white rounded-lg p-3 border border-slate-100">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
+                    {updates.map((update) => (
+                      <div key={update.id} className="bg-white rounded-lg p-3 border border-slate-100 overflow-hidden">
+                        <div className="flex items-center justify-between mb-1 gap-2">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
                             <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-600 flex-shrink-0">
                               {update.author_name?.[0] || '?'}
                             </div>
@@ -491,12 +491,12 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                           </div>
                         </div>
                         {update.note && (
-                          <p className="text-sm text-slate-600 mt-1 break-words overflow-hidden">{update.note}</p>
+                          <p className="text-sm text-slate-600 mt-2 break-all whitespace-pre-wrap" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{update.note}</p>
                         )}
                       </div>
                     ))}
                   </div>
-                </ScrollArea>
+                </div>
               )}
               
               {showHistory && updates.length === 0 && (
