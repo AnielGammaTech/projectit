@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, FileText, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, FileText, AlertCircle, Loader2, XCircle, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 
 export default function ProposalApproval() {
@@ -19,6 +20,12 @@ export default function ProposalApproval() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showDeclineForm, setShowDeclineForm] = useState(false);
+  const [showChangesForm, setShowChangesForm] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
+  const [changeNotes, setChangeNotes] = useState('');
+  const [declined, setDeclined] = useState(false);
+  const [changesRequested, setChangesRequested] = useState(false);
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
 
@@ -188,13 +195,25 @@ export default function ProposalApproval() {
     );
   }
 
-  if (proposal.status === 'rejected') {
+  if (proposal.status === 'rejected' || declined) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-slate-900 mb-2">Proposal Declined</h1>
-          <p className="text-slate-500">This proposal has been declined.</p>
+          <p className="text-slate-500">This proposal has been declined. We'll be in touch if you'd like to discuss alternatives.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (proposal.status === 'changes_requested' || changesRequested) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
+          <MessageSquare className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+          <h1 className="text-xl font-bold text-slate-900 mb-2">Changes Requested</h1>
+          <p className="text-slate-500">Your feedback has been submitted. We'll review and get back to you with an updated proposal.</p>
         </div>
       </div>
     );
@@ -344,8 +363,120 @@ export default function ProposalApproval() {
                 </>
               )}
             </Button>
+
+            <div className="flex gap-3 pt-4 border-t border-slate-100">
+              <Button
+                variant="outline"
+                onClick={() => setShowChangesForm(true)}
+                className="flex-1 text-amber-600 border-amber-200 hover:bg-amber-50"
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Request Changes
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeclineForm(true)}
+                className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+              >
+                <XCircle className="w-4 h-4 mr-2" />
+                Decline
+              </Button>
+            </div>
           </div>
         </motion.div>
+
+        {/* Decline Modal */}
+        {showDeclineForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full"
+            >
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Decline Proposal</h3>
+              <p className="text-sm text-slate-500 mb-4">Please let us know why you're declining this proposal (optional).</p>
+              <Textarea
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                placeholder="Reason for declining..."
+                className="mb-4"
+                rows={3}
+              />
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setShowDeclineForm(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={async () => {
+                    setSubmitting(true);
+                    try {
+                      await fetch('https://it-projects-e1224427.base44.app/api/functions/logProposalView', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token, action: 'decline', declineReason })
+                      });
+                      setDeclined(true);
+                    } catch (err) {
+                      console.error('Failed to decline:', err);
+                    }
+                    setSubmitting(false);
+                  }}
+                  disabled={submitting}
+                  className="flex-1 bg-red-600 hover:bg-red-700"
+                >
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Decline'}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Request Changes Modal */}
+        {showChangesForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full"
+            >
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Request Changes</h3>
+              <p className="text-sm text-slate-500 mb-4">Please describe what changes you'd like to see in the proposal.</p>
+              <Textarea
+                value={changeNotes}
+                onChange={(e) => setChangeNotes(e.target.value)}
+                placeholder="Describe the changes you need..."
+                className="mb-4"
+                rows={4}
+              />
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setShowChangesForm(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={async () => {
+                    if (!changeNotes.trim()) return;
+                    setSubmitting(true);
+                    try {
+                      await fetch('https://it-projects-e1224427.base44.app/api/functions/logProposalView', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token, action: 'request_changes', changeNotes })
+                      });
+                      setChangesRequested(true);
+                    } catch (err) {
+                      console.error('Failed to request changes:', err);
+                    }
+                    setSubmitting(false);
+                  }}
+                  disabled={submitting || !changeNotes.trim()}
+                  className="flex-1 bg-amber-600 hover:bg-amber-700"
+                >
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Request'}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     </div>
   );
