@@ -62,14 +62,15 @@ export default function ProposalEditor() {
 
       // Poll ProposalApproval app for status changes every 3 seconds
           useEffect(() => {
-            if (!proposal?.approval_token || !['sent', 'viewed'].includes(formData.status)) return;
+            const token = proposal?.approval_token;
+            if (!token || !['sent', 'viewed'].includes(formData.status)) return;
 
             const pollInterval = setInterval(async () => {
               try {
                 const response = await fetch('https://proposal-pro-545d1a0b.base44.app/api/functions/receiveProposal', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ action: 'check_status', token: proposal.approval_token })
+                  body: JSON.stringify({ action: 'check_status', token })
                 });
                 const result = await response.json();
 
@@ -97,7 +98,7 @@ export default function ProposalEditor() {
             }, 3000);
 
             return () => clearInterval(pollInterval);
-          }, [proposal?.approval_token, formData.status]);
+                }, [proposal, formData.status, proposalId]);
 
       // Markup settings
   const [markupType, setMarkupType] = useState('percentage');
