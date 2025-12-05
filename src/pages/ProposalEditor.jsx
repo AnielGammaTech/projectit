@@ -58,49 +58,9 @@ export default function ProposalEditor() {
   const [expandedAreas, setExpandedAreas] = useState({});
   const [linkCopied, setLinkCopied] = useState(false);
   const [showActivityPanel, setShowActivityPanel] = useState(false);
-      const [pollingStatus, setPollingStatus] = useState(null);
+  const [pollingStatus, setPollingStatus] = useState(null);
 
-      // Poll ProposalApproval app for status changes every 3 seconds
-          useEffect(() => {
-            const token = proposal?.approval_token;
-            if (!token || !['sent', 'viewed'].includes(formData.status)) return;
-
-            const pollInterval = setInterval(async () => {
-              try {
-                const response = await fetch('https://proposal-pro-545d1a0b.base44.app/api/functions/receiveProposal', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ action: 'check_status', token })
-                });
-                const result = await response.json();
-
-                if (result.status && result.status !== formData.status) {
-                  // Update local proposal with new status
-                  const updateData = { status: result.status };
-                  if (result.signer_name) updateData.signer_name = result.signer_name;
-                  if (result.signature_data) updateData.signature_data = result.signature_data;
-                  if (result.signed_date) updateData.signed_date = result.signed_date;
-                  if (result.change_request_notes) updateData.change_request_notes = result.change_request_notes;
-
-                  await base44.entities.Proposal.update(proposalId, updateData);
-                  setFormData(prev => ({ ...prev, ...updateData }));
-                  queryClient.invalidateQueries({ queryKey: ['proposal', proposalId] });
-                  queryClient.invalidateQueries({ queryKey: ['proposalActivity', proposalId] });
-
-                  // Stop polling once we get a final status
-                  if (['approved', 'rejected', 'changes_requested'].includes(result.status)) {
-                    clearInterval(pollInterval);
-                  }
-                }
-              } catch (err) {
-                console.error('Polling error:', err);
-              }
-            }, 3000);
-
-            return () => clearInterval(pollInterval);
-                }, [proposal, formData.status, proposalId]);
-
-      // Markup settings
+  // Markup settings
   const [markupType, setMarkupType] = useState('percentage');
   const [markupValue, setMarkupValue] = useState(20);
   const [selectedSalesperson, setSelectedSalesperson] = useState(null);
