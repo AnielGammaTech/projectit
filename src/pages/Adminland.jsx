@@ -2061,7 +2061,17 @@ function ProposalSyncSection({ queryClient }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: proposal.approval_token, action: 'check_status' })
         });
-        const result = await response.json();
+        const responseText = await response.text();
+        debugInfo.push(`${proposal.proposal_number}: Response=${responseText.substring(0, 200)}`);
+        
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch (e) {
+          debugInfo.push(`  → Failed to parse JSON`);
+          errors++;
+          continue;
+        }
         
         // If proposal doesn't exist in ProposalPro (status undefined), push it first
         if (result.status === undefined) {
