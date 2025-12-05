@@ -1,5 +1,3 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
-
 Deno.serve(async (req) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -11,9 +9,16 @@ Deno.serve(async (req) => {
     return new Response(null, { status: 204, headers });
   }
 
-  try {
-    const base44 = createClientFromRequest(req);
+  // Direct API access to proposals - no SDK auth needed for cross-app calls
+  const APP_ID = Deno.env.get('BASE44_APP_ID');
+  const API_KEY = Deno.env.get('PROPOSAL_API_KEY');
+  const API_BASE = `https://app.base44.com/api/apps/${APP_ID}/entities`;
 
+  if (!API_KEY) {
+    return Response.json({ error: 'API key not configured' }, { status: 500, headers });
+  }
+
+  try {
     if (req.method === 'POST') {
       const body = await req.json();
       const { token, action, signerName, signatureData, declineReason } = body;
@@ -22,24 +27,28 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Token required' }, { status: 400, headers });
       }
 
-      const proposals = await base44.asServiceRole.entities.Proposal.filter({ approval_token: token });
+      // Fetch proposal by token using direct API
+      const fetchRes = await fetch(`${API_BASE}/Proposal?filter=${encodeURIComponent(JSON.stringify({ approval_token: token }))}`, {
+        headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' }
+      });
+      const proposals = await fetchRes.json();
       const proposal = proposals[0];
 
       if (!proposal) {
-        return Response.json({ error: 'Proposal not found', token }, { status: 404, headers });
+        return Response.json({ error: 'Proposal not found' }, { status: 404, headers });
       }
 
       if (action === 'fetch') {
         // Update status to viewed if sent
         if (proposal.status === 'sent') {
-          await base44.asServiceRole.entities.Proposal.update(proposal.id, { 
-            status: 'viewed', 
-            viewed_date: new Date().toISOString() 
+          await fetch(`${API_BASE}/Proposal/${proposal.id}`, {
+            method: 'PUT',
+            headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'viewed', viewed_date: new Date().toISOString() })
           });
           proposal.status = 'viewed';
         }
         
-        // Return proposal data (sanitized for customer view)
         return Response.json({ 
           success: true,
           proposal: {
@@ -67,36 +76,52 @@ Deno.serve(async (req) => {
           return Response.json({ error: 'Signer name required' }, { status: 400, headers });
         }
         
-        await base44.asServiceRole.entities.Proposal.update(proposal.id, {
-          status: 'approved',
-          signature_data: signatureData,
-          signer_name: signerName,
-          signed_date: new Date().toISOString()
+        await fetch(`${API_BASE}/Proposal/${proposal.id}`, {
+          method: 'PUT',
+          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'approved',
+            signature_data: signatureData,
+            signer_name: signerName,
+            signed_date: new Date().toISOString()
+          })
         });
-        
+
         // Log activity
-        await base44.asServiceRole.entities.ProposalActivity.create({
-          proposal_id: proposal.id,
-          action: 'approved',
-          actor_name: signerName,
-          details: `Proposal approved and signed by ${signerName}`
+        await fetch(`${API_BASE}/ProposalActivity`, {
+          method: 'POST',
+          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            proposal_id: proposal.id,
+            action: 'approved',
+            actor_name: signerName,
+            details: `Proposal approved and signed by ${signerName}`
+          })
         });
         
         return Response.json({ success: true }, { headers });
       }
 
       if (action === 'decline') {
-        await base44.asServiceRole.entities.Proposal.update(proposal.id, {
-          status: 'rejected',
-          change_request_notes: declineReason || 'Declined by customer'
+        await fetch(`${API_BASE}/Proposal/${proposal.id}`, {
+          method: 'PUT',
+          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'rejected',
+            change_request_notes: declineReason || 'Declined by customer'
+          })
         });
-        
+
         // Log activity
-        await base44.asServiceRole.entities.ProposalActivity.create({
-          proposal_id: proposal.id,
-          action: 'rejected',
-          actor_name: proposal.customer_name,
-          details: declineReason || 'Declined by customer'
+        await fetch(`${API_BASE}/ProposalActivity`, {
+          method: 'POST',
+          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            proposal_id: proposal.id,
+            action: 'rejected',
+            actor_name: proposal.customer_name,
+            details: declineReason || 'Declined by customer'
+          })
         });
         
         return Response.json({ success: true }, { headers });
@@ -105,22 +130,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid action' }, { status: 400, headers });
     }
 
-    // GET requests - return API info
-    return Response.json({ 
-      api: 'Proposal Approval API',
-      usage: 'POST with {token, action: "fetch|approve|decline"}',
-      actions: {
-        fetch: 'Get proposal data',
-        approve: 'Approve proposal (requires signerName, signatureData)',
-        decline: 'Decline proposal (optional declineReason)'
-      }
-    }, { headers });
+    return Response.json({ api: 'Proposal Approval API', status: 'ready' }, { headers });
 
   } catch (error) {
     console.error('Function error:', error);
-    return Response.json({ 
-      error: 'Internal server error', 
-      details: error.message 
-    }, { status: 500, headers });
+    return Response.json({ error: 'Internal server error', details: error.message }, { status: 500, headers });
   }
 });
