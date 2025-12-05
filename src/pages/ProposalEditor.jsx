@@ -548,33 +548,38 @@ export default function ProposalEditor() {
                                   await handleSave();
 
                                   // Sync proposal to approval app before sending
-                                  try {
-                                    await fetch('https://proposal-pro-545d1a0b.base44.app/api/functions/receiveProposal', {
-                                      method: 'POST',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({
-                                        action: 'store',
-                                        token: proposal?.approval_token,
-                                        proposal: {
-                                          proposal_number: formData.proposal_number,
-                                          title: formData.title,
-                                          customer_name: formData.customer_name,
-                                          customer_email: formData.customer_email,
-                                          customer_company: formData.customer_company,
-                                          items: formData.areas?.flatMap(a => a.items || []) || [],
-                                          areas: formData.areas,
-                                          subtotal: calculateTotals().subtotal,
-                                          tax_total: calculateTotals().taxAmount,
-                                          total: calculateTotals().total,
-                                          terms_conditions: formData.terms_conditions,
-                                          valid_until: formData.valid_until,
-                                          status: formData.status
-                                        }
-                                      })
-                                    });
-                                  } catch (err) {
-                                    console.error('Failed to sync proposal:', err);
-                                  }
+                                                      try {
+                                                        await fetch('https://proposal-pro-545d1a0b.base44.app/api/functions/receiveProposal', {
+                                                          method: 'POST',
+                                                          headers: { 'Content-Type': 'application/json' },
+                                                          body: JSON.stringify({
+                                                            action: 'store',
+                                                            token: proposal?.approval_token,
+                                                            proposal: {
+                                                              proposal_number: formData.proposal_number,
+                                                              title: formData.title,
+                                                              customer_name: formData.customer_name,
+                                                              customer_email: formData.customer_email,
+                                                              customer_company: formData.customer_company,
+                                                              customer_phone: formData.customer_phone,
+                                                              customer_address: formData.customer_address,
+                                                              created_by_name: selectedSalesperson?.name || currentUser?.full_name,
+                                                              created_by_email: selectedSalesperson?.email || currentUser?.email,
+                                                              items: formData.areas?.flatMap(a => a.items || []) || [],
+                                                              areas: formData.areas,
+                                                              subtotal: calculateTotals().subtotal,
+                                                              tax_total: calculateTotals().taxAmount,
+                                                              total: calculateTotals().total,
+                                                              terms_conditions: formData.terms_conditions,
+                                                              valid_until: formData.valid_until,
+                                                              sent_date: new Date().toISOString(),
+                                                              status: 'sent'
+                                                            }
+                                                          })
+                                                        });
+                                                      } catch (err) {
+                                                        console.error('Failed to sync proposal:', err);
+                                                      }
 
                                   const approvalLink = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal?.approval_token}`;
                                   await base44.integrations.Core.SendEmail({
