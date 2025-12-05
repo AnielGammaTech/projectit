@@ -2070,15 +2070,12 @@ function ProposalSyncSection({ queryClient }) {
       checked++;
       try {
         // Query ProposalPro API directly using their entity API with the token filter
-        const response = await fetch(PROPOSALPRO_API_URL, {
-          method: 'POST',
+        const response = await fetch(`${PROPOSALPRO_API_URL}?filter=${encodeURIComponent(JSON.stringify({ token: proposal.approval_token }))}`, {
+          method: 'GET',
           headers: { 
             'Content-Type': 'application/json',
             'x-api-key': PROPOSALPRO_API_KEY
-          },
-          body: JSON.stringify({
-            filter: { token: proposal.approval_token }
-          })
+          }
         });
         
         if (!response.ok) {
