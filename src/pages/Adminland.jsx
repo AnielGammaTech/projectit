@@ -57,14 +57,12 @@ const groupColors = {
 const adminMenuItems = [
   { id: 'people', label: 'People & Teams', icon: Users, description: 'Manage team members, groups, and admin access' },
   { id: 'roles', label: 'Roles & Permissions', icon: Shield, description: 'Custom roles and granular access control', page: 'RolesPermissions' },
-  { id: 'archived', label: 'Archived Projects', icon: Archive, description: 'View and restore archived projects' },
-  { id: 'trash', label: 'Deleted Projects', icon: Trash2, description: 'View and permanently delete or restore trashed projects' },
+  { id: 'project-management', label: 'Project Management', icon: Archive, description: 'Archived and deleted projects' },
   { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automate actions based on triggers', page: 'Workflows' },
   { id: 'templates', label: 'Email & Notification Templates', icon: Mail, description: 'Customize email templates with HTML and variables' },
-  { id: 'webhooks', label: 'Webhooks', icon: Webhook, description: 'Send push notifications to external services' },
   { id: 'proposals', label: 'Proposal Sync', icon: FileText, description: 'Sync proposal statuses from ProposalPro app' },
   { id: 'company', label: 'Company Settings', icon: Building2, description: 'Branding, proposal defaults, and company info' },
-  { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'Connect external services' },
+  { id: 'integrations', label: 'Integrations & Webhooks', icon: GitMerge, description: 'Connect external services and webhooks' },
   { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Track user actions and system changes', page: 'AuditLogs' },
 ];
 
@@ -84,14 +82,11 @@ export default function Adminland() {
         return <IntegrationsSection queryClient={queryClient} />;
       case 'templates':
         return <EmailTemplatesSection queryClient={queryClient} />;
-      case 'archived':
-        return <ArchivedProjectsSection queryClient={queryClient} />;
-      case 'trash':
-        return <DeletedProjectsSection queryClient={queryClient} />;
-      case 'webhooks':
-        return <WebhooksSection queryClient={queryClient} />;
+      
       case 'proposals':
         return <ProposalSyncSection queryClient={queryClient} />;
+      case 'project-management':
+        return <ProjectManagementSection queryClient={queryClient} />;
       default:
         return null;
     }
