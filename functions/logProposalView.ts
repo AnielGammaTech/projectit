@@ -86,13 +86,13 @@ Deno.serve(async (req) => {
       }
 
       if (action === 'decline') {
-        await base44.entities.Proposal.update(proposal.id, {
+        await base44.asServiceRole.entities.Proposal.update(proposal.id, {
           status: 'rejected',
           change_request_notes: declineReason || 'Declined by customer'
         });
         
         // Log activity
-        await base44.entities.ProposalActivity.create({
+        await base44.asServiceRole.entities.ProposalActivity.create({
           proposal_id: proposal.id,
           action: 'rejected',
           actor_name: proposal.customer_name,
