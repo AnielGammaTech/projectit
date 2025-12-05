@@ -2043,24 +2043,37 @@ function ProposalSyncSection({ queryClient }) {
     
     let updated = 0;
     let errors = 0;
+    let checked = 0;
+    const debugInfo = [];
 
     for (const proposal of pendingProposals) {
-      if (!proposal.approval_token) continue;
+      if (!proposal.approval_token) {
+        debugInfo.push(`${proposal.proposal_number}: No token`);
+        continue;
+      }
       
+      checked++;
       try {
         const response = await fetch('https://proposal-pro-693241d0a76cc7fc545d1a0b.base44.app/api/functions/receiveProposal', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'check_status', token: proposal.approval_token })
+          body: JSON.stringify({ token: proposal.approval_token, action: 'check_status' })
         });
         const result = await response.json();
+        
+        debugInfo.push(`${proposal.proposal_number}: Remote status=${result.status}, viewed=${result.viewed}`);
 
-        const remoteStatus = result.status === 'declined' ? 'rejected' : result.status;
-        const isViewed = result.viewed && proposal.status === 'sent';
-        const newStatus = isViewed ? 'viewed' : remoteStatus;
+        // Map remote status
+        let remoteStatus = result.status;
+        if (remoteStatus === 'declined') remoteStatus = 'rejected';
+        
+        // Check if viewed
+        const wasViewed = result.viewed && proposal.status === 'sent';
+        const newStatus = wasViewed ? 'viewed' : (remoteStatus && remoteStatus !== 'pending' ? remoteStatus : null);
 
-        if (newStatus && newStatus !== 'pending' && newStatus !== proposal.status) {
+        if (newStatus && newStatus !== proposal.status) {
           const updateData = { status: newStatus };
+          if (wasViewed && result.viewed_date) updateData.viewed_date = result.viewed_date;
           if (result.signer_name) updateData.signer_name = result.signer_name;
           if (result.signature_data) updateData.signature_data = result.signature_data;
           if (result.signed_date) updateData.signed_date = result.signed_date;
@@ -2068,9 +2081,11 @@ function ProposalSyncSection({ queryClient }) {
 
           await base44.entities.Proposal.update(proposal.id, updateData);
           updated++;
+          debugInfo.push(`  → Updated to ${newStatus}`);
         }
       } catch (err) {
         console.error('Sync error for proposal:', proposal.id, err);
+        debugInfo.push(`${proposal.proposal_number}: Error - ${err.message}`);
         errors++;
       }
     }
@@ -2079,7 +2094,8 @@ function ProposalSyncSection({ queryClient }) {
     queryClient.invalidateQueries({ queryKey: ['proposals'] });
     setSyncResult({ 
       success: errors === 0, 
-      message: `Synced ${updated} proposal(s)${errors > 0 ? `, ${errors} error(s)` : ''}` 
+      message: `Checked ${checked} proposal(s), updated ${updated}${errors > 0 ? `, ${errors} error(s)` : ''}`,
+      details: debugInfo.join('\n')
     });
     setSyncing(false);
   };
