@@ -7,16 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 
-// Get the function URL from the current origin
-const getFunctionUrl = () => {
-  const host = window.location.host;
-  // Extract app identifier from host for function URL
-  if (host.includes('base44.com')) {
-    return `https://${host}/api/functions/logProposalView`;
-  }
-  // For dev/preview environments
-  return `/api/functions/logProposalView`;
-};
+const API_URL = 'https://app.base44.com/api/apps/693241d0a76cc7fc545d1a0b/entities/Proposal';
+const API_KEY = 'c0154b757e3644729507b5d2391259fe';
 
 export default function ProposalApproval() {
   const urlParams = new URLSearchParams(window.location.search);
