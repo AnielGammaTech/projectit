@@ -464,6 +464,20 @@ export default function ProposalEditor() {
                                                           setLinkCopied(true);
                                                           setTimeout(() => setLinkCopied(false), 2000);
 
+                                                          // Update status to sent
+                                                          const newStatus = 'sent';
+                                                          setFormData(prev => ({ ...prev, status: newStatus }));
+                                                          await base44.entities.Proposal.update(proposalId, { status: newStatus, sent_date: new Date().toISOString() });
+
+                                                          // Log activity
+                                                          await base44.entities.ProposalActivity.create({
+                                                            proposal_id: proposalId,
+                                                            action: 'sent',
+                                                            actor_name: currentUser?.full_name || 'User',
+                                                            actor_email: currentUser?.email,
+                                                            details: 'Approval link copied and shared'
+                                                          });
+
                                                           // Then sync proposal to approval app
                                                           try {
                                                             await fetch('https://proposal-pro-545d1a0b.base44.app/api/functions/receiveProposal', {
@@ -485,13 +499,15 @@ export default function ProposalEditor() {
                                                                   total: calculateTotals().total,
                                                                   terms_conditions: formData.terms_conditions,
                                                                   valid_until: formData.valid_until,
-                                                                  status: formData.status
+                                                                  status: newStatus
                                                                 }
                                                               })
                                                             });
                                                           } catch (err) {
                                                             console.error('Failed to sync proposal:', err);
                                                           }
+
+                                                          queryClient.invalidateQueries({ queryKey: ['proposalActivity', proposalId] });
                                                         }}
                                   className={cn(linkCopied && "bg-emerald-50 border-emerald-200 text-emerald-600")}
                                 >

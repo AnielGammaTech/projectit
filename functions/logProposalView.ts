@@ -127,6 +127,31 @@ Deno.serve(async (req) => {
         return Response.json({ success: true }, { headers });
       }
 
+      if (action === 'request_changes') {
+        await fetch(`${API_BASE}/Proposal/${proposal.id}`, {
+          method: 'PUT',
+          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'changes_requested',
+            change_request_notes: body.changeNotes || 'Customer requested changes'
+          })
+        });
+
+        // Log activity
+        await fetch(`${API_BASE}/ProposalActivity`, {
+          method: 'POST',
+          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            proposal_id: proposal.id,
+            action: 'changes_requested',
+            actor_name: proposal.customer_name,
+            details: body.changeNotes || 'Customer requested changes'
+          })
+        });
+        
+        return Response.json({ success: true }, { headers });
+      }
+
       return Response.json({ error: 'Invalid action' }, { status: 400, headers });
     }
 
