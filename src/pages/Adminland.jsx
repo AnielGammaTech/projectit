@@ -1718,8 +1718,8 @@ function DeletedProjectsContent({ queryClient }) {
   );
 }
 
-// Webhooks Section
-function WebhooksSection({ queryClient }) {
+// Webhooks Content (used inside IntegrationsSection)
+function WebhooksContent({ queryClient }) {
   const [webhooks, setWebhooks] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -1823,12 +1823,9 @@ function WebhooksSection({ queryClient }) {
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-6 border-b flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-900">Webhooks</h2>
-          <p className="text-sm text-slate-500">Send push notifications to external services when events occur</p>
-        </div>
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-slate-500">Send push notifications to external services when events occur</p>
         <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
           <Plus className="w-4 h-4 mr-2" />
           Add Webhook
@@ -1926,6 +1923,11 @@ function WebhooksSection({ queryClient }) {
       </Dialog>
     </div>
   );
+}
+
+// Keep WebhooksSection for backward compatibility but redirect to the content
+function WebhooksSection({ queryClient }) {
+  return <WebhooksContent queryClient={queryClient} />;
 }
 
 function WebhookForm({ webhook, eventTypes, onSave, onCancel }) {
@@ -2154,6 +2156,7 @@ function ProposalSyncSection({ queryClient }) {
 }
 
 function IntegrationsSection({ queryClient }) {
+  const [activeTab, setActiveTab] = useState('integrations');
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
@@ -2514,13 +2517,43 @@ function IntegrationsSection({ queryClient }) {
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">Integrations</h2>
-          <p className="text-sm text-slate-500">Connect external services</p>
+          <h2 className="text-xl font-semibold text-slate-900">Integrations & Webhooks</h2>
+          <p className="text-sm text-slate-500">Connect external services and webhooks</p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
-          {saving ? 'Saving...' : 'Save Changes'}
-        </Button>
+        {activeTab === 'integrations' && (
+          <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        )}
       </div>
+      
+      {/* Tabs */}
+      <div className="flex border-b">
+        <button
+          onClick={() => setActiveTab('integrations')}
+          className={cn(
+            "px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+            activeTab === 'integrations' ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+          )}
+        >
+          <GitMerge className="w-4 h-4" />
+          Integrations
+        </button>
+        <button
+          onClick={() => setActiveTab('webhooks')}
+          className={cn(
+            "px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+            activeTab === 'webhooks' ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+          )}
+        >
+          <Webhook className="w-4 h-4" />
+          Webhooks
+        </button>
+      </div>
+
+      {activeTab === 'webhooks' && <WebhooksContent queryClient={queryClient} />}
+      
+      {activeTab === 'integrations' && (
       <div className="p-6 space-y-4">
         {/* Integration Cards */}
         
