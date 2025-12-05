@@ -58,8 +58,35 @@ export default function ProposalEditor() {
   const [expandedAreas, setExpandedAreas] = useState({});
   const [linkCopied, setLinkCopied] = useState(false);
   const [showActivityPanel, setShowActivityPanel] = useState(false);
-  
-  // Markup settings
+      const [pollingStatus, setPollingStatus] = useState(null);
+
+      // Poll for status changes every 3 seconds when proposal is sent/viewed
+      useEffect(() => {
+        if (!proposalId || !['sent', 'viewed'].includes(formData.status)) return;
+
+        const pollInterval = setInterval(async () => {
+          try {
+            const proposals = await base44.entities.Proposal.filter({ id: proposalId });
+            const current = proposals[0];
+            if (current && current.status !== formData.status) {
+              setFormData(prev => ({ ...prev, status: current.status, change_request_notes: current.change_request_notes }));
+              setPollingStatus(current.status);
+              queryClient.invalidateQueries({ queryKey: ['proposal', proposalId] });
+              queryClient.invalidateQueries({ queryKey: ['proposalActivity', proposalId] });
+              // Stop polling once we get a final status
+              if (['approved', 'rejected', 'changes_requested'].includes(current.status)) {
+                clearInterval(pollInterval);
+              }
+            }
+          } catch (err) {
+            console.error('Polling error:', err);
+          }
+        }, 3000);
+
+        return () => clearInterval(pollInterval);
+      }, [proposalId, formData.status]);
+
+      // Markup settings
   const [markupType, setMarkupType] = useState('percentage');
   const [markupValue, setMarkupValue] = useState(20);
   const [selectedSalesperson, setSelectedSalesperson] = useState(null);
