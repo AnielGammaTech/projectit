@@ -53,16 +53,9 @@ export default function ProposalApproval() {
         
         if (data.error) {
           setError(data.error);
-        } else if (data.proposal) {
-          setProposal(data.proposal);
-          // Log view if proposal was just sent
-          if (data.proposal.status === 'sent') {
-            fetch(getFunctionUrl(), {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ token, action: 'viewed' })
-            }).catch(() => {});
-          }
+        } else if (data.p) {
+          setProposal(data.p);
+          // View is already logged by the backend when action='fetch'
         } else {
           setError('Proposal not found');
         }
@@ -132,15 +125,14 @@ export default function ProposalApproval() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           token, 
-          action: 'approved',
+          action: 'approve',
           signerName,
-          signatureData,
-          details: `Approved and signed by ${signerName}`
+          signatureData
         })
       });
       
       const data = await response.json();
-      if (data.success) {
+      if (data.ok) {
         setSubmitted(true);
       } else {
         console.error('Submit error:', data.error);
