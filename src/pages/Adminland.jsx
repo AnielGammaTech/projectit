@@ -1423,8 +1423,56 @@ function EmailTemplatesSection({ queryClient }) {
   );
 }
 
-// Archived Projects Section
-function ArchivedProjectsSection({ queryClient }) {
+// Combined Project Management Section (Archived + Deleted)
+function ProjectManagementSection({ queryClient }) {
+  const [activeTab, setActiveTab] = useState('archived');
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 rounded-lg bg-amber-100">
+            <Archive className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Project Management</h2>
+            <p className="text-sm text-slate-500">Manage archived and deleted projects</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Tabs */}
+      <div className="flex border-b">
+        <button
+          onClick={() => setActiveTab('archived')}
+          className={cn(
+            "px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+            activeTab === 'archived' ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+          )}
+        >
+          <Archive className="w-4 h-4" />
+          Archived Projects
+        </button>
+        <button
+          onClick={() => setActiveTab('deleted')}
+          className={cn(
+            "px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+            activeTab === 'deleted' ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+          )}
+        >
+          <Trash2 className="w-4 h-4" />
+          Deleted Projects
+        </button>
+      </div>
+
+      {activeTab === 'archived' && <ArchivedProjectsContent queryClient={queryClient} />}
+      {activeTab === 'deleted' && <DeletedProjectsContent queryClient={queryClient} />}
+    </div>
+  );
+}
+
+// Archived Projects Content
+function ArchivedProjectsContent({ queryClient }) {
   const { data: archivedProjects = [], refetch } = useQuery({
     queryKey: ['archivedProjects'],
     queryFn: async () => {
@@ -1466,19 +1514,7 @@ function ArchivedProjectsSection({ queryClient }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-6 border-b">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-lg bg-amber-100">
-            <Archive className="w-5 h-5 text-amber-600" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">Archived Projects</h2>
-            <p className="text-sm text-slate-500">{archivedProjects.length} archived project{archivedProjects.length !== 1 ? 's' : ''}</p>
-          </div>
-        </div>
-      </div>
-
+    <>
       {archivedProjects.length === 0 ? (
         <div className="p-12 text-center">
           <Archive className="w-12 h-12 mx-auto text-slate-300 mb-4" />
@@ -1540,12 +1576,12 @@ function ArchivedProjectsSection({ queryClient }) {
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }
 
-// Deleted Projects (Trash) Section
-function DeletedProjectsSection({ queryClient }) {
+// Deleted Projects Content
+function DeletedProjectsContent({ queryClient }) {
   const [restoreConfirm, setRestoreConfirm] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
@@ -1588,20 +1624,7 @@ function DeletedProjectsSection({ queryClient }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-6 border-b">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-lg bg-red-100">
-            <Trash2 className="w-5 h-5 text-red-600" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">Deleted Projects</h2>
-            <p className="text-sm text-slate-500">{deletedProjects.length} deleted project{deletedProjects.length !== 1 ? 's' : ''} in trash</p>
-          </div>
-        </div>
-        <p className="text-xs text-slate-400 mt-2">Projects in trash can be restored or permanently deleted. Permanent deletion cannot be undone.</p>
-      </div>
-
+    <>
       {deletedProjects.length === 0 ? (
         <div className="p-12 text-center">
           <Trash2 className="w-12 h-12 mx-auto text-slate-300 mb-4" />
@@ -1691,7 +1714,7 @@ function DeletedProjectsSection({ queryClient }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }
 
