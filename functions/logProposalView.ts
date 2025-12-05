@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Token required' }, { status: 400, headers });
       }
 
-      const proposals = await base44.entities.Proposal.filter({ approval_token: token });
+      const proposals = await base44.asServiceRole.entities.Proposal.filter({ approval_token: token });
       const proposal = proposals[0];
 
       if (!proposal) {
