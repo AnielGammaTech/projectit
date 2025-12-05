@@ -533,7 +533,7 @@ export default function ProposalEditor() {
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="grid lg:grid-cols-12 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-8 space-y-5">
+          <div className={cn("lg:col-span-8 space-y-5", showActivityPanel && "lg:col-span-5")}
             {/* Title Header */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-slate-200 p-5">
               <div className="flex items-start justify-between gap-4">
@@ -863,7 +863,7 @@ export default function ProposalEditor() {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-4">
+          <div className={cn("lg:col-span-4", showActivityPanel && "lg:col-span-3")}>
             <ProposalSummary
               formData={formData}
               setFormData={setFormData}
@@ -875,6 +875,50 @@ export default function ProposalEditor() {
               setMarkupValue={setMarkupValue}
             />
           </div>
+
+          {/* Activity Panel - Slide out */}
+          {showActivityPanel && proposalId && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="lg:col-span-4 space-y-4"
+            >
+              <div className="bg-white rounded-xl border border-slate-200 p-5 sticky top-20">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-slate-900">Activity</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setShowActivityPanel(false)}>
+                    ✕
+                  </Button>
+                </div>
+                <ProposalActivityFeed proposalId={proposalId} />
+                {proposal?.approval_token && (
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <p className="text-xs text-slate-500 mb-2">Customer Approval Link:</p>
+                    <div className="flex gap-2">
+                      <Input 
+                        value={`${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`}
+                        readOnly
+                        className="text-xs h-8"
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="h-8"
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`);
+                          setLinkCopied(true);
+                          setTimeout(() => setLinkCopied(false), 2000);
+                        }}
+                      >
+                        {linkCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
 
