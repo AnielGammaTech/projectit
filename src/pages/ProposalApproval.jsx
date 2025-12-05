@@ -25,7 +25,7 @@ export default function ProposalApproval() {
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
 
-  // Fetch proposal via backend function (no auth required)
+  // Fetch proposal via direct entity API
   useEffect(() => {
     if (!token) {
       setIsLoading(false);
@@ -35,19 +35,34 @@ export default function ProposalApproval() {
 
     const fetchProposal = async () => {
       try {
-        const response = await fetch(getFunctionUrl(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, action: 'fetch' })
+        const response = await fetch(`${API_URL}?filter=${encodeURIComponent(JSON.stringify({approval_token: token}))}`, {
+          headers: {
+            'api_key': API_KEY,
+            'Content-Type': 'application/json'
+          }
         });
         
-        const data = await response.json();
+        const proposals = await response.json();
         
-        if (data.error) {
-          setError(data.error);
-        } else if (data.p) {
-          setProposal(data.p);
-          // View is already logged by the backend when action='fetch'
+        if (proposals && proposals.length > 0) {
+          const p = proposals[0];
+          setProposal(p);
+          
+          // Update status to viewed if sent
+          if (p.status === 'sent') {
+            await fetch(`${API_URL}/${p.id}`, {
+              method: 'PUT',
+              headers: {
+                'api_key': API_KEY,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                status: 'viewed',
+                viewed_date: new Date().toISOString()
+              })
+            });
+            setProposal(prev => ({ ...prev, status: 'viewed' }));
+          }
         } else {
           setError('Proposal not found');
         }
