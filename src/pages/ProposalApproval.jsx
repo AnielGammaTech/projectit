@@ -34,14 +34,35 @@ export default function ProposalApproval() {
 
     const fetchProposal = async () => {
       try {
-        const response = await fetch(`${API_URL}?filter=${encodeURIComponent(JSON.stringify({approval_token: token}))}`, {
-          headers: {
-            'api_key': API_KEY,
-            'Content-Type': 'application/json'
-          }
+        // Call backend function to fetch proposal
+        const response = await fetch('https://it-projects-e1224427.base44.app/api/functions/logProposalView', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, action: 'fetch' })
         });
         
-        const proposals = await response.json();
+        const result = await response.json();
+        
+        if (!result.success) {
+          setError(result.error || 'Proposal not found');
+          setIsLoading(false);
+          return;
+        }
+        
+        setProposal(result.proposal);
+        setIsLoading(false);
+        return;
+      } catch (err) {
+        console.error('Fetch error:', err);
+        setError('Failed to load proposal');
+        setIsLoading(false);
+      }
+    };
+
+    fetchProposal();
+  }, [token]);
+
+  // OLD CODE REMOVED - using backend function now
         
         if (proposals && proposals.length > 0) {
           const p = proposals[0];
