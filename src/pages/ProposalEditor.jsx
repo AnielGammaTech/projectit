@@ -155,20 +155,25 @@ export default function ProposalEditor() {
 
     const pollInterval = setInterval(async () => {
       try {
-        const response = await fetch('https://proposal-pro-545d1a0b.base44.app/api/functions/receiveProposal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'check_status', token })
-        });
-        const result = await response.json();
+        const response = await fetch('https://proposal-pro-693241d0a76cc7fc545d1a0b.base44.app/api/functions/receiveProposal', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ action: 'check_status', token })
+                        });
+                        const result = await response.json();
 
-        if (result.status && result.status !== formData.status) {
+                        // Map status from remote app
+                        const remoteStatus = result.status === 'declined' ? 'rejected' : result.status;
+                        const isViewed = result.viewed && formData.status === 'sent';
+                        const newStatus = isViewed ? 'viewed' : remoteStatus;
+
+                        if (newStatus && newStatus !== 'pending' && newStatus !== formData.status) {
           // Update local proposal with new status
-          const updateData = { status: result.status };
-          if (result.signer_name) updateData.signer_name = result.signer_name;
-          if (result.signature_data) updateData.signature_data = result.signature_data;
-          if (result.signed_date) updateData.signed_date = result.signed_date;
-          if (result.change_request_notes) updateData.change_request_notes = result.change_request_notes;
+                            const updateData = { status: newStatus };
+                            if (result.signer_name) updateData.signer_name = result.signer_name;
+                            if (result.signature_data) updateData.signature_data = result.signature_data;
+                            if (result.signed_date) updateData.signed_date = result.signed_date;
+                            if (result.changes_requested) updateData.change_request_notes = result.changes_requested;
 
           await base44.entities.Proposal.update(proposalId, updateData);
           setFormData(prev => ({ ...prev, ...updateData }));
