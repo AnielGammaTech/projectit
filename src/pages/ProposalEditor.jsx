@@ -628,7 +628,7 @@ export default function ProposalEditor() {
                                                       }
 
                                   const approvalLink = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal?.approval_token}`;
-                                  await base44.functions.invoke('sendEmailit', {
+                                  const emailResult = await base44.functions.invoke('sendEmailit', {
                                     to: formData.customer_email,
                                     subject: `Proposal: ${formData.title}`,
                                     html: `
@@ -641,6 +641,10 @@ export default function ProposalEditor() {
                                       <p>This proposal is valid until ${formData.valid_until ? format(new Date(formData.valid_until), 'MMMM d, yyyy') : 'further notice'}.</p>
                                     `
                                   });
+                                  if (!emailResult.data?.success) {
+                                    alert(`Email error: ${emailResult.data?.error || 'Failed to send email. Please configure Emailit in Adminland.'}`);
+                                    return;
+                                  }
                 await base44.entities.Proposal.update(proposalId, { status: 'sent', sent_date: new Date().toISOString() });
                 // Log activity
                 await base44.entities.ProposalActivity.create({
