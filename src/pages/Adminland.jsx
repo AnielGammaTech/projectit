@@ -973,6 +973,7 @@ function CompanySettingsSection({ queryClient }) {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
@@ -1419,6 +1420,7 @@ function EmailTemplatesSection({ queryClient }) {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
