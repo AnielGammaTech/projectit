@@ -2042,6 +2042,7 @@ function ProposalSyncSection({ queryClient }) {
     setSyncResult(null);
     
     let updated = 0;
+    let pushed = 0;
     let errors = 0;
     let checked = 0;
     const debugInfo = [];
@@ -2054,12 +2055,50 @@ function ProposalSyncSection({ queryClient }) {
       
       checked++;
       try {
+        // First check status
         const response = await fetch('https://proposal-pro-693241d0a76cc7fc545d1a0b.base44.app/api/functions/receiveProposal', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: proposal.approval_token, action: 'check_status' })
         });
         const result = await response.json();
+        
+        // If proposal doesn't exist in ProposalPro (status undefined), push it first
+        if (result.status === undefined) {
+          debugInfo.push(`${proposal.proposal_number}: Not in ProposalPro, pushing...`);
+          
+          await fetch('https://proposal-pro-693241d0a76cc7fc545d1a0b.base44.app/api/functions/receiveProposal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'store',
+              token: proposal.approval_token,
+              proposal: {
+                proposal_number: proposal.proposal_number,
+                title: proposal.title,
+                customer_name: proposal.customer_name,
+                customer_email: proposal.customer_email,
+                customer_company: proposal.customer_company,
+                customer_phone: proposal.customer_phone,
+                customer_address: proposal.customer_address,
+                created_by_name: proposal.created_by_name,
+                created_by_email: proposal.created_by_email,
+                items: proposal.items || [],
+                areas: proposal.areas || [],
+                subtotal: proposal.subtotal,
+                tax_total: proposal.tax_total,
+                total: proposal.total,
+                terms_conditions: proposal.terms_conditions,
+                valid_until: proposal.valid_until,
+                sent_date: proposal.sent_date,
+                status: proposal.status
+              }
+            })
+          });
+          pushed++;
+          debugInfo.push(`  → Pushed to ProposalPro`);
+          continue;
+        }
         
         debugInfo.push(`${proposal.proposal_number}: Remote status=${result.status}, viewed=${result.viewed}`);
 
@@ -2094,7 +2133,7 @@ function ProposalSyncSection({ queryClient }) {
     queryClient.invalidateQueries({ queryKey: ['proposals'] });
     setSyncResult({ 
       success: errors === 0, 
-      message: `Checked ${checked} proposal(s), updated ${updated}${errors > 0 ? `, ${errors} error(s)` : ''}`,
+      message: `Checked ${checked}, pushed ${pushed} to ProposalPro, updated ${updated}${errors > 0 ? `, ${errors} error(s)` : ''}`,
       details: debugInfo.join('\n')
     });
     setSyncing(false);
