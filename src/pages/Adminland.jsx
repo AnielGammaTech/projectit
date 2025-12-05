@@ -1697,6 +1697,309 @@ function DeletedProjectsSection({ queryClient }) {
   );
 }
 
+// Webhooks Section
+function WebhooksSection({ queryClient }) {
+  const [webhooks, setWebhooks] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [testing, setTesting] = useState(null);
+  const [testResult, setTestResult] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['webhookSettings'],
+    queryFn: async () => {
+      const s = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
+      return s;
+    }
+  });
+
+  useEffect(() => {
+    if (settings[0]?.webhooks) {
+      setWebhooks(settings[0].webhooks);
+    }
+  }, [settings]);
+
+  const saveWebhooks = async (newWebhooks) => {
+    if (settings[0]?.id) {
+      await base44.entities.IntegrationSettings.update(settings[0].id, { webhooks: newWebhooks });
+    } else {
+      await base44.entities.IntegrationSettings.create({ setting_key: 'main', webhooks: newWebhooks });
+    }
+    refetch();
+  };
+
+  const handleSave = async (webhook) => {
+    let newWebhooks;
+    if (editing) {
+      newWebhooks = webhooks.map(w => w.id === editing.id ? { ...webhook, id: editing.id } : w);
+    } else {
+      newWebhooks = [...webhooks, { ...webhook, id: Date.now().toString(), created_date: new Date().toISOString() }];
+    }
+    setWebhooks(newWebhooks);
+    await saveWebhooks(newWebhooks);
+    setShowModal(false);
+    setEditing(null);
+  };
+
+  const handleDelete = async (id) => {
+    if (confirm('Delete this webhook?')) {
+      const newWebhooks = webhooks.filter(w => w.id !== id);
+      setWebhooks(newWebhooks);
+      await saveWebhooks(newWebhooks);
+    }
+  };
+
+  const handleToggle = async (id) => {
+    const newWebhooks = webhooks.map(w => w.id === id ? { ...w, enabled: !w.enabled } : w);
+    setWebhooks(newWebhooks);
+    await saveWebhooks(newWebhooks);
+  };
+
+  const handleTest = async (webhook) => {
+    setTesting(webhook.id);
+    setTestResult(null);
+    try {
+      const response = await fetch(webhook.url, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(webhook.secret ? { 'X-Webhook-Secret': webhook.secret } : {})
+        },
+        body: JSON.stringify({
+          event: 'test',
+          timestamp: new Date().toISOString(),
+          data: { message: 'This is a test webhook from IT Projects' }
+        })
+      });
+      setTestResult({ id: webhook.id, success: response.ok, status: response.status });
+    } catch (err) {
+      setTestResult({ id: webhook.id, success: false, error: err.message });
+    }
+    setTesting(null);
+  };
+
+  const copyWebhookId = (id) => {
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const eventTypes = [
+    { value: 'proposal.approved', label: 'Proposal Approved' },
+    { value: 'proposal.rejected', label: 'Proposal Rejected' },
+    { value: 'proposal.sent', label: 'Proposal Sent' },
+    { value: 'proposal.viewed', label: 'Proposal Viewed' },
+    { value: 'proposal.changes_requested', label: 'Proposal Changes Requested' },
+    { value: 'project.created', label: 'Project Created' },
+    { value: 'project.completed', label: 'Project Completed' },
+    { value: 'project.status_changed', label: 'Project Status Changed' },
+    { value: 'task.completed', label: 'Task Completed' },
+    { value: 'task.assigned', label: 'Task Assigned' },
+    { value: 'part.received', label: 'Part Received' },
+    { value: 'part.installed', label: 'Part Installed' },
+    { value: 'customer.created', label: 'Customer Created' },
+  ];
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-slate-900">Webhooks</h2>
+          <p className="text-sm text-slate-500">Send push notifications to external services when events occur</p>
+        </div>
+        <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          <Plus className="w-4 h-4 mr-2" />
+          Add Webhook
+        </Button>
+      </div>
+
+      {webhooks.length === 0 ? (
+        <div className="p-12 text-center">
+          <Webhook className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">No webhooks configured</h3>
+          <p className="text-slate-500 mb-4">Set up webhooks to push data to external services like Zapier, Make, or custom endpoints.</p>
+          <Button onClick={() => setShowModal(true)} variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Your First Webhook
+          </Button>
+        </div>
+      ) : (
+        <div className="divide-y">
+          {webhooks.map((webhook) => (
+            <div key={webhook.id} className="p-4 hover:bg-slate-50 transition-colors">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-slate-900">{webhook.name}</h3>
+                    <Badge variant={webhook.enabled ? "default" : "outline"} className={webhook.enabled ? "bg-emerald-500" : ""}>
+                      {webhook.enabled ? 'Active' : 'Disabled'}
+                    </Badge>
+                    {testResult?.id === webhook.id && (
+                      <Badge variant="outline" className={testResult.success ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"}>
+                        {testResult.success ? `Success (${testResult.status})` : `Failed: ${testResult.error || testResult.status}`}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-500 font-mono truncate mb-2">{webhook.url}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {webhook.events?.map(event => (
+                      <Badge key={event} variant="outline" className="text-xs">{event}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyWebhookId(webhook.id)}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    {copiedId === webhook.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTest(webhook)}
+                    disabled={testing === webhook.id}
+                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                  >
+                    {testing === webhook.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleToggle(webhook.id)}>
+                        {webhook.enabled ? 'Disable' : 'Enable'}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setEditing(webhook); setShowModal(true); }}>
+                        <Edit2 className="w-4 h-4 mr-2" />Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(webhook.id)} className="text-red-600">
+                        <Trash2 className="w-4 h-4 mr-2" />Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Webhook Modal */}
+      <Dialog open={showModal} onOpenChange={() => { setShowModal(false); setEditing(null); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Edit Webhook' : 'Add Webhook'}</DialogTitle>
+          </DialogHeader>
+          <WebhookForm 
+            webhook={editing} 
+            eventTypes={eventTypes}
+            onSave={handleSave} 
+            onCancel={() => { setShowModal(false); setEditing(null); }} 
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function WebhookForm({ webhook, eventTypes, onSave, onCancel }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    url: '',
+    secret: '',
+    events: [],
+    enabled: true
+  });
+
+  useEffect(() => {
+    if (webhook) {
+      setFormData({
+        name: webhook.name || '',
+        url: webhook.url || '',
+        secret: webhook.secret || '',
+        events: webhook.events || [],
+        enabled: webhook.enabled !== false
+      });
+    }
+  }, [webhook]);
+
+  const toggleEvent = (event) => {
+    setFormData(prev => ({
+      ...prev,
+      events: prev.events.includes(event) 
+        ? prev.events.filter(e => e !== event)
+        : [...prev.events, event]
+    }));
+  };
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-4 mt-4">
+      <div>
+        <Label>Name</Label>
+        <Input 
+          value={formData.name} 
+          onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} 
+          placeholder="e.g., Zapier Integration" 
+          required 
+          className="mt-1" 
+        />
+      </div>
+      <div>
+        <Label>Webhook URL</Label>
+        <Input 
+          value={formData.url} 
+          onChange={(e) => setFormData(p => ({ ...p, url: e.target.value }))} 
+          placeholder="https://hooks.zapier.com/..." 
+          required 
+          className="mt-1 font-mono text-sm" 
+        />
+        <p className="text-xs text-slate-400 mt-1">The URL to receive POST requests with event data</p>
+      </div>
+      <div>
+        <Label>Secret (Optional)</Label>
+        <Input 
+          value={formData.secret} 
+          onChange={(e) => setFormData(p => ({ ...p, secret: e.target.value }))} 
+          placeholder="Optional secret for X-Webhook-Secret header" 
+          className="mt-1" 
+        />
+        <p className="text-xs text-slate-400 mt-1">Will be sent in the X-Webhook-Secret header for verification</p>
+      </div>
+      <div>
+        <Label>Events</Label>
+        <p className="text-xs text-slate-500 mb-2">Select which events trigger this webhook</p>
+        <div className="max-h-48 overflow-y-auto border rounded-lg p-2 space-y-1">
+          {eventTypes.map(event => (
+            <label key={event.value} className="flex items-center gap-2 p-2 rounded hover:bg-slate-50 cursor-pointer">
+              <Checkbox 
+                checked={formData.events.includes(event.value)} 
+                onCheckedChange={() => toggleEvent(event.value)} 
+              />
+              <span className="text-sm">{event.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <Checkbox 
+          checked={formData.enabled} 
+          onCheckedChange={(checked) => setFormData(p => ({ ...p, enabled: checked }))} 
+        />
+        <span className="text-sm">Enabled</span>
+      </label>
+      <div className="flex justify-end gap-3 pt-4 border-t">
+        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]">{webhook ? 'Update' : 'Create'}</Button>
+      </div>
+    </form>
+  );
+}
+
 function IntegrationsSection({ queryClient }) {
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
