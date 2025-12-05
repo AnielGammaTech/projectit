@@ -7,8 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 
-const API_URL = 'https://app.base44.com/api/apps/6931ffd106ce9e3ae1224427/entities/Proposal';
-
 export default function ProposalApproval() {
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
