@@ -2003,6 +2003,138 @@ function WebhookForm({ webhook, eventTypes, onSave, onCancel }) {
   );
 }
 
+// Proposal Sync Section
+function ProposalSyncSection({ queryClient }) {
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
+
+  const { data: proposals = [], refetch } = useQuery({
+    queryKey: ['proposals'],
+    queryFn: () => base44.entities.Proposal.list('-created_date')
+  });
+
+  const pendingProposals = proposals.filter(p => ['sent', 'viewed'].includes(p.status));
+
+  const handleSyncAll = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    
+    let updated = 0;
+    let errors = 0;
+
+    for (const proposal of pendingProposals) {
+      if (!proposal.approval_token) continue;
+      
+      try {
+        const response = await fetch('https://proposal-pro-693241d0a76cc7fc545d1a0b.base44.app/api/functions/receiveProposal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'check_status', token: proposal.approval_token })
+        });
+        const result = await response.json();
+
+        const remoteStatus = result.status === 'declined' ? 'rejected' : result.status;
+        const isViewed = result.viewed && proposal.status === 'sent';
+        const newStatus = isViewed ? 'viewed' : remoteStatus;
+
+        if (newStatus && newStatus !== 'pending' && newStatus !== proposal.status) {
+          const updateData = { status: newStatus };
+          if (result.signer_name) updateData.signer_name = result.signer_name;
+          if (result.signature_data) updateData.signature_data = result.signature_data;
+          if (result.signed_date) updateData.signed_date = result.signed_date;
+          if (result.changes_requested) updateData.change_request_notes = result.changes_requested;
+
+          await base44.entities.Proposal.update(proposal.id, updateData);
+          updated++;
+        }
+      } catch (err) {
+        console.error('Sync error for proposal:', proposal.id, err);
+        errors++;
+      }
+    }
+
+    refetch();
+    queryClient.invalidateQueries({ queryKey: ['proposals'] });
+    setSyncResult({ 
+      success: errors === 0, 
+      message: `Synced ${updated} proposal(s)${errors > 0 ? `, ${errors} error(s)` : ''}` 
+    });
+    setSyncing(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 rounded-lg bg-blue-100">
+            <FileText className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Proposal Status Sync</h2>
+            <p className="text-sm text-slate-500">Sync proposal statuses from ProposalPro approval app</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-4">
+        <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+          <p className="text-sm text-blue-700">
+            <strong>{pendingProposals.length}</strong> proposal(s) with "Sent" or "Viewed" status that can be synced.
+          </p>
+        </div>
+
+        <Button 
+          onClick={handleSyncAll} 
+          disabled={syncing || pendingProposals.length === 0}
+          className="bg-[#0069AF] hover:bg-[#133F5C]"
+        >
+          {syncing ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Syncing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Sync All Proposal Statuses
+            </>
+          )}
+        </Button>
+
+        {syncResult && (
+          <div className={cn(
+            "p-3 rounded-lg text-sm",
+            syncResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-amber-50 text-amber-700 border border-amber-200"
+          )}>
+            {syncResult.message}
+          </div>
+        )}
+
+        {pendingProposals.length > 0 && (
+          <div className="border rounded-lg divide-y">
+            {pendingProposals.slice(0, 10).map(proposal => (
+              <div key={proposal.id} className="p-3 flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-slate-900">{proposal.title}</p>
+                  <p className="text-xs text-slate-500">{proposal.proposal_number} • {proposal.customer_name}</p>
+                </div>
+                <Badge variant="outline" className={proposal.status === 'sent' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'}>
+                  {proposal.status}
+                </Badge>
+              </div>
+            ))}
+            {pendingProposals.length > 10 && (
+              <div className="p-3 text-center text-sm text-slate-500">
+                +{pendingProposals.length - 10} more
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function IntegrationsSection({ queryClient }) {
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
