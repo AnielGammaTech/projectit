@@ -2028,7 +2028,11 @@ function WebhookForm({ webhook, eventTypes, onSave, onCancel }) {
 // Proposal Sync Section
 function ProposalSyncSection({ queryClient }) {
   const [syncing, setSyncing] = useState(false);
+  const [autoSync, setAutoSync] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
+
+  const PROPOSALPRO_API_KEY = 'c0154b757e3644729507b5d2391259fe';
+  const PROPOSALPRO_API_URL = 'https://proposal-pro-693241d0a76cc7fc545d1a0b.base44.app/api/entities/Proposal';
 
   const { data: proposals = [], refetch } = useQuery({
     queryKey: ['proposals'],
@@ -2037,116 +2041,110 @@ function ProposalSyncSection({ queryClient }) {
 
   const pendingProposals = proposals.filter(p => ['sent', 'viewed'].includes(p.status));
 
-  const handleSyncAll = async () => {
-    setSyncing(true);
-    setSyncResult(null);
+  // Auto-sync every 2 seconds when enabled
+  useEffect(() => {
+    if (!autoSync) return;
+    
+    const interval = setInterval(() => {
+      handleSyncAll(true); // silent mode
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [autoSync, pendingProposals]);
+
+  const handleSyncAll = async (silent = false) => {
+    if (!silent) setSyncing(true);
+    if (!silent) setSyncResult(null);
     
     let updated = 0;
-    let pushed = 0;
     let errors = 0;
     let checked = 0;
     const debugInfo = [];
 
     for (const proposal of pendingProposals) {
       if (!proposal.approval_token) {
-        debugInfo.push(`${proposal.proposal_number}: No token`);
+        if (!silent) debugInfo.push(`${proposal.proposal_number}: No token`);
         continue;
       }
       
       checked++;
       try {
-        // First check status
-        const response = await fetch('https://proposal-pro-693241d0a76cc7fc545d1a0b.base44.app/api/functions/receiveProposal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: proposal.approval_token, action: 'check_status' })
+        // Query ProposalPro API directly using their entity API with the token filter
+        const response = await fetch(`${PROPOSALPRO_API_URL}?token=${encodeURIComponent(proposal.approval_token)}`, {
+          method: 'GET',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${PROPOSALPRO_API_KEY}`
+          }
         });
-        const responseText = await response.text();
-        debugInfo.push(`${proposal.proposal_number}: Response=${responseText.substring(0, 200)}`);
         
-        let result;
-        try {
-          result = JSON.parse(responseText);
-        } catch (e) {
-          debugInfo.push(`  → Failed to parse JSON`);
+        if (!response.ok) {
+          if (!silent) debugInfo.push(`${proposal.proposal_number}: API error ${response.status}`);
           errors++;
           continue;
         }
+
+        const results = await response.json();
+        const remoteProposal = results[0]; // First matching proposal
         
-        // If proposal doesn't exist in ProposalPro (status undefined), push it first
-        if (result.status === undefined) {
-          debugInfo.push(`${proposal.proposal_number}: Not in ProposalPro, pushing...`);
-          
-          await fetch('https://proposal-pro-693241d0a76cc7fc545d1a0b.base44.app/api/functions/receiveProposal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'store',
-              token: proposal.approval_token,
-              proposal: {
-                proposal_number: proposal.proposal_number,
-                title: proposal.title,
-                customer_name: proposal.customer_name,
-                customer_email: proposal.customer_email,
-                customer_company: proposal.customer_company,
-                customer_phone: proposal.customer_phone,
-                customer_address: proposal.customer_address,
-                created_by_name: proposal.created_by_name,
-                created_by_email: proposal.created_by_email,
-                items: proposal.items || [],
-                areas: proposal.areas || [],
-                subtotal: proposal.subtotal,
-                tax_total: proposal.tax_total,
-                total: proposal.total,
-                terms_conditions: proposal.terms_conditions,
-                valid_until: proposal.valid_until,
-                sent_date: proposal.sent_date,
-                status: proposal.status
-              }
-            })
-          });
-          pushed++;
-          debugInfo.push(`  → Pushed to ProposalPro`);
+        if (!remoteProposal) {
+          if (!silent) debugInfo.push(`${proposal.proposal_number}: Not found in ProposalPro`);
           continue;
         }
         
-        debugInfo.push(`${proposal.proposal_number}: Remote status=${result.status}, viewed=${result.viewed}`);
+        if (!silent) debugInfo.push(`${proposal.proposal_number}: status=${remoteProposal.status}, viewed=${remoteProposal.viewed}`);
 
-        // Map remote status
-        let remoteStatus = result.status;
+        // Map remote status (declined -> rejected for our system)
+        let remoteStatus = remoteProposal.status;
         if (remoteStatus === 'declined') remoteStatus = 'rejected';
         
-        // Check if viewed
-        const wasViewed = result.viewed && proposal.status === 'sent';
-        const newStatus = wasViewed ? 'viewed' : (remoteStatus && remoteStatus !== 'pending' ? remoteStatus : null);
+        // Check if viewed (update to viewed if proposal was sent and is now viewed)
+        const wasViewed = remoteProposal.viewed && proposal.status === 'sent';
+        const statusChanged = remoteStatus && remoteStatus !== 'pending' && remoteStatus !== proposal.status;
+        const newStatus = wasViewed ? 'viewed' : (statusChanged ? remoteStatus : null);
 
         if (newStatus && newStatus !== proposal.status) {
           const updateData = { status: newStatus };
-          if (wasViewed && result.viewed_date) updateData.viewed_date = result.viewed_date;
-          if (result.signer_name) updateData.signer_name = result.signer_name;
-          if (result.signature_data) updateData.signature_data = result.signature_data;
-          if (result.signed_date) updateData.signed_date = result.signed_date;
-          if (result.changes_requested) updateData.change_request_notes = result.changes_requested;
+          
+          // Copy over relevant fields from remote
+          if (wasViewed && remoteProposal.viewed_date) updateData.viewed_date = remoteProposal.viewed_date;
+          if (remoteProposal.signer_name) updateData.signer_name = remoteProposal.signer_name;
+          if (remoteProposal.signature_data) updateData.signature_data = remoteProposal.signature_data;
+          if (remoteProposal.signed_date) updateData.signed_date = remoteProposal.signed_date;
+          if (remoteProposal.changes_requested) updateData.change_request_notes = remoteProposal.changes_requested;
 
           await base44.entities.Proposal.update(proposal.id, updateData);
           updated++;
-          debugInfo.push(`  → Updated to ${newStatus}`);
+          if (!silent) debugInfo.push(`  → Updated to ${newStatus}`);
+          
+          // Log activity
+          await base44.entities.ProposalActivity.create({
+            proposal_id: proposal.id,
+            action: newStatus === 'viewed' ? 'viewed' : newStatus,
+            actor_name: remoteProposal.signer_name || proposal.customer_name || 'Customer',
+            details: newStatus === 'changes_requested' ? remoteProposal.changes_requested : `Status synced from ProposalPro`
+          });
         }
       } catch (err) {
         console.error('Sync error for proposal:', proposal.id, err);
-        debugInfo.push(`${proposal.proposal_number}: Error - ${err.message}`);
+        if (!silent) debugInfo.push(`${proposal.proposal_number}: Error - ${err.message}`);
         errors++;
       }
     }
 
-    refetch();
-    queryClient.invalidateQueries({ queryKey: ['proposals'] });
-    setSyncResult({ 
-      success: errors === 0, 
-      message: `Checked ${checked}, pushed ${pushed} to ProposalPro, updated ${updated}${errors > 0 ? `, ${errors} error(s)` : ''}`,
-      details: debugInfo.join('\n')
-    });
-    setSyncing(false);
+    if (updated > 0) {
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+    }
+    
+    if (!silent) {
+      setSyncResult({ 
+        success: errors === 0, 
+        message: `Checked ${checked}, updated ${updated}${errors > 0 ? `, ${errors} error(s)` : ''}`,
+        details: debugInfo.join('\n')
+      });
+      setSyncing(false);
+    }
   };
 
   return (
@@ -2170,23 +2168,40 @@ function ProposalSyncSection({ queryClient }) {
           </p>
         </div>
 
-        <Button 
-          onClick={handleSyncAll} 
-          disabled={syncing || pendingProposals.length === 0}
-          className="bg-[#0069AF] hover:bg-[#133F5C]"
-        >
-          {syncing ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Syncing...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Sync All Proposal Statuses
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={() => handleSyncAll(false)} 
+            disabled={syncing || pendingProposals.length === 0}
+            className="bg-[#0069AF] hover:bg-[#133F5C]"
+          >
+            {syncing ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Syncing...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Sync Now
+              </>
+            )}
+          </Button>
+          
+          <Button 
+            onClick={() => setAutoSync(!autoSync)} 
+            variant={autoSync ? "default" : "outline"}
+            className={autoSync ? "bg-emerald-600 hover:bg-emerald-700" : ""}
+          >
+            {autoSync ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Auto-Sync ON (2s)
+              </>
+            ) : (
+              'Enable Auto-Sync'
+            )}
+          </Button>
+        </div>
 
         {syncResult && (
           <div className={cn(
