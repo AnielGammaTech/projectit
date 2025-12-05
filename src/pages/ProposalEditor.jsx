@@ -458,40 +458,41 @@ export default function ProposalEditor() {
                                   variant="outline" 
                                   size="sm"
                                   onClick={async () => {
-                                    // First sync proposal to approval app
-                                    try {
-                                      await fetch('https://proposal-pro-545d1a0b.base44.app/api/functions/receiveProposal', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                          action: 'store',
-                                          token: proposal.approval_token,
-                                          proposal: {
-                                            proposal_number: formData.proposal_number,
-                                            title: formData.title,
-                                            customer_name: formData.customer_name,
-                                            customer_email: formData.customer_email,
-                                            customer_company: formData.customer_company,
-                                            items: formData.areas?.flatMap(a => a.items || []) || [],
-                                            areas: formData.areas,
-                                            subtotal: calculateTotals().subtotal,
-                                            tax_total: calculateTotals().taxAmount,
-                                            total: calculateTotals().total,
-                                            terms_conditions: formData.terms_conditions,
-                                            valid_until: formData.valid_until,
-                                            status: formData.status
-                                          }
-                                        })
-                                      });
-                                    } catch (err) {
-                                      console.error('Failed to sync proposal:', err);
-                                    }
+                                                          // Copy link first (before async call loses document focus)
+                                                          const link = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal.approval_token}`;
+                                                          navigator.clipboard.writeText(link);
+                                                          setLinkCopied(true);
+                                                          setTimeout(() => setLinkCopied(false), 2000);
 
-                                    const link = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal.approval_token}`;
-                                    navigator.clipboard.writeText(link);
-                                    setLinkCopied(true);
-                                    setTimeout(() => setLinkCopied(false), 2000);
-                                  }}
+                                                          // Then sync proposal to approval app
+                                                          try {
+                                                            await fetch('https://proposal-pro-545d1a0b.base44.app/api/functions/receiveProposal', {
+                                                              method: 'POST',
+                                                              headers: { 'Content-Type': 'application/json' },
+                                                              body: JSON.stringify({
+                                                                action: 'store',
+                                                                token: proposal.approval_token,
+                                                                proposal: {
+                                                                  proposal_number: formData.proposal_number,
+                                                                  title: formData.title,
+                                                                  customer_name: formData.customer_name,
+                                                                  customer_email: formData.customer_email,
+                                                                  customer_company: formData.customer_company,
+                                                                  items: formData.areas?.flatMap(a => a.items || []) || [],
+                                                                  areas: formData.areas,
+                                                                  subtotal: calculateTotals().subtotal,
+                                                                  tax_total: calculateTotals().taxAmount,
+                                                                  total: calculateTotals().total,
+                                                                  terms_conditions: formData.terms_conditions,
+                                                                  valid_until: formData.valid_until,
+                                                                  status: formData.status
+                                                                }
+                                                              })
+                                                            });
+                                                          } catch (err) {
+                                                            console.error('Failed to sync proposal:', err);
+                                                          }
+                                                        }}
                                   className={cn(linkCopied && "bg-emerald-50 border-emerald-200 text-emerald-600")}
                                 >
                                   {linkCopied ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
