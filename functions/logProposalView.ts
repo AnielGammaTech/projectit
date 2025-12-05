@@ -1,3 +1,5 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+
 Deno.serve(async (req) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -9,16 +11,10 @@ Deno.serve(async (req) => {
     return new Response(null, { status: 204, headers });
   }
 
-  // Direct API access to proposals - no SDK auth needed for cross-app calls
-  const APP_ID = Deno.env.get('BASE44_APP_ID');
-  const API_KEY = Deno.env.get('PROPOSAL_API_KEY');
-  const API_BASE = `https://app.base44.com/api/apps/${APP_ID}/entities`;
-
-  if (!API_KEY) {
-    return Response.json({ error: 'API key not configured' }, { status: 500, headers });
-  }
-
   try {
+    // Use service role SDK for cross-app webhook calls
+    const base44 = createClientFromRequest(req);
+    
     if (req.method === 'POST') {
       const body = await req.json();
       const { token, action, signerName, signatureData, declineReason } = body;
@@ -27,11 +23,8 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Token required' }, { status: 400, headers });
       }
 
-      // Fetch proposal by token using direct API
-      const fetchRes = await fetch(`${API_BASE}/Proposal?filter=${encodeURIComponent(JSON.stringify({ approval_token: token }))}`, {
-        headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' }
-      });
-      const proposals = await fetchRes.json();
+      // Fetch proposal by token using SDK service role
+      const proposals = await base44.asServiceRole.entities.Proposal.filter({ approval_token: token });
       const proposal = proposals[0];
 
       if (!proposal) {
@@ -41,10 +34,9 @@ Deno.serve(async (req) => {
       if (action === 'fetch') {
         // Update status to viewed if sent
         if (proposal.status === 'sent') {
-          await fetch(`${API_BASE}/Proposal/${proposal.id}`, {
-            method: 'PUT',
-            headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'viewed', viewed_date: new Date().toISOString() })
+          await base44.asServiceRole.entities.Proposal.update(proposal.id, { 
+            status: 'viewed', 
+            viewed_date: new Date().toISOString() 
           });
           proposal.status = 'viewed';
         }
@@ -76,77 +68,53 @@ Deno.serve(async (req) => {
           return Response.json({ error: 'Signer name required' }, { status: 400, headers });
         }
         
-        await fetch(`${API_BASE}/Proposal/${proposal.id}`, {
-          method: 'PUT',
-          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            status: 'approved',
-            signature_data: signatureData,
-            signer_name: signerName,
-            signed_date: new Date().toISOString()
-          })
+        await base44.asServiceRole.entities.Proposal.update(proposal.id, {
+          status: 'approved',
+          signature_data: signatureData,
+          signer_name: signerName,
+          signed_date: new Date().toISOString()
         });
 
         // Log activity
-        await fetch(`${API_BASE}/ProposalActivity`, {
-          method: 'POST',
-          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            proposal_id: proposal.id,
-            action: 'approved',
-            actor_name: signerName,
-            details: `Proposal approved and signed by ${signerName}`
-          })
+        await base44.asServiceRole.entities.ProposalActivity.create({
+          proposal_id: proposal.id,
+          action: 'approved',
+          actor_name: signerName,
+          details: `Proposal approved and signed by ${signerName}`
         });
         
         return Response.json({ success: true }, { headers });
       }
 
       if (action === 'decline') {
-        await fetch(`${API_BASE}/Proposal/${proposal.id}`, {
-          method: 'PUT',
-          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            status: 'rejected',
-            change_request_notes: declineReason || 'Declined by customer'
-          })
+        await base44.asServiceRole.entities.Proposal.update(proposal.id, {
+          status: 'rejected',
+          change_request_notes: declineReason || 'Declined by customer'
         });
 
         // Log activity
-        await fetch(`${API_BASE}/ProposalActivity`, {
-          method: 'POST',
-          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            proposal_id: proposal.id,
-            action: 'rejected',
-            actor_name: proposal.customer_name,
-            details: declineReason || 'Declined by customer'
-          })
+        await base44.asServiceRole.entities.ProposalActivity.create({
+          proposal_id: proposal.id,
+          action: 'rejected',
+          actor_name: proposal.customer_name,
+          details: declineReason || 'Declined by customer'
         });
         
         return Response.json({ success: true }, { headers });
       }
 
       if (action === 'request_changes') {
-        await fetch(`${API_BASE}/Proposal/${proposal.id}`, {
-          method: 'PUT',
-          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            status: 'changes_requested',
-            change_request_notes: body.changeNotes || 'Customer requested changes'
-          })
+        await base44.asServiceRole.entities.Proposal.update(proposal.id, {
+          status: 'changes_requested',
+          change_request_notes: body.changeNotes || 'Customer requested changes'
         });
 
         // Log activity
-        await fetch(`${API_BASE}/ProposalActivity`, {
-          method: 'POST',
-          headers: { 'api_key': API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            proposal_id: proposal.id,
-            action: 'changes_requested',
-            actor_name: proposal.customer_name,
-            details: body.changeNotes || 'Customer requested changes'
-          })
+        await base44.asServiceRole.entities.ProposalActivity.create({
+          proposal_id: proposal.id,
+          action: 'changes_requested',
+          actor_name: proposal.customer_name,
+          details: body.changeNotes || 'Customer requested changes'
         });
         
         return Response.json({ success: true }, { headers });
