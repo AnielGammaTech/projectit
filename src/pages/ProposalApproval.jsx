@@ -113,25 +113,24 @@ export default function ProposalApproval() {
     try {
       const signatureData = canvasRef.current.toDataURL();
       
-      // Submit via direct entity API
-      const response = await fetch(`${API_URL}/${proposal.id}`, {
-        method: 'PUT',
-        headers: {
-          'api_key': API_KEY,
-          'Content-Type': 'application/json'
-        },
+      // Submit via backend function
+      const response = await fetch('https://it-projects-e1224427.base44.app/api/functions/logProposalView', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          status: 'approved',
-          signer_name: signerName,
-          signature_data: signatureData,
-          signed_date: new Date().toISOString()
+          token,
+          action: 'approve',
+          signerName,
+          signatureData
         })
       });
       
-      if (response.ok) {
+      const result = await response.json();
+      
+      if (result.success) {
         setSubmitted(true);
       } else {
-        console.error('Submit error');
+        console.error('Submit error:', result.error);
       }
     } catch (err) {
       console.error('Failed to submit:', err);
