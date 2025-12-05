@@ -10,7 +10,7 @@ import {
   Plus, MoreHorizontal, Mail, Phone, Package, ArrowLeft,
   Building2, Tags, FolderKanban, GitMerge, DollarSign,
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
-  Webhook, Send, Copy, Check
+  Webhook, Send, Copy, Check, FileText
 } from 'lucide-react';
 import {
   Dialog,
@@ -62,6 +62,7 @@ const adminMenuItems = [
   { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automate actions based on triggers', page: 'Workflows' },
   { id: 'templates', label: 'Email & Notification Templates', icon: Mail, description: 'Customize email templates with HTML and variables' },
   { id: 'webhooks', label: 'Webhooks', icon: Webhook, description: 'Send push notifications to external services' },
+  { id: 'proposals', label: 'Proposal Sync', icon: FileText, description: 'Sync proposal statuses from ProposalPro app' },
   { id: 'company', label: 'Company Settings', icon: Building2, description: 'Branding, proposal defaults, and company info' },
   { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'Connect external services' },
   { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Track user actions and system changes', page: 'AuditLogs' },
@@ -89,6 +90,8 @@ export default function Adminland() {
         return <DeletedProjectsSection queryClient={queryClient} />;
       case 'webhooks':
         return <WebhooksSection queryClient={queryClient} />;
+      case 'proposals':
+        return <ProposalSyncSection queryClient={queryClient} />;
       default:
         return null;
     }
