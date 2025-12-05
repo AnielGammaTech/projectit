@@ -188,7 +188,7 @@ export default function ProposalEditor() {
       } catch (err) {
         console.error('Polling error:', err);
       }
-    }, 3000);
+    }, 2000);
 
     return () => clearInterval(pollInterval);
   }, [proposal?.approval_token, formData.status, proposalId]);
