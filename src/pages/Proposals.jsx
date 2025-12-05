@@ -158,7 +158,7 @@ export default function Proposals() {
         sent_date: new Date().toISOString() 
       });
       
-      const approvalLink = `${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`;
+      const approvalLink = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal.approval_token}`;
       
       await base44.integrations.Core.SendEmail({
         to: proposal.customer_email,
@@ -182,7 +182,7 @@ export default function Proposals() {
   };
 
   const copyApprovalLink = (proposal) => {
-    const link = `${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`;
+    const link = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal.approval_token}`;
     navigator.clipboard.writeText(link);
   };
 

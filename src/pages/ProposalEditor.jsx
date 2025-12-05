@@ -458,7 +458,7 @@ export default function ProposalEditor() {
                 variant="outline" 
                 size="sm"
                 onClick={() => {
-                  const link = `${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`;
+                  const link = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal.approval_token}`;
                   navigator.clipboard.writeText(link);
                   setLinkCopied(true);
                   setTimeout(() => setLinkCopied(false), 2000);
@@ -495,7 +495,7 @@ export default function ProposalEditor() {
                   return;
                 }
                 await handleSave();
-                const approvalLink = `${window.location.origin}/api/functions/logProposalView?token=${proposal?.approval_token}`;
+                const approvalLink = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal?.approval_token}`;
                 await base44.integrations.Core.SendEmail({
                   to: formData.customer_email,
                   subject: `Proposal: ${formData.title}`,
@@ -897,7 +897,7 @@ export default function ProposalEditor() {
                     <p className="text-xs text-slate-500 mb-2">Customer Approval Link:</p>
                     <div className="flex gap-2">
                       <Input 
-                        value={`${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`}
+                        value={`https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal.approval_token}`}
                         readOnly
                         className="text-xs h-8"
                       />
@@ -906,7 +906,7 @@ export default function ProposalEditor() {
                         variant="outline"
                         className="h-8"
                         onClick={() => {
-                          navigator.clipboard.writeText(`${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`);
+                          navigator.clipboard.writeText(`https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal.approval_token}`);
                           setLinkCopied(true);
                           setTimeout(() => setLinkCopied(false), 2000);
                         }}
