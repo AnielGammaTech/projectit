@@ -126,23 +126,25 @@ export default function ProposalApproval() {
     try {
       const signatureData = canvasRef.current.toDataURL();
       
-      // Submit via backend function (no auth required)
-      const response = await fetch(getFunctionUrl(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          token, 
-          action: 'approve',
-          signerName,
-          signatureData
+      // Submit via direct entity API
+      const response = await fetch(`${API_URL}/${proposal.id}`, {
+        method: 'PUT',
+        headers: {
+          'api_key': API_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: 'approved',
+          signer_name: signerName,
+          signature_data: signatureData,
+          signed_date: new Date().toISOString()
         })
       });
       
-      const data = await response.json();
-      if (data.ok) {
+      if (response.ok) {
         setSubmitted(true);
       } else {
-        console.error('Submit error:', data.error);
+        console.error('Submit error');
       }
     } catch (err) {
       console.error('Failed to submit:', err);
