@@ -533,7 +533,7 @@ export default function ProposalEditor() {
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="grid lg:grid-cols-12 gap-6">
           {/* Main Content */}
-          <div className={cn("lg:col-span-8 space-y-5", showActivityPanel && "lg:col-span-5")}
+          <div className={cn("lg:col-span-8 space-y-5", showActivityPanel && "lg:col-span-5")}>
             {/* Title Header */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-slate-200 p-5">
               <div className="flex items-start justify-between gap-4">
