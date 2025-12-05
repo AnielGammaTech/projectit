@@ -3396,6 +3396,7 @@ function IntegrationsSection({ queryClient }) {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
