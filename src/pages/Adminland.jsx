@@ -2144,7 +2144,12 @@ function ProposalSyncSection({ queryClient }) {
             "p-3 rounded-lg text-sm",
             syncResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-amber-50 text-amber-700 border border-amber-200"
           )}>
-            {syncResult.message}
+            <p className="font-medium">{syncResult.message}</p>
+            {syncResult.details && (
+              <pre className="mt-2 text-xs bg-white/50 p-2 rounded overflow-x-auto whitespace-pre-wrap">
+                {syncResult.details}
+              </pre>
+            )}
           </div>
         )}
 
