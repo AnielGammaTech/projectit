@@ -532,60 +532,25 @@ export default function ProposalEditor() {
 
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="grid lg:grid-cols-12 gap-6">
-          {/* Activity Panel - Inline expandable */}
-          {showActivityPanel && proposalId && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-white rounded-xl border border-slate-200 p-5 -mt-2"
-            >
-              <ProposalActivityFeed proposalId={proposalId} />
-              {proposal?.approval_token && (
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <p className="text-xs text-slate-500 mb-2">Customer Approval Link:</p>
-                  <div className="flex gap-2">
-                      <Input 
-                        value={`${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`}
-                        readOnly
-                        className="text-xs h-8"
-                      />
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="h-8"
-                        onClick={() => {
-                          navigator.clipboard.writeText(`${window.location.origin}/api/functions/logProposalView?token=${proposal.approval_token}`);
-                          setLinkCopied(true);
-                          setTimeout(() => setLinkCopied(false), 2000);
-                        }}
-                      >
-                        {linkCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="h-8"
-                        onClick={() => window.open(`/api/functions/logProposalView?token=${proposal.approval_token}`, '_blank')}
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                      </Button>
-                    </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-
           {/* Main Content */}
-          <div className={cn("lg:col-span-8 space-y-5", showActivityPanel && "lg:col-span-8")}>
-            {/* Title Header - New Design */}
+          <div className="lg:col-span-8 space-y-5">
+            {/* Title Header */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-slate-200 p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-2xl font-bold text-slate-900">Proposal #{formData.proposal_number}</span>
-                    <span className="text-2xl text-slate-400">·</span>
-                    <span className="text-2xl font-bold text-slate-900">${totals.total.toFixed(2)}</span>
+                  <div className="flex items-center gap-3 mb-2">
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Enter proposal title..."
+                      className="text-2xl font-bold text-slate-900 bg-transparent border-none focus:outline-none w-full placeholder:text-slate-300"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-slate-500">{formData.proposal_number}</span>
+                    <span className="text-slate-300">·</span>
+                    <span className="text-sm font-medium text-slate-700">${totals.total.toFixed(2)}</span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className={cn(
@@ -635,14 +600,19 @@ export default function ProposalEditor() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Enter proposal title..."
-                    className="text-slate-500 text-base bg-transparent border-none focus:outline-none w-full placeholder:text-slate-300"
-                  />
                 </div>
+                {/* Activity Button */}
+                {proposalId && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowActivityPanel(!showActivityPanel)}
+                    className={cn(showActivityPanel && "bg-slate-100")}
+                  >
+                    <History className="w-4 h-4 mr-1.5" />
+                    Activity
+                  </Button>
+                )}
               </div>
             </motion.div>
 
@@ -758,23 +728,7 @@ export default function ProposalEditor() {
               </div>
             </motion.div>
 
-            {/* Proposal History Accordion */}
-            {proposalId && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.07 }}
-                className="bg-white rounded-xl border border-slate-200 overflow-hidden"
-              >
-                <button 
-                  onClick={() => setShowActivityPanel(!showActivityPanel)}
-                  className="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition-colors"
-                >
-                  <h3 className="text-lg font-semibold text-slate-900">Proposal History</h3>
-                  <ChevronDown className={cn("w-5 h-5 text-slate-400 transition-transform", showActivityPanel && "rotate-180")} />
-                </button>
-              </motion.div>
-            )}
+
 
             {/* Version History */}
             {proposalId && (
