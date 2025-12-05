@@ -628,10 +628,10 @@ export default function ProposalEditor() {
                                                       }
 
                                   const approvalLink = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal?.approval_token}`;
-                                  await base44.integrations.Core.SendEmail({
+                                  await base44.functions.invoke('sendEmailit', {
                                     to: formData.customer_email,
                                     subject: `Proposal: ${formData.title}`,
-                                    body: `
+                                    html: `
                                       <h2>You have received a proposal</h2>
                                       <p>Dear ${formData.customer_name},</p>
                                       <p>Please review and approve the following proposal:</p>
