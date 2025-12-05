@@ -62,40 +62,7 @@ export default function ProposalApproval() {
     fetchProposal();
   }, [token]);
 
-  // OLD CODE REMOVED - using backend function now
-        
-        if (proposals && proposals.length > 0) {
-          const p = proposals[0];
-          setProposal(p);
-          
-          // Update status to viewed if sent
-          if (p.status === 'sent') {
-            await fetch(`${API_URL}/${p.id}`, {
-              method: 'PUT',
-              headers: {
-                'api_key': API_KEY,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                status: 'viewed',
-                viewed_date: new Date().toISOString()
-              })
-            });
-            setProposal(prev => ({ ...prev, status: 'viewed' }));
-          }
-        } else {
-          setError('Proposal not found');
-        }
-      } catch (err) {
-        console.error('Fetch error:', err);
-        setError('Failed to load proposal');
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    fetchProposal();
-  }, [token]);
 
   useEffect(() => {
     if (canvasRef.current) {
