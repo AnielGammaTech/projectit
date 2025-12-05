@@ -2032,7 +2032,7 @@ function ProposalSyncSection({ queryClient }) {
   const [syncResult, setSyncResult] = useState(null);
 
   const PROPOSALPRO_API_KEY = 'c0154b757e3644729507b5d2391259fe';
-  const PROPOSALPRO_API_URL = 'https://proposal-pro-693241d0a76cc7fc545d1a0b.base44.app/api/entities/Proposal';
+  const PROPOSALPRO_API_URL = 'https://app.base44.com/api/p/proposal-pro-693241d0a76cc7fc545d1a0b/entities/Proposal/rows';
 
   const { data: proposals = [], refetch } = useQuery({
     queryKey: ['proposals'],
