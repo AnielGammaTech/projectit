@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@base44/sdk@0.8.4';
+import { createServiceRoleClient } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
   const headers = {
@@ -12,10 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const base44 = createClient({ 
-      appId: Deno.env.get('BASE44_APP_ID'),
-      serviceRoleToken: Deno.env.get('BASE44_SERVICE_ROLE_TOKEN')
-    });
+    const base44 = createServiceRoleClient();
 
     if (req.method === 'POST') {
       const body = await req.json();
