@@ -452,23 +452,52 @@ export default function ProposalEditor() {
             <span className="text-xs text-slate-400 mr-2">
               {saving ? 'Saving...' : 'All changes saved'}
             </span>
-            {/* Copy Customer Link Button */}
-            {proposalId && proposal?.approval_token && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  const link = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal.approval_token}`;
-                  navigator.clipboard.writeText(link);
-                  setLinkCopied(true);
-                  setTimeout(() => setLinkCopied(false), 2000);
-                }}
-                className={cn(linkCopied && "bg-emerald-50 border-emerald-200 text-emerald-600")}
-              >
-                {linkCopied ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
-                {linkCopied ? 'Copied!' : 'Copy Link'}
-              </Button>
-            )}
+            {/* Generate & Copy Customer Link Button */}
+                              {proposalId && proposal?.approval_token && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={async () => {
+                                    // First sync proposal to approval app
+                                    try {
+                                      await fetch('https://proposal-pro-545d1a0b.base44.app/api/functions/receiveProposal', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                          action: 'store',
+                                          token: proposal.approval_token,
+                                          proposal: {
+                                            proposal_number: formData.proposal_number,
+                                            title: formData.title,
+                                            customer_name: formData.customer_name,
+                                            customer_email: formData.customer_email,
+                                            customer_company: formData.customer_company,
+                                            items: formData.areas?.flatMap(a => a.items || []) || [],
+                                            areas: formData.areas,
+                                            subtotal: calculateTotals().subtotal,
+                                            tax_total: calculateTotals().taxAmount,
+                                            total: calculateTotals().total,
+                                            terms_conditions: formData.terms_conditions,
+                                            valid_until: formData.valid_until,
+                                            status: formData.status
+                                          }
+                                        })
+                                      });
+                                    } catch (err) {
+                                      console.error('Failed to sync proposal:', err);
+                                    }
+
+                                    const link = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal.approval_token}`;
+                                    navigator.clipboard.writeText(link);
+                                    setLinkCopied(true);
+                                    setTimeout(() => setLinkCopied(false), 2000);
+                                  }}
+                                  className={cn(linkCopied && "bg-emerald-50 border-emerald-200 text-emerald-600")}
+                                >
+                                  {linkCopied ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                                  {linkCopied ? 'Copied!' : 'Copy Link'}
+                                </Button>
+                              )}
             <Button variant="ghost" size="sm" onClick={async () => {
               await handleSave(false);
               if (proposalId) {
