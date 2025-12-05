@@ -519,25 +519,55 @@ export default function ProposalEditor() {
               className="bg-[#0069AF] hover:bg-[#005a94]"
               disabled={!proposalId || !formData.customer_email}
               onClick={async () => {
-                if (!formData.customer_email) {
-                  alert('Please add a customer with an email address before sending.');
-                  return;
-                }
-                await handleSave();
-                const approvalLink = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal?.approval_token}`;
-                await base44.integrations.Core.SendEmail({
-                  to: formData.customer_email,
-                  subject: `Proposal: ${formData.title}`,
-                  body: `
-                    <h2>You have received a proposal</h2>
-                    <p>Dear ${formData.customer_name},</p>
-                    <p>Please review and approve the following proposal:</p>
-                    <p><strong>${formData.title}</strong></p>
-                    <p>Total: $${calculateTotals().total?.toLocaleString()}</p>
-                    <p><a href="${approvalLink}" style="background: #0069AF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Review & Sign Proposal</a></p>
-                    <p>This proposal is valid until ${formData.valid_until ? format(new Date(formData.valid_until), 'MMMM d, yyyy') : 'further notice'}.</p>
-                  `
-                });
+                                  if (!formData.customer_email) {
+                                    alert('Please add a customer with an email address before sending.');
+                                    return;
+                                  }
+                                  await handleSave();
+
+                                  // Sync proposal to approval app before sending
+                                  try {
+                                    await fetch('https://proposal-pro-545d1a0b.base44.app/api/functions/receiveProposal', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        action: 'store',
+                                        token: proposal?.approval_token,
+                                        proposal: {
+                                          proposal_number: formData.proposal_number,
+                                          title: formData.title,
+                                          customer_name: formData.customer_name,
+                                          customer_email: formData.customer_email,
+                                          customer_company: formData.customer_company,
+                                          items: formData.areas?.flatMap(a => a.items || []) || [],
+                                          areas: formData.areas,
+                                          subtotal: calculateTotals().subtotal,
+                                          tax_total: calculateTotals().taxAmount,
+                                          total: calculateTotals().total,
+                                          terms_conditions: formData.terms_conditions,
+                                          valid_until: formData.valid_until,
+                                          status: formData.status
+                                        }
+                                      })
+                                    });
+                                  } catch (err) {
+                                    console.error('Failed to sync proposal:', err);
+                                  }
+
+                                  const approvalLink = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal?.approval_token}`;
+                                  await base44.integrations.Core.SendEmail({
+                                    to: formData.customer_email,
+                                    subject: `Proposal: ${formData.title}`,
+                                    body: `
+                                      <h2>You have received a proposal</h2>
+                                      <p>Dear ${formData.customer_name},</p>
+                                      <p>Please review and approve the following proposal:</p>
+                                      <p><strong>${formData.title}</strong></p>
+                                      <p>Total: $${calculateTotals().total?.toLocaleString()}</p>
+                                      <p><a href="${approvalLink}" style="background: #0069AF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Review & Sign Proposal</a></p>
+                                      <p>This proposal is valid until ${formData.valid_until ? format(new Date(formData.valid_until), 'MMMM d, yyyy') : 'further notice'}.</p>
+                                    `
+                                  });
                 await base44.entities.Proposal.update(proposalId, { status: 'sent', sent_date: new Date().toISOString() });
                 // Log activity
                 await base44.entities.ProposalActivity.create({
