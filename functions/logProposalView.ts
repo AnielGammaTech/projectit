@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
           return Response.json({ error: 'Signer name required' }, { status: 400, headers });
         }
         
-        await base44.entities.Proposal.update(proposal.id, {
+        await base44.asServiceRole.entities.Proposal.update(proposal.id, {
           status: 'approved',
           signature_data: signatureData,
           signer_name: signerName,
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
         });
         
         // Log activity
-        await base44.entities.ProposalActivity.create({
+        await base44.asServiceRole.entities.ProposalActivity.create({
           proposal_id: proposal.id,
           action: 'approved',
           actor_name: signerName,
