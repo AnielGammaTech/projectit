@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       if (action === 'fetch') {
         // Update status to viewed if sent
         if (proposal.status === 'sent') {
-          await base44.entities.Proposal.update(proposal.id, { 
+          await base44.asServiceRole.entities.Proposal.update(proposal.id, { 
             status: 'viewed', 
             viewed_date: new Date().toISOString() 
           });
