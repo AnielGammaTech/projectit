@@ -2114,6 +2114,7 @@ function IntegrationsSection({ queryClient }) {
         halopsa_tenant: settings[0].halopsa_tenant || '',
         halopsa_sync_customers: settings[0].halopsa_sync_customers !== false,
         halopsa_sync_tickets: settings[0].halopsa_sync_tickets || false,
+        halopsa_excluded_ids: settings[0].halopsa_excluded_ids || '',
         halopsa_two_way_sync: settings[0].halopsa_two_way_sync || false,
         halopsa_auto_push_updates: settings[0].halopsa_auto_push_updates || false,
         halopsa_webhook_secret: settings[0].halopsa_webhook_secret || '',

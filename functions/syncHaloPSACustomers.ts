@@ -144,7 +144,17 @@ Deno.serve(async (req) => {
     }
 
     const clientsData = await clientsResponse.json();
-    const haloClients = clientsData.clients || [];
+    let haloClients = clientsData.clients || [];
+
+    // Filter out excluded IDs
+    const excludedIdsStr = settings[0]?.halopsa_excluded_ids || '';
+    if (excludedIdsStr) {
+      const excludedIds = excludedIdsStr.split(',').map(id => id.trim()).filter(Boolean);
+      if (excludedIds.length > 0) {
+        // HaloPSA IDs are numbers usually, but let's handle them as strings to be safe
+        haloClients = haloClients.filter(client => !excludedIds.includes(String(client.id)));
+      }
+    }
 
     // If test mode, just return success with count
     if (testOnly) {
