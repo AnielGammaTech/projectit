@@ -480,11 +480,6 @@ export default function ProjectDetail() {
               </div>
             </div>
 
-            {/* Upcoming Tasks Widget */}
-            <div className="hidden xl:block">
-              <UpcomingTasksWidget projectId={projectId} tasks={tasks} />
-            </div>
-
             {/* Actions Row */}
             <div className="flex flex-col items-end gap-2 flex-shrink-0">
               <div className="flex items-center gap-2">
@@ -529,18 +524,25 @@ export default function ProjectDetail() {
                 </DropdownMenu>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="w-full max-w-xs">
-                <ProgressNeedle 
-                  projectId={projectId} 
-                  value={project.progress || 0} 
-                  onSave={handleProgressUpdate} 
-                  currentUser={currentUser}
-                  onStatusChange={(status) => handleQuickUpdate('status', status)}
-                  halopsaTicketId={project.halopsa_ticket_id}
-                  hasUpdates={progressUpdates.length > 0}
-                  lastUpdateNote={progressUpdates[0]?.note}
-                />
+                <div className="flex items-stretch gap-4">
+                  {/* Upcoming Tasks Widget */}
+                  <div className="hidden xl:block w-[260px]">
+                    <UpcomingTasksWidget projectId={projectId} tasks={tasks} />
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="w-full max-w-xs">
+                    <ProgressNeedle 
+                      projectId={projectId} 
+                      value={project.progress || 0} 
+                      onSave={handleProgressUpdate} 
+                      currentUser={currentUser}
+                      onStatusChange={(status) => handleQuickUpdate('status', status)}
+                      halopsaTicketId={project.halopsa_ticket_id}
+                      hasUpdates={progressUpdates.length > 0}
+                      lastUpdateNote={progressUpdates[0]?.note}
+                    />
+                  </div>
                 </div>
                 </div>
                 </div>
