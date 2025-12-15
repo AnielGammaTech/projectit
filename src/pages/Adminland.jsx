@@ -60,7 +60,7 @@ const adminMenuItems = [
   { id: 'project-management', label: 'Project Management', icon: Archive, description: 'Archived and deleted projects' },
   { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automate actions based on triggers', page: 'Workflows' },
   { id: 'templates', label: 'Email & Notification Templates', icon: Mail, description: 'Customize email templates with HTML and variables' },
-  { id: 'company', label: 'Company Settings', icon: Building2, description: 'Branding, proposal defaults, and company info' },
+  { id: 'company', label: 'App Settings', icon: Building2, description: 'Branding and app identity' },
   { id: 'integrations', label: 'Integrations & Webhooks', icon: GitMerge, description: 'Connect external services, webhooks, and GammaStack' },
   { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Track user actions and system changes', page: 'AuditLogs' },
 ];
@@ -547,29 +547,15 @@ function UserGroupModal({ open, onClose, group, members, onSave }) {
 
 
 
-// Consolidated Company Settings Section (combines Branding + Proposal Settings)
+// Consolidated Company Settings Section (App Settings)
 function CompanySettingsSection({ queryClient }) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [expandedSections, setExpandedSections] = useState({ branding: true });
   const [formData, setFormData] = useState({
-    proposal_prefix: 'P-',
-    default_valid_days: 30,
-    default_sales_tax_percent: 0,
-    tax_rates_by_location: [],
-    default_markup_type: 'percentage',
-    default_markup_value: 20,
-    default_terms_conditions: 'Payment due within 30 days of approval. All prices valid for 30 days.',
-    show_item_images: true,
-    company_name: '',
-    company_address: '',
-    company_phone: '',
-    company_email: '',
-    company_logo_url: '',
     app_name: '',
     app_logo_url: ''
   });
-  const [newTaxRate, setNewTaxRate] = useState({ name: '', state: '', city: '', zip: '', rate: 0 });
 
   const { data: settings = [], refetch } = useQuery({
     queryKey: ['proposalSettings'],
@@ -579,40 +565,11 @@ function CompanySettingsSection({ queryClient }) {
   useEffect(() => {
     if (settings[0]) {
       setFormData({
-          proposal_prefix: settings[0].proposal_prefix || 'P-',
-          default_valid_days: settings[0].default_valid_days || 30,
-          default_sales_tax_percent: settings[0].default_sales_tax_percent || 0,
-          tax_rates_by_location: settings[0].tax_rates_by_location || [],
-          default_markup_type: settings[0].default_markup_type || 'percentage',
-          default_markup_value: settings[0].default_markup_value || 20,
-          default_terms_conditions: settings[0].default_terms_conditions || '',
-          show_item_images: settings[0].show_item_images !== false,
-          company_name: settings[0].company_name || '',
-          company_address: settings[0].company_address || '',
-          company_phone: settings[0].company_phone || '',
-          company_email: settings[0].company_email || '',
-          company_logo_url: settings[0].company_logo_url || '',
           app_name: settings[0].app_name || '',
           app_logo_url: settings[0].app_logo_url || ''
         });
     }
   }, [settings]);
-
-  const addTaxRate = () => {
-    if (!newTaxRate.name || !newTaxRate.rate) return;
-    setFormData(prev => ({
-      ...prev,
-      tax_rates_by_location: [...prev.tax_rates_by_location, { ...newTaxRate }]
-    }));
-    setNewTaxRate({ name: '', state: '', city: '', zip: '', rate: 0 });
-  };
-
-  const removeTaxRate = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      tax_rates_by_location: prev.tax_rates_by_location.filter((_, i) => i !== index)
-    }));
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -630,7 +587,7 @@ function CompanySettingsSection({ queryClient }) {
     if (!file) return;
     setUploading(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setFormData(prev => ({ ...prev, company_logo_url: file_url }));
+    setFormData(prev => ({ ...prev, app_logo_url: file_url }));
     setUploading(false);
   };
 
@@ -642,8 +599,8 @@ function CompanySettingsSection({ queryClient }) {
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">Company Settings</h2>
-          <p className="text-sm text-slate-500">Branding, proposal defaults, and company info</p>
+          <h2 className="text-xl font-semibold text-slate-900">App Settings</h2>
+          <p className="text-sm text-slate-500">Branding and app identity</p>
         </div>
         <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
           {saving ? 'Saving...' : 'Save Changes'}
@@ -711,267 +668,7 @@ function CompanySettingsSection({ queryClient }) {
             </div>
           )}
         </div>
-
-        {/* Company Logo Section */}
-        <div>
-          <button
-            onClick={() => toggleSection('companyLogo')}
-            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-slate-100">
-                <FolderKanban className="w-5 h-5 text-slate-600" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-slate-900">Company Logo (Proposals)</h3>
-                <p className="text-xs text-slate-500">Logo for proposals and documents</p>
-              </div>
-            </div>
-            {expandedSections.companyLogo ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-          </button>
-          
-          {expandedSections.companyLogo && (
-            <div className="px-4 pb-4">
-              <div className="flex items-start gap-6 p-4 bg-slate-50 rounded-xl">
-                <div className="flex-shrink-0">
-                  {formData.company_logo_url ? (
-                    <div className="relative">
-                      <img src={formData.company_logo_url} alt="Logo" className="w-32 h-32 object-contain rounded-lg border bg-white p-2" />
-                      <button 
-                        onClick={() => setFormData(p => ({ ...p, company_logo_url: '' }))}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm hover:bg-red-600"
-                      >×</button>
-                    </div>
-                  ) : (
-                    <label className="w-32 h-32 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#0069AF] hover:bg-white transition-colors">
-                      {uploading ? (
-                        <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-                      ) : (
-                        <>
-                          <Building2 className="w-8 h-8 text-slate-400 mb-1" />
-                          <span className="text-xs text-slate-400">Upload Logo</span>
-                        </>
-                      )}
-                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={uploading} />
-                    </label>
-                  )}
-                </div>
-                <div className="flex-1 space-y-3">
-                  <p className="text-sm text-slate-600">Upload your company logo to appear on proposals and other documents.</p>
-                  <p className="text-xs text-slate-400">Recommended: PNG or SVG, at least 200x200px</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Company Information Section */}
-        <div>
-          <button
-            onClick={() => toggleSection('companyInfo')}
-            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-100">
-                <Building2 className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-slate-900">Company Information</h3>
-                <p className="text-xs text-slate-500">Name, email, phone, and address</p>
-              </div>
-            </div>
-            {expandedSections.companyInfo ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-          </button>
-          
-          {expandedSections.companyInfo && (
-            <div className="px-4 pb-4">
-              <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs">Company Name</Label>
-                    <Input value={formData.company_name} onChange={(e) => setFormData(p => ({ ...p, company_name: e.target.value }))} className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Email</Label>
-                    <Input value={formData.company_email} onChange={(e) => setFormData(p => ({ ...p, company_email: e.target.value }))} className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Phone</Label>
-                    <Input value={formData.company_phone} onChange={(e) => setFormData(p => ({ ...p, company_phone: e.target.value }))} className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Address</Label>
-                    <Input value={formData.company_address} onChange={(e) => setFormData(p => ({ ...p, company_address: e.target.value }))} className="mt-1" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Proposal Defaults Section */}
-        <div>
-          <button
-            onClick={() => toggleSection('proposals')}
-            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-100">
-                <FolderKanban className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-slate-900">Proposal Defaults</h3>
-                <p className="text-xs text-slate-500">Number prefix, validity, tax, and markup</p>
-              </div>
-            </div>
-            {expandedSections.proposals ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-          </button>
-          
-          {expandedSections.proposals && (
-            <div className="px-4 pb-4 space-y-4">
-        {/* Proposal Defaults */}
-        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label className="text-xs">Proposal Number Prefix</Label>
-              <Input value={formData.proposal_prefix} onChange={(e) => setFormData(p => ({ ...p, proposal_prefix: e.target.value }))} className="mt-1" placeholder="P-" />
-            </div>
-            <div>
-              <Label className="text-xs">Valid for (days)</Label>
-              <Input type="number" value={formData.default_valid_days} onChange={(e) => setFormData(p => ({ ...p, default_valid_days: parseInt(e.target.value) || 30 }))} className="mt-1" />
-            </div>
-            <div>
-              <Label className="text-xs">Default Tax %</Label>
-              <Input type="number" step="0.1" value={formData.default_sales_tax_percent} onChange={(e) => setFormData(p => ({ ...p, default_sales_tax_percent: parseFloat(e.target.value) || 0 }))} className="mt-1" />
-            </div>
-          </div>
-        </div>
-
-        {/* Markup Settings */}
-        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-          <h3 className="font-semibold text-slate-900">Default Markup</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-xs">Markup Type</Label>
-              <select 
-                value={formData.default_markup_type} 
-                onChange={(e) => setFormData(p => ({ ...p, default_markup_type: e.target.value }))}
-                className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="percentage">Percentage (%)</option>
-                <option value="fixed">Fixed Amount ($)</option>
-                <option value="none">No Markup</option>
-              </select>
-            </div>
-            {formData.default_markup_type !== 'none' && (
-              <div>
-                <Label className="text-xs">Markup Value</Label>
-                <Input 
-                  type="number" 
-                  value={formData.default_markup_value} 
-                  onChange={(e) => setFormData(p => ({ ...p, default_markup_value: parseFloat(e.target.value) || 0 }))} 
-                  className="mt-1" 
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Terms & Conditions */}
-        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-          <h3 className="font-semibold text-slate-900">Default Terms & Conditions</h3>
-          <Textarea 
-            value={formData.default_terms_conditions} 
-            onChange={(e) => setFormData(p => ({ ...p, default_terms_conditions: e.target.value }))}
-            className="h-32"
-            placeholder="Enter default terms and conditions..."
-          />
-        </div>
-
-        {/* Display Options */}
-        <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-          <h3 className="font-semibold text-slate-900">Display Options</h3>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <Checkbox 
-              checked={formData.show_item_images} 
-              onCheckedChange={(checked) => setFormData(p => ({ ...p, show_item_images: checked }))} 
-            />
-            <span className="text-sm">Show item images on proposals</span>
-          </label>
-        </div>
-            </div>
-          )}
-        </div>
-
-        {/* Tax Rates Section */}
-        <div>
-          <button
-            onClick={() => toggleSection('taxes')}
-            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-100">
-                <DollarSign className="w-5 h-5 text-amber-600" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-slate-900">Tax Rates by Location</h3>
-                <p className="text-xs text-slate-500">Configure tax rates for different locations</p>
-              </div>
-            </div>
-            {expandedSections.taxes ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-          </button>
-          
-          {expandedSections.taxes && (
-          <div className="px-4 pb-4">
-          <div className="p-4 bg-slate-50 rounded-xl space-y-4">
-            <p className="text-xs text-slate-500">Set tax rates for specific locations. Customers can have a default tax rate assigned.</p>
-            
-            {formData.tax_rates_by_location?.length > 0 && (
-              <div className="space-y-2">
-                {formData.tax_rates_by_location.map((rate, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{rate.name}</p>
-                      <p className="text-xs text-slate-500">
-                        {[rate.city, rate.state, rate.zip].filter(Boolean).join(', ') || 'No location specified'}
-                      </p>
-                    </div>
-                    <Badge className="bg-blue-100 text-blue-700">{rate.rate}%</Badge>
-                    <Button variant="ghost" size="sm" onClick={() => removeTaxRate(idx)} className="text-red-500 hover:text-red-700">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="grid grid-cols-5 gap-2 pt-2 border-t">
-              <div>
-                <Label className="text-xs">Name</Label>
-                <Input value={newTaxRate.name} onChange={(e) => setNewTaxRate(p => ({ ...p, name: e.target.value }))} placeholder="e.g., Texas" className="mt-1 h-9" />
-              </div>
-              <div>
-                <Label className="text-xs">State</Label>
-                <Input value={newTaxRate.state} onChange={(e) => setNewTaxRate(p => ({ ...p, state: e.target.value }))} placeholder="TX" className="mt-1 h-9" />
-              </div>
-              <div>
-                <Label className="text-xs">City</Label>
-                <Input value={newTaxRate.city} onChange={(e) => setNewTaxRate(p => ({ ...p, city: e.target.value }))} placeholder="Austin" className="mt-1 h-9" />
-              </div>
-              <div>
-                <Label className="text-xs">Rate %</Label>
-                <Input type="number" step="0.01" value={newTaxRate.rate} onChange={(e) => setNewTaxRate(p => ({ ...p, rate: parseFloat(e.target.value) || 0 }))} className="mt-1 h-9" />
-              </div>
-              <div className="flex items-end">
-                <Button onClick={addTaxRate} size="sm" className="w-full bg-[#0069AF] hover:bg-[#133F5C]">Add</Button>
-              </div>
-            </div>
-          </div>
-          </div>
-          )}
-        </div>
       </div>
-      )}
     </div>
   );
 }
@@ -984,9 +681,6 @@ function EmailTemplatesSection({ queryClient }) {
   const [viewMode, setViewMode] = useState('split'); // 'code', 'preview', 'split'
 
   const templateOptions = [
-    { key: 'proposal_sent', name: 'Proposal Sent', description: 'When a proposal is emailed to customer' },
-    { key: 'proposal_accepted', name: 'Proposal Accepted', description: 'When customer approves a proposal' },
-    { key: 'proposal_rejected', name: 'Proposal Rejected', description: 'When customer rejects a proposal' },
     { key: 'task_assigned', name: 'Task Assigned', description: 'When a task is assigned to someone' },
     { key: 'task_due_reminder', name: 'Task Due Reminder', description: 'Reminder before task is due' },
     { key: 'task_overdue', name: 'Task Overdue', description: 'When a task becomes overdue' },
@@ -998,7 +692,6 @@ function EmailTemplatesSection({ queryClient }) {
   ];
 
   const availableVariables = {
-    proposal: ['{{proposal.number}}', '{{proposal.title}}', '{{proposal.total}}', '{{proposal.valid_until}}', '{{proposal.approval_link}}'],
     customer: ['{{customer.name}}', '{{customer.email}}', '{{customer.company}}', '{{customer.phone}}'],
     project: ['{{project.name}}', '{{project.status}}', '{{project.due_date}}', '{{project.progress}}'],
     task: ['{{task.title}}', '{{task.description}}', '{{task.due_date}}', '{{task.priority}}', '{{task.assignee}}'],
@@ -1046,9 +739,6 @@ function EmailTemplatesSection({ queryClient }) {
 
   const getDefaultSubject = (key) => {
     const defaults = {
-      proposal_sent: 'Proposal: {{proposal.title}}',
-      proposal_accepted: 'Great news! Proposal {{proposal.number}} has been accepted',
-      proposal_rejected: 'Proposal {{proposal.number}} was declined',
       task_assigned: 'New task assigned: {{task.title}}',
       task_due_reminder: 'Reminder: {{task.title}} is due {{task.due_date}}',
       task_overdue: 'Overdue: {{task.title}}',
@@ -1154,79 +844,6 @@ function EmailTemplatesSection({ queryClient }) {
 
   // Get pretty default body for proposal_accepted with celebration
   const getDefaultBodyForKey = (key) => {
-    if (key === 'proposal_accepted') {
-      return `<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f0fdf4; }
-    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-    .header { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; padding: 40px 20px; text-align: center; }
-    .header h1 { margin: 0; font-size: 28px; }
-    .celebration { text-align: center; padding: 20px; }
-    .celebration img { max-width: 200px; border-radius: 12px; }
-    .content { padding: 30px; }
-    .highlight-box { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #22c55e; }
-    .details { background: #f8fafc; border-radius: 8px; padding: 15px; margin: 15px 0; }
-    .details-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
-    .details-row:last-child { border-bottom: none; }
-    .label { color: #64748b; font-size: 14px; }
-    .value { font-weight: 600; color: #1e293b; }
-    .total { font-size: 24px; color: #22c55e; font-weight: bold; }
-    .button { display: inline-block; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
-    .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; background: #f8fafc; }
-    .confetti { font-size: 32px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="confetti">🎉 🎊 🎉</div>
-      <h1>Proposal Accepted!</h1>
-      <p style="margin: 10px 0 0 0; opacity: 0.9;">Great news - your proposal has been approved!</p>
-    </div>
-    <div class="celebration">
-      <img src="https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif" alt="Celebration" />
-    </div>
-    <div class="content">
-      <div class="highlight-box">
-        <h2 style="margin: 0 0 10px 0; color: #166534;">✨ {{proposal.title}}</h2>
-        <p style="margin: 0; color: #166534;">Proposal #{{proposal.number}} has been approved by {{customer.name}}</p>
-      </div>
-      
-      <div class="details">
-        <div class="details-row">
-          <span class="label">Customer</span>
-          <span class="value">{{customer.name}}</span>
-        </div>
-        <div class="details-row">
-          <span class="label">Company</span>
-          <span class="value">{{customer.company}}</span>
-        </div>
-        <div class="details-row">
-          <span class="label">Approved On</span>
-          <span class="value">{{current_date}}</span>
-        </div>
-        <div class="details-row">
-          <span class="label">Total Amount</span>
-          <span class="value total">{{proposal.total}}</span>
-        </div>
-      </div>
-
-      <p>Time to celebrate! 🥳 The customer has signed off and you're ready to move forward with this project.</p>
-      
-      <center>
-        <a href="{{app_url}}" class="button">View Proposal Details →</a>
-      </center>
-    </div>
-    <div class="footer">
-      <p>{{company.name}} | {{company.address}}</p>
-      <p>{{company.phone}} | {{company.email}}</p>
-    </div>
-  </div>
-</body>
-</html>`;
-    }
     return getDefaultBody(key);
   };
 
@@ -2074,11 +1691,6 @@ function WebhooksContent({ queryClient }) {
   };
 
   const eventTypes = [
-    { value: 'proposal.approved', label: 'Proposal Approved' },
-    { value: 'proposal.rejected', label: 'Proposal Rejected' },
-    { value: 'proposal.sent', label: 'Proposal Sent' },
-    { value: 'proposal.viewed', label: 'Proposal Viewed' },
-    { value: 'proposal.changes_requested', label: 'Proposal Changes Requested' },
     { value: 'project.created', label: 'Project Created' },
     { value: 'project.completed', label: 'Project Completed' },
     { value: 'project.status_changed', label: 'Project Status Changed' },

@@ -141,14 +141,7 @@ export default function Dashboard() {
     queryFn: () => base44.entities.QuoteRequest.list()
   });
 
-  const { data: proposals = [] } = useQuery({
-    queryKey: ['proposals'],
-    queryFn: () => base44.entities.Proposal.list('-created_date')
-  });
-
   const pendingQuotes = quoteRequests.filter(q => !['received'].includes(q.status));
-  const approvedProposals = proposals.filter(p => p.status === 'approved');
-  const approvedTotal = approvedProposals.reduce((sum, p) => sum + (p.total || 0), 0);
 
   const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
   const archivedProjects = projects.filter(p => (p.status === 'archived' || p.status === 'completed') && p.status !== 'deleted');
