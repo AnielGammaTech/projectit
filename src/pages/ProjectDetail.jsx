@@ -67,6 +67,7 @@ import TimeTracker from '@/components/project/TimeTracker';
 import HaloPSATicketLink from '@/components/project/HaloPSATicketLink';
 import ProjectInsightsWidget from '@/components/dashboard/ProjectInsightsWidget';
 import ProjectSidebar from '@/components/project/ProjectSidebar';
+import UpcomingTasksWidget from '@/components/project/UpcomingTasksWidget';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
 import ArchiveProjectModal from '@/components/modals/ArchiveProjectModal';
@@ -477,6 +478,11 @@ export default function ProjectDetail() {
                   onUpdate={handleTeamUpdate}
                 />
               </div>
+            </div>
+
+            {/* Upcoming Tasks Widget */}
+            <div className="hidden xl:block">
+              <UpcomingTasksWidget projectId={projectId} tasks={tasks} />
             </div>
 
             {/* Actions Row */}
