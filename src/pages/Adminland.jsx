@@ -65,7 +65,7 @@ const adminMenuItems = [
   { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Track user actions and system changes', page: 'AuditLogs' },
 ];
 
-// Adminland dashboard
+// Adminland Dashboard (Main)
 export default function Adminland() {
   const urlParams = new URLSearchParams(window.location.search);
   const initialSection = urlParams.get('section') || null;
