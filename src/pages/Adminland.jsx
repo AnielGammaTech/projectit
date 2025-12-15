@@ -2331,6 +2331,7 @@ function WebhookForm({ webhook, eventTypes, onSave, onCancel }) {
 function IntegrationsSection({ queryClient }) {
   const [activeTab, setActiveTab] = useState('integrations');
   const [saving, setSaving] = useState(false);
+  const [generatedKey, setGeneratedKey] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
@@ -2390,6 +2391,7 @@ function IntegrationsSection({ queryClient }) {
       state: 'state',
       zip: 'zip'
     },
+    projectit_api_key: '',
     // Email (Emailit SMTP)
     emailit_enabled: false,
     emailit_smtp_host: 'smtp.emailit.com',
@@ -2524,6 +2526,7 @@ function IntegrationsSection({ queryClient }) {
           state: 'state',
           zip: 'zip'
         },
+        projectit_api_key: settings[0].projectit_api_key || '',
         // Resend
         resend_enabled: settings[0].resend_enabled || false,
         resend_api_key: settings[0].resend_api_key || '',
@@ -2680,6 +2683,17 @@ function IntegrationsSection({ queryClient }) {
     setSaving(false);
   };
 
+  const generateApiKey = () => {
+    const key = 'pk_' + Math.random().toString(36).substring(2) + Date.now().toString(36) + Math.random().toString(36).substring(2);
+    setFormData(prev => ({ ...prev, projectit_api_key: key }));
+    setGeneratedKey(key);
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    alert('Copied to clipboard!');
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
@@ -2733,6 +2747,60 @@ function IntegrationsSection({ queryClient }) {
       
       {activeTab === 'integrations' && (
       <div className="p-6 space-y-4">
+        {/* ProjectIT API Access */}
+        <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-[#0069AF]/10 rounded-lg">
+              <Shield className="w-5 h-5 text-[#0069AF]" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900">ProjectIT API Access</h3>
+              <p className="text-xs text-slate-500">Allow external apps (like QuoteIT) to pull data from this application</p>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <Label>ProjectIT API Key</Label>
+            <div className="flex gap-2">
+              <Input 
+                value={formData.projectit_api_key} 
+                readOnly 
+                placeholder="No API key generated yet"
+                className="font-mono text-sm bg-white"
+                type={showSecret ? "text" : "password"}
+              />
+              <Button variant="outline" size="icon" onClick={() => setShowSecret(!showSecret)}>
+                {showSecret ? <Shield className="w-4 h-4" /> : <div className="w-4 h-4 flex items-center justify-center">●</div>}
+              </Button>
+              <Button variant="outline" onClick={() => copyToClipboard(formData.projectit_api_key)} disabled={!formData.projectit_api_key}>
+                <Copy className="w-4 h-4" />
+              </Button>
+              <Button onClick={generateApiKey} className="bg-[#0069AF] hover:bg-[#133F5C] text-white">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Generate Key
+              </Button>
+            </div>
+            {generatedKey && (
+              <p className="text-xs text-emerald-600 font-medium">
+                New key generated! Don't forget to save changes.
+              </p>
+            )}
+            <div className="mt-4 p-3 bg-white rounded-lg border text-xs text-slate-600 space-y-2">
+              <div>
+                <span className="font-semibold text-slate-900 block mb-1">ProjectIT API URL:</span>
+                <div className="flex items-center gap-2">
+                  <code className="bg-slate-100 px-2 py-1 rounded block flex-1">{window.location.origin}/api/functions/getProjectITData</code>
+                  <button onClick={() => copyToClipboard(`${window.location.origin}/api/functions/getProjectITData`)} className="text-[#0069AF] hover:underline">Copy</button>
+                </div>
+              </div>
+              <div>
+                <span className="font-semibold text-slate-900 block mb-1">Header:</span>
+                <code className="bg-slate-100 px-2 py-1 rounded">x-projectit-api-key: YOUR_KEY</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Integration Cards */}
         
         {/* HaloPSA Card */}
