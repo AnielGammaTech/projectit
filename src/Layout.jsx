@@ -78,7 +78,7 @@ export default function Layout({ children, currentPageName }) {
   const { data: appSettings } = useQuery({
     queryKey: ['appSettings'],
     queryFn: async () => {
-      const settings = await base44.entities.ProposalSettings.filter({ setting_key: 'main' });
+      const settings = await base44.entities.AppSettings.filter({ setting_key: 'main' });
       return settings[0] || {};
     }
   });

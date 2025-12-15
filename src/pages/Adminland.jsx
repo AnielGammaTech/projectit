@@ -558,8 +558,8 @@ function CompanySettingsSection({ queryClient }) {
   });
 
   const { data: settings = [], refetch } = useQuery({
-    queryKey: ['proposalSettings'],
-    queryFn: () => base44.entities.ProposalSettings.filter({ setting_key: 'main' })
+    queryKey: ['appSettingsMain'],
+    queryFn: () => base44.entities.AppSettings.filter({ setting_key: 'main' })
   });
 
   useEffect(() => {
@@ -574,9 +574,9 @@ function CompanySettingsSection({ queryClient }) {
   const handleSave = async () => {
     setSaving(true);
     if (settings[0]?.id) {
-      await base44.entities.ProposalSettings.update(settings[0].id, { ...formData, setting_key: 'main' });
+      await base44.entities.AppSettings.update(settings[0].id, { ...formData, setting_key: 'main' });
     } else {
-      await base44.entities.ProposalSettings.create({ ...formData, setting_key: 'main' });
+      await base44.entities.AppSettings.create({ ...formData, setting_key: 'main' });
     }
     refetch();
     setSaving(false);
