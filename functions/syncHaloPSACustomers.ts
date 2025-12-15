@@ -211,8 +211,14 @@ Deno.serve(async (req) => {
       return value || '';
     };
 
+    // Batch processing arrays
+    const customersToCreate = [];
+    const customersToUpdate = [];
+    const haloClientMap = {}; // external_id -> halo_id
+
     for (const haloClient of haloClients) {
       const externalId = `halo_${haloClient.id}`;
+      haloClientMap[externalId] = haloClient.id;
       
       const customerName = getField(haloClient, fieldMapping.name) || haloClient.name || haloClient.client_name || 'Unknown';
       const customerEmail = getField(haloClient, fieldMapping.email) || haloClient.email || haloClient.main_email || '';
@@ -250,14 +256,49 @@ Deno.serve(async (req) => {
       }
       
       if (existingCustomer) {
-        await base44.entities.Customer.update(existingCustomer.id, customerData);
-        updated++;
-        haloIdToBase44Id[haloClient.id] = { id: existingCustomer.id, name: customerData.name };
+        customersToUpdate.push({ id: existingCustomer.id, data: customerData, haloId: haloClient.id });
       } else {
-        const newC = await base44.entities.Customer.create(customerData);
-        created++;
-        haloIdToBase44Id[haloClient.id] = { id: newC.id, name: customerData.name };
+        customersToCreate.push({ data: customerData, haloId: haloClient.id });
       }
+    }
+
+    // Process Updates in batches
+    if (customersToUpdate.length > 0) {
+        const chunkSize = 10;
+        for (let i = 0; i < customersToUpdate.length; i += chunkSize) {
+            const batch = customersToUpdate.slice(i, i + chunkSize);
+            await Promise.all(batch.map(async (item) => {
+                try {
+                    await base44.entities.Customer.update(item.id, item.data);
+                    haloIdToBase44Id[item.haloId] = { id: item.id, name: item.data.name };
+                    updated++;
+                } catch (e) {
+                    console.error(`Failed to update customer ${item.id}`, e);
+                }
+            }));
+        }
+    }
+
+    // Process Creates in batches
+    if (customersToCreate.length > 0) {
+        const chunkSize = 50;
+        for (let i = 0; i < customersToCreate.length; i += chunkSize) {
+            const batchData = customersToCreate.slice(i, i + chunkSize).map(c => c.data);
+            try {
+                const createdEntities = await base44.entities.Customer.bulkCreate(batchData);
+                created += createdEntities.length;
+                
+                // Map back IDs for haloIdToBase44Id
+                for (const c of createdEntities) {
+                    const haloId = haloClientMap[c.external_id];
+                    if (haloId) {
+                        haloIdToBase44Id[haloId] = { id: c.id, name: c.name };
+                    }
+                }
+            } catch (e) {
+                console.error("Bulk create failed", e);
+            }
+        }
     }
 
     // --- SYNC USERS (Contacts) ---
@@ -287,6 +328,9 @@ Deno.serve(async (req) => {
                 if (c.external_id) existingContactMap[c.external_id] = c;
             });
 
+            const usersToCreate = [];
+            const usersToUpdate = [];
+
             for (const user of haloUsers) {
                 if (!user.client_id || !haloIdToBase44Id[user.client_id]) continue;
                 
@@ -303,16 +347,43 @@ Deno.serve(async (req) => {
                     is_company: false,
                     source: 'halo_psa',
                     external_id: userExternalId,
-                    // Additional fields if available
                     notes: user.notes || ''
                 };
 
                 if (existingContactMap[userExternalId]) {
-                    await base44.entities.Customer.update(existingContactMap[userExternalId].id, contactData);
-                    usersUpdated++;
+                    usersToUpdate.push({ id: existingContactMap[userExternalId].id, data: contactData });
                 } else {
-                    await base44.entities.Customer.create(contactData);
-                    usersCreated++;
+                    usersToCreate.push(contactData);
+                }
+            }
+
+            // Batch update users
+            if (usersToUpdate.length > 0) {
+                const chunkSize = 10;
+                for (let i = 0; i < usersToUpdate.length; i += chunkSize) {
+                    const batch = usersToUpdate.slice(i, i + chunkSize);
+                    await Promise.all(batch.map(async (item) => {
+                        try {
+                            await base44.entities.Customer.update(item.id, item.data);
+                            usersUpdated++;
+                        } catch (e) {
+                            console.error(`Failed to update user ${item.id}`, e);
+                        }
+                    }));
+                }
+            }
+
+            // Bulk create users
+            if (usersToCreate.length > 0) {
+                const chunkSize = 50;
+                for (let i = 0; i < usersToCreate.length; i += chunkSize) {
+                    const batch = usersToCreate.slice(i, i + chunkSize);
+                    try {
+                        const createdUsers = await base44.entities.Customer.bulkCreate(batch);
+                        usersCreated += createdUsers.length;
+                    } catch (e) {
+                        console.error("Bulk create users failed", e);
+                    }
                 }
             }
         }
