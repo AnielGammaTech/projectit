@@ -63,6 +63,7 @@ const adminMenuItems = [
   { id: 'proposals', label: 'Proposal Sync', icon: FileText, description: 'Sync proposal statuses from ProposalPro app' },
   { id: 'company', label: 'Company Settings', icon: Building2, description: 'Branding, proposal defaults, and company info' },
   { id: 'integrations', label: 'Integrations & Webhooks', icon: GitMerge, description: 'Connect external services and webhooks' },
+  { id: 'gammastack', label: 'GammaStack', icon: Layers, description: 'Connect QuoteIT, PortalIT and generate API keys' },
   { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Track user actions and system changes', page: 'AuditLogs' },
 ];
 
@@ -87,6 +88,8 @@ export default function Adminland() {
         return <ProposalSyncSection queryClient={queryClient} />;
       case 'project-management':
         return <ProjectManagementSection queryClient={queryClient} />;
+      case 'gammastack':
+        return <GammaStackSection queryClient={queryClient} />;
       default:
         return null;
     }
@@ -1421,6 +1424,218 @@ function EmailTemplatesSection({ queryClient }) {
         </div>
       </div>
       )}
+    </div>
+  );
+}
+
+// GammaStack Section
+function GammaStackSection({ queryClient }) {
+  const [saving, setSaving] = useState(false);
+  const [generatedKey, setGeneratedKey] = useState(null);
+  
+  const [formData, setFormData] = useState({
+    gammastack_api_key: '',
+    quoteit_enabled: false,
+    quoteit_api_url: '',
+    quoteit_api_key: '',
+    portalit_enabled: false,
+    portalit_api_url: '',
+    portalit_api_key: '',
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['integrationSettings'],
+    queryFn: () => base44.entities.IntegrationSettings.filter({ setting_key: 'main' })
+  });
+
+  useEffect(() => {
+    if (settings[0]) {
+      setFormData({
+        gammastack_api_key: settings[0].gammastack_api_key || '',
+        quoteit_enabled: settings[0].quoteit_enabled || false,
+        quoteit_api_url: settings[0].quoteit_api_url || '',
+        quoteit_api_key: settings[0].quoteit_api_key || '',
+        portalit_enabled: settings[0].portalit_enabled || false,
+        portalit_api_url: settings[0].portalit_api_url || '',
+        portalit_api_key: settings[0].portalit_api_key || '',
+      });
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    if (settings[0]?.id) {
+      await base44.entities.IntegrationSettings.update(settings[0].id, { ...formData, setting_key: 'main' });
+    } else {
+      await base44.entities.IntegrationSettings.create({ ...formData, setting_key: 'main' });
+    }
+    refetch();
+    setSaving(false);
+  };
+
+  const generateApiKey = () => {
+    const key = 'gs_' + Math.random().toString(36).substring(2) + Date.now().toString(36) + Math.random().toString(36).substring(2);
+    setFormData(prev => ({ ...prev, gammastack_api_key: key }));
+    setGeneratedKey(key);
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    alert('Copied to clipboard!');
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-slate-900">GammaStack Integrations</h2>
+          <p className="text-sm text-slate-500">Connect to the GammaStack ecosystem</p>
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+
+      <div className="p-6 space-y-8">
+        
+        {/* API Access Section */}
+        <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <Shield className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900">Incoming API Access</h3>
+              <p className="text-xs text-slate-500">Generate a key to allow other apps to send data to this application</p>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <Label>This Application's API Key</Label>
+            <div className="flex gap-2">
+              <Input 
+                value={formData.gammastack_api_key} 
+                readOnly 
+                placeholder="No API key generated yet"
+                className="font-mono text-sm bg-white"
+              />
+              <Button variant="outline" onClick={() => copyToClipboard(formData.gammastack_api_key)} disabled={!formData.gammastack_api_key}>
+                <Copy className="w-4 h-4" />
+              </Button>
+              <Button onClick={generateApiKey} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Generate New Key
+              </Button>
+            </div>
+            {generatedKey && (
+              <p className="text-xs text-emerald-600 font-medium">
+                New key generated! Make sure to save changes.
+              </p>
+            )}
+            <div className="text-xs text-slate-500 mt-2">
+              <p>Endpoint for incoming data: <code className="bg-slate-200 px-1 rounded">/api/functions/gammaStackReceiver</code></p>
+              <p>Authentication: Send header <code className="bg-slate-200 px-1 rounded">x-gammastack-key: YOUR_KEY</code></p>
+            </div>
+          </div>
+        </div>
+
+        {/* QuoteIT Integration */}
+        <div className="border rounded-xl overflow-hidden">
+          <div className="p-4 bg-white border-b flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">QuoteIT</h3>
+                <p className="text-xs text-slate-500">Advanced quoting and estimation</p>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox 
+                checked={formData.quoteit_enabled} 
+                onCheckedChange={(checked) => setFormData(p => ({ ...p, quoteit_enabled: checked }))} 
+              />
+              <span className="text-sm font-medium">Enable</span>
+            </label>
+          </div>
+          
+          {formData.quoteit_enabled && (
+            <div className="p-4 bg-slate-50 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs">QuoteIT Base44 App URL</Label>
+                  <Input 
+                    value={formData.quoteit_api_url} 
+                    onChange={(e) => setFormData(p => ({ ...p, quoteit_api_url: e.target.value }))}
+                    placeholder="https://quoteit-app.base44.app"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">API Key</Label>
+                  <Input 
+                    type="password"
+                    value={formData.quoteit_api_key} 
+                    onChange={(e) => setFormData(p => ({ ...p, quoteit_api_key: e.target.value }))}
+                    placeholder="QuoteIT API Key"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* PortalIT Integration */}
+        <div className="border rounded-xl overflow-hidden">
+          <div className="p-4 bg-white border-b flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                <Users className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">PortalIT</h3>
+                <p className="text-xs text-slate-500">Customer portal and ticketing</p>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox 
+                checked={formData.portalit_enabled} 
+                onCheckedChange={(checked) => setFormData(p => ({ ...p, portalit_enabled: checked }))} 
+              />
+              <span className="text-sm font-medium">Enable</span>
+            </label>
+          </div>
+          
+          {formData.portalit_enabled && (
+            <div className="p-4 bg-slate-50 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs">PortalIT Base44 App URL</Label>
+                  <Input 
+                    value={formData.portalit_api_url} 
+                    onChange={(e) => setFormData(p => ({ ...p, portalit_api_url: e.target.value }))}
+                    placeholder="https://portalit-app.base44.app"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">API Key</Label>
+                  <Input 
+                    type="password"
+                    value={formData.portalit_api_key} 
+                    onChange={(e) => setFormData(p => ({ ...p, portalit_api_key: e.target.value }))}
+                    placeholder="PortalIT API Key"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+      </div>
     </div>
   );
 }
