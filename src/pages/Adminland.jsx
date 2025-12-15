@@ -579,6 +579,7 @@ function CompanySettingsSection({ queryClient }) {
       await base44.entities.AppSettings.create({ ...formData, setting_key: 'main' });
     }
     refetch();
+    queryClient.invalidateQueries({ queryKey: ['appSettings'] });
     setSaving(false);
   };
 
