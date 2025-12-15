@@ -2558,6 +2558,19 @@ function IntegrationsSection({ queryClient }) {
                   <span className="text-sm">Sync Tickets</span>
                 </label>
               </div>
+
+              <div className="pt-2 mt-2 border-t border-slate-100">
+                <Label className="text-xs mb-1.5 block">Excluded Client IDs</Label>
+                <Input 
+                  value={formData.halopsa_excluded_ids || ''} 
+                  onChange={(e) => setFormData(p => ({ ...p, halopsa_excluded_ids: e.target.value }))}
+                  placeholder="e.g. 1, 45, 99 (Comma separated)" 
+                  className="font-mono text-sm"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Enter the HaloPSA Client IDs you want to exclude from the sync, separated by commas.
+                </p>
+              </div>
               {/* Field Mapping */}
               <div className="pt-2 border-t border-slate-200">
                 <button 
