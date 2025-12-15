@@ -58,11 +58,9 @@ Deno.serve(async (req) => {
     apiUrl = apiUrl.replace(/\/+$/, '').replace(/\/api\/?$/, '');
 
     // Build token URL: Auth URL + /auth/token
-    // HaloPSA hosted uses: https://yourcompany.halopsa.com/auth/token
     let tokenUrl = `${authUrl}/auth/token`;
 
     // Build API base URL
-    // HaloPSA uses: https://yourcompany.halopsa.com/api/Client (capital C)
     let apiBaseUrl = `${apiUrl}/api`;
     
     const tokenBody = new URLSearchParams({
@@ -113,7 +111,6 @@ Deno.serve(async (req) => {
     }
 
     // Fetch clients from HaloPSA
-    // HaloPSA API endpoint is /api/Client (capital C is important!)
     const clientsUrl = `${apiBaseUrl}/Client?count=500`;
     
     let clientsResponse;
@@ -147,13 +144,10 @@ Deno.serve(async (req) => {
     }
 
     const clientsData = await clientsResponse.json();
-    
-    // HaloPSA returns { record_count: X, clients: [...] }
     const haloClients = clientsData.clients || [];
 
     // If test mode, just return success with count
     if (testOnly) {
-      // Return sample of first client's fields for mapping help
       const sampleFields = haloClients[0] ? Object.keys(haloClients[0]).slice(0, 20) : [];
       return Response.json({
         success: true,
@@ -203,6 +197,7 @@ Deno.serve(async (req) => {
     let created = 0;
     let updated = 0;
     let matched = 0;
+    const haloIdToBase44Id = {}; // Map Halo Client ID -> Base44 Customer ID {id, name}
 
     // Helper to get nested field value
     const getField = (obj, fieldPath) => {
@@ -222,11 +217,15 @@ Deno.serve(async (req) => {
       const customerName = getField(haloClient, fieldMapping.name) || haloClient.name || haloClient.client_name || 'Unknown';
       const customerEmail = getField(haloClient, fieldMapping.email) || haloClient.email || haloClient.main_email || '';
       
+      // Enhanced field mapping fallbacks
+      const phone = getField(haloClient, fieldMapping.phone) || haloClient.main_phone || haloClient.phone_number || haloClient.phonenumber || '';
+      const address = getField(haloClient, fieldMapping.address) || haloClient.address || haloClient.address_line_1 || haloClient.billing_address_line_1 || '';
+      
       const customerData = {
         name: customerName,
         email: customerEmail,
-        phone: getField(haloClient, fieldMapping.phone) || haloClient.main_phone || haloClient.phone_number || '',
-        address: getField(haloClient, fieldMapping.address) || haloClient.address || '',
+        phone: phone,
+        address: address,
         city: getField(haloClient, fieldMapping.city) || haloClient.city || '',
         state: getField(haloClient, fieldMapping.state) || haloClient.county || haloClient.state || '',
         zip: getField(haloClient, fieldMapping.zip) || haloClient.postcode || '',
@@ -253,10 +252,72 @@ Deno.serve(async (req) => {
       if (existingCustomer) {
         await base44.entities.Customer.update(existingCustomer.id, customerData);
         updated++;
+        haloIdToBase44Id[haloClient.id] = { id: existingCustomer.id, name: customerData.name };
       } else {
-        await base44.entities.Customer.create(customerData);
+        const newC = await base44.entities.Customer.create(customerData);
         created++;
+        haloIdToBase44Id[haloClient.id] = { id: newC.id, name: customerData.name };
       }
+    }
+
+    // --- SYNC USERS (Contacts) ---
+    let usersCreated = 0;
+    let usersUpdated = 0;
+    
+    try {
+        const usersUrl = `${apiBaseUrl}/Users?count=1000`; // Adjust count as needed
+        const usersResponse = await fetch(usersUrl, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (usersResponse.ok) {
+            const usersData = await usersResponse.json();
+            const haloUsers = usersData.users || [];
+            
+            // Get all existing contacts (is_company: false) to avoid duplicates
+            // Re-fetch or filter from existing list. Re-fetching is safer if many created.
+            // For efficiency, we can use the existingByExternalId map, but it only has initial load.
+            // Let's assume we can query contacts by source='halo_psa'.
+            const existingContacts = await base44.entities.Customer.filter({ is_company: false, source: 'halo_psa' });
+            const existingContactMap = {}; 
+            existingContacts.forEach(c => {
+                if (c.external_id) existingContactMap[c.external_id] = c;
+            });
+
+            for (const user of haloUsers) {
+                if (!user.client_id || !haloIdToBase44Id[user.client_id]) continue;
+                
+                const parentInfo = haloIdToBase44Id[user.client_id];
+                const userExternalId = `halo_user_${user.id}`;
+                const userName = user.name || user.username || 'Unknown User';
+                
+                const contactData = {
+                    name: userName,
+                    email: user.emailaddress || user.email || '',
+                    phone: user.phonenumber || user.phone || user.mobile_number || '',
+                    company_id: parentInfo.id,
+                    company: parentInfo.name,
+                    is_company: false,
+                    source: 'halo_psa',
+                    external_id: userExternalId,
+                    // Additional fields if available
+                    notes: user.notes || ''
+                };
+
+                if (existingContactMap[userExternalId]) {
+                    await base44.entities.Customer.update(existingContactMap[userExternalId].id, contactData);
+                    usersUpdated++;
+                } else {
+                    await base44.entities.Customer.create(contactData);
+                    usersCreated++;
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Error syncing users:", err);
     }
 
     // Update last sync time
@@ -268,9 +329,11 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      message: `Synced ${created} new customers, updated ${updated} existing (${matched} matched by name/email)`,
+      message: `Synced ${created} new customers, updated ${updated} existing. Synced ${usersCreated} new users, updated ${usersUpdated} existing.`,
       created,
       updated,
+      usersCreated,
+      usersUpdated,
       matched,
       total: haloClients.length
     });
