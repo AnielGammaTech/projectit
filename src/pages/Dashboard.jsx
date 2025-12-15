@@ -77,6 +77,7 @@ export default function Dashboard() {
     setPrefillData({
       name: quote.title,
       client: quote.customer_name,
+      customer_id: quote.customer_id, // Pass matched customer ID
       budget: quote.amount,
       quoteit_quote_id: quote.quoteit_id, // Pass ID to link
       incoming_quote_id: quote.id, // Pass internal ID to update status later

@@ -49,6 +49,17 @@ Deno.serve(async (req) => {
     const projects = await base44.asServiceRole.entities.Project.list('-project_number', 1);
     let nextNumber = (projects[0]?.project_number || 1000) + 1;
 
+    // Fetch all customers for matching
+    // Note: In a larger system, we might want to optimize this to only fetch relevant fields or cache it
+    const allCustomers = await base44.asServiceRole.entities.Customer.list();
+    const customerMap = new Map();
+    // Normalize and map for lookup
+    for (const c of allCustomers) {
+      if (c.email) customerMap.set(c.email.toLowerCase(), c.id);
+      if (c.name) customerMap.set(c.name.toLowerCase(), c.id);
+      if (c.company) customerMap.set(c.company.toLowerCase(), c.id);
+    }
+
     for (const quote of quotes) {
       try {
         // Check if IncomingQuote already exists
@@ -56,11 +67,24 @@ Deno.serve(async (req) => {
         const existingProject = await base44.asServiceRole.entities.Project.filter({ quoteit_quote_id: quote.id });
         
         if (existing.length === 0 && existingProject.length === 0) {
+          // Try to match customer
+          const customerName = quote.customer_name || 'Unknown Client';
+          const customerEmail = quote.customer_email || quote.email || quote.raw_data?.customer_email || '';
+
+          let matchedCustomerId = null;
+          if (customerEmail && customerMap.has(customerEmail.toLowerCase())) {
+            matchedCustomerId = customerMap.get(customerEmail.toLowerCase());
+          } else if (customerName && customerMap.has(customerName.toLowerCase())) {
+            matchedCustomerId = customerMap.get(customerName.toLowerCase());
+          }
+
           // Create new IncomingQuote instead of Project directly
           await base44.asServiceRole.entities.IncomingQuote.create({
             quoteit_id: quote.id,
             title: quote.title || `Quote #${quote.number || 'Unknown'}`,
-            customer_name: quote.customer_name || 'Unknown Client',
+            customer_name: customerName,
+            customer_email: customerEmail,
+            customer_id: matchedCustomerId,
             amount: quote.total_amount || 0,
             received_date: new Date().toISOString(),
             status: 'pending',
