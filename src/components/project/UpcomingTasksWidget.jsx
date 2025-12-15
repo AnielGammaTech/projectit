@@ -42,7 +42,7 @@ export default function UpcomingTasksWidget({ projectId, tasks = [] }) {
 
   if (upcomingTasks.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-3 w-full max-w-xs h-full flex items-center justify-center min-h-[100px]">
+      <div className="bg-white rounded-xl border border-slate-200 p-3 w-full h-full flex items-center justify-center min-h-[100px]">
         <div className="text-center">
           <CheckCircle2 className="w-5 h-5 text-emerald-300 mx-auto mb-1" />
           <p className="text-[10px] text-slate-500">All caught up!</p>
@@ -54,7 +54,7 @@ export default function UpcomingTasksWidget({ projectId, tasks = [] }) {
   const dueInfo = currentTask ? getDueDateLabel(currentTask.due_date) : null;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-3 w-full max-w-xs h-full flex flex-col justify-center min-h-[100px]">
+    <div className="bg-white rounded-xl border border-slate-200 p-3 w-full h-full flex flex-col justify-center min-h-[100px]">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
           <ListTodo className="w-3.5 h-3.5 text-indigo-500" />

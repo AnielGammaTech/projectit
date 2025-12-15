@@ -526,7 +526,7 @@ export default function ProjectDetail() {
 
                 <div className="flex items-stretch gap-4">
                   {/* Upcoming Tasks Widget */}
-                  <div className="hidden xl:block w-[260px]">
+                  <div className="hidden xl:block w-[300px]">
                     <UpcomingTasksWidget projectId={projectId} tasks={tasks} />
                   </div>
 
