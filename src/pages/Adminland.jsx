@@ -2724,7 +2724,7 @@ function IntegrationsSection({ queryClient }) {
           )}
         >
           <Layers className="w-4 h-4" />
-          GammaStack
+          GammaStack Ecosystem
         </button>
       </div>
 
