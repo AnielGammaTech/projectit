@@ -1429,7 +1429,7 @@ function GammaStackSection({ queryClient }) {
   const [generatedKey, setGeneratedKey] = useState(null);
   
   const [formData, setFormData] = useState({
-    gammastack_api_key: '',
+
     quoteit_enabled: false,
     quoteit_api_url: '',
     quoteit_api_key: '',
@@ -1449,7 +1449,7 @@ function GammaStackSection({ queryClient }) {
   useEffect(() => {
     if (settings[0]) {
       setFormData({
-        gammastack_api_key: settings[0].gammastack_api_key || '',
+
         quoteit_enabled: settings[0].quoteit_enabled || false,
         quoteit_api_url: settings[0].quoteit_api_url || '',
         quoteit_api_key: settings[0].quoteit_api_key || '',
@@ -1474,22 +1474,11 @@ function GammaStackSection({ queryClient }) {
     setSaving(false);
   };
 
-  const generateApiKey = () => {
-    const key = 'gs_' + Math.random().toString(36).substring(2) + Date.now().toString(36) + Math.random().toString(36).substring(2);
-    setFormData(prev => ({ ...prev, gammastack_api_key: key }));
-    setGeneratedKey(key);
-  };
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
-  };
-
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">GammaStack Integrations</h2>
+          <h2 className="text-xl font-semibold text-slate-900">GammaStack</h2>
           <p className="text-sm text-slate-500">Connect to the GammaStack ecosystem</p>
         </div>
         <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
@@ -1498,47 +1487,6 @@ function GammaStackSection({ queryClient }) {
       </div>
 
       <div className="p-6 space-y-8">
-        
-        {/* API Access Section */}
-        <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <Shield className="w-5 h-5 text-indigo-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900">Incoming API Access</h3>
-              <p className="text-xs text-slate-500">Generate a key to allow other apps to send data to this application</p>
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <Label>This Application's API Key</Label>
-            <div className="flex gap-2">
-              <Input 
-                value={formData.gammastack_api_key} 
-                readOnly 
-                placeholder="No API key generated yet"
-                className="font-mono text-sm bg-white"
-              />
-              <Button variant="outline" onClick={() => copyToClipboard(formData.gammastack_api_key)} disabled={!formData.gammastack_api_key}>
-                <Copy className="w-4 h-4" />
-              </Button>
-              <Button onClick={generateApiKey} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Generate New Key
-              </Button>
-            </div>
-            {generatedKey && (
-              <p className="text-xs text-emerald-600 font-medium">
-                New key generated! Make sure to save changes.
-              </p>
-            )}
-            <div className="text-xs text-slate-500 mt-2">
-              <p>Endpoint for incoming data: <code className="bg-slate-200 px-1 rounded">/api/functions/gammaStackReceiver</code></p>
-              <p>Authentication: Send header <code className="bg-slate-200 px-1 rounded">x-gammastack-key: YOUR_KEY</code></p>
-            </div>
-          </div>
-        </div>
 
         {/* QuoteIT Integration */}
         <div className="border rounded-xl overflow-hidden">
@@ -2738,7 +2686,7 @@ function IntegrationsSection({ queryClient }) {
           )}
         >
           <Layers className="w-4 h-4" />
-          GammaStack Ecosystem
+          GammaStack
         </button>
       </div>
 
