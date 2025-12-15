@@ -21,12 +21,6 @@ import ProjectNotes from './pages/ProjectNotes';
 import ProjectParts from './pages/ProjectParts';
 import ProjectTasks from './pages/ProjectTasks';
 import ProjectTimeline from './pages/ProjectTimeline';
-import ProposalAnalytics from './pages/ProposalAnalytics';
-import ProposalApproval from './pages/ProposalApproval';
-import ProposalEditor from './pages/ProposalEditor';
-import ProposalReports from './pages/ProposalReports';
-import ProposalView from './pages/ProposalView';
-import Proposals from './pages/Proposals';
 import QuoteRequests from './pages/QuoteRequests';
 import ReportBuilder from './pages/ReportBuilder';
 import Reports from './pages/Reports';
@@ -66,12 +60,6 @@ export const PAGES = {
     "ProjectParts": ProjectParts,
     "ProjectTasks": ProjectTasks,
     "ProjectTimeline": ProjectTimeline,
-    "ProposalAnalytics": ProposalAnalytics,
-    "ProposalApproval": ProposalApproval,
-    "ProposalEditor": ProposalEditor,
-    "ProposalReports": ProposalReports,
-    "ProposalView": ProposalView,
-    "Proposals": Proposals,
     "QuoteRequests": QuoteRequests,
     "ReportBuilder": ReportBuilder,
     "Reports": Reports,

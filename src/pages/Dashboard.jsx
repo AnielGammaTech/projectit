@@ -109,21 +109,6 @@ export default function Dashboard() {
     const urlParams = new URLSearchParams(window.location.search);
     const action = urlParams.get('action');
     const proposalId = urlParams.get('proposalId');
-    
-    if (action === 'createFromProposal' && proposalId) {
-      base44.entities.Proposal.filter({ id: proposalId }).then(proposals => {
-        if (proposals[0]) {
-          const proposal = proposals[0];
-          setPrefillData({
-            name: proposal.title,
-            client: proposal.customer_name,
-            customer_id: proposal.customer_id,
-            proposalItems: proposal.items || []
-          });
-          setShowProjectModal(true);
-        }
-      });
-    }
   }, []);
 
   const { data: projects = [], refetch: refetchProjects } = useQuery({
@@ -616,14 +601,7 @@ export default function Dashboard() {
             iconColor="bg-[#0069AF]"
             href={createPageUrl('Dashboard')}
           />
-          <StatsCard
-            title="Quotes to Convert"
-            value={approvedProposals.length}
-            subtitle={approvedProposals.length > 0 ? `$${approvedTotal.toLocaleString()}` : null}
-            icon={FileText}
-            iconColor="bg-emerald-500"
-            href={createPageUrl('Proposals') + '?status=approved'}
-          />
+
           <StatsCard
             title="Parts Tracking"
             value={pendingParts.length}
