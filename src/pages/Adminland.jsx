@@ -2100,10 +2100,47 @@ function WebhooksContent({ queryClient }) {
         </Button>
       </div>
 
+      {/* Incoming Webhook Section */}
+      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Webhook className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-slate-900">Incoming Webhooks</h3>
+            <p className="text-xs text-slate-500">Send data to this application using this URL</p>
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <Label>Webhook Receiver URL</Label>
+          <div className="flex gap-2">
+            <Input 
+              value={`${window.location.origin}/api/functions/incomingWebhook?source=external`} 
+              readOnly 
+              className="font-mono text-sm bg-white"
+            />
+            <Button variant="outline" onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/api/functions/incomingWebhook?source=external`);
+              alert('Copied to clipboard!');
+            }}>
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Send POST requests to this URL. The payload will be logged in Audit Logs.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mb-4 pt-4 border-t">
+        <h3 className="font-semibold text-slate-900">Outgoing Webhooks</h3>
+      </div>
+
       {webhooks.length === 0 ? (
         <div className="p-12 text-center">
           <Webhook className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-          <h3 className="text-lg font-medium text-slate-900 mb-2">No webhooks configured</h3>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">No outgoing webhooks configured</h3>
           <p className="text-slate-500 mb-4">Set up webhooks to push data to external services like Zapier, Make, or custom endpoints.</p>
           <Button onClick={() => setShowModal(true)} variant="outline">
             <Plus className="w-4 h-4 mr-2" />
