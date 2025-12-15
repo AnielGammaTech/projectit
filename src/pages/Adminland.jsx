@@ -1426,7 +1426,6 @@ function EmailTemplatesSection({ queryClient }) {
 // GammaStack Section
 function GammaStackSection({ queryClient }) {
   const [saving, setSaving] = useState(false);
-  const [generatedKey, setGeneratedKey] = useState(null);
   
   const [formData, setFormData] = useState({
 
