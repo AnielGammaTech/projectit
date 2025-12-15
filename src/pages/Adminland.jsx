@@ -10,7 +10,7 @@ import {
   Plus, MoreHorizontal, Mail, Phone, Package, ArrowLeft,
   Building2, Tags, FolderKanban, GitMerge, DollarSign,
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
-  Webhook, Send, Copy, Check, FileText
+  Webhook, Send, Copy, Check, FileText, Layers
 } from 'lucide-react';
 import {
   Dialog,
