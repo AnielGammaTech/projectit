@@ -1426,6 +1426,33 @@ function EmailTemplatesSection({ queryClient }) {
 // GammaStack Section
 function GammaStackSection({ queryClient }) {
   const [saving, setSaving] = useState(false);
+  const [syncingQuoteIT, setSyncingQuoteIT] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
+
+  const handleSyncQuoteIT = async () => {
+    setSyncingQuoteIT(true);
+    setSyncResult(null);
+    try {
+      // Save settings first just in case
+      await handleSave();
+      
+      const response = await base44.functions.invoke('syncQuoteIT', {});
+      const data = response.data;
+      
+      if (data.success) {
+        setSyncResult({ success: true, message: data.message });
+        // Invalidate projects query if we created new ones
+        if (data.details?.created > 0) {
+          queryClient.invalidateQueries({ queryKey: ['projects'] });
+        }
+      } else {
+        setSyncResult({ success: false, message: data.error || 'Sync failed' });
+      }
+    } catch (error) {
+      setSyncResult({ success: false, message: error.message || 'Sync failed' });
+    }
+    setSyncingQuoteIT(false);
+  };
   
   const [formData, setFormData] = useState({
 
@@ -1519,6 +1546,7 @@ function GammaStackSection({ queryClient }) {
                     placeholder="https://quoteit-app.base44.app"
                     className="mt-1"
                   />
+                  <p className="text-[10px] text-slate-400 mt-1">Enter the full base URL (e.g., https://...)</p>
                 </div>
                 <div>
                   <Label className="text-xs">API Key</Label>
@@ -1529,6 +1557,32 @@ function GammaStackSection({ queryClient }) {
                     placeholder="QuoteIT API Key"
                     className="mt-1"
                   />
+                </div>
+              </div>
+              <div className="pt-2 border-t border-slate-200">
+                <div className="flex items-center justify-between">
+                  <Button 
+                    onClick={handleSyncQuoteIT} 
+                    disabled={syncingQuoteIT} 
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    {syncingQuoteIT ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Sync Accepted Quotes
+                      </>
+                    )}
+                  </Button>
+                  {syncResult && (
+                    <span className={cn("text-sm font-medium", syncResult.success ? "text-emerald-600" : "text-red-600")}>
+                      {syncResult.message}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
