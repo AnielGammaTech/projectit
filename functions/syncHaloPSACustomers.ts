@@ -328,10 +328,6 @@ Deno.serve(async (req) => {
             const usersData = await usersResponse.json();
             const haloUsers = usersData.users || [];
             
-            // Get all existing contacts (is_company: false) to avoid duplicates
-            // Re-fetch or filter from existing list. Re-fetching is safer if many created.
-            // For efficiency, we can use the existingByExternalId map, but it only has initial load.
-            // Let's assume we can query contacts by source='halo_psa'.
             const existingContacts = await base44.entities.Customer.filter({ is_company: false, source: 'halo_psa' });
             const existingContactMap = {}; 
             existingContacts.forEach(c => {
@@ -396,6 +392,96 @@ Deno.serve(async (req) => {
                     }
                 }
             }
+    } catch (err) {
+        console.error("Error syncing users:", err);
+    }
+
+    // --- SYNC SITES ---
+    let sitesCreated = 0;
+    let sitesUpdated = 0;
+
+    try {
+        const sitesUrl = `${apiBaseUrl}/Site?count=1000`; // Adjust count as needed
+        const sitesResponse = await fetch(sitesUrl, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (sitesResponse.ok) {
+            const sitesData = await sitesResponse.json();
+            const haloSites = sitesData.sites || [];
+
+            // Get existing sites
+            const existingSites = await base44.entities.Site.list();
+            const existingSiteMap = {}; // external_id -> Site
+            existingSites.forEach(s => {
+                if (s.external_id) existingSiteMap[s.external_id] = s;
+            });
+
+            const sitesToCreate = [];
+            const sitesToUpdate = [];
+
+            for (const site of haloSites) {
+                if (!site.client_id || !haloIdToBase44Id[site.client_id]) continue;
+
+                const parentInfo = haloIdToBase44Id[site.client_id];
+                const siteExternalId = `halo_site_${site.id}`;
+                const siteName = site.name || 'Main Site';
+
+                const siteData = {
+                    name: siteName,
+                    address: site.address_line_1 || site.address || '',
+                    city: site.city || '',
+                    state: site.state || site.county || '',
+                    zip: site.postcode || site.zip || '',
+                    customer_id: parentInfo.id,
+                    external_id: siteExternalId,
+                    notes: site.notes || '',
+                    is_default: site.is_default === true
+                };
+
+                if (existingSiteMap[siteExternalId]) {
+                    sitesToUpdate.push({ id: existingSiteMap[siteExternalId].id, data: siteData });
+                } else {
+                    sitesToCreate.push(siteData);
+                }
+            }
+
+            // Batch update sites
+            if (sitesToUpdate.length > 0) {
+                const chunkSize = 10;
+                for (let i = 0; i < sitesToUpdate.length; i += chunkSize) {
+                    const batch = sitesToUpdate.slice(i, i + chunkSize);
+                    await Promise.all(batch.map(async (item) => {
+                        try {
+                            await base44.entities.Site.update(item.id, item.data);
+                            sitesUpdated++;
+                        } catch (e) {
+                            console.error(`Failed to update site ${item.id}`, e);
+                        }
+                    }));
+                }
+            }
+
+            // Bulk create sites
+            if (sitesToCreate.length > 0) {
+                const chunkSize = 50;
+                for (let i = 0; i < sitesToCreate.length; i += chunkSize) {
+                    const batch = sitesToCreate.slice(i, i + chunkSize);
+                    try {
+                        const createdSites = await base44.entities.Site.bulkCreate(batch);
+                        sitesCreated += createdSites.length;
+                    } catch (e) {
+                        console.error("Bulk create sites failed", e);
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Error syncing sites:", err);
+    }
         }
     } catch (err) {
         console.error("Error syncing users:", err);
@@ -410,11 +496,13 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      message: `Synced ${created} new customers, updated ${updated} existing. Synced ${usersCreated} new users, updated ${usersUpdated} existing.`,
+      message: `Synced ${created} new customers, updated ${updated} existing. Synced ${usersCreated} new users, updated ${usersUpdated} existing. Synced ${sitesCreated} new sites, updated ${sitesUpdated} existing.`,
       created,
       updated,
       usersCreated,
       usersUpdated,
+      sitesCreated,
+      sitesUpdated,
       matched,
       total: haloClients.length
     });
