@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
+import IncomingQuoteBanner from '@/components/dashboard/IncomingQuoteBanner';
 import DashboardWidgets from '@/components/dashboard/DashboardWidgets';
 
 // Filter out in_progress and medium priority from dashboard display
@@ -66,6 +67,28 @@ export default function Dashboard() {
   const [currentView, setCurrentView] = useState(null);
   const [viewName, setViewName] = useState('');
   const [showSaveViewModal, setShowSaveViewModal] = useState(false);
+
+  const { data: incomingQuotes = [], refetch: refetchIncomingQuotes } = useQuery({
+    queryKey: ['incomingQuotes'],
+    queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' })
+  });
+
+  const handleCreateProjectFromQuote = (quote) => {
+    setPrefillData({
+      name: quote.title,
+      client: quote.customer_name,
+      budget: quote.amount,
+      quoteit_quote_id: quote.quoteit_id, // Pass ID to link
+      incoming_quote_id: quote.id, // Pass internal ID to update status later
+      description: `Imported from Accepted Quote: ${quote.title}`
+    });
+    setShowProjectModal(true);
+  };
+
+  const handleDismissQuote = async (quote) => {
+    await base44.entities.IncomingQuote.update(quote.id, { status: 'dismissed' });
+    refetchIncomingQuotes();
+  };
 
   const { data: dashboardViews = [], refetch: refetchViews } = useQuery({
     queryKey: ['dashboardViews'],
@@ -373,6 +396,13 @@ export default function Dashboard() {
     
     const newProject = await base44.entities.Project.create(projectData);
     
+    // If created from IncomingQuote, mark it as converted
+    if (prefillData?.incoming_quote_id) {
+      await base44.entities.IncomingQuote.update(prefillData.incoming_quote_id, { status: 'converted' });
+      // Clean up the query
+      if (typeof refetchIncomingQuotes === 'function') refetchIncomingQuotes();
+    }
+
     if (template?.default_tasks?.length) {
       for (const task of template.default_tasks) {
         await base44.entities.Task.create({ ...task, project_id: newProject.id });
@@ -461,6 +491,13 @@ export default function Dashboard() {
             </div>
           </div>
         </motion.div>
+
+        {/* Incoming Quotes Banner */}
+        <IncomingQuoteBanner 
+          quotes={incomingQuotes} 
+          onCreateProject={handleCreateProjectFromQuote} 
+          onDismiss={handleDismissQuote}
+        />
 
         {/* Urgent Tasks Alert */}
         {!dismissedAlert && myUrgentTasks.length > 0 && (

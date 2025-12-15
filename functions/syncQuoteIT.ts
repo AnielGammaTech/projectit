@@ -50,21 +50,20 @@ Deno.serve(async (req) => {
 
     for (const quote of quotes) {
       try {
-        // Check if project already exists for this quote
-        const existing = await base44.asServiceRole.entities.Project.filter({ quoteit_quote_id: quote.id });
+        // Check if IncomingQuote already exists
+        const existing = await base44.asServiceRole.entities.IncomingQuote.filter({ quoteit_id: quote.id });
+        const existingProject = await base44.asServiceRole.entities.Project.filter({ quoteit_quote_id: quote.id });
         
-        if (existing.length === 0) {
-          // Create new project
-          await base44.asServiceRole.entities.Project.create({
-            name: quote.title || `Quote #${quote.number || 'Unknown'}`,
-            description: `Imported from QuoteIT. Quote #${quote.number}`,
-            client: quote.customer_name || 'Unknown Client',
-            project_number: nextNumber++,
-            quoteit_quote_id: quote.id,
-            status: 'planning',
-            budget: quote.total_amount || 0,
-            start_date: new Date().toISOString().split('T')[0],
-            color: 'blue'
+        if (existing.length === 0 && existingProject.length === 0) {
+          // Create new IncomingQuote instead of Project directly
+          await base44.asServiceRole.entities.IncomingQuote.create({
+            quoteit_id: quote.id,
+            title: quote.title || `Quote #${quote.number || 'Unknown'}`,
+            customer_name: quote.customer_name || 'Unknown Client',
+            amount: quote.total_amount || 0,
+            received_date: new Date().toISOString(),
+            status: 'pending',
+            raw_data: quote
           });
           createdCount++;
         }

@@ -25,6 +25,23 @@ Deno.serve(async (req) => {
     const { type, data } = body;
 
     // Handle different types of incoming data
+    if (type === 'accepted_quote') {
+      const existing = await base44.asServiceRole.entities.IncomingQuote.filter({ quoteit_id: data.id || data.quote_id });
+      
+      if (existing.length === 0) {
+        await base44.asServiceRole.entities.IncomingQuote.create({
+          quoteit_id: data.id || data.quote_id,
+          title: data.title,
+          customer_name: data.customer_name || data.client_name,
+          amount: data.total_amount || data.total || 0,
+          received_date: new Date().toISOString(),
+          status: 'pending',
+          raw_data: data
+        });
+      }
+      return Response.json({ success: true, message: 'Quote received and staged' });
+    }
+
     if (type === 'create_ticket') {
       // Example: Create a task from incoming ticket data
       await base44.asServiceRole.entities.Task.create({
