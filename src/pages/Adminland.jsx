@@ -62,8 +62,7 @@ const adminMenuItems = [
   { id: 'templates', label: 'Email & Notification Templates', icon: Mail, description: 'Customize email templates with HTML and variables' },
   { id: 'proposals', label: 'Proposal Sync', icon: FileText, description: 'Sync proposal statuses from ProposalPro app' },
   { id: 'company', label: 'Company Settings', icon: Building2, description: 'Branding, proposal defaults, and company info' },
-  { id: 'integrations', label: 'Integrations & Webhooks', icon: GitMerge, description: 'Connect external services and webhooks' },
-  { id: 'gammastack', label: 'GammaStack', icon: Layers, description: 'Connect QuoteIT, PortalIT and generate API keys' },
+  { id: 'integrations', label: 'Integrations & Webhooks', icon: GitMerge, description: 'Connect external services, webhooks, and GammaStack' },
   { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Track user actions and system changes', page: 'AuditLogs' },
 ];
 
@@ -88,8 +87,6 @@ export default function Adminland() {
         return <ProposalSyncSection queryClient={queryClient} />;
       case 'project-management':
         return <ProjectManagementSection queryClient={queryClient} />;
-      case 'gammastack':
-        return <GammaStackSection queryClient={queryClient} />;
       default:
         return null;
     }
@@ -2845,9 +2842,20 @@ function IntegrationsSection({ queryClient }) {
           <Webhook className="w-4 h-4" />
           Webhooks
         </button>
+        <button
+          onClick={() => setActiveTab('gammastack')}
+          className={cn(
+            "px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+            activeTab === 'gammastack' ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+          )}
+        >
+          <Layers className="w-4 h-4" />
+          GammaStack
+        </button>
       </div>
 
       {activeTab === 'webhooks' && <WebhooksContent queryClient={queryClient} />}
+      {activeTab === 'gammastack' && <GammaStackSection queryClient={queryClient} />}
       
       {activeTab === 'integrations' && (
       <div className="p-6 space-y-4">
