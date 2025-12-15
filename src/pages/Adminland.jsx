@@ -556,20 +556,23 @@ function CompanySettingsSection({ queryClient }) {
     app_name: '',
     app_logo_url: ''
   });
+  const [initialized, setInitialized] = useState(false);
 
   const { data: settings = [], refetch } = useQuery({
     queryKey: ['appSettingsMain'],
-    queryFn: () => base44.entities.AppSettings.filter({ setting_key: 'main' })
+    queryFn: () => base44.entities.AppSettings.filter({ setting_key: 'main' }),
+    refetchOnWindowFocus: false
   });
 
   useEffect(() => {
-    if (settings[0]) {
+    if (settings[0] && !initialized) {
       setFormData({
           app_name: settings[0].app_name || '',
           app_logo_url: settings[0].app_logo_url || ''
         });
+      setInitialized(true);
     }
-  }, [settings]);
+  }, [settings, initialized]);
 
   const handleSave = async () => {
     setSaving(true);
