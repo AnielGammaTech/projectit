@@ -923,7 +923,7 @@ export default function Customers() {
           {selectedCustomer && (
             <CustomerCommunication 
               customer={selectedCustomer} 
-              proposals={proposals}
+              quotes={incomingQuotes}
               onClose={() => setShowCommunication(false)} 
             />
           )}
