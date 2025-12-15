@@ -40,7 +40,8 @@ Deno.serve(async (req) => {
     }
 
     const data = await response.json();
-    const quotes = data.quotes || [];
+    console.log('QuoteIT Response:', JSON.stringify(data, null, 2));
+    const quotes = data.quotes || data.accepted_quotes || data.data || [];
     let createdCount = 0;
     const errors = [];
 
