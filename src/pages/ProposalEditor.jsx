@@ -628,7 +628,7 @@ export default function ProposalEditor() {
                                                       }
 
                                   const approvalLink = `https://proposal-pro-545d1a0b.base44.app/Approve?token=${proposal?.approval_token}`;
-                                  const emailResult = await base44.functions.invoke('sendEmailit', {
+                                  const emailResult = await base44.functions.invoke('sendEmail', {
                                     to: formData.customer_email,
                                     subject: `Proposal: ${formData.title}`,
                                     html: `
@@ -642,7 +642,7 @@ export default function ProposalEditor() {
                                     `
                                   });
                                   if (!emailResult.data?.success) {
-                                    alert(`Email error: ${emailResult.data?.error || 'Failed to send email. Please configure Emailit in Adminland.'}`);
+                                    alert(`Email error: ${emailResult.data?.error || 'Failed to send email. Please configure Resend in Adminland.'}`);
                                     return;
                                   }
                 await base44.entities.Proposal.update(proposalId, { status: 'sent', sent_date: new Date().toISOString() });

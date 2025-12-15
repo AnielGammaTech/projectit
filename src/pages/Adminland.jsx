@@ -2438,17 +2438,11 @@ function IntegrationsSection({ queryClient }) {
           state: 'state',
           zip: 'zip'
         },
-        // Email (Emailit SMTP)
-        emailit_enabled: settings[0].emailit_enabled || false,
-        emailit_smtp_host: settings[0].emailit_smtp_host || 'smtp.emailit.com',
-        emailit_smtp_port: settings[0].emailit_smtp_port || '587',
-        emailit_smtp_username: settings[0].emailit_smtp_username || '',
-        emailit_smtp_password: settings[0].emailit_smtp_password || '',
-        emailit_from_email: settings[0].emailit_from_email || '',
-        emailit_from_name: settings[0].emailit_from_name || '',
-        emailit_reply_to: settings[0].emailit_reply_to || '',
-        emailit_secure: settings[0].emailit_secure !== false,
-        emailit_auth: settings[0].emailit_auth !== false,
+        // Resend
+        resend_enabled: settings[0].resend_enabled || false,
+        resend_api_key: settings[0].resend_api_key || '',
+        resend_from_email: settings[0].resend_from_email || '',
+        resend_from_name: settings[0].resend_from_name || '',
         // Twilio
         twilio_enabled: settings[0].twilio_enabled || false,
         twilio_account_sid: settings[0].twilio_account_sid || '',
@@ -2881,78 +2875,55 @@ function IntegrationsSection({ queryClient }) {
           )}
         </div>
 
-        {/* Emailit Card */}
+        {/* Resend Card */}
         <div className="border rounded-xl overflow-hidden">
           <button
-            onClick={() => setSelectedIntegration(selectedIntegration === 'emailit' ? null : 'emailit')}
+            onClick={() => setSelectedIntegration(selectedIntegration === 'resend' ? null : 'resend')}
             className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Mail className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                <Mail className="w-5 h-5 text-white" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-slate-900">Emailit SMTP</h3>
-                <p className="text-xs text-slate-500">Transactional email delivery</p>
+                <h3 className="font-semibold text-slate-900">Resend</h3>
+                <p className="text-xs text-slate-500">Email API for developers</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant={formData.emailit_enabled ? "default" : "outline"} className={formData.emailit_enabled ? "bg-emerald-500" : ""}>
-                {formData.emailit_enabled ? 'Enabled' : 'Disabled'}
+              <Badge variant={formData.resend_enabled ? "default" : "outline"} className={formData.resend_enabled ? "bg-emerald-500" : ""}>
+                {formData.resend_enabled ? 'Enabled' : 'Disabled'}
               </Badge>
-              {selectedIntegration === 'emailit' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+              {selectedIntegration === 'resend' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
             </div>
           </button>
           
-          {selectedIntegration === 'emailit' && (
+          {selectedIntegration === 'resend' && (
           <div className="p-4 bg-white">
             <div className="flex items-center justify-between mb-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox 
-                  checked={formData.emailit_enabled} 
-                  onCheckedChange={(checked) => setFormData(p => ({ ...p, emailit_enabled: checked }))} 
+                  checked={formData.resend_enabled} 
+                  onCheckedChange={(checked) => setFormData(p => ({ ...p, resend_enabled: checked }))} 
                 />
-                <span className="text-sm font-medium">Enable</span>
+                <span className="text-sm font-medium">Enable Resend Integration</span>
               </label>
-              <a href="https://app.emailit.com" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
-                Open Emailit Dashboard →
+              <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                Get API Key →
               </a>
             </div>
 
-            {formData.emailit_enabled && (
+            {formData.resend_enabled && (
               <div className="space-y-3">
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label className="text-xs">Username</Label>
-                    <Input 
-                      value={formData.emailit_smtp_username} 
-                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_username: e.target.value }))} 
-                      placeholder="emailit or custom" 
-                      className="mt-1 h-9" 
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">API Key / Password</Label>
-                    <Input 
-                      type="password"
-                      value={formData.emailit_smtp_password} 
-                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_password: e.target.value }))} 
-                      placeholder="SMTP credential" 
-                      className="mt-1 h-9" 
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Port</Label>
-                    <select 
-                      value={formData.emailit_smtp_port} 
-                      onChange={(e) => setFormData(p => ({ ...p, emailit_smtp_port: e.target.value }))}
-                      className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                    >
-                      <option value="587">587 (TLS)</option>
-                      <option value="465">465 (SSL)</option>
-                      <option value="25">25</option>
-                    </select>
-                  </div>
+                <div>
+                  <Label className="text-xs">API Key</Label>
+                  <Input 
+                    type="password"
+                    value={formData.resend_api_key} 
+                    onChange={(e) => setFormData(p => ({ ...p, resend_api_key: e.target.value }))} 
+                    placeholder="re_..." 
+                    className="mt-1 h-9 font-mono" 
+                  />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
@@ -2960,55 +2931,38 @@ function IntegrationsSection({ queryClient }) {
                     <Label className="text-xs">From Email</Label>
                     <Input 
                       type="email"
-                      value={formData.emailit_from_email} 
-                      onChange={(e) => setFormData(p => ({ ...p, emailit_from_email: e.target.value }))} 
-                      placeholder="noreply@domain.com" 
+                      value={formData.resend_from_email} 
+                      onChange={(e) => setFormData(p => ({ ...p, resend_from_email: e.target.value }))} 
+                      placeholder="onboarding@resend.dev" 
                       className="mt-1 h-9" 
                     />
                   </div>
                   <div>
                     <Label className="text-xs">From Name</Label>
                     <Input 
-                      value={formData.emailit_from_name} 
-                      onChange={(e) => setFormData(p => ({ ...p, emailit_from_name: e.target.value }))} 
-                      placeholder="Company Name" 
+                      value={formData.resend_from_name} 
+                      onChange={(e) => setFormData(p => ({ ...p, resend_from_name: e.target.value }))} 
+                      placeholder="IT Projects" 
                       className="mt-1 h-9" 
                     />
                   </div>
                 </div>
 
-                <div className="flex gap-3 items-center pt-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox 
-                      checked={formData.emailit_secure !== false} 
-                      onCheckedChange={(checked) => setFormData(p => ({ ...p, emailit_secure: checked }))} 
-                    />
-                    <span className="text-xs">Use TLS/SSL</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox 
-                      checked={formData.emailit_auth !== false} 
-                      onCheckedChange={(checked) => setFormData(p => ({ ...p, emailit_auth: checked }))} 
-                    />
-                    <span className="text-xs">Authentication</span>
-                  </label>
-                </div>
-
                 <div className="flex gap-2 pt-2 border-t">
                   <Input 
                     type="email"
-                    value={formData.emailit_test_to || ''}
-                    onChange={(e) => setFormData(p => ({ ...p, emailit_test_to: e.target.value }))} 
+                    value={formData.resend_test_to || ''}
+                    onChange={(e) => setFormData(p => ({ ...p, resend_test_to: e.target.value }))} 
                     placeholder="Test email address..."
                     className="flex-1 h-9"
                   />
                   <Button 
                     onClick={async () => {
-                      if (!formData.emailit_smtp_password || !formData.emailit_from_email) {
-                        setEmailTestResult({ success: false, message: 'Enter API key and from email' });
+                      if (!formData.resend_api_key) {
+                        setEmailTestResult({ success: false, message: 'Enter API key' });
                         return;
                       }
-                      if (!formData.emailit_test_to) {
+                      if (!formData.resend_test_to) {
                         setEmailTestResult({ success: false, message: 'Enter test email address' });
                         return;
                       }
@@ -3016,11 +2970,11 @@ function IntegrationsSection({ queryClient }) {
                       setEmailTestResult(null);
                       try {
                         await handleSave();
-                        const response = await base44.functions.invoke('sendEmailit', { 
+                        const response = await base44.functions.invoke('sendEmail', { 
                           testOnly: true,
-                          to: formData.emailit_test_to,
+                          to: formData.resend_test_to,
                           subject: 'Test Email from IT Projects',
-                          html: '<h1>Test Email</h1><p>Your Emailit integration is working correctly.</p>'
+                          html: '<h1>Test Email</h1><p>Your Resend integration is working correctly.</p>'
                         });
                         setEmailTestResult(response.data?.success 
                           ? { success: true, message: 'Sent!' } 
@@ -3031,9 +2985,9 @@ function IntegrationsSection({ queryClient }) {
                       }
                       setTestingEmail(false);
                     }} 
-                    disabled={testingEmail || !formData.emailit_test_to}
+                    disabled={testingEmail || !formData.resend_test_to}
                     size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 h-9"
+                    className="bg-black hover:bg-slate-800 h-9"
                   >
                     {testingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Test'}
                   </Button>

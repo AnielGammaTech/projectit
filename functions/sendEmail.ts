@@ -1,86 +1,72 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { Resend } from 'npm:resend@2.0.0';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
+    
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
-    const { to, subject, body: emailBody, testOnly } = body;
+    const { to, subject, html, text, testOnly } = body;
 
     // Get integration settings
     const settings = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
-    const integrationSettings = settings[0];
+    const config = settings[0];
 
-    if (!integrationSettings?.sendgrid_enabled || !integrationSettings?.sendgrid_api_key) {
+    if (!config?.resend_enabled) {
       return Response.json({ 
         success: false, 
-        error: 'SendGrid is not configured. Please set up SendGrid in Adminland → Integrations.' 
+        error: 'Resend integration is not enabled. Please enable it in Adminland.' 
       });
     }
 
-    const apiKey = integrationSettings.sendgrid_api_key;
-    const fromEmail = integrationSettings.sendgrid_from_email;
-    const fromName = integrationSettings.sendgrid_from_name || 'IT Projects';
-
-    if (!fromEmail) {
+    if (!config?.resend_api_key) {
       return Response.json({ 
         success: false, 
-        error: 'SendGrid from email is not configured.' 
+        error: 'Resend API Key is not configured. Please enter it in Adminland.' 
       });
     }
 
-    // Send email via SendGrid
-    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        personalizations: [{
-          to: [{ email: to }]
-        }],
-        from: {
-          email: fromEmail,
-          name: fromName
-        },
-        subject: subject,
-        content: [{
-          type: 'text/html',
-          value: emailBody
-        }]
-      })
+    const resend = new Resend(config.resend_api_key);
+
+    const fromEmail = config.resend_from_email || 'onboarding@resend.dev';
+    const fromName = config.resend_from_name || 'IT Projects';
+    const from = `${fromName} <${fromEmail}>`;
+
+    // Send email via Resend
+    const { data, error } = await resend.emails.send({
+      from,
+      to: [to],
+      subject,
+      html: html || text,
+      text: text || undefined
     });
 
-    if (response.status === 202 || response.status === 200) {
-      return Response.json({ 
-        success: true, 
-        message: testOnly ? 'Test email sent successfully!' : 'Email sent successfully' 
-      });
-    } else {
-      const errorText = await response.text();
-      let errorDetails;
-      try {
-        errorDetails = JSON.parse(errorText);
-      } catch {
-        errorDetails = errorText;
-      }
+    if (error) {
+      console.error('Resend error:', error);
       return Response.json({ 
         success: false, 
-        error: 'Failed to send email via SendGrid',
-        details: errorDetails
-      });
+        error: error.message,
+        details: error
+      }, { status: 400 });
     }
 
+    return Response.json({ 
+      success: true, 
+      message: testOnly ? 'Test email sent successfully via Resend!' : 'Email sent successfully via Resend',
+      id: data.id
+    });
+
   } catch (error) {
+    console.error('Email error:', error);
     return Response.json({ 
       success: false, 
-      error: error.message 
+      error: error.message,
+      details: error.message
     }, { status: 500 });
   }
 });

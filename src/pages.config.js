@@ -1,87 +1,89 @@
-import Dashboard from './pages/Dashboard';
-import ProjectDetail from './pages/ProjectDetail';
-import Team from './pages/Team';
-import AllTasks from './pages/AllTasks';
-import Templates from './pages/Templates';
-import UserGroups from './pages/UserGroups';
-import ProjectTasks from './pages/ProjectTasks';
-import ProjectParts from './pages/ProjectParts';
-import ProjectNotes from './pages/ProjectNotes';
-import ProjectFiles from './pages/ProjectFiles';
-import Settings from './pages/Settings';
-import Reports from './pages/Reports';
-import NotificationSettings from './pages/NotificationSettings';
-import QuoteRequests from './pages/QuoteRequests';
-import Inventory from './pages/Inventory';
+import ActivityFeed from './pages/ActivityFeed';
 import Adminland from './pages/Adminland';
-import TimeReport from './pages/TimeReport';
-import Profile from './pages/Profile';
-import Proposals from './pages/Proposals';
-import ProposalView from './pages/ProposalView';
-import ProposalApproval from './pages/ProposalApproval';
-import Customers from './pages/Customers';
-import ProposalReports from './pages/ProposalReports';
-import ProposalEditor from './pages/ProposalEditor';
-import ChangeOrderEditor from './pages/ChangeOrderEditor';
-import ProjectBilling from './pages/ProjectBilling';
-import Billing from './pages/Billing';
+import AllTasks from './pages/AllTasks';
 import AuditLogs from './pages/AuditLogs';
+import Billing from './pages/Billing';
+import ChangeOrderEditor from './pages/ChangeOrderEditor';
+import Customers from './pages/Customers';
+import Dashboard from './pages/Dashboard';
+import Home from './pages/Home';
+import Inventory from './pages/Inventory';
+import ManagerDashboard from './pages/ManagerDashboard';
+import MyAssignments from './pages/MyAssignments';
+import MyNotifications from './pages/MyNotifications';
+import MySchedule from './pages/MySchedule';
+import NotificationSettings from './pages/NotificationSettings';
+import Profile from './pages/Profile';
+import ProjectBilling from './pages/ProjectBilling';
+import ProjectDetail from './pages/ProjectDetail';
+import ProjectFiles from './pages/ProjectFiles';
+import ProjectNotes from './pages/ProjectNotes';
+import ProjectParts from './pages/ProjectParts';
+import ProjectTasks from './pages/ProjectTasks';
+import ProjectTimeline from './pages/ProjectTimeline';
+import ProposalAnalytics from './pages/ProposalAnalytics';
+import ProposalApproval from './pages/ProposalApproval';
+import ProposalEditor from './pages/ProposalEditor';
+import ProposalReports from './pages/ProposalReports';
+import ProposalView from './pages/ProposalView';
+import Proposals from './pages/Proposals';
+import QuoteRequests from './pages/QuoteRequests';
+import ReportBuilder from './pages/ReportBuilder';
+import Reports from './pages/Reports';
 import RolesPermissions from './pages/RolesPermissions';
 import SecuritySettings from './pages/SecuritySettings';
-import Workflows from './pages/Workflows';
-import ReportBuilder from './pages/ReportBuilder';
-import ProjectTimeline from './pages/ProjectTimeline';
-import ActivityFeed from './pages/ActivityFeed';
-import MyAssignments from './pages/MyAssignments';
-import MySchedule from './pages/MySchedule';
-import MyNotifications from './pages/MyNotifications';
-import ManagerDashboard from './pages/ManagerDashboard';
+import Settings from './pages/Settings';
+import Team from './pages/Team';
 import TechDashboard from './pages/TechDashboard';
-import ProposalAnalytics from './pages/ProposalAnalytics';
+import Templates from './pages/Templates';
+import TimeReport from './pages/TimeReport';
+import UserGroups from './pages/UserGroups';
+import Workflows from './pages/Workflows';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
-    "ProjectDetail": ProjectDetail,
-    "Team": Team,
-    "AllTasks": AllTasks,
-    "Templates": Templates,
-    "UserGroups": UserGroups,
-    "ProjectTasks": ProjectTasks,
-    "ProjectParts": ProjectParts,
-    "ProjectNotes": ProjectNotes,
-    "ProjectFiles": ProjectFiles,
-    "Settings": Settings,
-    "Reports": Reports,
-    "NotificationSettings": NotificationSettings,
-    "QuoteRequests": QuoteRequests,
-    "Inventory": Inventory,
+    "ActivityFeed": ActivityFeed,
     "Adminland": Adminland,
-    "TimeReport": TimeReport,
-    "Profile": Profile,
-    "Proposals": Proposals,
-    "ProposalView": ProposalView,
-    "ProposalApproval": ProposalApproval,
-    "Customers": Customers,
-    "ProposalReports": ProposalReports,
-    "ProposalEditor": ProposalEditor,
-    "ChangeOrderEditor": ChangeOrderEditor,
-    "ProjectBilling": ProjectBilling,
-    "Billing": Billing,
+    "AllTasks": AllTasks,
     "AuditLogs": AuditLogs,
+    "Billing": Billing,
+    "ChangeOrderEditor": ChangeOrderEditor,
+    "Customers": Customers,
+    "Dashboard": Dashboard,
+    "Home": Home,
+    "Inventory": Inventory,
+    "ManagerDashboard": ManagerDashboard,
+    "MyAssignments": MyAssignments,
+    "MyNotifications": MyNotifications,
+    "MySchedule": MySchedule,
+    "NotificationSettings": NotificationSettings,
+    "Profile": Profile,
+    "ProjectBilling": ProjectBilling,
+    "ProjectDetail": ProjectDetail,
+    "ProjectFiles": ProjectFiles,
+    "ProjectNotes": ProjectNotes,
+    "ProjectParts": ProjectParts,
+    "ProjectTasks": ProjectTasks,
+    "ProjectTimeline": ProjectTimeline,
+    "ProposalAnalytics": ProposalAnalytics,
+    "ProposalApproval": ProposalApproval,
+    "ProposalEditor": ProposalEditor,
+    "ProposalReports": ProposalReports,
+    "ProposalView": ProposalView,
+    "Proposals": Proposals,
+    "QuoteRequests": QuoteRequests,
+    "ReportBuilder": ReportBuilder,
+    "Reports": Reports,
     "RolesPermissions": RolesPermissions,
     "SecuritySettings": SecuritySettings,
-    "Workflows": Workflows,
-    "ReportBuilder": ReportBuilder,
-    "ProjectTimeline": ProjectTimeline,
-    "ActivityFeed": ActivityFeed,
-    "MyAssignments": MyAssignments,
-    "MySchedule": MySchedule,
-    "MyNotifications": MyNotifications,
-    "ManagerDashboard": ManagerDashboard,
+    "Settings": Settings,
+    "Team": Team,
     "TechDashboard": TechDashboard,
-    "ProposalAnalytics": ProposalAnalytics,
+    "Templates": Templates,
+    "TimeReport": TimeReport,
+    "UserGroups": UserGroups,
+    "Workflows": Workflows,
 }
 
 export const pagesConfig = {
