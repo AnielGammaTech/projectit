@@ -1438,6 +1438,9 @@ function GammaStackSection({ queryClient }) {
     portalit_enabled: false,
     portalit_api_url: '',
     portalit_api_key: '',
+    billingit_enabled: false,
+    billingit_api_url: '',
+    billingit_api_key: '',
   });
 
   const { data: settings = [], refetch } = useQuery({
@@ -1455,6 +1458,9 @@ function GammaStackSection({ queryClient }) {
         portalit_enabled: settings[0].portalit_enabled || false,
         portalit_api_url: settings[0].portalit_api_url || '',
         portalit_api_key: settings[0].portalit_api_key || '',
+        billingit_enabled: settings[0].billingit_enabled || false,
+        billingit_api_url: settings[0].billingit_api_url || '',
+        billingit_api_key: settings[0].billingit_api_key || '',
       });
     }
   }, [settings]);
@@ -1624,6 +1630,54 @@ function GammaStackSection({ queryClient }) {
                     value={formData.portalit_api_key} 
                     onChange={(e) => setFormData(p => ({ ...p, portalit_api_key: e.target.value }))}
                     placeholder="PortalIT API Key"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* BillingIT Integration */}
+        <div className="border rounded-xl overflow-hidden">
+          <div className="p-4 bg-white border-b flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">BillingIT</h3>
+                <p className="text-xs text-slate-500">Invoicing and payments</p>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox 
+                checked={formData.billingit_enabled} 
+                onCheckedChange={(checked) => setFormData(p => ({ ...p, billingit_enabled: checked }))} 
+              />
+              <span className="text-sm font-medium">Enable</span>
+            </label>
+          </div>
+          
+          {formData.billingit_enabled && (
+            <div className="p-4 bg-slate-50 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs">BillingIT Base44 App URL</Label>
+                  <Input 
+                    value={formData.billingit_api_url} 
+                    onChange={(e) => setFormData(p => ({ ...p, billingit_api_url: e.target.value }))}
+                    placeholder="https://billingit-app.base44.app"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">API Key</Label>
+                  <Input 
+                    type="password"
+                    value={formData.billingit_api_key} 
+                    onChange={(e) => setFormData(p => ({ ...p, billingit_api_key: e.target.value }))}
+                    placeholder="BillingIT API Key"
                     className="mt-1"
                   />
                 </div>
