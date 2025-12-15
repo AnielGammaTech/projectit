@@ -89,9 +89,9 @@ export default function Customers() {
     setAllCompaniesExpanded(!allCompaniesExpanded);
   };
 
-  const { data: proposals = [] } = useQuery({
-    queryKey: ['proposals'],
-    queryFn: () => base44.entities.Proposal.list()
+  const { data: incomingQuotes = [] } = useQuery({
+    queryKey: ['incomingQuotes'],
+    queryFn: () => base44.entities.IncomingQuote.list()
   });
 
   const { data: projects = [] } = useQuery({
@@ -143,11 +143,15 @@ export default function Customers() {
     c.company?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getCustomerProposals = (customerId, email) => proposals.filter(p => p.customer_id === customerId || p.customer_email === email);
+  const getCustomerQuotes = (name, company, email) => incomingQuotes.filter(q => {
+    const nameMatch = q.customer_name && (q.customer_name.toLowerCase() === name?.toLowerCase() || q.customer_name.toLowerCase() === company?.toLowerCase());
+    const emailMatch = email && q.raw_data?.customer_email?.toLowerCase() === email.toLowerCase();
+    return nameMatch || emailMatch;
+  });
   const getCustomerProjects = (customerId) => projects.filter(p => p.customer_id === customerId);
-  const getProposalCount = (customerId, email) => getCustomerProposals(customerId, email).length;
+  const getProposalCount = (name, company, email) => getCustomerQuotes(name, company, email).length;
   const getProjectCount = (customerId) => getCustomerProjects(customerId).length;
-  const getTotalValue = (customerId, email) => getCustomerProposals(customerId, email).filter(p => p.status === 'approved').reduce((sum, p) => sum + (p.total || 0), 0);
+  const getTotalValue = (name, company, email) => getCustomerQuotes(name, company, email).reduce((sum, q) => sum + (q.amount || 0), 0);
 
   const handleSave = async () => {
     if (editingCustomer) {
@@ -535,9 +539,9 @@ export default function Customers() {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <p className="text-sm text-slate-500">{getProposalCount(customer.id, customer.email)} proposals · {getProjectCount(customer.id)} projects</p>
-                          {getTotalValue(customer.id, customer.email) > 0 && (
-                            <p className="text-sm font-medium text-emerald-600">${getTotalValue(customer.id, customer.email).toLocaleString()} won</p>
+                          <p className="text-sm text-slate-500">{getProposalCount(customer.name, customer.company, customer.email)} quotes · {getProjectCount(customer.id)} projects</p>
+                          {getTotalValue(customer.name, customer.company, customer.email) > 0 && (
+                            <p className="text-sm font-medium text-emerald-600">${getTotalValue(customer.name, customer.company, customer.email).toLocaleString()} total</p>
                           )}
                         </div>
                         <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(customer)}>
@@ -800,16 +804,16 @@ export default function Customers() {
                 {/* Summary Stats */}
                 <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-200">
                   <div className="text-center p-2 bg-white rounded-lg">
-                    <p className="text-xl font-bold text-[#0069AF]">{getProposalCount(selectedCustomer.id, selectedCustomer.email)}</p>
-                    <p className="text-xs text-slate-500">Proposals</p>
+                    <p className="text-xl font-bold text-[#0069AF]">{getProposalCount(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email)}</p>
+                    <p className="text-xs text-slate-500">QuoteIT Quotes</p>
                   </div>
                   <div className="text-center p-2 bg-white rounded-lg">
                     <p className="text-xl font-bold text-[#0069AF]">{getProjectCount(selectedCustomer.id)}</p>
                     <p className="text-xs text-slate-500">Projects</p>
                   </div>
                   <div className="text-center p-2 bg-white rounded-lg">
-                    <p className="text-xl font-bold text-emerald-600">${getTotalValue(selectedCustomer.id, selectedCustomer.email).toLocaleString()}</p>
-                    <p className="text-xs text-slate-500">Won Value</p>
+                    <p className="text-xl font-bold text-emerald-600">${getTotalValue(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).toLocaleString()}</p>
+                    <p className="text-xs text-slate-500">Total Value</p>
                   </div>
                 </div>
 
@@ -858,46 +862,40 @@ export default function Customers() {
                 )}
               </div>
 
-              {/* Proposals */}
+              {/* QuoteIT Proposals */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-semibold text-slate-900 flex items-center gap-2">
                     <FileText className="w-4 h-4 text-[#0069AF]" />
-                    Proposals ({getCustomerProposals(selectedCustomer.id, selectedCustomer.email).length})
+                    QuoteIT Proposals ({getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).length})
                   </h4>
-                  <Link to={createPageUrl('Proposals')}>
-                    <Button variant="outline" size="sm">View All</Button>
-                  </Link>
                 </div>
-                {getCustomerProposals(selectedCustomer.id, selectedCustomer.email).length > 0 ? (
+                {getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).length > 0 ? (
                   <div className="space-y-2">
-                    {getCustomerProposals(selectedCustomer.id, selectedCustomer.email).slice(0, 5).map(proposal => (
+                    {getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).slice(0, 5).map(quote => (
                       <div 
-                        key={proposal.id} 
-                        onClick={() => window.location.href = createPageUrl('ProposalEditor') + `?id=${proposal.id}`}
-                        className="block p-3 bg-white border rounded-lg hover:shadow-sm hover:border-[#0069AF]/30 transition-all cursor-pointer"
+                        key={quote.id} 
+                        className="block p-3 bg-white border rounded-lg hover:shadow-sm hover:border-[#0069AF]/30 transition-all"
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <span className="font-medium text-slate-900">{proposal.title || proposal.proposal_number}</span>
-                            <p className="text-xs text-slate-500">{proposal.proposal_number}</p>
+                            <span className="font-medium text-slate-900">{quote.title}</span>
+                            <p className="text-xs text-slate-500">ID: {quote.quoteit_id}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-slate-700">${(proposal.total || 0).toLocaleString()}</span>
+                            <span className="font-semibold text-slate-700">${(quote.amount || 0).toLocaleString()}</span>
                             <Badge variant="outline" className={cn(
-                              proposal.status === 'approved' && "bg-emerald-50 text-emerald-700",
-                              proposal.status === 'sent' && "bg-blue-50 text-blue-700",
-                              proposal.status === 'draft' && "bg-slate-50 text-slate-600",
-                              proposal.status === 'viewed' && "bg-purple-50 text-purple-700",
-                              proposal.status === 'rejected' && "bg-red-50 text-red-700"
-                            )}>{proposal.status}</Badge>
+                              quote.status === 'converted' && "bg-emerald-50 text-emerald-700",
+                              quote.status === 'pending' && "bg-blue-50 text-blue-700",
+                              quote.status === 'dismissed' && "bg-slate-50 text-slate-600"
+                            )}>{quote.status}</Badge>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-400 text-center py-4">No proposals yet</p>
+                  <p className="text-sm text-slate-400 text-center py-4">No matching QuoteIT proposals found</p>
                 )}
               </div>
 
