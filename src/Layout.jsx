@@ -53,8 +53,7 @@ const navItems = [
   },
   { name: 'Activity', icon: ListTodo, page: 'AllTasks' },
   { name: 'Customers', icon: Users, page: 'Customers' },
-  { name: 'Proposals', icon: FileText, page: 'Proposals' },
-  { name: 'Catalog', icon: Package, page: 'Inventory' },
+  { name: 'Stock', icon: Package, page: 'Inventory' },
   { 
     name: 'Reporting', 
     icon: PieChart, 
