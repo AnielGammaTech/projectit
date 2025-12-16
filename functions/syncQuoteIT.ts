@@ -41,7 +41,18 @@ Deno.serve(async (req) => {
 
     const data = await response.json();
     console.log('QuoteIT Response:', JSON.stringify(data, null, 2));
-    const quotes = data.quotes || data.accepted_quotes || data.data || [];
+    
+    let rawQuotes = data.quotes || data.accepted_quotes || data.data || [];
+    
+    // Normalize quotes array (handle wrapper objects)
+    const quotes = rawQuotes.map(q => {
+      // Handle wrapper object { type: 'accepted_quote', data: { ... } }
+      if (q.data && (q.type === 'accepted_quote' || !q.id)) {
+        return q.data;
+      }
+      return q;
+    });
+
     let createdCount = 0;
     const errors = [];
 
@@ -61,10 +72,16 @@ Deno.serve(async (req) => {
     }
 
     for (const quote of quotes) {
+      const quoteId = quote.id || quote.quote_id;
+      if (!quoteId) {
+        console.warn('Skipping quote with no ID:', quote);
+        continue;
+      }
+
       try {
         // Check if IncomingQuote already exists
-        const existing = await base44.asServiceRole.entities.IncomingQuote.filter({ quoteit_id: quote.id });
-        const existingProject = await base44.asServiceRole.entities.Project.filter({ quoteit_quote_id: quote.id });
+        const existing = await base44.asServiceRole.entities.IncomingQuote.filter({ quoteit_id: quoteId });
+        const existingProject = await base44.asServiceRole.entities.Project.filter({ quoteit_quote_id: quoteId });
         
         if (existing.length === 0 && existingProject.length === 0) {
           // Try to match customer
@@ -78,23 +95,23 @@ Deno.serve(async (req) => {
             matchedCustomerId = customerMap.get(customerName.toLowerCase());
           }
 
-          // Create new IncomingQuote instead of Project directly
+          // Create new IncomingQuote
           await base44.asServiceRole.entities.IncomingQuote.create({
-            quoteit_id: quote.id,
-            title: quote.title || `Quote #${quote.number || 'Unknown'}`,
+            quoteit_id: quoteId,
+            title: quote.title || `Quote #${quote.quote_number || quote.number || 'Unknown'}`,
             customer_name: customerName,
             customer_email: customerEmail,
             customer_id: matchedCustomerId,
             amount: quote.total_amount || 0,
-            received_date: new Date().toISOString(),
+            received_date: quote.date_accepted || new Date().toISOString(),
             status: 'pending',
             raw_data: quote
           });
           createdCount++;
         }
       } catch (e) {
-        console.error(`Error processing quote ${quote.id}:`, e);
-        errors.push(`Error with quote ${quote.id}: ${e.message}`);
+        console.error(`Error processing quote ${quoteId}:`, e);
+        errors.push(`Error with quote ${quoteId}: ${e.message}`);
       }
     }
 
