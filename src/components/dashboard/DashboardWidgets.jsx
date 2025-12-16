@@ -32,7 +32,34 @@ const WIDGET_TYPES = {
   overdue_parts: { icon: Package, label: 'Overdue Parts', color: 'bg-red-500' },
   project_progress: { icon: TrendingUp, label: 'Project Progress', color: 'bg-teal-500' },
   billing_summary: { icon: Clock, label: 'Billable Hours', color: 'bg-orange-500' },
+  pending_proposals: { icon: FileText, label: 'Pending Proposals', color: 'bg-indigo-500' },
 };
+
+// Pending Proposals Widget
+function PendingProposalsWidget({ quotes }) {
+  const pendingQuotes = quotes.filter(q => q.status === 'pending').slice(0, 5);
+
+  return (
+    <div className="space-y-2">
+      {pendingQuotes.length === 0 ? (
+        <p className="text-sm text-slate-500 text-center py-4">No pending proposals</p>
+      ) : (
+        pendingQuotes.map((quote) => (
+          <div key={quote.id} className="flex items-center gap-2 p-2 bg-indigo-50 rounded-lg">
+            <FileText className="w-4 h-4 text-indigo-500" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-slate-700 truncate">{quote.title}</p>
+              <p className="text-[10px] text-slate-500 truncate">{quote.customer_name}</p>
+            </div>
+            <Badge className="text-[10px] bg-indigo-100 text-indigo-700">
+              ${quote.amount?.toLocaleString()}
+            </Badge>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
 
 // Metrics Widget
 function MetricsWidget({ projects, tasks, parts }) {
@@ -395,12 +422,14 @@ function BillableHoursWidget({ timeEntries }) {
 }
 
 // Main Widget Component
-function DashboardWidget({ type, onRemove, projects, tasks, parts, activities, teamMembers, currentUser, timeEntries }) {
+function DashboardWidget({ type, onRemove, projects, tasks, parts, activities, teamMembers, currentUser, timeEntries, quotes }) {
   const config = WIDGET_TYPES[type];
   const Icon = config?.icon || BarChart3;
 
   const renderContent = () => {
     switch (type) {
+      case 'pending_proposals':
+        return <PendingProposalsWidget quotes={quotes} />;
       case 'metrics':
         return <MetricsWidget projects={projects} tasks={tasks} parts={parts} />;
       case 'activity':
@@ -500,7 +529,7 @@ export default function DashboardWidgets() {
   const [currentUser, setCurrentUser] = useState(null);
   const [pinnedWidgets, setPinnedWidgets] = useState(() => {
     const saved = localStorage.getItem('dashboard_widgets');
-    return saved ? JSON.parse(saved) : ['metrics', 'deadlines', 'my_tasks'];
+    return saved ? JSON.parse(saved) : ['metrics', 'deadlines', 'my_tasks', 'pending_proposals'];
   });
 
   useEffect(() => {
@@ -545,6 +574,11 @@ export default function DashboardWidgets() {
     queryFn: () => base44.entities.TimeEntry.list()
   });
 
+  const { data: quotes = [] } = useQuery({
+    queryKey: ['incomingQuotesWidget'],
+    queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' })
+  });
+
   const handleAddWidget = (type) => {
     if (!pinnedWidgets.includes(type)) {
       setPinnedWidgets([...pinnedWidgets, type]);
@@ -578,6 +612,7 @@ export default function DashboardWidgets() {
             teamMembers={teamMembers}
             currentUser={currentUser}
             timeEntries={timeEntries}
+            quotes={quotes}
           />
         ))}
       </div>
