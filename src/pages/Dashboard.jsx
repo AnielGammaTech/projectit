@@ -392,15 +392,16 @@ export default function Dashboard() {
     if (prefillData?.incoming_quote_id) {
       await base44.entities.IncomingQuote.update(prefillData.incoming_quote_id, { status: 'converted' });
       
-      // Update status on QuoteIT if ID is available
+      // Link project on QuoteIT if ID is available
       if (prefillData.quoteit_quote_id) {
         try {
-          await base44.functions.invoke('updateQuoteITStatus', { 
+          await base44.functions.invoke('linkQuoteToProject', { 
             quote_id: prefillData.quoteit_quote_id, 
-            status: 'converted' 
+            project_id: newProject.id,
+            project_number: newProject.project_number
           });
         } catch (err) {
-          console.error('Failed to update QuoteIT status:', err);
+          console.error('Failed to link project on QuoteIT:', err);
         }
       }
 
