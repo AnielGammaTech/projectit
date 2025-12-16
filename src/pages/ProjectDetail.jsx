@@ -513,18 +513,6 @@ export default function ProjectDetail() {
             {/* Actions Row */}
             <div className="flex flex-col items-end gap-2 flex-shrink-0">
               <div className="flex items-center gap-2">
-                {(integrationSettings?.quoteit_api_url && (project.quoteit_quote_id || linkedQuote?.quoteit_id)) && (
-                  <a 
-                    href={`${integrationSettings.quoteit_api_url}/QuoteView?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button variant="outline" size="sm" className="gap-2 text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100">
-                      <FileText className="w-4 h-4" />
-                      View Quote
-                    </Button>
-                  </a>
-                )}
                 <HaloPSATicketLink 
                   project={project} 
                   onUpdate={refetchProject}
