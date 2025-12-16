@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square } from 'lucide-react';
+import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -67,6 +67,7 @@ export default function Dashboard() {
   const [currentView, setCurrentView] = useState(null);
   const [viewName, setViewName] = useState('');
   const [showSaveViewModal, setShowSaveViewModal] = useState(false);
+  const [isSyncingQuotes, setIsSyncingQuotes] = useState(false);
 
   const { data: incomingQuotes = [], refetch: refetchIncomingQuotes } = useQuery({
     queryKey: ['incomingQuotes'],
@@ -90,6 +91,17 @@ export default function Dashboard() {
   const handleDismissQuote = async (quote) => {
     await base44.entities.IncomingQuote.update(quote.id, { status: 'dismissed' });
     refetchIncomingQuotes();
+  };
+
+  const handleSyncQuotes = async () => {
+    setIsSyncingQuotes(true);
+    try {
+      await base44.functions.invoke('syncQuoteIT', {});
+      refetchIncomingQuotes();
+    } catch (error) {
+      console.error("Sync failed", error);
+    }
+    setIsSyncingQuotes(false);
   };
 
   const { data: dashboardViews = [], refetch: refetchViews } = useQuery({
@@ -447,6 +459,17 @@ export default function Dashboard() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                  onClick={handleSyncQuotes}
+                  disabled={isSyncingQuotes}
+                  title="Sync Quotes from QuoteIT"
+                >
+                  <RefreshCw className={cn("w-4 h-4", isSyncingQuotes && "animate-spin")} />
+                </Button>
               </div>
             </div>
             <div className="flex items-start gap-6">
