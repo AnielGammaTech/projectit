@@ -117,12 +117,13 @@ export default function Dashboard() {
         setIsAdmin(user?.role === 'admin');
       }
     }).catch(() => {});
+
+    // Background sync from QuoteIT
+    base44.functions.invoke('syncQuoteIT', {})
+      .then(() => refetchIncomingQuotes())
+      .catch(err => console.error("Background sync failed", err));
+
     return () => { mounted = false; };
-    
-    // Check for proposal-based project creation
-    const urlParams = new URLSearchParams(window.location.search);
-    const action = urlParams.get('action');
-    const proposalId = urlParams.get('proposalId');
   }, []);
 
   const { data: projects = [], refetch: refetchProjects } = useQuery({
