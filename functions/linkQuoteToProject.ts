@@ -25,8 +25,8 @@ Deno.serve(async (req) => {
 
     // Clean URL and construct endpoint
     const baseUrl = config.quoteit_api_url.replace(/\/$/, '');
-    // We'll call a function that adds the tag
-    const url = `${baseUrl}/api/functions/addProjectTag`;
+    // Use generic updateQuote function to add the tag
+    const url = `${baseUrl}/api/functions/updateQuote`;
 
     console.log(`Linking project to quote at: ${url}`);
 
@@ -38,8 +38,8 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({ 
         quote_id, 
-        project_id,
-        tag: `Project #${project_number}`
+        tags: [`Project #${project_number}`],
+        project_id
       })
     });
 
