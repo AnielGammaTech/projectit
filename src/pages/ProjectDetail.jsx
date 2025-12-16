@@ -486,7 +486,7 @@ export default function ProjectDetail() {
                 </Link>
               )}
 
-              {((project.quoteit_quote_id || linkedQuote?.quoteit_id) && integrationSettings?.quoteit_api_url) && (
+              {(integrationSettings?.quoteit_api_url && (project.quoteit_quote_id || linkedQuote?.quoteit_id)) && (
                 <a 
                   href={`${integrationSettings.quoteit_api_url}/QuoteDetail?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
                   target="_blank"
@@ -513,7 +513,7 @@ export default function ProjectDetail() {
             {/* Actions Row */}
             <div className="flex flex-col items-end gap-2 flex-shrink-0">
               <div className="flex items-center gap-2">
-                {((project.quoteit_quote_id || linkedQuote?.quoteit_id) && integrationSettings?.quoteit_api_url) && (
+                {(integrationSettings?.quoteit_api_url && (project.quoteit_quote_id || linkedQuote?.quoteit_id)) && (
                   <a 
                     href={`${integrationSettings.quoteit_api_url}/QuoteDetail?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
                     target="_blank"
