@@ -172,6 +172,24 @@ export default function ProjectDetail() {
     enabled: !!projectId
   });
 
+  const { data: integrationSettings } = useQuery({
+    queryKey: ['integrationSettings'],
+    queryFn: async () => {
+      const settings = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
+      return settings[0] || {};
+    }
+  });
+
+  const { data: linkedQuote } = useQuery({
+    queryKey: ['linkedQuote', project?.incoming_quote_id],
+    queryFn: async () => {
+      if (!project?.incoming_quote_id) return null;
+      const quotes = await base44.entities.IncomingQuote.filter({ id: project.incoming_quote_id });
+      return quotes[0];
+    },
+    enabled: !!project?.incoming_quote_id
+  });
+
   const { data: appSettings } = useQuery({
     queryKey: ['appSettings'],
     queryFn: async () => {
@@ -483,6 +501,18 @@ export default function ProjectDetail() {
             {/* Actions Row */}
             <div className="flex flex-col items-end gap-2 flex-shrink-0">
               <div className="flex items-center gap-2">
+                {linkedQuote && integrationSettings?.quoteit_api_url && (
+                  <a 
+                    href={`${integrationSettings.quoteit_api_url}/QuoteDetail?id=${linkedQuote.quoteit_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" size="sm" className="gap-2 text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100">
+                      <FileText className="w-4 h-4" />
+                      {linkedQuote.title}
+                    </Button>
+                  </a>
+                )}
                 <HaloPSATicketLink 
                   project={project} 
                   onUpdate={refetchProject}
