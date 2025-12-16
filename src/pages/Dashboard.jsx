@@ -383,7 +383,9 @@ export default function Dashboard() {
     const projectData = {
       ...data,
       project_number: nextNumber,
-      customer_id: data.customer_id || prefillData?.customer_id || null
+      customer_id: data.customer_id || prefillData?.customer_id || null,
+      quoteit_quote_id: prefillData?.quoteit_quote_id || null,
+      incoming_quote_id: prefillData?.incoming_quote_id || null
     };
     
     const newProject = await base44.entities.Project.create(projectData);

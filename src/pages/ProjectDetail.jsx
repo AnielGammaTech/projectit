@@ -480,13 +480,25 @@ export default function ProjectDetail() {
               {project.client && (
                 <Link 
                   to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')} 
-                  className="text-[#0069AF] hover:underline text-sm"
+                  className="text-[#0069AF] hover:underline text-sm block"
                 >
                   {project.client} →
                 </Link>
               )}
 
-              {project.description && <p className="text-slate-600 text-sm mt-1">{project.description}</p>}
+              {(project.quoteit_quote_id && integrationSettings?.quoteit_api_url) && (
+                <a 
+                  href={`${integrationSettings.quoteit_api_url}/QuoteDetail?id=${project.quoteit_quote_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 mt-1 rounded text-xs font-medium bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors border border-orange-200"
+                >
+                  <FileText className="w-3 h-3" />
+                  View Quote on QuoteIT
+                </a>
+              )}
+
+              {project.description && <p className="text-slate-600 text-sm mt-2">{project.description}</p>}
 
               {/* Team Avatars */}
               <div className="mt-3">
@@ -501,18 +513,6 @@ export default function ProjectDetail() {
             {/* Actions Row */}
             <div className="flex flex-col items-end gap-2 flex-shrink-0">
               <div className="flex items-center gap-2">
-                {linkedQuote && integrationSettings?.quoteit_api_url && (
-                  <a 
-                    href={`${integrationSettings.quoteit_api_url}/QuoteDetail?id=${linkedQuote.quoteit_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button variant="outline" size="sm" className="gap-2 text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100">
-                      <FileText className="w-4 h-4" />
-                      {linkedQuote.title}
-                    </Button>
-                  </a>
-                )}
                 <HaloPSATicketLink 
                   project={project} 
                   onUpdate={refetchProject}
