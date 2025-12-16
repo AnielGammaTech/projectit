@@ -488,7 +488,7 @@ export default function ProjectDetail() {
 
               {(integrationSettings?.quoteit_api_url && (project.quoteit_quote_id || linkedQuote?.quoteit_id)) && (
                 <a 
-                  href={`${integrationSettings.quoteit_api_url}/QuoteDetail?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
+                  href={`${integrationSettings.quoteit_api_url}/QuoteView?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-2 py-0.5 mt-1 rounded text-xs font-medium bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors border border-orange-200"
@@ -515,7 +515,7 @@ export default function ProjectDetail() {
               <div className="flex items-center gap-2">
                 {(integrationSettings?.quoteit_api_url && (project.quoteit_quote_id || linkedQuote?.quoteit_id)) && (
                   <a 
-                    href={`${integrationSettings.quoteit_api_url}/QuoteDetail?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
+                    href={`${integrationSettings.quoteit_api_url}/QuoteView?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
