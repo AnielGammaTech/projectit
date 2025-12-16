@@ -391,6 +391,19 @@ export default function Dashboard() {
     // If created from IncomingQuote, mark it as converted
     if (prefillData?.incoming_quote_id) {
       await base44.entities.IncomingQuote.update(prefillData.incoming_quote_id, { status: 'converted' });
+      
+      // Update status on QuoteIT if ID is available
+      if (prefillData.quoteit_quote_id) {
+        try {
+          await base44.functions.invoke('updateQuoteITStatus', { 
+            quote_id: prefillData.quoteit_quote_id, 
+            status: 'converted' 
+          });
+        } catch (err) {
+          console.error('Failed to update QuoteIT status:', err);
+        }
+      }
+
       // Clean up the query
       if (typeof refetchIncomingQuotes === 'function') refetchIncomingQuotes();
     }
