@@ -81,7 +81,8 @@ export default function Dashboard() {
       budget: quote.amount,
       quoteit_quote_id: quote.quoteit_id, // Pass ID to link
       incoming_quote_id: quote.id, // Pass internal ID to update status later
-      description: `Imported from Accepted Quote: ${quote.title}`
+      description: `Imported from Accepted Quote: ${quote.title}`,
+      proposalItems: quote.raw_data?.items || []
     });
     setShowProjectModal(true);
   };

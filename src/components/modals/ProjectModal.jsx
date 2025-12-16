@@ -87,9 +87,9 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
       // Convert proposal items to parts
       if (prefillData.proposalItems) {
         setExtractedParts(prefillData.proposalItems.map(item => ({
-          name: item.name,
+          name: item.name || 'Unnamed Item',
           quantity: item.quantity || 1,
-          unit_cost: item.unit_cost || 0,
+          unit_cost: item.unit_cost || item.unit_price || 0,
           description: item.description || ''
         })));
       }
