@@ -486,9 +486,9 @@ export default function ProjectDetail() {
                 </Link>
               )}
 
-              {(project.quoteit_quote_id && integrationSettings?.quoteit_api_url) && (
+              {((project.quoteit_quote_id || linkedQuote?.quoteit_id) && integrationSettings?.quoteit_api_url) && (
                 <a 
-                  href={`${integrationSettings.quoteit_api_url}/QuoteDetail?id=${project.quoteit_quote_id}`}
+                  href={`${integrationSettings.quoteit_api_url}/QuoteDetail?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-2 py-0.5 mt-1 rounded text-xs font-medium bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors border border-orange-200"
