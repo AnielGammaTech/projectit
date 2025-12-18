@@ -18,8 +18,10 @@ export default function CustomerTicketAI({ customer, onClose }) {
 
   const { data: tickets = [], isLoading: loadingTickets, refetch: refetchTickets } = useQuery({
     queryKey: ['customerTickets', customer.id],
-    queryFn: () => base44.entities.Ticket.filter({ customer_id: customer.id }, '-date_created'),
-    enabled: !!customer.id
+    queryFn: () => base44.entities.Ticket.filter({ customer_id: customer.id }, '-date_created', 1000),
+    enabled: !!customer.id,
+    staleTime: 0,
+    refetchOnMount: 'always'
   });
 
   const openTickets = tickets.filter(t => !t.date_closed);
