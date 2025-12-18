@@ -133,22 +133,89 @@ export default function NotificationSettings() {
           <p className="text-slate-500 mt-1">Manage your email notification preferences</p>
         </motion.div>
 
+        {/* Resend Status Banner */}
+        {!integrationSettings?.resend_enabled && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3"
+          >
+            <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-amber-800">Email notifications require Resend integration</p>
+              <p className="text-sm text-amber-600 mt-1">Please enable Resend in Adminland → Integrations to receive email notifications.</p>
+            </div>
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="space-y-6"
         >
+          {/* Email Frequency */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Mail className="w-5 h-5 text-indigo-500" />
-                Email Notifications
+                <Send className="w-5 h-5 text-indigo-500" />
+                Email Delivery
               </CardTitle>
               <CardDescription>
-                Choose when you want to receive email notifications
+                Choose how you want to receive email notifications
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div>
+                  <Label className="text-base font-medium text-slate-900">Delivery Frequency</Label>
+                  <p className="text-sm text-slate-500 mt-0.5">How often should we send you email notifications?</p>
+                </div>
+                <Select 
+                  value={settings.email_frequency} 
+                  onValueChange={(v) => handleChange('email_frequency', v)}
+                >
+                  <SelectTrigger className="w-44 bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="instant">Instant</SelectItem>
+                    <SelectItem value="daily_digest">Daily Digest</SelectItem>
+                    <SelectItem value="weekly_digest">Weekly Digest</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {integrationSettings?.resend_enabled && (
+                <Button 
+                  variant="outline" 
+                  onClick={sendTestEmail}
+                  disabled={sendingTest}
+                  className="w-full"
+                >
+                  {sendingTest ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Mail className="w-4 h-4 mr-2" />
+                  )}
+                  Send Test Email
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Task Notifications */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-blue-500" />
+                Task Notifications
+              </CardTitle>
+              <CardDescription>
+                Notifications about tasks assigned to you
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               {/* Task Assigned */}
               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
                 <div className="flex items-start gap-4">
@@ -163,6 +230,23 @@ export default function NotificationSettings() {
                 <Switch
                   checked={settings.notify_task_assigned}
                   onCheckedChange={(v) => handleChange('notify_task_assigned', v)}
+                />
+              </div>
+
+              {/* Task Completed */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 rounded-lg bg-emerald-100">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-medium text-slate-900">Task Completed</Label>
+                    <p className="text-sm text-slate-500 mt-0.5">Get notified when tasks you're involved in are completed</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.notify_task_completed}
+                  onCheckedChange={(v) => handleChange('notify_task_completed', v)}
                 />
               </div>
 
@@ -222,22 +306,120 @@ export default function NotificationSettings() {
                   onCheckedChange={(v) => handleChange('notify_task_overdue', v)}
                 />
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Save Button */}
-              <div className="pt-4 border-t border-slate-100">
-                <Button 
-                  onClick={handleSave} 
-                  disabled={!hasChanges || saveMutation.isPending}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700"
-                >
-                  {saveMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4 mr-2" />
-                  )}
-                  Save Settings
-                </Button>
+          {/* Project & Parts Notifications */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FolderOpen className="w-5 h-5 text-violet-500" />
+                Project & Parts
+              </CardTitle>
+              <CardDescription>
+                Notifications about projects and materials
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Project Updates */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 rounded-lg bg-violet-100">
+                    <FolderOpen className="w-5 h-5 text-violet-600" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-medium text-slate-900">Project Updates</Label>
+                    <p className="text-sm text-slate-500 mt-0.5">Get notified about progress updates on your projects</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.notify_project_updates}
+                  onCheckedChange={(v) => handleChange('notify_project_updates', v)}
+                />
               </div>
+
+              {/* Part Status Changes */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 rounded-lg bg-orange-100">
+                    <Package className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-medium text-slate-900">Part Status Changes</Label>
+                    <p className="text-sm text-slate-500 mt-0.5">Get notified when parts are ordered, received, or installed</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.notify_part_status_change}
+                  onCheckedChange={(v) => handleChange('notify_part_status_change', v)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Communication Notifications */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-teal-500" />
+                Communication
+              </CardTitle>
+              <CardDescription>
+                Notifications about messages and mentions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Mentions */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 rounded-lg bg-teal-100">
+                    <AtSign className="w-5 h-5 text-teal-600" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-medium text-slate-900">@Mentions</Label>
+                    <p className="text-sm text-slate-500 mt-0.5">Get notified when someone mentions you in notes or comments</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.notify_mentions}
+                  onCheckedChange={(v) => handleChange('notify_mentions', v)}
+                />
+              </div>
+
+              {/* New Comments */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 rounded-lg bg-slate-200">
+                    <MessageSquare className="w-5 h-5 text-slate-600" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-medium text-slate-900">New Comments</Label>
+                    <p className="text-sm text-slate-500 mt-0.5">Get notified about new comments on tasks you follow</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.notify_new_comments}
+                  onCheckedChange={(v) => handleChange('notify_new_comments', v)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Save Button */}
+          <Card>
+            <CardContent className="pt-6">
+              <Button 
+                onClick={handleSave} 
+                disabled={!hasChanges || saveMutation.isPending}
+                className="w-full bg-indigo-600 hover:bg-indigo-700"
+              >
+                {saveMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                Save Settings
+              </Button>
             </CardContent>
           </Card>
         </motion.div>
