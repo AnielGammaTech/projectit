@@ -123,20 +123,31 @@ Deno.serve(async (req) => {
 
     const haloTickets = allTickets;
 
-    // Get all customers to match by external_id
-    const customers = await base44.asServiceRole.entities.Customer.list();
-    const customersByExternalId = {};
-    customers.forEach(c => {
-      if (c.external_id) {
-        // Store with both formats: 'halo_123' and '123'
-        customersByExternalId[c.external_id] = c;
-        const strippedId = c.external_id.replace(/^halo_/, '');
-        customersByExternalId[strippedId] = c;
-      }
-    });
+    // If syncing for specific customer, we already have it
+    let customersByExternalId = {};
+    if (targetCustomer) {
+      const strippedId = targetCustomer.external_id?.replace(/^halo_/, '') || '';
+      customersByExternalId[targetCustomer.external_id] = targetCustomer;
+      customersByExternalId[strippedId] = targetCustomer;
+    } else {
+      // Get all customers to match by external_id
+      const customers = await base44.asServiceRole.entities.Customer.list();
+      customers.forEach(c => {
+        if (c.external_id) {
+          customersByExternalId[c.external_id] = c;
+          const strippedId = c.external_id.replace(/^halo_/, '');
+          customersByExternalId[strippedId] = c;
+        }
+      });
+    }
 
-    // Get existing tickets to avoid duplicates
-    const existingTickets = await base44.asServiceRole.entities.Ticket.list();
+    // Get existing tickets to avoid duplicates - filter if syncing specific customer
+    let existingTickets;
+    if (targetCustomer) {
+      existingTickets = await base44.asServiceRole.entities.Ticket.filter({ customer_id: targetCustomer.id });
+    } else {
+      existingTickets = await base44.asServiceRole.entities.Ticket.list();
+    }
     const existingByExternalId = {};
     existingTickets.forEach(t => {
       existingByExternalId[t.external_id] = t;
