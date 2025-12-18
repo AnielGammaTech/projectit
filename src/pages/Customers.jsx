@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus, Upload, Loader2, MessageSquare, Send, CheckSquare, Square, X } from 'lucide-react';
+import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus, Upload, Loader2, MessageSquare, Send, CheckSquare, Square, X, Bot, Ticket, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +34,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import CustomerCommunication from '@/components/customers/CustomerCommunication';
+import CustomerTicketAI from '@/components/customers/CustomerTicketAI';
 
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,6 +55,8 @@ export default function Customers() {
 
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCommunication, setShowCommunication] = useState(false);
+  const [showTicketAI, setShowTicketAI] = useState(false);
+  const [syncingTickets, setSyncingTickets] = useState(false);
   
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -98,6 +101,24 @@ export default function Customers() {
     queryKey: ['projects'],
     queryFn: () => base44.entities.Project.list()
   });
+
+  const { data: tickets = [], refetch: refetchTickets } = useQuery({
+    queryKey: ['allTickets'],
+    queryFn: () => base44.entities.Ticket.list('-date_created')
+  });
+
+  const getCustomerTickets = (customerId) => tickets.filter(t => t.customer_id === customerId);
+
+  const handleSyncTickets = async () => {
+    setSyncingTickets(true);
+    try {
+      await base44.functions.invoke('syncHaloPSATickets', {});
+      refetchTickets();
+    } catch (err) {
+      console.error('Ticket sync failed:', err);
+    }
+    setSyncingTickets(false);
+  };
 
   useEffect(() => {
     if (editingCustomer) {
@@ -255,6 +276,14 @@ export default function Customers() {
             <p className="text-slate-500 mt-1">Manage your customer database</p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleSyncTickets}
+              disabled={syncingTickets}
+            >
+              {syncingTickets ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Ticket className="w-4 h-4 mr-2" />}
+              Sync Tickets
+            </Button>
             <Button variant="outline" onClick={() => setShowImportModal(true)}>
               <Upload className="w-4 h-4 mr-2" />
               Import
@@ -431,10 +460,20 @@ export default function Customers() {
                           <div className="flex items-center gap-4">
                             <div className="text-right">
                               <p className="text-sm text-slate-500">{getProposalCount(company.id, company.email)} proposals · {getProjectCount(company.id)} projects</p>
+                              <p className="text-xs text-slate-400">{getCustomerTickets(company.id).length} tickets</p>
                               {getTotalValue(company.id, company.email) > 0 && (
                                 <p className="text-sm font-medium text-emerald-600">${getTotalValue(company.id, company.email).toLocaleString()} won</p>
                               )}
                             </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={(e) => { e.stopPropagation(); setSelectedCustomer(company); setShowTicketAI(true); }}
+                              className="gap-1.5"
+                            >
+                              <Bot className="w-4 h-4 text-indigo-600" />
+                              AI
+                            </Button>
                             <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(company)}>
                               <Eye className="w-4 h-4 mr-1" />View
                             </Button>
@@ -540,10 +579,20 @@ export default function Customers() {
                       <div className="flex items-center gap-4">
                         <div className="text-right">
                           <p className="text-sm text-slate-500">{getProposalCount(customer.name, customer.company, customer.email)} quotes · {getProjectCount(customer.id)} projects</p>
+                          <p className="text-xs text-slate-400">{getCustomerTickets(customer.id).length} tickets</p>
                           {getTotalValue(customer.name, customer.company, customer.email) > 0 && (
                             <p className="text-sm font-medium text-emerald-600">${getTotalValue(customer.name, customer.company, customer.email).toLocaleString()} total</p>
                           )}
                         </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={(e) => { e.stopPropagation(); setSelectedCustomer(customer); setShowTicketAI(true); }}
+                          className="gap-1.5"
+                        >
+                          <Bot className="w-4 h-4 text-indigo-600" />
+                          AI
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(customer)}>
                           <Eye className="w-4 h-4 mr-1" />View
                         </Button>
@@ -776,6 +825,15 @@ export default function Customers() {
                 >
                   <Phone className="w-4 h-4" />
                 </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={() => { setSelectedCustomer(selectedCustomer); setShowTicketAI(true); }}
+                >
+                  <Bot className="w-4 h-4 text-indigo-600" />
+                  Ticket AI
+                </Button>
               </div>
 
               {/* Contact Info */}
@@ -802,7 +860,7 @@ export default function Customers() {
                 )}
                 
                 {/* Summary Stats */}
-                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-200">
+                <div className="grid grid-cols-4 gap-3 pt-3 border-t border-slate-200">
                   <div className="text-center p-2 bg-white rounded-lg">
                     <p className="text-xl font-bold text-[#0069AF]">{getProposalCount(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email)}</p>
                     <p className="text-xs text-slate-500">QuoteIT Quotes</p>
@@ -810,6 +868,10 @@ export default function Customers() {
                   <div className="text-center p-2 bg-white rounded-lg">
                     <p className="text-xl font-bold text-[#0069AF]">{getProjectCount(selectedCustomer.id)}</p>
                     <p className="text-xs text-slate-500">Projects</p>
+                  </div>
+                  <div className="text-center p-2 bg-white rounded-lg">
+                    <p className="text-xl font-bold text-amber-600">{getCustomerTickets(selectedCustomer.id).length}</p>
+                    <p className="text-xs text-slate-500">Tickets</p>
                   </div>
                   <div className="text-center p-2 bg-white rounded-lg">
                     <p className="text-xl font-bold text-emerald-600">${getTotalValue(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).toLocaleString()}</p>
@@ -925,6 +987,18 @@ export default function Customers() {
               customer={selectedCustomer} 
               quotes={incomingQuotes}
               onClose={() => setShowCommunication(false)} 
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Ticket AI Modal */}
+      <Dialog open={showTicketAI} onOpenChange={setShowTicketAI}>
+        <DialogContent className="sm:max-w-xl p-0">
+          {selectedCustomer && (
+            <CustomerTicketAI 
+              customer={selectedCustomer} 
+              onClose={() => setShowTicketAI(false)} 
             />
           )}
         </DialogContent>
