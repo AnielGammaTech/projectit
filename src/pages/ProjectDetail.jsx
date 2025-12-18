@@ -201,19 +201,56 @@ export default function ProjectDetail() {
   const appLogoUrl = appSettings?.app_logo_url;
 
   // Tasks
-  const handleSaveTask = async (data) => {
-    if (editingTask) {
-      await base44.entities.Task.update(editingTask.id, data);
-      await logActivity(projectId, ActivityActions.TASK_UPDATED, `updated task "${data.title}"`, currentUser, 'task', editingTask.id);
-    } else {
-      const newTask = await base44.entities.Task.create(data);
-      await logActivity(projectId, ActivityActions.TASK_CREATED, `created task "${data.title}"`, currentUser, 'task', newTask.id);
-    }
-    refetchTasks();
-    queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
-    setShowTaskModal(false);
-    setEditingTask(null);
-  };
+    const handleSaveTask = async (data) => {
+      const wasAssigned = editingTask?.assigned_to;
+      const isNewlyAssigned = data.assigned_to && data.assigned_to !== 'unassigned' && data.assigned_to !== wasAssigned;
+
+      if (editingTask) {
+        await base44.entities.Task.update(editingTask.id, data);
+        await logActivity(projectId, ActivityActions.TASK_UPDATED, `updated task "${data.title}"`, currentUser, 'task', editingTask.id);
+      } else {
+        const newTask = await base44.entities.Task.create(data);
+        await logActivity(projectId, ActivityActions.TASK_CREATED, `created task "${data.title}"`, currentUser, 'task', newTask.id);
+      }
+
+      // Send notification if task is newly assigned to someone
+      if (isNewlyAssigned && data.assigned_to !== currentUser?.email) {
+        try {
+          // Create in-app notification
+          await base44.entities.UserNotification.create({
+            user_email: data.assigned_to,
+            type: 'task_assigned',
+            title: 'New task assigned to you',
+            message: `"${data.title}" has been assigned to you by ${currentUser?.full_name || currentUser?.email}`,
+            project_id: projectId,
+            project_name: project?.name,
+            from_user_email: currentUser?.email,
+            from_user_name: currentUser?.full_name || currentUser?.email,
+            link: `/ProjectDetail?id=${projectId}`,
+            is_read: false
+          });
+
+          // Send email notification via Resend
+          await base44.functions.invoke('sendNotificationEmail', {
+            to: data.assigned_to,
+            type: 'task_assigned',
+            title: 'New task assigned to you',
+            message: `"${data.title}" has been assigned to you by ${currentUser?.full_name || currentUser?.email}`,
+            projectId: projectId,
+            projectName: project?.name,
+            fromUserName: currentUser?.full_name || currentUser?.email,
+            link: `${window.location.origin}/ProjectDetail?id=${projectId}`
+          });
+        } catch (notifErr) {
+          console.error('Failed to send task notification:', notifErr);
+        }
+      }
+
+      refetchTasks();
+      queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
+      setShowTaskModal(false);
+      setEditingTask(null);
+    };
 
   const handleTaskStatusChange = async (task, status) => {
     await base44.entities.Task.update(task.id, { ...task, status });
