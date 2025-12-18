@@ -256,6 +256,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
         m.email?.toLowerCase().includes(name.toLowerCase())
       );
       if (member?.email && member.email !== currentUser?.email) {
+        // Create in-app notification
         await base44.entities.UserNotification.create({
           user_email: member.email,
           type: 'mention',
@@ -267,6 +268,21 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
           link: `/ProjectDetail?id=${projectId}`,
           is_read: false
         });
+        
+        // Send email notification via Resend
+        try {
+          await base44.functions.invoke('sendNotificationEmail', {
+            to: member.email,
+            type: 'mention',
+            title: 'You were mentioned in a progress update',
+            message: note,
+            projectId: projectId,
+            fromUserName: currentUser?.full_name || currentUser?.email,
+            link: `${window.location.origin}/ProjectDetail?id=${projectId}`
+          });
+        } catch (emailErr) {
+          console.error('Failed to send notification email:', emailErr);
+        }
       }
     }
     
