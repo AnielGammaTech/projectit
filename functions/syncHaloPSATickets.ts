@@ -76,10 +76,13 @@ Deno.serve(async (req) => {
         const customers = await base44.asServiceRole.entities.Customer.filter({ id: customerId });
         targetCustomer = customers[0];
         if (targetCustomer?.external_id) {
-          clientFilter = `&client_id=${targetCustomer.external_id}`;
+          // Strip 'halo_' prefix if present
+          const haloClientId = targetCustomer.external_id.replace(/^halo_/, '');
+          clientFilter = `&client_id=${haloClientId}`;
         }
       } else if (customerExternalId) {
-        clientFilter = `&client_id=${customerExternalId}`;
+        const haloClientId = customerExternalId.replace(/^halo_/, '');
+        clientFilter = `&client_id=${haloClientId}`;
       }
     }
 
@@ -125,7 +128,10 @@ Deno.serve(async (req) => {
     const customersByExternalId = {};
     customers.forEach(c => {
       if (c.external_id) {
+        // Store with both formats: 'halo_123' and '123'
         customersByExternalId[c.external_id] = c;
+        const strippedId = c.external_id.replace(/^halo_/, '');
+        customersByExternalId[strippedId] = c;
       }
     });
 
