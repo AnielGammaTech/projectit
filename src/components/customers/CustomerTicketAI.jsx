@@ -14,6 +14,8 @@ export default function CustomerTicketAI({ customer, onClose }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const [syncing, setSyncing] = useState(false);
+
   const { data: tickets = [], isLoading: loadingTickets, refetch: refetchTickets } = useQuery({
     queryKey: ['customerTickets', customer.id],
     queryFn: () => base44.entities.Ticket.filter({ customer_id: customer.id }, '-date_created'),
@@ -22,6 +24,17 @@ export default function CustomerTicketAI({ customer, onClose }) {
 
   const openTickets = tickets.filter(t => !t.date_closed);
   const closedTickets = tickets.filter(t => t.date_closed);
+
+  const handleSyncCustomerTickets = async () => {
+    setSyncing(true);
+    try {
+      await base44.functions.invoke('syncHaloPSATickets', { customerId: customer.id });
+      refetchTickets();
+    } catch (err) {
+      console.error('Sync failed:', err);
+    }
+    setSyncing(false);
+  };
 
   const handleAsk = async () => {
     if (!question.trim() || loading) return;
@@ -119,13 +132,14 @@ Provide a helpful, concise answer based on the ticket history. If asked about pa
           </div>
         </div>
         <Button 
-          variant="ghost" 
+          variant="outline" 
           size="sm" 
-          onClick={() => refetchTickets()}
+          onClick={handleSyncCustomerTickets}
+          disabled={syncing}
           className="text-xs"
         >
-          <RefreshCw className="w-3 h-3 mr-1" />
-          Refresh
+          {syncing ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+          Sync from Halo
         </Button>
       </div>
 

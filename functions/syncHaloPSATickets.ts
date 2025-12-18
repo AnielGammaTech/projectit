@@ -37,6 +37,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const body = await req.json().catch(() => ({}));
+    const { customerId, customerExternalId } = body;
+
     // Get credentials
     const haloClientId = Deno.env.get("HALOPSA_CLIENT_ID");
     const clientSecret = Deno.env.get("HALOPSA_CLIENT_SECRET");
@@ -63,14 +66,32 @@ Deno.serve(async (req) => {
 
     const accessToken = await getHaloToken(authUrl, haloClientId, clientSecret, tenant);
 
+    // Build query params - filter by client if specified
+    let clientFilter = '';
+    let targetCustomer = null;
+    
+    if (customerId || customerExternalId) {
+      // Get customer to find external_id
+      if (customerId) {
+        const customers = await base44.asServiceRole.entities.Customer.filter({ id: customerId });
+        targetCustomer = customers[0];
+        if (targetCustomer?.external_id) {
+          clientFilter = `&client_id=${targetCustomer.external_id}`;
+        }
+      } else if (customerExternalId) {
+        clientFilter = `&client_id=${customerExternalId}`;
+      }
+    }
+
     // Fetch tickets from HaloPSA - paginated to avoid rate limits
     let allTickets = [];
     let page = 1;
     const pageSize = 50;
+    const maxPages = clientFilter ? 20 : 10; // Allow more pages for single client
     let hasMore = true;
 
-    while (hasMore && page <= 10) { // Max 500 tickets (10 pages * 50)
-      const ticketsResponse = await fetch(`${apiUrl}/Tickets?page_no=${page}&page_size=${pageSize}`, {
+    while (hasMore && page <= maxPages) {
+      const ticketsResponse = await fetch(`${apiUrl}/Tickets?page_no=${page}&page_size=${pageSize}${clientFilter}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
@@ -91,7 +112,7 @@ Deno.serve(async (req) => {
         allTickets = [...allTickets, ...pageTickets];
         page++;
         // Small delay to avoid rate limiting
-        if (hasMore && page <= 10) {
+        if (hasMore && page <= maxPages) {
           await new Promise(r => setTimeout(r, 200));
         }
       }
