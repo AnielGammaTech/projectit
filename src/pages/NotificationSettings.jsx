@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { Bell, Mail, Clock, CheckCircle2, AlertTriangle, Save, Loader2 } from 'lucide-react';
+import { Bell, Mail, Clock, CheckCircle2, AlertTriangle, Save, Loader2, Package, MessageSquare, AtSign, FolderOpen, Send, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -17,9 +17,16 @@ export default function NotificationSettings() {
     notify_task_assigned: true,
     notify_task_due_soon: true,
     notify_task_overdue: true,
-    due_reminder_days: 1
+    notify_task_completed: true,
+    notify_part_status_change: true,
+    notify_project_updates: true,
+    notify_mentions: true,
+    notify_new_comments: false,
+    due_reminder_days: 1,
+    email_frequency: 'instant'
   });
   const [hasChanges, setHasChanges] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
