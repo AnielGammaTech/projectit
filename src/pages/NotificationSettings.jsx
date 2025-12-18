@@ -41,16 +41,50 @@ export default function NotificationSettings() {
     enabled: !!currentUser?.email
   });
 
+  const { data: integrationSettings } = useQuery({
+    queryKey: ['integrationSettings'],
+    queryFn: async () => {
+      const settings = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
+      return settings[0] || {};
+    }
+  });
+
   useEffect(() => {
     if (savedSettings) {
       setSettings({
         notify_task_assigned: savedSettings.notify_task_assigned ?? true,
         notify_task_due_soon: savedSettings.notify_task_due_soon ?? true,
         notify_task_overdue: savedSettings.notify_task_overdue ?? true,
-        due_reminder_days: savedSettings.due_reminder_days ?? 1
+        notify_task_completed: savedSettings.notify_task_completed ?? true,
+        notify_part_status_change: savedSettings.notify_part_status_change ?? true,
+        notify_project_updates: savedSettings.notify_project_updates ?? true,
+        notify_mentions: savedSettings.notify_mentions ?? true,
+        notify_new_comments: savedSettings.notify_new_comments ?? false,
+        due_reminder_days: savedSettings.due_reminder_days ?? 1,
+        email_frequency: savedSettings.email_frequency ?? 'instant'
       });
     }
   }, [savedSettings]);
+
+  const sendTestEmail = async () => {
+    setSendingTest(true);
+    try {
+      const response = await base44.functions.invoke('sendEmail', {
+        to: currentUser.email,
+        subject: 'Test Email from ProjectIT',
+        html: `<h2>Test Email</h2><p>This is a test email to confirm your notification settings are working correctly.</p><p>Sent via Resend integration.</p>`,
+        testOnly: true
+      });
+      if (response.data?.success) {
+        toast.success('Test email sent! Check your inbox.');
+      } else {
+        toast.error(response.data?.error || 'Failed to send test email');
+      }
+    } catch (err) {
+      toast.error('Failed to send test email: ' + err.message);
+    }
+    setSendingTest(false);
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
