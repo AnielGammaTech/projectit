@@ -161,6 +161,7 @@ Deno.serve(async (req) => {
     let created = 0;
     let updated = 0;
     let matched = 0;
+    let skipped = 0;
 
     // Process in batches to avoid rate limits
     const toCreate = [];
@@ -173,9 +174,15 @@ Deno.serve(async (req) => {
       // Find matching customer
       const matchedCustomer = clientId ? customersByExternalId[clientId] : null;
 
+      // SKIP tickets that don't have a matching customer in Base44
+      if (!matchedCustomer) {
+        skipped++;
+        continue;
+      }
+
       const ticketData = {
         external_id: ticketExternalId,
-        customer_id: matchedCustomer?.id || null,
+        customer_id: matchedCustomer.id,
         customer_external_id: clientId,
         summary: haloTicket.summary || 'No summary',
         details: haloTicket.details || '',
@@ -199,9 +206,7 @@ Deno.serve(async (req) => {
         toCreate.push(ticketData);
       }
 
-      if (matchedCustomer) {
-        matched++;
-      }
+      matched++;
     }
 
     // Create new tickets in small batches
