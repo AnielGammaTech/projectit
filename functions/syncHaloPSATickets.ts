@@ -63,21 +63,41 @@ Deno.serve(async (req) => {
 
     const accessToken = await getHaloToken(authUrl, haloClientId, clientSecret, tenant);
 
-    // Fetch tickets from HaloPSA - get recent tickets (last 90 days)
-    const ticketsResponse = await fetch(`${apiUrl}/Tickets?pageinate=false&count=500`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    // Fetch tickets from HaloPSA - paginated to avoid rate limits
+    let allTickets = [];
+    let page = 1;
+    const pageSize = 50;
+    let hasMore = true;
 
-    if (!ticketsResponse.ok) {
-      const errorText = await ticketsResponse.text();
-      return Response.json({ error: 'Failed to fetch tickets', details: errorText }, { status: 500 });
+    while (hasMore && page <= 10) { // Max 500 tickets (10 pages * 50)
+      const ticketsResponse = await fetch(`${apiUrl}/Tickets?page_no=${page}&page_size=${pageSize}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!ticketsResponse.ok) {
+        const errorText = await ticketsResponse.text();
+        return Response.json({ error: 'Failed to fetch tickets', details: errorText, page }, { status: 500 });
+      }
+
+      const ticketsData = await ticketsResponse.json();
+      const pageTickets = ticketsData.tickets || ticketsData || [];
+      
+      if (pageTickets.length === 0) {
+        hasMore = false;
+      } else {
+        allTickets = [...allTickets, ...pageTickets];
+        page++;
+        // Small delay to avoid rate limiting
+        if (hasMore && page <= 10) {
+          await new Promise(r => setTimeout(r, 200));
+        }
+      }
     }
 
-    const ticketsData = await ticketsResponse.json();
-    const haloTickets = ticketsData.tickets || ticketsData || [];
+    const haloTickets = allTickets;
 
     // Get all customers to match by external_id
     const customers = await base44.asServiceRole.entities.Customer.list();
