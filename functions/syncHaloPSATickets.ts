@@ -146,6 +146,10 @@ Deno.serve(async (req) => {
     let updated = 0;
     let matched = 0;
 
+    // Process in batches to avoid rate limits
+    const toCreate = [];
+    const toUpdate = [];
+
     for (const haloTicket of haloTickets) {
       const ticketExternalId = String(haloTicket.id);
       const clientId = haloTicket.client_id ? String(haloTicket.client_id) : null;
@@ -174,17 +178,28 @@ Deno.serve(async (req) => {
       const existing = existingByExternalId[ticketExternalId];
 
       if (existing) {
-        // Update existing ticket
-        await base44.asServiceRole.entities.Ticket.update(existing.id, ticketData);
-        updated++;
+        toUpdate.push({ id: existing.id, data: ticketData });
       } else {
-        // Create new ticket
-        await base44.asServiceRole.entities.Ticket.create(ticketData);
-        created++;
+        toCreate.push(ticketData);
       }
 
       if (matchedCustomer) {
         matched++;
+      }
+    }
+
+    // Bulk create new tickets
+    if (toCreate.length > 0) {
+      await base44.asServiceRole.entities.Ticket.bulkCreate(toCreate);
+      created = toCreate.length;
+    }
+
+    // Update existing tickets one by one with delay
+    for (let i = 0; i < toUpdate.length; i++) {
+      await base44.asServiceRole.entities.Ticket.update(toUpdate[i].id, toUpdate[i].data);
+      updated++;
+      if (i < toUpdate.length - 1 && i % 5 === 4) {
+        await new Promise(r => setTimeout(r, 500));
       }
     }
 
