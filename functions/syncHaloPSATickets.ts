@@ -87,6 +87,11 @@ Deno.serve(async (req) => {
     }
 
     // Fetch tickets from HaloPSA - paginated to avoid rate limits
+    // Limit to last 90 days
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const dateFilter = `&dateoccurred_start=${ninetyDaysAgo.toISOString().split('T')[0]}`;
+    
     let allTickets = [];
     let page = 1;
     const pageSize = 50;
@@ -94,7 +99,7 @@ Deno.serve(async (req) => {
     let hasMore = true;
 
     while (hasMore && page <= maxPages) {
-      const ticketsResponse = await fetch(`${apiUrl}/Tickets?page_no=${page}&page_size=${pageSize}${clientFilter}`, {
+      const ticketsResponse = await fetch(`${apiUrl}/Tickets?page_no=${page}&page_size=${pageSize}${clientFilter}${dateFilter}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
