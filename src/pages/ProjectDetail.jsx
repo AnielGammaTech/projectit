@@ -349,6 +349,38 @@ export default function ProjectDetail() {
       installed: ActivityActions.PART_INSTALLED
     };
     await logActivity(projectId, actionMap[status] || ActivityActions.PART_UPDATED, `changed part "${part.name}" status to ${status}`, currentUser, 'part', part.id);
+
+    // Notify assigned installer when part is ready to install
+    if (status === 'ready_to_install' && part.installer_email && part.installer_email !== currentUser?.email) {
+      try {
+        await base44.entities.UserNotification.create({
+          user_email: part.installer_email,
+          type: 'part_status',
+          title: 'Part ready for installation',
+          message: `"${part.name}" is now ready to be installed`,
+          project_id: projectId,
+          project_name: project?.name,
+          from_user_email: currentUser?.email,
+          from_user_name: currentUser?.full_name || currentUser?.email,
+          link: `/ProjectDetail?id=${projectId}`,
+          is_read: false
+        });
+
+        await base44.functions.invoke('sendNotificationEmail', {
+          to: part.installer_email,
+          type: 'part_status',
+          title: 'Part ready for installation',
+          message: `"${part.name}" is now ready to be installed`,
+          projectId: projectId,
+          projectName: project?.name,
+          fromUserName: currentUser?.full_name || currentUser?.email,
+          link: `${window.location.origin}/ProjectDetail?id=${projectId}`
+        });
+      } catch (err) {
+        console.error('Failed to send part notification:', err);
+      }
+    }
+
     refetchParts();
     queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
   };
