@@ -256,6 +256,41 @@ export default function ProjectDetail() {
     await base44.entities.Task.update(task.id, { ...task, status });
     if (status === 'completed') {
       await logActivity(projectId, ActivityActions.TASK_COMPLETED, `completed task "${task.title}"`, currentUser, 'task', task.id);
+
+      // Notify people who should be notified on task completion
+      if (task.notify_on_complete?.length > 0) {
+        for (const email of task.notify_on_complete) {
+          if (email !== currentUser?.email) {
+            try {
+              await base44.entities.UserNotification.create({
+                user_email: email,
+                type: 'task_completed',
+                title: 'Task completed',
+                message: `"${task.title}" was completed by ${currentUser?.full_name || currentUser?.email}`,
+                project_id: projectId,
+                project_name: project?.name,
+                from_user_email: currentUser?.email,
+                from_user_name: currentUser?.full_name || currentUser?.email,
+                link: `/ProjectDetail?id=${projectId}`,
+                is_read: false
+              });
+
+              await base44.functions.invoke('sendNotificationEmail', {
+                to: email,
+                type: 'task_completed',
+                title: 'Task completed',
+                message: `"${task.title}" was completed by ${currentUser?.full_name || currentUser?.email}`,
+                projectId: projectId,
+                projectName: project?.name,
+                fromUserName: currentUser?.full_name || currentUser?.email,
+                link: `${window.location.origin}/ProjectDetail?id=${projectId}`
+              });
+            } catch (err) {
+              console.error('Failed to send completion notification:', err);
+            }
+          }
+        }
+      }
     } else {
       await logActivity(projectId, ActivityActions.TASK_UPDATED, `changed task "${task.title}" status to ${status.replace('_', ' ')}`, currentUser, 'task', task.id);
     }
