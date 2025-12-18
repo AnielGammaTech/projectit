@@ -236,10 +236,11 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      message: `Synced ${haloTickets.length} tickets`,
+      message: `Synced ${created + updated} tickets (skipped ${skipped} unmatched)`,
       created,
       updated,
       matched,
+      skipped,
       total: haloTickets.length
     });
 
