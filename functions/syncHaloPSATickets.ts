@@ -199,18 +199,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Bulk create new tickets
-    if (toCreate.length > 0) {
-      await base44.asServiceRole.entities.Ticket.bulkCreate(toCreate);
-      created = toCreate.length;
+    // Create new tickets in small batches
+    const batchSize = 10;
+    for (let i = 0; i < toCreate.length; i += batchSize) {
+      const batch = toCreate.slice(i, i + batchSize);
+      await base44.asServiceRole.entities.Ticket.bulkCreate(batch);
+      created += batch.length;
+      if (i + batchSize < toCreate.length) {
+        await new Promise(r => setTimeout(r, 1000)); // 1 sec between batches
+      }
     }
 
-    // Update existing tickets one by one with delay
+    // Update existing tickets with delays
     for (let i = 0; i < toUpdate.length; i++) {
       await base44.asServiceRole.entities.Ticket.update(toUpdate[i].id, toUpdate[i].data);
       updated++;
-      if (i < toUpdate.length - 1 && i % 5 === 4) {
-        await new Promise(r => setTimeout(r, 500));
+      if (i < toUpdate.length - 1) {
+        await new Promise(r => setTimeout(r, 300));
       }
     }
 
