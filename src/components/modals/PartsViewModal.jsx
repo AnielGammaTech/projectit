@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import PartsUploader from '@/components/parts/PartsUploader';
 
 const statusConfig = {
   needed: { label: 'Needed', color: 'bg-red-100 text-red-700' },
@@ -207,14 +208,11 @@ export default function PartsViewModal({
               <span className="text-sm font-normal text-slate-500">
                 Total: ${totalCost.toLocaleString()}
               </span>
-              <label className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors",
-                uploading ? "bg-slate-100 text-slate-400" : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-              )}>
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                Scan Doc
-                <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileUpload} className="hidden" disabled={uploading} />
-              </label>
+              <PartsUploader 
+                projectId={projectId} 
+                onPartsExtracted={onPartsExtracted} 
+                compact={true}
+              />
               <Button size="sm" onClick={onAdd} className="bg-amber-500 hover:bg-amber-600">
                 <Plus className="w-4 h-4 mr-1" />
                 Add Part
