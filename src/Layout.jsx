@@ -294,8 +294,6 @@ export default function Layout({ children, currentPageName }) {
                   <p className="text-xs text-slate-500">{currentUser?.email}</p>
                 </div>
                 <div className="py-1">
-
-                <div className="py-1">
                   <DropdownMenuItem asChild>
                     <Link to={createPageUrl('Profile')} className="cursor-pointer">
                       <User className="w-4 h-4 mr-2 text-slate-500" />
