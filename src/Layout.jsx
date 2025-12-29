@@ -80,7 +80,8 @@ export default function Layout({ children, currentPageName }) {
     queryFn: async () => {
       const settings = await base44.entities.AppSettings.filter({ setting_key: 'main' });
       return settings[0] || {};
-    }
+    },
+    staleTime: 300000 // 5 minutes - prevent refetching and logo flickering
   });
 
   // Fetch user notifications
