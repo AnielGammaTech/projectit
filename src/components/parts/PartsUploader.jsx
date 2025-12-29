@@ -168,11 +168,20 @@ Be thorough - identify all visible items that could be parts for a project. Incl
         }
       }
 
+      // Parse unit_cost to ensure it's a valid number
+      let unitCost = 0;
+      if (part.unit_cost) {
+        const parsed = parseFloat(String(part.unit_cost).replace(/[^0-9.-]/g, ''));
+        if (!isNaN(parsed)) {
+          unitCost = parsed;
+        }
+      }
+
       await base44.entities.Part.create({
         name: part.name,
         part_number: part.part_number || '',
         quantity: part.quantity || 1,
-        unit_cost: part.unit_cost || 0,
+        unit_cost: unitCost,
         supplier: part.supplier || '',
         project_id: projectId,
         status: 'needed',
