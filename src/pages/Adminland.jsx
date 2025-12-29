@@ -10,7 +10,7 @@ import {
   Plus, MoreHorizontal, Mail, Phone, Package, ArrowLeft,
   Building2, Tags, FolderKanban, GitMerge, DollarSign,
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
-  Webhook, Send, Copy, Check, FileText, Layers
+  Webhook, Send, Copy, Check, FileText, Layers, MessageSquare
 } from 'lucide-react';
 import {
   Dialog,
@@ -62,6 +62,7 @@ const adminMenuItems = [
   { id: 'templates', label: 'Email & Notification Templates', icon: Mail, description: 'Customize email templates with HTML and variables' },
   { id: 'company', label: 'App Settings', icon: Building2, description: 'Branding and app identity' },
   { id: 'integrations', label: 'Integrations & Webhooks', icon: GitMerge, description: 'Connect external services, webhooks, and GammaStack' },
+  { id: 'feedback', label: 'Feedback', icon: MessageSquare, description: 'View user feedback and bug reports', page: 'FeedbackManagement' },
   { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Track user actions and system changes', page: 'AuditLogs' },
 ];
 
