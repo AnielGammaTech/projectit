@@ -2,7 +2,6 @@ import ActivityFeed from './pages/ActivityFeed';
 import Adminland from './pages/Adminland';
 import AllTasks from './pages/AllTasks';
 import AuditLogs from './pages/AuditLogs';
-import Billing from './pages/Billing';
 import ChangeOrderEditor from './pages/ChangeOrderEditor';
 import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
@@ -14,7 +13,6 @@ import MyNotifications from './pages/MyNotifications';
 import MySchedule from './pages/MySchedule';
 import NotificationSettings from './pages/NotificationSettings';
 import Profile from './pages/Profile';
-import ProjectBilling from './pages/ProjectBilling';
 import ProjectDetail from './pages/ProjectDetail';
 import ProjectFiles from './pages/ProjectFiles';
 import ProjectNotes from './pages/ProjectNotes';
@@ -42,7 +40,6 @@ export const PAGES = {
     "Adminland": Adminland,
     "AllTasks": AllTasks,
     "AuditLogs": AuditLogs,
-    "Billing": Billing,
     "ChangeOrderEditor": ChangeOrderEditor,
     "Customers": Customers,
     "Dashboard": Dashboard,
@@ -54,7 +51,6 @@ export const PAGES = {
     "MySchedule": MySchedule,
     "NotificationSettings": NotificationSettings,
     "Profile": Profile,
-    "ProjectBilling": ProjectBilling,
     "ProjectDetail": ProjectDetail,
     "ProjectFiles": ProjectFiles,
     "ProjectNotes": ProjectNotes,

@@ -15,7 +15,6 @@ import {
   LogOut,
   Search,
   Zap,
-  Wallet,
   Users,
   Activity,
   Clock,
@@ -61,7 +60,6 @@ const navItems = [
     submenu: [
       { name: 'Activity', icon: Activity, page: 'Reports', params: '?type=activity' },
       { name: 'Timesheets', icon: Clock, page: 'Reports', params: '?type=timesheets' },
-      { name: 'Financial', icon: TrendingUp, page: 'Reports', params: '?type=financial' },
       { name: 'Report Builder', icon: PieChart, page: 'ReportBuilder' },
     ]
   },
@@ -296,14 +294,7 @@ export default function Layout({ children, currentPageName }) {
                   <p className="text-xs text-slate-500">{currentUser?.email}</p>
                 </div>
                 <div className="py-1">
-                  <DropdownMenuItem asChild>
-                    <Link to={createPageUrl('Billing')} className="cursor-pointer">
-                      <Wallet className="w-4 h-4 mr-2 text-emerald-500" />
-                      Billing
-                    </Link>
-                  </DropdownMenuItem>
-                </div>
-                <DropdownMenuSeparator />
+
                 <div className="py-1">
                   <DropdownMenuItem asChild>
                     <Link to={createPageUrl('Profile')} className="cursor-pointer">
