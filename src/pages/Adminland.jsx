@@ -1044,39 +1044,14 @@ function EmailTemplatesSection({ queryClient }) {
   );
 }
 
-// GammaStack Section
-function GammaStackSection({ queryClient }) {
+// GammaStack Content (collapsible cards)
+function GammaStackContent({ queryClient }) {
   const [saving, setSaving] = useState(false);
   const [syncingQuoteIT, setSyncingQuoteIT] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
+  const [expandedCard, setExpandedCard] = useState(null);
 
-  const handleSyncQuoteIT = async () => {
-    setSyncingQuoteIT(true);
-    setSyncResult(null);
-    try {
-      // Save settings first just in case
-      await handleSave();
-      
-      const response = await base44.functions.invoke('syncQuoteIT', {});
-      const data = response.data;
-      
-      if (data.success) {
-        setSyncResult({ success: true, message: data.message });
-        // Invalidate projects query if we created new ones
-        if (data.details?.created > 0) {
-          queryClient.invalidateQueries({ queryKey: ['projects'] });
-        }
-      } else {
-        setSyncResult({ success: false, message: data.error || 'Sync failed' });
-      }
-    } catch (error) {
-      setSyncResult({ success: false, message: error.message || 'Sync failed' });
-    }
-    setSyncingQuoteIT(false);
-  };
-  
   const [formData, setFormData] = useState({
-
     quoteit_enabled: false,
     quoteit_api_url: '',
     quoteit_api_key: '',
@@ -1096,7 +1071,6 @@ function GammaStackSection({ queryClient }) {
   useEffect(() => {
     if (settings[0]) {
       setFormData({
-
         quoteit_enabled: settings[0].quoteit_enabled || false,
         quoteit_api_url: settings[0].quoteit_api_url || '',
         quoteit_api_key: settings[0].quoteit_api_key || '',
@@ -1121,191 +1095,178 @@ function GammaStackSection({ queryClient }) {
     setSaving(false);
   };
 
+  const handleSyncQuoteIT = async () => {
+    setSyncingQuoteIT(true);
+    setSyncResult(null);
+    try {
+      await handleSave();
+      const response = await base44.functions.invoke('syncQuoteIT', {});
+      const data = response.data;
+      if (data.success) {
+        setSyncResult({ success: true, message: data.message });
+        if (data.details?.created > 0) {
+          queryClient.invalidateQueries({ queryKey: ['projects'] });
+        }
+      } else {
+        setSyncResult({ success: false, message: data.error || 'Sync failed' });
+      }
+    } catch (error) {
+      setSyncResult({ success: false, message: error.message || 'Sync failed' });
+    }
+    setSyncingQuoteIT(false);
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-6 border-b flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-900">GammaStack</h2>
-          <p className="text-sm text-slate-500">Connect to the GammaStack ecosystem</p>
-        </div>
+    <div className="p-6 space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-slate-500">Connect to the GammaStack ecosystem</p>
         <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
           {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
 
-      <div className="p-6 space-y-8">
-
-        {/* QuoteIT Integration */}
-        <div className="border rounded-xl overflow-hidden">
-          <div className="p-4 bg-white border-b flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">QuoteIT</h3>
-                <p className="text-xs text-slate-500">Advanced quoting and estimation</p>
-              </div>
+      {/* QuoteIT */}
+      <div className="border rounded-xl overflow-hidden">
+        <button
+          onClick={() => setExpandedCard(expandedCard === 'quoteit' ? null : 'quoteit')}
+          className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-orange-600" />
             </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox 
-                checked={formData.quoteit_enabled} 
-                onCheckedChange={(checked) => setFormData(p => ({ ...p, quoteit_enabled: checked }))} 
-              />
-              <span className="text-sm font-medium">Enable</span>
-            </label>
+            <div className="text-left">
+              <h3 className="font-semibold text-slate-900">QuoteIT</h3>
+              <p className="text-xs text-slate-500">Advanced quoting and estimation</p>
+            </div>
           </div>
-          
-          {formData.quoteit_enabled && (
-            <div className="p-4 bg-slate-50 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs">QuoteIT Base44 App URL</Label>
-                  <Input 
-                    value={formData.quoteit_api_url} 
-                    onChange={(e) => setFormData(p => ({ ...p, quoteit_api_url: e.target.value }))}
-                    placeholder="https://quoteit-app.base44.app"
-                    className="mt-1"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">Enter the full base URL (e.g., https://...)</p>
+          <div className="flex items-center gap-3">
+            <Badge variant={formData.quoteit_enabled ? "default" : "outline"} className={formData.quoteit_enabled ? "bg-emerald-500" : ""}>
+              {formData.quoteit_enabled ? 'Enabled' : 'Disabled'}
+            </Badge>
+            {expandedCard === 'quoteit' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </div>
+        </button>
+        {expandedCard === 'quoteit' && (
+          <div className="p-4 bg-white space-y-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox checked={formData.quoteit_enabled} onCheckedChange={(checked) => setFormData(p => ({ ...p, quoteit_enabled: checked }))} />
+              <span className="text-sm font-medium">Enable QuoteIT Integration</span>
+            </label>
+            {formData.quoteit_enabled && (
+              <div className="space-y-4 pt-4 border-t">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs">QuoteIT Base44 App URL</Label>
+                    <Input value={formData.quoteit_api_url} onChange={(e) => setFormData(p => ({ ...p, quoteit_api_url: e.target.value }))} placeholder="https://quoteit-app.base44.app" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">API Key</Label>
+                    <Input type="password" value={formData.quoteit_api_key} onChange={(e) => setFormData(p => ({ ...p, quoteit_api_key: e.target.value }))} placeholder="QuoteIT API Key" className="mt-1" />
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-xs">API Key</Label>
-                  <Input 
-                    type="password"
-                    value={formData.quoteit_api_key} 
-                    onChange={(e) => setFormData(p => ({ ...p, quoteit_api_key: e.target.value }))}
-                    placeholder="QuoteIT API Key"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <div className="pt-2 border-t border-slate-200">
-                <div className="flex items-center justify-between">
-                  <Button 
-                    onClick={handleSyncQuoteIT} 
-                    disabled={syncingQuoteIT} 
-                    className="bg-orange-600 hover:bg-orange-700 text-white"
-                  >
-                    {syncingQuoteIT ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Syncing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Sync Accepted Quotes
-                      </>
-                    )}
+                <div className="flex items-center gap-3 pt-2 border-t">
+                  <Button onClick={handleSyncQuoteIT} disabled={syncingQuoteIT} className="bg-orange-600 hover:bg-orange-700">
+                    {syncingQuoteIT ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Syncing...</> : <><RefreshCw className="w-4 h-4 mr-2" />Sync Accepted Quotes</>}
                   </Button>
-                  {syncResult && (
-                    <span className={cn("text-sm font-medium", syncResult.success ? "text-emerald-600" : "text-red-600")}>
-                      {syncResult.message}
-                    </span>
-                  )}
+                  {syncResult && <span className={cn("text-sm", syncResult.success ? "text-emerald-600" : "text-red-600")}>{syncResult.message}</span>}
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* PortalIT Integration */}
-        <div className="border rounded-xl overflow-hidden">
-          <div className="p-4 bg-white border-b flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">PortalIT</h3>
-                <p className="text-xs text-slate-500">Customer portal and ticketing</p>
-              </div>
-            </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox 
-                checked={formData.portalit_enabled} 
-                onCheckedChange={(checked) => setFormData(p => ({ ...p, portalit_enabled: checked }))} 
-              />
-              <span className="text-sm font-medium">Enable</span>
-            </label>
+            )}
           </div>
-          
-          {formData.portalit_enabled && (
-            <div className="p-4 bg-slate-50 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs">PortalIT Base44 App URL</Label>
-                  <Input 
-                    value={formData.portalit_api_url} 
-                    onChange={(e) => setFormData(p => ({ ...p, portalit_api_url: e.target.value }))}
-                    placeholder="https://portalit-app.base44.app"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">API Key</Label>
-                  <Input 
-                    type="password"
-                    value={formData.portalit_api_key} 
-                    onChange={(e) => setFormData(p => ({ ...p, portalit_api_key: e.target.value }))}
-                    placeholder="PortalIT API Key"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* BillingIT Integration */}
-        <div className="border rounded-xl overflow-hidden">
-          <div className="p-4 bg-white border-b flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">BillingIT</h3>
-                <p className="text-xs text-slate-500">Invoicing and payments</p>
-              </div>
+      {/* PortalIT */}
+      <div className="border rounded-xl overflow-hidden">
+        <button
+          onClick={() => setExpandedCard(expandedCard === 'portalit' ? null : 'portalit')}
+          className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Users className="w-5 h-5 text-blue-600" />
             </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox 
-                checked={formData.billingit_enabled} 
-                onCheckedChange={(checked) => setFormData(p => ({ ...p, billingit_enabled: checked }))} 
-              />
-              <span className="text-sm font-medium">Enable</span>
-            </label>
+            <div className="text-left">
+              <h3 className="font-semibold text-slate-900">PortalIT</h3>
+              <p className="text-xs text-slate-500">Customer portal and ticketing</p>
+            </div>
           </div>
-          
-          {formData.billingit_enabled && (
-            <div className="p-4 bg-slate-50 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs">BillingIT Base44 App URL</Label>
-                  <Input 
-                    value={formData.billingit_api_url} 
-                    onChange={(e) => setFormData(p => ({ ...p, billingit_api_url: e.target.value }))}
-                    placeholder="https://billingit-app.base44.app"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">API Key</Label>
-                  <Input 
-                    type="password"
-                    value={formData.billingit_api_key} 
-                    onChange={(e) => setFormData(p => ({ ...p, billingit_api_key: e.target.value }))}
-                    placeholder="BillingIT API Key"
-                    className="mt-1"
-                  />
+          <div className="flex items-center gap-3">
+            <Badge variant={formData.portalit_enabled ? "default" : "outline"} className={formData.portalit_enabled ? "bg-emerald-500" : ""}>
+              {formData.portalit_enabled ? 'Enabled' : 'Disabled'}
+            </Badge>
+            {expandedCard === 'portalit' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </div>
+        </button>
+        {expandedCard === 'portalit' && (
+          <div className="p-4 bg-white space-y-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox checked={formData.portalit_enabled} onCheckedChange={(checked) => setFormData(p => ({ ...p, portalit_enabled: checked }))} />
+              <span className="text-sm font-medium">Enable PortalIT Integration</span>
+            </label>
+            {formData.portalit_enabled && (
+              <div className="space-y-4 pt-4 border-t">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs">PortalIT Base44 App URL</Label>
+                    <Input value={formData.portalit_api_url} onChange={(e) => setFormData(p => ({ ...p, portalit_api_url: e.target.value }))} placeholder="https://portalit-app.base44.app" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">API Key</Label>
+                    <Input type="password" value={formData.portalit_api_key} onChange={(e) => setFormData(p => ({ ...p, portalit_api_key: e.target.value }))} placeholder="PortalIT API Key" className="mt-1" />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
+      </div>
 
+      {/* BillingIT */}
+      <div className="border rounded-xl overflow-hidden">
+        <button
+          onClick={() => setExpandedCard(expandedCard === 'billingit' ? null : 'billingit')}
+          className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-semibold text-slate-900">BillingIT</h3>
+              <p className="text-xs text-slate-500">Invoicing and payments</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Badge variant={formData.billingit_enabled ? "default" : "outline"} className={formData.billingit_enabled ? "bg-emerald-500" : ""}>
+              {formData.billingit_enabled ? 'Enabled' : 'Disabled'}
+            </Badge>
+            {expandedCard === 'billingit' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </div>
+        </button>
+        {expandedCard === 'billingit' && (
+          <div className="p-4 bg-white space-y-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox checked={formData.billingit_enabled} onCheckedChange={(checked) => setFormData(p => ({ ...p, billingit_enabled: checked }))} />
+              <span className="text-sm font-medium">Enable BillingIT Integration</span>
+            </label>
+            {formData.billingit_enabled && (
+              <div className="space-y-4 pt-4 border-t">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs">BillingIT Base44 App URL</Label>
+                    <Input value={formData.billingit_api_url} onChange={(e) => setFormData(p => ({ ...p, billingit_api_url: e.target.value }))} placeholder="https://billingit-app.base44.app" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">API Key</Label>
+                    <Input type="password" value={formData.billingit_api_key} onChange={(e) => setFormData(p => ({ ...p, billingit_api_key: e.target.value }))} placeholder="BillingIT API Key" className="mt-1" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2361,7 +2322,7 @@ function IntegrationsSection({ queryClient }) {
       </div>
 
       {activeTab === 'webhooks' && <WebhooksContent queryClient={queryClient} />}
-      {activeTab === 'gammastack' && <GammaStackSection queryClient={queryClient} />}
+      {activeTab === 'gammastack' && <GammaStackContent queryClient={queryClient} />}
       
       {activeTab === 'integrations' && (
       <div className="p-6 space-y-4">
@@ -2671,134 +2632,7 @@ function IntegrationsSection({ queryClient }) {
           )}
         </div>
 
-        {/* Resend Card */}
-        <div className="border rounded-xl overflow-hidden">
-          <button
-            onClick={() => setSelectedIntegration(selectedIntegration === 'resend' ? null : 'resend')}
-            className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
-                <Mail className="w-5 h-5 text-white" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-slate-900">Resend</h3>
-                <p className="text-xs text-slate-500">Email API for developers</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant={formData.resend_enabled ? "default" : "outline"} className={formData.resend_enabled ? "bg-emerald-500" : ""}>
-                {formData.resend_enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
-              {selectedIntegration === 'resend' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-            </div>
-          </button>
-          
-          {selectedIntegration === 'resend' && (
-          <div className="p-4 bg-white">
-            <div className="flex items-center justify-between mb-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox 
-                  checked={formData.resend_enabled} 
-                  onCheckedChange={(checked) => setFormData(p => ({ ...p, resend_enabled: checked }))} 
-                />
-                <span className="text-sm font-medium">Enable Resend Integration</span>
-              </label>
-              <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
-                Get API Key →
-              </a>
-            </div>
 
-            {formData.resend_enabled && (
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs">API Key</Label>
-                  <Input 
-                    type="password"
-                    value={formData.resend_api_key} 
-                    onChange={(e) => setFormData(p => ({ ...p, resend_api_key: e.target.value }))} 
-                    placeholder="re_..." 
-                    className="mt-1 h-9 font-mono" 
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs">From Email</Label>
-                    <Input 
-                      type="email"
-                      value={formData.resend_from_email} 
-                      onChange={(e) => setFormData(p => ({ ...p, resend_from_email: e.target.value }))} 
-                      placeholder="onboarding@resend.dev" 
-                      className="mt-1 h-9" 
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">From Name</Label>
-                    <Input 
-                      value={formData.resend_from_name} 
-                      onChange={(e) => setFormData(p => ({ ...p, resend_from_name: e.target.value }))} 
-                      placeholder="IT Projects" 
-                      className="mt-1 h-9" 
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-2 border-t">
-                  <Input 
-                    type="email"
-                    value={formData.resend_test_to || ''}
-                    onChange={(e) => setFormData(p => ({ ...p, resend_test_to: e.target.value }))} 
-                    placeholder="Test email address..."
-                    className="flex-1 h-9"
-                  />
-                  <Button 
-                    onClick={async () => {
-                      if (!formData.resend_api_key) {
-                        setEmailTestResult({ success: false, message: 'Enter API key' });
-                        return;
-                      }
-                      if (!formData.resend_test_to) {
-                        setEmailTestResult({ success: false, message: 'Enter test email address' });
-                        return;
-                      }
-                      setTestingEmail(true);
-                      setEmailTestResult(null);
-                      try {
-                        await handleSave();
-                        const response = await base44.functions.invoke('sendEmail', { 
-                          testOnly: true,
-                          to: formData.resend_test_to,
-                          subject: 'Test Email from IT Projects',
-                          html: '<h1>Test Email</h1><p>Your Resend integration is working correctly.</p>'
-                        });
-                        setEmailTestResult(response.data?.success 
-                          ? { success: true, message: 'Sent!' } 
-                          : { success: false, message: response.data?.error || 'Failed' }
-                        );
-                      } catch (error) {
-                        setEmailTestResult({ success: false, message: error.response?.data?.error || 'Failed' });
-                      }
-                      setTestingEmail(false);
-                    }} 
-                    disabled={testingEmail || !formData.resend_test_to}
-                    size="sm"
-                    className="bg-black hover:bg-slate-800 h-9"
-                  >
-                    {testingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Test'}
-                  </Button>
-                </div>
-                
-                {emailTestResult && (
-                  <p className={cn("text-xs", emailTestResult.success ? "text-emerald-600" : "text-red-600")}>
-                    {emailTestResult.message}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-          )}
-        </div>
 
         {/* Twilio SMS Card */}
         <div className="border rounded-xl overflow-hidden">
