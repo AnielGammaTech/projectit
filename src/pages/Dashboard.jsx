@@ -556,10 +556,7 @@ export default function Dashboard() {
 
         {/* Urgent Tasks Alert */}
         {!dismissedAlert && myUrgentTasks.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            className={cn(
+          <div className={cn(
               "mb-6 rounded-2xl p-4 border-2 shadow-lg relative overflow-hidden",
               overdueTasks.length > 0 
                 ? "bg-gradient-to-r from-red-500 to-red-600 border-red-400 text-white" 
@@ -647,19 +644,14 @@ export default function Dashboard() {
                 </button>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Customizable Widgets - Optional based on user settings */}
         {currentUser?.show_dashboard_widgets === true && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="mb-8"
-          >
+          <div className="mb-8">
             <DashboardWidgets />
-          </motion.div>
+          </div>
         )}
 
         {/* Stats Grid - Focused */}
@@ -755,11 +747,7 @@ export default function Dashboard() {
 
             {/* Bulk Actions Bar */}
             {selectionMode && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 bg-[#0069AF]/10 rounded-xl border border-[#0069AF]/20 flex items-center justify-between"
-              >
+              <div className="mb-4 p-3 bg-[#0069AF]/10 rounded-xl border border-[#0069AF]/20 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={selectAllProjects}
@@ -798,7 +786,7 @@ export default function Dashboard() {
                     </Button>
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
 
             {/* Alphabet Quick Filter - shows when more than 25 projects */}
@@ -1208,11 +1196,7 @@ export default function Dashboard() {
                         </DragDropContext>
                         )
             ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-white rounded-2xl border border-slate-100 p-12 text-center"
-              >
+              <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
                 <FolderKanban className="w-12 h-12 mx-auto text-slate-300 mb-4" />
                 <h3 className="text-lg font-medium text-slate-900 mb-2">No projects yet</h3>
                 <p className="text-slate-500 mb-6">Get started by creating your first project</p>
@@ -1220,7 +1204,7 @@ export default function Dashboard() {
                   <Plus className="w-4 h-4 mr-2" />
                   Create Project
                 </Button>
-              </motion.div>
+              </div>
             )}
           </div>
 

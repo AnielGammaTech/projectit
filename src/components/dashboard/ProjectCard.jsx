@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, memo, useMemo } from 'react';
 import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Sparkles, Users, AlertTriangle, Clock, MessageCircle, CheckSquare, Square } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -68,41 +67,38 @@ const statusOptions = [
   { value: 'completed', label: 'Completed' }
 ];
 
-export default function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, onPinToggle, groups = [], isPinned = false, dragHandleProps = {}, teamMembers = [], selectionMode = false, isSelected = false, onSelectionToggle }) {
+function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, onPinToggle, groups = [], isPinned = false, dragHandleProps = {}, teamMembers = [], selectionMode = false, isSelected = false, onSelectionToggle }) {
   const navigate = useNavigate();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   const [groupPickerOpen, setGroupPickerOpen] = useState(false);
   
-  // Fetch latest progress update for this project
-  const { data: progressUpdates = [] } = useQuery({
-    queryKey: ['progressUpdates', project.id],
-    queryFn: () => base44.entities.ProgressUpdate.filter({ project_id: project.id }, '-created_date', 1),
-    enabled: !!project.id,
-    staleTime: 30000 // 30 seconds to prevent excessive refetching
-  });
+  // Use project's stored progress and health status instead of fetching
+  const healthStatus = project.health_status || 'good';
+  
+  const stats = useMemo(() => {
+    const completed = tasks.filter(t => t.status === 'completed').length;
+    const pending = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length;
+    const total = tasks.length;
+    const pendingP = parts.filter(p => p.status !== 'installed').length;
+    const prog = project.progress || (total > 0 ? (completed / total) * 100 : 0);
+    
+    const unassigned = tasks.filter(t => !t.assigned_to && t.status !== 'completed' && t.status !== 'archived').length;
+    const overdue = tasks.filter(t => {
+      if (t.status === 'completed' || t.status === 'archived' || !t.due_date) return false;
+      const dueDate = new Date(t.due_date);
+      return dueDate < new Date() && dueDate.toDateString() !== new Date().toDateString();
+    }).length;
+    const active = pending;
+    const issues = unassigned + overdue;
+    const health = active > 0 ? Math.max(0, 100 - Math.round((issues / active) * 100)) : 100;
+    
+    return { completedTasks: completed, pendingTasks: pending, totalTasks: total, pendingParts: pendingP, progress: prog, unassignedTasks: unassigned, overdueTasks: overdue, totalActive: active, healthScore: health };
+  }, [tasks, parts, project.progress]);
 
-  const lastUpdate = progressUpdates[0];
-  const healthStatus = lastUpdate?.health_status || 'good';
-  
-  const completedTasks = tasks.filter(t => t.status === 'completed').length;
-  const pendingTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length;
-  const totalTasks = tasks.length;
-  const pendingParts = parts.filter(p => p.status !== 'installed').length;
-  const progress = project.progress || (totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0);
+  const { completedTasks, pendingTasks, totalTasks, pendingParts, progress, unassignedTasks, overdueTasks, totalActive, healthScore } = stats;
   const colorClass = cardColors[project.color] || cardColors.slate;
-  
-  // Calculate AI health score
-  const unassignedTasks = tasks.filter(t => !t.assigned_to && t.status !== 'completed' && t.status !== 'archived').length;
-  const overdueTasks = tasks.filter(t => {
-    if (t.status === 'completed' || t.status === 'archived' || !t.due_date) return false;
-    const dueDate = new Date(t.due_date);
-    return dueDate < new Date() && dueDate.toDateString() !== new Date().toDateString();
-  }).length;
-  const totalActive = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length;
-  const totalIssues = unassignedTasks + overdueTasks;
-  const healthScore = totalActive > 0 ? Math.max(0, 100 - Math.round((totalIssues / totalActive) * 100)) : 100;
   
   // Health-based colors for progress ring
   const getHealthColor = () => {
@@ -149,13 +145,7 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      whileHover={{ y: -4 }}
-      className="group relative"
-    >
+    <div className="group relative hover:-translate-y-1 transition-transform duration-200">
       {/* Selection checkbox */}
       {selectionMode && (
         <button
@@ -327,31 +317,16 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
                   <p className="font-semibold text-sm">Progress</p>
                   <span className="text-sm font-bold">{Math.round(progress)}%</span>
                 </div>
-                {lastUpdate ? (
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <div className={cn(
-                        "px-2 py-0.5 rounded text-[10px] font-medium",
-                        healthStatus === 'issue' ? "bg-red-100 text-red-700" :
-                        healthStatus === 'concern' ? "bg-amber-100 text-amber-700" :
-                        "bg-emerald-100 text-emerald-700"
-                      )}>
-                        {healthStatus === 'issue' ? 'Has Issues' : healthStatus === 'concern' ? 'Some Concerns' : 'On Track'}
-                      </div>
-                      <span className="text-[10px] text-slate-400">
-                        {format(new Date(lastUpdate.created_date), 'MMM d')}
-                      </span>
-                    </div>
-                    {lastUpdate.note && (
-                      <div className="flex items-start gap-1.5 text-xs text-slate-600 bg-slate-50 rounded-lg p-2">
-                        <MessageCircle className="w-3 h-3 text-slate-400 mt-0.5 flex-shrink-0" />
-                        <span className="line-clamp-3">{lastUpdate.note}</span>
-                      </div>
-                    )}
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    "px-2 py-0.5 rounded text-[10px] font-medium",
+                    healthStatus === 'issue' ? "bg-red-100 text-red-700" :
+                    healthStatus === 'concern' ? "bg-amber-100 text-amber-700" :
+                    "bg-emerald-100 text-emerald-700"
+                  )}>
+                    {healthStatus === 'issue' ? 'Has Issues' : healthStatus === 'concern' ? 'Some Concerns' : 'On Track'}
                   </div>
-                ) : (
-                  <p className="text-xs text-slate-400">No updates yet</p>
-                )}
+                </div>
               </div>
             </TooltipContent>
           </Tooltip>
@@ -456,6 +431,8 @@ export default function ProjectCard({ project, tasks = [], parts = [], index, on
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
+
+export default memo(ProjectCard);
