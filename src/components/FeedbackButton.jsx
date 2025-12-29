@@ -121,7 +121,7 @@ export default function FeedbackButton() {
       {/* Floating Button */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 p-4 rounded-full bg-[#0069AF] text-white shadow-xl hover:bg-[#005a96] transition-colors"
+        className="fixed bottom-6 right-24 z-50 p-4 rounded-full bg-[#0069AF] text-white shadow-xl hover:bg-[#005a96] transition-colors"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
