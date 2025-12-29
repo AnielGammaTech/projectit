@@ -84,6 +84,19 @@ export default function ActivityFeed() {
     queryFn: () => base44.entities.TeamMember.list()
   });
 
+  const { data: appUsers = [] } = useQuery({
+    queryKey: ['appUsers'],
+    queryFn: () => base44.entities.User.list()
+  });
+
+  // Combine team members and app users, deduplicate by email
+  const allPeople = [...teamMembers];
+  appUsers.forEach(user => {
+    if (!allPeople.find(m => m.email === user.email)) {
+      allPeople.push({ id: user.id, email: user.email, name: user.full_name || user.email });
+    }
+  });
+
   const getProjectName = (projectId) => {
     const project = projects.find(p => p.id === projectId);
     return project?.name || 'Unknown Project';
@@ -188,8 +201,8 @@ export default function ActivityFeed() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All People</SelectItem>
-                    {teamMembers.map(member => (
-                      <SelectItem key={member.id} value={member.email}>{member.name}</SelectItem>
+                    {allPeople.map(person => (
+                      <SelectItem key={person.id} value={person.email}>{person.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
