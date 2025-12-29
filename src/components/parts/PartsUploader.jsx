@@ -26,7 +26,9 @@ export default function PartsUploader({ projectId, onPartsExtracted, compact = f
             part_number: { type: "string", description: "Part/model number if visible" },
             quantity: { type: "number", description: "Quantity (default 1)" },
             unit_cost: { type: "number", description: "Price per unit if visible" },
-            supplier: { type: "string", description: "Supplier/manufacturer if visible" }
+            supplier: { type: "string", description: "Supplier/manufacturer if visible" },
+            purchase_id: { type: "string", description: "Order number, purchase ID, confirmation number, or tracking number if visible" },
+            estimated_delivery: { type: "string", description: "Estimated delivery date or ETA if visible (format: YYYY-MM-DD)" }
           }
         }
       }
@@ -83,8 +85,10 @@ export default function PartsUploader({ projectId, onPartsExtracted, compact = f
 - quantity: count if multiple of same item (default 1)
 - unit_cost: price if visible
 - supplier: brand/manufacturer if visible
+- purchase_id: IMPORTANT - any order number, purchase ID, confirmation number, invoice number, or tracking number visible
+- estimated_delivery: any estimated delivery date, ETA, or expected arrival date (return as YYYY-MM-DD format)
 
-Be thorough - identify all visible items that could be parts for a project. Include hardware, cables, equipment, tools, materials, etc.`,
+Be thorough - identify all visible items that could be parts for a project. Include hardware, cables, equipment, tools, materials, etc. Pay special attention to order/purchase IDs and delivery dates as these are critical for tracking.`,
           file_urls: [file_url],
           response_json_schema: partsSchema
         });
@@ -149,6 +153,12 @@ Be thorough - identify all visible items that could be parts for a project. Incl
 
     setUploading(true);
     for (const part of extractedParts) {
+      // Build notes with purchase ID if available
+      let notes = '';
+      if (part.purchase_id) {
+        notes = `📦 Purchase/Order ID: ${part.purchase_id}`;
+      }
+
       await base44.entities.Part.create({
         name: part.name,
         part_number: part.part_number || '',
@@ -156,7 +166,9 @@ Be thorough - identify all visible items that could be parts for a project. Incl
         unit_cost: part.unit_cost || 0,
         supplier: part.supplier || '',
         project_id: projectId,
-        status: 'needed'
+        status: 'needed',
+        notes: notes,
+        est_delivery_date: part.estimated_delivery || ''
       });
     }
     onPartsExtracted?.();
@@ -260,6 +272,8 @@ Be thorough - identify all visible items that could be parts for a project. Incl
                         {part.quantity > 1 && <span>Qty: {part.quantity}</span>}
                         {part.unit_cost > 0 && <span>${part.unit_cost}</span>}
                         {part.supplier && <span>{part.supplier}</span>}
+                        {part.purchase_id && <span className="text-amber-600 font-medium">📦 {part.purchase_id}</span>}
+                        {part.estimated_delivery && <span className="text-blue-600">ETA: {part.estimated_delivery}</span>}
                       </div>
                     </div>
                     <button
