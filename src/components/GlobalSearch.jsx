@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { 
   Search, X, FolderKanban, FileText, Users, Package, 
   ListTodo, Filter, ChevronDown 
@@ -52,76 +52,86 @@ export default function GlobalSearch({ isOpen, onClose }) {
   const { data: projects = [] } = useQuery({
     queryKey: ['searchProjects'],
     queryFn: () => base44.entities.Project.list('-created_date', 100),
-    enabled: isOpen && filters.project
+    enabled: isOpen && filters.project,
+    staleTime: 60000
   });
 
   const { data: proposals = [] } = useQuery({
     queryKey: ['searchProposals'],
     queryFn: () => base44.entities.Proposal.list('-created_date', 100),
-    enabled: isOpen && filters.proposal
+    enabled: isOpen && filters.proposal,
+    staleTime: 60000
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['searchCustomers'],
     queryFn: () => base44.entities.Customer.list('name', 100),
-    enabled: isOpen && filters.customer
+    enabled: isOpen && filters.customer,
+    staleTime: 60000
   });
 
   const { data: inventory = [] } = useQuery({
     queryKey: ['searchInventory'],
     queryFn: () => base44.entities.InventoryItem.list('name', 100),
-    enabled: isOpen && filters.inventory
+    enabled: isOpen && filters.inventory,
+    staleTime: 60000
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['searchTasks'],
     queryFn: () => base44.entities.Task.list('-created_date', 100),
-    enabled: isOpen && filters.task
+    enabled: isOpen && filters.task,
+    staleTime: 60000
   });
 
-  const searchResults = [];
-  const lowerQuery = query.toLowerCase().trim();
+  const searchResults = useMemo(() => {
+    const results = [];
+    const lowerQuery = query.toLowerCase().trim();
+    if (!lowerQuery) return results;
 
-  if (lowerQuery && filters.project) {
-    projects.filter(p => 
-      p.name?.toLowerCase().includes(lowerQuery) ||
-      p.client?.toLowerCase().includes(lowerQuery) ||
-      p.description?.toLowerCase().includes(lowerQuery) ||
-      p.project_number?.toString().includes(lowerQuery) ||
-      p.halopsa_ticket_id?.includes(lowerQuery)
-    ).forEach(p => searchResults.push({ type: 'project', item: p, url: createPageUrl('ProjectDetail') + `?id=${p.id}` }));
-  }
+    if (filters.project) {
+      projects.filter(p => 
+        p.name?.toLowerCase().includes(lowerQuery) ||
+        p.client?.toLowerCase().includes(lowerQuery) ||
+        p.description?.toLowerCase().includes(lowerQuery) ||
+        p.project_number?.toString().includes(lowerQuery) ||
+        p.halopsa_ticket_id?.includes(lowerQuery)
+      ).forEach(p => results.push({ type: 'project', item: p, url: createPageUrl('ProjectDetail') + `?id=${p.id}` }));
+    }
 
-  if (lowerQuery && filters.proposal) {
-    proposals.filter(p => 
-      p.title?.toLowerCase().includes(lowerQuery) ||
-      p.customer_name?.toLowerCase().includes(lowerQuery) ||
-      p.proposal_number?.toLowerCase().includes(lowerQuery)
-    ).forEach(p => searchResults.push({ type: 'proposal', item: p, url: createPageUrl('ProposalEditor') + `?id=${p.id}` }));
-  }
+    if (filters.proposal) {
+      proposals.filter(p => 
+        p.title?.toLowerCase().includes(lowerQuery) ||
+        p.customer_name?.toLowerCase().includes(lowerQuery) ||
+        p.proposal_number?.toLowerCase().includes(lowerQuery)
+      ).forEach(p => results.push({ type: 'proposal', item: p, url: createPageUrl('ProposalEditor') + `?id=${p.id}` }));
+    }
 
-  if (lowerQuery && filters.customer) {
-    customers.filter(c => 
-      c.name?.toLowerCase().includes(lowerQuery) ||
-      c.email?.toLowerCase().includes(lowerQuery) ||
-      c.company?.toLowerCase().includes(lowerQuery)
-    ).forEach(c => searchResults.push({ type: 'customer', item: c, url: createPageUrl('Customers') + `?highlight=${c.id}` }));
-  }
+    if (filters.customer) {
+      customers.filter(c => 
+        c.name?.toLowerCase().includes(lowerQuery) ||
+        c.email?.toLowerCase().includes(lowerQuery) ||
+        c.company?.toLowerCase().includes(lowerQuery)
+      ).forEach(c => results.push({ type: 'customer', item: c, url: createPageUrl('Customers') + `?highlight=${c.id}` }));
+    }
 
-  if (lowerQuery && filters.inventory) {
-    inventory.filter(i => 
-      i.name?.toLowerCase().includes(lowerQuery) ||
-      i.sku?.toLowerCase().includes(lowerQuery) ||
-      i.category?.toLowerCase().includes(lowerQuery)
-    ).forEach(i => searchResults.push({ type: 'inventory', item: i, url: createPageUrl('Inventory') }));
-  }
+    if (filters.inventory) {
+      inventory.filter(i => 
+        i.name?.toLowerCase().includes(lowerQuery) ||
+        i.sku?.toLowerCase().includes(lowerQuery) ||
+        i.category?.toLowerCase().includes(lowerQuery)
+      ).forEach(i => results.push({ type: 'inventory', item: i, url: createPageUrl('Inventory') }));
+    }
 
-  if (lowerQuery && filters.task) {
-    tasks.filter(t => 
-      t.title?.toLowerCase().includes(lowerQuery) ||
-      t.description?.toLowerCase().includes(lowerQuery)
-    ).forEach(t => searchResults.push({ type: 'task', item: t, url: createPageUrl('AllTasks') }));
-  }
+    if (filters.task) {
+      tasks.filter(t => 
+        t.title?.toLowerCase().includes(lowerQuery) ||
+        t.description?.toLowerCase().includes(lowerQuery)
+      ).forEach(t => results.push({ type: 'task', item: t, url: createPageUrl('AllTasks') }));
+    }
+
+    return results;
+  }, [query, filters, projects, proposals, customers, inventory, tasks]);
 
   const toggleFilter = (key) => {
     setFilters(prev => ({ ...prev, [key]: !prev[key] }));
@@ -137,12 +147,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       
       {/* Search Panel */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        className="relative max-w-2xl mx-auto mt-20 bg-white rounded-2xl shadow-2xl overflow-hidden"
-      >
+      <div className="relative max-w-2xl mx-auto mt-20 bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Search Input */}
         <div className="flex items-center gap-3 p-4 border-b">
           <Search className="w-5 h-5 text-slate-400" />
@@ -173,25 +178,20 @@ export default function GlobalSearch({ isOpen, onClose }) {
         {/* Filters */}
         <AnimatePresence>
           {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="border-b bg-slate-50 overflow-hidden"
-            >
-              <div className="p-3 flex flex-wrap gap-3">
-                {Object.entries(RESULT_TYPES).map(([key, config]) => (
-                  <label key={key} className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox 
-                      checked={filters[key]} 
-                      onCheckedChange={() => toggleFilter(key)}
-                    />
-                    <config.icon className={cn("w-4 h-4", config.color.split(' ')[0])} />
-                    <span className="text-sm">{config.label}</span>
-                  </label>
-                ))}
-              </div>
-            </motion.div>
+            <div className="border-b bg-slate-50 overflow-hidden">
+            <div className="p-3 flex flex-wrap gap-3">
+              {Object.entries(RESULT_TYPES).map(([key, config]) => (
+                <label key={key} className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox 
+                    checked={filters[key]} 
+                    onCheckedChange={() => toggleFilter(key)}
+                  />
+                  <config.icon className={cn("w-4 h-4", config.color.split(' ')[0])} />
+                  <span className="text-sm">{config.label}</span>
+                </label>
+              ))}
+            </div>
+            </div>
           )}
         </AnimatePresence>
 
@@ -260,7 +260,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
           <span><kbd className="px-1.5 py-0.5 bg-white border rounded">↵</kbd> to select</span>
           <span><kbd className="px-1.5 py-0.5 bg-white border rounded">esc</kbd> to close</span>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
