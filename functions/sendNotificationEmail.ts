@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
-import { Resend } from 'npm:resend@2.0.0';
 
 Deno.serve(async (req) => {
   try {
@@ -18,15 +17,6 @@ Deno.serve(async (req) => {
 
     if (!to || !title) {
       return Response.json({ success: false, error: 'Missing required fields: to, title' }, { status: 400 });
-    }
-
-    // Get integration settings
-    const settings = await base44.asServiceRole.entities.IntegrationSettings.filter({ setting_key: 'main' });
-    const config = settings[0];
-
-    if (!config?.resend_enabled || !config?.resend_api_key) {
-      console.log('Resend not configured, skipping email notification');
-      return Response.json({ success: false, error: 'Resend not configured', skipped: true });
     }
 
     // Get user notification preferences
@@ -62,14 +52,8 @@ Deno.serve(async (req) => {
     const appConfig = appSettings[0] || {};
     const appName = appConfig.app_name || 'ProjectIT';
 
-    const resend = new Resend(config.resend_api_key);
-
-    const fromEmail = config.resend_from_email || 'onboarding@resend.dev';
-    const fromName = config.resend_from_name || appName;
-    const from = `${fromName} <${fromEmail}>`;
-
-    // Build email HTML
-    const emailHtml = buildEmailHtml({
+    // Build email body
+    const emailBody = buildEmailHtml({
       appName,
       appLogo: appConfig.app_logo_url,
       type,
@@ -80,21 +64,15 @@ Deno.serve(async (req) => {
       link
     });
 
-    // Send email via Resend
-    const { data, error } = await resend.emails.send({
-      from,
-      to: [to],
+    // Send email via Base44's built-in SendEmail integration
+    await base44.integrations.Core.SendEmail({
+      to: to,
       subject: `${appName}: ${title}`,
-      html: emailHtml
+      body: emailBody
     });
 
-    if (error) {
-      console.error('Resend error:', error);
-      return Response.json({ success: false, error: error.message }, { status: 400 });
-    }
-
     console.log(`Notification email sent to ${to}: ${title}`);
-    return Response.json({ success: true, id: data.id });
+    return Response.json({ success: true });
 
   } catch (error) {
     console.error('Notification email error:', error);
