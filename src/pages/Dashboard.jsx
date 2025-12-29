@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -71,7 +70,8 @@ export default function Dashboard() {
 
   const { data: incomingQuotes = [], refetch: refetchIncomingQuotes } = useQuery({
     queryKey: ['incomingQuotes'],
-    queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' })
+    queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' }),
+    staleTime: 60000 // 1 minute
   });
 
   const handleCreateProjectFromQuote = (quote) => {
@@ -105,8 +105,10 @@ export default function Dashboard() {
   };
 
   const { data: dashboardViews = [], refetch: refetchViews } = useQuery({
-    queryKey: ['dashboardViews'],
-    queryFn: () => base44.entities.DashboardView.filter({ user_id: currentUser?.id })
+    queryKey: ['dashboardViews', currentUser?.id],
+    queryFn: () => base44.entities.DashboardView.filter({ user_id: currentUser?.id }),
+    enabled: !!currentUser?.id,
+    staleTime: 300000 // 5 minutes
   });
 
   useEffect(() => {
@@ -117,112 +119,149 @@ export default function Dashboard() {
         setIsAdmin(user?.role === 'admin');
       }
     }).catch(() => {});
-
-    // Background sync from QuoteIT
-    base44.functions.invoke('syncQuoteIT', {})
-      .then(() => refetchIncomingQuotes())
-      .catch(err => console.error("Background sync failed", err));
-
     return () => { mounted = false; };
   }, []);
 
   const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list('-created_date')
+    queryFn: () => base44.entities.Project.list('-created_date'),
+    staleTime: 30000 // 30 seconds
   });
 
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks'],
-    queryFn: () => base44.entities.Task.list('-created_date')
+    queryFn: () => base44.entities.Task.list('-created_date'),
+    staleTime: 30000
   });
 
   const { data: parts = [] } = useQuery({
     queryKey: ['parts'],
-    queryFn: () => base44.entities.Part.list('-created_date')
+    queryFn: () => base44.entities.Part.list('-created_date'),
+    staleTime: 60000
   });
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
-    queryFn: () => base44.entities.ProjectTemplate.list()
+    queryFn: () => base44.entities.ProjectTemplate.list(),
+    staleTime: 300000 // 5 minutes
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => base44.entities.TeamMember.list(),
+    staleTime: 300000
   });
 
   const { data: quoteRequests = [] } = useQuery({
     queryKey: ['quoteRequests'],
-    queryFn: () => base44.entities.QuoteRequest.list()
+    queryFn: () => base44.entities.QuoteRequest.list(),
+    staleTime: 60000
   });
 
-  const pendingQuotes = quoteRequests.filter(q => !['received'].includes(q.status));
+  // Memoize expensive computations
+  const { activeProjects, archivedProjects, deletedProjects, activeProjectIds } = useMemo(() => {
+    const active = projects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
+    const archived = projects.filter(p => (p.status === 'archived' || p.status === 'completed') && p.status !== 'deleted');
+    const deleted = projects.filter(p => p.status === 'deleted');
+    return { activeProjects: active, archivedProjects: archived, deletedProjects: deleted, activeProjectIds: active.map(p => p.id) };
+  }, [projects]);
 
-  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
-  const archivedProjects = projects.filter(p => (p.status === 'archived' || p.status === 'completed') && p.status !== 'deleted');
-  const deletedProjects = projects.filter(p => p.status === 'deleted');
-  // Only count tasks and parts from active projects
-  const activeProjectIds = activeProjects.map(p => p.id);
-  const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
-  const activeParts = parts.filter(p => activeProjectIds.includes(p.project_id));
-  const completedTasks = activeTasks.filter(t => t.status === 'completed');
-  const pendingParts = activeParts.filter(p => p.status === 'needed' || p.status === 'ordered');
+  const { activeTasks, activeParts, pendingParts, completedTasks } = useMemo(() => {
+    const activeT = tasks.filter(t => activeProjectIds.includes(t.project_id));
+    const activeP = parts.filter(p => activeProjectIds.includes(p.project_id));
+    return {
+      activeTasks: activeT,
+      activeParts: activeP,
+      pendingParts: activeP.filter(p => p.status === 'needed' || p.status === 'ordered'),
+      completedTasks: activeT.filter(t => t.status === 'completed')
+    };
+  }, [tasks, parts, activeProjectIds]);
 
-  // Get user's overdue and due today tasks (only from active projects)
-  const myUrgentTasks = activeTasks.filter(t => {
-    if (t.assigned_to !== currentUser?.email) return false;
-    if (t.status === 'completed' || t.status === 'archived') return false;
-    if (!t.due_date) return false;
-    const dueDate = new Date(t.due_date);
-    return isPast(dueDate) || isToday(dueDate) || isTomorrow(dueDate);
-  }).sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-
-  const overdueTasks = myUrgentTasks.filter(t => isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date)));
-  const dueTodayTasks = myUrgentTasks.filter(t => isToday(new Date(t.due_date)));
-  const dueTomorrowTasks = myUrgentTasks.filter(t => isTomorrow(new Date(t.due_date)));
+  const { myUrgentTasks, overdueTasks, dueTodayTasks, dueTomorrowTasks } = useMemo(() => {
+    const urgent = activeTasks.filter(t => {
+      if (t.assigned_to !== currentUser?.email) return false;
+      if (t.status === 'completed' || t.status === 'archived') return false;
+      if (!t.due_date) return false;
+      const dueDate = new Date(t.due_date);
+      return isPast(dueDate) || isToday(dueDate) || isTomorrow(dueDate);
+    }).sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+    
+    return {
+      myUrgentTasks: urgent,
+      overdueTasks: urgent.filter(t => isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date))),
+      dueTodayTasks: urgent.filter(t => isToday(new Date(t.due_date))),
+      dueTomorrowTasks: urgent.filter(t => isTomorrow(new Date(t.due_date)))
+    };
+  }, [activeTasks, currentUser?.email]);
 
   const displayProjects = showArchived ? archivedProjects : activeProjects;
-  const filteredProjects = displayProjects.filter(p =>
-    p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.client?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  
+  const filteredProjects = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return displayProjects.filter(p =>
+      p.name?.toLowerCase().includes(query) ||
+      p.client?.toLowerCase().includes(query)
+    );
+  }, [displayProjects, searchQuery]);
 
-  const pinnedProjects = filteredProjects.filter(p => pinnedProjectIds.includes(p.id))
-    .sort((a, b) => pinnedProjectIds.indexOf(a.id) - pinnedProjectIds.indexOf(b.id));
-  const unpinnedProjects = filteredProjects.filter(p => !pinnedProjectIds.includes(p.id));
+  const { pinnedProjects, unpinnedProjects } = useMemo(() => {
+    const pinned = filteredProjects.filter(p => pinnedProjectIds.includes(p.id))
+      .sort((a, b) => pinnedProjectIds.indexOf(a.id) - pinnedProjectIds.indexOf(b.id));
+    const unpinned = filteredProjects.filter(p => !pinnedProjectIds.includes(p.id));
+    return { pinnedProjects: pinned, unpinnedProjects: unpinned };
+  }, [filteredProjects, pinnedProjectIds]);
 
-  // Apply letter filter if active
-  const letterFilteredProjects = activeLetter 
-    ? unpinnedProjects.filter(p => (p.name || '')[0].toUpperCase() === activeLetter)
-    : unpinnedProjects;
+  const letterFilteredProjects = useMemo(() => 
+    activeLetter ? unpinnedProjects.filter(p => (p.name || '')[0].toUpperCase() === activeLetter) : unpinnedProjects
+  , [unpinnedProjects, activeLetter]);
 
-  // Pagination
   const totalPages = Math.ceil(letterFilteredProjects.length / PROJECTS_PER_PAGE);
   const paginatedProjects = letterFilteredProjects.slice(
     (currentPage - 1) * PROJECTS_PER_PAGE,
     currentPage * PROJECTS_PER_PAGE
   );
 
-  // Get available letters for alphabet filter
-  const availableLetters = [...new Set(unpinnedProjects.map(p => (p.name || '?')[0].toUpperCase()))].sort();
+  const availableLetters = useMemo(() => 
+    [...new Set(unpinnedProjects.map(p => (p.name || '?')[0].toUpperCase()))].sort()
+  , [unpinnedProjects]);
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-  // Group projects
-  const groupedProjects = filteredProjects.reduce((acc, project) => {
-    const group = project.group || 'Ungrouped';
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(project);
-    return acc;
-  }, {});
+  const { groupedProjects, sortedGroups } = useMemo(() => {
+    const grouped = filteredProjects.reduce((acc, project) => {
+      const group = project.group || 'Ungrouped';
+      if (!acc[group]) acc[group] = [];
+      acc[group].push(project);
+      return acc;
+    }, {});
+    const sorted = Object.keys(grouped).sort((a, b) => {
+      if (a === 'Ungrouped') return 1;
+      if (b === 'Ungrouped') return -1;
+      return a.localeCompare(b);
+    });
+    return { groupedProjects: grouped, sortedGroups: sorted };
+  }, [filteredProjects]);
 
-  const sortedGroups = Object.keys(groupedProjects).sort((a, b) => {
-    if (a === 'Ungrouped') return 1;
-    if (b === 'Ungrouped') return -1;
-    return a.localeCompare(b);
-  });
+  // Memoize task/part lookups
+  const tasksByProject = useMemo(() => {
+    const map = {};
+    tasks.forEach(t => {
+      if (!map[t.project_id]) map[t.project_id] = [];
+      map[t.project_id].push(t);
+    });
+    return map;
+  }, [tasks]);
 
-  const getTasksForProject = (projectId) => tasks.filter(t => t.project_id === projectId);
-  const getPartsForProject = (projectId) => parts.filter(p => p.project_id === projectId);
+  const partsByProject = useMemo(() => {
+    const map = {};
+    parts.forEach(p => {
+      if (!map[p.project_id]) map[p.project_id] = [];
+      map[p.project_id].push(p);
+    });
+    return map;
+  }, [parts]);
+
+  const getTasksForProject = useCallback((projectId) => tasksByProject[projectId] || [], [tasksByProject]);
+  const getPartsForProject = useCallback((projectId) => partsByProject[projectId] || [], [partsByProject]);
 
   const toggleGroup = (group) => {
     setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -439,11 +478,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
+        <div className="mb-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-[#133F5C]">Welcome back, {currentUser?.full_name?.split(' ')[0] || 'there'}! 👋</h1>
@@ -510,7 +545,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Incoming Quotes Banner */}
         <IncomingQuoteBanner 
