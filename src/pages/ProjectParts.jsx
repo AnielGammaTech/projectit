@@ -551,7 +551,8 @@ export default function ProjectParts() {
             {otherParts.length > 0 ? (
               filteredParts.map((part, idx) => {
                 const isSelected = selectedParts.has(part.id);
-                const isDeliveryDue = part.est_delivery_date && (isToday(new Date(part.est_delivery_date)) || isPast(new Date(part.est_delivery_date)));
+                const estDeliveryDateValid = part.est_delivery_date && !isNaN(new Date(part.est_delivery_date).getTime());
+                const isDeliveryDue = estDeliveryDateValid && (isToday(new Date(part.est_delivery_date)) || isPast(new Date(part.est_delivery_date)));
                 return (
                 <motion.div
                   key={part.id}
@@ -647,7 +648,7 @@ export default function ProjectParts() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         )}
-                        {part.est_delivery_date && (
+                        {estDeliveryDateValid && (
                           <Badge 
                             variant="outline" 
                             className={cn(
@@ -660,7 +661,7 @@ export default function ProjectParts() {
                             {isDeliveryDue && " ⚠️"}
                           </Badge>
                         )}
-                        {part.due_date && (
+                        {part.due_date && !isNaN(new Date(part.due_date).getTime()) && (
                           <div className="flex items-center gap-1.5 text-sm text-slate-500">
                             <Calendar className="w-3.5 h-3.5" />
                             <span>{format(new Date(part.due_date), 'MMM d')}</span>
