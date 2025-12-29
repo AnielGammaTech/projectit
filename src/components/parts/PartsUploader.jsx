@@ -159,6 +159,15 @@ Be thorough - identify all visible items that could be parts for a project. Incl
         notes = `📦 Purchase/Order ID: ${part.purchase_id}`;
       }
 
+      // Validate estimated delivery date format
+      let estDeliveryDate = '';
+      if (part.estimated_delivery) {
+        const dateTest = new Date(part.estimated_delivery);
+        if (!isNaN(dateTest.getTime())) {
+          estDeliveryDate = part.estimated_delivery;
+        }
+      }
+
       await base44.entities.Part.create({
         name: part.name,
         part_number: part.part_number || '',
@@ -168,7 +177,7 @@ Be thorough - identify all visible items that could be parts for a project. Incl
         project_id: projectId,
         status: 'needed',
         notes: notes,
-        est_delivery_date: part.estimated_delivery || ''
+        est_delivery_date: estDeliveryDate
       });
     }
     onPartsExtracted?.();
