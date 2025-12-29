@@ -297,7 +297,7 @@ Be thorough - identify all visible items that could be parts for a project. Incl
                         {part.unit_cost > 0 && <span>${part.unit_cost}</span>}
                         {part.supplier && <span>{part.supplier}</span>}
                         {part.purchase_id && <span className="text-amber-600 font-medium">📦 {part.purchase_id}</span>}
-                        {part.estimated_delivery && <span className="text-blue-600">ETA: {part.estimated_delivery}</span>}
+                        {part.estimated_delivery && !isNaN(new Date(part.estimated_delivery).getTime()) && <span className="text-blue-600">ETA: {part.estimated_delivery}</span>}
                         {part.status && part.status !== 'needed' && <span className="text-emerald-600 font-medium">✓ {part.status}</span>}
                       </div>
                     </div>
