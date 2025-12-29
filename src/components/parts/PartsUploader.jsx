@@ -28,7 +28,8 @@ export default function PartsUploader({ projectId, onPartsExtracted, compact = f
             unit_cost: { type: "number", description: "Price per unit if visible" },
             supplier: { type: "string", description: "Supplier/manufacturer if visible" },
             purchase_id: { type: "string", description: "Order number, purchase ID, confirmation number, or tracking number if visible" },
-            estimated_delivery: { type: "string", description: "Estimated delivery date or ETA if visible (format: YYYY-MM-DD)" }
+            estimated_delivery: { type: "string", description: "Estimated delivery date or ETA if visible (format: YYYY-MM-DD)" },
+            status: { type: "string", enum: ["needed", "ordered", "received"], description: "Status: 'ordered' if this is an order confirmation/invoice/tracking, 'received' if marked as delivered/arrived, otherwise 'needed'" }
           }
         }
       }
@@ -87,6 +88,7 @@ export default function PartsUploader({ projectId, onPartsExtracted, compact = f
 - supplier: brand/manufacturer if visible
 - purchase_id: IMPORTANT - any order number, purchase ID, confirmation number, invoice number, or tracking number visible
 - estimated_delivery: any estimated delivery date, ETA, or expected arrival date (return as YYYY-MM-DD format)
+- status: Set to 'ordered' if this appears to be an order confirmation, invoice, or shipping notification. Set to 'received' if marked as delivered. Otherwise 'needed'.
 
 Be thorough - identify all visible items that could be parts for a project. Include hardware, cables, equipment, tools, materials, etc. Pay special attention to order/purchase IDs and delivery dates as these are critical for tracking.`,
           file_urls: [file_url],
@@ -177,6 +179,10 @@ Be thorough - identify all visible items that could be parts for a project. Incl
         }
       }
 
+      // Determine status based on AI detection
+      const validStatuses = ['needed', 'ordered', 'received', 'ready_to_install', 'installed'];
+      const partStatus = validStatuses.includes(part.status) ? part.status : 'needed';
+
       await base44.entities.Part.create({
         name: part.name,
         part_number: part.part_number || '',
@@ -184,7 +190,7 @@ Be thorough - identify all visible items that could be parts for a project. Incl
         unit_cost: unitCost,
         supplier: part.supplier || '',
         project_id: projectId,
-        status: 'needed',
+        status: partStatus,
         notes: notes,
         est_delivery_date: estDeliveryDate
       });
@@ -292,6 +298,7 @@ Be thorough - identify all visible items that could be parts for a project. Incl
                         {part.supplier && <span>{part.supplier}</span>}
                         {part.purchase_id && <span className="text-amber-600 font-medium">📦 {part.purchase_id}</span>}
                         {part.estimated_delivery && <span className="text-blue-600">ETA: {part.estimated_delivery}</span>}
+                        {part.status && part.status !== 'needed' && <span className="text-emerald-600 font-medium">✓ {part.status}</span>}
                       </div>
                     </div>
                     <button
