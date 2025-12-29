@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { ListTodo, Filter, Search, Plus, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, User, FolderKanban, Package, Edit2, Truck } from 'lucide-react';
+import { ListTodo, Filter, Search, Plus, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, User, FolderKanban, Package, Edit2, Truck, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,16 @@ import { cn } from '@/lib/utils';
 import TaskModal from '@/components/modals/TaskModal';
 import PartModal from '@/components/modals/PartModal';
 import PartDetailModal from '@/components/modals/PartDetailModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -46,6 +56,7 @@ export default function AllTasks() {
   const [selectedPart, setSelectedPart] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showPartModal, setShowPartModal] = useState(false);
+  const [deletePartConfirm, setDeletePartConfirm] = useState({ open: false, part: null });
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -163,6 +174,14 @@ export default function AllTasks() {
   const handlePartStatusChange = async (part, status) => {
     await base44.entities.Part.update(part.id, { status });
     queryClient.invalidateQueries({ queryKey: ['allParts'] });
+  };
+
+  const handleDeletePart = async () => {
+    if (deletePartConfirm.part) {
+      await base44.entities.Part.delete(deletePartConfirm.part.id);
+      queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    }
+    setDeletePartConfirm({ open: false, part: null });
   };
 
   const getDueDateLabel = (date) => {
@@ -590,6 +609,14 @@ export default function AllTasks() {
                                 </PopoverContent>
                               </Popover>
                             )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => { e.stopPropagation(); setDeletePartConfirm({ open: true, part }); }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                             <Link to={createPageUrl('ProjectDetail') + `?id=${part.project_id}`} onClick={(e) => e.stopPropagation()}>
                               <Badge variant="outline" className="shrink-0 hover:bg-slate-100">
                                 <FolderKanban className="w-3 h-3 mr-1" />
@@ -688,6 +715,22 @@ export default function AllTasks() {
         onEdit={(part) => { setSelectedPart(null); setEditingPart(part); setShowPartModal(true); }}
         onStatusChange={handlePartStatusChange}
       />
+
+      {/* Delete Part Confirmation */}
+      <AlertDialog open={deletePartConfirm.open} onOpenChange={(open) => !open && setDeletePartConfirm({ open: false, part: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete part?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletePartConfirm.part?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePart} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

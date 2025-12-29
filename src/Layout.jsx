@@ -30,6 +30,7 @@ import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import GlobalSearch from '@/components/GlobalSearch';
 import NotificationToast from '@/components/NotificationToast';
+import FeedbackButton from '@/components/FeedbackButton';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
@@ -466,14 +467,17 @@ export default function Layout({ children, currentPageName }) {
       <GlobalSearch isOpen={showSearch} onClose={() => setShowSearch(false)} />
 
       {/* Notification Toast */}
-      <AnimatePresence>
-        {newNotification && (
-          <NotificationToast 
-            notification={newNotification} 
-            onDismiss={() => setNewNotification(null)} 
-          />
-        )}
-      </AnimatePresence>
-    </div>
-  );
-  }
+              <AnimatePresence>
+                {newNotification && (
+                  <NotificationToast 
+                    notification={newNotification} 
+                    onDismiss={() => setNewNotification(null)} 
+                  />
+                )}
+              </AnimatePresence>
+
+              {/* Floating Feedback Button */}
+              <FeedbackButton />
+            </div>
+          );
+          }
