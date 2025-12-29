@@ -169,7 +169,7 @@ export default function PartsViewModal({
                   <p className="font-medium">{part.supplier}</p>
                 </div>
               )}
-              {part.due_date && (
+              {part.due_date && !isNaN(new Date(part.due_date).getTime()) && (
                 <div>
                   <span className="text-slate-500">Due Date</span>
                   <p className="font-medium">{format(new Date(part.due_date), 'MMM d, yyyy')}</p>
@@ -301,7 +301,7 @@ export default function PartsViewModal({
                               ))}
                             </DropdownMenuContent>
                           </DropdownMenu>
-                          {part.due_date && (
+                          {part.due_date && !isNaN(new Date(part.due_date).getTime()) && (
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               {format(new Date(part.due_date), 'MMM d')}

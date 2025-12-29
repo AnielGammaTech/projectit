@@ -546,8 +546,8 @@ export default function AllTasks() {
           <div className="space-y-3">
             {filteredParts.length > 0 ? (
               filteredParts.map((part, idx) => {
-                const dueInfo = part.due_date ? getDueDateLabel(part.due_date) : null;
-                const deliveryInfo = part.est_delivery_date ? getDueDateLabel(part.est_delivery_date) : null;
+                const dueInfo = part.due_date && !isNaN(new Date(part.due_date).getTime()) ? getDueDateLabel(part.due_date) : null;
+                const deliveryInfo = part.est_delivery_date && !isNaN(new Date(part.est_delivery_date).getTime()) ? getDueDateLabel(part.est_delivery_date) : null;
                 
                 return (
                   <motion.div
