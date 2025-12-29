@@ -53,6 +53,7 @@ import { cn } from '@/lib/utils';
 import PartModal from '@/components/modals/PartModal';
 import PartDetailModal from '@/components/modals/PartDetailModal';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
+import PartsUploader from '@/components/parts/PartsUploader';
 
 const statusConfig = {
   needed: { label: 'Needed', color: 'bg-slate-100 text-slate-700 border-slate-200' },
@@ -381,16 +382,14 @@ export default function ProjectParts() {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <label className="cursor-pointer">
-              <Button variant="outline" disabled={uploading} asChild>
-                <span>
-                  {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
-                  Upload PDF
-                </span>
-              </Button>
-              <input type="file" accept=".pdf" onChange={handleFileUpload} className="hidden" disabled={uploading} />
-            </label>
+          <div className="flex gap-2 items-start">
+            <div className="text-right">
+              <PartsUploader 
+                projectId={projectId} 
+                onPartsExtracted={refetchParts} 
+                compact={true}
+              />
+            </div>
             <Button onClick={() => { setEditingPart(null); setShowPartModal(true); }} className="bg-amber-500 hover:bg-amber-600">
               <Plus className="w-4 h-4 mr-2" />
               Add Part
