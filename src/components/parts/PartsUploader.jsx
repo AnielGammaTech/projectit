@@ -161,12 +161,13 @@ Be thorough - identify all visible items that could be parts for a project. Incl
         notes = `📦 Purchase/Order ID: ${part.purchase_id}`;
       }
 
-      // Validate estimated delivery date format
+      // Validate estimated delivery date format - must be valid date
       let estDeliveryDate = '';
-      if (part.estimated_delivery) {
+      if (part.estimated_delivery && typeof part.estimated_delivery === 'string') {
+        // Only accept YYYY-MM-DD format or similar valid date strings
         const dateTest = new Date(part.estimated_delivery);
-        if (!isNaN(dateTest.getTime())) {
-          estDeliveryDate = part.estimated_delivery;
+        if (!isNaN(dateTest.getTime()) && part.estimated_delivery.match(/^\d{4}-\d{2}-\d{2}/)) {
+          estDeliveryDate = part.estimated_delivery.substring(0, 10); // Take only YYYY-MM-DD
         }
       }
 
