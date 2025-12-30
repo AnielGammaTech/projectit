@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function PartModal({ open, onClose, part, projectId, teamMembers = [], onSave }) {
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     part_number: '',
@@ -70,9 +71,12 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({ ...formData, project_id: projectId });
+    if (saving) return;
+    setSaving(true);
+    await onSave({ ...formData, project_id: projectId });
+    setSaving(false);
   };
 
   return (
@@ -180,13 +184,13 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full mt-1.5 justify-start font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.due_date ? format(new Date(formData.due_date), 'PPP') : 'Pick date'}
+                    {formData.due_date ? format(new Date(formData.due_date + 'T12:00:00'), 'PPP') : 'Pick date'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={formData.due_date ? new Date(formData.due_date) : undefined}
+                    selected={formData.due_date ? new Date(formData.due_date + 'T12:00:00') : undefined}
                     onSelect={(date) => setFormData(prev => ({ ...prev, due_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
                   />
                 </PopoverContent>
@@ -200,13 +204,13 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full mt-1.5 justify-start font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.est_delivery_date ? format(new Date(formData.est_delivery_date), 'PPP') : 'Pick delivery date'}
+                  {formData.est_delivery_date ? format(new Date(formData.est_delivery_date + 'T12:00:00'), 'PPP') : 'Pick delivery date'}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={formData.est_delivery_date ? new Date(formData.est_delivery_date) : undefined}
+                  selected={formData.est_delivery_date ? new Date(formData.est_delivery_date + 'T12:00:00') : undefined}
                   onSelect={(date) => setFormData(prev => ({ ...prev, est_delivery_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
                 />
               </PopoverContent>
@@ -225,8 +229,9 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {part ? 'Update Part' : 'Add Part'}
             </Button>
           </div>
