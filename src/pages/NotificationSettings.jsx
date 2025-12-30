@@ -69,17 +69,12 @@ export default function NotificationSettings() {
   const sendTestEmail = async () => {
     setSendingTest(true);
     try {
-      const response = await base44.functions.invoke('sendEmail', {
+      await base44.integrations.Core.SendEmail({
         to: currentUser.email,
         subject: 'Test Email from ProjectIT',
-        html: `<h2>Test Email</h2><p>This is a test email to confirm your notification settings are working correctly.</p><p>Sent via Resend integration.</p>`,
-        testOnly: true
+        body: `<h2>Test Email</h2><p>This is a test email to confirm your notification settings are working correctly.</p><p>Sent at ${new Date().toLocaleString()}</p>`
       });
-      if (response.data?.success) {
-        toast.success('Test email sent! Check your inbox.');
-      } else {
-        toast.error(response.data?.error || 'Failed to send test email');
-      }
+      toast.success('Test email sent! Check your inbox.');
     } catch (err) {
       toast.error('Failed to send test email: ' + err.message);
     }

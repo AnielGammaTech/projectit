@@ -5,6 +5,7 @@ import AuditLogs from './pages/AuditLogs';
 import ChangeOrderEditor from './pages/ChangeOrderEditor';
 import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
+import FeedbackManagement from './pages/FeedbackManagement';
 import Home from './pages/Home';
 import Inventory from './pages/Inventory';
 import ManagerDashboard from './pages/ManagerDashboard';
@@ -31,7 +32,6 @@ import Templates from './pages/Templates';
 import TimeReport from './pages/TimeReport';
 import UserGroups from './pages/UserGroups';
 import Workflows from './pages/Workflows';
-import FeedbackManagement from './pages/FeedbackManagement';
 import __Layout from './Layout.jsx';
 
 
@@ -43,6 +43,7 @@ export const PAGES = {
     "ChangeOrderEditor": ChangeOrderEditor,
     "Customers": Customers,
     "Dashboard": Dashboard,
+    "FeedbackManagement": FeedbackManagement,
     "Home": Home,
     "Inventory": Inventory,
     "ManagerDashboard": ManagerDashboard,
@@ -69,7 +70,6 @@ export const PAGES = {
     "TimeReport": TimeReport,
     "UserGroups": UserGroups,
     "Workflows": Workflows,
-    "FeedbackManagement": FeedbackManagement,
 }
 
 export const pagesConfig = {
