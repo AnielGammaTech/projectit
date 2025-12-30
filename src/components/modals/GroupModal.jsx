@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const groupColors = {
@@ -17,6 +18,7 @@ const groupColors = {
 
 export default function GroupModal({ open, onClose, group, projectId, onSave }) {
   const [formData, setFormData] = useState({ name: '', color: 'slate', project_id: projectId });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (group) {
@@ -26,9 +28,12 @@ export default function GroupModal({ open, onClose, group, projectId, onSave }) 
     }
   }, [group, open, projectId]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(formData);
+    if (saving) return;
+    setSaving(true);
+    await onSave(formData, group);
+    setSaving(false);
   };
 
   return (
@@ -66,8 +71,9 @@ export default function GroupModal({ open, onClose, group, projectId, onSave }) 
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {group ? 'Update' : 'Create'}
             </Button>
           </div>

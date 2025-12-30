@@ -330,15 +330,20 @@ export default function ProjectTasks() {
     } else {
       await base44.entities.Task.create(data);
     }
-    refetchTasks();
+    await refetchTasks();
     setShowTaskModal(false);
     setEditingTask(null);
   };
 
-  const handleCreateGroup = async (data) => {
-    await base44.entities.TaskGroup.create({ ...data, project_id: projectId });
+  const handleSaveGroup = async (data, existingGroup) => {
+    if (existingGroup) {
+      await base44.entities.TaskGroup.update(existingGroup.id, data);
+    } else {
+      await base44.entities.TaskGroup.create({ ...data, project_id: projectId });
+    }
     refetchGroups();
     setShowGroupModal(false);
+    setEditingGroup(null);
   };
 
   const handleDeleteGroup = async (group) => {
@@ -484,11 +489,11 @@ export default function ProjectTasks() {
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
               <Calendar
-                mode="single"
-                selected={task.due_date ? new Date(task.due_date) : undefined}
-                onSelect={(date) => { handleTaskDueDateChange(task, date); setDateOpen(false); }}
-                initialFocus
-              />
+                  mode="single"
+                  selected={task.due_date ? new Date(task.due_date + 'T12:00:00') : undefined}
+                  onSelect={(date) => { handleTaskDueDateChange(task, date); setDateOpen(false); }}
+                  initialFocus
+                />
               {task.due_date && (
                 <div className="p-2 border-t">
                   <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => { handleTaskDueDateChange(task, null); setDateOpen(false); }}>
@@ -1055,7 +1060,7 @@ export default function ProjectTasks() {
         onClose={() => { setShowGroupModal(false); setEditingGroup(null); }}
         group={editingGroup}
         projectId={projectId}
-        onSave={handleCreateGroup}
+        onSave={handleSaveGroup}
       />
 
       <TaskDetailModal
