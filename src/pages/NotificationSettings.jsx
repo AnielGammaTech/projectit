@@ -168,21 +168,19 @@ export default function NotificationSettings() {
                 </Select>
               </div>
 
-              {integrationSettings?.resend_enabled && (
-                <Button 
-                  variant="outline" 
-                  onClick={sendTestEmail}
-                  disabled={sendingTest}
-                  className="w-full"
-                >
-                  {sendingTest ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Mail className="w-4 h-4 mr-2" />
-                  )}
-                  Send Test Email
-                </Button>
-              )}
+              <Button 
+                variant="outline" 
+                onClick={sendTestEmail}
+                disabled={sendingTest}
+                className="w-full"
+              >
+                {sendingTest ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Mail className="w-4 h-4 mr-2" />
+                )}
+                Send Test Email
+              </Button>
             </CardContent>
           </Card>
 
