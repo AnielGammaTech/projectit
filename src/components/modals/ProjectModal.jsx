@@ -34,6 +34,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
   const [extractedParts, setExtractedParts] = useState([]);
   const [customerSearch, setCustomerSearch] = useState('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const { data: userGroups = [] } = useQuery({
     queryKey: ['userGroups'],
@@ -160,10 +161,13 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     setUploading(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
     const template = selectedTemplate && selectedTemplate !== 'none' ? templates.find(t => t.id === selectedTemplate) : null;
-    onSave(formData, template, extractedParts);
+    await onSave(formData, template, extractedParts);
+    setSaving(false);
   };
 
   return (
@@ -427,13 +431,13 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full mt-1.5 justify-start font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.start_date ? format(new Date(formData.start_date), 'PPP') : 'Pick date'}
+                    {formData.start_date ? format(new Date(formData.start_date + 'T12:00:00'), 'PPP') : 'Pick date'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={formData.start_date ? new Date(formData.start_date) : undefined}
+                    selected={formData.start_date ? new Date(formData.start_date + 'T12:00:00') : undefined}
                     onSelect={(date) => setFormData(prev => ({ ...prev, start_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
                   />
                 </PopoverContent>
@@ -446,13 +450,13 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full mt-1.5 justify-start font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.due_date ? format(new Date(formData.due_date), 'PPP') : 'Pick date'}
+                    {formData.due_date ? format(new Date(formData.due_date + 'T12:00:00'), 'PPP') : 'Pick date'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={formData.due_date ? new Date(formData.due_date) : undefined}
+                    selected={formData.due_date ? new Date(formData.due_date + 'T12:00:00') : undefined}
                     onSelect={(date) => setFormData(prev => ({ ...prev, due_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
                   />
                 </PopoverContent>
@@ -461,8 +465,9 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {project ? 'Update Project' : 'Create Project'}
             </Button>
           </div>
