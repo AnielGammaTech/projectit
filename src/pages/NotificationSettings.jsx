@@ -128,20 +128,7 @@ export default function NotificationSettings() {
           <p className="text-slate-500 mt-1">Manage your email notification preferences</p>
         </motion.div>
 
-        {/* Resend Status Banner */}
-        {!integrationSettings?.resend_enabled && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3"
-          >
-            <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-amber-800">Email notifications require Resend integration</p>
-              <p className="text-sm text-amber-600 mt-1">Please enable Resend in Adminland → Integrations to receive email notifications.</p>
-            </div>
-          </motion.div>
-        )}
+
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
