@@ -50,9 +50,19 @@ body {
   }
 }
 
-/* Prevent layout shift when dropdown opens */
+/* Prevent layout shift and scrollbar issues */
 html {
   overflow-y: scroll;
+}
+
+/* Fix scrollbar disappearing when dropdowns/popovers open */
+body[data-scroll-locked] {
+  overflow: scroll !important;
+  padding-right: 0 !important;
+}
+
+[data-radix-scroll-area-viewport] {
+  scrollbar-width: thin;
 }
 
 /* Custom scrollbar */

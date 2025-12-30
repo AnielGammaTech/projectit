@@ -489,11 +489,10 @@ export default function ProjectTasks() {
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
               <Calendar
-                  mode="single"
-                  selected={task.due_date ? new Date(task.due_date + 'T12:00:00') : undefined}
-                  onSelect={(date) => { handleTaskDueDateChange(task, date); setDateOpen(false); }}
-                  initialFocus
-                />
+                mode="single"
+                selected={task.due_date ? new Date(task.due_date + 'T12:00:00') : undefined}
+                onSelect={(date) => { handleTaskDueDateChange(task, date); setDateOpen(false); }}
+              />
               {task.due_date && (
                 <div className="p-2 border-t">
                   <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => { handleTaskDueDateChange(task, null); setDateOpen(false); }}>
