@@ -1,16 +1,8 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    
-    // Allow service role calls (for system notifications)
-    let user = null;
-    try {
-      user = await base44.auth.me();
-    } catch (e) {
-      // Service role call - allowed
-    }
 
     const body = await req.json();
     const { to, type, title, message, projectId, projectName, fromUserName, link } = body;
@@ -19,9 +11,14 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Missing required fields: to, title' }, { status: 400 });
     }
 
-    // Get user notification preferences
-    const userSettings = await base44.asServiceRole.entities.NotificationSettings.filter({ user_email: to });
-    const prefs = userSettings[0] || {};
+    // Get user notification preferences using service role
+    let prefs = {};
+    try {
+      const userSettings = await base44.asServiceRole.entities.NotificationSettings.filter({ user_email: to });
+      prefs = userSettings[0] || {};
+    } catch (e) {
+      console.log('Could not fetch user preferences, using defaults:', e.message);
+    }
 
     // Check if user wants this type of notification
     const notificationTypeMap = {
@@ -47,9 +44,14 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: true, reason: 'User prefers digest emails' });
     }
 
-    // Get app settings for branding
-    const appSettings = await base44.asServiceRole.entities.AppSettings.filter({ setting_key: 'main' });
-    const appConfig = appSettings[0] || {};
+    // Get app settings for branding using service role
+    let appConfig = {};
+    try {
+      const appSettings = await base44.asServiceRole.entities.AppSettings.filter({ setting_key: 'main' });
+      appConfig = appSettings[0] || {};
+    } catch (e) {
+      console.log('Could not fetch app settings, using defaults:', e.message);
+    }
     const appName = appConfig.app_name || 'ProjectIT';
 
     // Build email body
@@ -64,8 +66,8 @@ Deno.serve(async (req) => {
       link
     });
 
-    // Send email via Base44's built-in SendEmail integration
-    await base44.integrations.Core.SendEmail({
+    // Send email via Base44's built-in SendEmail integration using service role
+    await base44.asServiceRole.integrations.Core.SendEmail({
       to: to,
       subject: `${appName}: ${title}`,
       body: emailBody

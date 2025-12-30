@@ -64,17 +64,26 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   const [notes, setNotes] = useState('');
   const [notifyOnComplete, setNotifyOnComplete] = useState([]);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [selectedDueDate, setSelectedDueDate] = useState(null);
+  const [savingDate, setSavingDate] = useState(false);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
-  // Initialize notes from task
+  // Initialize notes and due date from task
   useEffect(() => {
     if (task) {
       setNotes(task.notes || '');
       setNotifyOnComplete(task.notify_on_complete || []);
+      // Parse the date properly - handle both date-only and datetime strings
+      if (task.due_date) {
+        const dateStr = task.due_date.split('T')[0];
+        setSelectedDueDate(new Date(dateStr + 'T12:00:00'));
+      } else {
+        setSelectedDueDate(null);
+      }
     }
-  }, [task?.id]);
+  }, [task?.id, task?.due_date]);
 
   const { data: comments = [], refetch: refetchComments } = useQuery({
     queryKey: ['taskComments', task?.id],
@@ -194,10 +203,24 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     });
   };
 
-  const handleDueDateChange = async (date) => {
+  const handleDueDateSelect = (date) => {
+    setSelectedDueDate(date);
+  };
+
+  const handleSaveDueDate = async () => {
+    setSavingDate(true);
     await handleUpdateTask({
-      due_date: date ? format(date, 'yyyy-MM-dd') : ''
+      due_date: selectedDueDate ? format(selectedDueDate, 'yyyy-MM-dd') : ''
     });
+    setSavingDate(false);
+    setDatePickerOpen(false);
+  };
+
+  const handleClearDueDate = async () => {
+    setSavingDate(true);
+    setSelectedDueDate(null);
+    await handleUpdateTask({ due_date: '' });
+    setSavingDate(false);
     setDatePickerOpen(false);
   };
 
@@ -318,19 +341,35 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                     )}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={task.due_date ? new Date(task.due_date.split('T')[0] + 'T12:00:00') : undefined}
-                    onSelect={handleDueDateChange}
+                    selected={selectedDueDate}
+                    onSelect={handleDueDateSelect}
+                    defaultMonth={selectedDueDate || new Date()}
                   />
-                  {task.due_date && (
-                    <div className="p-2 border-t">
-                      <Button variant="ghost" size="sm" className="w-full" onClick={() => handleDueDateChange(null)}>
-                        Clear date
+                  <div className="p-3 border-t flex items-center justify-between gap-2">
+                    {task.due_date && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleClearDueDate}
+                        disabled={savingDate}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        Clear
                       </Button>
-                    </div>
-                  )}
+                    )}
+                    <div className="flex-1" />
+                    <Button 
+                      size="sm" 
+                      onClick={handleSaveDueDate}
+                      disabled={savingDate}
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      {savingDate ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
+                    </Button>
+                  </div>
                 </PopoverContent>
               </Popover>
             </div>
