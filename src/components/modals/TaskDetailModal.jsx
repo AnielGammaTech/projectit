@@ -75,10 +75,11 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     if (task) {
       setNotes(task.notes || '');
       setNotifyOnComplete(task.notify_on_complete || []);
-      // Parse the date properly - handle both date-only and datetime strings
+      // Parse the date properly using UTC to avoid timezone shifts
       if (task.due_date) {
         const dateStr = task.due_date.split('T')[0];
-        setSelectedDueDate(new Date(dateStr + 'T12:00:00'));
+        const [year, month, day] = dateStr.split('-').map(Number);
+        setSelectedDueDate(new Date(year, month - 1, day));
       } else {
         setSelectedDueDate(null);
       }
@@ -334,7 +335,11 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                         <div className="w-5 h-5 rounded bg-orange-500 flex items-center justify-center text-white">
                           <CalendarIcon className="w-3 h-3" />
                         </div>
-                        <span className="text-sm text-slate-700">{format(new Date(task.due_date.split('T')[0] + 'T12:00:00'), 'EEE, MMM d')}</span>
+                        <span className="text-sm text-slate-700">{(() => {
+                          const dateStr = task.due_date.split('T')[0];
+                          const [year, month, day] = dateStr.split('-').map(Number);
+                          return format(new Date(year, month - 1, day), 'EEE, MMM d');
+                        })()}</span>
                       </>
                     ) : (
                       <span className="text-sm text-slate-400">Set due date...</span>
