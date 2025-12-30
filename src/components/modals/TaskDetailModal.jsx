@@ -202,7 +202,9 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   };
 
   const handleNotesChange = async () => {
-    await handleUpdateTask({ notes });
+    if (notes !== task.notes) {
+      await handleUpdateTask({ notes });
+    }
   };
 
   const handleToggleNotify = async (email) => {
@@ -309,7 +311,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                         <div className="w-5 h-5 rounded bg-orange-500 flex items-center justify-center text-white">
                           <CalendarIcon className="w-3 h-3" />
                         </div>
-                        <span className="text-sm text-slate-700">{format(new Date(task.due_date), 'EEE, MMM d')}</span>
+                        <span className="text-sm text-slate-700">{format(new Date(task.due_date.split('T')[0] + 'T12:00:00'), 'EEE, MMM d')}</span>
                       </>
                     ) : (
                       <span className="text-sm text-slate-400">Set due date...</span>
@@ -319,10 +321,16 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={task.due_date ? new Date(task.due_date) : undefined}
+                    selected={task.due_date ? new Date(task.due_date.split('T')[0] + 'T12:00:00') : undefined}
                     onSelect={handleDueDateChange}
-                    initialFocus
                   />
+                  {task.due_date && (
+                    <div className="p-2 border-t">
+                      <Button variant="ghost" size="sm" className="w-full" onClick={() => handleDueDateChange(null)}>
+                        Clear date
+                      </Button>
+                    </div>
+                  )}
                 </PopoverContent>
               </Popover>
             </div>
