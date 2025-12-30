@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { Bell, Mail, Clock, CheckCircle2, AlertTriangle, Save, Loader2, Package, MessageSquare, AtSign, FolderOpen, Send, Info } from 'lucide-react';
+import { Bell, Mail, Clock, CheckCircle2, AlertTriangle, Save, Loader2, Package, MessageSquare, AtSign, FolderOpen, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
