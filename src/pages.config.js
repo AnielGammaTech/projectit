@@ -33,6 +33,7 @@ import TimeReport from './pages/TimeReport';
 import UserGroups from './pages/UserGroups';
 import Workflows from './pages/Workflows';
 import ProjectTime from './pages/ProjectTime';
+import ProjectBilling from './pages/ProjectBilling';
 import __Layout from './Layout.jsx';
 
 
@@ -72,6 +73,7 @@ export const PAGES = {
     "UserGroups": UserGroups,
     "Workflows": Workflows,
     "ProjectTime": ProjectTime,
+    "ProjectBilling": ProjectBilling,
 }
 
 export const pagesConfig = {
