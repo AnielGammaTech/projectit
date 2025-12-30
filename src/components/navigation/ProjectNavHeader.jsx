@@ -11,7 +11,7 @@ const navTabs = [
   { page: 'ProjectParts', label: 'Parts', icon: Package },
   { page: 'ProjectNotes', label: 'Notes', icon: MessageSquare },
   { page: 'ProjectFiles', label: 'Files', icon: File },
-  { page: 'ProjectBilling', label: 'Billing', icon: Clock },
+  { page: 'ProjectTime', label: 'Time', icon: Clock },
 ];
 
 export default function ProjectNavHeader({ project, currentPage }) {
