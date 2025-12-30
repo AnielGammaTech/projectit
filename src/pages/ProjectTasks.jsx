@@ -75,7 +75,10 @@ const getInitials = (name) => {
 
 const getDueDateInfo = (dueDate, status) => {
   if (!dueDate || status === 'completed') return null;
-  const date = new Date(dueDate);
+  // Parse as local date to avoid timezone issues
+  const dateStr = dueDate.split('T')[0];
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -490,7 +493,11 @@ export default function ProjectTasks() {
             <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
               <Calendar
                 mode="single"
-                selected={task.due_date ? new Date(task.due_date.split('T')[0] + 'T12:00:00') : undefined}
+                selected={task.due_date ? (() => {
+                  const dateStr = task.due_date.split('T')[0];
+                  const [year, month, day] = dateStr.split('-').map(Number);
+                  return new Date(year, month - 1, day);
+                })() : undefined}
                 onSelect={(date) => { handleTaskDueDateChange(task, date); setDateOpen(false); }}
               />
               {task.due_date && (
