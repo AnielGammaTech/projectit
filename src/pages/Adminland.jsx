@@ -1275,6 +1275,167 @@ function GammaStackContent({ queryClient }) {
   );
 }
 
+// Project Tags Section
+function ProjectTagsSection({ queryClient }) {
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  const { data: tags = [], refetch } = useQuery({
+    queryKey: ['projectTags'],
+    queryFn: () => base44.entities.ProjectTag.list('name')
+  });
+
+  const handleSave = async (data) => {
+    if (editing) {
+      await base44.entities.ProjectTag.update(editing.id, data);
+    } else {
+      await base44.entities.ProjectTag.create(data);
+    }
+    queryClient.invalidateQueries({ queryKey: ['projectTags'] });
+    refetch();
+    setShowModal(false);
+    setEditing(null);
+  };
+
+  const handleDelete = async () => {
+    await base44.entities.ProjectTag.delete(deleteConfirm.id);
+    queryClient.invalidateQueries({ queryKey: ['projectTags'] });
+    refetch();
+    setDeleteConfirm(null);
+  };
+
+  const tagColors = {
+    slate: 'bg-slate-500', red: 'bg-red-500', orange: 'bg-orange-500',
+    amber: 'bg-amber-500', yellow: 'bg-yellow-500', lime: 'bg-lime-500',
+    green: 'bg-green-500', emerald: 'bg-emerald-500', teal: 'bg-teal-500',
+    cyan: 'bg-cyan-500', sky: 'bg-sky-500', blue: 'bg-blue-500',
+    indigo: 'bg-indigo-500', violet: 'bg-violet-500', purple: 'bg-purple-500',
+    fuchsia: 'bg-fuchsia-500', pink: 'bg-pink-500', rose: 'bg-rose-500'
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-slate-900">Project Tags</h2>
+          <p className="text-sm text-slate-500">Create and manage tags for organizing projects</p>
+        </div>
+        <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          <Plus className="w-4 h-4 mr-2" />
+          Add Tag
+        </Button>
+      </div>
+
+      {tags.length === 0 ? (
+        <div className="p-12 text-center">
+          <Tags className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">No tags yet</h3>
+          <p className="text-slate-500 mb-4">Create tags to organize and filter your projects</p>
+          <Button onClick={() => setShowModal(true)} variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            Create Your First Tag
+          </Button>
+        </div>
+      ) : (
+        <div className="divide-y">
+          {tags.map((tag) => (
+            <div key={tag.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
+              <div className="flex items-center gap-4">
+                <div className={cn("w-4 h-4 rounded-full", tagColors[tag.color] || 'bg-slate-500')} />
+                <div>
+                  <p className="font-medium text-slate-900">{tag.name}</p>
+                  {tag.description && <p className="text-sm text-slate-500">{tag.description}</p>}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setEditing(tag); setShowModal(true); }}>
+                  <Edit2 className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm(tag)} className="text-red-600 hover:text-red-700">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Tag Modal */}
+      <Dialog open={showModal} onOpenChange={() => { setShowModal(false); setEditing(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Edit Tag' : 'Create Tag'}</DialogTitle>
+          </DialogHeader>
+          <ProjectTagForm tag={editing} tagColors={tagColors} onSave={handleSave} onCancel={() => { setShowModal(false); setEditing(null); }} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete tag?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the tag "{deleteConfirm?.name}". Projects using this tag will no longer have it assigned.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function ProjectTagForm({ tag, tagColors, onSave, onCancel }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    color: 'blue',
+    description: ''
+  });
+
+  useEffect(() => {
+    if (tag) {
+      setFormData({
+        name: tag.name || '',
+        color: tag.color || 'blue',
+        description: tag.description || ''
+      });
+    } else {
+      setFormData({ name: '', color: 'blue', description: '' });
+    }
+  }, [tag]);
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-4 mt-4">
+      <div>
+        <Label>Tag Name</Label>
+        <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} required className="mt-1" placeholder="e.g., Urgent, VIP Client" />
+      </div>
+      <div>
+        <Label>Description (optional)</Label>
+        <Input value={formData.description} onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))} className="mt-1" placeholder="Brief description..." />
+      </div>
+      <div>
+        <Label>Color</Label>
+        <div className="flex gap-2 mt-2 flex-wrap">
+          {Object.entries(tagColors).map(([name, className]) => (
+            <button key={name} type="button" onClick={() => setFormData(p => ({ ...p, color: name }))}
+              className={cn("w-8 h-8 rounded-full", className, formData.color === name && "ring-2 ring-offset-2 ring-[#0069AF]")} />
+          ))}
+        </div>
+      </div>
+      <div className="flex justify-end gap-3 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]">{tag ? 'Update' : 'Create'}</Button>
+      </div>
+    </form>
+  );
+}
+
 // Combined Project Management Section (Archived + Deleted)
 function ProjectManagementSection({ queryClient }) {
   const [activeTab, setActiveTab] = useState('archived');
