@@ -169,13 +169,13 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full mt-1.5 justify-start font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.due_date ? format(new Date(formData.due_date + 'T12:00:00'), 'PPP') : 'Pick date'}
+                    {formData.due_date ? format(new Date(formData.due_date.split('T')[0] + 'T12:00:00'), 'PPP') : 'Pick date'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={formData.due_date ? new Date(formData.due_date + 'T12:00:00') : undefined}
+                    selected={formData.due_date ? new Date(formData.due_date.split('T')[0] + 'T12:00:00') : undefined}
                     onSelect={(date) => setFormData(prev => ({ ...prev, due_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
                   />
                 </PopoverContent>

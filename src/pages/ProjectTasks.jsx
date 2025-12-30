@@ -490,7 +490,7 @@ export default function ProjectTasks() {
             <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
               <Calendar
                 mode="single"
-                selected={task.due_date ? new Date(task.due_date + 'T12:00:00') : undefined}
+                selected={task.due_date ? new Date(task.due_date.split('T')[0] + 'T12:00:00') : undefined}
                 onSelect={(date) => { handleTaskDueDateChange(task, date); setDateOpen(false); }}
               />
               {task.due_date && (
