@@ -59,6 +59,7 @@ const adminMenuItems = [
   { id: 'roles', label: 'Roles & Permissions', icon: Shield, description: 'Custom roles and granular access control', page: 'RolesPermissions' },
   { id: 'project-management', label: 'Project Management', icon: Archive, description: 'Archived and deleted projects' },
   { id: 'tags', label: 'Project Tags', icon: Tags, description: 'Create and manage project tags' },
+  { id: 'statuses', label: 'Project Statuses', icon: Layers, description: 'Customize project status tags', page: 'ProjectStatuses' },
   { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automate actions based on triggers', page: 'Workflows' },
   { id: 'templates', label: 'Email & Notification Templates', icon: Mail, description: 'Customize email templates with HTML and variables' },
   { id: 'company', label: 'App Settings', icon: Building2, description: 'Branding and app identity' },
