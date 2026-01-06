@@ -246,36 +246,40 @@ export default function ProjectDetail() {
 
   // Handle putting project on hold with reason
   const handleOnHold = async (reason) => {
-    const onHoldTag = projectTags.find(t => t.name === 'On Hold');
-    const inProgressTag = projectTags.find(t => t.name === 'In Progress');
-    const completedTag = projectTags.find(t => t.name === 'Completed');
-    
-    // Remove In Progress/Completed tags, add On Hold
-    let newTags = (project.tags || []).filter(id => 
-      id !== inProgressTag?.id && id !== completedTag?.id
-    );
-    if (onHoldTag && !newTags.includes(onHoldTag.id)) {
-      newTags.push(onHoldTag.id);
+    try {
+      const onHoldTag = projectTags.find(t => t.name === 'On Hold');
+      const inProgressTag = projectTags.find(t => t.name === 'In Progress');
+      const completedTag = projectTags.find(t => t.name === 'Completed');
+      
+      // Remove In Progress/Completed tags, add On Hold (if tag exists)
+      let newTags = (project.tags || []).filter(id => 
+        id !== inProgressTag?.id && id !== completedTag?.id
+      );
+      if (onHoldTag && !newTags.includes(onHoldTag.id)) {
+        newTags.push(onHoldTag.id);
+      }
+      
+      await base44.entities.Project.update(projectId, { 
+        tags: newTags,
+        status: 'on_hold'
+      });
+      
+      // Add the reason as a project note
+      await base44.entities.ProjectNote.create({
+        project_id: projectId,
+        type: 'note',
+        content: `🔸 **Project put on hold:** ${reason}`,
+        created_by: currentUser?.email,
+        created_by_name: currentUser?.full_name || currentUser?.email
+      });
+      
+      await logActivity(projectId, 'project_on_hold', `put project on hold: ${reason}`, currentUser);
+      refetchProject();
+      queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
+      setShowOnHoldModal(false);
+    } catch (err) {
+      console.error('Failed to put project on hold:', err);
     }
-    
-    await base44.entities.Project.update(projectId, { 
-      tags: newTags,
-      status: 'on_hold'
-    });
-    
-    // Add the reason as a project note
-    await base44.entities.ProjectNote.create({
-      project_id: projectId,
-      type: 'note',
-      content: `🔸 **Project put on hold:** ${reason}`,
-      created_by: currentUser?.email,
-      created_by_name: currentUser?.full_name || currentUser?.email
-    });
-    
-    await logActivity(projectId, 'project_on_hold', `put project on hold: ${reason}`, currentUser);
-    refetchProject();
-    queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
-    setShowOnHoldModal(false);
   };
 
   // Handle completing project
