@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { 
   Activity, Filter, Search, CheckCircle2, MessageSquare, 
   FileText, FolderKanban, Package, Clock, User, 
-  TrendingUp, Upload, Edit2, Plus, ArrowRight
+  TrendingUp, Upload, Edit2, Plus, ArrowRight, Tag
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
