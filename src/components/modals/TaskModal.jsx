@@ -33,12 +33,9 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
     queryKey: ['todoTemplates'],
     queryFn: async () => {
       const templates = await base44.entities.ProjectTemplate.list();
-      console.log('All templates:', templates);
-      const todoOnly = templates.filter(t => t.template_type === 'todo');
-      console.log('Todo templates:', todoOnly);
-      return todoOnly;
+      return templates.filter(t => t.template_type === 'todo');
     },
-    enabled: open && !task
+    enabled: open
   });
 
   useEffect(() => {
