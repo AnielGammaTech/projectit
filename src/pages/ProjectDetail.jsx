@@ -826,11 +826,15 @@ export default function ProjectDetail() {
                       <Archive className="w-4 h-4 mr-2" />
                       Archive Project
                     </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-red-600">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Move to Trash
-                  </DropdownMenuItem>
+                  {currentUser?.role === 'admin' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-red-600">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Move to Trash
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   </DropdownMenuContent>
                 </DropdownMenu>
                 </div>
