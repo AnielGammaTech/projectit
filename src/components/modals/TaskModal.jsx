@@ -284,9 +284,11 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
 
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={saving}>
+            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={saving || (!selectedTemplate && !formData.title)}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {task ? 'Update Task' : 'Create Task'}
+              {selectedTemplate 
+                ? `Add ${selectedTemplate.default_tasks?.length || 0} Tasks` 
+                : (task ? 'Update Task' : 'Create Task')}
             </Button>
           </div>
         </form>
