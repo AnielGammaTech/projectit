@@ -171,6 +171,14 @@ export default function ActivityFeed() {
 
   const activityTypes = [...new Set(activities.map(a => a.action))].filter(Boolean);
 
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center">
+        <div className="animate-pulse text-slate-400">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
