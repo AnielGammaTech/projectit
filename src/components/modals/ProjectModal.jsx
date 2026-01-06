@@ -21,7 +21,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     description: '',
     client: '',
     customer_id: '',
-    status: 'planning',
+    status: 'in_progress',
     start_date: '',
     due_date: '',
     color: 'slate',
@@ -47,6 +47,15 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     queryFn: () => base44.entities.Customer.list('name'),
     enabled: open
   });
+
+  const { data: projectStatuses = [] } = useQuery({
+    queryKey: ['projectStatuses'],
+    queryFn: () => base44.entities.ProjectStatus.list('order'),
+    enabled: open
+  });
+
+  // Get default status key
+  const defaultStatus = projectStatuses.find(s => s.is_default)?.key || 'in_progress';
 
   useEffect(() => {
     if (project) {
@@ -77,7 +86,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         description: '',
         client: prefillData.client || '',
         customer_id: customerId,
-        status: 'planning',
+        status: defaultStatus,
         start_date: '',
         due_date: '',
         color: 'slate',
@@ -100,7 +109,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         description: '',
         client: '',
         customer_id: '',
-        status: 'planning',
+        status: defaultStatus,
         start_date: '',
         due_date: '',
         color: 'slate',
@@ -111,7 +120,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
       setExtractedParts([]);
     }
     setSelectedTemplate('');
-  }, [project, open, prefillData]);
+  }, [project, open, prefillData, defaultStatus]);
 
   const toggleUserGroup = (groupId) => {
     setFormData(prev => ({
@@ -345,9 +354,17 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="planning">Planning</SelectItem>
-                <SelectItem value="on_hold">On Hold</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                {projectStatuses.length > 0 ? (
+                  projectStatuses.map(status => (
+                    <SelectItem key={status.id} value={status.key}>{status.name}</SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="on_hold">On Hold</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
