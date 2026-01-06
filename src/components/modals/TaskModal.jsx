@@ -279,6 +279,8 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
               </Popover>
             </div>
           </div>
+            </>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
