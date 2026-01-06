@@ -79,7 +79,20 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
     e.preventDefault();
     if (saving) return;
     setSaving(true);
-    await onSave(formData);
+    
+    // If a template is selected, create all tasks from template
+    if (selectedTemplate && onBulkCreate) {
+      const tasksToCreate = selectedTemplate.default_tasks.map(t => ({
+        ...t,
+        project_id: projectId,
+        status: 'todo'
+      }));
+      await onBulkCreate(tasksToCreate);
+    } else {
+      await onSave(formData);
+    }
+    
+    setSelectedTemplate(null);
     setSaving(false);
   };
 
