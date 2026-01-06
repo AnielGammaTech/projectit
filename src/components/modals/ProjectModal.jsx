@@ -9,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon, Loader2, Users, Search, Building2, User, Check, Clock, X, Palette, FileStack } from 'lucide-react';
+import { CalendarIcon, Loader2, Users, Search, Building2, User, Check, Clock, X, Palette, FileStack, UserPlus, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
@@ -35,7 +35,7 @@ const colorOptions = [
   { value: 'rose', color: '#f43f5e' },
 ];
 
-export default function ProjectModal({ open, onClose, project, templates = [], onSave, onPartsExtracted, prefillData }) {
+export default function ProjectModal({ open, onClose, project, templates = [], onSave, onPartsExtracted, prefillData, currentUserEmail }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -47,6 +47,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     color: 'slate',
     group: '',
     user_groups: [],
+    team_members: [],
     time_budget_hours: 0
   });
   const [selectedTemplate, setSelectedTemplate] = useState('');
@@ -55,6 +56,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showDates, setShowDates] = useState(false);
+  const [showPeopleSelector, setShowPeopleSelector] = useState(false);
+  const [peopleSearch, setPeopleSearch] = useState('');
 
   const { data: userGroups = [] } = useQuery({
     queryKey: ['userGroups'],
@@ -74,6 +77,12 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     enabled: open
   });
 
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => base44.entities.TeamMember.list('name'),
+    enabled: open
+  });
+
   // Get default status key
   const defaultStatus = projectStatuses.find(s => s.is_default)?.key || 'in_progress';
 
@@ -90,6 +99,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         color: project.color || 'slate',
         group: project.group || '',
         user_groups: project.user_groups || [],
+        team_members: project.team_members || [],
         time_budget_hours: project.time_budget_hours || 0
       });
       setShowDates(!!(project.start_date || project.due_date));
@@ -113,6 +123,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         color: 'slate',
         group: '',
         user_groups: [],
+        team_members: currentUserEmail ? [currentUserEmail] : [],
         time_budget_hours: 0
       });
       setShowDates(false);
@@ -137,13 +148,16 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         color: 'slate',
         group: '',
         user_groups: [],
+        team_members: currentUserEmail ? [currentUserEmail] : [],
         time_budget_hours: 0
       });
       setShowDates(false);
       setExtractedParts([]);
     }
     setSelectedTemplate('');
-  }, [project, open, prefillData, defaultStatus]);
+    setShowPeopleSelector(false);
+    setPeopleSearch('');
+  }, [project, open, prefillData, defaultStatus, currentUserEmail]);
 
   const toggleUserGroup = (groupId) => {
     setFormData(prev => ({
@@ -152,6 +166,34 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         ? prev.user_groups.filter(id => id !== groupId)
         : [...prev.user_groups, groupId]
     }));
+  };
+
+  const toggleTeamMember = (email) => {
+    setFormData(prev => ({
+      ...prev,
+      team_members: prev.team_members.includes(email)
+        ? prev.team_members.filter(e => e !== email)
+        : [...prev.team_members, email]
+    }));
+  };
+
+  const addGroupMembers = (group) => {
+    if (!group.member_emails?.length) return;
+    setFormData(prev => ({
+      ...prev,
+      team_members: [...new Set([...prev.team_members, ...group.member_emails])]
+    }));
+  };
+
+  const getMemberName = (email) => {
+    const member = teamMembers.find(m => m.email === email);
+    return member?.name || email;
+  };
+
+  const getInitials = (name) => {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
   };
 
   const handleFileUpload = async (e) => {
@@ -352,6 +394,131 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
               placeholder="e.g., 40"
               className="mt-1.5 h-11"
             />
+          </div>
+
+          {/* Add People Section */}
+          <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-blue-600" />
+                <Label className="text-blue-900 font-semibold text-sm">Project Access</Label>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPeopleSelector(!showPeopleSelector)}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+              >
+                Add People
+                <ChevronDown className={cn("w-4 h-4 transition-transform", showPeopleSelector && "rotate-180")} />
+              </button>
+            </div>
+
+            {/* Selected Members Display */}
+            {formData.team_members.length > 0 ? (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {formData.team_members.map(email => (
+                  <div 
+                    key={email} 
+                    className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-full border border-blue-200 text-sm"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center font-medium">
+                      {getInitials(getMemberName(email))}
+                    </div>
+                    <span className="text-slate-700">{getMemberName(email)}</span>
+                    {email !== currentUserEmail && (
+                      <button
+                        type="button"
+                        onClick={() => toggleTeamMember(email)}
+                        className="text-slate-400 hover:text-red-500 ml-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-blue-600 mb-3">Only you will have access to this project</p>
+            )}
+
+            {/* People Selector */}
+            {showPeopleSelector && (
+              <div className="mt-3 pt-3 border-t border-blue-200 space-y-3">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    value={peopleSearch}
+                    onChange={(e) => setPeopleSearch(e.target.value)}
+                    placeholder="Search people..."
+                    className="pl-8 h-9 text-sm bg-white"
+                  />
+                </div>
+
+                {/* Teams (UserGroups) */}
+                {userGroups.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-blue-700 mb-2">Add by Team</p>
+                    <div className="flex flex-wrap gap-2">
+                      {userGroups.map(group => (
+                        <button
+                          key={group.id}
+                          type="button"
+                          onClick={() => addGroupMembers(group)}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg border border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-colors text-sm"
+                        >
+                          <Users className="w-3.5 h-3.5 text-blue-500" />
+                          <span>{group.name}</span>
+                          <span className="text-xs text-slate-400">({group.member_emails?.length || 0})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Individual Members */}
+                <div>
+                  <p className="text-xs font-medium text-blue-700 mb-2">Add Individual</p>
+                  <div className="max-h-40 overflow-y-auto space-y-1 bg-white rounded-lg border border-blue-200 p-2">
+                    {teamMembers
+                      .filter(m => 
+                        !formData.team_members.includes(m.email) &&
+                        (m.name?.toLowerCase().includes(peopleSearch.toLowerCase()) ||
+                         m.email?.toLowerCase().includes(peopleSearch.toLowerCase()))
+                      )
+                      .map(member => (
+                        <button
+                          key={member.id}
+                          type="button"
+                          onClick={() => toggleTeamMember(member.email)}
+                          className="w-full flex items-center gap-2 p-2 rounded-md hover:bg-blue-50 transition-colors text-left"
+                        >
+                          <div className={cn(
+                            "w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium",
+                            member.avatar_color || "bg-blue-500"
+                          )}>
+                            {getInitials(member.name)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900 truncate">{member.name}</p>
+                            <p className="text-xs text-slate-500 truncate">{member.email}</p>
+                          </div>
+                        </button>
+                      ))
+                    }
+                    {teamMembers.filter(m => 
+                      !formData.team_members.includes(m.email) &&
+                      (m.name?.toLowerCase().includes(peopleSearch.toLowerCase()) ||
+                       m.email?.toLowerCase().includes(peopleSearch.toLowerCase()))
+                    ).length === 0 && (
+                      <p className="text-sm text-slate-400 text-center py-3">
+                        {peopleSearch ? 'No matching people' : 'All team members added'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Template & Color Row */}
