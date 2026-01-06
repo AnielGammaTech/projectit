@@ -425,13 +425,18 @@ export default function Dashboard() {
     const allProjects = await base44.entities.Project.list('-project_number', 1);
     const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
     
+    // Get "In Progress" tag to auto-assign
+    const allTags = await base44.entities.ProjectTag.list();
+    const inProgressTag = allTags.find(t => t.name === 'In Progress');
+    
     // Ensure customer_id is correctly passed
     const projectData = {
       ...data,
       project_number: nextNumber,
       customer_id: data.customer_id || prefillData?.customer_id || null,
       quoteit_quote_id: prefillData?.quoteit_quote_id || null,
-      incoming_quote_id: prefillData?.incoming_quote_id || null
+      incoming_quote_id: prefillData?.incoming_quote_id || null,
+      tags: inProgressTag ? [inProgressTag.id] : []
     };
     
     const newProject = await base44.entities.Project.create(projectData);

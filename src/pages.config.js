@@ -19,6 +19,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import ProjectFiles from './pages/ProjectFiles';
 import ProjectNotes from './pages/ProjectNotes';
 import ProjectParts from './pages/ProjectParts';
+import ProjectStatuses from './pages/ProjectStatuses';
 import ProjectTasks from './pages/ProjectTasks';
 import ProjectTime from './pages/ProjectTime';
 import ProjectTimeline from './pages/ProjectTimeline';
@@ -34,7 +35,6 @@ import Templates from './pages/Templates';
 import TimeReport from './pages/TimeReport';
 import UserGroups from './pages/UserGroups';
 import Workflows from './pages/Workflows';
-import ProjectStatuses from './pages/ProjectStatuses';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +60,7 @@ export const PAGES = {
     "ProjectFiles": ProjectFiles,
     "ProjectNotes": ProjectNotes,
     "ProjectParts": ProjectParts,
+    "ProjectStatuses": ProjectStatuses,
     "ProjectTasks": ProjectTasks,
     "ProjectTime": ProjectTime,
     "ProjectTimeline": ProjectTimeline,
@@ -75,7 +76,6 @@ export const PAGES = {
     "TimeReport": TimeReport,
     "UserGroups": UserGroups,
     "Workflows": Workflows,
-    "ProjectStatuses": ProjectStatuses,
 }
 
 export const pagesConfig = {
