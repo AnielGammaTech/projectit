@@ -306,8 +306,22 @@ export default function ActivityFeed() {
                           transition={{ delay: idx * 0.02 }}
                         >
                           {/* Project Header */}
-                          <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
-                            {project?.client && `${project.client} - `}{projectName}
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                              {project?.client && `${project.client} - `}{projectName}
+                            </span>
+                            {getProjectTags(project).map(tag => (
+                              <span 
+                                key={tag.id} 
+                                className={cn(
+                                  "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium",
+                                  tagColors[tag.color] || tagColors.slate
+                                )}
+                              >
+                                <Tag className="w-2.5 h-2.5" />
+                                {tag.name}
+                              </span>
+                            ))}
                           </div>
 
                           <div className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all">
