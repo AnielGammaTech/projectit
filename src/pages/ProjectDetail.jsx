@@ -798,11 +798,6 @@ export default function ProjectDetail() {
                       Put On Hold
                     </Button>
                   )}
-                  <TeamAvatars
-                    members={project.team_members || []}
-                    teamMembers={teamMembers}
-                    onUpdate={handleTeamUpdate}
-                  />
                   <Button
                     size="sm"
                     onClick={() => setShowCompleteModal(true)}
@@ -811,6 +806,11 @@ export default function ProjectDetail() {
                     <CheckCircle2 className="w-4 h-4 mr-1" />
                     Complete Project
                   </Button>
+                  <TeamAvatars
+                    members={project.team_members || []}
+                    teamMembers={teamMembers}
+                    onUpdate={handleTeamUpdate}
+                  />
                 </div>
               )}
             </div>
