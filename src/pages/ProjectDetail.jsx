@@ -782,7 +782,7 @@ export default function ProjectDetail() {
               {/* Status Action Buttons */}
               {project.status !== 'archived' && project.status !== 'completed' && (
                 <div className="flex items-center gap-2 mt-3">
-                  {getProjectTags().some(t => t.name === 'On Hold') ? (
+                  {project.status === 'on_hold' ? (
                     <Button
                       size="sm"
                       variant="outline"
