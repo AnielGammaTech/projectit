@@ -89,6 +89,11 @@ export default function ActivityFeed() {
     queryFn: () => base44.entities.User.list()
   });
 
+  const { data: projectTags = [] } = useQuery({
+    queryKey: ['projectTags'],
+    queryFn: () => base44.entities.ProjectTag.list()
+  });
+
   // Combine team members and app users, deduplicate by email
   const allPeople = [...teamMembers];
   appUsers.forEach(user => {
