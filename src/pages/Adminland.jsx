@@ -73,7 +73,43 @@ export default function Adminland() {
   const urlParams = new URLSearchParams(window.location.search);
   const initialSection = urlParams.get('section') || null;
   const [activeSection, setActiveSection] = useState(initialSection);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    base44.auth.me().then(user => {
+      setCurrentUser(user);
+      setIsLoading(false);
+    }).catch(() => setIsLoading(false));
+  }, []);
+
+  // Block non-admin users
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
+        <div className="animate-pulse text-slate-400">Loading...</div>
+      </div>
+    );
+  }
+
+  if (currentUser?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-16 h-16 mx-auto text-red-400 mb-4" />
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
+          <p className="text-slate-500 mb-4">You need administrator privileges to access this page.</p>
+          <Link to={createPageUrl('Dashboard')}>
+            <Button variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const renderSection = () => {
     switch (activeSection) {
