@@ -62,10 +62,13 @@ export default function ActivityFeed() {
   const [currentUser, setCurrentUser] = useState(null);
   const [showingFor, setShowingFor] = useState(null);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+
   useEffect(() => {
     base44.auth.me().then(user => {
       setCurrentUser(user);
       setShowingFor(user);
+      setIsAdmin(user?.role === 'admin');
     }).catch(() => {});
   }, []);
 
@@ -107,6 +110,16 @@ export default function ActivityFeed() {
     return project?.name || 'Unknown Project';
   };
 
+  // Helper to check if user has access to a project
+  const userHasProjectAccess = (project) => {
+    if (isAdmin) return true;
+    if (!project?.team_members || project.team_members.length === 0) return true;
+    return project.team_members.includes(currentUser?.email);
+  };
+
+  // Only show activities from projects user has access to
+  const accessibleProjectIds = projects.filter(userHasProjectAccess).map(p => p.id);
+
   const getProjectTags = (project) => {
     if (!project?.tags || project.tags.length === 0) return [];
     return project.tags.map(tagId => projectTags.find(t => t.id === tagId)).filter(Boolean);
@@ -134,6 +147,9 @@ export default function ActivityFeed() {
   };
 
   const filteredActivities = activities.filter(activity => {
+    // First check if user has access to the project this activity belongs to
+    if (!accessibleProjectIds.includes(activity.project_id)) return false;
+    
     const matchesSearch = activity.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          activity.actor_name?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesProject = projectFilter === 'all' || activity.project_id === projectFilter;
@@ -219,7 +235,7 @@ export default function ActivityFeed() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Projects</SelectItem>
-                    {projects.map(project => (
+                    {projects.filter(userHasProjectAccess).map(project => (
                       <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
                     ))}
                   </SelectContent>
