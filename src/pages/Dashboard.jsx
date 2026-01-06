@@ -440,6 +440,12 @@ export default function Dashboard() {
     const allTags = await base44.entities.ProjectTag.list();
     const inProgressTag = allTags.find(t => t.name === 'In Progress');
     
+    // Ensure team_members includes the creator if not already
+    const teamMembers = data.team_members || [];
+    if (currentUser?.email && !teamMembers.includes(currentUser.email)) {
+      teamMembers.push(currentUser.email);
+    }
+    
     // Ensure customer_id is correctly passed
     const projectData = {
       ...data,
@@ -447,7 +453,8 @@ export default function Dashboard() {
       customer_id: data.customer_id || prefillData?.customer_id || null,
       quoteit_quote_id: prefillData?.quoteit_quote_id || null,
       incoming_quote_id: prefillData?.incoming_quote_id || null,
-      tags: inProgressTag ? [inProgressTag.id] : []
+      tags: inProgressTag ? [inProgressTag.id] : [],
+      team_members: teamMembers
     };
     
     const newProject = await base44.entities.Project.create(projectData);
