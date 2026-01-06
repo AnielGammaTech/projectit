@@ -338,6 +338,17 @@ export default function ProjectTasks() {
     setEditingTask(null);
   };
 
+  const handleBulkCreateTasks = async (tasksData) => {
+    for (const taskData of tasksData) {
+      await base44.entities.Task.create({
+        ...taskData,
+        project_id: projectId
+      });
+    }
+    await refetchTasks();
+    setShowTaskModal(false);
+  };
+
   const handleSaveGroup = async (data, existingGroup) => {
     if (existingGroup) {
       await base44.entities.TaskGroup.update(existingGroup.id, data);
