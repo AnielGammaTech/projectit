@@ -158,6 +158,12 @@ export default function Dashboard() {
     staleTime: 60000
   });
 
+  const { data: customStatuses = [] } = useQuery({
+    queryKey: ['projectStatuses'],
+    queryFn: () => base44.entities.ProjectStatus.list('order'),
+    staleTime: 300000
+  });
+
   // Memoize expensive computations
   const { activeProjects, archivedProjects, deletedProjects, activeProjectIds } = useMemo(() => {
     const active = projects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
@@ -1030,6 +1036,7 @@ export default function Dashboard() {
                                                                                       selectionMode={selectionMode}
                                                                                       isSelected={selectedProjects.includes(project.id)}
                                                                                       onSelectionToggle={toggleProjectSelection}
+                                                                                      customStatuses={customStatuses}
                                                                                     />
                                   </div>
                                 )}
@@ -1120,6 +1127,7 @@ export default function Dashboard() {
                                                                                             selectionMode={selectionMode}
                                                                                             isSelected={selectedProjects.includes(project.id)}
                                                                                             onSelectionToggle={toggleProjectSelection}
+                                                                                            customStatuses={customStatuses}
                                                                                           />
                                         </div>
                                       )}

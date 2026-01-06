@@ -42,6 +42,7 @@ import AIWorkflowSuggestions from '@/components/workflows/AIWorkflowSuggestions'
 
 const triggerTypes = {
   project_status_change: { label: 'Project Status Change', icon: Activity, color: 'bg-blue-500' },
+  project_status_to_specific: { label: 'Project Status Changed To...', icon: Activity, color: 'bg-indigo-500' },
   proposal_accepted: { label: 'Proposal Accepted', icon: CheckCircle2, color: 'bg-green-500' },
   proposal_sent: { label: 'Proposal Sent', icon: Mail, color: 'bg-indigo-500' },
   task_completed: { label: 'Task Completed', icon: ListTodo, color: 'bg-emerald-500' },
@@ -82,6 +83,11 @@ export default function Workflows() {
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: () => base44.entities.TeamMember.list()
+  });
+
+  const { data: projectStatuses = [] } = useQuery({
+    queryKey: ['projectStatuses'],
+    queryFn: () => base44.entities.ProjectStatus.list('order')
   });
 
   const handleSave = async (data) => {
@@ -297,6 +303,7 @@ export default function Workflows() {
           onClose={() => { setShowModal(false); setEditingWorkflow(null); }}
           workflow={editingWorkflow}
           teamMembers={teamMembers}
+          projectStatuses={projectStatuses}
           onSave={handleSave}
         />
 
@@ -321,7 +328,7 @@ export default function Workflows() {
   );
 }
 
-function WorkflowModal({ open, onClose, workflow, teamMembers, onSave }) {
+function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses = [], onSave }) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
@@ -439,7 +446,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, onSave }) {
                   return (
                     <button
                       key={key}
-                      onClick={() => setFormData(p => ({ ...p, trigger_type: key }))}
+                      onClick={() => setFormData(p => ({ ...p, trigger_type: key, trigger_conditions: {} }))}
                       className={cn(
                         "p-4 rounded-xl border-2 text-left transition-all hover:shadow-md",
                         formData.trigger_type === key
@@ -455,6 +462,26 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, onSave }) {
                   );
                 })}
               </div>
+
+              {/* Status-specific trigger condition */}
+              {formData.trigger_type === 'project_status_to_specific' && projectStatuses.length > 0 && (
+                <div className="p-4 bg-slate-50 rounded-xl border mt-4">
+                  <Label className="text-sm font-medium">When status changes to:</Label>
+                  <select
+                    value={formData.trigger_conditions.target_status || ''}
+                    onChange={(e) => setFormData(p => ({ 
+                      ...p, 
+                      trigger_conditions: { ...p.trigger_conditions, target_status: e.target.value } 
+                    }))}
+                    className="mt-2 w-full h-10 rounded-md border px-3 text-sm"
+                  >
+                    <option value="">Select a status...</option>
+                    {projectStatuses.map(s => (
+                      <option key={s.id} value={s.key}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           )}
 
