@@ -175,53 +175,55 @@ export default function Adminland() {
                 </div>
                 <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Adminland</h1>
               </div>
-              <p className="text-slate-500">You're an admin, so you can...</p>
+              <p className="text-slate-500">Manage your workspace settings</p>
             </div>
             
-            <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-              {adminMenuItems.map((item, idx) => (
-                item.page ? (
-                  <Link
-                    key={item.id}
-                    to={createPageUrl(item.page)}
-                  >
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                      className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors group text-left border-b last:border-b-0"
-                    >
-                      <div className="p-2 rounded-lg bg-[#0069AF] group-hover:bg-[#133F5C] transition-colors">
-                        <item.icon className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <span className="text-[#0069AF] group-hover:text-[#133F5C] font-medium transition-colors block">
-                          {item.label}
-                        </span>
-                        <span className="text-sm text-slate-500">{item.description}</span>
-                      </div>
-                    </motion.div>
-                  </Link>
-                ) : (
-                  <motion.button
-                    key={item.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    onClick={() => setActiveSection(item.id)}
-                    className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors group text-left border-b last:border-b-0"
-                  >
-                    <div className="p-2 rounded-lg bg-[#0069AF] group-hover:bg-[#133F5C] transition-colors">
-                      <item.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <span className="text-[#0069AF] group-hover:text-[#133F5C] font-medium transition-colors block">
-                        {item.label}
-                      </span>
-                      <span className="text-sm text-slate-500">{item.description}</span>
-                    </div>
-                  </motion.button>
-                )
+            <div className="grid md:grid-cols-2 gap-6">
+              {adminMenuGroups.map((group, gIdx) => (
+                <motion.div
+                  key={group.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: gIdx * 0.1 }}
+                  className="bg-white rounded-2xl border shadow-sm overflow-hidden"
+                >
+                  <div className="px-4 py-3 bg-slate-50 border-b">
+                    <h2 className="font-semibold text-slate-700">{group.title}</h2>
+                  </div>
+                  <div className="divide-y">
+                    {group.items.map((item) => (
+                      item.page ? (
+                        <Link
+                          key={item.id}
+                          to={createPageUrl(item.page)}
+                          className="flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors group"
+                        >
+                          <div className="p-1.5 rounded-lg bg-[#0069AF]/10 group-hover:bg-[#0069AF] transition-colors">
+                            <item.icon className="w-4 h-4 text-[#0069AF] group-hover:text-white transition-colors" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-medium text-slate-900 block">{item.label}</span>
+                            <span className="text-xs text-slate-500">{item.description}</span>
+                          </div>
+                        </Link>
+                      ) : (
+                        <button
+                          key={item.id}
+                          onClick={() => setActiveSection(item.id)}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors group text-left"
+                        >
+                          <div className="p-1.5 rounded-lg bg-[#0069AF]/10 group-hover:bg-[#0069AF] transition-colors">
+                            <item.icon className="w-4 h-4 text-[#0069AF] group-hover:text-white transition-colors" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-medium text-slate-900 block">{item.label}</span>
+                            <span className="text-xs text-slate-500">{item.description}</span>
+                          </div>
+                        </button>
+                      )
+                    ))}
+                  </div>
+                </motion.div>
               ))}
             </div>
           </motion.div>
