@@ -755,6 +755,40 @@ export default function ProjectDetail() {
                   onUpdate={handleTeamUpdate}
                 />
               </div>
+
+              {/* Status Action Buttons */}
+              {project.status !== 'archived' && project.status !== 'completed' && (
+                <div className="flex items-center gap-2 mt-3">
+                  {getProjectTags().some(t => t.name === 'On Hold') ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleResumeProject}
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-1" />
+                      Resume Project
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowOnHoldModal(true)}
+                      className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                    >
+                      Put On Hold
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={() => setShowCompleteModal(true)}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-1" />
+                    Complete Project
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Actions Row */}
