@@ -164,13 +164,24 @@ export default function Dashboard() {
     staleTime: 300000
   });
 
+  // Helper to check if user has access to a project
+  const userHasProjectAccess = useCallback((project) => {
+    // Admins can see everything
+    if (isAdmin) return true;
+    // If project has no team_members defined, it's visible to everyone (legacy behavior)
+    if (!project.team_members || project.team_members.length === 0) return true;
+    // Otherwise check if current user is in team_members
+    return project.team_members.includes(currentUser?.email);
+  }, [isAdmin, currentUser?.email]);
+
   // Memoize expensive computations
   const { activeProjects, archivedProjects, deletedProjects, activeProjectIds } = useMemo(() => {
-    const active = projects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
-    const archived = projects.filter(p => (p.status === 'archived' || p.status === 'completed') && p.status !== 'deleted');
-    const deleted = projects.filter(p => p.status === 'deleted');
+    const accessibleProjects = projects.filter(userHasProjectAccess);
+    const active = accessibleProjects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
+    const archived = accessibleProjects.filter(p => (p.status === 'archived' || p.status === 'completed') && p.status !== 'deleted');
+    const deleted = accessibleProjects.filter(p => p.status === 'deleted');
     return { activeProjects: active, archivedProjects: archived, deletedProjects: deleted, activeProjectIds: active.map(p => p.id) };
-  }, [projects]);
+  }, [projects, userHasProjectAccess]);
 
   const { activeTasks, activeParts, pendingParts, completedTasks } = useMemo(() => {
     const activeT = tasks.filter(t => activeProjectIds.includes(t.project_id));
@@ -1219,6 +1230,7 @@ export default function Dashboard() {
         templates={templates}
         onSave={handleCreateProject}
         prefillData={prefillData}
+        currentUserEmail={currentUser?.email}
       />
 
       {/* Adminland Corner Link (Admin Only) */}
