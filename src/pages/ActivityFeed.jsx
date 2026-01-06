@@ -69,7 +69,10 @@ export default function ActivityFeed() {
       setCurrentUser(user);
       setShowingFor(user);
       setIsAdmin(user?.role === 'admin');
-    }).catch(() => {});
+    }).catch(() => {
+      // Redirect to login if not authenticated
+      base44.auth.redirectToLogin();
+    });
   }, []);
 
   const { data: activities = [], isLoading } = useQuery({
