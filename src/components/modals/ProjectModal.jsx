@@ -483,9 +483,15 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={saving}>
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="px-6">
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              className="bg-[#0F2F44] hover:bg-[#1a4a6e] px-6" 
+              disabled={saving || !formData.name || !formData.customer_id || !formData.description}
+            >
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {project ? 'Update Project' : 'Create Project'}
             </Button>
