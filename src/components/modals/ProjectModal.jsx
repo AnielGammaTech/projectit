@@ -203,146 +203,153 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{project ? 'Edit Project' : 'New Project'}</DialogTitle>
+          <DialogTitle className="text-xl">{project ? 'Edit Project' : 'Create New Project'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-5 mt-4">
+          {/* Project Name */}
           <div>
-            <Label htmlFor="name">Project Name</Label>
+            <Label htmlFor="name" className="text-sm font-medium">
+              Project Name <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="e.g., Office Network Upgrade"
               required
-              className="mt-1.5"
+              className="mt-1.5 h-11"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-                          <div className="relative">
-                            <Label htmlFor="client">Client</Label>
-                            <div className="relative mt-1.5">
-                              <div 
-                                className={cn(
-                                  "flex items-center gap-2 w-full h-10 px-3 rounded-md border bg-white cursor-pointer transition-all",
-                                  showCustomerDropdown ? "border-indigo-500 ring-2 ring-indigo-100" : "border-slate-200 hover:border-slate-300"
-                                )}
-                                onClick={() => setShowCustomerDropdown(!showCustomerDropdown)}
-                              >
-                                {formData.customer_id ? (
-                                  <>
-                                    <Building2 className="w-4 h-4 text-indigo-500" />
-                                    <span className="flex-1 text-sm truncate">{formData.client}</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Search className="w-4 h-4 text-slate-400" />
-                                    <span className="flex-1 text-sm text-slate-400">Select customer...</span>
-                                  </>
-                                )}
-                              </div>
-                              
-                              {showCustomerDropdown && (
-                                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white rounded-lg border border-slate-200 shadow-lg max-h-64 overflow-hidden">
-                                  <div className="p-2 border-b border-slate-100">
-                                    <div className="relative">
-                                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                      <Input
-                                        value={customerSearch}
-                                        onChange={(e) => setCustomerSearch(e.target.value)}
-                                        placeholder="Search customers..."
-                                        className="pl-8 h-9 text-sm"
-                                        autoFocus
-                                        onClick={(e) => e.stopPropagation()}
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="max-h-48 overflow-y-auto p-1">
-                                    {customers
-                                      .filter(c => 
-                                        c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-                                        c.company?.toLowerCase().includes(customerSearch.toLowerCase())
-                                      )
-                                      .map(customer => (
-                                        <button
-                                          key={customer.id}
-                                          type="button"
-                                          onClick={() => {
-                                            setFormData(prev => ({ ...prev, client: customer.name || '', customer_id: customer.id }));
-                                            setShowCustomerDropdown(false);
-                                            setCustomerSearch('');
-                                          }}
-                                          className={cn(
-                                            "w-full flex items-center gap-3 p-2.5 rounded-md text-left transition-all",
-                                            formData.customer_id === customer.id 
-                                              ? "bg-indigo-50 text-indigo-700" 
-                                              : "hover:bg-slate-50"
-                                          )}
-                                        >
-                                          <div className={cn(
-                                            "w-8 h-8 rounded-full flex items-center justify-center",
-                                            customer.type === 'company' ? "bg-indigo-100" : "bg-slate-100"
-                                          )}>
-                                            {customer.type === 'company' ? (
-                                              <Building2 className="w-4 h-4 text-indigo-600" />
-                                            ) : (
-                                              <User className="w-4 h-4 text-slate-600" />
-                                            )}
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-sm truncate">{customer.name}</p>
-                                            {customer.company && customer.type !== 'company' && (
-                                              <p className="text-xs text-slate-500 truncate">{customer.company}</p>
-                                            )}
-                                          </div>
-                                          {formData.customer_id === customer.id && (
-                                            <Check className="w-4 h-4 text-indigo-600" />
-                                          )}
-                                        </button>
-                                      ))
-                                    }
-                                    {customers.filter(c => 
-                                      c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-                                      c.company?.toLowerCase().includes(customerSearch.toLowerCase())
-                                    ).length === 0 && (
-                                      <p className="text-sm text-slate-500 text-center py-4">No customers found</p>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            {/* Click outside to close */}
-                            {showCustomerDropdown && (
-                              <div 
-                                className="fixed inset-0 z-40" 
-                                onClick={() => setShowCustomerDropdown(false)}
-                              />
+          {/* Client Selection */}
+          <div className="relative">
+            <Label htmlFor="client" className="text-sm font-medium">
+              Client <span className="text-red-500">*</span>
+            </Label>
+            <div className="relative mt-1.5">
+              <div 
+                className={cn(
+                  "flex items-center gap-2 w-full h-11 px-3 rounded-md border bg-white cursor-pointer transition-all",
+                  showCustomerDropdown ? "border-[#0069AF] ring-2 ring-[#0069AF]/20" : "border-slate-200 hover:border-slate-300",
+                  !formData.customer_id && "text-slate-400"
+                )}
+                onClick={() => setShowCustomerDropdown(!showCustomerDropdown)}
+              >
+                {formData.customer_id ? (
+                  <>
+                    <Building2 className="w-4 h-4 text-[#0069AF]" />
+                    <span className="flex-1 text-sm truncate text-slate-900">{formData.client}</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4 text-slate-400" />
+                    <span className="flex-1 text-sm">Select customer...</span>
+                  </>
+                )}
+              </div>
+              
+              {showCustomerDropdown && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white rounded-lg border border-slate-200 shadow-xl max-h-64 overflow-hidden">
+                  <div className="p-2 border-b border-slate-100">
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        value={customerSearch}
+                        onChange={(e) => setCustomerSearch(e.target.value)}
+                        placeholder="Search customers..."
+                        className="pl-8 h-9 text-sm"
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto p-1">
+                    {customers
+                      .filter(c => 
+                        c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                        c.company?.toLowerCase().includes(customerSearch.toLowerCase())
+                      )
+                      .map(customer => (
+                        <button
+                          key={customer.id}
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, client: customer.name || '', customer_id: customer.id }));
+                            setShowCustomerDropdown(false);
+                            setCustomerSearch('');
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-3 p-2.5 rounded-md text-left transition-all",
+                            formData.customer_id === customer.id 
+                              ? "bg-[#0069AF]/10 text-[#0069AF]" 
+                              : "hover:bg-slate-50"
+                          )}
+                        >
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center",
+                            customer.type === 'company' ? "bg-[#0069AF]/10" : "bg-slate-100"
+                          )}>
+                            {customer.type === 'company' ? (
+                              <Building2 className="w-4 h-4 text-[#0069AF]" />
+                            ) : (
+                              <User className="w-4 h-4 text-slate-600" />
                             )}
                           </div>
-                          <div>
-                            <Label htmlFor="time_budget_hours">Time Budget (hours)</Label>
-                            <Input
-                              id="time_budget_hours"
-                              type="number"
-                              step="0.5"
-                              value={formData.time_budget_hours || ''}
-                              onChange={(e) => setFormData(prev => ({ ...prev, time_budget_hours: e.target.value ? Number(e.target.value) : 0 }))}
-                              placeholder="e.g., 40"
-                              className="mt-1.5"
-                            />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{customer.name}</p>
+                            {customer.company && customer.type !== 'company' && (
+                              <p className="text-xs text-slate-500 truncate">{customer.company}</p>
+                            )}
                           </div>
-                        </div>
+                          {formData.customer_id === customer.id && (
+                            <Check className="w-4 h-4 text-[#0069AF]" />
+                          )}
+                        </button>
+                      ))
+                    }
+                    {customers.filter(c => 
+                      c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                      c.company?.toLowerCase().includes(customerSearch.toLowerCase())
+                    ).length === 0 && (
+                      <p className="text-sm text-slate-500 text-center py-4">No customers found</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            {showCustomerDropdown && (
+              <div className="fixed inset-0 z-40" onClick={() => setShowCustomerDropdown(false)} />
+            )}
+          </div>
 
+          {/* Description */}
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="text-sm font-medium">
+              Description <span className="text-red-500">*</span>
+            </Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Project details..."
-              className="mt-1.5 h-20"
+              placeholder="What is this project about?"
+              required
+              className="mt-1.5 h-24 resize-none"
+            />
+          </div>
+
+          {/* Time Budget */}
+          <div>
+            <Label htmlFor="time_budget_hours" className="text-sm font-medium">Time Budget (hours)</Label>
+            <Input
+              id="time_budget_hours"
+              type="number"
+              step="0.5"
+              value={formData.time_budget_hours || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, time_budget_hours: e.target.value ? Number(e.target.value) : 0 }))}
+              placeholder="e.g., 40"
+              className="mt-1.5 h-11"
             />
           </div>
 
