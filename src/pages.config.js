@@ -34,6 +34,7 @@ import Templates from './pages/Templates';
 import TimeReport from './pages/TimeReport';
 import UserGroups from './pages/UserGroups';
 import Workflows from './pages/Workflows';
+import ProjectStatuses from './pages/ProjectStatuses';
 import __Layout from './Layout.jsx';
 
 
@@ -74,6 +75,7 @@ export const PAGES = {
     "TimeReport": TimeReport,
     "UserGroups": UserGroups,
     "Workflows": Workflows,
+    "ProjectStatuses": ProjectStatuses,
 }
 
 export const pagesConfig = {

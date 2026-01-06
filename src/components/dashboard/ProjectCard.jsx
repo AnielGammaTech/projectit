@@ -13,10 +13,35 @@ import { format } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
-const statusColors = {
+// Fallback status colors for built-in statuses
+const fallbackStatusColors = {
   planning: 'bg-amber-50 text-amber-700 border-amber-200',
   on_hold: 'bg-slate-50 text-slate-700 border-slate-200',
-  completed: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+  completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  archived: 'bg-slate-50 text-slate-500 border-slate-200',
+  deleted: 'bg-red-50 text-red-700 border-red-200'
+};
+
+// Color mapping for dynamic statuses
+const statusColorMap = {
+  slate: 'bg-slate-100 text-slate-700 border-slate-200',
+  red: 'bg-red-100 text-red-700 border-red-200',
+  orange: 'bg-orange-100 text-orange-700 border-orange-200',
+  amber: 'bg-amber-100 text-amber-700 border-amber-200',
+  yellow: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  lime: 'bg-lime-100 text-lime-700 border-lime-200',
+  green: 'bg-green-100 text-green-700 border-green-200',
+  emerald: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  teal: 'bg-teal-100 text-teal-700 border-teal-200',
+  cyan: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+  sky: 'bg-sky-100 text-sky-700 border-sky-200',
+  blue: 'bg-blue-100 text-blue-700 border-blue-200',
+  indigo: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  violet: 'bg-violet-100 text-violet-700 border-violet-200',
+  purple: 'bg-purple-100 text-purple-700 border-purple-200',
+  fuchsia: 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200',
+  pink: 'bg-pink-100 text-pink-700 border-pink-200',
+  rose: 'bg-rose-100 text-rose-700 border-rose-200',
 };
 
 const cardColors = {
@@ -61,13 +86,14 @@ const colorOptions = [
   { name: 'rose', bg: 'bg-rose-500' }
 ];
 
-const statusOptions = [
-  { value: 'planning', label: 'Planning' },
-  { value: 'on_hold', label: 'On Hold' },
-  { value: 'completed', label: 'Completed' }
+// Fallback status options if no custom statuses exist
+const fallbackStatusOptions = [
+  { value: 'planning', label: 'Planning', color: 'amber' },
+  { value: 'on_hold', label: 'On Hold', color: 'slate' },
+  { value: 'completed', label: 'Completed', color: 'emerald' }
 ];
 
-function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, onPinToggle, groups = [], isPinned = false, dragHandleProps = {}, teamMembers = [], selectionMode = false, isSelected = false, onSelectionToggle }) {
+function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, onGroupChange, onStatusChange, onDueDateChange, onPinToggle, groups = [], isPinned = false, dragHandleProps = {}, teamMembers = [], selectionMode = false, isSelected = false, onSelectionToggle, customStatuses = [] }) {
   const navigate = useNavigate();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -76,6 +102,35 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
   
   // Use project's stored progress and health status instead of fetching
   const healthStatus = project.health_status || 'good';
+
+  // Build status options from custom statuses or fallback
+  const statusOptions = useMemo(() => {
+    if (customStatuses && customStatuses.length > 0) {
+      return customStatuses.map(s => ({
+        value: s.key,
+        label: s.name,
+        color: s.color
+      }));
+    }
+    return fallbackStatusOptions;
+  }, [customStatuses]);
+
+  // Get status color class
+  const getStatusColor = (statusKey) => {
+    const customStatus = customStatuses?.find(s => s.key === statusKey);
+    if (customStatus) {
+      return statusColorMap[customStatus.color] || statusColorMap.slate;
+    }
+    return fallbackStatusColors[statusKey] || fallbackStatusColors.planning;
+  };
+
+  // Get status display name
+  const getStatusLabel = (statusKey) => {
+    const customStatus = customStatuses?.find(s => s.key === statusKey);
+    if (customStatus) return customStatus.name;
+    const fallback = fallbackStatusOptions.find(s => s.value === statusKey);
+    return fallback?.label || statusKey?.replace('_', ' ');
+  };
   
   const stats = useMemo(() => {
     const completed = tasks.filter(t => t.status === 'completed').length;
@@ -257,10 +312,10 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
               <DropdownMenuTrigger asChild>
                 <Badge 
                   variant="outline" 
-                  className={cn("text-xs cursor-pointer hover:opacity-80", statusColors[project.status])}
+                  className={cn("text-xs cursor-pointer hover:opacity-80", getStatusColor(project.status))}
                   onClick={(e) => { e.stopPropagation(); setStatusOpen(true); }}
                 >
-                  {project.status?.replace('_', ' ')}
+                  {getStatusLabel(project.status)}
                 </Badge>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -273,7 +328,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
                       setStatusOpen(false);
                     }}
                   >
-                    <Badge className={cn("mr-2", statusColors[opt.value])}>{opt.label}</Badge>
+                    <Badge className={cn("mr-2", statusColorMap[opt.color] || fallbackStatusColors[opt.value])}>{opt.label}</Badge>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
