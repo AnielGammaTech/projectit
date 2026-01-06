@@ -775,15 +775,6 @@ export default function ProjectDetail() {
 
               {project.description && <p className="text-slate-600 text-sm mt-2">{project.description}</p>}
 
-              {/* Team Avatars */}
-              <div className="mt-3">
-                <TeamAvatars
-                  members={project.team_members || []}
-                  teamMembers={teamMembers}
-                  onUpdate={handleTeamUpdate}
-                />
-              </div>
-
               {/* Status Action Buttons */}
               {project.status !== 'archived' && project.status !== 'completed' && (
                 <div className="flex items-center gap-2 mt-3">
@@ -807,6 +798,11 @@ export default function ProjectDetail() {
                       Put On Hold
                     </Button>
                   )}
+                  <TeamAvatars
+                    members={project.team_members || []}
+                    teamMembers={teamMembers}
+                    onUpdate={handleTeamUpdate}
+                  />
                   <Button
                     size="sm"
                     onClick={() => setShowCompleteModal(true)}
