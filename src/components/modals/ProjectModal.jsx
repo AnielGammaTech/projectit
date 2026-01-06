@@ -356,8 +356,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
           {/* Template & Color Row */}
           <div className="flex items-center gap-2">
-            {/* Template Picker Button */}
-            {!project && templates.length > 0 && (
+            {/* Template Picker Button - only show when creating new project */}
+            {!project && (
               <Popover>
                 <PopoverTrigger asChild>
                   <button
@@ -391,7 +391,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                       <X className="w-4 h-4 text-slate-400" />
                       No Template
                     </button>
-                    {templates.map(t => (
+                    {templates.length > 0 ? templates.map(t => (
                       <button
                         key={t.id}
                         type="button"
@@ -412,7 +412,9 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                         </div>
                         {selectedTemplate === t.id && <Check className="w-4 h-4" />}
                       </button>
-                    ))}
+                    )) : (
+                      <p className="text-xs text-slate-400 px-2 py-2">No templates yet</p>
+                    )}
                   </div>
                 </PopoverContent>
               </Popover>
