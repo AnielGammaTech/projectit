@@ -125,6 +125,14 @@ export default function ProjectDetail() {
     enabled: !!projectId
   });
 
+  // Check if user has access to this project
+  const hasAccess = () => {
+    if (!project || !currentUser) return true; // Still loading
+    if (currentUser.role === 'admin') return true;
+    if (!project.team_members || project.team_members.length === 0) return true; // Legacy projects
+    return project.team_members.includes(currentUser.email);
+  };
+
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks', projectId],
     queryFn: () => base44.entities.Task.filter({ project_id: projectId }),
@@ -611,6 +619,26 @@ export default function ProjectDetail() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-slate-900 mb-2">Project not found</h2>
+          <Link to={createPageUrl('Dashboard')}>
+            <Button variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasAccess()) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
+          <p className="text-slate-500 mb-4">You don't have access to this project.</p>
           <Link to={createPageUrl('Dashboard')}>
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
