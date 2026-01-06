@@ -236,6 +236,95 @@ export default function ProjectDetail() {
     return project.tags.map(tagId => projectTags.find(t => t.id === tagId)).filter(Boolean);
   };
 
+  // Handle putting project on hold with reason
+  const handleOnHold = async (reason) => {
+    const onHoldTag = projectTags.find(t => t.name === 'On Hold');
+    const inProgressTag = projectTags.find(t => t.name === 'In Progress');
+    const completedTag = projectTags.find(t => t.name === 'Completed');
+    
+    // Remove In Progress/Completed tags, add On Hold
+    let newTags = (project.tags || []).filter(id => 
+      id !== inProgressTag?.id && id !== completedTag?.id
+    );
+    if (onHoldTag && !newTags.includes(onHoldTag.id)) {
+      newTags.push(onHoldTag.id);
+    }
+    
+    await base44.entities.Project.update(projectId, { 
+      tags: newTags,
+      status: 'on_hold'
+    });
+    
+    // Add the reason as a project note
+    await base44.entities.ProjectNote.create({
+      project_id: projectId,
+      type: 'note',
+      content: `🔸 **Project put on hold:** ${reason}`,
+      created_by: currentUser?.email,
+      created_by_name: currentUser?.full_name || currentUser?.email
+    });
+    
+    await logActivity(projectId, 'project_on_hold', `put project on hold: ${reason}`, currentUser);
+    refetchProject();
+    queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
+    setShowOnHoldModal(false);
+  };
+
+  // Handle completing project
+  const handleCompleteProject = async (notes) => {
+    const completedTag = projectTags.find(t => t.name === 'Completed');
+    const inProgressTag = projectTags.find(t => t.name === 'In Progress');
+    const onHoldTag = projectTags.find(t => t.name === 'On Hold');
+    
+    // Remove In Progress/On Hold tags, add Completed
+    let newTags = (project.tags || []).filter(id => 
+      id !== inProgressTag?.id && id !== onHoldTag?.id
+    );
+    if (completedTag && !newTags.includes(completedTag.id)) {
+      newTags.push(completedTag.id);
+    }
+    
+    await base44.entities.Project.update(projectId, { 
+      tags: newTags,
+      status: 'completed'
+    });
+    
+    // Add completion notes if provided
+    if (notes?.trim()) {
+      await base44.entities.ProjectNote.create({
+        project_id: projectId,
+        type: 'note',
+        content: `✅ **Project completed:** ${notes}`,
+        created_by: currentUser?.email,
+        created_by_name: currentUser?.full_name || currentUser?.email
+      });
+    }
+    
+    await logActivity(projectId, 'project_completed', `completed project${notes ? ': ' + notes : ''}`, currentUser);
+    refetchProject();
+    queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
+    setShowCompleteModal(false);
+  };
+
+  // Resume project from On Hold
+  const handleResumeProject = async () => {
+    const inProgressTag = projectTags.find(t => t.name === 'In Progress');
+    const onHoldTag = projectTags.find(t => t.name === 'On Hold');
+    
+    let newTags = (project.tags || []).filter(id => id !== onHoldTag?.id);
+    if (inProgressTag && !newTags.includes(inProgressTag.id)) {
+      newTags.push(inProgressTag.id);
+    }
+    
+    await base44.entities.Project.update(projectId, { 
+      tags: newTags,
+      status: 'planning'
+    });
+    
+    await logActivity(projectId, 'project_resumed', 'resumed project from on hold', currentUser);
+    refetchProject();
+  };
+
   // Tasks
     const handleSaveTask = async (data) => {
       const wasAssigned = editingTask?.assigned_to;
