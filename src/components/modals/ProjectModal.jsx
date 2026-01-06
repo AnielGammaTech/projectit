@@ -83,7 +83,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         description: project.description || '',
         client: project.client || '',
         customer_id: project.customer_id || '',
-        status: project.status || 'planning',
+        status: project.status || 'in_progress',
         start_date: project.start_date || '',
         due_date: project.due_date || '',
         color: project.color || 'slate',
@@ -91,6 +91,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         user_groups: project.user_groups || [],
         time_budget_hours: project.time_budget_hours || 0
       });
+      setShowDates(!!(project.start_date || project.due_date));
       setExtractedParts([]);
     } else if (prefillData) {
       // Try to find customer by name if ID is missing
@@ -113,6 +114,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         user_groups: [],
         time_budget_hours: 0
       });
+      setShowDates(false);
       // Convert proposal items to parts
       if (prefillData.proposalItems) {
         setExtractedParts(prefillData.proposalItems.map(item => ({
@@ -136,6 +138,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         user_groups: [],
         time_budget_hours: 0
       });
+      setShowDates(false);
       setExtractedParts([]);
     }
     setSelectedTemplate('');
