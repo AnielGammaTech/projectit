@@ -5,15 +5,34 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CalendarIcon, Upload, Loader2, FileText, Users, Search, Building2, User, Check } from 'lucide-react';
+import { CalendarIcon, Loader2, Users, Search, Building2, User, Check, Clock, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
+
+const colorOptions = [
+  { value: 'slate', color: '#64748b' },
+  { value: 'red', color: '#ef4444' },
+  { value: 'orange', color: '#f97316' },
+  { value: 'amber', color: '#f59e0b' },
+  { value: 'yellow', color: '#eab308' },
+  { value: 'lime', color: '#84cc16' },
+  { value: 'green', color: '#22c55e' },
+  { value: 'emerald', color: '#10b981' },
+  { value: 'teal', color: '#14b8a6' },
+  { value: 'cyan', color: '#06b6d4' },
+  { value: 'sky', color: '#0ea5e9' },
+  { value: 'blue', color: '#3b82f6' },
+  { value: 'indigo', color: '#6366f1' },
+  { value: 'violet', color: '#8b5cf6' },
+  { value: 'purple', color: '#a855f7' },
+  { value: 'fuchsia', color: '#d946ef' },
+  { value: 'pink', color: '#ec4899' },
+  { value: 'rose', color: '#f43f5e' },
+];
 
 export default function ProjectModal({ open, onClose, project, templates = [], onSave, onPartsExtracted, prefillData }) {
   const [formData, setFormData] = useState({
@@ -30,11 +49,11 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     time_budget_hours: 0
   });
   const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [uploading, setUploading] = useState(false);
   const [extractedParts, setExtractedParts] = useState([]);
   const [customerSearch, setCustomerSearch] = useState('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showDates, setShowDates] = useState(false);
 
   const { data: userGroups = [] } = useQuery({
     queryKey: ['userGroups'],
