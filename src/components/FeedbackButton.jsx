@@ -121,7 +121,7 @@ export default function FeedbackButton() {
       {/* Floating Button */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-24 z-50 p-4 rounded-full bg-[#0069AF] text-white shadow-xl hover:bg-[#005a96] transition-colors"
+        className="fixed bottom-6 left-6 z-50 p-4 rounded-full bg-[#0069AF] text-white shadow-xl hover:bg-[#005a96] transition-colors"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -143,7 +143,7 @@ export default function FeedbackButton() {
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 50, scale: 0.95 }}
-              className="fixed bottom-24 right-6 z-50 w-[420px] max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+              className="fixed bottom-24 left-6 z-50 w-[420px] max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
               onPaste={handlePaste}
             >
               {/* Header */}

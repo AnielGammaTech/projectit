@@ -483,35 +483,6 @@ export default function Dashboard() {
             <div>
               <h1 className="text-2xl font-bold text-[#133F5C]">Welcome back, {currentUser?.full_name?.split(' ')[0] || 'there'}! 👋</h1>
               <div className="flex items-center gap-3 mt-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 gap-2 border-slate-300">
-                      <LayoutGrid className="w-4 h-4 text-slate-500" />
-                      {currentView ? currentView.name : 'Default View'}
-                      <ChevronDown className="w-3 h-3 text-slate-400" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56">
-                    <DropdownMenuItem onClick={() => {
-                      setCurrentView(null);
-                      setListFilter('all');
-                      setViewMode('cards');
-                    }}>
-                      Default View
-                    </DropdownMenuItem>
-                    {dashboardViews.map(view => (
-                      <DropdownMenuItem key={view.id} onClick={() => applyView(view)}>
-                        {view.name}
-                      </DropdownMenuItem>
-                    ))}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setShowSaveViewModal(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Save Current View
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
                 <Button
                   variant="ghost"
                   size="icon"
@@ -528,7 +499,6 @@ export default function Dashboard() {
               <div className="text-right text-sm">
                 <p className="font-medium text-slate-700">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                 <p className="text-slate-500">{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} • Naples, FL</p>
-                <p className="text-slate-500">🌴 Sunny, 78°F</p>
               </div>
               <div className="flex flex-col items-end gap-1">
                 <Button
@@ -673,13 +643,21 @@ export default function Dashboard() {
             href={createPageUrl('AllTasks') + '?tab=parts'}
           />
           <StatsCard
-                            title="All Tasks"
-                            value={activeTasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}
-                            subtitle={activeTasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length > 0 ? `${activeTasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length} overdue` : null}
-                            icon={ClipboardList}
-                            iconColor="bg-[#0069AF]"
-                            href={createPageUrl('AllTasks')}
-                          />
+            title="All Tasks"
+            value={activeTasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}
+            subtitle={activeTasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length > 0 ? `${activeTasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length} overdue` : null}
+            icon={ClipboardList}
+            iconColor="bg-[#0069AF]"
+            href={createPageUrl('AllTasks')}
+          />
+          <StatsCard
+            title="Proposals Pending"
+            value={incomingQuotes.length}
+            subtitle={incomingQuotes.length > 0 ? 'awaiting project' : null}
+            icon={FileText}
+            iconColor="bg-emerald-500"
+            href={createPageUrl('QuoteRequests')}
+          />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">

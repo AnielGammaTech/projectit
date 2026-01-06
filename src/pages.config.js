@@ -14,11 +14,13 @@ import MyNotifications from './pages/MyNotifications';
 import MySchedule from './pages/MySchedule';
 import NotificationSettings from './pages/NotificationSettings';
 import Profile from './pages/Profile';
+import ProjectBilling from './pages/ProjectBilling';
 import ProjectDetail from './pages/ProjectDetail';
 import ProjectFiles from './pages/ProjectFiles';
 import ProjectNotes from './pages/ProjectNotes';
 import ProjectParts from './pages/ProjectParts';
 import ProjectTasks from './pages/ProjectTasks';
+import ProjectTime from './pages/ProjectTime';
 import ProjectTimeline from './pages/ProjectTimeline';
 import QuoteRequests from './pages/QuoteRequests';
 import ReportBuilder from './pages/ReportBuilder';
@@ -32,8 +34,6 @@ import Templates from './pages/Templates';
 import TimeReport from './pages/TimeReport';
 import UserGroups from './pages/UserGroups';
 import Workflows from './pages/Workflows';
-import ProjectTime from './pages/ProjectTime';
-import ProjectBilling from './pages/ProjectBilling';
 import __Layout from './Layout.jsx';
 
 
@@ -54,11 +54,13 @@ export const PAGES = {
     "MySchedule": MySchedule,
     "NotificationSettings": NotificationSettings,
     "Profile": Profile,
+    "ProjectBilling": ProjectBilling,
     "ProjectDetail": ProjectDetail,
     "ProjectFiles": ProjectFiles,
     "ProjectNotes": ProjectNotes,
     "ProjectParts": ProjectParts,
     "ProjectTasks": ProjectTasks,
+    "ProjectTime": ProjectTime,
     "ProjectTimeline": ProjectTimeline,
     "QuoteRequests": QuoteRequests,
     "ReportBuilder": ReportBuilder,
@@ -72,8 +74,6 @@ export const PAGES = {
     "TimeReport": TimeReport,
     "UserGroups": UserGroups,
     "Workflows": Workflows,
-    "ProjectTime": ProjectTime,
-    "ProjectBilling": ProjectBilling,
 }
 
 export const pagesConfig = {
