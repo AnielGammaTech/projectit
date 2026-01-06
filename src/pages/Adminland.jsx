@@ -141,7 +141,7 @@ export default function Adminland() {
         return <CompanySettingsSection queryClient={queryClient} />;
       case 'integrations':
         return <IntegrationsSection queryClient={queryClient} />;
-      case 'templates':
+      case 'email-templates':
         return <EmailTemplatesSection queryClient={queryClient} />;
       case 'tags':
         return <ProjectTagsSection queryClient={queryClient} />;
