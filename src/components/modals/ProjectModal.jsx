@@ -353,89 +353,102 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             />
           </div>
 
-          {!project && (
-            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-200">
-              <Label className="text-indigo-900 font-semibold">Create from Template</Label>
-              <p className="text-xs text-indigo-600 mb-2">Start with predefined tasks and parts</p>
-              <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                <SelectTrigger className="mt-1.5 bg-white">
-                  <SelectValue placeholder="Select a template..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Template - Start Fresh</SelectItem>
-                  {templates.map(t => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                      {t.default_tasks?.length > 0 && ` (${t.default_tasks.length} tasks)`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-
-
+          {/* Color Picker - Compact */}
           <div>
-            <Label>Status</Label>
-            <Select value={formData.status} onValueChange={(v) => setFormData(prev => ({ ...prev, status: v }))}>
-              <SelectTrigger className="mt-1.5">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {projectStatuses.length > 0 ? (
-                  projectStatuses.map(status => (
-                    <SelectItem key={status.id} value={status.key}>{status.name}</SelectItem>
-                  ))
-                ) : (
-                  <>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="on_hold">On Hold</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Color</Label>
-              <Select value={formData.color} onValueChange={(v) => setFormData(prev => ({ ...prev, color: v }))}>
-                <SelectTrigger className="mt-1.5">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {['slate', 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'].map(c => (
-                    <SelectItem key={c} value={c}>
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full bg-${c}-500`} style={{ backgroundColor: `var(--${c}-500, ${c === 'slate' ? '#64748b' : c === 'red' ? '#ef4444' : c === 'orange' ? '#f97316' : c === 'amber' ? '#f59e0b' : c === 'yellow' ? '#eab308' : c === 'lime' ? '#84cc16' : c === 'green' ? '#22c55e' : c === 'emerald' ? '#10b981' : c === 'teal' ? '#14b8a6' : c === 'cyan' ? '#06b6d4' : c === 'sky' ? '#0ea5e9' : c === 'blue' ? '#3b82f6' : c === 'indigo' ? '#6366f1' : c === 'violet' ? '#8b5cf6' : c === 'purple' ? '#a855f7' : c === 'fuchsia' ? '#d946ef' : c === 'pink' ? '#ec4899' : '#f43f5e'})` }} />
-                        <span className="capitalize">{c}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="group">Project Group</Label>
-              <Input
-                id="group"
-                value={formData.group}
-                onChange={(e) => setFormData(prev => ({ ...prev, group: e.target.value }))}
-                placeholder="e.g., Client A, Phase 1"
-                className="mt-1.5"
-              />
+            <Label className="text-sm font-medium">Project Color</Label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {colorOptions.map(c => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, color: c.value }))}
+                  className={cn(
+                    "w-7 h-7 rounded-full transition-all border-2",
+                    formData.color === c.value 
+                      ? "ring-2 ring-offset-2 ring-slate-400 border-white scale-110" 
+                      : "border-transparent hover:scale-110"
+                  )}
+                  style={{ backgroundColor: c.color }}
+                  title={c.value}
+                />
+              ))}
             </div>
           </div>
 
-          {/* User Groups Access */}
+          {/* Optional Dates Toggle */}
+          <div>
+            {!showDates ? (
+              <button
+                type="button"
+                onClick={() => setShowDates(true)}
+                className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#005a9e] font-medium transition-colors"
+              >
+                <Clock className="w-4 h-4" />
+                Add start & due dates
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Project Dates</Label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDates(false);
+                      setFormData(prev => ({ ...prev, start_date: '', due_date: '' }));
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-slate-500">Start Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full mt-1 justify-start font-normal h-10 text-sm">
+                          <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                          {formData.start_date ? format(new Date(formData.start_date.split('T')[0] + 'T12:00:00'), 'MMM d, yyyy') : 'Pick date'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formData.start_date ? new Date(formData.start_date.split('T')[0] + 'T12:00:00') : undefined}
+                          onSelect={(date) => setFormData(prev => ({ ...prev, start_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Due Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full mt-1 justify-start font-normal h-10 text-sm">
+                          <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                          {formData.due_date ? format(new Date(formData.due_date.split('T')[0] + 'T12:00:00'), 'MMM d, yyyy') : 'Pick date'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formData.due_date ? new Date(formData.due_date.split('T')[0] + 'T12:00:00') : undefined}
+                          onSelect={(date) => setFormData(prev => ({ ...prev, due_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* User Groups Access - Collapsible */}
           {userGroups.length > 0 && (
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
               <div className="flex items-center gap-2 mb-3">
                 <Users className="w-4 h-4 text-slate-600" />
-                <Label className="text-slate-900 font-semibold">Access Control</Label>
+                <Label className="text-slate-900 font-semibold text-sm">Access Control</Label>
               </div>
               <p className="text-xs text-slate-500 mb-3">Select which user groups can access this project</p>
               <div className="space-y-2">
@@ -443,9 +456,9 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                   <label
                     key={group.id}
                     className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                      "flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-all",
                       formData.user_groups.includes(group.id)
-                        ? "border-indigo-300 bg-indigo-50"
+                        ? "border-[#0069AF]/30 bg-[#0069AF]/5"
                         : "border-slate-200 bg-white hover:border-slate-300"
                     )}
                   >
@@ -454,7 +467,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                       onCheckedChange={() => toggleUserGroup(group.id)}
                     />
                     <div className="flex-1">
-                      <span className="font-medium text-slate-900">{group.name}</span>
+                      <span className="font-medium text-slate-900 text-sm">{group.name}</span>
                       {group.member_emails?.length > 0 && (
                         <span className="text-xs text-slate-500 ml-2">
                           ({group.member_emails.length} members)
@@ -469,46 +482,6 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
               )}
             </div>
           )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Start Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full mt-1.5 justify-start font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.start_date ? format(new Date(formData.start_date.split('T')[0] + 'T12:00:00'), 'PPP') : 'Pick date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.start_date ? new Date(formData.start_date.split('T')[0] + 'T12:00:00') : undefined}
-                    onSelect={(date) => setFormData(prev => ({ ...prev, start_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div>
-              <Label>Due Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full mt-1.5 justify-start font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.due_date ? format(new Date(formData.due_date.split('T')[0] + 'T12:00:00'), 'PPP') : 'Pick date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.due_date ? new Date(formData.due_date.split('T')[0] + 'T12:00:00') : undefined}
-                    onSelect={(date) => setFormData(prev => ({ ...prev, due_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
