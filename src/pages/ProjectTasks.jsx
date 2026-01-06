@@ -1070,6 +1070,7 @@ export default function ProjectTasks() {
         teamMembers={teamMembers}
         groups={taskGroups}
         onSave={handleSaveTask}
+        onBulkCreate={handleBulkCreateTasks}
       />
 
       <GroupModal
