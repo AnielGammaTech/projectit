@@ -72,6 +72,8 @@ import UpcomingTasksWidget from '@/components/project/UpcomingTasksWidget';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
 import ArchiveProjectModal from '@/components/modals/ArchiveProjectModal';
+import OnHoldReasonModal from '@/components/modals/OnHoldReasonModal';
+import CompleteProjectModal from '@/components/modals/CompleteProjectModal';
 import { cn } from '@/lib/utils';
 
 const statusColors = {
@@ -111,6 +113,8 @@ export default function ProjectDetail() {
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: null, item: null });
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showOnHoldModal, setShowOnHoldModal] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
 
   const { data: project, isLoading: loadingProject, refetch: refetchProject } = useQuery({
     queryKey: ['project', projectId],
@@ -199,7 +203,7 @@ export default function ProjectDetail() {
     }
   });
 
-  const { data: projectTags = [] } = useQuery({
+  const { data: projectTags = [], refetch: refetchTags } = useQuery({
     queryKey: ['projectTags'],
     queryFn: () => base44.entities.ProjectTag.list()
   });
