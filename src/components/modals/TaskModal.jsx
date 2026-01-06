@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 
-export default function TaskModal({ open, onClose, task, projectId, teamMembers = [], groups = [], onSave }) {
+export default function TaskModal({ open, onClose, task, projectId, teamMembers = [], groups = [], onSave, onBulkCreate }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -26,6 +26,17 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
     due_date: ''
   });
   const [saving, setSaving] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+
+  // Fetch todo templates
+  const { data: todoTemplates = [] } = useQuery({
+    queryKey: ['todoTemplates'],
+    queryFn: async () => {
+      const templates = await base44.entities.ProjectTemplate.list();
+      return templates.filter(t => t.template_type === 'todo');
+    },
+    enabled: open && !task
+  });
 
   useEffect(() => {
     if (task) {
