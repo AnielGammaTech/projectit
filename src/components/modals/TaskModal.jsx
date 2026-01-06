@@ -103,6 +103,76 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
           <DialogTitle>{task ? 'Edit Task' : 'New Task'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          {/* Template Picker - only when creating new task */}
+          {!task && (
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex items-center gap-2 h-9 px-3 rounded-lg border transition-all text-sm",
+                      selectedTemplate
+                        ? "border-[#0069AF] bg-[#0069AF]/5 text-[#0069AF]"
+                        : "border-slate-200 hover:border-slate-300 bg-white text-slate-600"
+                    )}
+                  >
+                    <FileStack className="w-4 h-4" />
+                    <span>{selectedTemplate ? selectedTemplate.name : 'From Template'}</span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-2" align="start">
+                  <p className="text-xs font-medium text-slate-500 px-2 py-1.5">Add tasks from template</p>
+                  <div className="space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTemplate(null)}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-2 py-2 rounded-md text-left text-sm transition-colors",
+                        !selectedTemplate ? "bg-slate-100 text-slate-900" : "hover:bg-slate-50 text-slate-600"
+                      )}
+                    >
+                      <X className="w-4 h-4 text-slate-400" />
+                      No Template
+                    </button>
+                    {todoTemplates.length > 0 ? todoTemplates.map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setSelectedTemplate(t)}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-2 py-2 rounded-md text-left text-sm transition-colors",
+                          selectedTemplate?.id === t.id 
+                            ? "bg-[#0069AF]/10 text-[#0069AF]" 
+                            : "hover:bg-slate-50 text-slate-600"
+                        )}
+                      >
+                        <FileStack className="w-4 h-4" />
+                        <div className="flex-1 min-w-0">
+                          <span className="truncate block">{t.name}</span>
+                          {t.default_tasks?.length > 0 && (
+                            <span className="text-xs text-slate-400">{t.default_tasks.length} tasks</span>
+                          )}
+                        </div>
+                        {selectedTemplate?.id === t.id && <Check className="w-4 h-4" />}
+                      </button>
+                    )) : (
+                      <p className="text-xs text-slate-400 px-2 py-2">No todo templates yet</p>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {selectedTemplate && (
+                <span className="text-xs text-slate-500">
+                  Will add {selectedTemplate.default_tasks?.length || 0} tasks
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Only show form fields if no template selected */}
+          {!selectedTemplate && (
+            <>
           <div>
             <Label htmlFor="title">Task Title</Label>
             <Input
