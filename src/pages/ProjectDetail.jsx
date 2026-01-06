@@ -613,6 +613,24 @@ export default function ProjectDetail() {
               {/* Project Title */}
               <h1 className="text-xl font-bold text-slate-900">{project.name}</h1>
 
+              {/* Project Tags */}
+              {getProjectTags().length > 0 && (
+                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  {getProjectTags().map(tag => (
+                    <span 
+                      key={tag.id} 
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium",
+                        tagColors[tag.color] || tagColors.slate
+                      )}
+                    >
+                      <Tag className="w-3 h-3" />
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               {project.client && (
                 <Link 
                   to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')} 
