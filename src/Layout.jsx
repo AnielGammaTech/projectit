@@ -54,15 +54,7 @@ const navItems = [
   { name: 'Activity', icon: ListTodo, page: 'AllTasks' },
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Stock', icon: Package, page: 'Inventory' },
-  { 
-    name: 'Reporting', 
-    icon: PieChart, 
-    submenu: [
-      { name: 'Activity', icon: Activity, page: 'Reports', params: '?type=activity' },
-      { name: 'Timesheets', icon: Clock, page: 'Reports', params: '?type=timesheets' },
-      { name: 'Report Builder', icon: PieChart, page: 'ReportBuilder' },
-    ]
-  },
+  { name: 'Reports', icon: PieChart, page: 'Reports' },
 ];
 
 export default function Layout({ children, currentPageName }) {
