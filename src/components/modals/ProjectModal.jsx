@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CalendarIcon, Loader2, Users, Search, Building2, User, Check, Clock, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CalendarIcon, Loader2, Users, Search, Building2, User, Check, Clock, X, Palette, FileStack } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
@@ -353,26 +354,66 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             />
           </div>
 
-          {/* Color Picker - Compact */}
-          <div>
-            <Label className="text-sm font-medium">Project Color</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {colorOptions.map(c => (
+          {/* Template & Color Row */}
+          <div className="flex items-center gap-3">
+            {/* Template Picker */}
+            {!project && templates.length > 0 && (
+              <div className="flex-1">
+                <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                  <SelectTrigger className="h-10">
+                    <div className="flex items-center gap-2">
+                      <FileStack className="w-4 h-4 text-slate-400" />
+                      <SelectValue placeholder="Use a template..." />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Template</SelectItem>
+                    {templates.map(t => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name}
+                        {t.default_tasks?.length > 0 && ` (${t.default_tasks.length} tasks)`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Color Picker Button */}
+            <Popover>
+              <PopoverTrigger asChild>
                 <button
-                  key={c.value}
                   type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, color: c.value }))}
-                  className={cn(
-                    "w-7 h-7 rounded-full transition-all border-2",
-                    formData.color === c.value 
-                      ? "ring-2 ring-offset-2 ring-slate-400 border-white scale-110" 
-                      : "border-transparent hover:scale-110"
-                  )}
-                  style={{ backgroundColor: c.color }}
-                  title={c.value}
-                />
-              ))}
-            </div>
+                  className="flex items-center gap-2 h-10 px-3 rounded-md border border-slate-200 hover:border-slate-300 bg-white transition-colors"
+                >
+                  <div 
+                    className="w-5 h-5 rounded-full border border-white shadow-sm"
+                    style={{ backgroundColor: colorOptions.find(c => c.value === formData.color)?.color || '#64748b' }}
+                  />
+                  <Palette className="w-4 h-4 text-slate-400" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-3" align="end">
+                <p className="text-xs font-medium text-slate-500 mb-2">Project Color</p>
+                <div className="grid grid-cols-6 gap-2">
+                  {colorOptions.map(c => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, color: c.value }))}
+                      className={cn(
+                        "w-7 h-7 rounded-full transition-all border-2",
+                        formData.color === c.value 
+                          ? "ring-2 ring-offset-1 ring-slate-400 border-white scale-110" 
+                          : "border-transparent hover:scale-110"
+                      )}
+                      style={{ backgroundColor: c.color }}
+                      title={c.value}
+                    />
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Optional Dates Toggle */}
