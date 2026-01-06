@@ -51,6 +51,7 @@ export default function AllTasks() {
   const [assigneeFilter, setAssigneeFilter] = useState('all');
   const [viewMode, setViewMode] = useState('all'); // 'all', 'mine', 'mine_due'
   const [currentUser, setCurrentUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [editingPart, setEditingPart] = useState(null);
   const [selectedPart, setSelectedPart] = useState(null);
@@ -60,7 +61,10 @@ export default function AllTasks() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    base44.auth.me().then(user => {
+      setCurrentUser(user);
+      setIsAdmin(user?.role === 'admin');
+    }).catch(() => {});
   }, []);
 
   const { data: tasks = [] } = useQuery({
@@ -88,9 +92,16 @@ export default function AllTasks() {
     return project?.name || 'Unknown Project';
   };
 
-  // Get active project IDs (not archived or completed)
+  // Helper to check if user has access to a project
+  const userHasProjectAccess = (project) => {
+    if (isAdmin) return true;
+    if (!project.team_members || project.team_members.length === 0) return true;
+    return project.team_members.includes(currentUser?.email);
+  };
+
+  // Get active project IDs (not archived or completed) that user has access to
   const activeProjectIds = projects
-    .filter(p => p.status !== 'archived' && p.status !== 'completed')
+    .filter(p => p.status !== 'archived' && p.status !== 'completed' && userHasProjectAccess(p))
     .map(p => p.id);
 
   const filteredTasks = tasks.filter(task => {
