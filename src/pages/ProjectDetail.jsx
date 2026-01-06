@@ -1175,6 +1175,23 @@ export default function ProjectDetail() {
         onConfirm={handleArchiveProject}
       />
 
+      {/* On Hold Modal */}
+      <OnHoldReasonModal
+        open={showOnHoldModal}
+        onClose={() => setShowOnHoldModal(false)}
+        project={project}
+        onConfirm={handleOnHold}
+      />
+
+      {/* Complete Project Modal */}
+      <CompleteProjectModal
+        open={showCompleteModal}
+        onClose={() => setShowCompleteModal(false)}
+        project={project}
+        incompleteTasks={tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}
+        onConfirm={handleCompleteProject}
+      />
+
       {/* Delete Task/Part Confirmation */}
       <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, type: null, item: null })}>
         <AlertDialogContent>
