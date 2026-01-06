@@ -54,18 +54,40 @@ const groupColors = {
   indigo: 'bg-indigo-500', violet: 'bg-violet-500', purple: 'bg-purple-500', pink: 'bg-pink-500'
 };
 
-const adminMenuItems = [
-  { id: 'people', label: 'People & Teams', icon: Users, description: 'Manage team members, groups, and admin access' },
-  { id: 'roles', label: 'Roles & Permissions', icon: Shield, description: 'Custom roles and granular access control', page: 'RolesPermissions' },
-  { id: 'project-management', label: 'Project Management', icon: Archive, description: 'Archived and deleted projects' },
-  { id: 'tags', label: 'Project Tags', icon: Tags, description: 'Create and manage project tags' },
-  { id: 'statuses', label: 'Project Statuses', icon: Layers, description: 'Customize project status tags', page: 'ProjectStatuses' },
-  { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automate actions based on triggers', page: 'Workflows' },
-  { id: 'templates', label: 'Email & Notification Templates', icon: Mail, description: 'Customize email templates with HTML and variables' },
-  { id: 'company', label: 'App Settings', icon: Building2, description: 'Branding and app identity' },
-  { id: 'integrations', label: 'Integrations & Webhooks', icon: GitMerge, description: 'Connect external services, webhooks, and GammaStack' },
-  { id: 'feedback', label: 'Feedback', icon: MessageSquare, description: 'View user feedback and bug reports', page: 'FeedbackManagement' },
-  { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Track user actions and system changes', page: 'AuditLogs' },
+const adminMenuGroups = [
+  {
+    title: 'People',
+    items: [
+      { id: 'people', label: 'People & Teams', icon: Users, description: 'Team members, groups, and admins' },
+      { id: 'roles', label: 'Roles & Permissions', icon: Shield, description: 'Access control', page: 'RolesPermissions' },
+    ]
+  },
+  {
+    title: 'Projects',
+    items: [
+      { id: 'project-management', label: 'Archived & Deleted', icon: Archive, description: 'Manage old projects' },
+      { id: 'tags', label: 'Tags', icon: Tags, description: 'Project tags' },
+      { id: 'statuses', label: 'Statuses', icon: Layers, description: 'Project statuses', page: 'ProjectStatuses' },
+      { id: 'templates', label: 'Templates', icon: FileText, description: 'Project & task templates', page: 'Templates' },
+    ]
+  },
+  {
+    title: 'Automation & Reports',
+    items: [
+      { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automation triggers', page: 'Workflows' },
+      { id: 'reports', label: 'Reports', icon: FileText, description: 'Run reports', page: 'Reports' },
+      { id: 'email-templates', label: 'Email Templates', icon: Mail, description: 'Notification templates' },
+    ]
+  },
+  {
+    title: 'Settings',
+    items: [
+      { id: 'company', label: 'App Settings', icon: Building2, description: 'Branding' },
+      { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'External services & webhooks' },
+      { id: 'feedback', label: 'Feedback', icon: MessageSquare, description: 'Bug reports', page: 'FeedbackManagement' },
+      { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Activity tracking', page: 'AuditLogs' },
+    ]
+  }
 ];
 
 // Adminland Dashboard (Main)
