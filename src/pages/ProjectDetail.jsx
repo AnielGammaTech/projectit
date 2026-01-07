@@ -261,7 +261,8 @@ export default function ProjectDetail() {
       
       await base44.entities.Project.update(projectId, { 
         tags: newTags,
-        status: 'on_hold'
+        status: 'on_hold',
+        on_hold_reason: reason
       });
       
       // Add the reason as a project note
@@ -274,9 +275,9 @@ export default function ProjectDetail() {
       });
       
       await logActivity(projectId, 'project_on_hold', `put project on hold: ${reason}`, currentUser);
+      setShowOnHoldModal(false);
       refetchProject();
       queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
-      setShowOnHoldModal(false);
     } catch (err) {
       console.error('Failed to put project on hold:', err);
     }
