@@ -663,6 +663,32 @@ export default function ProjectDetail() {
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
+        {/* On Hold Banner */}
+        {project.status === 'on_hold' && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 mb-4 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+              <p className="text-sm text-amber-800">
+                <span className="font-medium">On Hold</span>
+                {project.on_hold_reason && <span className="text-amber-600"> — {project.on_hold_reason}</span>}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleResumeProject}
+              className="text-amber-700 hover:text-amber-900 hover:bg-amber-100 h-7 text-xs"
+            >
+              <RotateCcw className="w-3 h-3 mr-1" />
+              Resume
+            </Button>
+          </motion.div>
+        )}
+
         {/* Archived Banner */}
         {(project.status === 'archived' || project.status === 'completed') && (
           <motion.div
