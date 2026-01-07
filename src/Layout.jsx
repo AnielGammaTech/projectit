@@ -253,6 +253,19 @@ function LayoutContent({ children, currentPageName }) {
               <Search className="w-5 h-5 text-white/70" />
             </button>
 
+            {/* Theme Toggle */}
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              title="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-5 h-5 text-white/70" />
+              ) : (
+                <Moon className="w-5 h-5 text-white/70" />
+              )}
+            </button>
+
             {/* My Schedule */}
             <Link
               to={createPageUrl('MySchedule')}
