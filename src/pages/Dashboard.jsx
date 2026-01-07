@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
-import IncomingQuoteBanner from '@/components/dashboard/IncomingQuoteBanner';
+
 import DashboardWidgets from '@/components/dashboard/DashboardWidgets';
 
 // Filter out in_progress and medium priority from dashboard display
@@ -68,10 +68,11 @@ export default function Dashboard() {
   const [showSaveViewModal, setShowSaveViewModal] = useState(false);
   const [isSyncingQuotes, setIsSyncingQuotes] = useState(false);
 
-  const { data: incomingQuotes = [], refetch: refetchIncomingQuotes } = useQuery({
+  const { data: incomingQuotes = [] } = useQuery({
     queryKey: ['incomingQuotes'],
     queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' }),
-    staleTime: 300000 // 5 minutes - synced by scheduled task
+    staleTime: 300000,
+    gcTime: 600000
   });
 
   const handleCreateProjectFromQuote = (quote) => {
@@ -108,7 +109,8 @@ export default function Dashboard() {
     queryKey: ['dashboardViews', currentUser?.id],
     queryFn: () => base44.entities.DashboardView.filter({ user_id: currentUser?.id }),
     enabled: !!currentUser?.id,
-    staleTime: 300000 // 5 minutes
+    staleTime: 600000,
+    gcTime: 900000
   });
 
   useEffect(() => {
@@ -573,12 +575,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Incoming Quotes Banner */}
-        <IncomingQuoteBanner 
-          quotes={incomingQuotes} 
-          onCreateProject={handleCreateProjectFromQuote} 
-          onDismiss={handleDismissQuote}
-        />
+
 
         {/* Urgent Tasks Alert */}
         {!dismissedAlert && myUrgentTasks.length > 0 && (
