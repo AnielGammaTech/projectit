@@ -46,6 +46,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { format, isToday, isPast } from 'date-fns';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
