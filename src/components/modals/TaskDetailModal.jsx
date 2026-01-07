@@ -375,8 +375,8 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
               <PopoverTrigger asChild>
                 <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors text-sm">
                   <CalendarIcon className="w-4 h-4 text-slate-400" />
-                  {task.due_date ? (
-                    <span>{format(new Date(task.due_date.split('T')[0] + 'T12:00:00'), 'MMM d')}</span>
+                  {localDueDate ? (
+                    <span>{format(localDueDate, 'MMM d')}</span>
                   ) : (
                     <span className="text-slate-500">Due date</span>
                   )}
