@@ -37,8 +37,8 @@ export default function IncomingQuoteBanner({ quotes, onCreateProject, onDismiss
 
             {/* Quote info */}
             <div className="flex-1 min-w-0 flex items-center gap-3">
-              <div className="p-1.5 bg-indigo-100 rounded-lg flex-shrink-0">
-                <FileText className="w-4 h-4 text-indigo-600" />
+              <div className="p-1.5 bg-orange-100 rounded-lg flex-shrink-0">
+                <FileText className="w-4 h-4 text-orange-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
