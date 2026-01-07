@@ -102,6 +102,96 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
     stopMutation.mutate(stopDescription);
   };
 
+  // Compact variant - minimal card style
+  if (variant === 'compact') {
+    return (
+      <>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-slate-600">
+              <Clock className="w-4 h-4 text-cyan-600" />
+              <span className="font-semibold text-sm">{formatHours(totalMinutes)}</span>
+            </div>
+            {timeBudgetHours > 0 && (
+              <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+                <TrendingUp className="w-3 h-3" />
+                <span className={cn(
+                  budgetPercent > 100 ? "text-red-500" : budgetPercent > 80 ? "text-amber-500" : ""
+                )}>
+                  {Math.round(budgetPercent)}% of {timeBudgetHours}h
+                </span>
+              </div>
+            )}
+          </div>
+          
+          {!activeEntry ? (
+            <Button 
+              onClick={() => startMutation.mutate()}
+              size="sm"
+              className="bg-cyan-600 hover:bg-cyan-700 h-7 px-2.5 text-xs"
+              disabled={startMutation.isPending}
+            >
+              <Play className="w-3 h-3 mr-1" />
+              Start
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded border border-green-200">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="font-mono text-xs font-semibold text-green-700">
+                  {formatTime(elapsedSeconds)}
+                </span>
+              </div>
+              <Button 
+                onClick={handleStopClick}
+                size="sm"
+                variant="destructive"
+                className="h-7 px-2 text-xs"
+                disabled={stopMutation.isPending}
+              >
+                <Square className="w-3 h-3" />
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Stop Timer Modal */}
+        <Dialog open={showStopModal} onOpenChange={setShowStopModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>What did you work on?</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div className="text-center p-4 bg-slate-50 rounded-lg">
+                <p className="text-sm text-slate-500 mb-1">Time logged</p>
+                <p className="text-2xl font-mono font-bold text-slate-900">{formatTime(elapsedSeconds)}</p>
+              </div>
+              <Textarea
+                value={stopDescription}
+                onChange={(e) => setStopDescription(e.target.value)}
+                placeholder="Describe what you worked on..."
+                className="min-h-[100px]"
+                autoFocus
+              />
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setShowStopModal(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleConfirmStop}
+                  className="bg-[#0069AF] hover:bg-[#133F5C]"
+                  disabled={stopMutation.isPending}
+                >
+                  Save & Stop
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
   // Card variant - shows more details in a box
   if (variant === 'card') {
     return (
