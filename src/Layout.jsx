@@ -124,7 +124,7 @@ function LayoutContent({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-background">
+    <div className="min-h-screen bg-slate-50">
       {/* Top Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 h-14 bg-[#0F2F44] z-40 px-4">
         <div className="max-w-[1800px] mx-auto h-full flex items-center">
@@ -249,19 +249,6 @@ function LayoutContent({ children, currentPageName }) {
               className="sm:hidden p-2 hover:bg-white/10 rounded-lg"
             >
               <Search className="w-5 h-5 text-white/70" />
-            </button>
-
-            {/* Theme Toggle */}
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              title="Toggle theme"
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-5 h-5 text-white/70" />
-              ) : (
-                <Moon className="w-5 h-5 text-white/70" />
-              )}
             </button>
 
             {/* My Schedule */}
@@ -481,9 +468,5 @@ function LayoutContent({ children, currentPageName }) {
 }
 
 export default function Layout({ children, currentPageName }) {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-      <LayoutContent children={children} currentPageName={currentPageName} />
-    </ThemeProvider>
-  );
+  return <LayoutContent children={children} currentPageName={currentPageName} />;
 }
