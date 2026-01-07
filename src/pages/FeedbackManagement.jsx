@@ -243,7 +243,12 @@ export default function FeedbackManagement() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-medium text-slate-900">{feedback.title}</h4>
+                        <h4 className="font-medium text-slate-900 flex items-center gap-2">
+                          {(feedback.status === 'closed' || feedback.status === 'resolved') && (
+                            <CheckCircle className="w-4 h-4 text-emerald-500" />
+                          )}
+                          {feedback.title}
+                        </h4>
                         <div className="flex items-center gap-2">
                           <Badge className={priority.color}>{priority.label}</Badge>
                           <Select
