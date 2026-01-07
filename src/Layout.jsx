@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
-import { ThemeProvider, useTheme } from 'next-themes';
+
 import { 
   LayoutDashboard, 
   ListTodo, 
