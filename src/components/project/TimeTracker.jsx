@@ -102,6 +102,114 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
     stopMutation.mutate(stopDescription);
   };
 
+  // Card variant - shows more details in a box
+  if (variant === 'card') {
+    return (
+      <>
+        <div className="space-y-4">
+          {/* Time Summary */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-2xl font-bold text-slate-900">{formatHours(totalMinutes)}</p>
+              <p className="text-xs text-slate-500">Total logged</p>
+            </div>
+            {timeBudgetHours > 0 && (
+              <div className="text-right">
+                <p className={cn(
+                  "text-lg font-semibold",
+                  budgetPercent > 100 ? "text-red-600" : budgetPercent > 80 ? "text-amber-600" : "text-slate-600"
+                )}>
+                  {Math.round(budgetPercent)}%
+                </p>
+                <p className="text-xs text-slate-500">of {timeBudgetHours}h budget</p>
+              </div>
+            )}
+          </div>
+
+          {/* Budget Progress Bar */}
+          {timeBudgetHours > 0 && (
+            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div 
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  budgetPercent > 100 ? "bg-red-500" : budgetPercent > 80 ? "bg-amber-500" : "bg-cyan-500"
+                )}
+                style={{ width: `${Math.min(budgetPercent, 100)}%` }}
+              />
+            </div>
+          )}
+
+          {/* Timer Controls */}
+          <div className="pt-2 border-t border-slate-100">
+            {!activeEntry ? (
+              <Button 
+                onClick={() => startMutation.mutate()}
+                className="w-full bg-cyan-600 hover:bg-cyan-700"
+                disabled={startMutation.isPending}
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Start Timer
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="font-mono text-xl font-bold text-green-700">
+                    {formatTime(elapsedSeconds)}
+                  </span>
+                </div>
+                <Button 
+                  onClick={handleStopClick}
+                  variant="destructive"
+                  className="w-full"
+                  disabled={stopMutation.isPending}
+                >
+                  <Square className="w-4 h-4 mr-2" />
+                  Stop Timer
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Stop Timer Modal */}
+        <Dialog open={showStopModal} onOpenChange={setShowStopModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>What did you work on?</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div className="text-center p-4 bg-slate-50 rounded-lg">
+                <p className="text-sm text-slate-500 mb-1">Time logged</p>
+                <p className="text-2xl font-mono font-bold text-slate-900">{formatTime(elapsedSeconds)}</p>
+              </div>
+              <Textarea
+                value={stopDescription}
+                onChange={(e) => setStopDescription(e.target.value)}
+                placeholder="Describe what you worked on..."
+                className="min-h-[100px]"
+                autoFocus
+              />
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setShowStopModal(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleConfirmStop}
+                  className="bg-[#0069AF] hover:bg-[#133F5C]"
+                  disabled={stopMutation.isPending}
+                >
+                  Save & Stop
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
+  // Default inline variant
   return (
     <>
       <div className="flex items-center gap-2">
