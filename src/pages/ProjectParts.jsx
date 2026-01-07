@@ -835,7 +835,7 @@ export default function ProjectParts() {
       </AlertDialog>
 
       {/* Receive Part Dialog with Location */}
-      <AlertDialog open={receiveDialog.open} onOpenChange={(open) => !open && setReceiveDialog({ open: false, part: null, installer: '', location: '' })}>
+      <AlertDialog open={receiveDialog.open} onOpenChange={(open) => !open && setReceiveDialog({ open: false, part: null, installer: '', location: '', createTask: false })}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
