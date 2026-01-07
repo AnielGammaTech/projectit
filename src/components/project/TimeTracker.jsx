@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Play, Square, Timer } from 'lucide-react';
+import { Play, Square, Timer, Clock, TrendingUp } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
