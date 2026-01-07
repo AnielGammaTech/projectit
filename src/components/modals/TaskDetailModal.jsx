@@ -94,7 +94,45 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   const addCommentMutation = useMutation({
     mutationFn: async (commentData) => {
-      return base44.entities.TaskComment.create(commentData);
+      const newComment = await base44.entities.TaskComment.create(commentData);
+      
+      // Send notifications for mentions
+      if (commentData.mentions?.length > 0) {
+        for (const email of commentData.mentions) {
+          if (email !== currentUser?.email) {
+            try {
+              await base44.entities.UserNotification.create({
+                user_email: email,
+                type: 'mention',
+                title: 'You were mentioned in a comment',
+                message: `${currentUser?.full_name || currentUser?.email} mentioned you on "${task.title}"`,
+                project_id: task.project_id,
+                project_name: project?.name,
+                from_user_email: currentUser?.email,
+                from_user_name: currentUser?.full_name || currentUser?.email,
+                link: `/ProjectDetail?id=${task.project_id}`,
+                is_read: false
+              });
+
+              // Send email notification
+              await base44.functions.invoke('sendNotificationEmail', {
+                to: email,
+                type: 'mention',
+                title: 'You were mentioned in a comment',
+                message: `${currentUser?.full_name || currentUser?.email} mentioned you on "${task.title}": "${commentData.content.slice(0, 100)}${commentData.content.length > 100 ? '...' : ''}"`,
+                projectId: task.project_id,
+                projectName: project?.name,
+                fromUserName: currentUser?.full_name || currentUser?.email,
+                link: `${window.location.origin}/ProjectDetail?id=${task.project_id}`
+              });
+            } catch (err) {
+              console.error('Failed to send mention notification:', err);
+            }
+          }
+        }
+      }
+      
+      return newComment;
     },
     onSuccess: () => {
       refetchComments();
