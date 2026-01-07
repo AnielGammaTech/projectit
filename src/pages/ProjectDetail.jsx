@@ -1075,6 +1075,34 @@ export default function ProjectDetail() {
             <ProjectInsightsWidget projectId={projectId} tasks={tasks} parts={parts} />
           </motion.div>
 
+          {/* Time Tracking Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-fit"
+          >
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-cyan-50 to-sky-100/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-cyan-600 shadow-lg shadow-cyan-200">
+                  <Clock className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">Time Tracking</h3>
+                  <p className="text-sm text-slate-500">Log hours on this project</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4">
+              <TimeTracker 
+                projectId={projectId} 
+                currentUser={currentUser} 
+                timeBudgetHours={project.time_budget_hours || 0}
+                variant="card"
+              />
+            </div>
+          </motion.div>
+
           </div>
 
         {/* Sidebar - Calendar */}
