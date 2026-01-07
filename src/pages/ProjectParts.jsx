@@ -298,7 +298,7 @@ export default function ProjectParts() {
   };
 
   const handleConfirmReceive = async () => {
-    const { part, installer, location } = receiveDialog;
+    const { part, installer, location, createTask } = receiveDialog;
     if (!part || !installer) return;
     
     const member = teamMembers.find(m => m.email === installer);
@@ -309,8 +309,23 @@ export default function ProjectParts() {
       received_date: format(new Date(), 'yyyy-MM-dd'),
       notes: location ? `${part.notes || ''}\n📍 Location: ${location}`.trim() : part.notes
     });
+    
+    // Create installation task if checkbox is checked
+    if (createTask) {
+      await base44.entities.Task.create({
+        title: `Install: ${part.name}`,
+        description: `Install part${part.part_number ? ` #${part.part_number}` : ''}${location ? `\n📍 Location: ${location}` : ''}`,
+        project_id: projectId,
+        assigned_to: installer,
+        assigned_name: member?.name || installer,
+        status: 'todo',
+        priority: 'medium'
+      });
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    }
+    
     refetchParts();
-    setReceiveDialog({ open: false, part: null, installer: '', location: '' });
+    setReceiveDialog({ open: false, part: null, installer: '', location: '', createTask: false });
   };
 
   const handleMarkInstalled = async (part) => {
