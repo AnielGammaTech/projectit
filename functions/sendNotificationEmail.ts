@@ -52,7 +52,19 @@ Deno.serve(async (req) => {
     } catch (e) {
       console.log('Could not fetch app settings, using defaults:', e.message);
     }
+
+    // Get integration settings for email configuration
+    let integrationConfig = {};
+    try {
+      const integrationSettings = await base44.asServiceRole.entities.IntegrationSettings.filter({ setting_key: 'main' });
+      integrationConfig = integrationSettings[0] || {};
+    } catch (e) {
+      console.log('Could not fetch integration settings:', e.message);
+    }
+
     const appName = appConfig.app_name || 'ProjectIT';
+    const fromEmail = integrationConfig.resend_from_email || 'no-reply@projectit.gtools.io';
+    const fromName = integrationConfig.resend_from_name || appName;
 
     // Build email body
     const emailBody = buildEmailHtml({
@@ -68,6 +80,7 @@ Deno.serve(async (req) => {
 
     // Send email via Base44's built-in SendEmail integration using service role
     await base44.asServiceRole.integrations.Core.SendEmail({
+      from_name: fromName,
       to: to,
       subject: `${appName}: ${title}`,
       body: emailBody
