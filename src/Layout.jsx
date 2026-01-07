@@ -478,6 +478,14 @@ function LayoutContent({ children, currentPageName }) {
 
               {/* Floating Feedback Button */}
               <FeedbackButton />
-            </div>
-          );
-          }
+              </div>
+              );
+              }
+
+              export default function Layout({ children, currentPageName }) {
+              return (
+              <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+              <LayoutContent children={children} currentPageName={currentPageName} />
+              </ThemeProvider>
+              );
+              }
