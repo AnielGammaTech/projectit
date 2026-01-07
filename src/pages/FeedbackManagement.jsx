@@ -230,7 +230,12 @@ export default function FeedbackManagement() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.02 }}
                   onClick={() => setSelectedFeedback(feedback)}
-                  className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md transition-all cursor-pointer group"
+                  className={cn(
+                    "rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
+                    feedback.status === 'closed' || feedback.status === 'resolved'
+                      ? "bg-emerald-50/50 border-emerald-200"
+                      : "bg-white border-slate-100"
+                  )}
                 >
                   <div className="flex items-start gap-4">
                     <div className={cn("p-2 rounded-lg", type.color.split(' ')[0])}>
