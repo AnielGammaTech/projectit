@@ -375,7 +375,10 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 <Calendar
                   mode="single"
                   selected={task.due_date ? new Date(task.due_date.split('T')[0] + 'T12:00:00') : undefined}
-                  onSelect={handleDueDateChange}
+                  onSelect={(date) => {
+                    handleDueDateChange(date);
+                  }}
+                  initialFocus
                 />
                 {task.due_date && (
                   <div className="p-2 border-t">
