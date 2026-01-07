@@ -20,6 +20,7 @@ export default function NotificationSettings() {
     notify_task_completed: true,
     notify_part_status_change: true,
     notify_project_updates: true,
+    notify_project_assigned: true,
     notify_mentions: true,
     notify_new_comments: false,
     due_reminder_days: 1,
@@ -52,17 +53,18 @@ export default function NotificationSettings() {
   useEffect(() => {
     if (savedSettings) {
       setSettings({
-        notify_task_assigned: savedSettings.notify_task_assigned ?? true,
-        notify_task_due_soon: savedSettings.notify_task_due_soon ?? true,
-        notify_task_overdue: savedSettings.notify_task_overdue ?? true,
-        notify_task_completed: savedSettings.notify_task_completed ?? true,
-        notify_part_status_change: savedSettings.notify_part_status_change ?? true,
-        notify_project_updates: savedSettings.notify_project_updates ?? true,
-        notify_mentions: savedSettings.notify_mentions ?? true,
-        notify_new_comments: savedSettings.notify_new_comments ?? false,
-        due_reminder_days: savedSettings.due_reminder_days ?? 1,
-        email_frequency: savedSettings.email_frequency ?? 'instant'
-      });
+                notify_task_assigned: savedSettings.notify_task_assigned ?? true,
+                notify_task_due_soon: savedSettings.notify_task_due_soon ?? true,
+                notify_task_overdue: savedSettings.notify_task_overdue ?? true,
+                notify_task_completed: savedSettings.notify_task_completed ?? true,
+                notify_part_status_change: savedSettings.notify_part_status_change ?? true,
+                notify_project_updates: savedSettings.notify_project_updates ?? true,
+                notify_project_assigned: savedSettings.notify_project_assigned ?? true,
+                notify_mentions: savedSettings.notify_mentions ?? true,
+                notify_new_comments: savedSettings.notify_new_comments ?? false,
+                due_reminder_days: savedSettings.due_reminder_days ?? 1,
+                email_frequency: savedSettings.email_frequency ?? 'instant'
+              });
     }
   }, [savedSettings]);
 
@@ -301,6 +303,23 @@ export default function NotificationSettings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Project Assigned */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 rounded-lg bg-blue-100">
+                    <FolderOpen className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-medium text-slate-900">Project Assigned</Label>
+                    <p className="text-sm text-slate-500 mt-0.5">Get notified when you are added to a project</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.notify_project_assigned}
+                  onCheckedChange={(v) => handleChange('notify_project_assigned', v)}
+                />
+              </div>
+
               {/* Project Updates */}
               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
                 <div className="flex items-start gap-4">
