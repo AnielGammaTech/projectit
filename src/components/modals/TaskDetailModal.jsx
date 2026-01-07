@@ -142,7 +142,11 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   };
 
   const handleDueDateChange = async (date) => {
-    await handleUpdateTask({ due_date: date ? format(date, 'yyyy-MM-dd') : '' });
+    if (date) {
+      await handleUpdateTask({ due_date: format(date, 'yyyy-MM-dd') });
+    } else {
+      await handleUpdateTask({ due_date: '' });
+    }
   };
 
   const handleNotesBlur = async () => {
