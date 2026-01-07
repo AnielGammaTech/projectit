@@ -126,7 +126,7 @@ function LayoutContent({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-background">
       {/* Top Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 h-14 bg-[#0F2F44] z-40 px-4">
         <div className="max-w-[1800px] mx-auto h-full flex items-center">
