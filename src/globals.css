@@ -31,6 +31,31 @@ css
   --destructive-foreground: 0 0% 100%;
 }
 
+.dark {
+  --primary: 202 100% 73%;
+  --primary-foreground: 200 65% 10%;
+  --secondary: 200 30% 20%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 202 100% 73%;
+  --accent-foreground: 200 65% 10%;
+  --highlight: 202 100% 73%;
+  
+  --background: 220 20% 10%;
+  --foreground: 210 20% 95%;
+  --card: 220 20% 13%;
+  --card-foreground: 210 20% 95%;
+  --popover: 220 20% 13%;
+  --popover-foreground: 210 20% 95%;
+  --muted: 220 15% 20%;
+  --muted-foreground: 210 15% 65%;
+  --border: 220 15% 25%;
+  --input: 220 15% 25%;
+  --ring: 202 100% 73%;
+  
+  --destructive: 0 70% 50%;
+  --destructive-foreground: 0 0% 100%;
+}
+
 * {
   font-family: 'Poppins', sans-serif;
 }
