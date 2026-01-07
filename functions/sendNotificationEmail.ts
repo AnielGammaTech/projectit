@@ -29,6 +29,7 @@ Deno.serve(async (req) => {
       'task_completed': 'notify_task_completed',
       'part_status': 'notify_part_status_change',
       'project_update': 'notify_project_updates',
+      'project_assigned': 'notify_project_assigned',
       'comment': 'notify_new_comments'
     };
 
@@ -104,6 +105,7 @@ function buildEmailHtml({ appName, appLogo, type, title, message, projectName, f
     'task_completed': '#10b981',
     'part_status': '#f97316',
     'project_update': '#8b5cf6',
+    'project_assigned': '#0069AF',
     'comment': '#14b8a6'
   };
 
@@ -115,6 +117,7 @@ function buildEmailHtml({ appName, appLogo, type, title, message, projectName, f
     'task_completed': 'Completed',
     'part_status': 'Part Update',
     'project_update': 'Project Update',
+    'project_assigned': 'Project Assigned',
     'comment': 'New Comment'
   };
 
