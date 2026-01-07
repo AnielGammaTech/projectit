@@ -1075,14 +1075,24 @@ export default function ProjectDetail() {
             <ProjectInsightsWidget projectId={projectId} tasks={tasks} parts={parts} />
           </motion.div>
 
-          {/* Time Tracking Card - Compact */}
+          {/* Time Report Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-fit"
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-fit hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
+            onClick={() => window.location.href = createPageUrl('ProjectTime') + `?id=${projectId}`}
           >
             <div className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-xl bg-amber-100">
+                  <Clock className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">Time Report</h3>
+                  <p className="text-sm text-slate-500">Track project hours</p>
+                </div>
+              </div>
               <TimeTracker 
                 projectId={projectId} 
                 currentUser={currentUser} 
