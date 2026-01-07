@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,14 +9,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, Package, Search } from 'lucide-react';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function PartModal({ open, onClose, part, projectId, teamMembers = [], onSave }) {
   const [saving, setSaving] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
+  const [showProductDropdown, setShowProductDropdown] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     part_number: '',
+    product_id: '',
     quantity: 1,
     unit_cost: 0,
     status: 'needed',
@@ -26,11 +32,24 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
     est_delivery_date: ''
   });
 
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => base44.entities.Product.list(),
+    staleTime: 300000,
+    enabled: open
+  });
+
+  const filteredProducts = products.filter(p =>
+    p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+    p.sku?.toLowerCase().includes(productSearch.toLowerCase())
+  ).slice(0, 10);
+
   useEffect(() => {
     if (part) {
       setFormData({
         name: part.name || '',
         part_number: part.part_number || '',
+        product_id: part.product_id || '',
         quantity: part.quantity || 1,
         unit_cost: part.unit_cost || 0,
         status: part.status || 'needed',
@@ -41,10 +60,16 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
         due_date: part.due_date || '',
         est_delivery_date: part.est_delivery_date || ''
       });
+      // Set product search to show linked product name
+      if (part.product_id) {
+        const linkedProduct = products.find(p => p.id === part.product_id);
+        if (linkedProduct) setProductSearch(linkedProduct.name);
+      }
     } else {
       setFormData({
         name: '',
         part_number: '',
+        product_id: '',
         quantity: 1,
         unit_cost: 0,
         status: 'needed',
@@ -55,8 +80,26 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
         est_delivery_date: '',
         due_date: ''
       });
+      setProductSearch('');
     }
-  }, [part, open]);
+  }, [part, open, products]);
+
+  const handleSelectProduct = (product) => {
+    setFormData(prev => ({
+      ...prev,
+      product_id: product.id,
+      name: prev.name || product.name,
+      part_number: prev.part_number || product.sku || '',
+      unit_cost: prev.unit_cost || product.cost || product.selling_price || 0
+    }));
+    setProductSearch(product.name);
+    setShowProductDropdown(false);
+  };
+
+  const handleClearProduct = () => {
+    setFormData(prev => ({ ...prev, product_id: '' }));
+    setProductSearch('');
+  };
 
   const handleAssigneeChange = (email) => {
     if (email === 'unassigned') {
@@ -86,6 +129,57 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
           <DialogTitle>{part ? 'Edit Part' : 'Add Part'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          {/* Link to Product from Stock */}
+          <div className="relative">
+            <Label className="flex items-center gap-2">
+              <Package className="w-4 h-4 text-emerald-600" />
+              Link to Stock Product (optional)
+            </Label>
+            <div className="relative mt-1.5">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                value={productSearch}
+                onChange={(e) => { setProductSearch(e.target.value); setShowProductDropdown(true); }}
+                onFocus={() => setShowProductDropdown(true)}
+                placeholder="Search products in stock..."
+                className={cn("pl-10", formData.product_id && "border-emerald-300 bg-emerald-50")}
+              />
+              {formData.product_id && (
+                <button
+                  type="button"
+                  onClick={handleClearProduct}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            {showProductDropdown && productSearch && filteredProducts.length > 0 && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-auto">
+                {filteredProducts.map(product => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => handleSelectProduct(product)}
+                    className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-3"
+                  >
+                    {product.image_url ? (
+                      <img src={product.image_url} alt="" className="w-8 h-8 rounded object-cover" />
+                    ) : (
+                      <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center">
+                        <Package className="w-4 h-4 text-slate-400" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{product.name}</p>
+                      <p className="text-xs text-slate-500">{product.sku || 'No SKU'} • ${product.cost || product.selling_price || 0}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="name">Part Name</Label>
