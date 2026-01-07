@@ -87,10 +87,12 @@ export default function FeedbackManagement() {
   });
 
   const handleStatusChange = async (feedback, status) => {
-    await base44.entities.Feedback.update(feedback.id, { status });
+    // When marking as resolved, automatically set to closed
+    const finalStatus = status === 'resolved' ? 'closed' : status;
+    await base44.entities.Feedback.update(feedback.id, { status: finalStatus });
     queryClient.invalidateQueries({ queryKey: ['feedback'] });
     if (selectedFeedback?.id === feedback.id) {
-      setSelectedFeedback({ ...selectedFeedback, status });
+      setSelectedFeedback({ ...selectedFeedback, status: finalStatus });
     }
   };
 
