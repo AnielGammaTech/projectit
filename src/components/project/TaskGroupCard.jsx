@@ -57,34 +57,34 @@ export default function TaskGroupCard({ group, tasks = [], onEditGroup, onDelete
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={cn(
-        "bg-[#1a3a2f] rounded-xl overflow-hidden shadow-lg min-w-[280px] max-w-[320px] flex-shrink-0"
-      )}
+      className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 min-w-[280px] max-w-[320px] flex-shrink-0"
     >
       {/* Header */}
       <div className={cn("p-3", colorConfig.bg)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400" />
+            <div className="w-2 h-2 rounded-full bg-white/80" />
             <h3 className="font-semibold text-white text-sm truncate">{group?.name || 'Ungrouped'}</h3>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-white/70">{completedCount}/{totalCount} completed</span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-white/70 hover:text-white hover:bg-white/10">
-                  <MoreHorizontal className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEditGroup?.(group)}>
-                  <Edit2 className="w-4 h-4 mr-2" />Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDeleteGroup?.(group)} className="text-red-600">
-                  <Trash2 className="w-4 h-4 mr-2" />Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {onEditGroup && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-white/70 hover:text-white hover:bg-white/10">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onEditGroup?.(group)}>
+                    <Edit2 className="w-4 h-4 mr-2" />Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDeleteGroup?.(group)} className="text-red-600">
+                    <Trash2 className="w-4 h-4 mr-2" />Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@ export default function TaskGroupCard({ group, tasks = [], onEditGroup, onDelete
                   onClick={() => onTaskClick?.(task)}
                   className={cn(
                     "flex items-start gap-2 p-2 rounded-lg cursor-pointer transition-all group",
-                    task.status === 'completed' ? "opacity-60" : "hover:bg-white/5"
+                    task.status === 'completed' ? "opacity-60" : "hover:bg-slate-50"
                   )}
                 >
                   <button
@@ -114,22 +114,22 @@ export default function TaskGroupCard({ group, tasks = [], onEditGroup, onDelete
                     className="mt-0.5 flex-shrink-0"
                   >
                     {task.status === 'completed' ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     ) : (
-                      <Circle className="w-4 h-4 text-slate-500 group-hover:text-slate-400" />
+                      <Circle className="w-4 h-4 text-slate-300 group-hover:text-slate-400" />
                     )}
                   </button>
                   <div className="flex-1 min-w-0">
                     <p className={cn(
-                      "text-sm text-white/90 leading-tight",
-                      task.status === 'completed' && "line-through text-white/50"
+                      "text-sm text-slate-800 leading-tight",
+                      task.status === 'completed' && "line-through text-slate-400"
                     )}>
                       {task.title}
                     </p>
                     {(task.due_date || task.assigned_name) && (
                       <div className="flex items-center gap-2 mt-1">
                         {task.due_date && (
-                          <span className="text-[10px] text-white/50 flex items-center gap-1">
+                          <span className="text-[10px] text-slate-400 flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </span>
@@ -152,7 +152,7 @@ export default function TaskGroupCard({ group, tasks = [], onEditGroup, onDelete
         ))}
         
         {tasks.length === 0 && (
-          <p className="text-sm text-white/40 text-center py-4">No tasks</p>
+          <p className="text-sm text-slate-400 text-center py-4">No tasks</p>
         )}
       </div>
     </motion.div>
