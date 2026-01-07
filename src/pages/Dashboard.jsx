@@ -729,12 +729,12 @@ export default function Dashboard() {
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-lg font-semibold text-slate-900">
+                <h2 className="text-lg font-semibold text-[#0F2F44]">
                   {showArchived ? 'Archived Projects' : 'Active Projects'}
                 </h2>
                 <button
                   onClick={() => setShowArchived(!showArchived)}
-                  className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+                  className="flex items-center gap-1.5 text-sm text-[#0F2F44]/60 hover:text-[#0F2F44]"
                 >
                   <Archive className="w-4 h-4" />
                   {showArchived ? 'Show Active' : `Archived (${archivedProjects.length})`}
@@ -755,35 +755,35 @@ export default function Dashboard() {
                   </button>
                 )}
                 {/* View Mode Toggle */}
-                <div className="flex items-center bg-slate-100 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode('cards')}
-                    className={cn(
-                      "p-1.5 rounded-md transition-all",
-                      viewMode === 'cards' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
-                    )}
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={cn(
-                      "p-1.5 rounded-md transition-all",
-                      viewMode === 'list' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
-                    )}
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 w-48 bg-white h-9"
-                  />
-                </div>
+                <div className="flex items-center bg-[#0F2F44]/10 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode('cards')}
+                      className={cn(
+                        "p-1.5 rounded-md transition-all",
+                        viewMode === 'cards' ? "bg-white shadow-sm text-[#0F2F44]" : "text-[#0F2F44]/60 hover:text-[#0F2F44]"
+                      )}
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={cn(
+                        "p-1.5 rounded-md transition-all",
+                        viewMode === 'list' ? "bg-white shadow-sm text-[#0F2F44]" : "text-[#0F2F44]/60 hover:text-[#0F2F44]"
+                      )}
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0F2F44]/40" />
+                    <Input
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 w-48 bg-[#0F2F44]/5 border-[#0F2F44]/10 h-9"
+                    />
+                  </div>
               </div>
             </div>
 
@@ -1240,15 +1240,15 @@ export default function Dashboard() {
                         </DragDropContext>
                         )
             ) : (
-              <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-                <FolderKanban className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No projects yet</h3>
-                <p className="text-slate-500 mb-6">Get started by creating your first project</p>
-                <Button onClick={() => setShowProjectModal(true)} className="bg-indigo-600 hover:bg-indigo-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Project
-                </Button>
-              </div>
+              <div className="bg-[#0F2F44]/5 rounded-2xl border border-[#0F2F44]/10 p-12 text-center">
+                  <FolderKanban className="w-12 h-12 mx-auto text-[#0F2F44]/30 mb-4" />
+                  <h3 className="text-lg font-medium text-[#0F2F44] mb-2">No projects yet</h3>
+                  <p className="text-[#0F2F44]/60 mb-6">Get started by creating your first project</p>
+                  <Button onClick={() => setShowProjectModal(true)} className="bg-[#0F2F44] hover:bg-[#1a4a6e]">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Project
+                  </Button>
+                </div>
             )}
           </div>
 
