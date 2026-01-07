@@ -390,10 +390,10 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
         {/* Stats Row - Clean Layout */}
         <div className="flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            {/* Tasks count */}
+            {/* Tasks count - completed/total */}
             <div className="flex items-center gap-1">
               <ListTodo className="w-3 h-3" />
-              <span>{pendingTasks}/{totalTasks}</span>
+              <span>{completedTasks}/{totalTasks}</span>
             </div>
             
             {/* Parts if any */}
