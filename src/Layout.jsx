@@ -248,6 +248,15 @@ export default function Layout({ children, currentPageName }) {
               <Search className="w-5 h-5 text-white/70" />
             </button>
 
+            {/* My Schedule */}
+            <Link
+              to={createPageUrl('MySchedule')}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              title="My Schedule"
+            >
+              <Calendar className="w-5 h-5 text-white/70" />
+            </Link>
+
             {/* Notifications Bell */}
             <Link
               to={createPageUrl('MyNotifications')}
