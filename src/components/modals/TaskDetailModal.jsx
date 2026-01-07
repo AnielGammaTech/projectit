@@ -141,12 +141,19 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     await handleUpdateTask({ priority });
   };
 
-  const handleDueDateChange = async (date) => {
-    if (date) {
-      await handleUpdateTask({ due_date: format(date, 'yyyy-MM-dd') });
+  const [localDueDate, setLocalDueDate] = useState(null);
+  
+  useEffect(() => {
+    if (task?.due_date) {
+      setLocalDueDate(new Date(task.due_date.split('T')[0] + 'T12:00:00'));
     } else {
-      await handleUpdateTask({ due_date: '' });
+      setLocalDueDate(null);
     }
+  }, [task?.due_date]);
+
+  const handleDueDateChange = (date) => {
+    setLocalDueDate(date);
+    handleUpdateTask({ due_date: date ? format(date, 'yyyy-MM-dd') : '' });
   };
 
   const handleNotesBlur = async () => {
