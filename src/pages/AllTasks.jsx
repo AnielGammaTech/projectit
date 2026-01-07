@@ -431,10 +431,7 @@ export default function AllTasks() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <h4 className={cn(
-                            "font-medium text-slate-900",
-                            task.status === 'completed' && "line-through text-slate-500"
-                          )}>
+                          <h4 className="font-medium text-slate-900">
                             {task.title}
                           </h4>
                           <div className="flex items-center gap-2">
@@ -483,9 +480,72 @@ export default function AllTasks() {
                 className="bg-white rounded-2xl border border-slate-100 p-12 text-center"
               >
                 <ListTodo className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No tasks found</h3>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">No active tasks found</h3>
                 <p className="text-slate-500">Try adjusting your filters or create a new task in a project</p>
               </motion.div>
+            )}
+
+            {/* Completed Tasks Section */}
+            {completedTasks.length > 0 && (
+              <div className="mt-6">
+                <button
+                  onClick={() => setShowCompletedTasks(!showCompletedTasks)}
+                  className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-700 mb-3 transition-colors"
+                >
+                  {showCompletedTasks ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  Completed Tasks ({completedTasks.length})
+                </button>
+                
+                <AnimatePresence>
+                  {showCompletedTasks && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-2 overflow-hidden"
+                    >
+                      {completedTasks.map((task, idx) => {
+                        const status = statusConfig.completed;
+                        const StatusIcon = status.icon;
+
+                        return (
+                          <motion.div
+                            key={task.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.02 }}
+                            onClick={() => { setEditingTask(task); setShowTaskModal(true); }}
+                            className="bg-slate-50 rounded-xl border border-slate-100 p-3 hover:bg-slate-100 transition-all cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={cn("p-1 rounded-lg", status.bg)}>
+                                <StatusIcon className={cn("w-4 h-4", status.color)} />
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-slate-500 line-through text-sm">
+                                  {task.title}
+                                </h4>
+                              </div>
+
+                              <Link to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`} onClick={(e) => e.stopPropagation()}>
+                                <Badge variant="outline" className="shrink-0 hover:bg-white text-xs">
+                                  {getProjectName(task.project_id)}
+                                </Badge>
+                              </Link>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             )}
           </div>
         )}
