@@ -147,7 +147,7 @@ export default function Layout({ children, currentPageName }) {
                   <Globe className="w-4 h-4 text-[#133F5C]" />
                 </div>
               )}
-              <span className="font-semibold text-white hidden sm:inline">{appName}</span>
+              <span className="font-semibold text-white hidden sm:inline">ProjectIT</span>
             </Link>
           </div>
 
