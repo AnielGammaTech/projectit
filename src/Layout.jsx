@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
+import { ThemeProvider, useTheme } from 'next-themes';
 import { 
   LayoutDashboard, 
   ListTodo, 
@@ -24,7 +25,9 @@ import {
   Bell,
   Globe,
   Inbox,
-  Calendar
+  Calendar,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
