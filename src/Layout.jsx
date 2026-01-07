@@ -43,14 +43,6 @@ import {
 
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
-  { 
-    name: 'My Stuff', 
-    icon: User, 
-    submenu: [
-      { name: 'My Assignments', icon: ListTodo, page: 'MyAssignments' },
-      { name: 'My Schedule', icon: Clock, page: 'MySchedule' },
-    ]
-  },
   { name: 'Activity', icon: ListTodo, page: 'AllTasks' },
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Stock', icon: Package, page: 'Inventory' },
