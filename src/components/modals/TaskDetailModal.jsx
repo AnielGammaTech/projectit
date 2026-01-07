@@ -603,13 +603,35 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                         {formatDistanceToNow(new Date(c.created_date), { addSuffix: true })}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-600 whitespace-pre-wrap bg-slate-50 rounded-lg px-3 py-2">
-                      {c.content.split(/(@\w+(?:\s\w+)?)/g).map((part, i) => 
-                        part.startsWith('@') ? (
-                          <span key={i} className="text-indigo-600 font-medium">{part}</span>
-                        ) : part
+                    <div className="bg-slate-50 rounded-lg px-3 py-2">
+                      <p className="text-sm text-slate-600 whitespace-pre-wrap">
+                        {c.content.split(/(@\w+(?:\s\w+)?)/g).map((part, i) => 
+                          part.startsWith('@') ? (
+                            <span key={i} className="text-indigo-600 font-medium">{part}</span>
+                          ) : part
+                        )}
+                      </p>
+                      {/* Comment Attachments */}
+                      {c.attachments?.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2 pt-2 border-t border-slate-200">
+                          {c.attachments.map((att, idx) => {
+                            const FileIcon = getFileIcon(att.type);
+                            return (
+                              <a 
+                                key={idx} 
+                                href={att.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 bg-white border border-slate-200 rounded px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50 transition-colors"
+                              >
+                                <FileIcon className="w-3 h-3" />
+                                <span className="truncate max-w-[120px]">{att.name}</span>
+                              </a>
+                            );
+                          })}
+                        </div>
                       )}
-                    </p>
+                    </div>
                   </div>
                 </div>
               ))}
