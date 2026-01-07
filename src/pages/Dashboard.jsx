@@ -71,7 +71,7 @@ export default function Dashboard() {
   const { data: incomingQuotes = [], refetch: refetchIncomingQuotes } = useQuery({
     queryKey: ['incomingQuotes'],
     queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' }),
-    staleTime: 60000 // 1 minute
+    staleTime: 300000 // 5 minutes - synced by scheduled task
   });
 
   const handleCreateProjectFromQuote = (quote) => {
@@ -125,43 +125,46 @@ export default function Dashboard() {
   const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: () => base44.entities.Project.list('-created_date'),
-    staleTime: 30000 // 30 seconds
+    staleTime: 120000, // 2 minutes
+    gcTime: 300000
   });
 
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks'],
     queryFn: () => base44.entities.Task.list('-created_date'),
-    staleTime: 30000
+    staleTime: 120000,
+    gcTime: 300000
   });
 
   const { data: parts = [] } = useQuery({
     queryKey: ['parts'],
     queryFn: () => base44.entities.Part.list('-created_date'),
-    staleTime: 60000
+    staleTime: 180000, // 3 minutes
+    gcTime: 300000
   });
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
     queryFn: () => base44.entities.ProjectTemplate.list(),
-    staleTime: 300000 // 5 minutes
+    staleTime: 600000 // 10 minutes
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: () => base44.entities.TeamMember.list(),
-    staleTime: 300000
+    staleTime: 600000
   });
 
   const { data: quoteRequests = [] } = useQuery({
     queryKey: ['quoteRequests'],
     queryFn: () => base44.entities.QuoteRequest.list(),
-    staleTime: 60000
+    staleTime: 300000 // 5 minutes - synced by scheduled task
   });
 
   const { data: customStatuses = [] } = useQuery({
     queryKey: ['projectStatuses'],
     queryFn: () => base44.entities.ProjectStatus.list('order'),
-    staleTime: 300000
+    staleTime: 600000
   });
 
   // Helper to check if user has access to a project
