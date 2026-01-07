@@ -847,17 +847,29 @@ export default function ProjectParts() {
               {receiveDialog.part?.part_number && <span className="text-slate-500"> (#{receiveDialog.part?.part_number})</span>}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4">
-            <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
-              <MapPin className="w-4 h-4" />
-              Where is the item stored? (optional)
-            </label>
-            <Textarea
-              value={receiveDialog.location}
-              onChange={(e) => setReceiveDialog(prev => ({ ...prev, location: e.target.value }))}
-              placeholder="e.g., Warehouse shelf B3, Office storage closet, Customer site..."
-              className="h-20"
-            />
+          <div className="py-4 space-y-4">
+            <div>
+              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+                <MapPin className="w-4 h-4" />
+                Where is the item stored? (optional)
+              </label>
+              <Textarea
+                value={receiveDialog.location}
+                onChange={(e) => setReceiveDialog(prev => ({ ...prev, location: e.target.value }))}
+                placeholder="e.g., Warehouse shelf B3, Office storage closet, Customer site..."
+                className="h-20"
+              />
+            </div>
+            <div className="flex items-center space-x-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+              <Checkbox
+                id="createTask"
+                checked={receiveDialog.createTask}
+                onCheckedChange={(checked) => setReceiveDialog(prev => ({ ...prev, createTask: checked }))}
+              />
+              <Label htmlFor="createTask" className="text-sm font-medium text-indigo-900 cursor-pointer">
+                Create installation task for installer
+              </Label>
+            </div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
