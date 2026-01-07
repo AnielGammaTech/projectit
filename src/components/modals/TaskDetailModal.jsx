@@ -66,8 +66,11 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedDueDate, setSelectedDueDate] = useState(null);
   const [savingDate, setSavingDate] = useState(false);
+  const [commentAttachments, setCommentAttachments] = useState([]);
+  const [uploadingCommentFile, setUploadingCommentFile] = useState(false);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
+  const commentFileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
   // Initialize notes and due date from task
