@@ -8,10 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Loader2, FileStack, Check, X } from 'lucide-react';
+import { CalendarIcon, Loader2, FileStack, Check, X, Bell } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export default function TaskModal({ open, onClose, task, projectId, teamMembers = [], groups = [], onSave, onBulkCreate }) {
   const [formData, setFormData] = useState({
@@ -23,8 +24,10 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
     assigned_name: '',
     status: 'todo',
     priority: 'medium',
-    due_date: ''
+    due_date: '',
+    notify_on_complete: []
   });
+  const [notifySearch, setNotifySearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
@@ -49,7 +52,8 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
         assigned_name: task.assigned_name || '',
         status: task.status || 'todo',
         priority: task.priority || 'medium',
-        due_date: task.due_date || ''
+        due_date: task.due_date || '',
+        notify_on_complete: task.notify_on_complete || []
       });
     } else {
       setFormData({
@@ -61,11 +65,41 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
         assigned_name: '',
         status: 'todo',
         priority: 'medium',
-        due_date: ''
+        due_date: '',
+        notify_on_complete: []
       });
     }
     setSelectedTemplate(null);
+    setNotifySearch('');
   }, [task, open, projectId]);
+
+  const handleAddNotifyPerson = (email) => {
+    if (!formData.notify_on_complete.includes(email)) {
+      setFormData(prev => ({
+        ...prev,
+        notify_on_complete: [...prev.notify_on_complete, email]
+      }));
+    }
+    setNotifySearch('');
+  };
+
+  const handleRemoveNotifyPerson = (email) => {
+    setFormData(prev => ({
+      ...prev,
+      notify_on_complete: prev.notify_on_complete.filter(e => e !== email)
+    }));
+  };
+
+  const getMemberName = (email) => {
+    const member = teamMembers.find(m => m.email === email);
+    return member?.name || email;
+  };
+
+  const filteredNotifyMembers = teamMembers.filter(m => 
+    !formData.notify_on_complete.includes(m.email) &&
+    (m.name?.toLowerCase().includes(notifySearch.toLowerCase()) ||
+     m.email?.toLowerCase().includes(notifySearch.toLowerCase()))
+  );
 
   const handleAssigneeChange = (email) => {
     const member = teamMembers.find(m => m.email === email);
@@ -277,6 +311,62 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
                         onSelect={(date) => setFormData(prev => ({ ...prev, due_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
                       />
                     </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              {/* Notify on Complete */}
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-slate-500" />
+                  When done, notify
+                </Label>
+                <div className="mt-1.5 space-y-2">
+                  {formData.notify_on_complete.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {formData.notify_on_complete.map(email => (
+                        <Badge key={email} variant="secondary" className="gap-1 pr-1">
+                          {getMemberName(email)}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveNotifyPerson(email)}
+                            className="ml-1 hover:bg-slate-300 rounded-full p-0.5"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Input
+                        value={notifySearch}
+                        onChange={(e) => setNotifySearch(e.target.value)}
+                        placeholder="Type names to notify..."
+                        className="text-sm"
+                      />
+                    </PopoverTrigger>
+                    {notifySearch && filteredNotifyMembers.length > 0 && (
+                      <PopoverContent className="w-64 p-1" align="start">
+                        {filteredNotifyMembers.slice(0, 5).map(member => (
+                          <button
+                            key={member.id}
+                            type="button"
+                            onClick={() => handleAddNotifyPerson(member.email)}
+                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 rounded-md text-sm text-left"
+                          >
+                            <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium">
+                              {member.name?.charAt(0) || '?'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{member.name}</p>
+                              <p className="text-xs text-slate-500 truncate">{member.email}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </PopoverContent>
+                    )}
                   </Popover>
                 </div>
               </div>
