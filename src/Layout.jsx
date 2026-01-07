@@ -476,16 +476,16 @@ function LayoutContent({ children, currentPageName }) {
                 )}
               </AnimatePresence>
 
-              {/* Floating Feedback Button */}
-              <FeedbackButton />
-              </div>
-              );
-              }
+      {/* Floating Feedback Button */}
+      <FeedbackButton />
+    </div>
+  );
+}
 
-              export default function Layout({ children, currentPageName }) {
-              return (
-              <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-              <LayoutContent children={children} currentPageName={currentPageName} />
-              </ThemeProvider>
-              );
-              }
+export default function Layout({ children, currentPageName }) {
+  return (
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+      <LayoutContent children={children} currentPageName={currentPageName} />
+    </ThemeProvider>
+  );
+}
