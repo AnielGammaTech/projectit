@@ -453,22 +453,8 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
         <div className="flex-1 overflow-y-auto">
           {/* Notes Section */}
           <div className="p-6 border-b border-slate-100">
-            <label className="text-sm font-medium text-slate-700 mb-2 block">Notes</label>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              onBlur={handleNotesBlur}
-              placeholder="Add notes or details..."
-              className="min-h-[80px] resize-none border-slate-200"
-            />
-          </div>
-
-          {/* Attachments */}
-          <div className="p-6 border-b border-slate-100">
-            <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-slate-700">
-                Attachments {task.attachments?.length > 0 && `(${task.attachments.length})`}
-              </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-slate-700">Notes</label>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -477,12 +463,19 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 className="h-7 text-xs"
               >
                 {uploadingTaskFile ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Paperclip className="w-3 h-3 mr-1" />}
-                Add file
+                Attach file
               </Button>
               <input ref={taskFileInputRef} type="file" className="hidden" onChange={handleTaskFileUpload} />
             </div>
-            {task.attachments?.length > 0 ? (
-              <div className="space-y-1">
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={handleNotesBlur}
+              placeholder="Add notes or details..."
+              className="min-h-[80px] resize-none border-slate-200"
+            />
+            {task.attachments?.length > 0 && (
+              <div className="mt-3 space-y-1">
                 {task.attachments.map((att, idx) => {
                   const FileIcon = getFileIcon(att.type);
                   return (
@@ -498,8 +491,6 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                   );
                 })}
               </div>
-            ) : (
-              <p className="text-sm text-slate-400">No files attached</p>
             )}
           </div>
 
