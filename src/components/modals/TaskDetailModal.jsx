@@ -176,7 +176,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   };
 
   const handleSubmitComment = async () => {
-    if (!comment.trim() || !currentUser) return;
+    if ((!comment.trim() && commentAttachments.length === 0) || !currentUser) return;
 
     // Extract mentions
     const mentionRegex = /@(\w+(?:\s\w+)?)/g;
@@ -195,8 +195,32 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
       content: comment,
       author_email: currentUser.email,
       author_name: currentUser.full_name || currentUser.email,
-      mentions: mentionedEmails
+      mentions: mentionedEmails,
+      attachments: commentAttachments.length > 0 ? commentAttachments : undefined
     });
+    setCommentAttachments([]);
+  };
+
+  const handleCommentFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingCommentFile(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setCommentAttachments(prev => [...prev, {
+        name: file.name,
+        url: file_url,
+        type: file.type
+      }]);
+    } catch (err) {
+      console.error('Failed to upload file:', err);
+    }
+    setUploadingCommentFile(false);
+  };
+
+  const removeCommentAttachment = (index) => {
+    setCommentAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const filteredMembers = teamMembers.filter(m => 
