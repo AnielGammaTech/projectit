@@ -103,7 +103,7 @@ export default function ProjectParts() {
   const [selectionMode, setSelectionMode] = useState(false);
   
   // Receive dialog state
-  const [receiveDialog, setReceiveDialog] = useState({ open: false, part: null, installer: '', location: '' });
+  const [receiveDialog, setReceiveDialog] = useState({ open: false, part: null, installer: '', location: '', createTask: false });
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
