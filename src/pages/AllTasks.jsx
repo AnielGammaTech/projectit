@@ -100,9 +100,9 @@ export default function AllTasks() {
     return project.team_members.includes(currentUser?.email);
   };
 
-  // Get active project IDs (not archived or completed) that user has access to
+  // Get active project IDs (not archived, completed, or deleted) that user has access to
   const activeProjectIds = projects
-    .filter(p => p.status !== 'archived' && p.status !== 'completed' && userHasProjectAccess(p))
+    .filter(p => p.status !== 'archived' && p.status !== 'completed' && p.status !== 'deleted' && userHasProjectAccess(p))
     .map(p => p.id);
 
   const allFilteredTasks = tasks.filter(task => {
