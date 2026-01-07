@@ -46,7 +46,7 @@ const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
   { name: 'Activity', icon: ListTodo, page: 'AllTasks' },
   { name: 'Customers', icon: Users, page: 'Customers' },
-  { name: 'Stock', icon: Package, page: 'Inventory' },
+  { name: 'Stock', icon: Package, page: 'Stock' },
   { name: 'Reports', icon: PieChart, page: 'Reports' },
 ];
 
