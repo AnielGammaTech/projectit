@@ -684,8 +684,16 @@ export default function Dashboard() {
             value={incomingQuotes.length}
             subtitle={incomingQuotes.length > 0 ? 'awaiting project' : null}
             icon={FileText}
-            iconColor="bg-emerald-500"
-            href={createPageUrl('QuoteRequests')}
+            iconColor={incomingQuotes.length > 0 ? "bg-orange-500" : "bg-emerald-500"}
+            highlight={incomingQuotes.length > 0}
+            onClick={() => {
+              const banner = document.getElementById('incoming-quotes-banner');
+              if (banner) {
+                banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                banner.classList.add('ring-4', 'ring-orange-400', 'ring-offset-2');
+                setTimeout(() => banner.classList.remove('ring-4', 'ring-orange-400', 'ring-offset-2'), 2000);
+              }
+            }}
           />
         </div>
 
