@@ -66,51 +66,100 @@ body {
   color: hsl(var(--foreground));
 }
 
-/* Dark mode background gradient override */
-.dark .bg-gradient-to-br {
-  background-image: none !important;
+/* Dark mode overrides */
+.dark .bg-gradient-to-br,
+.dark .bg-gradient-to-r,
+.dark .bg-gradient-to-b,
+.dark .bg-gradient-to-t,
+.dark .bg-gradient-to-l,
+.dark .bg-gradient-to-tr,
+.dark .bg-gradient-to-tl,
+.dark .bg-gradient-to-bl {
+  --tw-gradient-from: hsl(var(--background)) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: hsl(var(--background)) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.dark .from-slate-50,
+.dark .from-white,
+.dark .from-indigo-50\/30,
+.dark .from-gray-50 {
+  --tw-gradient-from: hsl(var(--background)) var(--tw-gradient-from-position) !important;
+}
+
+.dark .via-white,
+.dark .via-slate-50 {
+  --tw-gradient-to: hsl(var(--background)) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), hsl(var(--background)) var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+.dark .to-indigo-50\/30,
+.dark .to-white,
+.dark .to-slate-100,
+.dark .to-gray-100 {
+  --tw-gradient-to: hsl(var(--background)) var(--tw-gradient-to-position) !important;
+}
+
+.dark .bg-slate-50,
+.dark .bg-gray-50 {
   background-color: hsl(var(--background)) !important;
 }
 
-.dark .bg-slate-50 {
-  background-color: hsl(var(--background));
-}
-
 .dark .bg-white {
-  background-color: hsl(var(--card));
+  background-color: hsl(var(--card)) !important;
 }
 
-.dark .text-slate-900 {
-  color: hsl(var(--foreground));
+.dark .bg-slate-100,
+.dark .bg-gray-100 {
+  background-color: hsl(var(--muted)) !important;
 }
 
-.dark .text-slate-700 {
-  color: hsl(210 15% 75%);
+.dark .text-slate-900,
+.dark .text-gray-900 {
+  color: hsl(var(--foreground)) !important;
 }
 
-.dark .text-slate-600 {
-  color: hsl(210 15% 65%);
+.dark .text-slate-800,
+.dark .text-gray-800 {
+  color: hsl(210 15% 85%) !important;
 }
 
-.dark .text-slate-500 {
-  color: hsl(var(--muted-foreground));
+.dark .text-slate-700,
+.dark .text-gray-700 {
+  color: hsl(210 15% 75%) !important;
+}
+
+.dark .text-slate-600,
+.dark .text-gray-600 {
+  color: hsl(210 15% 65%) !important;
+}
+
+.dark .text-slate-500,
+.dark .text-gray-500 {
+  color: hsl(var(--muted-foreground)) !important;
 }
 
 .dark .border-slate-100,
-.dark .border-slate-200 {
-  border-color: hsl(var(--border));
+.dark .border-slate-200,
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: hsl(var(--border)) !important;
 }
 
-.dark .bg-slate-100 {
-  background-color: hsl(var(--muted));
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-gray-50:hover {
+  background-color: hsl(var(--muted)) !important;
 }
 
-.dark .hover\:bg-slate-50:hover {
-  background-color: hsl(var(--muted));
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-gray-100:hover {
+  background-color: hsl(220 15% 25%) !important;
 }
 
-.dark .hover\:bg-slate-100:hover {
-  background-color: hsl(220 15% 25%);
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg {
+  --tw-shadow-color: rgba(0, 0, 0, 0.3) !important;
 }
 
 @layer base {
