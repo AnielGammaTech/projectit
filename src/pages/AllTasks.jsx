@@ -305,9 +305,9 @@ export default function AllTasks() {
                 />
               </div>
 
-              {/* Status Pills */}
+              {/* Status Pills - exclude completed since it's in separate section */}
               <div className="flex items-center gap-1.5">
-                {Object.entries(statusConfig).map(([key, config]) => {
+                {Object.entries(statusConfig).filter(([key]) => key !== 'completed').map(([key, config]) => {
                   const Icon = config.icon;
                   const count = tasksByStatus[key]?.length || 0;
                   return (
