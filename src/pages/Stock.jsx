@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, Wrench, Layers } from 'lucide-react';
+import { Package, Wrench, Layers, Truck } from 'lucide-react';
 import ProductsTab from '@/components/stock/ProductsTab';
 import ServicesTab from '@/components/stock/ServicesTab';
 import BundlesTab from '@/components/stock/BundlesTab';
+import PartsTrackerTab from '@/components/stock/PartsTrackerTab';
 
 export default function Stock() {
   const [activeTab, setActiveTab] = useState('products');
@@ -32,6 +33,10 @@ export default function Stock() {
               <Layers className="w-4 h-4" />
               Bundles
             </TabsTrigger>
+            <TabsTrigger value="parts-tracker" className="gap-2 data-[state=active]:bg-[#0F2F44] data-[state=active]:text-white">
+              <Truck className="w-4 h-4" />
+              Parts Tracker
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="products">
@@ -44,6 +49,10 @@ export default function Stock() {
 
           <TabsContent value="bundles">
             <BundlesTab />
+          </TabsContent>
+
+          <TabsContent value="parts-tracker">
+            <PartsTrackerTab />
           </TabsContent>
         </Tabs>
       </div>
