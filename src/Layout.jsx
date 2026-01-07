@@ -23,7 +23,8 @@ import {
   ChevronDown,
   Bell,
   Globe,
-  Inbox
+  Inbox,
+  Calendar
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
