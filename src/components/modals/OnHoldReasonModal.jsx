@@ -16,6 +16,7 @@ export default function OnHoldReasonModal({ open, onClose, project, onConfirm })
     await onConfirm(reason);
     setReason('');
     setSaving(false);
+    onClose();
   };
 
   return (
