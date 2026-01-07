@@ -249,161 +249,118 @@ export default function AllTasks() {
           </div>
         </motion.div>
 
-        {/* My Tasks Buttons */}
-        {activeTab === 'tasks' && currentUser && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl border border-slate-100 p-3 mb-4"
-          >
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setViewMode('all')}
-                className={cn(
-                  "px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2",
-                  viewMode === 'all' 
-                    ? "bg-[#0069AF] text-white shadow-md" 
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                )}
-              >
-                <ListTodo className="w-4 h-4" />
-                All Tasks
-                <span className={cn(
-                  "px-2 py-0.5 rounded-full text-xs",
-                  viewMode === 'all' ? "bg-white/20" : "bg-slate-200"
-                )}>
-                  {activeTasks.filter(t => t.status !== 'completed').length}
-                </span>
-              </button>
-              <button
-                onClick={() => setViewMode('mine')}
-                className={cn(
-                  "px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2",
-                  viewMode === 'mine' 
-                    ? "bg-[#0069AF] text-white shadow-md" 
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                )}
-              >
-                <User className="w-4 h-4" />
-                My Tasks
-                <span className={cn(
-                  "px-2 py-0.5 rounded-full text-xs",
-                  viewMode === 'mine' ? "bg-white/20" : "bg-slate-200"
-                )}>
-                  {myTasksCount}
-                </span>
-              </button>
-              <button
-                onClick={() => setViewMode('mine_due')}
-                className={cn(
-                  "px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2",
-                  viewMode === 'mine_due' 
-                    ? "bg-[#0069AF] text-white shadow-md" 
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                )}
-              >
-                <Calendar className="w-4 h-4" />
-                My Tasks with Due Dates
-                <span className={cn(
-                  "px-2 py-0.5 rounded-full text-xs",
-                  viewMode === 'mine_due' ? "bg-white/20" : "bg-amber-100 text-amber-700"
-                )}>
-                  {myTasksWithDueCount}
-                </span>
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Filters - Tasks */}
+        {/* Unified Toolbar - Tasks */}
         {activeTab === 'tasks' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
             className="bg-white rounded-2xl border border-slate-100 p-4 mb-6"
           >
-            <div className="flex flex-wrap gap-4">
-              <div className="relative flex-1 min-w-[200px]">
+            {/* View Mode Tabs */}
+            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg w-fit mb-4">
+              <button
+                onClick={() => setViewMode('all')}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  viewMode === 'all' 
+                    ? "bg-white text-slate-900 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                All Tasks ({activeTasks.filter(t => t.status !== 'completed').length})
+              </button>
+              <button
+                onClick={() => setViewMode('mine')}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  viewMode === 'mine' 
+                    ? "bg-white text-slate-900 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                My Tasks ({myTasksCount})
+              </button>
+              <button
+                onClick={() => setViewMode('mine_due')}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  viewMode === 'mine_due' 
+                    ? "bg-white text-slate-900 shadow-sm" 
+                    : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                Due Soon ({myTasksWithDueCount})
+              </button>
+            </div>
+
+            {/* Filters Row */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative flex-1 min-w-[180px] max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   placeholder="Search tasks..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-9 h-9"
                 />
               </div>
+
+              {/* Status Pills */}
+              <div className="flex items-center gap-1.5">
+                {Object.entries(statusConfig).map(([key, config]) => {
+                  const Icon = config.icon;
+                  const count = tasksByStatus[key]?.length || 0;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setStatusFilter(statusFilter === key ? 'all' : key)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all",
+                        statusFilter === key 
+                          ? "bg-[#0069AF] text-white" 
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      )}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">{config.label}</span>
+                      <span className={cn(
+                        "px-1.5 py-0.5 rounded-full text-[10px]",
+                        statusFilter === key ? "bg-white/20" : "bg-white"
+                      )}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
               
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="review">Review</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2 ml-auto">
+                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                  <SelectTrigger className="w-32 h-9">
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priority</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Priority</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Assignee" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Assignees</SelectItem>
-                  {teamMembers.map(member => (
-                    <SelectItem key={member.id} value={member.email}>{member.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+                  <SelectTrigger className="w-36 h-9">
+                    <SelectValue placeholder="Assignee" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Assignees</SelectItem>
+                    {teamMembers.map(member => (
+                      <SelectItem key={member.id} value={member.email}>{member.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </motion.div>
-        )}
-
-        {/* Stats - Tasks */}
-        {activeTab === 'tasks' && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            {Object.entries(statusConfig).map(([key, config]) => {
-              const Icon = config.icon;
-              const count = tasksByStatus[key]?.length || 0;
-              return (
-                <motion.div
-                  key={key}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={cn(
-                    "p-4 rounded-xl border transition-all cursor-pointer hover:shadow-md",
-                    statusFilter === key ? "border-indigo-300 bg-indigo-50" : "border-slate-100 bg-white"
-                  )}
-                  onClick={() => setStatusFilter(statusFilter === key ? 'all' : key)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={cn("p-2 rounded-lg", config.bg)}>
-                      <Icon className={cn("w-4 h-4", config.color)} />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-slate-900">{count}</p>
-                      <p className="text-xs text-slate-500">{config.label}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
         )}
 
         {/* Tasks List */}
