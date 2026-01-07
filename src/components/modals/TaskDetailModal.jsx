@@ -385,9 +385,8 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
               <PopoverContent className="w-auto p-0 z-[100]" align="start">
                 <Calendar
                   mode="single"
-                  selected={task.due_date ? new Date(task.due_date.split('T')[0] + 'T12:00:00') : undefined}
+                  selected={localDueDate}
                   onSelect={handleDueDateChange}
-                  disabled={false}
                 />
                 {task.due_date && (
                   <div className="p-2 border-t">
