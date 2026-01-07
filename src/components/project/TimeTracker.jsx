@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
-export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 0 }) {
+export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 0, variant = 'inline' }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showStopModal, setShowStopModal] = useState(false);
   const [stopDescription, setStopDescription] = useState('');
