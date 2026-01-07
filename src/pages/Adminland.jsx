@@ -340,36 +340,48 @@ function PeopleSection({ queryClient }) {
           </div>
           <div className="divide-y">
             {members.map((member) => (
-              <div key={member.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
-                <div className="flex items-center gap-4">
-                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white font-medium", member.avatar_color || avatarColors[0])}>
-                    {member.name?.charAt(0)?.toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900">{member.name}</p>
-                    <div className="flex items-center gap-3 text-sm text-slate-500">
-                      <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{member.email}</span>
-                      {member.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{member.phone}</span>}
-                    </div>
-                  </div>
+            <div key={member.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
+              <div className="flex items-center gap-4">
+                <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white font-medium", member.avatar_color || avatarColors[0])}>
+                  {member.name?.charAt(0)?.toUpperCase()}
                 </div>
-                <div className="flex items-center gap-2">
-                  {member.role && <Badge variant="outline">{member.role}</Badge>}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => { setEditing(member); setShowModal(true); }}>
-                        <Edit2 className="w-4 h-4 mr-2" />Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'member', item: member })} className="text-red-600">
-                        <Trash2 className="w-4 h-4 mr-2" />Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <div>
+                  <p className="font-medium text-slate-900">{member.name}</p>
+                  <div className="flex items-center gap-3 text-sm text-slate-500">
+                    <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{member.email}</span>
+                    {member.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{member.phone}</span>}
+                  </div>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                {member.role && (
+                  <Badge 
+                    variant="outline" 
+                    className={cn(
+                      member.role === 'Admin' && "bg-red-50 text-red-700 border-red-200",
+                      member.role === 'Manager' && "bg-blue-50 text-blue-700 border-blue-200",
+                      member.role === 'Technician' && "bg-green-50 text-green-700 border-green-200",
+                      member.role === 'Viewer' && "bg-slate-50 text-slate-700 border-slate-200"
+                    )}
+                  >
+                    {member.role}
+                  </Badge>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => { setEditing(member); setShowModal(true); }}>
+                      <Edit2 className="w-4 h-4 mr-2" />Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'member', item: member })} className="text-red-600">
+                      <Trash2 className="w-4 h-4 mr-2" />Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
             ))}
             {members.length === 0 && (
               <div className="p-8 text-center text-slate-500">No team members yet</div>
