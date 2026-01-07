@@ -14,6 +14,7 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 
 import DashboardWidgets from '@/components/dashboard/DashboardWidgets';
+import PendingProposalsModal from '@/components/dashboard/PendingProposalsModal';
 
 // Filter out in_progress and medium priority from dashboard display
 // These values are removed from the system
@@ -67,6 +68,7 @@ export default function Dashboard() {
   const [viewName, setViewName] = useState('');
   const [showSaveViewModal, setShowSaveViewModal] = useState(false);
   const [isSyncingQuotes, setIsSyncingQuotes] = useState(false);
+  const [showProposalsModal, setShowProposalsModal] = useState(false);
 
   const { data: incomingQuotes = [] } = useQuery({
     queryKey: ['incomingQuotes'],
@@ -710,14 +712,7 @@ export default function Dashboard() {
             icon={FileText}
             iconColor={incomingQuotes.length > 0 ? "bg-orange-500" : "bg-emerald-500"}
             highlight={incomingQuotes.length > 0}
-            onClick={() => {
-              const banner = document.getElementById('incoming-quotes-banner');
-              if (banner) {
-                banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                banner.classList.add('ring-4', 'ring-orange-400', 'ring-offset-2');
-                setTimeout(() => banner.classList.remove('ring-4', 'ring-orange-400', 'ring-offset-2'), 2000);
-              }
-            }}
+            onClick={() => setShowProposalsModal(true)}
           />
         </div>
 
@@ -1301,6 +1296,14 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Pending Proposals Modal */}
+      <PendingProposalsModal
+        open={showProposalsModal}
+        onClose={() => setShowProposalsModal(false)}
+        quotes={incomingQuotes}
+        onCreateProject={handleCreateProjectFromQuote}
+      />
 
       {/* Bulk Archive Confirmation */}
       <AlertDialog open={showBulkArchiveConfirm} onOpenChange={setShowBulkArchiveConfirm}>
