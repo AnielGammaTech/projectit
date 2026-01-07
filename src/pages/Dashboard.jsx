@@ -545,7 +545,7 @@ export default function Dashboard() {
         <div className="mb-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-[#133F5C]">Howdy, {currentUser?.full_name?.split(' ')[0] || 'fellow tech'}! 🤠</h1>
+              <h1 className="text-2xl font-bold text-[#133F5C]">Howdy, Fellow Tech Enthusiast! 🤠</h1>
               <div className="flex items-center gap-3 mt-2">
                 <Button
                   variant="ghost"
