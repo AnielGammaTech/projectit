@@ -6,25 +6,25 @@ css
 @tailwind utilities;
 
 :root {
-  --primary: 210 64% 22%;
+  --primary: 200 65% 16%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 204 65% 16%;
+  --secondary: 200 65% 20%;
   --secondary-foreground: 0 0% 100%;
-  --accent: 207 100% 34%;
+  --accent: 200 65% 16%;
   --accent-foreground: 0 0% 100%;
   --highlight: 202 100% 73%;
   
   --background: 210 20% 98%;
-  --foreground: 210 64% 22%;
+  --foreground: 200 65% 16%;
   --card: 0 0% 100%;
-  --card-foreground: 210 64% 22%;
+  --card-foreground: 200 65% 16%;
   --popover: 0 0% 100%;
-  --popover-foreground: 210 64% 22%;
-  --muted: 210 20% 96%;
-  --muted-foreground: 210 20% 40%;
-  --border: 210 20% 90%;
-  --input: 210 20% 90%;
-  --ring: 207 100% 34%;
+  --popover-foreground: 200 65% 16%;
+  --muted: 200 20% 96%;
+  --muted-foreground: 200 20% 40%;
+  --border: 200 20% 90%;
+  --input: 200 20% 90%;
+  --ring: 200 65% 16%;
   --radius: 0.75rem;
   
   --destructive: 0 84% 60%;
