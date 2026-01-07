@@ -53,7 +53,7 @@ const navItems = [
   { name: 'Reports', icon: PieChart, page: 'Reports' },
 ];
 
-export default function Layout({ children, currentPageName }) {
+function LayoutContent({ children, currentPageName }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
@@ -61,6 +61,7 @@ export default function Layout({ children, currentPageName }) {
     const [expandedMenus, setExpandedMenus] = useState({});
     const [newNotification, setNewNotification] = useState(null);
     const lastNotificationIdRef = useRef(null);
+    const { theme, setTheme } = useTheme();
 
   const { data: appSettings } = useQuery({
     queryKey: ['appSettings'],
