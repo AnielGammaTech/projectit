@@ -26,8 +26,6 @@ import {
   Globe,
   Inbox,
   Calendar,
-  Moon,
-  Sun
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
@@ -61,7 +59,7 @@ function LayoutContent({ children, currentPageName }) {
     const [expandedMenus, setExpandedMenus] = useState({});
     const [newNotification, setNewNotification] = useState(null);
     const lastNotificationIdRef = useRef(null);
-    const { theme, setTheme } = useTheme();
+
 
   const { data: appSettings } = useQuery({
     queryKey: ['appSettings'],
