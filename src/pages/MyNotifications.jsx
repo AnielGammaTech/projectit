@@ -117,7 +117,7 @@ export default function MyNotifications() {
             <CardContent>
               {notifications.length > 0 ? (
                 <ScrollArea className="h-[500px]">
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {notifications.map(notification => {
                       const config = notificationConfig[notification.type] || notificationConfig.mention;
                       const IconComponent = config.icon;
@@ -126,67 +126,60 @@ export default function MyNotifications() {
                         <div
                           key={notification.id}
                           className={cn(
-                            "p-4 rounded-xl border transition-all group relative",
+                            "px-3 py-2 rounded-lg border transition-all group flex items-center gap-3",
                             notification.is_read 
                               ? "bg-white border-slate-100" 
-                              : "bg-blue-50 border-blue-200"
+                              : "bg-blue-50/50 border-blue-100"
                           )}
                         >
                           {/* Unread indicator dot */}
                           {!notification.is_read && (
-                            <div className="absolute top-4 left-4 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+                            <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0" />
                           )}
                           
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-start gap-3">
-                              <div className={cn("p-2.5 rounded-xl", config.bg, config.color, !notification.is_read && "ml-4")}>
-                                <IconComponent className="w-5 h-5" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-slate-900">{notification.title}</p>
-                                <p className="text-sm text-slate-500 mt-1">{notification.message}</p>
-                                {notification.project_name && (
-                                  <p className="text-xs text-[#0069AF] mt-2">Project: {notification.project_name}</p>
-                                )}
-                                {notification.from_user_name && (
-                                  <p className="text-xs text-slate-400 mt-1">From: {notification.from_user_name}</p>
-                                )}
-                                <p className="text-xs text-slate-400 mt-1">
-                                  {format(new Date(notification.created_date), 'MMM d, yyyy • h:mm a')}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <div className="flex items-center gap-1">
-                                {notification.link && (
-                                  <Link to={notification.link}>
-                                    <Button variant="outline" size="sm" className="text-xs h-8">
-                                      View
-                                    </Button>
-                                  </Link>
-                                )}
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  onClick={() => dismissNotification.mutate(notification.id)}
-                                  className="h-8 w-8 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  title="Dismiss"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                              {!notification.is_read && (
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  onClick={() => markAsRead.mutate(notification.id)}
-                                  className="text-xs h-8"
-                                >
-                                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                                  Mark read
-                                </Button>
+                          <div className={cn("p-1.5 rounded-lg flex-shrink-0", config.bg, config.color)}>
+                            <IconComponent className="w-4 h-4" />
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm text-slate-900 truncate">{notification.title}</p>
+                              {notification.project_name && (
+                                <span className="text-xs text-[#0069AF] truncate">• {notification.project_name}</span>
                               )}
                             </div>
+                            <p className="text-xs text-slate-500 truncate">{notification.message}</p>
+                          </div>
+                          
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <span className="text-xs text-slate-400 hidden sm:inline">
+                              {format(new Date(notification.created_date), 'MMM d')}
+                            </span>
+                            {notification.link && (
+                              <Link to={notification.link}>
+                                <Button variant="outline" size="sm" className="text-xs h-7 px-2">
+                                  View
+                                </Button>
+                              </Link>
+                            )}
+                            {!notification.is_read && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => markAsRead.mutate(notification.id)}
+                                className="text-xs h-7 px-2 text-slate-500"
+                              >
+                                <CheckCircle2 className="w-3 h-3" />
+                              </Button>
+                            )}
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => dismissNotification.mutate(notification.id)}
+                              className="h-7 w-7 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
                           </div>
                         </div>
                       );
