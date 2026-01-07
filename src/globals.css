@@ -66,6 +66,53 @@ body {
   color: hsl(var(--foreground));
 }
 
+/* Dark mode background gradient override */
+.dark .bg-gradient-to-br {
+  background-image: none !important;
+  background-color: hsl(var(--background)) !important;
+}
+
+.dark .bg-slate-50 {
+  background-color: hsl(var(--background));
+}
+
+.dark .bg-white {
+  background-color: hsl(var(--card));
+}
+
+.dark .text-slate-900 {
+  color: hsl(var(--foreground));
+}
+
+.dark .text-slate-700 {
+  color: hsl(210 15% 75%);
+}
+
+.dark .text-slate-600 {
+  color: hsl(210 15% 65%);
+}
+
+.dark .text-slate-500 {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .border-slate-100,
+.dark .border-slate-200 {
+  border-color: hsl(var(--border));
+}
+
+.dark .bg-slate-100 {
+  background-color: hsl(var(--muted));
+}
+
+.dark .hover\:bg-slate-50:hover {
+  background-color: hsl(var(--muted));
+}
+
+.dark .hover\:bg-slate-100:hover {
+  background-color: hsl(220 15% 25%);
+}
+
 @layer base {
   * {
     @apply border-border;
