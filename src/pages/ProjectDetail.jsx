@@ -331,7 +331,8 @@ export default function ProjectDetail() {
     
     await base44.entities.Project.update(projectId, { 
       tags: newTags,
-      status: 'planning'
+      status: 'planning',
+      on_hold_reason: ''
     });
     
     await logActivity(projectId, 'project_resumed', 'resumed project from on hold', currentUser);
