@@ -338,23 +338,21 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
                       ))}
                     </div>
                   )}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Input
-                        value={notifySearch}
-                        onChange={(e) => setNotifySearch(e.target.value)}
-                        placeholder="Type names to notify..."
-                        className="text-sm"
-                      />
-                    </PopoverTrigger>
+                  <div className="relative">
+                    <Input
+                      value={notifySearch}
+                      onChange={(e) => setNotifySearch(e.target.value)}
+                      placeholder="Type names to notify..."
+                      className="text-sm"
+                    />
                     {notifySearch && filteredNotifyMembers.length > 0 && (
-                      <PopoverContent className="w-64 p-1" align="start">
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
                         {filteredNotifyMembers.slice(0, 5).map(member => (
                           <button
                             key={member.id}
                             type="button"
                             onClick={() => handleAddNotifyPerson(member.email)}
-                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 rounded-md text-sm text-left"
+                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 text-sm text-left"
                           >
                             <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium">
                               {member.name?.charAt(0) || '?'}
@@ -365,9 +363,9 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
                             </div>
                           </button>
                         ))}
-                      </PopoverContent>
+                      </div>
                     )}
-                  </Popover>
+                  </div>
                 </div>
               </div>
             </div>
