@@ -549,18 +549,7 @@ export default function Dashboard() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-[#133F5C]">Howdy, Fellow Tech Enthusiast! 🤠</h1>
-              <div className="flex items-center gap-3 mt-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                  onClick={handleSyncQuotes}
-                  disabled={isSyncingQuotes}
-                  title="Sync Quotes from QuoteIT"
-                >
-                  <RefreshCw className={cn("w-4 h-4", isSyncingQuotes && "animate-spin")} />
-                </Button>
-              </div>
+
             </div>
             <div className="flex items-start gap-6">
               <div className="text-right text-sm">
