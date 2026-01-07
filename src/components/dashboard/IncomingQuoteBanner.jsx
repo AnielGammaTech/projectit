@@ -22,8 +22,8 @@ export default function IncomingQuoteBanner({ quotes, onCreateProject, onDismiss
   };
 
   return (
-    <div className="mb-4">
-      <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl p-0.5 shadow-md">
+    <div className="mb-4" id="incoming-quotes-banner">
+      <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-0.5 shadow-md transition-all">
         <div className="bg-white rounded-[10px] p-3">
           <div className="flex items-center gap-3">
             {/* Left arrow */}
