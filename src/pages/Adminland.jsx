@@ -495,15 +495,66 @@ function PeopleSection({ queryClient }) {
 }
 
 function TeamMemberModal({ open, onClose, member, onSave }) {
-  const [formData, setFormData] = useState({ name: '', email: '', role: '', phone: '', avatar_color: avatarColors[0] });
+  const [formData, setFormData] = useState({ name: '', email: '', role: '', custom_role_id: '', phone: '', avatar_color: avatarColors[0] });
+
+  const { data: customRoles = [] } = useQuery({
+    queryKey: ['customRoles'],
+    queryFn: () => base44.entities.CustomRole.list('name'),
+    enabled: open
+  });
+
+  // Default system roles for the dropdown
+  const defaultRoles = [
+    { id: 'admin', name: 'Admin', is_system: true },
+    { id: 'manager', name: 'Manager', is_system: true },
+    { id: 'technician', name: 'Technician', is_system: true },
+    { id: 'viewer', name: 'Viewer', is_system: true }
+  ];
+
+  const allRoles = [...defaultRoles, ...customRoles.filter(r => !r.is_system)];
 
   useEffect(() => {
     if (member) {
-      setFormData({ name: member.name || '', email: member.email || '', role: member.role || '', phone: member.phone || '', avatar_color: member.avatar_color || avatarColors[0] });
+      setFormData({ 
+        name: member.name || '', 
+        email: member.email || '', 
+        role: member.role || '', 
+        custom_role_id: member.custom_role_id || '',
+        phone: member.phone || '', 
+        avatar_color: member.avatar_color || avatarColors[0] 
+      });
     } else {
-      setFormData({ name: '', email: '', role: '', phone: '', avatar_color: avatarColors[0] });
+      setFormData({ name: '', email: '', role: '', custom_role_id: '', phone: '', avatar_color: avatarColors[0] });
     }
   }, [member, open]);
+
+  const handleRoleChange = (roleId) => {
+    const selectedRole = allRoles.find(r => r.id === roleId);
+    if (selectedRole) {
+      // For system roles, set the role name; for custom roles, set the custom_role_id
+      if (selectedRole.is_system) {
+        setFormData(p => ({ 
+          ...p, 
+          role: selectedRole.name, 
+          custom_role_id: '' 
+        }));
+      } else {
+        setFormData(p => ({ 
+          ...p, 
+          role: selectedRole.name,
+          custom_role_id: roleId 
+        }));
+      }
+    } else {
+      setFormData(p => ({ ...p, role: '', custom_role_id: '' }));
+    }
+  };
+
+  const getCurrentRoleId = () => {
+    if (formData.custom_role_id) return formData.custom_role_id;
+    const systemRole = defaultRoles.find(r => r.name === formData.role);
+    return systemRole?.id || '';
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -523,7 +574,25 @@ function TeamMemberModal({ open, onClose, member, onSave }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Role</Label>
-              <Input value={formData.role} onChange={(e) => setFormData(p => ({ ...p, role: e.target.value }))} className="mt-1" placeholder="e.g., Technician" />
+              <select
+                value={getCurrentRoleId()}
+                onChange={(e) => handleRoleChange(e.target.value)}
+                className="mt-1 w-full h-10 px-3 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#0069AF] focus:border-transparent"
+              >
+                <option value="">Select role...</option>
+                <optgroup label="System Roles">
+                  {defaultRoles.map(role => (
+                    <option key={role.id} value={role.id}>{role.name}</option>
+                  ))}
+                </optgroup>
+                {customRoles.filter(r => !r.is_system).length > 0 && (
+                  <optgroup label="Custom Roles">
+                    {customRoles.filter(r => !r.is_system).map(role => (
+                      <option key={role.id} value={role.id}>{role.name}</option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
             </div>
             <div>
               <Label>Phone</Label>
