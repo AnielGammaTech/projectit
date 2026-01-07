@@ -105,7 +105,7 @@ export default function AllTasks() {
     .filter(p => p.status !== 'archived' && p.status !== 'completed' && userHasProjectAccess(p))
     .map(p => p.id);
 
-  const filteredTasks = tasks.filter(task => {
+  const allFilteredTasks = tasks.filter(task => {
     // Only show tasks from active projects (exclude archived)
     if (!activeProjectIds.includes(task.project_id)) return false;
     
@@ -124,15 +124,15 @@ export default function AllTasks() {
     
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
   }).sort((a, b) => {
-    // Sort completed tasks to the bottom
-    if (a.status === 'completed' && b.status !== 'completed') return 1;
-    if (a.status !== 'completed' && b.status === 'completed') return -1;
-    
     if (viewMode === 'mine_due') {
       return new Date(a.due_date) - new Date(b.due_date);
     }
     return 0;
   });
+
+  // Separate active and completed tasks
+  const filteredTasks = allFilteredTasks.filter(t => t.status !== 'completed');
+  const completedTasks = allFilteredTasks.filter(t => t.status === 'completed');
 
   // My assigned parts (with due dates)
   const myParts = parts.filter(part => 
