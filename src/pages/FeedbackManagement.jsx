@@ -55,10 +55,10 @@ const typeConfig = {
 };
 
 const statusConfig = {
-  new: { label: 'New', color: 'bg-blue-100 text-blue-700' },
-  in_review: { label: 'In Review', color: 'bg-amber-100 text-amber-700' },
-  resolved: { label: 'Resolved', color: 'bg-emerald-100 text-emerald-700' },
-  closed: { label: 'Closed', color: 'bg-slate-100 text-slate-700' },
+  new: { label: 'New', color: 'bg-blue-100 text-blue-700', icon: null },
+  in_review: { label: 'In Review', color: 'bg-amber-100 text-amber-700', icon: null },
+  resolved: { label: 'Resolved', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle },
+  closed: { label: 'Closed', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle },
 };
 
 const priorityConfig = {
