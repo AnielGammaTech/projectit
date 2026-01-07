@@ -205,10 +205,10 @@ export default function AllTasks() {
   };
 
   const tasksByStatus = {
-    todo: filteredTasks.filter(t => t.status === 'todo'),
-    in_progress: filteredTasks.filter(t => t.status === 'in_progress'),
-    review: filteredTasks.filter(t => t.status === 'review'),
-    completed: filteredTasks.filter(t => t.status === 'completed')
+    todo: allFilteredTasks.filter(t => t.status === 'todo'),
+    in_progress: allFilteredTasks.filter(t => t.status === 'in_progress'),
+    review: allFilteredTasks.filter(t => t.status === 'review'),
+    completed: completedTasks
   };
 
   return (
