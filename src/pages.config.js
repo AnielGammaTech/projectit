@@ -29,13 +29,13 @@ import Reports from './pages/Reports';
 import RolesPermissions from './pages/RolesPermissions';
 import SecuritySettings from './pages/SecuritySettings';
 import Settings from './pages/Settings';
+import Stock from './pages/Stock';
 import Team from './pages/Team';
 import TechDashboard from './pages/TechDashboard';
 import Templates from './pages/Templates';
 import TimeReport from './pages/TimeReport';
 import UserGroups from './pages/UserGroups';
 import Workflows from './pages/Workflows';
-import Stock from './pages/Stock';
 import __Layout from './Layout.jsx';
 
 
@@ -71,13 +71,13 @@ export const PAGES = {
     "RolesPermissions": RolesPermissions,
     "SecuritySettings": SecuritySettings,
     "Settings": Settings,
+    "Stock": Stock,
     "Team": Team,
     "TechDashboard": TechDashboard,
     "Templates": Templates,
     "TimeReport": TimeReport,
     "UserGroups": UserGroups,
     "Workflows": Workflows,
-    "Stock": Stock,
 }
 
 export const pagesConfig = {

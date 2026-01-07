@@ -256,7 +256,16 @@ function PeopleSection({ queryClient }) {
     if (editing) {
       await base44.entities.TeamMember.update(editing.id, data);
     } else {
+      // Create TeamMember record
       await base44.entities.TeamMember.create(data);
+      
+      // Also invite as a User (backend) if it's a new member
+      try {
+        const userRole = data.role === 'Admin' ? 'admin' : 'user';
+        await base44.users.inviteUser(data.email, userRole);
+      } catch (inviteError) {
+        console.log('User may already exist or invite failed:', inviteError);
+      }
     }
     queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
     setShowModal(false);
