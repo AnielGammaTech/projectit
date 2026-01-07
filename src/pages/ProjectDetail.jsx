@@ -705,56 +705,28 @@ export default function ProjectDetail() {
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              {/* Status + Project Number Row */}
+              {/* Project Number + Tags Row */}
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 {project.project_number && (
                   <span className="px-2 py-0.5 bg-slate-800 text-white rounded text-xs font-mono font-semibold">
                     #{project.project_number}
                   </span>
                 )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className={cn(
-                      "px-2 py-0.5 rounded text-xs font-medium cursor-pointer hover:opacity-80 transition-all",
-                      project.status === 'planning' && "bg-amber-100 text-amber-700",
-                      project.status === 'on_hold' && "bg-slate-100 text-slate-700",
-                      project.status === 'completed' && "bg-emerald-100 text-emerald-700"
-                    )}>
-                      {project.status === 'planning' && 'planning'}
-                      {project.status === 'on_hold' && 'on hold'}
-                      {project.status === 'completed' && 'completed'}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {statusOptions.map((opt) => (
-                      <DropdownMenuItem key={opt.value} onClick={() => handleQuickUpdate('status', opt.value)} className="cursor-pointer">
-                        {opt.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {getProjectTags().map(tag => (
+                  <span 
+                    key={tag.id} 
+                    className={cn(
+                      "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium",
+                      tagColors[tag.color] || tagColors.slate
+                    )}
+                  >
+                    {tag.name}
+                  </span>
+                ))}
               </div>
 
               {/* Project Title */}
               <h1 className="text-xl font-bold text-slate-900">{project.name}</h1>
-
-              {/* Project Tags */}
-              {getProjectTags().length > 0 && (
-                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                  {getProjectTags().map(tag => (
-                    <span 
-                      key={tag.id} 
-                      className={cn(
-                        "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium",
-                        tagColors[tag.color] || tagColors.slate
-                      )}
-                    >
-                      <Tag className="w-3 h-3" />
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
-              )}
 
               {project.client && (
                 <Link 
