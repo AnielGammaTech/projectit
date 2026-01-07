@@ -632,9 +632,51 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 ref={textareaRef}
                 value={comment}
                 onChange={handleCommentChange}
-                placeholder="Add a comment here..."
-                className="min-h-[60px] resize-none"
+                placeholder="Add a comment... Type @ to mention someone"
+                className="min-h-[60px] resize-none pr-10"
               />
+              
+              {/* Attach file button inside textarea area */}
+              <button
+                type="button"
+                onClick={() => commentFileInputRef.current?.click()}
+                disabled={uploadingCommentFile}
+                className="absolute bottom-2 right-2 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+                title="Attach file"
+              >
+                {uploadingCommentFile ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Paperclip className="w-4 h-4" />
+                )}
+              </button>
+              <input
+                ref={commentFileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleCommentFileUpload}
+              />
+              
+              {/* Comment Attachments Preview */}
+              {commentAttachments.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {commentAttachments.map((att, idx) => {
+                    const FileIcon = getFileIcon(att.type);
+                    return (
+                      <div key={idx} className="flex items-center gap-1.5 bg-slate-100 rounded-lg px-2 py-1 text-xs">
+                        <FileIcon className="w-3 h-3 text-slate-500" />
+                        <span className="text-slate-700 truncate max-w-[120px]">{att.name}</span>
+                        <button
+                          onClick={() => removeCommentAttachment(idx)}
+                          className="text-slate-400 hover:text-red-500"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               
               {/* Mentions Dropdown */}
               {showMentions && filteredMembers.length > 0 && (
@@ -656,7 +698,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
             </div>
             <Button 
               onClick={handleSubmitComment} 
-              disabled={!comment.trim() || addCommentMutation.isPending}
+              disabled={(!comment.trim() && commentAttachments.length === 0) || addCommentMutation.isPending}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
               <Send className="w-4 h-4" />
