@@ -133,15 +133,17 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
   };
   
   const stats = useMemo(() => {
-    const completed = tasks.filter(t => t.status === 'completed').length;
-    const pending = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length;
-    const total = tasks.length;
+    // Exclude archived tasks from counts
+    const activeTasks = tasks.filter(t => t.status !== 'archived');
+    const completed = activeTasks.filter(t => t.status === 'completed').length;
+    const pending = activeTasks.filter(t => t.status !== 'completed').length;
+    const total = activeTasks.length;
     const pendingP = parts.filter(p => p.status !== 'installed').length;
     const prog = project.progress || (total > 0 ? (completed / total) * 100 : 0);
     
-    const unassigned = tasks.filter(t => !t.assigned_to && t.status !== 'completed' && t.status !== 'archived').length;
-    const overdue = tasks.filter(t => {
-      if (t.status === 'completed' || t.status === 'archived' || !t.due_date) return false;
+    const unassigned = activeTasks.filter(t => !t.assigned_to && t.status !== 'completed').length;
+    const overdue = activeTasks.filter(t => {
+      if (t.status === 'completed' || !t.due_date) return false;
       const dueDate = new Date(t.due_date);
       return dueDate < new Date() && dueDate.toDateString() !== new Date().toDateString();
     }).length;
