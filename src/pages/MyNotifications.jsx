@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { Inbox, AtSign, CheckCircle2, Clock, ArrowLeft, Loader2 } from 'lucide-react';
+import { Inbox, AtSign, CheckCircle2, Clock, ArrowLeft, Loader2, Package, FolderOpen, MessageSquare, AlertTriangle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,19 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+
+const notificationConfig = {
+  mention: { icon: AtSign, bg: 'bg-indigo-100', color: 'text-indigo-600' },
+  progress_update: { icon: CheckCircle2, bg: 'bg-emerald-100', color: 'text-emerald-600' },
+  task_assigned: { icon: CheckCircle2, bg: 'bg-blue-100', color: 'text-blue-600' },
+  task_due: { icon: Clock, bg: 'bg-amber-100', color: 'text-amber-600' },
+  task_completed: { icon: CheckCircle2, bg: 'bg-emerald-100', color: 'text-emerald-600' },
+  task_overdue: { icon: AlertTriangle, bg: 'bg-red-100', color: 'text-red-600' },
+  part_status: { icon: Package, bg: 'bg-orange-100', color: 'text-orange-600' },
+  project_update: { icon: FolderOpen, bg: 'bg-violet-100', color: 'text-violet-600' },
+  project_assigned: { icon: FolderOpen, bg: 'bg-blue-100', color: 'text-blue-600' },
+  comment: { icon: MessageSquare, bg: 'bg-teal-100', color: 'text-teal-600' }
+};
 
 export default function MyNotifications() {
   const queryClient = useQueryClient();
@@ -46,6 +59,14 @@ export default function MyNotifications() {
         await base44.entities.UserNotification.update(n.id, { is_read: true });
       }
     },
+    onSuccess: () => {
+      refetchNotifications();
+      queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
+    }
+  });
+
+  const dismissNotification = useMutation({
+    mutationFn: (notificationId) => base44.entities.UserNotification.delete(notificationId),
     onSuccess: () => {
       refetchNotifications();
       queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
@@ -97,64 +118,79 @@ export default function MyNotifications() {
               {notifications.length > 0 ? (
                 <ScrollArea className="h-[500px]">
                   <div className="space-y-2">
-                    {notifications.map(notification => (
-                      <div
-                        key={notification.id}
-                        className={cn(
-                          "p-4 rounded-xl border transition-all",
-                          notification.is_read 
-                            ? "bg-white border-slate-100" 
-                            : "bg-blue-50 border-blue-200"
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3">
-                            <div className={cn(
-                              "p-2.5 rounded-xl",
-                              notification.type === 'mention' && "bg-indigo-100 text-indigo-600",
-                              notification.type === 'progress_update' && "bg-emerald-100 text-emerald-600",
-                              notification.type === 'task_assigned' && "bg-blue-100 text-blue-600",
-                              notification.type === 'task_due' && "bg-amber-100 text-amber-600"
-                            )}>
-                              {notification.type === 'mention' && <AtSign className="w-5 h-5" />}
-                              {notification.type === 'progress_update' && <CheckCircle2 className="w-5 h-5" />}
-                              {notification.type === 'task_assigned' && <CheckCircle2 className="w-5 h-5" />}
-                              {notification.type === 'task_due' && <Clock className="w-5 h-5" />}
+                    {notifications.map(notification => {
+                      const config = notificationConfig[notification.type] || notificationConfig.mention;
+                      const IconComponent = config.icon;
+                      
+                      return (
+                        <div
+                          key={notification.id}
+                          className={cn(
+                            "p-4 rounded-xl border transition-all group relative",
+                            notification.is_read 
+                              ? "bg-white border-slate-100" 
+                              : "bg-blue-50 border-blue-200"
+                          )}
+                        >
+                          {/* Unread indicator dot */}
+                          {!notification.is_read && (
+                            <div className="absolute top-4 left-4 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+                          )}
+                          
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                              <div className={cn("p-2.5 rounded-xl", config.bg, config.color, !notification.is_read && "ml-4")}>
+                                <IconComponent className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-slate-900">{notification.title}</p>
+                                <p className="text-sm text-slate-500 mt-1">{notification.message}</p>
+                                {notification.project_name && (
+                                  <p className="text-xs text-[#0069AF] mt-2">Project: {notification.project_name}</p>
+                                )}
+                                {notification.from_user_name && (
+                                  <p className="text-xs text-slate-400 mt-1">From: {notification.from_user_name}</p>
+                                )}
+                                <p className="text-xs text-slate-400 mt-1">
+                                  {format(new Date(notification.created_date), 'MMM d, yyyy • h:mm a')}
+                                </p>
+                              </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-900">{notification.title}</p>
-                              <p className="text-sm text-slate-500 mt-1">{notification.message}</p>
-                              {notification.from_user_name && (
-                                <p className="text-xs text-slate-400 mt-2">From: {notification.from_user_name}</p>
-                              )}
-                              <p className="text-xs text-slate-400 mt-1">
-                                {format(new Date(notification.created_date), 'MMM d, yyyy • h:mm a')}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            {notification.link && (
-                              <Link to={notification.link}>
-                                <Button variant="outline" size="sm" className="text-xs h-8">
-                                  View
+                            <div className="flex flex-col items-end gap-2">
+                              <div className="flex items-center gap-1">
+                                {notification.link && (
+                                  <Link to={notification.link}>
+                                    <Button variant="outline" size="sm" className="text-xs h-8">
+                                      View
+                                    </Button>
+                                  </Link>
+                                )}
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => dismissNotification.mutate(notification.id)}
+                                  className="h-8 w-8 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Dismiss"
+                                >
+                                  <Trash2 className="w-4 h-4" />
                                 </Button>
-                              </Link>
-                            )}
-                            {!notification.is_read && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => markAsRead.mutate(notification.id)}
-                                className="text-xs h-8"
-                              >
-                                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                                Mark read
-                              </Button>
-                            )}
+                              </div>
+                              {!notification.is_read && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => markAsRead.mutate(notification.id)}
+                                  className="text-xs h-8"
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                                  Mark read
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </ScrollArea>
               ) : (
