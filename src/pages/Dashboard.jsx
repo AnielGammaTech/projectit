@@ -432,76 +432,111 @@ export default function Dashboard() {
   };
 
   const handleCreateProject = async (data, template, extractedParts) => {
-    // Get highest project number and increment
-    const allProjects = await base44.entities.Project.list('-project_number', 1);
-    const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
-    
-    // Get "In Progress" tag to auto-assign
-    const allTags = await base44.entities.ProjectTag.list();
-    const inProgressTag = allTags.find(t => t.name === 'In Progress');
-    
-    // Ensure team_members includes the creator if not already
-    const teamMembers = data.team_members || [];
-    if (currentUser?.email && !teamMembers.includes(currentUser.email)) {
-      teamMembers.push(currentUser.email);
-    }
-    
-    // Ensure customer_id is correctly passed
-    const projectData = {
-      ...data,
-      project_number: nextNumber,
-      customer_id: data.customer_id || prefillData?.customer_id || null,
-      quoteit_quote_id: prefillData?.quoteit_quote_id || null,
-      incoming_quote_id: prefillData?.incoming_quote_id || null,
-      tags: inProgressTag ? [inProgressTag.id] : [],
-      team_members: teamMembers
-    };
-    
-    const newProject = await base44.entities.Project.create(projectData);
-    
-    // If created from IncomingQuote, mark it as converted
-    if (prefillData?.incoming_quote_id) {
-      await base44.entities.IncomingQuote.update(prefillData.incoming_quote_id, { status: 'converted' });
-      
-      // Link project on QuoteIT if ID is available
-      if (prefillData.quoteit_quote_id) {
-        try {
-          await base44.functions.invoke('linkQuoteToProject', { 
-            quote_id: prefillData.quoteit_quote_id, 
-            project_id: newProject.id,
-            project_number: newProject.project_number
-          });
-        } catch (err) {
-          console.error('Failed to link project on QuoteIT:', err);
+        // Get highest project number and increment
+        const allProjects = await base44.entities.Project.list('-project_number', 1);
+        const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
+
+        // Get "In Progress" tag to auto-assign
+        const allTags = await base44.entities.ProjectTag.list();
+        const inProgressTag = allTags.find(t => t.name === 'In Progress');
+
+        // Ensure team_members includes the creator if not already
+        const teamMembersList = data.team_members || [];
+        if (currentUser?.email && !teamMembersList.includes(currentUser.email)) {
+          teamMembersList.push(currentUser.email);
         }
-      }
 
-      // Clean up the query
-      if (typeof refetchIncomingQuotes === 'function') refetchIncomingQuotes();
-    }
+        // Ensure customer_id is correctly passed
+        const projectData = {
+          ...data,
+          project_number: nextNumber,
+          customer_id: data.customer_id || prefillData?.customer_id || null,
+          quoteit_quote_id: prefillData?.quoteit_quote_id || null,
+          incoming_quote_id: prefillData?.incoming_quote_id || null,
+          tags: inProgressTag ? [inProgressTag.id] : [],
+          team_members: teamMembersList
+        };
 
-    if (template?.default_tasks?.length) {
-      for (const task of template.default_tasks) {
-        await base44.entities.Task.create({ ...task, project_id: newProject.id });
-      }
-      refetchTasks();
-    }
-    
-    if (template?.default_parts?.length) {
-      for (const part of template.default_parts) {
-        await base44.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
-      }
-    }
+        const newProject = await base44.entities.Project.create(projectData);
 
-    if (extractedParts?.length) {
-      for (const part of extractedParts) {
-        await base44.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
-      }
-    }
+        // Send project assignment notifications to team members (excluding creator)
+        for (const memberEmail of teamMembersList) {
+          if (memberEmail !== currentUser?.email) {
+            try {
+              // Create in-app notification
+              await base44.entities.UserNotification.create({
+                user_email: memberEmail,
+                type: 'project_assigned',
+                title: 'You have been added to a project',
+                message: `${currentUser?.full_name || currentUser?.email} added you to "${newProject.name}"`,
+                project_id: newProject.id,
+                project_name: newProject.name,
+                from_user_email: currentUser?.email,
+                from_user_name: currentUser?.full_name || currentUser?.email,
+                link: `/ProjectDetail?id=${newProject.id}`,
+                is_read: false
+              });
 
-    refetchProjects();
-    setShowProjectModal(false);
-  };
+              // Send email notification
+              await base44.functions.invoke('sendNotificationEmail', {
+                to: memberEmail,
+                type: 'project_assigned',
+                title: 'You have been added to a project',
+                message: `${currentUser?.full_name || currentUser?.email} added you to "${newProject.name}"`,
+                projectId: newProject.id,
+                projectName: newProject.name,
+                fromUserName: currentUser?.full_name || currentUser?.email,
+                link: `${window.location.origin}/ProjectDetail?id=${newProject.id}`
+              });
+            } catch (notifErr) {
+              console.error('Failed to send project assignment notification:', notifErr);
+            }
+          }
+        }
+
+        // If created from IncomingQuote, mark it as converted
+        if (prefillData?.incoming_quote_id) {
+          await base44.entities.IncomingQuote.update(prefillData.incoming_quote_id, { status: 'converted' });
+
+          // Link project on QuoteIT if ID is available
+          if (prefillData.quoteit_quote_id) {
+            try {
+              await base44.functions.invoke('linkQuoteToProject', { 
+                quote_id: prefillData.quoteit_quote_id, 
+                project_id: newProject.id,
+                project_number: newProject.project_number
+              });
+            } catch (err) {
+              console.error('Failed to link project on QuoteIT:', err);
+            }
+          }
+
+          // Clean up the query
+          if (typeof refetchIncomingQuotes === 'function') refetchIncomingQuotes();
+        }
+
+        if (template?.default_tasks?.length) {
+          for (const task of template.default_tasks) {
+            await base44.entities.Task.create({ ...task, project_id: newProject.id });
+          }
+          refetchTasks();
+        }
+
+        if (template?.default_parts?.length) {
+          for (const part of template.default_parts) {
+            await base44.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
+          }
+        }
+
+        if (extractedParts?.length) {
+          for (const part of extractedParts) {
+            await base44.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
+          }
+        }
+
+        refetchProjects();
+        setShowProjectModal(false);
+      };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
