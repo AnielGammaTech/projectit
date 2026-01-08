@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import UserAvatar from '@/components/UserAvatar';
 
 const activityIcons = {
   task_created: { icon: Plus, color: 'text-blue-500', bg: 'bg-blue-100' },
@@ -29,28 +30,6 @@ const activityIcons = {
   part_installed: { icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-100' },
   progress_updated: { icon: TrendingUp, color: 'text-purple-500', bg: 'bg-purple-100' },
   note_added: { icon: FileText, color: 'text-slate-500', bg: 'bg-slate-100' },
-};
-
-const avatarColors = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
-  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
-  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
-];
-
-const getColorForEmail = (email) => {
-  if (!email) return avatarColors[0];
-  let hash = 0;
-  for (let i = 0; i < email.length; i++) {
-    hash = email.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return avatarColors[Math.abs(hash) % avatarColors.length];
-};
-
-const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
 };
 
 export default function ActivityFeed() {
@@ -99,6 +78,11 @@ export default function ActivityFeed() {
     queryKey: ['projectTags'],
     queryFn: () => base44.entities.ProjectTag.list()
   });
+
+  const getMemberAvatarUrl = (email) => {
+    const member = teamMembers.find(m => m.email === email);
+    return member?.avatar_url;
+  };
 
   // Combine team members and app users, deduplicate by email
   const allPeople = [...teamMembers];
@@ -354,12 +338,12 @@ export default function ActivityFeed() {
                           <div className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all">
                             <div className="flex items-start gap-4">
                               {/* Avatar */}
-                              <div className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium shrink-0",
-                                getColorForEmail(activity.actor_email)
-                              )}>
-                                {getInitials(activity.actor_name)}
-                              </div>
+                              <UserAvatar 
+                                email={activity.actor_email} 
+                                name={activity.actor_name} 
+                                avatarUrl={getMemberAvatarUrl(activity.actor_email)}
+                                size="lg"
+                              />
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between">
