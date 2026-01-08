@@ -349,7 +349,7 @@ function LayoutContent({ children, currentPageName }) {
                 )}
                 <DropdownMenuSeparator />
                 <div className="py-1">
-                  <DropdownMenuItem onClick={() => base44.auth.logout()} className="text-red-600 cursor-pointer">
+                  <DropdownMenuItem onClick={() => base44.auth.logout(window.location.origin)} className="text-red-600 cursor-pointer">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>
