@@ -31,6 +31,9 @@ export default function ProductsTab() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [stockFilter, setStockFilter] = useState('all'); // 'all', 'in_stock', 'out_of_stock', 'low_stock'
+  const [selectedManufacturers, setSelectedManufacturers] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
 
   const { data: products = [], refetch } = useQuery({
     queryKey: ['products'],
@@ -38,12 +41,46 @@ export default function ProductsTab() {
     staleTime: 300000
   });
 
-  const filteredProducts = products.filter(p =>
-    p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.manufacturer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.tags?.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Get unique manufacturers and tags for filters
+  const allManufacturers = [...new Set(products.map(p => p.manufacturer).filter(Boolean))].sort();
+  const allTags = [...new Set(products.flatMap(p => p.tags || []))].sort();
+
+  const filteredProducts = products.filter(p => {
+    // Search filter
+    const matchesSearch = 
+      p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.manufacturer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.tags?.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    // Stock filter
+    const matchesStock = 
+      stockFilter === 'all' ||
+      (stockFilter === 'in_stock' && (p.quantity_on_hand || 0) > 0) ||
+      (stockFilter === 'out_of_stock' && (p.quantity_on_hand || 0) === 0) ||
+      (stockFilter === 'low_stock' && (p.quantity_on_hand || 0) > 0 && (p.quantity_on_hand || 0) <= 5);
+    
+    // Manufacturer filter
+    const matchesManufacturer = selectedManufacturers.length === 0 || selectedManufacturers.includes(p.manufacturer);
+    
+    // Tags filter
+    const matchesTags = selectedTags.length === 0 || selectedTags.some(t => p.tags?.includes(t));
+    
+    return matchesSearch && matchesStock && matchesManufacturer && matchesTags;
+  });
+
+  const activeFiltersCount = (stockFilter !== 'all' ? 1 : 0) + selectedManufacturers.length + selectedTags.length;
+
+  const clearAllFilters = () => {
+    setStockFilter('all');
+    setSelectedManufacturers([]);
+    setSelectedTags([]);
+  };
+
+  const handleProductClick = (product) => {
+    setEditingProduct(product);
+    setShowModal(true);
+  };
 
   const handleSave = async (data) => {
     if (editingProduct) {
