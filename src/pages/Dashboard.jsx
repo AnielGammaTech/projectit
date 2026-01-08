@@ -242,9 +242,11 @@ export default function Dashboard() {
     return { pinnedProjects: pinned, unpinnedProjects: unpinned };
   }, [filteredProjects, pinnedProjectIds]);
 
-  const letterFilteredProjects = useMemo(() => 
-    activeLetter ? unpinnedProjects.filter(p => (p.name || '')[0].toUpperCase() === activeLetter) : unpinnedProjects
-  , [unpinnedProjects, activeLetter]);
+  const letterFilteredProjects = useMemo(() => {
+    const projectsInStacksSet = new Set(projectStacks.flatMap(s => s.project_ids || []));
+    const unstacked = unpinnedProjects.filter(p => !projectsInStacksSet.has(p.id));
+    return activeLetter ? unstacked.filter(p => (p.name || '')[0].toUpperCase() === activeLetter) : unstacked;
+  }, [unpinnedProjects, activeLetter, projectStacks]);
 
   const totalPages = Math.ceil(letterFilteredProjects.length / PROJECTS_PER_PAGE);
   const paginatedProjects = letterFilteredProjects.slice(
