@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Package, Edit2, Trash2, ImagePlus } from 'lucide-react';
+import { Plus, Search, Package, Edit2, Trash2, Filter, X, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ProductModal from './ProductModal';
 import {
@@ -17,6 +17,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 
 export default function ProductsTab() {
   const [searchQuery, setSearchQuery] = useState('');
