@@ -349,15 +349,33 @@ export default function Dashboard() {
     const sourceIsStack = source.droppableId.startsWith('stack-');
     const destIsStack = destination?.droppableId?.startsWith('stack-');
 
-    // Helper to remove project from its current stack
+    // Helper to optimistically update local stacks
+    const optimisticUpdate = (updater) => {
+      setLocalStacks(prev => {
+        const current = prev || projectStacksData;
+        return updater(current);
+      });
+    };
+
+    // Helper to remove project from its current stack (optimistic + server)
     const removeFromCurrentStack = async (projectId) => {
       const currentStack = projectStacks.find(s => s.project_ids?.includes(projectId));
       if (currentStack) {
         const newIds = currentStack.project_ids.filter(id => id !== projectId);
+        
+        // Optimistic update
+        optimisticUpdate(stacks => {
+          if (newIds.length === 0) {
+            return stacks.filter(s => s.id !== currentStack.id);
+          }
+          return stacks.map(s => s.id === currentStack.id ? { ...s, project_ids: newIds } : s);
+        });
+        
+        // Server update (fire and forget, refetch will sync)
         if (newIds.length === 0) {
-          await base44.entities.ProjectStack.delete(currentStack.id);
+          base44.entities.ProjectStack.delete(currentStack.id).then(() => refetchStacks());
         } else {
-          await base44.entities.ProjectStack.update(currentStack.id, { project_ids: newIds });
+          base44.entities.ProjectStack.update(currentStack.id, { project_ids: newIds }).then(() => refetchStacks());
         }
         return true;
       }
@@ -372,25 +390,42 @@ export default function Dashboard() {
       // Check if target is in a stack - add dragged to that stack
       const targetStack = projectStacks.find(s => s.project_ids?.includes(targetProjectId));
       if (targetStack) {
+        // Optimistic: remove from old stack, add to target
+        optimisticUpdate(stacks => stacks.map(s => {
+          if (s.project_ids?.includes(draggedProjectId) && s.id !== targetStack.id) {
+            return { ...s, project_ids: s.project_ids.filter(id => id !== draggedProjectId) };
+          }
+          if (s.id === targetStack.id && !s.project_ids?.includes(draggedProjectId)) {
+            return { ...s, project_ids: [...(s.project_ids || []), draggedProjectId] };
+          }
+          return s;
+        }).filter(s => s.project_ids?.length > 0));
+        
         await removeFromCurrentStack(draggedProjectId);
         if (!targetStack.project_ids?.includes(draggedProjectId)) {
-          await base44.entities.ProjectStack.update(targetStack.id, {
+          base44.entities.ProjectStack.update(targetStack.id, {
             project_ids: [...targetStack.project_ids, draggedProjectId]
-          });
+          }).then(() => refetchStacks());
         }
-        refetchStacks();
         return;
       }
 
       // Neither is in a stack - create new stack
-      await removeFromCurrentStack(draggedProjectId);
-      await base44.entities.ProjectStack.create({
+      const tempId = 'temp-' + Date.now();
+      optimisticUpdate(stacks => [...stacks, {
+        id: tempId,
+        name: 'New Stack',
+        color: 'slate',
+        project_ids: [targetProjectId, draggedProjectId],
+        order: stacks.length
+      }]);
+      
+      base44.entities.ProjectStack.create({
         name: 'New Stack',
         color: 'slate',
         project_ids: [targetProjectId, draggedProjectId],
         order: projectStacks.length
-      });
-      refetchStacks();
+      }).then(() => refetchStacks());
       return;
     }
 
@@ -398,7 +433,6 @@ export default function Dashboard() {
     if (!destination) {
       if (sourceIsStack) {
         await removeFromCurrentStack(draggableId);
-        refetchStacks();
       }
       return;
     }
@@ -413,19 +447,27 @@ export default function Dashboard() {
       const stackId = destination.droppableId.replace('stack-', '');
       const stack = projectStacks.find(s => s.id === stackId);
       
-      if (stack) {
-        // Remove from current stack if different
-        if (sourceIsStack && source.droppableId !== destination.droppableId) {
-          await removeFromCurrentStack(draggableId);
-        }
+      if (stack && !stack.project_ids?.includes(draggableId)) {
+        // Optimistic update
+        optimisticUpdate(stacks => stacks.map(s => {
+          // Remove from old stack
+          if (sourceIsStack && s.project_ids?.includes(draggableId) && s.id !== stackId) {
+            return { ...s, project_ids: s.project_ids.filter(id => id !== draggableId) };
+          }
+          // Add to new stack
+          if (s.id === stackId) {
+            return { ...s, project_ids: [...(s.project_ids || []), draggableId] };
+          }
+          return s;
+        }).filter(s => s.project_ids?.length > 0));
         
-        // Add to target stack if not already there
-        if (!stack.project_ids?.includes(draggableId)) {
-          await base44.entities.ProjectStack.update(stackId, {
-            project_ids: [...(stack.project_ids || []), draggableId]
-          });
+        // Server updates
+        if (sourceIsStack && source.droppableId !== destination.droppableId) {
+          removeFromCurrentStack(draggableId);
         }
-        refetchStacks();
+        base44.entities.ProjectStack.update(stackId, {
+          project_ids: [...(stack.project_ids || []), draggableId]
+        }).then(() => refetchStacks());
       }
       return;
     }
@@ -433,7 +475,6 @@ export default function Dashboard() {
     // Dropping OUT of a stack (to unpinned/pinned)
     if (sourceIsStack && !destIsStack) {
       await removeFromCurrentStack(draggableId);
-      refetchStacks();
     }
 
     // Handle pinned area
@@ -446,7 +487,6 @@ export default function Dashboard() {
         return newPinned;
       });
     } else if (source.droppableId === 'pinned') {
-      // Removing from pinned
       setPinnedProjectIds(prev => {
         const newPinned = prev.filter(id => id !== draggableId);
         localStorage.setItem('pinnedProjects', JSON.stringify(newPinned));
