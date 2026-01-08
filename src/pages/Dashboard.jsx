@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
+import ProjectStackCard from '@/components/dashboard/ProjectStackCard';
 
 import DashboardWidgets from '@/components/dashboard/DashboardWidgets';
 import PendingProposalsModal from '@/components/dashboard/PendingProposalsModal';
@@ -171,6 +172,12 @@ export default function Dashboard() {
     staleTime: 600000
   });
 
+  const { data: projectStacks = [], refetch: refetchStacks } = useQuery({
+    queryKey: ['projectStacks'],
+    queryFn: () => base44.entities.ProjectStack.list('order'),
+    staleTime: 300000
+  });
+
   // Helper to check if user has access to a project
   const userHasProjectAccess = useCallback((project) => {
     // Admins can see everything
@@ -323,10 +330,75 @@ export default function Dashboard() {
     });
   };
 
-  const handleDragEnd = (result) => {
-    const { destination, source, draggableId } = result;
+  const handleDragEnd = async (result) => {
+    const { destination, source, draggableId, combine } = result;
+
+    // Handle combining projects to create a stack
+    if (combine) {
+      const targetProjectId = combine.draggableId;
+      const draggedProjectId = draggableId;
+
+      // Create a new stack with both projects
+      const draggedProject = projects.find(p => p.id === draggedProjectId);
+      const targetProject = projects.find(p => p.id === targetProjectId);
+
+      if (draggedProject && targetProject) {
+        await base44.entities.ProjectStack.create({
+          name: 'New Stack',
+          color: 'slate',
+          project_ids: [targetProjectId, draggedProjectId],
+          order: projectStacks.length
+        });
+        refetchStacks();
+      }
+      return;
+    }
+
     if (!destination) return;
-    
+
+    // Handle dropping into a stack
+    if (destination.droppableId.startsWith('stack-')) {
+      const stackId = destination.droppableId.replace('stack-', '');
+      const stack = projectStacks.find(s => s.id === stackId);
+
+      if (stack) {
+        // Remove from any other stack first
+        for (const s of projectStacks) {
+          if (s.project_ids?.includes(draggableId) && s.id !== stackId) {
+            await base44.entities.ProjectStack.update(s.id, {
+              project_ids: s.project_ids.filter(id => id !== draggableId)
+            });
+          }
+        }
+
+        // Add to target stack if not already there
+        if (!stack.project_ids?.includes(draggableId)) {
+          await base44.entities.ProjectStack.update(stackId, {
+            project_ids: [...(stack.project_ids || []), draggableId]
+          });
+        }
+        refetchStacks();
+        return;
+      }
+    }
+
+    // Handle dropping from stack to unpinned (remove from stack)
+    if (source.droppableId.startsWith('stack-') && destination.droppableId === 'unpinned') {
+      const stackId = source.droppableId.replace('stack-', '');
+      const stack = projectStacks.find(s => s.id === stackId);
+
+      if (stack) {
+        const newIds = stack.project_ids?.filter(id => id !== draggableId) || [];
+        if (newIds.length === 0) {
+          // Delete empty stack
+          await base44.entities.ProjectStack.delete(stackId);
+        } else {
+          await base44.entities.ProjectStack.update(stackId, { project_ids: newIds });
+        }
+        refetchStacks();
+      }
+    }
+
     // If dropped on pinned area, pin it
     if (destination.droppableId === 'pinned' && source.droppableId !== 'pinned') {
       setPinnedProjectIds(prev => {
@@ -354,6 +426,31 @@ export default function Dashboard() {
       });
     }
   };
+
+  // Stack handlers
+  const handleStackToggleCollapse = async (stack) => {
+    await base44.entities.ProjectStack.update(stack.id, { is_collapsed: !stack.is_collapsed });
+    refetchStacks();
+  };
+
+  const handleStackRename = async (stack, newName) => {
+    await base44.entities.ProjectStack.update(stack.id, { name: newName });
+    refetchStacks();
+  };
+
+  const handleStackDelete = async (stack) => {
+    await base44.entities.ProjectStack.delete(stack.id);
+    refetchStacks();
+  };
+
+  const handleStackColorChange = async (stack, color) => {
+    await base44.entities.ProjectStack.update(stack.id, { color });
+    refetchStacks();
+  };
+
+  // Get projects not in any stack
+  const projectsInStacks = projectStacks.flatMap(s => s.project_ids || []);
+  const unstackedProjects = unpinnedProjects.filter(p => !projectsInStacks.includes(p.id));
 
   const handleTaskComplete = async (task) => {
     await base44.entities.Task.update(task.id, { ...task, status: 'completed' });
