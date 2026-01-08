@@ -340,7 +340,40 @@ export default function Dashboard() {
       const targetProjectId = combine.draggableId;
       const draggedProjectId = draggableId;
 
-      // Create a new stack with both projects
+      // Check if either project is already in a stack
+      const targetInStack = projectStacks.find(s => s.project_ids?.includes(targetProjectId));
+      const draggedInStack = projectStacks.find(s => s.project_ids?.includes(draggedProjectId));
+
+      // If target is in a stack, add dragged to that stack
+      if (targetInStack) {
+        // Remove dragged from its current stack if any
+        if (draggedInStack && draggedInStack.id !== targetInStack.id) {
+          await base44.entities.ProjectStack.update(draggedInStack.id, {
+            project_ids: draggedInStack.project_ids.filter(id => id !== draggedProjectId)
+          });
+        }
+        // Add to target stack if not already there
+        if (!targetInStack.project_ids?.includes(draggedProjectId)) {
+          await base44.entities.ProjectStack.update(targetInStack.id, {
+            project_ids: [...(targetInStack.project_ids || []), draggedProjectId]
+          });
+        }
+        refetchStacks();
+        return;
+      }
+
+      // If dragged is in a stack but target is not, add target to dragged's stack
+      if (draggedInStack) {
+        if (!draggedInStack.project_ids?.includes(targetProjectId)) {
+          await base44.entities.ProjectStack.update(draggedInStack.id, {
+            project_ids: [...(draggedInStack.project_ids || []), targetProjectId]
+          });
+        }
+        refetchStacks();
+        return;
+      }
+
+      // Neither is in a stack - create new stack
       const draggedProject = projects.find(p => p.id === draggedProjectId);
       const targetProject = projects.find(p => p.id === targetProjectId);
 
@@ -367,9 +400,12 @@ export default function Dashboard() {
         // Remove from any other stack first
         for (const s of projectStacks) {
           if (s.project_ids?.includes(draggableId) && s.id !== stackId) {
-            await base44.entities.ProjectStack.update(s.id, {
-              project_ids: s.project_ids.filter(id => id !== draggableId)
-            });
+            const newIds = s.project_ids.filter(id => id !== draggableId);
+            if (newIds.length === 0) {
+              await base44.entities.ProjectStack.delete(s.id);
+            } else {
+              await base44.entities.ProjectStack.update(s.id, { project_ids: newIds });
+            }
           }
         }
 
