@@ -54,6 +54,7 @@ export default function ProjectStackCard({
   onProjectColorChange,
   onProjectStatusChange,
   onProjectDueDateChange,
+  onPinToggle,
   getTasksForProject,
   getPartsForProject
 }) {
@@ -205,6 +206,7 @@ export default function ProjectStackCard({
                             onColorChange={onProjectColorChange}
                             onStatusChange={onProjectStatusChange}
                             onDueDateChange={onProjectDueDateChange}
+                            onPinToggle={onPinToggle}
                             dragHandleProps={provided.dragHandleProps}
                             teamMembers={teamMembers}
                             customStatuses={customStatuses}

@@ -389,7 +389,23 @@ export default function Dashboard() {
       return;
     }
 
-    if (!destination) return;
+    if (!destination) {
+      // If dropped outside any droppable but came from a stack, remove from stack
+      if (source.droppableId.startsWith('stack-')) {
+        const stackId = source.droppableId.replace('stack-', '');
+        const stack = projectStacks.find(s => s.id === stackId);
+        if (stack) {
+          const newIds = stack.project_ids?.filter(id => id !== draggableId) || [];
+          if (newIds.length === 0) {
+            await base44.entities.ProjectStack.delete(stackId);
+          } else {
+            await base44.entities.ProjectStack.update(stackId, { project_ids: newIds });
+          }
+          refetchStacks();
+        }
+      }
+      return;
+    }
 
     // Handle dropping into a stack
     if (destination.droppableId.startsWith('stack-')) {
@@ -1275,6 +1291,7 @@ export default function Dashboard() {
                           onProjectColorChange={handleProjectColorChange}
                           onProjectStatusChange={handleProjectStatusChange}
                           onProjectDueDateChange={handleProjectDueDateChange}
+                          onPinToggle={handlePinToggle}
                           getTasksForProject={getTasksForProject}
                           getPartsForProject={getPartsForProject}
                         />
