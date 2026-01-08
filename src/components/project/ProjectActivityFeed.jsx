@@ -7,6 +7,7 @@ import {
   Trash2, ArrowUpCircle, User, Clock, FileText, Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import UserAvatar from '@/components/UserAvatar';
 
 const actionIcons = {
   task_created: { icon: PlusCircle, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
@@ -22,28 +23,6 @@ const actionIcons = {
   default: { icon: Zap, color: 'text-slate-500', bg: 'bg-slate-500/10' }
 };
 
-const avatarColors = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
-  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
-  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
-];
-
-const getColorForEmail = (email) => {
-  if (!email) return avatarColors[0];
-  let hash = 0;
-  for (let i = 0; i < email.length; i++) {
-    hash = email.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return avatarColors[Math.abs(hash) % avatarColors.length];
-};
-
-const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-};
-
 export default function ProjectActivityFeed({ projectId, progressUpdates = [] }) {
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ['projectActivity', projectId],
@@ -51,6 +30,16 @@ export default function ProjectActivityFeed({ projectId, progressUpdates = [] })
     enabled: !!projectId,
     refetchInterval: 30000
   });
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => base44.entities.TeamMember.list()
+  });
+
+  const getMemberAvatarUrl = (email) => {
+    const member = teamMembers.find(m => m.email === email);
+    return member?.avatar_url;
+  };
 
   if (isLoading) {
     return (
@@ -155,11 +144,13 @@ export default function ProjectActivityFeed({ projectId, progressUpdates = [] })
 
                 {/* Actor avatar */}
                 {activity.actor_name && (
-                  <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity",
-                    getColorForEmail(activity.actor_email)
-                  )}>
-                    {getInitials(activity.actor_name)}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <UserAvatar 
+                      email={activity.actor_email} 
+                      name={activity.actor_name} 
+                      avatarUrl={getMemberAvatarUrl(activity.actor_email)}
+                      size="md"
+                    />
                   </div>
                 )}
               </motion.div>
