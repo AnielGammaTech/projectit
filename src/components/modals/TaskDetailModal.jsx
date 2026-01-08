@@ -15,6 +15,7 @@ import {
   User, Clock, Flag, MessageSquare, ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import UserAvatar from '@/components/UserAvatar';
 
 const priorityConfig = {
   low: { label: 'Low', color: 'text-slate-500', bg: 'bg-slate-100' },
@@ -27,28 +28,6 @@ const statusConfig = {
   in_progress: { label: 'In Progress', color: 'bg-blue-500' },
   review: { label: 'Review', color: 'bg-purple-500' },
   completed: { label: 'Completed', color: 'bg-emerald-500' }
-};
-
-const avatarColors = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
-  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
-  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
-];
-
-const getColorForEmail = (email) => {
-  if (!email) return avatarColors[0];
-  let hash = 0;
-  for (let i = 0; i < email.length; i++) {
-    hash = email.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return avatarColors[Math.abs(hash) % avatarColors.length];
-};
-
-const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
 };
 
 const getFileIcon = (type) => type?.startsWith('image') ? Image : FileText;
@@ -338,9 +317,12 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors text-sm">
                   {task.assigned_name ? (
                     <>
-                      <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(task.assigned_to))}>
-                        {getInitials(task.assigned_name)}
-                      </div>
+                      <UserAvatar 
+                        email={task.assigned_to} 
+                        name={task.assigned_name} 
+                        avatarUrl={teamMembers.find(m => m.email === task.assigned_to)?.avatar_url}
+                        size="xs"
+                      />
                       {task.assigned_name}
                     </>
                   ) : (
@@ -360,9 +342,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 <DropdownMenuSeparator />
                 {teamMembers.map(m => (
                   <DropdownMenuItem key={m.id} onClick={() => handleAssign(m.email)}>
-                    <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(m.email))}>
-                      {getInitials(m.name)}
-                    </div>
+                    <UserAvatar email={m.email} name={m.name} avatarUrl={m.avatar_url} size="xs" className="mr-2" />
                     {m.name}
                     {task.assigned_to === m.email && <Check className="w-4 h-4 ml-auto" />}
                   </DropdownMenuItem>
@@ -437,9 +417,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 <p className="px-2 py-1.5 text-xs text-slate-500">Notify when completed:</p>
                 {teamMembers.map(m => (
                   <DropdownMenuItem key={m.id} onClick={() => handleToggleNotify(m.email)}>
-                    <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(m.email))}>
-                      {getInitials(m.name)}
-                    </div>
+                    <UserAvatar email={m.email} name={m.name} avatarUrl={m.avatar_url} size="xs" className="mr-2" />
                     {m.name}
                     {notifyOnComplete.includes(m.email) && <Check className="w-4 h-4 ml-auto text-emerald-600" />}
                   </DropdownMenuItem>
@@ -504,9 +482,12 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
             <div className="space-y-4">
               {comments.map((c) => (
                 <div key={c.id} className="flex gap-3">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-medium", getColorForEmail(c.author_email))}>
-                    {getInitials(c.author_name)}
-                  </div>
+                  <UserAvatar 
+                    email={c.author_email} 
+                    name={c.author_name} 
+                    avatarUrl={teamMembers.find(m => m.email === c.author_email)?.avatar_url}
+                    size="md"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-slate-900 text-sm">{c.author_name}</span>
@@ -546,9 +527,12 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
         {/* Comment Input */}
         <div className="p-4 border-t border-slate-100 bg-slate-50">
           <div className="flex gap-3">
-            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-xs shrink-0", getColorForEmail(currentUser?.email))}>
-              {getInitials(currentUser?.full_name)}
-            </div>
+            <UserAvatar 
+              email={currentUser?.email} 
+              name={currentUser?.full_name} 
+              avatarUrl={currentUser?.avatar_url}
+              size="md"
+            />
             <div className="flex-1 relative">
               <Textarea
                 ref={textareaRef}
@@ -592,9 +576,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                       onClick={() => insertMention(member)}
                       className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2"
                     >
-                      <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(member.email))}>
-                        {getInitials(member.name)}
-                      </div>
+                      <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="sm" />
                       <span className="text-sm">{member.name}</span>
                     </button>
                   ))}
