@@ -420,8 +420,8 @@ export default function Dashboard() {
       }
     }
 
-    // Handle dropping from stack to unpinned (remove from stack)
-    if (source.droppableId.startsWith('stack-') && destination.droppableId === 'unpinned') {
+    // Handle dropping from stack to anywhere outside a stack (remove from stack)
+    if (source.droppableId.startsWith('stack-') && !destination.droppableId.startsWith('stack-')) {
       const stackId = source.droppableId.replace('stack-', '');
       const stack = projectStacks.find(s => s.id === stackId);
 
