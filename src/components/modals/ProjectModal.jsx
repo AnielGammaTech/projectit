@@ -692,45 +692,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             )}
           </div>
 
-          {/* User Groups Access - Collapsible */}
-          {userGroups.length > 0 && (
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-              <div className="flex items-center gap-2 mb-3">
-                <Users className="w-4 h-4 text-slate-600" />
-                <Label className="text-slate-900 font-semibold text-sm">Access Control</Label>
-              </div>
-              <p className="text-xs text-slate-500 mb-3">Select which user groups can access this project</p>
-              <div className="space-y-2">
-                {userGroups.map((group) => (
-                  <label
-                    key={group.id}
-                    className={cn(
-                      "flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-all",
-                      formData.user_groups.includes(group.id)
-                        ? "border-[#0069AF]/30 bg-[#0069AF]/5"
-                        : "border-slate-200 bg-white hover:border-slate-300"
-                    )}
-                  >
-                    <Checkbox
-                      checked={formData.user_groups.includes(group.id)}
-                      onCheckedChange={() => toggleUserGroup(group.id)}
-                    />
-                    <div className="flex-1">
-                      <span className="font-medium text-slate-900 text-sm">{group.name}</span>
-                      {group.member_emails?.length > 0 && (
-                        <span className="text-xs text-slate-500 ml-2">
-                          ({group.member_emails.length} members)
-                        </span>
-                      )}
-                    </div>
-                  </label>
-                ))}
-              </div>
-              {formData.user_groups.length === 0 && (
-                <p className="text-xs text-amber-600 mt-2">No groups selected - project will be visible to all users</p>
-              )}
-            </div>
-          )}
+
 
           <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="px-6">
