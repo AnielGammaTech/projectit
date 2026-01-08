@@ -81,14 +81,15 @@ export default function ProjectStackCard({
   const isOpen = !stack.is_collapsed;
 
   return (
-    <Droppable droppableId={`stack-${stack.id}`} type="PROJECT">
+    <Droppable droppableId={`stack-${stack.id}`}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           {...provided.droppableProps}
           className={cn(
             "rounded-2xl transition-all",
-            isOpen ? cn("border-2 border-dashed p-3", colors.border, colors.bg) : ""
+            isOpen ? cn("border-2 p-3", snapshot.isDraggingOver ? "border-solid border-blue-400 bg-blue-50" : cn("border-dashed", colors.border, colors.bg)) : "",
+            snapshot.isDraggingOver && !isOpen && "ring-2 ring-blue-400"
           )}
         >
           {/* Folder Header - Always visible */}
@@ -185,17 +186,19 @@ export default function ProjectStackCard({
           {isOpen && (
             <div className={cn(
               "mt-3 min-h-[60px] transition-colors rounded-xl",
-              snapshot.isDraggingOver && "bg-white/50"
+              snapshot.isDraggingOver && "bg-blue-50/50"
             )}>
               {stackProjects.length > 0 ? (
                 <div className="grid gap-3">
                   {stackProjects.map((project, idx) => (
                     <Draggable key={project.id} draggableId={project.id} index={idx}>
-                      {(provided, snapshot) => (
+                      {(provided, dragSnapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
+                          {...provided.dragHandleProps}
                           style={provided.draggableProps.style}
+                          className={cn(dragSnapshot.isDragging && "opacity-90 shadow-2xl")}
                         >
                           <ProjectCard
                             project={project}
@@ -207,7 +210,6 @@ export default function ProjectStackCard({
                             onStatusChange={onProjectStatusChange}
                             onDueDateChange={onProjectDueDateChange}
                             onPinToggle={onPinToggle}
-                            dragHandleProps={provided.dragHandleProps}
                             teamMembers={teamMembers}
                             customStatuses={customStatuses}
                           />
@@ -218,9 +220,8 @@ export default function ProjectStackCard({
                 </div>
               ) : (
                 <div className={cn(
-                  "h-16 flex items-center justify-center border-2 border-dashed rounded-xl",
-                  colors.border,
-                  "bg-white/30"
+                  "h-16 flex items-center justify-center border-2 border-dashed rounded-xl transition-colors",
+                  snapshot.isDraggingOver ? "border-blue-400 bg-blue-50" : cn(colors.border, "bg-white/30")
                 )}>
                   <p className="text-sm text-slate-400">Drag projects here</p>
                 </div>
