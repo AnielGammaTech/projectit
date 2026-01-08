@@ -1218,12 +1218,38 @@ export default function Dashboard() {
                     </Droppable>
                   )}
 
+                  {/* Stacks Section */}
+                  {projectStacks.length > 0 && (
+                    <div className="mb-6 grid sm:grid-cols-2 gap-4">
+                      {projectStacks.map(stack => (
+                        <ProjectStackCard
+                          key={stack.id}
+                          stack={stack}
+                          projects={projects}
+                          tasks={tasks}
+                          parts={parts}
+                          teamMembers={teamMembers}
+                          customStatuses={customStatuses}
+                          onToggleCollapse={handleStackToggleCollapse}
+                          onRename={handleStackRename}
+                          onDelete={handleStackDelete}
+                          onColorChange={handleStackColorChange}
+                          onProjectColorChange={handleProjectColorChange}
+                          onProjectStatusChange={handleProjectStatusChange}
+                          onProjectDueDateChange={handleProjectDueDateChange}
+                          getTasksForProject={getTasksForProject}
+                          getPartsForProject={getPartsForProject}
+                        />
+                      ))}
+                    </div>
+                  )}
+
                   {/* Unpinned Projects */}
-                  <Droppable droppableId="unpinned">
+                  <Droppable droppableId="unpinned" isCombineEnabled>
                     {(provided) => (
                       <div ref={provided.innerRef} {...provided.droppableProps}>
                         {sortedGroups.map(group => {
-                                  const allGroupProjects = (groupedProjects[group] || []).filter(p => !pinnedProjectIds.includes(p.id));
+                                  const allGroupProjects = (groupedProjects[group] || []).filter(p => !pinnedProjectIds.includes(p.id) && !projectsInStacks.includes(p.id));
                                   // Apply letter filter and pagination to group projects
                                   const groupProjects = allGroupProjects.filter(p => 
                                     !activeLetter || (p.name || '')[0].toUpperCase() === activeLetter
@@ -1256,6 +1282,7 @@ export default function Dashboard() {
                                           ref={provided.innerRef}
                                           {...provided.draggableProps}
                                           style={provided.draggableProps.style}
+                                          className={snapshot.combineTargetFor ? 'ring-2 ring-indigo-400 ring-offset-2 rounded-2xl' : ''}
                                         >
                                           <ProjectCard
                                                                                             project={project}
