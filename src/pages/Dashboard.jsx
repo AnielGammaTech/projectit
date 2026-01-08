@@ -172,11 +172,22 @@ export default function Dashboard() {
     staleTime: 600000
   });
 
-  const { data: projectStacks = [], refetch: refetchStacks } = useQuery({
+  const { data: projectStacksData = [], refetch: refetchStacks } = useQuery({
     queryKey: ['projectStacks'],
     queryFn: () => base44.entities.ProjectStack.list('order'),
     staleTime: 300000
   });
+  
+  // Local state for optimistic updates
+  const [localStacks, setLocalStacks] = useState(null);
+  const projectStacks = localStacks || projectStacksData;
+  
+  // Sync local state when data changes
+  useEffect(() => {
+    if (projectStacksData.length > 0 || localStacks === null) {
+      setLocalStacks(null); // Reset to use server data
+    }
+  }, [projectStacksData]);
 
   // Helper to check if user has access to a project
   const userHasProjectAccess = useCallback((project) => {
