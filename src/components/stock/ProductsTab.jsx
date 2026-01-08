@@ -75,7 +75,7 @@ export default function ProductsTab() {
         </Button>
       </div>
 
-      {/* Products Grid */}
+      {/* Products List */}
       {filteredProducts.length === 0 ? (
         <div className="text-center py-16 bg-[#0F2F44]/5 rounded-2xl border border-[#0F2F44]/10">
           <Package className="w-12 h-12 mx-auto text-[#0F2F44]/30 mb-4" />
@@ -87,64 +87,68 @@ export default function ProductsTab() {
           </Button>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="space-y-2">
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all group"
+              className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition-all group flex items-center"
             >
-              {/* Image */}
-              <div className="aspect-square bg-slate-100 relative">
+              {/* Image - Fixed size thumbnail */}
+              <div className="w-20 h-20 flex-shrink-0 bg-slate-100 relative">
                 {product.image_url ? (
                   <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Package className="w-16 h-16 text-slate-300" />
+                    <Package className="w-8 h-8 text-slate-300" />
                   </div>
                 )}
-                {/* Actions overlay */}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <Button size="sm" variant="secondary" onClick={() => { setEditingProduct(product); setShowModal(true); }}>
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(product)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
               </div>
 
               {/* Details */}
-              <div className="p-4">
-                <h3 className="font-semibold text-slate-900 truncate">{product.name}</h3>
-                {product.sku && <p className="text-xs text-slate-500 mb-2">SKU: {product.sku}</p>}
-                
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <span className="text-xs text-slate-500">Cost</span>
-                    <p className="font-medium text-slate-700">${product.cost?.toFixed(2) || '0.00'}</p>
+              <div className="flex-1 p-4 flex items-center justify-between min-w-0">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-slate-900 truncate">{product.name}</h3>
+                  <div className="flex items-center gap-3 text-sm">
+                    {product.sku && <span className="text-slate-500">SKU: {product.sku}</span>}
+                    {product.manufacturer && (
+                      <span className="text-slate-400">{product.manufacturer}</span>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs text-slate-500">Price</span>
-                    <p className="font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Badge variant={product.quantity_on_hand > 0 ? "default" : "destructive"} className={product.quantity_on_hand > 0 ? "bg-emerald-100 text-emerald-700" : ""}>
-                    {product.quantity_on_hand || 0} in stock
-                  </Badge>
-                  {product.manufacturer && (
-                    <span className="text-xs text-slate-500 truncate max-w-[100px]">{product.manufacturer}</span>
+                  {product.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {product.tags.slice(0, 3).map((tag, i) => (
+                        <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
+                      ))}
+                    </div>
                   )}
                 </div>
 
-                {product.tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {product.tags.slice(0, 3).map((tag, i) => (
-                      <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
-                    ))}
+                <div className="flex items-center gap-6 flex-shrink-0">
+                  <div className="text-center">
+                    <span className="text-xs text-slate-500 block">Cost</span>
+                    <p className="font-medium text-slate-700">${product.cost?.toFixed(2) || '0.00'}</p>
                   </div>
-                )}
+                  <div className="text-center">
+                    <span className="text-xs text-slate-500 block">Price</span>
+                    <p className="font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</p>
+                  </div>
+                  <Badge variant={product.quantity_on_hand > 0 ? "default" : "destructive"} className={cn(
+                    "min-w-[80px] justify-center",
+                    product.quantity_on_hand > 0 ? "bg-emerald-100 text-emerald-700" : ""
+                  )}>
+                    {product.quantity_on_hand || 0} in stock
+                  </Badge>
+                  
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button size="sm" variant="ghost" onClick={() => { setEditingProduct(product); setShowModal(true); }}>
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setDeleteConfirm(product)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
