@@ -63,7 +63,7 @@ export default function ProjectStackCard({
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
   const colors = stackColors[stack.color] || stackColors.slate;
-  const stackProjects = projects.filter(p => stack.project_ids?.includes(p.id));
+  const stackProjects = projects.filter(p => stack.project_ids?.includes(p.id) && p.status !== 'deleted' && p.status !== 'archived' && p.status !== 'completed');
 
   const handleSaveName = () => {
     if (editName.trim() && editName !== stack.name) {
