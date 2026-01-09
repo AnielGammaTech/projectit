@@ -1308,6 +1308,8 @@ export default function Dashboard() {
                           onPinToggle={handlePinToggle}
                           getTasksForProject={getTasksForProject}
                           getPartsForProject={getPartsForProject}
+                          currentUserEmail={currentUser?.email}
+                          isAdmin={isAdmin}
                         />
                       ))}
                     </div>
