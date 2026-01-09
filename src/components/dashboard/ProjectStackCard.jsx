@@ -56,7 +56,9 @@ export default function ProjectStackCard({
   onProjectDueDateChange,
   onPinToggle,
   getTasksForProject,
-  getPartsForProject
+  getPartsForProject,
+  currentUserEmail,
+  isAdmin
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(stack.name);
