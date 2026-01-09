@@ -65,7 +65,14 @@ export default function ProjectStackCard({
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
   const colors = stackColors[stack.color] || stackColors.slate;
-  const stackProjects = projects.filter(p => stack.project_ids?.includes(p.id) && p.status !== 'deleted' && p.status !== 'archived' && p.status !== 'completed');
+  const stackProjects = projects.filter(p => {
+    if (!stack.project_ids?.includes(p.id)) return false;
+    if (p.status === 'deleted' || p.status === 'archived' || p.status === 'completed') return false;
+    // Check access - admins see all, users see projects they're assigned to or projects with no team_members
+    if (isAdmin) return true;
+    if (!p.team_members || p.team_members.length === 0) return true;
+    return p.team_members.includes(currentUserEmail);
+  });
 
   const handleSaveName = () => {
     if (editName.trim() && editName !== stack.name) {
