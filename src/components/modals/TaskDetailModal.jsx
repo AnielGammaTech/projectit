@@ -23,13 +23,6 @@ const priorityConfig = {
   high: { label: 'High', color: 'text-red-600', bg: 'bg-red-50' }
 };
 
-const statusConfig = {
-  todo: { label: 'To Do', color: 'bg-slate-400' },
-  in_progress: { label: 'In Progress', color: 'bg-blue-500' },
-  review: { label: 'Review', color: 'bg-purple-500' },
-  completed: { label: 'Completed', color: 'bg-emerald-500' }
-};
-
 const getFileIcon = (type) => type?.startsWith('image') ? Image : FileText;
 
 export default function TaskDetailModal({ open, onClose, task, teamMembers = [], onEdit, currentUser, project }) {
@@ -116,7 +109,16 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     });
   };
 
+  const [localPriority, setLocalPriority] = useState(task?.priority || 'medium');
+  
+  useEffect(() => {
+    if (task?.priority) {
+      setLocalPriority(task.priority);
+    }
+  }, [task?.priority]);
+
   const handlePriorityChange = async (priority) => {
+    setLocalPriority(priority); // Optimistic update
     await handleUpdateTask({ priority });
   };
 
@@ -210,6 +212,29 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     setUploadingCommentFile(false);
   };
 
+  const handlePaste = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) continue;
+        
+        setUploadingCommentFile(true);
+        try {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          setCommentAttachments(prev => [...prev, { name: `pasted-image-${Date.now()}.png`, url: file_url, type: file.type }]);
+        } catch (err) {
+          console.error('Failed to upload pasted image:', err);
+        }
+        setUploadingCommentFile(false);
+        break;
+      }
+    }
+  };
+
   const handleTaskFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -234,8 +259,8 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   if (!task) return null;
 
-  const currentStatus = statusConfig[task.status] || statusConfig.todo;
-  const currentPriority = priorityConfig[task.priority] || priorityConfig.medium;
+  const currentPriority = priorityConfig[localPriority] || priorityConfig.medium;
+  const isCompleted = task.status === 'completed';
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -291,25 +316,14 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
           {/* Quick Actions Row */}
           <div className="flex items-center gap-2 mt-4 flex-wrap">
-            {/* Status */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors text-sm">
-                  <div className={cn("w-2 h-2 rounded-full", currentStatus.color)} />
-                  {currentStatus.label}
-                  <ChevronDown className="w-3 h-3 text-slate-400" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                {Object.entries(statusConfig).map(([key, config]) => (
-                  <DropdownMenuItem key={key} onClick={() => handleStatusChange(key)}>
-                    <div className={cn("w-2 h-2 rounded-full mr-2", config.color)} />
-                    {config.label}
-                    {task.status === key && <Check className="w-4 h-4 ml-auto" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Status - Read only, shows To Do or Completed based on checkbox */}
+            <div className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm",
+              isCompleted ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+            )}>
+              <div className={cn("w-2 h-2 rounded-full", isCompleted ? "bg-emerald-500" : "bg-slate-400")} />
+              {isCompleted ? 'Completed' : 'To Do'}
+            </div>
 
             {/* Assignee */}
             <DropdownMenu>
@@ -501,10 +515,15 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                       )}
                     </p>
                     {c.attachments?.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
+                      <div className="mt-2 flex flex-wrap gap-2">
                         {c.attachments.map((att, idx) => {
+                          const isImage = att.type?.startsWith('image/');
                           const FileIcon = getFileIcon(att.type);
-                          return (
+                          return isImage ? (
+                            <a key={idx} href={att.url} target="_blank" rel="noopener noreferrer">
+                              <img src={att.url} alt={att.name} className="h-24 w-auto rounded-lg object-cover border border-slate-200 hover:opacity-90 transition-opacity" />
+                            </a>
+                          ) : (
                             <a key={idx} href={att.url} target="_blank" rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 bg-slate-100 rounded px-2 py-1 text-xs text-indigo-600 hover:bg-slate-200">
                               <FileIcon className="w-3 h-3" />
@@ -538,7 +557,8 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 ref={textareaRef}
                 value={comment}
                 onChange={handleCommentChange}
-                placeholder="Add a comment... Use @ to mention"
+                onPaste={handlePaste}
+                placeholder="Add a comment... Use @ to mention (paste images supported)"
                 className="min-h-[60px] resize-none pr-10 bg-white"
               />
               <button
@@ -552,16 +572,31 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
               <input ref={commentFileInputRef} type="file" className="hidden" onChange={handleCommentFileUpload} />
               
               {commentAttachments.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {commentAttachments.map((att, idx) => {
+                    const isImage = att.type?.startsWith('image/');
                     const FileIcon = getFileIcon(att.type);
                     return (
-                      <div key={idx} className="flex items-center gap-1 bg-slate-100 rounded px-2 py-1 text-xs">
-                        <FileIcon className="w-3 h-3 text-slate-500" />
-                        <span className="truncate max-w-[100px]">{att.name}</span>
-                        <button onClick={() => setCommentAttachments(prev => prev.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-red-500">
-                          <X className="w-3 h-3" />
-                        </button>
+                      <div key={idx} className="relative group">
+                        {isImage ? (
+                          <div className="relative">
+                            <img src={att.url} alt={att.name} className="h-16 w-auto rounded-lg object-cover border border-slate-200" />
+                            <button 
+                              onClick={() => setCommentAttachments(prev => prev.filter((_, i) => i !== idx))} 
+                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 bg-slate-100 rounded px-2 py-1 text-xs">
+                            <FileIcon className="w-3 h-3 text-slate-500" />
+                            <span className="truncate max-w-[100px]">{att.name}</span>
+                            <button onClick={() => setCommentAttachments(prev => prev.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-red-500">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
