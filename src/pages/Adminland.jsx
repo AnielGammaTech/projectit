@@ -1250,6 +1250,24 @@ function GammaStackContent({ queryClient }) {
     setSaving(false);
   };
 
+  const handleTestQuoteIT = async () => {
+    setTestingQuoteIT(true);
+    setSyncResult(null);
+    try {
+      await handleSave();
+      const response = await base44.functions.invoke('syncQuoteIT', { testOnly: true });
+      const data = response.data;
+      if (data.success) {
+        setSyncResult({ success: true, message: data.message || 'Connection successful!' });
+      } else {
+        setSyncResult({ success: false, message: data.error || 'Connection failed' });
+      }
+    } catch (error) {
+      setSyncResult({ success: false, message: error.response?.data?.error || error.message || 'Connection failed' });
+    }
+    setTestingQuoteIT(false);
+  };
+
   const handleSyncQuoteIT = async () => {
     setSyncingQuoteIT(true);
     setSyncResult(null);
