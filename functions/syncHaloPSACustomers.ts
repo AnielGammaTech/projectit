@@ -480,10 +480,6 @@ Deno.serve(async (req) => {
     } catch (err) {
         console.error("Error syncing sites:", err);
     }
-        }
-    } catch (err) {
-        console.error("Error syncing users:", err);
-    }
 
     // Update last sync time
     if (settings[0]?.id) {
