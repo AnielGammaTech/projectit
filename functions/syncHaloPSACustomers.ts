@@ -368,7 +368,7 @@ Deno.serve(async (req) => {
                     const batch = usersToUpdate.slice(i, i + chunkSize);
                     await Promise.all(batch.map(async (item) => {
                         try {
-                            await base44.entities.Customer.update(item.id, item.data);
+                            await base44.asServiceRole.entities.Customer.update(item.id, item.data);
                             usersUpdated++;
                         } catch (e) {
                             console.error(`Failed to update user ${item.id}`, e);
