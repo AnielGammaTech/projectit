@@ -383,7 +383,7 @@ Deno.serve(async (req) => {
                 for (let i = 0; i < usersToCreate.length; i += chunkSize) {
                     const batch = usersToCreate.slice(i, i + chunkSize);
                     try {
-                        const createdUsers = await base44.entities.Customer.bulkCreate(batch);
+                        const createdUsers = await base44.asServiceRole.entities.Customer.bulkCreate(batch);
                         usersCreated += createdUsers.length;
                     } catch (e) {
                         console.error("Bulk create users failed", e);
