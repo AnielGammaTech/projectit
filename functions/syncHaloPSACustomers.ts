@@ -454,7 +454,7 @@ Deno.serve(async (req) => {
                     const batch = sitesToUpdate.slice(i, i + chunkSize);
                     await Promise.all(batch.map(async (item) => {
                         try {
-                            await base44.entities.Site.update(item.id, item.data);
+                            await base44.asServiceRole.entities.Site.update(item.id, item.data);
                             sitesUpdated++;
                         } catch (e) {
                             console.error(`Failed to update site ${item.id}`, e);
