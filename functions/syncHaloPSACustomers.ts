@@ -293,7 +293,7 @@ Deno.serve(async (req) => {
         for (let i = 0; i < customersToCreate.length; i += chunkSize) {
             const batchData = customersToCreate.slice(i, i + chunkSize).map(c => c.data);
             try {
-                const createdEntities = await base44.entities.Customer.bulkCreate(batchData);
+                const createdEntities = await base44.asServiceRole.entities.Customer.bulkCreate(batchData);
                 created += createdEntities.length;
                 
                 // Map back IDs for haloIdToBase44Id
