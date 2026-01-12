@@ -7,6 +7,15 @@ Deno.serve(async (req) => {
     // Allow both authenticated users and scheduled tasks (service role)
     const user = await base44.auth.me().catch(() => null);
 
+    // Parse request body for options
+    let payload = {};
+    try {
+      payload = await req.json();
+    } catch (e) {
+      // No body or invalid JSON - that's fine
+    }
+    const testOnly = payload.testOnly === true;
+
     // Get settings
     const settings = await base44.asServiceRole.entities.IntegrationSettings.filter({ setting_key: 'main' });
     const config = settings[0];
@@ -34,6 +43,16 @@ Deno.serve(async (req) => {
       return Response.json({ 
         success: false, 
         error: `Failed to fetch from QuoteIT (${response.status}): ${text}` 
+      });
+    }
+
+    // If test only, just verify we got a valid response
+    if (testOnly) {
+      const data = await response.json();
+      const quotes = data.quotes || data.accepted_quotes || data.data || [];
+      return Response.json({ 
+        success: true, 
+        message: `Connection successful! Found ${quotes.length} accepted quote(s) in QuoteIT.`
       });
     }
 
