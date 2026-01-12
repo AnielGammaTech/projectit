@@ -1202,6 +1202,7 @@ function EmailTemplatesSection({ queryClient }) {
 function GammaStackContent({ queryClient }) {
   const [saving, setSaving] = useState(false);
   const [syncingQuoteIT, setSyncingQuoteIT] = useState(false);
+  const [testingQuoteIT, setTestingQuoteIT] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
   const [expandedCard, setExpandedCard] = useState(null);
 
