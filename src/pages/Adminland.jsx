@@ -1339,11 +1339,26 @@ function GammaStackContent({ queryClient }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 pt-2 border-t">
-                  <Button onClick={handleSyncQuoteIT} disabled={syncingQuoteIT} className="bg-orange-600 hover:bg-orange-700">
+                  <Button 
+                    onClick={handleTestQuoteIT} 
+                    disabled={testingQuoteIT || syncingQuoteIT}
+                    variant="outline"
+                    className="border-orange-300 text-orange-600 hover:bg-orange-50"
+                  >
+                    {testingQuoteIT ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : 'Test Connection'}
+                  </Button>
+                  <Button onClick={handleSyncQuoteIT} disabled={syncingQuoteIT || testingQuoteIT} className="bg-orange-600 hover:bg-orange-700">
                     {syncingQuoteIT ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Syncing...</> : <><RefreshCw className="w-4 h-4 mr-2" />Sync Accepted Quotes</>}
                   </Button>
-                  {syncResult && <span className={cn("text-sm", syncResult.success ? "text-emerald-600" : "text-red-600")}>{syncResult.message}</span>}
                 </div>
+                {syncResult && (
+                  <div className={cn(
+                    "mt-3 p-3 rounded-lg text-sm",
+                    syncResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+                  )}>
+                    {syncResult.message}
+                  </div>
+                )}
               </div>
             )}
           </div>
