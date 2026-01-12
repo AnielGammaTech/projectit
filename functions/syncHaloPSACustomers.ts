@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
     }
 
     // Get existing customers to check for duplicates
-    const existingCustomers = await base44.entities.Customer.list();
+    const existingCustomers = await base44.asServiceRole.entities.Customer.list();
 
     // Build lookup maps for efficient matching
     const existingByExternalId = {};
