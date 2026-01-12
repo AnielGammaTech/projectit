@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     }
 
     // Get integration settings for the URLs
-    const settings = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
+    const settings = await base44.asServiceRole.entities.IntegrationSettings.filter({ setting_key: 'main' });
     let authUrl = settings[0]?.halopsa_auth_url;
     let apiUrl = settings[0]?.halopsa_api_url;
 
