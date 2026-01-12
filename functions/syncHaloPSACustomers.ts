@@ -277,7 +277,7 @@ Deno.serve(async (req) => {
             const batch = customersToUpdate.slice(i, i + chunkSize);
             await Promise.all(batch.map(async (item) => {
                 try {
-                    await base44.entities.Customer.update(item.id, item.data);
+                    await base44.asServiceRole.entities.Customer.update(item.id, item.data);
                     haloIdToBase44Id[item.haloId] = { id: item.id, name: item.data.name };
                     updated++;
                 } catch (e) {
