@@ -412,7 +412,7 @@ Deno.serve(async (req) => {
             const haloSites = sitesData.sites || [];
 
             // Get existing sites
-            const existingSites = await base44.entities.Site.list();
+            const existingSites = await base44.asServiceRole.entities.Site.list();
             const existingSiteMap = {}; // external_id -> Site
             existingSites.forEach(s => {
                 if (s.external_id) existingSiteMap[s.external_id] = s;
