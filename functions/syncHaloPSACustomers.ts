@@ -326,7 +326,7 @@ Deno.serve(async (req) => {
             const usersData = await usersResponse.json();
             const haloUsers = usersData.users || [];
             
-            const existingContacts = await base44.entities.Customer.filter({ is_company: false, source: 'halo_psa' });
+            const existingContacts = await base44.asServiceRole.entities.Customer.filter({ is_company: false, source: 'halo_psa' });
             const existingContactMap = {}; 
             existingContacts.forEach(c => {
                 if (c.external_id) existingContactMap[c.external_id] = c;
