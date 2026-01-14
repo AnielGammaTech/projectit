@@ -393,26 +393,60 @@ Deno.serve(async (req) => {
     let sitesUpdated = 0;
 
     try {
-        const sitesUrl = `${apiBaseUrl}/Site?count=1000`; // Adjust count as needed
-        console.log("Fetching sites from:", sitesUrl);
-        const sitesResponse = await fetch(sitesUrl, {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
+        // Try paginated endpoint for sites
+        let allSites = [];
+        let pageNum = 1;
+        let hasMore = true;
+        
+        while (hasMore) {
+            const sitesUrl = `${apiBaseUrl}/Site?page_no=${pageNum}&page_size=100`;
+            console.log("Fetching sites from:", sitesUrl);
+            const sitesResponse = await fetch(sitesUrl, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        console.log("Sites response status:", sitesResponse.status);
+            console.log("Sites response status:", sitesResponse.status);
 
-        if (sitesResponse.ok) {
-            const sitesData = await sitesResponse.json();
-            console.log("Sites data keys:", Object.keys(sitesData));
-            console.log("Sites data sample:", JSON.stringify(sitesData).slice(0, 500));
-            const haloSites = sitesData.sites || sitesData.Sites || (Array.isArray(sitesData) ? sitesData : []);
-            console.log("Found", Array.isArray(haloSites) ? haloSites.length : 0, "sites from HaloPSA");
-            if (haloSites.length > 0) {
-                console.log("Sample site:", JSON.stringify(haloSites[0]).slice(0, 500));
+            if (sitesResponse.ok) {
+                const sitesData = await sitesResponse.json();
+                console.log("Sites data keys:", Object.keys(sitesData));
+                console.log("Sites data sample:", JSON.stringify(sitesData).slice(0, 500));
+                
+                // Handle different possible response formats
+                let pageSites = [];
+                if (Array.isArray(sitesData)) {
+                    pageSites = sitesData;
+                } else if (sitesData.sites) {
+                    pageSites = sitesData.sites;
+                } else if (sitesData.Sites) {
+                    pageSites = sitesData.Sites;
+                }
+                
+                console.log(`Page ${pageNum}: Found ${pageSites.length} sites`);
+                
+                if (pageSites.length > 0) {
+                    allSites = allSites.concat(pageSites);
+                    pageNum++;
+                    await new Promise(r => setTimeout(r, 100)); // Rate limit delay
+                } else {
+                    hasMore = false;
+                }
+            } else {
+                console.error("Sites fetch failed:", sitesResponse.status);
+                hasMore = false;
             }
+        }
+        
+        const haloSites = allSites;
+        console.log("Total sites fetched:", haloSites.length);
+        if (haloSites.length > 0) {
+            console.log("Sample site:", JSON.stringify(haloSites[0]).slice(0, 500));
+        }
+
+        if (haloSites.length > 0) {
 
             // Get existing sites
             const existingSites = await base44.asServiceRole.entities.Site.list();
@@ -508,6 +542,7 @@ Deno.serve(async (req) => {
         }
     } catch (err) {
         console.error("Error syncing sites:", err);
+    }
     }
 
     // Update last sync time
