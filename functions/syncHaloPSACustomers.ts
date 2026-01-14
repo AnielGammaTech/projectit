@@ -417,6 +417,7 @@ Deno.serve(async (req) => {
                 });
 
                 const sitesToCreate = [];
+                const sitesToUpdate = [];
 
                 for (const site of haloSites) {
                     if (!site.client_id) continue;
@@ -424,28 +425,36 @@ Deno.serve(async (req) => {
 
                     const parentInfo = haloIdToBase44Id[site.client_id];
                     const siteExternalId = `halo_site_${site.id}`;
-                    
-                    // Skip if already exists (only create new sites to save time)
-                    if (existingSiteMap[siteExternalId]) continue;
-
                     const siteName = site.name || 'Main Site';
 
-                    // HaloPSA sites have address in nested 'delivery_address' or 'invoice_address' objects
-                    const addr = site.delivery_address || site.invoice_address || site;
+                    // HaloPSA sites - try multiple address field patterns
+                    const addr = site.delivery_address || site.invoice_address || {};
+                    const siteAddress = addr.line1 || addr.line_1 || site.address_line_1 || site.address || site.line1 || '';
+                    const siteCity = addr.city || site.city || '';
+                    const siteState = addr.state || addr.county || site.state || site.county || '';
+                    const siteZip = addr.postcode || addr.zip || site.postcode || site.zip || '';
 
                     const siteData = {
                         name: siteName,
-                        address: addr.line1 || addr.address_line_1 || site.address_line_1 || site.address || '',
-                        city: addr.city || site.city || '',
-                        state: addr.state || addr.county || site.state || site.county || '',
-                        zip: addr.postcode || site.postcode || site.zip || '',
+                        address: siteAddress,
+                        city: siteCity,
+                        state: siteState,
+                        zip: siteZip,
                         customer_id: parentInfo.id,
                         external_id: siteExternalId,
                         notes: site.notes || '',
                         is_default: site.is_default === true
                     };
 
-                    sitesToCreate.push(siteData);
+                    const existingSite = existingSiteMap[siteExternalId];
+                    if (existingSite) {
+                        // Update if address is missing but now available
+                        if (!existingSite.address && siteAddress) {
+                            sitesToUpdate.push({ id: existingSite.id, data: siteData });
+                        }
+                    } else {
+                        sitesToCreate.push(siteData);
+                    }
                 }
                 
                 console.log(`Sites to create: ${sitesToCreate.length}`);
