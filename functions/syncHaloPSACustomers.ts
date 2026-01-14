@@ -447,22 +447,24 @@ Deno.serve(async (req) => {
                 
                 console.log(`Sites to create: ${sitesToCreate.length}`);
 
-                // Bulk create sites
+                // Bulk create sites with rate limit handling
                 if (sitesToCreate.length > 0) {
-                    const chunkSize = 50;
+                    const chunkSize = 25; // Smaller chunks
                     for (let i = 0; i < sitesToCreate.length; i += chunkSize) {
                         const batch = sitesToCreate.slice(i, i + chunkSize);
                         try {
                             const createdSites = await base44.asServiceRole.entities.Site.bulkCreate(batch);
                             sitesCreated += createdSites.length;
+                            await new Promise(r => setTimeout(r, 500)); // Longer delay between batches
                         } catch (e) {
                             console.error("Bulk create sites failed", e);
+                            await new Promise(r => setTimeout(r, 2000)); // Wait longer on error
                         }
                     }
                 }
             }
         } else {
-            console.error("Sites fetch failed:", sitesResponse.status, await sitesResponse.text());
+            console.error("Sites fetch failed:", sitesResponse.status);
         }
     } catch (err) {
         console.error("Error syncing sites:", err);
