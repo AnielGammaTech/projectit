@@ -421,9 +421,7 @@ export default function Customers() {
                             )}
                           </div>
                           <p className="text-xs text-slate-500 truncate mt-0.5">
-                            {(company.address || company.city) 
-                              ? [company.address, company.city, company.state].filter(Boolean).join(', ')
-                              : 'No address'}
+                            {displayAddress || 'No address'}
                           </p>
                         </div>
                       </div>
