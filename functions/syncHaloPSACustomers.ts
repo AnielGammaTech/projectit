@@ -493,14 +493,16 @@ Deno.serve(async (req) => {
 
                     const siteName = siteDetail.name || site.name || 'Main Site';
 
-                    // Extract address from nested objects in detailed response
+                    // Extract address from nested client object in detailed response (HaloPSA returns client inside site)
+                    const clientAddr = siteDetail.client || {};
                     const deliveryAddr = siteDetail.delivery_address || {};
                     const invoiceAddr = siteDetail.invoice_address || {};
                     
-                    const siteAddress = deliveryAddr.line1 || invoiceAddr.line1 || siteDetail.line1 || '';
-                    const siteCity = deliveryAddr.city || invoiceAddr.city || siteDetail.city || '';
-                    const siteState = deliveryAddr.state || deliveryAddr.county || invoiceAddr.state || invoiceAddr.county || siteDetail.state || siteDetail.county || '';
-                    const siteZip = deliveryAddr.postcode || invoiceAddr.postcode || siteDetail.postcode || '';
+                    // Priority: client nested object > delivery_address > invoice_address > direct fields
+                    const siteAddress = clientAddr.line1 || deliveryAddr.line1 || invoiceAddr.line1 || siteDetail.line1 || '';
+                    const siteCity = clientAddr.city || deliveryAddr.city || invoiceAddr.city || siteDetail.city || '';
+                    const siteState = clientAddr.county || clientAddr.state || deliveryAddr.state || deliveryAddr.county || invoiceAddr.state || invoiceAddr.county || siteDetail.state || siteDetail.county || '';
+                    const siteZip = clientAddr.postcode || deliveryAddr.postcode || invoiceAddr.postcode || siteDetail.postcode || '';
 
                     const siteData = {
                         name: siteName,
