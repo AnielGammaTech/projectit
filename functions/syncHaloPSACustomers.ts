@@ -393,127 +393,92 @@ Deno.serve(async (req) => {
     let sitesUpdated = 0;
 
     try {
-        // Try paginated endpoint for sites
-        let allSites = [];
-        let pageNum = 1;
-        let hasMore = true;
-        
-        while (hasMore) {
-            const sitesUrl = `${apiBaseUrl}/Site?page_no=${pageNum}&page_size=100`;
-            console.log("Fetching sites from:", sitesUrl);
-            const sitesResponse = await fetch(sitesUrl, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            console.log("Sites response status:", sitesResponse.status);
-
-            if (sitesResponse.ok) {
-                const sitesData = await sitesResponse.json();
-                console.log("Sites data keys:", Object.keys(sitesData));
-                console.log("Sites data sample:", JSON.stringify(sitesData).slice(0, 500));
-                
-                // Handle different possible response formats
-                let pageSites = [];
-                if (Array.isArray(sitesData)) {
-                    pageSites = sitesData;
-                } else if (sitesData.sites) {
-                    pageSites = sitesData.sites;
-                } else if (sitesData.Sites) {
-                    pageSites = sitesData.Sites;
-                }
-                
-                console.log(`Page ${pageNum}: Found ${pageSites.length} sites`);
-                
-                if (pageSites.length > 0) {
-                    allSites = allSites.concat(pageSites);
-                    pageNum++;
-                    await new Promise(r => setTimeout(r, 100)); // Rate limit delay
-                } else {
-                    hasMore = false;
-                }
-            } else {
-                console.error("Sites fetch failed:", sitesResponse.status);
-                hasMore = false;
+        // Fetch all sites from HaloPSA
+        const sitesUrl = `${apiBaseUrl}/Site?count=1000`;
+        console.log("Fetching sites from:", sitesUrl);
+        const sitesResponse = await fetch(sitesUrl, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
             }
-        }
-        
-        const haloSites = allSites;
-        console.log("Total sites fetched:", haloSites.length);
-        if (haloSites.length > 0) {
-            console.log("Sample site:", JSON.stringify(haloSites[0]).slice(0, 500));
-        }
+        });
 
-        if (haloSites.length > 0) {
+        console.log("Sites response status:", sitesResponse.status);
 
-            // Get existing sites
-            const existingSites = await base44.asServiceRole.entities.Site.list();
-            const existingSiteMap = {}; // external_id -> Site
-            existingSites.forEach(s => {
-                if (s.external_id) existingSiteMap[s.external_id] = s;
-            });
-
-            const sitesToCreate = [];
-            const sitesToUpdate = [];
-
-            for (const site of haloSites) {
-                if (!site.client_id) continue;
-                if (!haloIdToBase44Id[site.client_id]) continue;
-
-                const parentInfo = haloIdToBase44Id[site.client_id];
-                const siteExternalId = `halo_site_${site.id}`;
-                const siteName = site.name || 'Main Site';
-
-                // Use basic site data first (skip individual fetches to avoid timeout)
-                const siteData = {
-                    name: siteName,
-                    address: site.address_line_1 || site.address || '',
-                    city: site.city || '',
-                    state: site.state || site.county || '',
-                    zip: site.postcode || site.zip || '',
-                    customer_id: parentInfo.id,
-                    external_id: siteExternalId,
-                    notes: site.notes || '',
-                    is_default: site.is_default === true
-                };
-
-                if (existingSiteMap[siteExternalId]) {
-                    sitesToUpdate.push({ id: existingSiteMap[siteExternalId].id, data: siteData });
-                } else {
-                    sitesToCreate.push(siteData);
-                }
+        if (sitesResponse.ok) {
+            const sitesData = await sitesResponse.json();
+            console.log("Sites data keys:", Object.keys(sitesData));
+            
+            // Handle different possible response formats
+            let haloSites = [];
+            if (Array.isArray(sitesData)) {
+                haloSites = sitesData;
+            } else if (sitesData.sites) {
+                haloSites = sitesData.sites;
+            } else if (sitesData.Sites) {
+                haloSites = sitesData.Sites;
             }
             
-            console.log(`Sites to create: ${sitesToCreate.length}, to update: ${sitesToUpdate.length}`);
+            console.log(`Found ${haloSites.length} sites from HaloPSA`);
+            if (haloSites.length > 0) {
+                console.log("Sample site:", JSON.stringify(haloSites[0]).slice(0, 300));
+            }
 
-            // Update sites sequentially to avoid rate limits
-            if (sitesToUpdate.length > 0) {
-                for (const item of sitesToUpdate) {
-                    try {
-                        await base44.asServiceRole.entities.Site.update(item.id, item.data);
-                        sitesUpdated++;
-                        await new Promise(r => setTimeout(r, 50)); // Small delay
-                    } catch (e) {
-                        console.error(`Failed to update site ${item.id}`, e);
+            if (haloSites.length > 0) {
+                // Get existing sites
+                const existingSites = await base44.asServiceRole.entities.Site.list();
+                const existingSiteMap = {}; // external_id -> Site
+                existingSites.forEach(s => {
+                    if (s.external_id) existingSiteMap[s.external_id] = s;
+                });
+
+                const sitesToCreate = [];
+
+                for (const site of haloSites) {
+                    if (!site.client_id) continue;
+                    if (!haloIdToBase44Id[site.client_id]) continue;
+
+                    const parentInfo = haloIdToBase44Id[site.client_id];
+                    const siteExternalId = `halo_site_${site.id}`;
+                    
+                    // Skip if already exists (only create new sites to save time)
+                    if (existingSiteMap[siteExternalId]) continue;
+
+                    const siteName = site.name || 'Main Site';
+
+                    const siteData = {
+                        name: siteName,
+                        address: site.address_line_1 || site.address || '',
+                        city: site.city || '',
+                        state: site.state || site.county || '',
+                        zip: site.postcode || site.zip || '',
+                        customer_id: parentInfo.id,
+                        external_id: siteExternalId,
+                        notes: site.notes || '',
+                        is_default: site.is_default === true
+                    };
+
+                    sitesToCreate.push(siteData);
+                }
+                
+                console.log(`Sites to create: ${sitesToCreate.length}`);
+
+                // Bulk create sites
+                if (sitesToCreate.length > 0) {
+                    const chunkSize = 50;
+                    for (let i = 0; i < sitesToCreate.length; i += chunkSize) {
+                        const batch = sitesToCreate.slice(i, i + chunkSize);
+                        try {
+                            const createdSites = await base44.asServiceRole.entities.Site.bulkCreate(batch);
+                            sitesCreated += createdSites.length;
+                        } catch (e) {
+                            console.error("Bulk create sites failed", e);
+                        }
                     }
                 }
             }
-
-            // Bulk create sites
-            if (sitesToCreate.length > 0) {
-                const chunkSize = 50;
-                for (let i = 0; i < sitesToCreate.length; i += chunkSize) {
-                    const batch = sitesToCreate.slice(i, i + chunkSize);
-                    try {
-                        const createdSites = await base44.asServiceRole.entities.Site.bulkCreate(batch);
-                        sitesCreated += createdSites.length;
-                    } catch (e) {
-                        console.error("Bulk create sites failed", e);
-                    }
-                }
-            }
+        } else {
+            console.error("Sites fetch failed:", sitesResponse.status, await sitesResponse.text());
         }
     } catch (err) {
         console.error("Error syncing sites:", err);
