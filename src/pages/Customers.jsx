@@ -371,115 +371,91 @@ export default function Customers() {
         </div>
 
         <div className="space-y-4">
-          {/* Companies with expandable contacts */}
+          {/* Companies Grid */}
           {(viewFilter === 'all' || viewFilter === 'companies') && filteredCompanies.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                  <Building2 className="w-4 h-4" /> Companies ({filteredCompanies.length})
-                </h3>
-                <button
-                  onClick={toggleAllCompanies}
-                  className="text-xs text-[#0069AF] hover:text-[#133F5C] flex items-center gap-1 font-medium"
-                >
-                  {allCompaniesExpanded ? (
-                    <>
-                      <ChevronDown className="w-3.5 h-3.5" />
-                      Collapse All
-                    </>
-                  ) : (
-                    <>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                      Expand All
-                    </>
-                  )}
-                </button>
-              </div>
-              <AnimatePresence>
-                {filteredCompanies.map((company, idx) => {
-                  const contacts = getContactsForCompany(company.id);
-                  const isExpanded = expandedCompanies[company.id] !== false;
-                  return (
-                    <motion.div
-                      key={company.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.02 }}
-                      className={cn(
-                        "bg-white rounded-xl border overflow-hidden",
-                        selectedIds.has(company.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-100"
-                      )}
-                    >
-                      <div className="p-5 hover:bg-slate-50/50 transition-all">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-4">
-                            {selectionMode && (
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); toggleSelection(company.id); }}
-                                className="mt-1 p-1"
-                              >
-                                {selectedIds.has(company.id) ? (
-                                  <CheckSquare className="w-5 h-5 text-red-600" />
-                                ) : (
-                                  <Square className="w-5 h-5 text-slate-300" />
-                                )}
-                              </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {filteredCompanies.map((company, idx) => {
+                const contacts = getContactsForCompany(company.id);
+                const companySites = getSitesForCompany(company.id);
+                const companyProjects = getProjectCount(company.id);
+                return (
+                  <motion.div
+                    key={company.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.02 }}
+                    className={cn(
+                      "bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
+                      selectedIds.has(company.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 hover:border-slate-300"
+                    )}
+                    onClick={() => setSelectedCustomer(company)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {selectionMode && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); toggleSelection(company.id); }}
+                            className="mt-0.5 p-0.5"
+                          >
+                            {selectedIds.has(company.id) ? (
+                              <CheckSquare className="w-4 h-4 text-red-600" />
+                            ) : (
+                              <Square className="w-4 h-4 text-slate-300" />
                             )}
-                            <button onClick={() => toggleCompany(company.id)} className="mt-1">
-                              {isExpanded ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-                            </button>
-                            <div className="w-12 h-12 rounded-lg bg-[#133F5C]/10 flex items-center justify-center text-[#133F5C] font-semibold text-lg">
-                              <Building2 className="w-6 h-6" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-semibold text-slate-900">{company.name}</h3>
-                                {company.source === 'halo_psa' && (
-                                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">Halo</Badge>
-                                )}
-                              </div>
-                              <p className="text-sm text-slate-500">{getSitesForCompany(company.id).length} sites · {contacts.length} contacts</p>
-                              <div className="flex flex-wrap gap-3 mt-2 text-sm text-slate-500">
-                                {company.email && <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{company.email}</span>}
-                                {company.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{company.phone}</span>}
-                              </div>
-                              {(company.city || company.state) && (
-                                <span className="flex items-center gap-1 text-sm text-slate-400 mt-1">
-                                  <MapPin className="w-3.5 h-3.5" />
-                                  {[company.city, company.state].filter(Boolean).join(', ')}
-                                </span>
-                              )}
-                            </div>
+                          </button>
+                        )}
+                        <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 flex-shrink-0">
+                          <Building2 className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-slate-900 truncate text-sm">{company.name}</h3>
+                            {company.source === 'halo_psa' && (
+                              <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-600 border-blue-200 px-1.5 py-0 flex-shrink-0">Halo</Badge>
+                            )}
                           </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <p className="text-sm text-slate-500">{getProposalCount(company.id, company.email)} proposals · {getProjectCount(company.id)} projects</p>
-                              {getTotalValue(company.id, company.email) > 0 && (
-                                <p className="text-sm font-medium text-emerald-600">${getTotalValue(company.id, company.email).toLocaleString()} won</p>
-                              )}
-                            </div>
-                            <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(company)}>
-                              <Eye className="w-4 h-4 mr-1" />View
-                            </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon"><MoreHorizontal className="w-5 h-5" /></Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => { setAddingContactTo(company.id); setShowModal(true); }}>
-                                  <UserPlus className="w-4 h-4 mr-2" />Add Contact
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => { setEditingCustomer(company); setShowModal(true); }}>
-                                  <Edit2 className="w-4 h-4 mr-2" />Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setDeleteConfirm({ open: true, customer: company })} className="text-red-600">
-                                  <Trash2 className="w-4 h-4 mr-2" />Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
+                          {(company.address || company.city) && (
+                            <p className="text-xs text-slate-500 truncate mt-0.5">
+                              {[company.address, company.city, company.state].filter(Boolean).join(', ')}
+                            </p>
+                          )}
                         </div>
                       </div>
+                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0 ml-2" />
+                    </div>
+                    
+                    {/* Stats Row */}
+                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setSelectedCustomer(company); }}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-emerald-50 transition-colors"
+                        title="Sites/Locations"
+                      >
+                        <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-xs font-medium text-slate-700">{companySites.length}</span>
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setSelectedCustomer(company); }}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
+                        title="Contacts"
+                      >
+                        <Users className="w-3.5 h-3.5 text-blue-600" />
+                        <span className="text-xs font-medium text-slate-700">{contacts.length}</span>
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setSelectedCustomer(company); }}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-orange-50 transition-colors"
+                        title="Projects"
+                      >
+                        <FolderKanban className="w-3.5 h-3.5 text-orange-600" />
+                        <span className="text-xs font-medium text-slate-700">{companyProjects}</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
                       {isExpanded && (
                         <div className="border-t bg-slate-50/50">
                           {/* Sites/Contacts Tabs */}
