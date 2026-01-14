@@ -459,51 +459,24 @@ Deno.serve(async (req) => {
             const sitesToUpdate = [];
 
             for (const site of haloSites) {
-                console.log("Processing site:", site.id, site.name, "client_id:", site.client_id);
-                if (!site.client_id) {
-                    console.log("Skipping site - no client_id");
-                    continue;
-                }
-                if (!haloIdToBase44Id[site.client_id]) {
-                    console.log("Skipping site - client_id not in map:", site.client_id);
-                    continue;
-                }
+                if (!site.client_id) continue;
+                if (!haloIdToBase44Id[site.client_id]) continue;
 
                 const parentInfo = haloIdToBase44Id[site.client_id];
                 const siteExternalId = `halo_site_${site.id}`;
                 const siteName = site.name || 'Main Site';
 
-                // Fetch full site details to get address info
-                let fullSite = site;
-                try {
-                    const siteDetailRes = await fetch(`${apiBaseUrl}/Site/${site.id}`, {
-                        headers: { 
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Accept': 'application/json'
-                        }
-                    });
-                    if (siteDetailRes.ok) {
-                        fullSite = await siteDetailRes.json();
-                    }
-                    // Small delay to avoid rate limiting
-                    await new Promise(r => setTimeout(r, 100));
-                } catch (e) {
-                    console.warn(`Could not fetch site detail for ${site.id}`, e);
-                }
-
-                // Use invoice_address first (typically has city/state), fall back to delivery_address
-                const addr = fullSite.invoice_address || fullSite.delivery_address || {};
-
+                // Use basic site data first (skip individual fetches to avoid timeout)
                 const siteData = {
                     name: siteName,
-                    address: addr.line1 || fullSite.address_line_1 || fullSite.address || '',
-                    city: addr.line3 || fullSite.city || '',
-                    state: (addr.line4 || '').split(',')[0]?.trim() || fullSite.state || fullSite.county || '',
-                    zip: addr.postcode || fullSite.postcode || fullSite.zip || '',
+                    address: site.address_line_1 || site.address || '',
+                    city: site.city || '',
+                    state: site.state || site.county || '',
+                    zip: site.postcode || site.zip || '',
                     customer_id: parentInfo.id,
                     external_id: siteExternalId,
-                    notes: fullSite.notes || '',
-                    is_default: fullSite.is_default === true
+                    notes: site.notes || '',
+                    is_default: site.is_default === true
                 };
 
                 if (existingSiteMap[siteExternalId]) {
@@ -512,6 +485,8 @@ Deno.serve(async (req) => {
                     sitesToCreate.push(siteData);
                 }
             }
+            
+            console.log(`Sites to create: ${sitesToCreate.length}, to update: ${sitesToUpdate.length}`);
 
             // Update sites sequentially to avoid rate limits
             if (sitesToUpdate.length > 0) {
@@ -542,7 +517,6 @@ Deno.serve(async (req) => {
         }
     } catch (err) {
         console.error("Error syncing sites:", err);
-    }
     }
 
     // Update last sync time
