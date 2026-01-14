@@ -414,11 +414,11 @@ export default function Customers() {
                               <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-600 border-blue-200 px-1.5 py-0 flex-shrink-0">Halo</Badge>
                             )}
                           </div>
-                          {(company.address || company.city) && (
-                            <p className="text-xs text-slate-500 truncate mt-0.5">
-                              {[company.address, company.city, company.state].filter(Boolean).join(', ')}
-                            </p>
-                          )}
+                          <p className="text-xs text-slate-500 truncate mt-0.5">
+                            {(company.address || company.city) 
+                              ? [company.address, company.city, company.state].filter(Boolean).join(', ')
+                              : 'No address'}
+                          </p>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0 ml-2" />
