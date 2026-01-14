@@ -528,13 +528,14 @@ export default function Customers() {
             <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
               <Users className="w-12 h-12 mx-auto text-slate-300 mb-4" />
               <h3 className="text-lg font-medium text-slate-900 mb-2">No customers yet</h3>
-              <p className="text-slate-500 mb-6">Add your first company or contact to get started</p>
+              <p className="text-slate-500 mb-6">Add your first company or sync from HaloPSA</p>
               <div className="flex justify-center gap-2">
-                <Button variant="outline" onClick={() => { setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }}>
-                  <Building2 className="w-4 h-4 mr-2" />Add Company
+                <Button variant="outline" onClick={handleHaloPSASync} disabled={syncing}>
+                  <RefreshCw className={cn("w-4 h-4 mr-2", syncing && "animate-spin")} />
+                  Sync from HaloPSA
                 </Button>
-                <Button onClick={() => setShowModal(true)} className="bg-[#0069AF] hover:bg-[#133F5C]">
-                  <Plus className="w-4 h-4 mr-2" />Add Contact
+                <Button onClick={() => { setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#F97316] hover:bg-[#EA580C]">
+                  <Plus className="w-4 h-4 mr-2" />Add Customer
                 </Button>
               </div>
             </div>
