@@ -209,7 +209,9 @@ Deno.serve(async (req) => {
         } : null,
         sampleSite: sampleSite,
         sampleSiteDetail: sampleSiteDetail,
-        sampleSiteDetailKeys: sampleSiteDetail ? Object.keys(sampleSiteDetail) : []
+        sampleSiteDetailKeys: sampleSiteDetail ? Object.keys(sampleSiteDetail) : [],
+        sampleClientDetail: sampleClientDetail,
+        sampleClientDetailKeys: sampleClientDetail ? Object.keys(sampleClientDetail) : []
       });
     }
 
