@@ -428,16 +428,37 @@ Deno.serve(async (req) => {
                 const siteExternalId = `halo_site_${site.id}`;
                 const siteName = site.name || 'Main Site';
 
+                // Fetch full site details to get address info
+                let fullSite = site;
+                try {
+                    const siteDetailRes = await fetch(`${apiBaseUrl}/Site/${site.id}`, {
+                        headers: { 
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    if (siteDetailRes.ok) {
+                        fullSite = await siteDetailRes.json();
+                    }
+                    // Small delay to avoid rate limiting
+                    await new Promise(r => setTimeout(r, 100));
+                } catch (e) {
+                    console.warn(`Could not fetch site detail for ${site.id}`, e);
+                }
+
+                // Use invoice_address first (typically has city/state), fall back to delivery_address
+                const addr = fullSite.invoice_address || fullSite.delivery_address || {};
+
                 const siteData = {
                     name: siteName,
-                    address: site.address_line_1 || site.address || '',
-                    city: site.city || '',
-                    state: site.state || site.county || '',
-                    zip: site.postcode || site.zip || '',
+                    address: addr.line1 || fullSite.address_line_1 || fullSite.address || '',
+                    city: addr.line3 || fullSite.city || '',
+                    state: (addr.line4 || '').split(',')[0]?.trim() || fullSite.state || fullSite.county || '',
+                    zip: addr.postcode || fullSite.postcode || fullSite.zip || '',
                     customer_id: parentInfo.id,
                     external_id: siteExternalId,
-                    notes: site.notes || '',
-                    is_default: site.is_default === true
+                    notes: fullSite.notes || '',
+                    is_default: fullSite.is_default === true
                 };
 
                 if (existingSiteMap[siteExternalId]) {

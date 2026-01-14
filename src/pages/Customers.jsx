@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus, Upload, Loader2, MessageSquare, Send, CheckSquare, Square, X } from 'lucide-react';
+import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus, Upload, Loader2, MessageSquare, Send, CheckSquare, Square, X, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -65,10 +65,19 @@ export default function Customers() {
     queryFn: () => base44.entities.Customer.list('-created_date')
   });
 
+  const { data: sites = [], refetch: refetchSites } = useQuery({
+    queryKey: ['sites'],
+    queryFn: () => base44.entities.Site.list()
+  });
+
   // Separate companies and contacts
   const companies = customers.filter(c => c.is_company);
   const standaloneContacts = customers.filter(c => !c.is_company && !c.company_id);
   const getContactsForCompany = (companyId) => customers.filter(c => c.company_id === companyId);
+  const getSitesForCompany = (companyId) => sites.filter(s => s.customer_id === companyId);
+  
+  // Track which tab is active per company (sites or contacts)
+  const [companyTabs, setCompanyTabs] = useState({});
 
   const toggleCompany = (companyId) => {
     setExpandedCompanies(prev => ({ ...prev, [companyId]: !prev[companyId] }));
@@ -414,8 +423,13 @@ export default function Customers() {
                               <Building2 className="w-6 h-6" />
                             </div>
                             <div>
-                              <h3 className="font-semibold text-slate-900">{company.name}</h3>
-                              <p className="text-sm text-slate-500">{contacts.length} contacts</p>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-slate-900">{company.name}</h3>
+                                {company.source === 'halo_psa' && (
+                                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">Halo</Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-slate-500">{getSitesForCompany(company.id).length} sites · {contacts.length} contacts</p>
                               <div className="flex flex-wrap gap-3 mt-2 text-sm text-slate-500">
                                 {company.email && <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{company.email}</span>}
                                 {company.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{company.phone}</span>}
@@ -457,33 +471,105 @@ export default function Customers() {
                           </div>
                         </div>
                       </div>
-                      {isExpanded && contacts.length > 0 && (
-                        <div className="border-t bg-slate-50/50 divide-y">
-                          {contacts.map(contact => (
-                            <div 
-                              key={contact.id} 
-                              className="px-5 py-3 pl-16 flex items-center justify-between hover:bg-slate-100/50 cursor-pointer transition-colors"
-                              onClick={() => setSelectedCustomer(contact)}
+                      {isExpanded && (
+                        <div className="border-t bg-slate-50/50">
+                          {/* Sites/Contacts Tabs */}
+                          <div className="px-5 py-2 border-b border-slate-100 flex items-center gap-4">
+                            <button
+                              onClick={() => setCompanyTabs(prev => ({ ...prev, [company.id]: 'sites' }))}
+                              className={cn(
+                                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                                (companyTabs[company.id] || 'sites') === 'sites' 
+                                  ? "bg-[#0069AF] text-white" 
+                                  : "text-slate-600 hover:bg-slate-100"
+                              )}
                             >
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm">
-                                  {contact.name?.charAt(0).toUpperCase()}
+                              <Globe className="w-3.5 h-3.5" />
+                              Sites ({getSitesForCompany(company.id).length})
+                            </button>
+                            <button
+                              onClick={() => setCompanyTabs(prev => ({ ...prev, [company.id]: 'contacts' }))}
+                              className={cn(
+                                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                                companyTabs[company.id] === 'contacts' 
+                                  ? "bg-[#0069AF] text-white" 
+                                  : "text-slate-600 hover:bg-slate-100"
+                              )}
+                            >
+                              <Users className="w-3.5 h-3.5" />
+                              Contacts ({contacts.length})
+                            </button>
+                          </div>
+                          
+                          {/* Sites Tab Content */}
+                          {(companyTabs[company.id] || 'sites') === 'sites' && (
+                            <div className="divide-y divide-slate-100">
+                              {getSitesForCompany(company.id).length > 0 ? (
+                                getSitesForCompany(company.id).map(site => (
+                                  <div 
+                                    key={site.id} 
+                                    className="px-5 py-3 pl-16 flex items-center justify-between hover:bg-slate-100/50 transition-colors"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                        <MapPin className="w-4 h-4" />
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-slate-900 text-sm">{site.name}</p>
+                                        <p className="text-xs text-slate-500">
+                                          {[site.address, site.city, site.state, site.zip].filter(Boolean).join(', ') || 'No address'}
+                                        </p>
+                                        {site.external_id && (
+                                          <Badge variant="outline" className="text-[10px] mt-1 bg-blue-50 text-blue-600 border-blue-200">Halo Site</Badge>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="px-5 py-6 text-center text-sm text-slate-400">
+                                  No sites for this company
                                 </div>
-                                <div>
-                                  <p className="font-medium text-slate-900 text-sm hover:text-[#0069AF]">{contact.name}</p>
-                                  <p className="text-xs text-slate-500">{contact.email}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                <Button variant="ghost" size="sm" onClick={() => { setEditingCustomer(contact); setShowModal(true); }}>
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({ open: true, customer: contact })} className="text-red-500">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                              </div>
+                              )}
                             </div>
-                          ))}
+                          )}
+                          
+                          {/* Contacts Tab Content */}
+                          {companyTabs[company.id] === 'contacts' && (
+                            <div className="divide-y divide-slate-100">
+                              {contacts.length > 0 ? (
+                                contacts.map(contact => (
+                                  <div 
+                                    key={contact.id} 
+                                    className="px-5 py-3 pl-16 flex items-center justify-between hover:bg-slate-100/50 cursor-pointer transition-colors"
+                                    onClick={() => setSelectedCustomer(contact)}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm">
+                                        {contact.name?.charAt(0).toUpperCase()}
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-slate-900 text-sm hover:text-[#0069AF]">{contact.name}</p>
+                                        <p className="text-xs text-slate-500">{contact.email}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                      <Button variant="ghost" size="sm" onClick={() => { setEditingCustomer(contact); setShowModal(true); }}>
+                                        <Edit2 className="w-3.5 h-3.5" />
+                                      </Button>
+                                      <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm({ open: true, customer: contact })} className="text-red-500">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="px-5 py-6 text-center text-sm text-slate-400">
+                                  No contacts for this company
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </motion.div>
