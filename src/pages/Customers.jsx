@@ -790,12 +790,23 @@ export default function Customers() {
                       <div className="space-y-3 text-sm">
                         <div>
                           <p className="text-slate-400 text-xs uppercase tracking-wide">Address</p>
-                          <p className="text-slate-700">{selectedCustomer.address || '--'}</p>
-                          {(selectedCustomer.city || selectedCustomer.state || selectedCustomer.zip) && (
-                            <p className="text-slate-700">{[selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}</p>
-                          )}
-                          {customerSites.length > 0 && (
-                            <p className="text-xs text-slate-400 mt-1">(from site: {customerSites[0].name})</p>
+                          {(selectedCustomer.address || selectedCustomer.city) ? (
+                            <>
+                              <p className="text-slate-700">{selectedCustomer.address || '--'}</p>
+                              {(selectedCustomer.city || selectedCustomer.state || selectedCustomer.zip) && (
+                                <p className="text-slate-700">{[selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}</p>
+                              )}
+                            </>
+                          ) : customerSites.length > 0 && (customerSites[0].address || customerSites[0].city) ? (
+                            <>
+                              <p className="text-slate-700">{customerSites[0].address || '--'}</p>
+                              {(customerSites[0].city || customerSites[0].state || customerSites[0].zip) && (
+                                <p className="text-slate-700">{[customerSites[0].city, customerSites[0].state, customerSites[0].zip].filter(Boolean).join(', ')}</p>
+                              )}
+                              <p className="text-xs text-slate-400 mt-1">(from site: {customerSites[0].name})</p>
+                            </>
+                          ) : (
+                            <p className="text-slate-700">--</p>
                           )}
                         </div>
                         <div>
