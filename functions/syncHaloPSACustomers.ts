@@ -171,12 +171,23 @@ Deno.serve(async (req) => {
           const sites = sitesData.sites || sitesData.Sites || (Array.isArray(sitesData) ? sitesData : []);
           if (sites.length > 0) {
             sampleSite = sites[0];
-            // Fetch individual site to see address fields
-            const detailResp = await fetch(`${apiBaseUrl}/Site/${sites[0].id}?includedetails=true`, {
+            // Fetch individual site to see address fields (try multiple endpoints)
+            const detailResp = await fetch(`${apiBaseUrl}/Site/${sites[0].id}`, {
               headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
             });
             if (detailResp.ok) {
               sampleSiteDetail = await detailResp.json();
+            }
+            
+            // Also try the Client endpoint to see if address is there
+            let sampleClientDetail = null;
+            if (sites[0].client_id) {
+              const clientDetailResp = await fetch(`${apiBaseUrl}/Client/${sites[0].client_id}`, {
+                headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+              });
+              if (clientDetailResp.ok) {
+                sampleClientDetail = await clientDetailResp.json();
+              }
             }
           }
         }
