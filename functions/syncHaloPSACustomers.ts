@@ -427,7 +427,15 @@ Deno.serve(async (req) => {
             const sitesToUpdate = [];
 
             for (const site of haloSites) {
-                if (!site.client_id || !haloIdToBase44Id[site.client_id]) continue;
+                console.log("Processing site:", site.id, site.name, "client_id:", site.client_id);
+                if (!site.client_id) {
+                    console.log("Skipping site - no client_id");
+                    continue;
+                }
+                if (!haloIdToBase44Id[site.client_id]) {
+                    console.log("Skipping site - client_id not in map:", site.client_id);
+                    continue;
+                }
 
                 const parentInfo = haloIdToBase44Id[site.client_id];
                 const siteExternalId = `halo_site_${site.id}`;
