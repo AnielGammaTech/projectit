@@ -430,12 +430,15 @@ Deno.serve(async (req) => {
 
                     const siteName = site.name || 'Main Site';
 
+                    // HaloPSA sites have address in nested 'delivery_address' or 'invoice_address' objects
+                    const addr = site.delivery_address || site.invoice_address || site;
+
                     const siteData = {
                         name: siteName,
-                        address: site.address_line_1 || site.address || '',
-                        city: site.city || '',
-                        state: site.state || site.county || '',
-                        zip: site.postcode || site.zip || '',
+                        address: addr.line1 || addr.address_line_1 || site.address_line_1 || site.address || '',
+                        city: addr.city || site.city || '',
+                        state: addr.state || addr.county || site.state || site.county || '',
+                        zip: addr.postcode || site.postcode || site.zip || '',
                         customer_id: parentInfo.id,
                         external_id: siteExternalId,
                         notes: site.notes || '',
