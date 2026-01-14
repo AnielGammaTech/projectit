@@ -274,7 +274,7 @@ export default function Customers() {
         >
           <div>
             <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Customers</h1>
-            <p className="text-slate-500 mt-1">Manage your customer database</p>
+            <p className="text-slate-500 mt-1">Manage your client relationships</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleHaloPSASync} disabled={syncing}>
