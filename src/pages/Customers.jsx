@@ -460,76 +460,65 @@ export default function Customers() {
 
           {/* Standalone Contacts */}
           {(viewFilter === 'all' || viewFilter === 'contacts') && filteredStandaloneContacts.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                <Users className="w-4 h-4" /> Individual Contacts ({filteredStandaloneContacts.length})
-              </h3>
-              <AnimatePresence>
-                {filteredStandaloneContacts.map((customer, idx) => (
-                  <motion.div
-                    key={customer.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.02 }}
-                    className={cn(
-                      "bg-white rounded-xl border p-5 hover:shadow-md transition-all",
-                      selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-100"
-                    )}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        {selectionMode && (
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); toggleSelection(customer.id); }}
-                            className="mt-1 p-1"
-                          >
-                            {selectedIds.has(customer.id) ? (
-                              <CheckSquare className="w-5 h-5 text-red-600" />
-                            ) : (
-                              <Square className="w-5 h-5 text-slate-300" />
-                            )}
-                          </button>
-                        )}
-                        <div className="w-12 h-12 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-semibold text-lg">
-                          {customer.name?.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-slate-900">{customer.name}</h3>
-                          {customer.company && <p className="text-sm text-slate-500">{customer.company}</p>}
-                          <div className="flex flex-wrap gap-3 mt-2 text-sm text-slate-500">
-                            <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{customer.email}</span>
-                            {customer.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{customer.phone}</span>}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="text-sm text-slate-500">{getProposalCount(customer.name, customer.company, customer.email)} quotes · {getProjectCount(customer.id)} projects</p>
-                          {getTotalValue(customer.name, customer.company, customer.email) > 0 && (
-                            <p className="text-sm font-medium text-emerald-600">${getTotalValue(customer.name, customer.company, customer.email).toLocaleString()} total</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+              {filteredStandaloneContacts.map((customer, idx) => (
+                <motion.div
+                  key={customer.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.02 }}
+                  className={cn(
+                    "bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
+                    selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 hover:border-slate-300"
+                  )}
+                  onClick={() => setSelectedCustomer(customer)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      {selectionMode && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); toggleSelection(customer.id); }}
+                          className="mt-0.5 p-0.5"
+                        >
+                          {selectedIds.has(customer.id) ? (
+                            <CheckSquare className="w-4 h-4 text-red-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-300" />
                           )}
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(customer)}>
-                          <Eye className="w-4 h-4 mr-1" />View
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon"><MoreHorizontal className="w-5 h-5" /></Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setEditingCustomer(customer); setShowModal(true); }}>
-                              <Edit2 className="w-4 h-4 mr-2" />Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setDeleteConfirm({ open: true, customer })} className="text-red-600">
-                              <Trash2 className="w-4 h-4 mr-2" />Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        </button>
+                      )}
+                      <div className="w-9 h-9 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm flex-shrink-0">
+                        {customer.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-slate-900 truncate text-sm">{customer.name}</h3>
+                        {customer.company && <p className="text-xs text-slate-500 truncate">{customer.company}</p>}
                       </div>
                     </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0 ml-2" />
+                  </div>
+                  
+                  {/* Stats Row */}
+                  <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100">
+                    <button 
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
+                      title="Contacts"
+                    >
+                      <Users className="w-3.5 h-3.5 text-blue-600" />
+                      <span className="text-xs font-medium text-slate-700">0</span>
+                    </button>
+                    <button 
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-orange-50 transition-colors"
+                      title="Projects"
+                    >
+                      <FolderKanban className="w-3.5 h-3.5 text-orange-600" />
+                      <span className="text-xs font-medium text-slate-700">{getProjectCount(customer.id)}</span>
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           )}
 
