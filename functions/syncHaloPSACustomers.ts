@@ -161,6 +161,7 @@ Deno.serve(async (req) => {
       // Fetch sites to show sample with individual site detail
       let sampleSite = null;
       let sampleSiteDetail = null;
+      let sampleClientDetail = null;
       try {
         const sitesUrl = `${apiBaseUrl}/Site?count=5`;
         const sitesResp = await fetch(sitesUrl, {
