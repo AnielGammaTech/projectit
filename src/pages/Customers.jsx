@@ -252,6 +252,18 @@ export default function Customers() {
     setImportData('');
   };
 
+  const handleHaloPSASync = async () => {
+    setSyncing(true);
+    try {
+      await base44.functions.invoke('syncHaloPSACustomers', {});
+      refetch();
+      refetchSites();
+    } catch (e) {
+      console.error('Sync failed', e);
+    }
+    setSyncing(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
