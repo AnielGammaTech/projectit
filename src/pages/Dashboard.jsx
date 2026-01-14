@@ -71,13 +71,6 @@ export default function Dashboard() {
   const [isSyncingQuotes, setIsSyncingQuotes] = useState(false);
   const [showProposalsModal, setShowProposalsModal] = useState(false);
 
-  const { data: incomingQuotes = [] } = useQuery({
-    queryKey: ['incomingQuotes'],
-    queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' }),
-    staleTime: 300000,
-    gcTime: 600000
-  });
-
   const handleCreateProjectFromQuote = (quote) => {
     setPrefillData({
       name: quote.title,
