@@ -405,7 +405,7 @@ Deno.serve(async (req) => {
             
             console.log(`Found ${haloSites.length} sites from HaloPSA`);
             if (haloSites.length > 0) {
-                console.log("Sample site:", JSON.stringify(haloSites[0]).slice(0, 300));
+                console.log("Sample site FULL:", JSON.stringify(haloSites[0]));
             }
 
             if (haloSites.length > 0) {
