@@ -400,6 +400,7 @@ Deno.serve(async (req) => {
 
     try {
         const sitesUrl = `${apiBaseUrl}/Site?count=1000`; // Adjust count as needed
+        console.log("Fetching sites from:", sitesUrl);
         const sitesResponse = await fetch(sitesUrl, {
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
@@ -407,9 +408,13 @@ Deno.serve(async (req) => {
             }
         });
 
+        console.log("Sites response status:", sitesResponse.status);
+
         if (sitesResponse.ok) {
             const sitesData = await sitesResponse.json();
-            const haloSites = sitesData.sites || [];
+            console.log("Sites data keys:", Object.keys(sitesData));
+            const haloSites = sitesData.sites || sitesData.Sites || sitesData || [];
+            console.log("Found", Array.isArray(haloSites) ? haloSites.length : 0, "sites from HaloPSA");
 
             // Get existing sites
             const existingSites = await base44.asServiceRole.entities.Site.list();
