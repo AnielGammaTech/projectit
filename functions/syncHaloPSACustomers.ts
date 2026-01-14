@@ -270,20 +270,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Process Updates in batches
+    // Process Updates sequentially to avoid rate limits
     if (customersToUpdate.length > 0) {
-        const chunkSize = 10;
-        for (let i = 0; i < customersToUpdate.length; i += chunkSize) {
-            const batch = customersToUpdate.slice(i, i + chunkSize);
-            await Promise.all(batch.map(async (item) => {
-                try {
-                    await base44.asServiceRole.entities.Customer.update(item.id, item.data);
-                    haloIdToBase44Id[item.haloId] = { id: item.id, name: item.data.name };
-                    updated++;
-                } catch (e) {
-                    console.error(`Failed to update customer ${item.id}`, e);
-                }
-            }));
+        for (const item of customersToUpdate) {
+            try {
+                await base44.asServiceRole.entities.Customer.update(item.id, item.data);
+                haloIdToBase44Id[item.haloId] = { id: item.id, name: item.data.name };
+                updated++;
+                await new Promise(r => setTimeout(r, 50)); // Small delay
+            } catch (e) {
+                console.error(`Failed to update customer ${item.id}`, e);
+            }
         }
     }
 
@@ -361,19 +358,16 @@ Deno.serve(async (req) => {
                 }
             }
 
-            // Batch update users
+            // Batch update users - sequential to avoid rate limits
             if (usersToUpdate.length > 0) {
-                const chunkSize = 10;
-                for (let i = 0; i < usersToUpdate.length; i += chunkSize) {
-                    const batch = usersToUpdate.slice(i, i + chunkSize);
-                    await Promise.all(batch.map(async (item) => {
-                        try {
-                            await base44.asServiceRole.entities.Customer.update(item.id, item.data);
-                            usersUpdated++;
-                        } catch (e) {
-                            console.error(`Failed to update user ${item.id}`, e);
-                        }
-                    }));
+                for (const item of usersToUpdate) {
+                    try {
+                        await base44.asServiceRole.entities.Customer.update(item.id, item.data);
+                        usersUpdated++;
+                        await new Promise(r => setTimeout(r, 50)); // Small delay
+                    } catch (e) {
+                        console.error(`Failed to update user ${item.id}`, e);
+                    }
                 }
             }
 
@@ -481,19 +475,16 @@ Deno.serve(async (req) => {
                 }
             }
 
-            // Batch update sites
+            // Update sites sequentially to avoid rate limits
             if (sitesToUpdate.length > 0) {
-                const chunkSize = 10;
-                for (let i = 0; i < sitesToUpdate.length; i += chunkSize) {
-                    const batch = sitesToUpdate.slice(i, i + chunkSize);
-                    await Promise.all(batch.map(async (item) => {
-                        try {
-                            await base44.asServiceRole.entities.Site.update(item.id, item.data);
-                            sitesUpdated++;
-                        } catch (e) {
-                            console.error(`Failed to update site ${item.id}`, e);
-                        }
-                    }));
+                for (const item of sitesToUpdate) {
+                    try {
+                        await base44.asServiceRole.entities.Site.update(item.id, item.data);
+                        sitesUpdated++;
+                        await new Promise(r => setTimeout(r, 50)); // Small delay
+                    } catch (e) {
+                        console.error(`Failed to update site ${item.id}`, e);
+                    }
                 }
             }
 
