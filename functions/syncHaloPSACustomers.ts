@@ -211,7 +211,17 @@ Deno.serve(async (req) => {
         sampleSite: sampleSite,
         sampleSiteDetail: sampleSiteDetail,
         sampleSiteDetailKeys: sampleSiteDetail ? Object.keys(sampleSiteDetail) : [],
-        sampleSiteAddressFields: sampleSiteDetail ? Object.keys(sampleSiteDetail).filter(k => k.toLowerCase().includes('address') || k.toLowerCase().includes('line') || k.toLowerCase().includes('city') || k.toLowerCase().includes('state') || k.toLowerCase().includes('post') || k.toLowerCase().includes('county')).reduce((acc, k) => { acc[k] = sampleSiteDetail[k]; return acc; }, {}) : null,
+        sampleSiteAddressFields: sampleSiteDetail ? {
+          invoice_address: sampleSiteDetail.invoice_address,
+          delivery_address: sampleSiteDetail.delivery_address,
+          toplevel_name: sampleSiteDetail.toplevel_name,
+          line1: sampleSiteDetail.line1,
+          line2: sampleSiteDetail.line2,
+          city: sampleSiteDetail.city,
+          postcode: sampleSiteDetail.postcode,
+          county: sampleSiteDetail.county,
+          state: sampleSiteDetail.state
+        } : null,
         sampleClientDetail: sampleClientDetail,
         sampleClientDetailKeys: sampleClientDetail ? Object.keys(sampleClientDetail) : []
       });
