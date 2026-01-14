@@ -211,8 +211,7 @@ Deno.serve(async (req) => {
         sampleSite: sampleSite,
         sampleSiteDetail: sampleSiteDetail,
         sampleSiteDetailKeys: sampleSiteDetail ? Object.keys(sampleSiteDetail) : [],
-        sampleSiteInvoiceAddress: sampleSiteDetail?.invoice_address || null,
-        sampleSiteDeliveryAddress: sampleSiteDetail?.delivery_address || null,
+        sampleSiteAddressFields: sampleSiteDetail ? Object.keys(sampleSiteDetail).filter(k => k.toLowerCase().includes('address') || k.toLowerCase().includes('line') || k.toLowerCase().includes('city') || k.toLowerCase().includes('state') || k.toLowerCase().includes('post') || k.toLowerCase().includes('county')).reduce((acc, k) => { acc[k] = sampleSiteDetail[k]; return acc; }, {}) : null,
         sampleClientDetail: sampleClientDetail,
         sampleClientDetailKeys: sampleClientDetail ? Object.keys(sampleClientDetail) : []
       });
