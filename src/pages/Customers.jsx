@@ -54,6 +54,7 @@ export default function Customers() {
 
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCommunication, setShowCommunication] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState(new Set());
