@@ -687,182 +687,239 @@ export default function Customers() {
 
       {/* Customer Detail Modal */}
       <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-semibold">
-                {selectedCustomer?.name?.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <span>{selectedCustomer?.name}</span>
-                {selectedCustomer?.company && <p className="text-sm text-slate-500 font-normal">{selectedCustomer.company}</p>}
-              </div>
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedCustomer && (
-            <div className="space-y-6 mt-4">
-              {/* Quick Actions */}
-              <div className="flex gap-2 mb-4">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1 gap-2"
-                  onClick={() => setShowCommunication(true)}
-                >
-                  <Mail className="w-4 h-4" /> Send Email
-                </Button>
-                {selectedCustomer.phone && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 gap-2"
-                    onClick={() => setShowCommunication(true)}
+        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
+          {selectedCustomer && (() => {
+            const customerSites = getSitesForCompany(selectedCustomer.id);
+            const customerContacts = getContactsForCompany(selectedCustomer.id);
+            const customerProjects = getCustomerProjects(selectedCustomer.id);
+            return (
+              <>
+                {/* Header */}
+                <div className="flex items-start justify-between border-b pb-4 mb-4">
+                  <div>
+                    <Link 
+                      to="#" 
+                      onClick={(e) => { e.preventDefault(); setSelectedCustomer(null); }}
+                      className="text-sm text-slate-500 hover:text-[#0069AF] flex items-center gap-1 mb-2"
+                    >
+                      ← Back to Customers
+                    </Link>
+                    <h2 className="text-2xl font-bold text-slate-900">{selectedCustomer.name}</h2>
+                    <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
+                      {selectedCustomer.email ? (
+                        <span className="flex items-center gap-1">
+                          <Mail className="w-3.5 h-3.5" /> {selectedCustomer.email}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">No email</span>
+                      )}
+                      {selectedCustomer.phone ? (
+                        <span className="flex items-center gap-1">
+                          <Phone className="w-3.5 h-3.5" /> {selectedCustomer.phone}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">No phone</span>
+                      )}
+                    </div>
+                    {(selectedCustomer.address || selectedCustomer.city) && (
+                      <p className="flex items-center gap-1 mt-1 text-sm text-slate-500">
+                        <MapPin className="w-3.5 h-3.5" />
+                        {[selectedCustomer.address, selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                    {selectedCustomer.source === 'halo_psa' && (
+                      <Badge variant="outline" className="mt-2 text-xs bg-blue-50 text-blue-600 border-blue-200">
+                        Synced from HaloPSA
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => { setEditingCustomer(selectedCustomer); setShowModal(true); }}>
+                      <Edit2 className="w-4 h-4 mr-1" /> Edit
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Tabs */}
+                <div className="flex items-center gap-4 border-b mb-4">
+                  <button
+                    onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: 'details' }))}
+                    className={cn(
+                      "pb-2 text-sm font-medium border-b-2 transition-colors",
+                      (companyTabs[selectedCustomer.id] || 'details') === 'details'
+                        ? "border-[#0069AF] text-[#0069AF]"
+                        : "border-transparent text-slate-500 hover:text-slate-700"
+                    )}
                   >
-                    <MessageSquare className="w-4 h-4" /> Send SMS
-                  </Button>
-                )}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2"
-                  onClick={() => window.location.href = `tel:${selectedCustomer.phone}`}
-                  disabled={!selectedCustomer.phone}
-                >
-                  <Phone className="w-4 h-4" />
-                </Button>
-              </div>
-
-              {/* Contact Info */}
-              <div className="p-4 bg-slate-50 rounded-xl space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  {selectedCustomer.email && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="w-4 h-4 text-slate-400" />
-                      <a href={`mailto:${selectedCustomer.email}`} className="text-[#0069AF] hover:underline">{selectedCustomer.email}</a>
-                    </div>
-                  )}
-                  {selectedCustomer.phone && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="w-4 h-4 text-slate-400" />
-                      <a href={`tel:${selectedCustomer.phone}`} className="text-[#0069AF] hover:underline">{selectedCustomer.phone}</a>
-                    </div>
-                  )}
-                </div>
-                {(selectedCustomer.address || selectedCustomer.city) && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-slate-400" />
-                    <span>{[selectedCustomer.address, selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}</span>
-                  </div>
-                )}
-                
-                {/* Summary Stats */}
-                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-200">
-                  <div className="text-center p-2 bg-white rounded-lg">
-                    <p className="text-xl font-bold text-[#0069AF]">{getProposalCount(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email)}</p>
-                    <p className="text-xs text-slate-500">QuoteIT Quotes</p>
-                  </div>
-                  <div className="text-center p-2 bg-white rounded-lg">
-                    <p className="text-xl font-bold text-[#0069AF]">{getProjectCount(selectedCustomer.id)}</p>
-                    <p className="text-xs text-slate-500">Projects</p>
-                  </div>
-                  <div className="text-center p-2 bg-white rounded-lg">
-                    <p className="text-xl font-bold text-emerald-600">${getTotalValue(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).toLocaleString()}</p>
-                    <p className="text-xs text-slate-500">Total Value</p>
-                  </div>
+                    Details & Contacts
+                  </button>
+                  <button
+                    onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: 'proposals' }))}
+                    className={cn(
+                      "pb-2 text-sm font-medium border-b-2 transition-colors",
+                      companyTabs[selectedCustomer.id] === 'proposals'
+                        ? "border-[#0069AF] text-[#0069AF]"
+                        : "border-transparent text-slate-500 hover:text-slate-700"
+                    )}
+                  >
+                    Proposals ({getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).length})
+                  </button>
+                  <button
+                    onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: 'projects' }))}
+                    className={cn(
+                      "pb-2 text-sm font-medium border-b-2 transition-colors",
+                      companyTabs[selectedCustomer.id] === 'projects'
+                        ? "border-[#0069AF] text-[#0069AF]"
+                        : "border-transparent text-slate-500 hover:text-slate-700"
+                    )}
+                  >
+                    Projects ({customerProjects.length})
+                  </button>
                 </div>
 
-                {selectedCustomer.default_tax_rate > 0 && (
-                  <div className="text-sm pt-2 border-t border-slate-200">
-                    <span className="text-slate-500">Default Tax Rate:</span> <span className="font-medium">{selectedCustomer.default_tax_rate}%</span>
-                  </div>
-                )}
-                
-                {selectedCustomer.source && (
-                  <div className="text-xs text-slate-400 pt-2 border-t border-slate-200">
-                    Source: <Badge variant="outline" className="text-xs">{selectedCustomer.source}</Badge>
-                    {selectedCustomer.external_id && <span className="ml-2">ID: {selectedCustomer.external_id}</span>}
-                  </div>
-                )}
-              </div>
-
-              {/* Projects */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-slate-900 flex items-center gap-2">
-                    <FolderKanban className="w-4 h-4 text-[#0069AF]" />
-                    Projects ({getCustomerProjects(selectedCustomer.id).length})
-                  </h4>
-                  <Link to={createPageUrl('Dashboard')}>
-                    <Button variant="outline" size="sm">View All</Button>
-                  </Link>
-                </div>
-                {getCustomerProjects(selectedCustomer.id).length > 0 ? (
-                  <div className="space-y-2">
-                    {getCustomerProjects(selectedCustomer.id).slice(0, 5).map(project => (
-                      <Link key={project.id} to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="block p-3 bg-white border rounded-lg hover:shadow-sm transition-all">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-slate-900">{project.name}</span>
-                          <Badge variant="outline" className={cn(
-                            project.status === 'completed' && "bg-emerald-50 text-emerald-700",
-                            project.status === 'in_progress' && "bg-blue-50 text-blue-700",
-                            project.status === 'planning' && "bg-amber-50 text-amber-700"
-                          )}>{project.status?.replace('_', ' ')}</Badge>
+                {/* Details & Contacts Tab */}
+                {(companyTabs[selectedCustomer.id] || 'details') === 'details' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Company Info */}
+                    <div className="bg-white border rounded-xl p-4">
+                      <h4 className="font-semibold text-slate-900 mb-4">Company Info</h4>
+                      <div className="space-y-3 text-sm">
+                        <div>
+                          <p className="text-slate-400 text-xs uppercase tracking-wide">Address</p>
+                          <p className="text-slate-700">{selectedCustomer.address || '--'}</p>
+                          {(selectedCustomer.city || selectedCustomer.state || selectedCustomer.zip) && (
+                            <p className="text-slate-700">{[selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}</p>
+                          )}
+                          {customerSites.length > 0 && (
+                            <p className="text-xs text-slate-400 mt-1">(from site: {customerSites[0].name})</p>
+                          )}
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-400 text-center py-4">No projects linked</p>
-                )}
-              </div>
-
-              {/* QuoteIT Proposals */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-slate-900 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#0069AF]" />
-                    QuoteIT Proposals ({getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).length})
-                  </h4>
-                </div>
-                {getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).length > 0 ? (
-                  <div className="space-y-2">
-                    {getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).slice(0, 5).map(quote => (
-                      <div 
-                        key={quote.id} 
-                        className="block p-3 bg-white border rounded-lg hover:shadow-sm hover:border-[#0069AF]/30 transition-all"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="font-medium text-slate-900">{quote.title}</span>
-                            <p className="text-xs text-slate-500">ID: {quote.quoteit_id}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-slate-700">${(quote.amount || 0).toLocaleString()}</span>
-                            <Badge variant="outline" className={cn(
-                              quote.status === 'converted' && "bg-emerald-50 text-emerald-700",
-                              quote.status === 'pending' && "bg-blue-50 text-blue-700",
-                              quote.status === 'dismissed' && "bg-slate-50 text-slate-600"
-                            )}>{quote.status}</Badge>
-                          </div>
+                        <div>
+                          <p className="text-slate-400 text-xs uppercase tracking-wide">Primary Contact</p>
+                          <p className="text-slate-700">{customerContacts[0]?.name || '--'}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400 text-xs uppercase tracking-wide">Email</p>
+                          <p className="text-slate-700">{selectedCustomer.email || '--'}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400 text-xs uppercase tracking-wide">Phone</p>
+                          <p className="text-slate-700">{selectedCustomer.phone || '--'}</p>
+                        </div>
+                        
+                        {/* Sites/Locations */}
+                        <div className="pt-3 border-t">
+                          <p className="text-slate-400 text-xs uppercase tracking-wide mb-2">Sites / Locations ({customerSites.length})</p>
+                          {customerSites.length > 0 ? (
+                            <div className="space-y-2">
+                              {customerSites.map(site => (
+                                <div key={site.id} className="p-2 bg-slate-50 rounded-lg">
+                                  <p className="font-medium text-slate-800 text-sm">{site.name}</p>
+                                  <p className="text-xs text-slate-500">
+                                    {[site.address, site.city, site.state, site.zip].filter(Boolean).join(', ') || 'No address'}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-slate-400 text-sm">No sites</p>
+                          )}
                         </div>
                       </div>
-                    ))}
+                    </div>
+                    
+                    {/* Associated Contacts */}
+                    <div className="bg-white border rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-semibold text-slate-900">Associated Contacts</h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{customerContacts.length}</span>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => { setAddingContactTo(selectedCustomer.id); setShowModal(true); }}
+                            className="h-7 text-xs"
+                          >
+                            <UserPlus className="w-3.5 h-3.5 mr-1" /> Add
+                          </Button>
+                        </div>
+                      </div>
+                      {customerContacts.length > 0 ? (
+                        <div className="space-y-2">
+                          {customerContacts.map(contact => (
+                            <div key={contact.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                              <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm">
+                                {contact.name?.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-slate-800 text-sm">{contact.name}</p>
+                                {contact.email && <p className="text-xs text-slate-500">{contact.email}</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-slate-400 text-sm text-center py-6">No contacts</p>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-sm text-slate-400 text-center py-4">No matching QuoteIT proposals found</p>
                 )}
-              </div>
 
-              {/* Notes */}
-              {selectedCustomer.notes && (
-                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                  <h4 className="font-medium text-amber-800 mb-1">Notes</h4>
-                  <p className="text-sm text-amber-700">{selectedCustomer.notes}</p>
-                </div>
-              )}
-            </div>
-          )}
+                {/* Proposals Tab */}
+                {companyTabs[selectedCustomer.id] === 'proposals' && (
+                  <div>
+                    {getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).length > 0 ? (
+                      <div className="space-y-2">
+                        {getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).map(quote => (
+                          <div key={quote.id} className="p-3 bg-white border rounded-lg hover:shadow-sm transition-all">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="font-medium text-slate-900">{quote.title}</span>
+                                <p className="text-xs text-slate-500">ID: {quote.quoteit_id}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-slate-700">${(quote.amount || 0).toLocaleString()}</span>
+                                <Badge variant="outline" className={cn(
+                                  quote.status === 'converted' && "bg-emerald-50 text-emerald-700",
+                                  quote.status === 'pending' && "bg-blue-50 text-blue-700"
+                                )}>{quote.status}</Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-400 text-center py-8">No proposals found</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Projects Tab */}
+                {companyTabs[selectedCustomer.id] === 'projects' && (
+                  <div>
+                    {customerProjects.length > 0 ? (
+                      <div className="space-y-2">
+                        {customerProjects.map(project => (
+                          <Link key={project.id} to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="block p-3 bg-white border rounded-lg hover:shadow-sm transition-all">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-slate-900">{project.name}</span>
+                              <Badge variant="outline" className={cn(
+                                project.status === 'completed' && "bg-emerald-50 text-emerald-700",
+                                project.status === 'in_progress' && "bg-blue-50 text-blue-700",
+                                project.status === 'planning' && "bg-amber-50 text-amber-700"
+                              )}>{project.status?.replace('_', ' ')}</Badge>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-400 text-center py-8">No projects linked</p>
+                    )}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
