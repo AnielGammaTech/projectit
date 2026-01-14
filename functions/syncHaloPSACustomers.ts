@@ -469,10 +469,14 @@ Deno.serve(async (req) => {
     }
 
     // Update last sync time
-    if (settings[0]?.id) {
-      await base44.asServiceRole.entities.IntegrationSettings.update(settings[0].id, {
-        halopsa_last_sync: new Date().toISOString()
-      });
+    try {
+      if (settings[0]?.id) {
+        await base44.asServiceRole.entities.IntegrationSettings.update(settings[0].id, {
+          halopsa_last_sync: new Date().toISOString()
+        });
+      }
+    } catch (e) {
+      console.error("Failed to update last sync time:", e);
     }
 
     return Response.json({
