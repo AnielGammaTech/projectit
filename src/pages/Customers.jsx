@@ -378,6 +378,12 @@ export default function Customers() {
                 const contacts = getContactsForCompany(company.id);
                 const companySites = getSitesForCompany(company.id);
                 const companyProjects = getProjectCount(company.id);
+                // Get address from company directly, or fall back to first site's address
+                const displayAddress = (company.address || company.city) 
+                  ? [company.address, company.city, company.state].filter(Boolean).join(', ')
+                  : companySites.length > 0 
+                    ? [companySites[0].address, companySites[0].city, companySites[0].state].filter(Boolean).join(', ')
+                    : null;
                 return (
                   <motion.div
                     key={company.id}
