@@ -97,6 +97,13 @@ export default function Dashboard() {
     refetchIncomingQuotes();
   };
 
+  const { data: incomingQuotes = [], refetch: refetchIncomingQuotes } = useQuery({
+    queryKey: ['incomingQuotes'],
+    queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' }),
+    staleTime: 300000,
+    gcTime: 600000
+  });
+
   const handleSyncQuotes = async () => {
     setIsSyncingQuotes(true);
     try {
@@ -107,12 +114,6 @@ export default function Dashboard() {
     }
     setIsSyncingQuotes(false);
   };
-
-  const { refetch: refetchIncomingQuotes } = useQuery({
-    queryKey: ['incomingQuotesRefetch'],
-    queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' }),
-    enabled: false
-  });
 
   const { data: dashboardViews = [], refetch: refetchViews } = useQuery({
     queryKey: ['dashboardViews', currentUser?.id],
