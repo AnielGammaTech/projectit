@@ -1504,6 +1504,8 @@ export default function Dashboard() {
         onClose={() => setShowProposalsModal(false)}
         quotes={incomingQuotes}
         onCreateProject={handleCreateProjectFromQuote}
+        onSync={handleSyncQuotes}
+        isSyncing={isSyncingQuotes}
       />
 
       {/* Bulk Archive Confirmation */}
