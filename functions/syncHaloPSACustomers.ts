@@ -311,7 +311,7 @@ Deno.serve(async (req) => {
     let usersUpdated = 0;
     
     try {
-        const usersUrl = `${apiBaseUrl}/Users?count=1000`; // Adjust count as needed
+        const usersUrl = `${apiBaseUrl}/Users?count=1000`;
         const usersResponse = await fetch(usersUrl, {
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
@@ -330,16 +330,18 @@ Deno.serve(async (req) => {
             });
 
             const usersToCreate = [];
-            const usersToUpdate = [];
 
             for (const user of haloUsers) {
                 if (!user.client_id || !haloIdToBase44Id[user.client_id]) continue;
                 
-                const parentInfo = haloIdToBase44Id[user.client_id];
                 const userExternalId = `halo_user_${user.id}`;
+                // Skip if already exists (only create new users)
+                if (existingContactMap[userExternalId]) continue;
+                
+                const parentInfo = haloIdToBase44Id[user.client_id];
                 const userName = user.name || user.username || 'Unknown User';
                 
-                const contactData = {
+                usersToCreate.push({
                     name: userName,
                     email: user.emailaddress || user.email || '',
                     phone: user.phonenumber || user.phone || user.mobile_number || '',
@@ -349,29 +351,10 @@ Deno.serve(async (req) => {
                     source: 'halo_psa',
                     external_id: userExternalId,
                     notes: user.notes || ''
-                };
-
-                if (existingContactMap[userExternalId]) {
-                    usersToUpdate.push({ id: existingContactMap[userExternalId].id, data: contactData });
-                } else {
-                    usersToCreate.push(contactData);
-                }
+                });
             }
 
-            // Batch update users - sequential to avoid rate limits
-            if (usersToUpdate.length > 0) {
-                for (const item of usersToUpdate) {
-                    try {
-                        await base44.asServiceRole.entities.Customer.update(item.id, item.data);
-                        usersUpdated++;
-                        await new Promise(r => setTimeout(r, 50)); // Small delay
-                    } catch (e) {
-                        console.error(`Failed to update user ${item.id}`, e);
-                    }
-                }
-            }
-
-            // Bulk create users
+            // Bulk create users only (no updates to save time)
             if (usersToCreate.length > 0) {
                 const chunkSize = 50;
                 for (let i = 0; i < usersToCreate.length; i += chunkSize) {
@@ -384,6 +367,7 @@ Deno.serve(async (req) => {
                     }
                 }
             }
+        }
     } catch (err) {
         console.error("Error syncing users:", err);
     }
