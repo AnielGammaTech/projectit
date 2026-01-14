@@ -407,8 +407,12 @@ Deno.serve(async (req) => {
         if (sitesResponse.ok) {
             const sitesData = await sitesResponse.json();
             console.log("Sites data keys:", Object.keys(sitesData));
-            const haloSites = sitesData.sites || sitesData.Sites || sitesData || [];
+            console.log("Sites data sample:", JSON.stringify(sitesData).slice(0, 500));
+            const haloSites = sitesData.sites || sitesData.Sites || (Array.isArray(sitesData) ? sitesData : []);
             console.log("Found", Array.isArray(haloSites) ? haloSites.length : 0, "sites from HaloPSA");
+            if (haloSites.length > 0) {
+                console.log("Sample site:", JSON.stringify(haloSites[0]).slice(0, 500));
+            }
 
             // Get existing sites
             const existingSites = await base44.asServiceRole.entities.Site.list();
