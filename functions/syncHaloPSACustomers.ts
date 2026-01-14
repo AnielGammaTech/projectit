@@ -154,9 +154,28 @@ Deno.serve(async (req) => {
       }
     }
 
-    // If test mode, just return success with count
+    // If test mode, fetch a sample site to show structure
     if (testOnly) {
       const sampleFields = haloClients[0] ? Object.keys(haloClients[0]).slice(0, 20) : [];
+
+      // Fetch sites to show sample
+      let sampleSite = null;
+      try {
+        const sitesUrl = `${apiBaseUrl}/Site?count=5`;
+        const sitesResp = await fetch(sitesUrl, {
+          headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+        });
+        if (sitesResp.ok) {
+          const sitesData = await sitesResp.json();
+          const sites = sitesData.sites || sitesData.Sites || (Array.isArray(sitesData) ? sitesData : []);
+          if (sites.length > 0) {
+            sampleSite = sites[0];
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch sample site", e);
+      }
+
       return Response.json({
         success: true,
         message: `Connection successful! Found ${haloClients.length} clients.`,
@@ -168,7 +187,8 @@ Deno.serve(async (req) => {
           client_name: haloClients[0].client_name,
           email: haloClients[0].email,
           main_email: haloClients[0].main_email
-        } : null
+        } : null,
+        sampleSite: sampleSite
       });
     }
 
