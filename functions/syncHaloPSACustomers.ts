@@ -503,11 +503,14 @@ Deno.serve(async (req) => {
 
                     const siteName = siteDetail.name || site.name || 'Main Site';
 
-                    // Extract address from detailed response
-                    const siteAddress = siteDetail.delivery_address_line1 || siteDetail.invoice_address_line1 || siteDetail.line1 || '';
-                    const siteCity = siteDetail.delivery_address_city || siteDetail.invoice_address_city || siteDetail.city || '';
-                    const siteState = siteDetail.delivery_address_state || siteDetail.invoice_address_state || siteDetail.state || siteDetail.county || '';
-                    const siteZip = siteDetail.delivery_address_postcode || siteDetail.invoice_address_postcode || siteDetail.postcode || '';
+                    // Extract address from nested objects in detailed response
+                    const deliveryAddr = siteDetail.delivery_address || {};
+                    const invoiceAddr = siteDetail.invoice_address || {};
+                    
+                    const siteAddress = deliveryAddr.line1 || invoiceAddr.line1 || siteDetail.line1 || '';
+                    const siteCity = deliveryAddr.city || invoiceAddr.city || siteDetail.city || '';
+                    const siteState = deliveryAddr.state || deliveryAddr.county || invoiceAddr.state || invoiceAddr.county || siteDetail.state || siteDetail.county || '';
+                    const siteZip = deliveryAddr.postcode || invoiceAddr.postcode || siteDetail.postcode || '';
 
                     const siteData = {
                         name: siteName,
