@@ -211,17 +211,7 @@ Deno.serve(async (req) => {
         sampleSite: sampleSite,
         sampleSiteDetail: sampleSiteDetail,
         sampleSiteDetailKeys: sampleSiteDetail ? Object.keys(sampleSiteDetail) : [],
-        sampleSiteAddressFields: sampleSiteDetail ? {
-          invoice_address: sampleSiteDetail.invoice_address,
-          delivery_address: sampleSiteDetail.delivery_address,
-          toplevel_name: sampleSiteDetail.toplevel_name,
-          line1: sampleSiteDetail.line1,
-          line2: sampleSiteDetail.line2,
-          city: sampleSiteDetail.city,
-          postcode: sampleSiteDetail.postcode,
-          county: sampleSiteDetail.county,
-          state: sampleSiteDetail.state
-        } : null,
+        sampleSiteDetailFull: sampleSiteDetail,
         sampleClientDetail: sampleClientDetail,
         sampleClientDetailKeys: sampleClientDetail ? Object.keys(sampleClientDetail) : []
       });
