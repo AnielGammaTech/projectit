@@ -277,17 +277,13 @@ export default function Customers() {
             <p className="text-slate-500 mt-1">Manage your customer database</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowImportModal(true)}>
-              <Upload className="w-4 h-4 mr-2" />
-              Import
+            <Button variant="outline" onClick={handleHaloPSASync} disabled={syncing}>
+              <RefreshCw className={cn("w-4 h-4 mr-2", syncing && "animate-spin")} />
+              Sync from HaloPSA
             </Button>
-            <Button variant="outline" onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }}>
-              <Building2 className="w-4 h-4 mr-2" />
-              Add Company
-            </Button>
-            <Button onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: false })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+            <Button onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#F97316] hover:bg-[#EA580C]">
               <Plus className="w-4 h-4 mr-2" />
-              Add Contact
+              Add Customer
             </Button>
           </div>
         </motion.div>
