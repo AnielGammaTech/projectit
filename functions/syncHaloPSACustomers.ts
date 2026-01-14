@@ -439,20 +439,40 @@ Deno.serve(async (req) => {
                 const sitesToCreate = [];
                 const sitesToUpdate = [];
 
+                // Process sites - fetch individual details for address info
                 for (const site of haloSites) {
                     if (!site.client_id) continue;
                     if (!haloIdToBase44Id[site.client_id]) continue;
 
                     const parentInfo = haloIdToBase44Id[site.client_id];
                     const siteExternalId = `halo_site_${site.id}`;
-                    const siteName = site.name || 'Main Site';
+                    const existingSite = existingSiteMap[siteExternalId];
 
-                    // HaloPSA sites - try multiple address field patterns
-                    const addr = site.delivery_address || site.invoice_address || {};
-                    const siteAddress = addr.line1 || addr.line_1 || site.address_line_1 || site.address || site.line1 || '';
-                    const siteCity = addr.city || site.city || '';
-                    const siteState = addr.state || addr.county || site.state || site.county || '';
-                    const siteZip = addr.postcode || addr.zip || site.postcode || site.zip || '';
+                    // Skip if already exists with address
+                    if (existingSite && existingSite.address) continue;
+
+                    // Fetch individual site details to get address
+                    let siteDetail = site;
+                    try {
+                        const siteDetailUrl = `${apiBaseUrl}/Site/${site.id}`;
+                        const siteDetailResp = await fetch(siteDetailUrl, {
+                            headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+                        });
+                        if (siteDetailResp.ok) {
+                            siteDetail = await siteDetailResp.json();
+                        }
+                        await new Promise(r => setTimeout(r, 100)); // Rate limit protection
+                    } catch (e) {
+                        console.error(`Failed to fetch site ${site.id} details`, e);
+                    }
+
+                    const siteName = siteDetail.name || site.name || 'Main Site';
+
+                    // Extract address from detailed response
+                    const siteAddress = siteDetail.delivery_address_line1 || siteDetail.invoice_address_line1 || siteDetail.line1 || '';
+                    const siteCity = siteDetail.delivery_address_city || siteDetail.invoice_address_city || siteDetail.city || '';
+                    const siteState = siteDetail.delivery_address_state || siteDetail.invoice_address_state || siteDetail.state || siteDetail.county || '';
+                    const siteZip = siteDetail.delivery_address_postcode || siteDetail.invoice_address_postcode || siteDetail.postcode || '';
 
                     const siteData = {
                         name: siteName,
@@ -462,16 +482,12 @@ Deno.serve(async (req) => {
                         zip: siteZip,
                         customer_id: parentInfo.id,
                         external_id: siteExternalId,
-                        notes: site.notes || '',
-                        is_default: site.is_default === true
+                        notes: siteDetail.notes || '',
+                        is_default: siteDetail.is_default === true
                     };
 
-                    const existingSite = existingSiteMap[siteExternalId];
                     if (existingSite) {
-                        // Update if address is missing but now available
-                        if (!existingSite.address && siteAddress) {
-                            sitesToUpdate.push({ id: existingSite.id, data: siteData });
-                        }
+                        sitesToUpdate.push({ id: existingSite.id, data: siteData });
                     } else {
                         sitesToCreate.push(siteData);
                     }
