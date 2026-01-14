@@ -158,8 +158,9 @@ Deno.serve(async (req) => {
     if (testOnly) {
       const sampleFields = haloClients[0] ? Object.keys(haloClients[0]).slice(0, 20) : [];
 
-      // Fetch sites to show sample
+      // Fetch sites to show sample with individual site detail
       let sampleSite = null;
+      let sampleSiteDetail = null;
       try {
         const sitesUrl = `${apiBaseUrl}/Site?count=5`;
         const sitesResp = await fetch(sitesUrl, {
@@ -170,6 +171,13 @@ Deno.serve(async (req) => {
           const sites = sitesData.sites || sitesData.Sites || (Array.isArray(sitesData) ? sitesData : []);
           if (sites.length > 0) {
             sampleSite = sites[0];
+            // Fetch individual site to see address fields
+            const detailResp = await fetch(`${apiBaseUrl}/Site/${sites[0].id}?includedetails=true`, {
+              headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+            });
+            if (detailResp.ok) {
+              sampleSiteDetail = await detailResp.json();
+            }
           }
         }
       } catch (e) {
@@ -188,7 +196,9 @@ Deno.serve(async (req) => {
           email: haloClients[0].email,
           main_email: haloClients[0].main_email
         } : null,
-        sampleSite: sampleSite
+        sampleSite: sampleSite,
+        sampleSiteDetail: sampleSiteDetail,
+        sampleSiteDetailKeys: sampleSiteDetail ? Object.keys(sampleSiteDetail) : []
       });
     }
 
