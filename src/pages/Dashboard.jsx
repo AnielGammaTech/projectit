@@ -100,13 +100,19 @@ export default function Dashboard() {
   const handleSyncQuotes = async () => {
     setIsSyncingQuotes(true);
     try {
-      await base44.functions.invoke('syncQuoteIT', {});
+      await base44.functions.invoke('pullQuoteITQuotes', {});
       refetchIncomingQuotes();
     } catch (error) {
       console.error("Sync failed", error);
     }
     setIsSyncingQuotes(false);
   };
+
+  const { refetch: refetchIncomingQuotes } = useQuery({
+    queryKey: ['incomingQuotesRefetch'],
+    queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' }),
+    enabled: false
+  });
 
   const { data: dashboardViews = [], refetch: refetchViews } = useQuery({
     queryKey: ['dashboardViews', currentUser?.id],
