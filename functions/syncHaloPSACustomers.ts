@@ -457,7 +457,18 @@ Deno.serve(async (req) => {
                     }
                 }
                 
-                console.log(`Sites to create: ${sitesToCreate.length}`);
+                console.log(`Sites to create: ${sitesToCreate.length}, to update: ${sitesToUpdate.length}`);
+
+                // Update existing sites sequentially
+                for (const item of sitesToUpdate) {
+                    try {
+                        await base44.asServiceRole.entities.Site.update(item.id, item.data);
+                        sitesUpdated++;
+                        await new Promise(r => setTimeout(r, 100));
+                    } catch (e) {
+                        console.error("Update site failed", e);
+                    }
+                }
 
                 // Bulk create sites with rate limit handling
                 if (sitesToCreate.length > 0) {
@@ -474,7 +485,7 @@ Deno.serve(async (req) => {
                         }
                     }
                 }
-            }
+                }
         } else {
             console.error("Sites fetch failed:", sitesResponse.status);
         }
