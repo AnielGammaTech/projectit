@@ -157,7 +157,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     setSelectedTemplate('');
     setShowPeopleSelector(false);
     setPeopleSearch('');
-  }, [project, open, prefillData, defaultStatus, currentUserEmail]);
+  }, [project, open, prefillData, defaultStatus, currentUserEmail, customers]);
 
   const toggleUserGroup = (groupId) => {
     setFormData(prev => ({
