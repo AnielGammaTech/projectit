@@ -107,15 +107,22 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     } else if (prefillData) {
       // Try to find customer by name if ID is missing
       let customerId = prefillData.customer_id || '';
-      if (!customerId && prefillData.client && customers.length > 0) {
-        const found = customers.find(c => c.name?.toLowerCase() === prefillData.client.toLowerCase() || c.company?.toLowerCase() === prefillData.client.toLowerCase());
-        if (found) customerId = found.id;
+      let clientName = prefillData.client || '';
+      if (!customerId && clientName && customers.length > 0) {
+        const found = customers.find(c => 
+          c.name?.toLowerCase() === clientName.toLowerCase() || 
+          c.company?.toLowerCase() === clientName.toLowerCase()
+        );
+        if (found) {
+          customerId = found.id;
+          clientName = found.name || clientName;
+        }
       }
 
       setFormData({
         name: prefillData.name || '',
         description: prefillData.description || '',
-        client: prefillData.client || '',
+        client: clientName,
         customer_id: customerId,
         status: defaultStatus,
         start_date: '',
@@ -128,13 +135,15 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
       });
       setShowDates(false);
       // Convert proposal items to parts
-      if (prefillData.proposalItems) {
+      if (prefillData.proposalItems && prefillData.proposalItems.length > 0) {
         setExtractedParts(prefillData.proposalItems.map(item => ({
           name: item.name || 'Unnamed Item',
           quantity: item.quantity || 1,
           unit_cost: item.unit_cost || item.unit_price || 0,
           description: item.description || ''
         })));
+      } else {
+        setExtractedParts([]);
       }
     } else {
       setFormData({
