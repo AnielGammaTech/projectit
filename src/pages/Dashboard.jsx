@@ -76,10 +76,10 @@ export default function Dashboard() {
       name: quote.title,
       client: quote.customer_name,
       customer_id: quote.customer_id, // Pass matched customer ID
-      budget: quote.amount,
+      budget: quote.amount || quote.raw_data?.total_amount || 0,
       quoteit_quote_id: quote.quoteit_id, // Pass ID to link
       incoming_quote_id: quote.id, // Pass internal ID to update status later
-      description: `Imported from Accepted Quote: ${quote.title}`,
+      description: quote.raw_data?.other_relevant_details || '',
       proposalItems: quote.raw_data?.items || []
     });
     setShowProjectModal(true);
