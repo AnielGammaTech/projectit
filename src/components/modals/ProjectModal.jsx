@@ -114,7 +114,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
       setFormData({
         name: prefillData.name || '',
-        description: '',
+        description: prefillData.description || '',
         client: prefillData.client || '',
         customer_id: customerId,
         status: defaultStatus,
