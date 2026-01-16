@@ -666,10 +666,8 @@ export default function Dashboard() {
           }
         }
 
-        // If created from IncomingQuote, mark it as converted
+        // If created from IncomingQuote, delete it (no longer needed)
         if (prefillData?.incoming_quote_id) {
-          await base44.entities.IncomingQuote.update(prefillData.incoming_quote_id, { status: 'converted' });
-
           // Link project on QuoteIT if ID is available
           if (prefillData.quoteit_quote_id) {
             try {
@@ -683,7 +681,10 @@ export default function Dashboard() {
             }
           }
 
-          // Clean up the query
+          // Delete the incoming quote record
+          await base44.entities.IncomingQuote.delete(prefillData.incoming_quote_id);
+
+          // Refresh the list
           if (typeof refetchIncomingQuotes === 'function') refetchIncomingQuotes();
         }
 
