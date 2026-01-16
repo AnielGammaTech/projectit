@@ -41,6 +41,10 @@ Deno.serve(async (req) => {
         const existingQuotes = await base44.asServiceRole.entities.IncomingQuote.list();
         const existingQuoteIds = new Set(existingQuotes.map(q => q.quoteit_id));
 
+        // Get existing projects to check if quote was already converted
+        const existingProjects = await base44.asServiceRole.entities.Project.list();
+        const projectQuoteIds = new Set(existingProjects.filter(p => p.quoteit_quote_id).map(p => p.quoteit_quote_id));
+
         let created = 0;
         let skipped = 0;
 
@@ -48,7 +52,8 @@ Deno.serve(async (req) => {
         for (const quote of (Array.isArray(quotes) ? quotes : [])) {
             const quoteId = quote.id || quote.quote_id;
             
-            if (existingQuoteIds.has(quoteId)) {
+            // Skip if already exists as IncomingQuote OR if a project was already created from it
+            if (existingQuoteIds.has(quoteId) || projectQuoteIds.has(quoteId)) {
                 skipped++;
                 continue;
             }
