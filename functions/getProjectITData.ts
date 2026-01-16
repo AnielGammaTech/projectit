@@ -32,23 +32,43 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 5. Fetch Data (Customers and Inventory)
+    // 5. Fetch Data (Customers, Inventory, and Projects)
     // We use service role to ensure we get all data regardless of the invoking user context (which is anonymous here anyway)
-    const [customers, inventory] = await Promise.all([
+    const [customers, inventory, projectsRaw] = await Promise.all([
       base44.asServiceRole.entities.Customer.list(),
-      base44.asServiceRole.entities.InventoryItem.list()
+      base44.asServiceRole.entities.InventoryItem.list(),
+      base44.asServiceRole.entities.Project.list()
     ]);
+
+    // Map projects to the expected format
+    const projects = projectsRaw.map(p => {
+      const customer = customers.find(c => c.id === p.customer_id);
+      return {
+        id: p.id,
+        project_number: p.project_number,
+        customer_id: p.customer_id || null,
+        customer_name: customer?.name || p.client || null,
+        name: p.name,
+        description: p.description || '',
+        status: p.status || 'planning',
+        start_date: p.start_date || null,
+        due_date: p.due_date || null,
+        quoteit_quote_id: p.quoteit_quote_id || null
+      };
+    });
 
     // 6. Return Data
     return new Response(JSON.stringify({
       success: true,
       data: {
         customers,
-        inventory
+        inventory,
+        projects
       },
       meta: {
         customer_count: customers.length,
         inventory_count: inventory.length,
+        project_count: projects.length,
         timestamp: new Date().toISOString()
       }
     }), {
