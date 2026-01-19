@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import TaskModal from '@/components/modals/TaskModal';
 import PartModal from '@/components/modals/PartModal';
 import PartDetailModal from '@/components/modals/PartDetailModal';
+import QuickOrderModal from '@/components/parts/QuickOrderModal';
 import {
   AlertDialog,
   AlertDialogAction,
