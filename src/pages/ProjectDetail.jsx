@@ -27,7 +27,8 @@ import {
   Users,
   Globe,
   RotateCcw,
-  Tag
+  Tag,
+  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -756,14 +757,24 @@ export default function ProjectDetail() {
               {/* Project Title */}
               <h1 className="text-xl font-bold text-slate-900">{project.name}</h1>
 
-              {project.client && (
-                <Link 
-                  to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')} 
-                  className="text-[#0069AF] hover:underline text-sm block"
-                >
-                  {project.client} →
-                </Link>
-              )}
+              <div className="flex items-center gap-3 flex-wrap">
+                {project.client && (
+                  <Link 
+                    to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')} 
+                    className="text-[#0069AF] hover:underline text-sm"
+                  >
+                    {project.client} →
+                  </Link>
+                )}
+                {project.project_lead && (
+                  <div className="flex items-center gap-1.5 text-sm text-amber-700 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                    <Crown className="w-4 h-4 text-amber-500" />
+                    <span className="font-medium">
+                      {teamMembers.find(m => m.email === project.project_lead)?.name || project.project_lead.split('@')[0]}
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {(integrationSettings?.quoteit_api_url && (project.quoteit_quote_id || linkedQuote?.quoteit_id)) && (
                 <a 
