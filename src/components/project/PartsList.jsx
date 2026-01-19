@@ -20,7 +20,13 @@ const statusConfig = {
 };
 
 export default function PartsList({ parts = [], onStatusChange, onEdit, onDelete }) {
+  const [quickOrderPart, setQuickOrderPart] = useState(null);
   const totalCost = parts.reduce((sum, p) => sum + (p.quantity || 1) * (p.unit_cost || 0), 0);
+
+  const handleQuickOrderSave = async (partId, orderData) => {
+    await onStatusChange({ id: partId, ...orderData }, 'ordered');
+    setQuickOrderPart(null);
+  };
 
   return (
     <div>
