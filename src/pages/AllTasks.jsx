@@ -60,6 +60,7 @@ export default function AllTasks() {
   const [showPartModal, setShowPartModal] = useState(false);
   const [deletePartConfirm, setDeletePartConfirm] = useState({ open: false, part: null });
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [quickOrderPart, setQuickOrderPart] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
