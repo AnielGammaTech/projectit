@@ -622,8 +622,20 @@ export default function AllTasks() {
                         <div className="flex items-start justify-between gap-2">
                           <h4 className="font-medium text-slate-900">{part.name}</h4>
                           <div className="flex items-center gap-2">
+                            {/* Quick Order button */}
+                            {part.status === 'needed' && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                onClick={(e) => { e.stopPropagation(); setQuickOrderPart(part); }}
+                              >
+                                <ShoppingCart className="w-3 h-3 mr-1" />
+                                Order
+                              </Button>
+                            )}
                             {/* Quick set delivery date button */}
-                            {!part.est_delivery_date && (part.status === 'ordered' || part.status === 'needed') && (
+                            {!part.est_delivery_date && part.status === 'ordered' && (
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <Button 
