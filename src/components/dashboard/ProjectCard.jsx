@@ -1,5 +1,5 @@
 import { useState, memo, useMemo } from 'react';
-import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Sparkles, Users, AlertTriangle, Clock, MessageCircle, CheckSquare, Square } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Sparkles, Users, AlertTriangle, Clock, MessageCircle, CheckSquare, Square, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -185,6 +185,11 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
     return member || { email, name: email.split('@')[0] };
   });
 
+  // Get project lead info
+  const projectLead = project.project_lead 
+    ? teamMembers.find(m => m.email === project.project_lead) || { email: project.project_lead, name: project.project_lead.split('@')[0] }
+    : null;
+
   const getInitials = (name) => {
     if (!name) return '?';
     const parts = name.split(' ');
@@ -343,9 +348,26 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
           <h3 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
             {project.name}
           </h3>
-          {project.client && (
-            <p className="text-xs text-slate-500 line-clamp-1">{project.client}</p>
-          )}
+          <div className="flex items-center gap-2">
+            {project.client && (
+              <p className="text-xs text-slate-500 line-clamp-1">{project.client}</p>
+            )}
+            {projectLead && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+                      <Crown className="w-3 h-3" />
+                      <span className="font-medium truncate max-w-[80px]">{projectLead.name}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Project Lead: {projectLead.name}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         </div>
         
         {/* AI Short Description */}

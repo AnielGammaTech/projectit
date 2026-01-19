@@ -9,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon, Loader2, Users, Search, Building2, User, Check, Clock, X, Palette, FileStack, UserPlus, ChevronDown } from 'lucide-react';
+import { CalendarIcon, Loader2, Users, Search, Building2, User, Check, Clock, X, Palette, FileStack, UserPlus, ChevronDown, Crown } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
@@ -48,7 +48,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     group: '',
     user_groups: [],
     team_members: [],
-    time_budget_hours: 0
+    time_budget_hours: 0,
+    project_lead: ''
   });
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [extractedParts, setExtractedParts] = useState([]);
@@ -100,7 +101,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         group: project.group || '',
         user_groups: project.user_groups || [],
         team_members: project.team_members || [],
-        time_budget_hours: project.time_budget_hours || 0
+        time_budget_hours: project.time_budget_hours || 0,
+        project_lead: project.project_lead || ''
       });
       setShowDates(!!(project.start_date || project.due_date));
       setExtractedParts([]);
@@ -131,7 +133,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         group: '',
         user_groups: [],
         team_members: currentUserEmail ? [currentUserEmail] : [],
-        time_budget_hours: 0
+        time_budget_hours: 0,
+        project_lead: currentUserEmail || ''
       });
       setShowDates(false);
       // Convert proposal items to parts
@@ -158,7 +161,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         group: '',
         user_groups: [],
         team_members: currentUserEmail ? [currentUserEmail] : [],
-        time_budget_hours: 0
+        time_budget_hours: 0,
+        project_lead: currentUserEmail || ''
       });
       setShowDates(false);
       setExtractedParts([]);
@@ -389,6 +393,37 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
               required
               className="mt-1.5 h-24 resize-none"
             />
+          </div>
+
+          {/* Project Lead */}
+          <div>
+            <Label className="text-sm font-medium flex items-center gap-1.5">
+              <Crown className="w-4 h-4 text-amber-500" />
+              Project Lead
+            </Label>
+            <Select
+              value={formData.project_lead}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, project_lead: value }))}
+            >
+              <SelectTrigger className="mt-1.5 h-11">
+                <SelectValue placeholder="Select project lead..." />
+              </SelectTrigger>
+              <SelectContent>
+                {teamMembers.map(member => (
+                  <SelectItem key={member.id} value={member.email}>
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium",
+                        member.avatar_color || "bg-blue-500"
+                      )}>
+                        {getInitials(member.name)}
+                      </div>
+                      {member.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Time Budget */}
