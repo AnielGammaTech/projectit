@@ -90,12 +90,18 @@ export default function Dashboard() {
     refetchIncomingQuotes();
   };
 
-  const { data: incomingQuotes = [], refetch: refetchIncomingQuotes } = useQuery({
+  const { data: incomingQuotesRaw = [], refetch: refetchIncomingQuotes } = useQuery({
     queryKey: ['incomingQuotes'],
     queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' }),
     staleTime: 300000,
     gcTime: 600000
   });
+
+  // Filter out quotes that already have projects created
+  const incomingQuotes = useMemo(() => {
+    const projectQuoteIds = new Set(projects.filter(p => p.quoteit_quote_id).map(p => p.quoteit_quote_id));
+    return incomingQuotesRaw.filter(q => !projectQuoteIds.has(q.quoteit_id));
+  }, [incomingQuotesRaw, projects]);
 
   const handleSyncQuotes = async () => {
     setIsSyncingQuotes(true);
