@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, MoreHorizontal, Trash2, Edit2, DollarSign, Hash, Truck } from 'lucide-react';
+import { Package, MoreHorizontal, Trash2, Edit2, DollarSign, Hash, Truck, ShoppingCart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import QuickOrderModal from '@/components/parts/QuickOrderModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
