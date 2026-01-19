@@ -67,6 +67,18 @@ export default function PartsList({ parts = [], onStatusChange, onEdit, onDelete
                           </p>
                         )}
                       </div>
+                      <div className="flex items-center gap-1">
+                        {part.status === 'needed' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            onClick={() => setQuickOrderPart(part)}
+                          >
+                            <ShoppingCart className="w-3.5 h-3.5 mr-1" />
+                            Order
+                          </Button>
+                        )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
