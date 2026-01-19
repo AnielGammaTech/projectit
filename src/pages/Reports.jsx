@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { 
   BarChart3, PieChart, TrendingUp, Calendar, Users, Package, 
   CheckCircle2, Clock, AlertTriangle, Download, Filter, Timer,
-  DollarSign, FileText, Activity, Bell, ChevronDown, ShoppingCart, Truck, Sparkles
+  DollarSign, FileText, Activity, Bell, ChevronDown, ShoppingCart, Truck, Sparkles, Crown
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -467,7 +467,8 @@ export default function Reports() {
                 {reportType === 'financial' ? 'Cost & Value Reporting' : 
                  reportType === 'activity' ? 'Activity Report' :
                  reportType === 'timesheets' ? 'Timesheets Report' :
-                 reportType === 'overdue' ? 'Overdue Appointments' : 'Notification History'}
+                 reportType === 'overdue' ? 'Overdue Appointments' : 
+                 reportType === 'project_lead' ? 'Projects by Lead' : 'Notification History'}
               </h1>
               <p className="text-slate-500 text-sm">
                 {reportType === 'financial' ? 'Track inventory costs and retail values' : 
@@ -512,6 +513,12 @@ export default function Reports() {
                     Notification History
                   </div>
                 </SelectItem>
+                <SelectItem value="project_lead">
+                  <div className="flex items-center gap-2">
+                    <Crown className="w-4 h-4" />
+                    Projects by Lead
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
             {reportType !== 'financial' && (
@@ -552,6 +559,109 @@ export default function Reports() {
               <p className="text-sm">Coming soon</p>
             </CardContent>
           </Card>
+        )}
+        {reportType === 'project_lead' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-4 gap-4">
+              {(() => {
+                // Group projects by project lead
+                const leadCounts = {};
+                const leadProjects = {};
+                projects.filter(p => p.status !== 'archived' && p.status !== 'deleted').forEach(p => {
+                  const lead = p.project_lead || 'Unassigned';
+                  leadCounts[lead] = (leadCounts[lead] || 0) + 1;
+                  if (!leadProjects[lead]) leadProjects[lead] = [];
+                  leadProjects[lead].push(p);
+                });
+                
+                return Object.entries(leadCounts)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([email, count]) => {
+                    const member = teamMembers.find(m => m.email === email);
+                    const name = email === 'Unassigned' ? 'Unassigned' : (member?.name || email.split('@')[0]);
+                    return (
+                      <Card key={email}>
+                        <CardContent className="p-5">
+                          <div className="flex items-center gap-3 mb-3">
+                            {email === 'Unassigned' ? (
+                              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                                <Users className="w-5 h-5 text-slate-400" />
+                              </div>
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                                <Crown className="w-5 h-5 text-amber-600" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-semibold text-slate-900">{name}</p>
+                              <p className="text-xs text-slate-500">{email === 'Unassigned' ? 'No lead assigned' : email}</p>
+                            </div>
+                          </div>
+                          <p className="text-3xl font-bold text-slate-900">{count}</p>
+                          <p className="text-sm text-slate-500">active project{count !== 1 ? 's' : ''}</p>
+                        </CardContent>
+                      </Card>
+                    );
+                  });
+              })()}
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-amber-500" />
+                  All Projects by Lead
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {(() => {
+                    const leadProjects = {};
+                    projects.filter(p => p.status !== 'archived' && p.status !== 'deleted').forEach(p => {
+                      const lead = p.project_lead || 'Unassigned';
+                      if (!leadProjects[lead]) leadProjects[lead] = [];
+                      leadProjects[lead].push(p);
+                    });
+
+                    return Object.entries(leadProjects)
+                      .sort((a, b) => b[1].length - a[1].length)
+                      .map(([email, projs]) => {
+                        const member = teamMembers.find(m => m.email === email);
+                        const name = email === 'Unassigned' ? 'Unassigned' : (member?.name || email.split('@')[0]);
+                        return (
+                          <div key={email}>
+                            <div className="flex items-center gap-2 mb-3">
+                              <Crown className="w-4 h-4 text-amber-500" />
+                              <h3 className="font-semibold text-slate-900">{name}</h3>
+                              <Badge variant="outline">{projs.length}</Badge>
+                            </div>
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 pl-6">
+                              {projs.map(p => {
+                                const customer = customers.find(c => c.id === p.customer_id);
+                                const projectTasks = tasks.filter(t => t.project_id === p.id);
+                                const completedCount = projectTasks.filter(t => t.status === 'completed').length;
+                                return (
+                                  <Link key={p.id} to={createPageUrl('ProjectDetail') + `?id=${p.id}`}>
+                                    <div className="p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                                      <p className="font-medium text-slate-900 truncate">{p.name}</p>
+                                      <p className="text-xs text-slate-500">{customer?.name || p.client}</p>
+                                      <div className="flex items-center gap-2 mt-2">
+                                        <Progress value={projectTasks.length > 0 ? (completedCount / projectTasks.length) * 100 : 0} className="h-1.5 flex-1" />
+                                        <span className="text-[10px] text-slate-400">{completedCount}/{projectTasks.length}</span>
+                                      </div>
+                                    </div>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      });
+                  })()}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* AI Assistant - Always Visible */}
