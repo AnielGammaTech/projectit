@@ -764,6 +764,14 @@ export default function AllTasks() {
         onStatusChange={handlePartStatusChange}
       />
 
+      {/* Quick Order Modal */}
+      <QuickOrderModal
+        open={!!quickOrderPart}
+        onClose={() => setQuickOrderPart(null)}
+        part={quickOrderPart}
+        onSave={handleQuickOrderSave}
+      />
+
       {/* Delete Part Confirmation */}
       <AlertDialog open={deletePartConfirm.open} onOpenChange={(open) => !open && setDeletePartConfirm({ open: false, part: null })}>
         <AlertDialogContent>
