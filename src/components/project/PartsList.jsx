@@ -154,6 +154,13 @@ export default function PartsList({ parts = [], onStatusChange, onEdit, onDelete
           </div>
         )}
       </div>
+
+      <QuickOrderModal
+        open={!!quickOrderPart}
+        onClose={() => setQuickOrderPart(null)}
+        part={quickOrderPart}
+        onSave={handleQuickOrderSave}
+      />
     </div>
   );
 }
