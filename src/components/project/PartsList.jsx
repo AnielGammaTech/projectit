@@ -96,6 +96,7 @@ export default function PartsList({ parts = [], onStatusChange, onEdit, onDelete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 mt-3">
