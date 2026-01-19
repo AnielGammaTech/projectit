@@ -134,6 +134,12 @@ export default function Dashboard() {
     gcTime: 300000
   });
 
+  // Filter out quotes that already have projects created
+  const incomingQuotes = useMemo(() => {
+    const projectQuoteIds = new Set(projects.filter(p => p.quoteit_quote_id).map(p => p.quoteit_quote_id));
+    return incomingQuotesRaw.filter(q => !projectQuoteIds.has(q.quoteit_id));
+  }, [incomingQuotesRaw, projects]);
+
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks'],
     queryFn: () => base44.entities.Task.list('-created_date'),
