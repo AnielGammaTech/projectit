@@ -190,6 +190,11 @@ export default function AllTasks() {
     queryClient.invalidateQueries({ queryKey: ['allParts'] });
   };
 
+  const handleQuickOrderSave = async (partId, data) => {
+    await base44.entities.Part.update(partId, data);
+    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+  };
+
   const handleDeletePart = async () => {
     if (deletePartConfirm.part) {
       await base44.entities.Part.delete(deletePartConfirm.part.id);
