@@ -10,7 +10,8 @@ Deno.serve(async (req) => {
         }
 
         const QUOTEIT_API_KEY = Deno.env.get("QUOTEIT_API_KEY");
-        const QUOTEIT_ENDPOINT = "https://quoteit.gtools.io/api/functions/getAcceptedQuotes";
+        // Only fetch active/accepted quotes that haven't been archived or deleted
+        const QUOTEIT_ENDPOINT = "https://quoteit.gtools.io/api/functions/getActiveAcceptedQuotes";
 
         if (!QUOTEIT_API_KEY) {
             return Response.json({ error: 'QuoteIT API Key not configured' }, { status: 500 });
