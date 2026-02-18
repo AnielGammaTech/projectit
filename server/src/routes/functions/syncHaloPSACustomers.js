@@ -1,5 +1,5 @@
 import entityService from '../../services/entityService.js';
-import emailService from '../../services/emailService.js';
+import { getHaloPSAConfig, getHaloPSAToken } from '../../services/halopsaService.js';
 
 export default async function handler(req, res) {
   try {
@@ -17,80 +17,10 @@ export default async function handler(req, res) {
       zip: 'postcode',
     };
 
-    // Get HaloPSA credentials from environment
-    const clientId = process.env.HALOPSA_CLIENT_ID;
-    const clientSecret = process.env.HALOPSA_CLIENT_SECRET;
-    const tenant = process.env.HALOPSA_TENANT;
-
-    if (!clientId || !clientSecret) {
-      return res.status(400).json({
-        error: 'HaloPSA credentials not configured.',
-        details: 'Please set HALOPSA_CLIENT_ID and HALOPSA_CLIENT_SECRET in your app environment variables (Dashboard > Settings > Environment Variables)',
-      });
-    }
-
-    // Get integration settings for the URLs
-    const settings = await entityService.filter('IntegrationSettings', { setting_key: 'main' });
-    let authUrl = settings[0]?.halopsa_auth_url;
-    let apiUrl = settings[0]?.halopsa_api_url;
-
-    if (!authUrl || !apiUrl) {
-      return res.status(400).json({
-        error: 'HaloPSA URLs not configured',
-        details: 'Please enter both the Authorisation Server URL and Resource Server URL in Adminland -> Integrations',
-      });
-    }
-
-    // Clean up URLs
-    authUrl = authUrl.replace(/\/+$/, '').replace(/\/auth\/?$/, '').replace(/\/api\/?$/, '');
-    apiUrl = apiUrl.replace(/\/+$/, '').replace(/\/api\/?$/, '');
-
-    const tokenUrl = `${authUrl}/auth/token`;
-    const apiBaseUrl = `${apiUrl}/api`;
-
-    const tokenBody = new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: clientId,
-      client_secret: clientSecret,
-      scope: 'all',
-    });
-
-    if (tenant) {
-      tokenBody.append('tenant', tenant);
-    }
-
-    let tokenResponse;
-    try {
-      tokenResponse = await fetch(tokenUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: tokenBody,
-      });
-    } catch (fetchError) {
-      return res.status(500).json({
-        error: `Cannot reach HaloPSA server: ${fetchError.message}`,
-        details: `URL attempted: ${tokenUrl}`,
-      });
-    }
-
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      return res.status(401).json({
-        error: `HaloPSA authentication failed (${tokenResponse.status})`,
-        details: errorText || 'Check your Client ID, Client Secret, and Tenant in environment variables',
-        debug: { tokenUrl, authUrl, apiUrl },
-      });
-    }
-
-    const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.access_token;
-
-    if (!accessToken) {
-      return res.status(401).json({
-        error: 'No access token received from HaloPSA',
-        details: JSON.stringify(tokenData),
-      });
-    }
+    // Get HaloPSA config from DB (falls back to env vars)
+    const config = await getHaloPSAConfig();
+    const { apiBaseUrl } = config;
+    const accessToken = await getHaloPSAToken(config);
 
     // Fetch clients from HaloPSA
     const clientsUrl = `${apiBaseUrl}/Client?count=500`;
@@ -117,9 +47,9 @@ export default async function handler(req, res) {
         details: errorText,
         debug: {
           clientsUrl,
-          apiBaseUrl,
-          apiUrl,
-          authUrl,
+          apiBaseUrl: config.apiBaseUrl,
+          apiUrl: config.apiUrl,
+          authUrl: config.authUrl,
           hint: 'Make sure Resource Server URL is correct. For hosted HaloPSA, both Auth and Resource URLs are usually the same (e.g., https://yourcompany.halopsa.com)',
         },
       });
@@ -129,7 +59,7 @@ export default async function handler(req, res) {
     let haloClients = clientsData.clients || [];
 
     // Filter out excluded IDs
-    const excludedIdsStr = settings[0]?.halopsa_excluded_ids || '';
+    const excludedIdsStr = config.settings?.halopsa_excluded_ids || '';
     if (excludedIdsStr) {
       const excludedIds = excludedIdsStr.split(',').map(id => id.trim()).filter(Boolean);
       if (excludedIds.length > 0) {
@@ -515,8 +445,8 @@ export default async function handler(req, res) {
 
     // Update last sync time
     try {
-      if (settings[0]?.id) {
-        await entityService.update('IntegrationSettings', settings[0].id, {
+      if (config.settings?.id) {
+        await entityService.update('IntegrationSettings', config.settings.id, {
           halopsa_last_sync: new Date().toISOString(),
         });
       }

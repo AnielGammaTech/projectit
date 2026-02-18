@@ -1,7 +1,6 @@
 import entityService from '../../services/entityService.js';
-import emailService from '../../services/emailService.js';
 
-// Field mapping for HaloPSA -> Base44
+// Status mapping for HaloPSA -> ProjectIT
 const STATUS_MAPPING = {
   1: 'planning',
   2: 'planning',
@@ -12,8 +11,10 @@ const STATUS_MAPPING = {
 
 export default async function handler(req, res) {
   try {
-    // Verify webhook authenticity using a shared secret
-    const webhookSecret = process.env.HALOPSA_WEBHOOK_SECRET;
+    // Verify webhook authenticity using a shared secret (DB first, env var fallback)
+    const settingsArr = await entityService.filter('IntegrationSettings', { setting_key: 'main' });
+    const settings = settingsArr[0] || {};
+    const webhookSecret = settings.halopsa_webhook_secret || process.env.HALOPSA_WEBHOOK_SECRET;
     const providedSecret = req.headers['x-webhook-secret'] || req.query?.secret;
 
     if (webhookSecret && providedSecret !== webhookSecret) {

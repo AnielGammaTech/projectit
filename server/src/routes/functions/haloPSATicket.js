@@ -1,69 +1,14 @@
 import entityService from '../../services/entityService.js';
-import emailService from '../../services/emailService.js';
+import { getHaloPSAConfig, getHaloPSAToken } from '../../services/halopsaService.js';
 
 export default async function handler(req, res) {
   try {
     const { action, projectId, ticketId, summary, details, clientId, clientName, note, noteIsPrivate } = req.body;
 
-    // Get HaloPSA credentials
-    const haloClientId = process.env.HALOPSA_CLIENT_ID;
-    const clientSecret = process.env.HALOPSA_CLIENT_SECRET;
-    const tenant = process.env.HALOPSA_TENANT;
-
-    if (!haloClientId || !clientSecret) {
-      return res.status(400).json({
-        error: 'HaloPSA credentials not configured.',
-        details: 'Please set HALOPSA_CLIENT_ID and HALOPSA_CLIENT_SECRET in environment variables',
-      });
-    }
-
-    // Get integration settings for URLs
-    const settings = await entityService.filter('IntegrationSettings', { setting_key: 'main' });
-    let authUrl = settings[0]?.halopsa_auth_url;
-    let apiUrl = settings[0]?.halopsa_api_url;
-
-    if (!authUrl || !apiUrl) {
-      return res.status(400).json({
-        error: 'HaloPSA URLs not configured',
-        details: 'Please configure HaloPSA in Adminland -> Integrations',
-      });
-    }
-
-    // Clean up URLs
-    authUrl = authUrl.replace(/\/+$/, '').replace(/\/auth\/?$/, '').replace(/\/api\/?$/, '');
-    apiUrl = apiUrl.replace(/\/+$/, '').replace(/\/api\/?$/, '');
-
-    const tokenUrl = `${authUrl}/auth/token`;
-    const apiBaseUrl = `${apiUrl}/api`;
-
-    // Get access token
-    const tokenBody = new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: haloClientId,
-      client_secret: clientSecret,
-      scope: 'all',
-    });
-
-    if (tenant) {
-      tokenBody.append('tenant', tenant);
-    }
-
-    const tokenResponse = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: tokenBody,
-    });
-
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      return res.status(401).json({
-        error: 'HaloPSA authentication failed',
-        details: errorText,
-      });
-    }
-
-    const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.access_token;
+    // Get HaloPSA config from DB (falls back to env vars)
+    const config = await getHaloPSAConfig();
+    const { apiUrl, apiBaseUrl } = config;
+    const accessToken = await getHaloPSAToken(config);
 
     if (action === 'create') {
       // Look up client in HaloPSA if we have a customer_id or client name

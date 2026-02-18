@@ -2346,48 +2346,55 @@ function IntegrationsSection({ queryClient }) {
   });
 
   const handleTestConnection = async () => {
-    if (!formData.halopsa_auth_url) { // Changed from halopsa_url to halopsa_auth_url based on the form field
-      setSyncResult({ success: false, message: 'Please enter your HaloPSA Authorisation Server URL first' });
+    if (!formData.halopsa_auth_url || !formData.halopsa_api_url) {
+      setSyncResult({ success: false, message: 'Please enter both HaloPSA URLs first' });
       return;
     }
-    
+    if (!formData.halopsa_client_id || !formData.halopsa_client_secret) {
+      setSyncResult({ success: false, message: 'Please enter your HaloPSA Client ID and Client Secret' });
+      return;
+    }
+
     setTestingConnection(true);
     setSyncResult(null);
-    
+
     try {
-      const response = await base44.functions.invoke('syncHaloPSACustomers', { 
-        testOnly: true,
-        fieldMapping: formData.halopsa_field_mapping
-      });
+      // Save settings first so the server can read the credentials from DB
+      await handleSave();
+
+      const response = await base44.functions.invoke('halopsa', { action: 'testConnection' });
       const result = response.data;
-      
+
       if (result.success) {
-        setSyncResult({ success: true, message: `Connection successful! Found ${result.total || 0} clients in HaloPSA.` });
+        setSyncResult({ success: true, message: 'Connection successful! HaloPSA credentials are valid.' });
       } else {
-        setSyncResult({ success: false, message: result.error || 'Connection failed', details: result.details || result.debug });
+        setSyncResult({ success: false, message: result.error || 'Connection failed', details: result.details });
       }
     } catch (error) {
       const errorData = error.response?.data;
-      setSyncResult({ 
-        success: false, 
-        message: errorData?.error || 'Connection failed. Check your credentials.',
-        details: errorData?.details || errorData?.debug
+      setSyncResult({
+        success: false,
+        message: errorData?.error || 'Connection failed. Check your credentials and URLs.',
+        details: errorData?.details
       });
     }
-    
+
     setTestingConnection(false);
   };
 
   const handleSyncCustomers = async () => {
-    if (!formData.halopsa_auth_url) { // Changed from halopsa_url to halopsa_auth_url
-      setSyncResult({ success: false, message: 'Please enter your HaloPSA Authorisation Server URL first' });
+    if (!formData.halopsa_auth_url || !formData.halopsa_client_id) {
+      setSyncResult({ success: false, message: 'Please configure HaloPSA credentials and URLs first' });
       return;
     }
-    
+
     setSyncing(true);
     setSyncResult(null);
-    
+
     try {
+      // Save settings first so credentials are available to the server
+      await handleSave();
+
       const response = await base44.functions.invoke('syncHaloPSACustomers', {
         fieldMapping: formData.halopsa_field_mapping
       });
@@ -2789,21 +2796,41 @@ function IntegrationsSection({ queryClient }) {
                 <p className="text-[10px] text-slate-400 mt-1">e.g., https://company.haloservicedesk.com</p>
               </div>
             </div>
-            <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                <p className="text-xs font-medium text-emerald-700">Credentials Configured via Environment Variables</p>
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <h4 className="text-sm font-semibold text-slate-700 mb-3">API Credentials</h4>
+              <p className="text-xs text-slate-500 mb-3">
+                In HaloPSA, go to <strong>Configuration &rarr; Integrations &rarr; Halo API &rarr; Applications</strong>. Create or select an API application and copy the Client ID and Client Secret.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs">Client ID</Label>
+                  <Input
+                    value={formData.halopsa_client_id}
+                    onChange={(e) => setFormData(p => ({ ...p, halopsa_client_id: e.target.value }))}
+                    placeholder="Enter your HaloPSA Client ID"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Client Secret</Label>
+                  <Input
+                    type="password"
+                    value={formData.halopsa_client_secret}
+                    onChange={(e) => setFormData(p => ({ ...p, halopsa_client_secret: e.target.value }))}
+                    placeholder="Enter your HaloPSA Client Secret"
+                    className="mt-1"
+                  />
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-3 text-xs text-emerald-600">
-                <div>
-                  <span className="font-medium">Client ID:</span> HALOPSA_CLIENT_ID ✓
-                </div>
-                <div>
-                  <span className="font-medium">Client Secret:</span> HALOPSA_CLIENT_SECRET ✓
-                </div>
-                <div>
-                  <span className="font-medium">Tenant:</span> HALOPSA_TENANT ✓
-                </div>
+              <div className="mt-3">
+                <Label className="text-xs">Tenant (optional)</Label>
+                <Input
+                  value={formData.halopsa_tenant}
+                  onChange={(e) => setFormData(p => ({ ...p, halopsa_tenant: e.target.value }))}
+                  placeholder="Your HaloPSA tenant name (if applicable)"
+                  className="mt-1"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">Only required for multi-tenant HaloPSA instances</p>
               </div>
             </div>
 
@@ -2845,8 +2872,8 @@ function IntegrationsSection({ queryClient }) {
                 <div className="p-3 bg-white rounded-lg border border-purple-200 text-xs text-purple-700">
                   <p className="font-medium mb-1">How Two-Way Sync Works:</p>
                   <ul className="list-disc list-inside space-y-1 text-purple-600">
-                    <li><strong>HaloPSA → Base44:</strong> Set up a webhook in HaloPSA to call our endpoint when tickets change</li>
-                    <li><strong>Base44 → HaloPSA:</strong> Project/task updates are pushed as notes or status changes</li>
+                    <li><strong>HaloPSA → ProjectIT:</strong> Set up a webhook in HaloPSA to call our endpoint when tickets change</li>
+                    <li><strong>ProjectIT → HaloPSA:</strong> Project/task updates are pushed as notes or status changes</li>
                     <li>Progress updates are synced as private notes on linked tickets</li>
                   </ul>
                 </div>

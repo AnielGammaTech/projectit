@@ -1,63 +1,19 @@
 import entityService from '../../services/entityService.js';
-import emailService from '../../services/emailService.js';
-
-async function getHaloToken(authUrl, clientId, clientSecret, tenant) {
-  const tokenUrl = `${authUrl}/token`;
-  const tokenBody = new URLSearchParams({
-    grant_type: 'client_credentials',
-    client_id: clientId,
-    client_secret: clientSecret,
-    scope: 'all',
-  });
-
-  if (tenant) {
-    tokenBody.append('tenant', tenant);
-  }
-
-  const response = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: tokenBody,
-  });
-
-  if (!response.ok) {
-    throw new Error(`HaloPSA auth failed: ${await response.text()}`);
-  }
-
-  const data = await response.json();
-  return data.access_token;
-}
+import { getHaloPSAConfig, getHaloPSAToken } from '../../services/halopsaService.js';
 
 export default async function handler(req, res) {
   try {
     const body = req.body || {};
     const { customerId, customerExternalId } = body;
 
-    // Get credentials
-    const haloClientId = process.env.HALOPSA_CLIENT_ID;
-    const clientSecret = process.env.HALOPSA_CLIENT_SECRET;
-    const tenant = process.env.HALOPSA_TENANT;
+    // Get HaloPSA config from DB (falls back to env vars)
+    const haloConfig = await getHaloPSAConfig();
 
-    if (!haloClientId || !clientSecret) {
-      return res.status(400).json({ error: 'HaloPSA credentials not configured' });
-    }
-
-    // Get integration settings
-    const settings = await entityService.filter('IntegrationSettings', { setting_key: 'main' });
-    const config = settings[0];
-
-    if (!config?.halopsa_enabled) {
+    if (!haloConfig.settings?.halopsa_enabled) {
       return res.status(400).json({ error: 'HaloPSA integration not enabled' });
     }
 
-    const authUrl = config.halopsa_auth_url?.replace(/\/+$/, '');
-    const apiUrl = config.halopsa_api_url?.replace(/\/+$/, '');
-
-    if (!authUrl || !apiUrl) {
-      return res.status(400).json({ error: 'HaloPSA URLs not configured' });
-    }
-
-    const accessToken = await getHaloToken(authUrl, haloClientId, clientSecret, tenant);
+    const accessToken = await getHaloPSAToken(haloConfig);
 
     // Build query params - filter by client if specified
     let clientFilter = '';
@@ -90,7 +46,7 @@ export default async function handler(req, res) {
     let hasMore = true;
 
     while (hasMore && page <= maxPages) {
-      const ticketsResponse = await fetch(`${apiUrl}/Tickets?page_no=${page}&page_size=${pageSize}${clientFilter}${dateFilter}`, {
+      const ticketsResponse = await fetch(`${haloConfig.apiBaseUrl}/Tickets?page_no=${page}&page_size=${pageSize}${clientFilter}${dateFilter}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
