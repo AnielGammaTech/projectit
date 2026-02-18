@@ -1,15 +1,15 @@
 import entityService from '../../services/entityService.js';
-import emailService from '../../services/emailService.js';
+import { getHaloPSAConfig, getHaloPSAToken } from '../../services/halopsaService.js';
 
-// Field mapping between Base44 and HaloPSA
+// Status mapping between ProjectIT and HaloPSA
 const FIELD_MAPPING = {
   statusMapping: {
-    base44ToHalo: {
+    projectitToHalo: {
       'planning': 1,
       'on_hold': 23,
       'completed': 9,
     },
-    haloToBase44: {
+    haloToProjectit: {
       1: 'planning',
       2: 'planning',
       23: 'on_hold',
@@ -34,59 +34,14 @@ async function logSync(operation, entityType, entityId, status, details) {
   }
 }
 
-async function getHaloToken(authUrl, clientId, clientSecret, tenant) {
-  const tokenUrl = `${authUrl}/auth/token`;
-  const tokenBody = new URLSearchParams({
-    grant_type: 'client_credentials',
-    client_id: clientId,
-    client_secret: clientSecret,
-    scope: 'all',
-  });
-
-  if (tenant) {
-    tokenBody.append('tenant', tenant);
-  }
-
-  const response = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: tokenBody,
-  });
-
-  if (!response.ok) {
-    throw new Error(`HaloPSA auth failed: ${await response.text()}`);
-  }
-
-  const data = await response.json();
-  return data.access_token;
-}
-
 export default async function handler(req, res) {
   try {
     const { action, projectId, taskId, ticketId, data: updateData } = req.body;
 
-    // Get credentials
-    const haloClientId = process.env.HALOPSA_CLIENT_ID;
-    const clientSecret = process.env.HALOPSA_CLIENT_SECRET;
-    const tenant = process.env.HALOPSA_TENANT;
-
-    if (!haloClientId || !clientSecret) {
-      return res.status(400).json({
-        error: 'HaloPSA credentials not configured',
-      });
-    }
-
-    // Get integration settings
-    const settings = await entityService.filter('IntegrationSettings', { setting_key: 'main' });
-    const authUrl = settings[0]?.halopsa_auth_url?.replace(/\/+$/, '').replace(/\/auth\/?$/, '');
-    const apiUrl = settings[0]?.halopsa_api_url?.replace(/\/+$/, '').replace(/\/api\/?$/, '');
-
-    if (!authUrl || !apiUrl) {
-      return res.status(400).json({ error: 'HaloPSA URLs not configured' });
-    }
-
-    const accessToken = await getHaloToken(authUrl, haloClientId, clientSecret, tenant);
-    const apiBase = `${apiUrl}/api`;
+    // Get HaloPSA config from DB (falls back to env vars)
+    const config = await getHaloPSAConfig();
+    const { apiUrl, apiBaseUrl: apiBase } = config;
+    const accessToken = await getHaloPSAToken(config);
 
     // ACTION: Push project updates to HaloPSA
     if (action === 'pushProjectUpdate') {
@@ -103,8 +58,8 @@ export default async function handler(req, res) {
         details: project.description || '',
       }];
 
-      if (project.status && FIELD_MAPPING.statusMapping.base44ToHalo[project.status]) {
-        ticketUpdate[0].status_id = FIELD_MAPPING.statusMapping.base44ToHalo[project.status];
+      if (project.status && FIELD_MAPPING.statusMapping.projectitToHalo[project.status]) {
+        ticketUpdate[0].status_id = FIELD_MAPPING.statusMapping.projectitToHalo[project.status];
       }
 
       const response = await fetch(`${apiBase}/Tickets`, {
@@ -203,8 +158,8 @@ export default async function handler(req, res) {
         description: ticket.details || project.description,
       };
 
-      if (ticket.status_id && FIELD_MAPPING.statusMapping.haloToBase44[ticket.status_id]) {
-        updates.status = FIELD_MAPPING.statusMapping.haloToBase44[ticket.status_id];
+      if (ticket.status_id && FIELD_MAPPING.statusMapping.haloToProjectit[ticket.status_id]) {
+        updates.status = FIELD_MAPPING.statusMapping.haloToProjectit[ticket.status_id];
       }
 
       await entityService.update('Project', project.id, updates);
