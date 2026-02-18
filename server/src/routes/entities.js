@@ -64,7 +64,7 @@ router.put('/:entityType/:id', async (req, res, next) => {
 router.delete('/:entityType/:id', async (req, res, next) => {
   try {
     const { entityType, id } = req.params;
-    const result = await entityService.delete(entityType, id);
+    const result = await entityService.delete(entityType, id, req.user?.email);
     res.json(result);
   } catch (err) {
     next(err);
