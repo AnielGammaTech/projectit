@@ -25,6 +25,8 @@ import proposalWebhook from './proposalWebhook.js';
 import receiveProposal from './receiveProposal.js';
 import updateQuoteITStatus from './updateQuoteITStatus.js';
 import haloPSACustomerList from './haloPSACustomerList.js';
+import resendEmail from './resendEmail.js';
+import claudeAI from './claudeAI.js';
 
 const router = Router();
 
@@ -54,6 +56,8 @@ const handlers = {
   receiveProposal,
   updateQuoteITStatus,
   haloPSACustomerList,
+  resendEmail,
+  claudeAI,
 };
 
 // POST /api/functions/:name

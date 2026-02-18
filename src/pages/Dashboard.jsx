@@ -127,7 +127,7 @@ export default function Dashboard() {
     return () => { mounted = false; };
   }, []);
 
-  const { data: projects = [], refetch: refetchProjects } = useQuery({
+  const { data: projects = [], isLoading: loadingProjects, refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: () => base44.entities.Project.list('-created_date'),
     staleTime: 120000, // 2 minutes
@@ -716,6 +716,43 @@ export default function Dashboard() {
         refetchProjects();
         setShowProjectModal(false);
       };
+
+  if (loadingProjects) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="h-8 w-64 bg-slate-200 rounded-lg" />
+                <div className="h-4 w-40 bg-slate-100 rounded mt-2" />
+              </div>
+              <div className="h-12 w-36 bg-slate-200 rounded-lg" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-200" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-5 bg-slate-200 rounded w-3/4" />
+                      <div className="h-3 bg-slate-100 rounded w-1/2" />
+                    </div>
+                  </div>
+                  <div className="h-2 bg-slate-100 rounded-full" />
+                  <div className="flex gap-4">
+                    <div className="h-4 bg-slate-100 rounded w-16" />
+                    <div className="h-4 bg-slate-100 rounded w-16" />
+                    <div className="h-4 bg-slate-100 rounded w-16" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">

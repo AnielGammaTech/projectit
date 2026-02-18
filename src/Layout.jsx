@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
 
 import { 
@@ -143,7 +143,7 @@ function LayoutContent({ children, currentPageName }) {
             {/* Logo */}
             <Link to={createPageUrl('Dashboard')} className="flex items-center gap-2">
               {appLogoUrl ? (
-                <img src={appLogoUrl} alt="" className="w-7 h-7 rounded-lg object-contain" />
+                <img src={resolveUploadUrl(appLogoUrl)} alt="" className="w-7 h-7 rounded-lg object-contain" />
               ) : (
                 <div className="w-7 h-7 rounded-lg bg-[#74C7FF] flex items-center justify-center">
                   <Globe className="w-4 h-4 text-[#133F5C]" />
@@ -266,12 +266,15 @@ function LayoutContent({ children, currentPageName }) {
             {/* Notifications Bell */}
             <Link
               to={createPageUrl('MyNotifications')}
-              className="relative p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className={cn(
+                "relative p-2 rounded-lg transition-colors",
+                unreadCount > 0 ? "bg-white/15 hover:bg-white/25" : "hover:bg-white/10"
+              )}
             >
-              <Bell className="w-5 h-5 text-white/70" />
+              <Bell className={cn("w-5 h-5", unreadCount > 0 ? "text-white" : "text-white/70")} />
               {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[18px] text-center animate-pulse">
-                  {unreadCount > 9 ? '9+' : unreadCount}
+                <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[20px] text-center ring-2 ring-[#133F5C] animate-pulse">
+                  {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
             </Link>
@@ -281,7 +284,7 @@ function LayoutContent({ children, currentPageName }) {
               <DropdownMenuTrigger asChild>
                 <button className="w-8 h-8 rounded-full bg-[#B4E1FF] flex items-center justify-center text-[#0F2F44] text-sm font-medium hover:ring-2 hover:ring-[#74C7FF]/50 hover:ring-offset-2 hover:ring-offset-[#133F5C] transition-all">
                   {currentUser?.avatar_url ? (
-                    <img src={currentUser.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                    <img src={resolveUploadUrl(currentUser.avatar_url)} alt="" className="w-8 h-8 rounded-full object-cover" />
                   ) : (
                     getInitials(currentUser?.full_name || currentUser?.email)
                   )}
@@ -379,10 +382,10 @@ function LayoutContent({ children, currentPageName }) {
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {appLogoUrl ? (
-              <img src={appLogoUrl} alt="" className="w-7 h-7 rounded-lg object-contain" />
+              <img src={resolveUploadUrl(appLogoUrl)} alt="" className="w-7 h-7 rounded-lg object-contain" />
             ) : (
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
-                <Globe className="w-4 h-4 text-white" />
+              <div className="w-7 h-7 rounded-lg bg-[#74C7FF] flex items-center justify-center">
+                <Globe className="w-4 h-4 text-[#133F5C]" />
               </div>
             )}
             <span className="font-semibold text-slate-900">{appName}</span>
@@ -466,6 +469,52 @@ function LayoutContent({ children, currentPageName }) {
 
       {/* Floating Feedback Button */}
       <FeedbackButton />
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-safe">
+        <div className="flex items-center justify-around h-16">
+          {navItems.slice(0, 4).map((item) => {
+            const Icon = item.icon;
+            const isActive = currentPageName === item.page;
+            return (
+              <Link
+                key={item.name}
+                to={createPageUrl(item.page) + (item.params || '')}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors",
+                  isActive ? "text-[#0069AF]" : "text-slate-400"
+                )}
+              >
+                <Icon className={cn("w-5 h-5", isActive && "text-[#0069AF]")} />
+                <span className="text-[10px] font-medium">{item.name}</span>
+                {isActive && <div className="absolute top-0 w-8 h-0.5 bg-[#0069AF] rounded-full" />}
+              </Link>
+            );
+          })}
+          {/* More menu for mobile */}
+          <Link
+            to={createPageUrl('Reports')}
+            className={cn(
+              "flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors",
+              currentPageName === 'Reports' ? "text-[#0069AF]" : "text-slate-400"
+            )}
+          >
+            <PieChart className={cn("w-5 h-5", currentPageName === 'Reports' && "text-[#0069AF]")} />
+            <span className="text-[10px] font-medium">Reports</span>
+          </Link>
+        </div>
+      </nav>
+
+      {/* Floating Adminland Button - visible only to admins, hidden on Adminland page, adjusted for mobile */}
+      {isAdmin && currentPageName !== 'Adminland' && (
+        <Link
+          to={createPageUrl('Adminland')}
+          className="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 z-50 w-11 h-11 lg:w-12 lg:h-12 bg-[#0069AF] hover:bg-[#0F2F44] text-white rounded-full shadow-lg shadow-[#0069AF]/30 flex items-center justify-center transition-all hover:scale-110 hover:shadow-xl"
+          title="Adminland"
+        >
+          <Shield className="w-5 h-5" />
+        </Link>
+      )}
     </div>
   );
 }

@@ -111,3 +111,29 @@ body[data-scroll-locked] {
 a, button {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* ── Mobile: safe areas for notch/home indicator ── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* ── Mobile bottom nav spacing ── */
+@media (max-width: 1023px) {
+  main {
+    padding-bottom: 72px; /* space for bottom nav */
+  }
+}
+
+/* ── Touch targets: ensure min 44px ── */
+@media (pointer: coarse) {
+  button, a, [role="button"] {
+    min-height: 40px;
+  }
+}
+
+/* ── PWA: disable pull-to-refresh on overscroll ── */
+html {
+  overscroll-behavior-y: contain;
+}

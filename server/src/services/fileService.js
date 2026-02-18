@@ -27,13 +27,20 @@ export const upload = multer({
 
 const fileService = {
   /**
-   * Get the public URL for an uploaded file
+   * Get the public URL for an uploaded file.
+   * Accepts an optional Express `req` object to build an absolute URL
+   * even when the API_URL env var is not configured.
    */
-  getFileUrl(filename) {
+  getFileUrl(filename, req) {
     if (process.env.API_URL) {
       return `${process.env.API_URL}/uploads/${filename}`;
     }
-    // Use relative path — works when frontend and API share the same origin
+    if (req) {
+      const protocol = req.get('x-forwarded-proto') || req.protocol;
+      const host = req.get('host');
+      return `${protocol}://${host}/uploads/${filename}`;
+    }
+    // Fallback: relative path
     return `/uploads/${filename}`;
   },
 
@@ -41,9 +48,9 @@ const fileService = {
    * Handle an uploaded file and return the URL
    * Called after multer has saved the file to disk
    */
-  processUpload(file) {
+  processUpload(file, req) {
     return {
-      file_url: this.getFileUrl(file.filename),
+      file_url: this.getFileUrl(file.filename, req),
       file_name: file.originalname,
       file_size: file.size,
       mime_type: file.mimetype,
