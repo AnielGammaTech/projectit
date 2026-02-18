@@ -17,7 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Ensure upload directory exists
-const uploadDir = process.env.UPLOAD_DIR || '/data/uploads';
+const uploadDir = process.env.UPLOAD_DIR || './uploads';
 if (!existsSync(uploadDir)) {
   mkdirSync(uploadDir, { recursive: true });
 }
