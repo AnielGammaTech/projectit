@@ -11,7 +11,7 @@ function getClient() {
 
 const llmService = {
   /**
-   * Invoke LLM — mirrors Base44's InvokeLLM integration
+   * Invoke LLM via Anthropic Claude
    * @param {Object} params
    * @param {string} params.prompt - The user prompt
    * @param {Object} [params.response_json_schema] - Optional JSON schema for structured output

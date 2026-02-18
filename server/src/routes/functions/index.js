@@ -24,6 +24,7 @@ import logProposalView from './logProposalView.js';
 import proposalWebhook from './proposalWebhook.js';
 import receiveProposal from './receiveProposal.js';
 import updateQuoteITStatus from './updateQuoteITStatus.js';
+import haloPSACustomerList from './haloPSACustomerList.js';
 
 const router = Router();
 
@@ -52,6 +53,7 @@ const handlers = {
   proposalWebhook,
   receiveProposal,
   updateQuoteITStatus,
+  haloPSACustomerList,
 };
 
 // POST /api/functions/:name

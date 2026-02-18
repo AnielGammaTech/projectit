@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -9,6 +9,7 @@ export default function AcceptInvite() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const inviteToken = searchParams.get('token');
 
   if (!inviteToken) {
@@ -54,7 +55,7 @@ export default function AcceptInvite() {
       }
 
       localStorage.setItem('projectit_token', data.token);
-      window.location.href = '/';
+      navigate('/', { replace: true });
     } catch (err) {
       setError('Could not connect to server');
       setLoading(false);

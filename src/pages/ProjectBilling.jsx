@@ -1,13 +1,16 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 // Redirect old ProjectBilling to new ProjectTime page
 export default function ProjectBilling() {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const projectId = urlParams.get('id');
-    window.location.href = createPageUrl('ProjectTime') + (projectId ? `?id=${projectId}` : '');
-  }, []);
+    navigate(createPageUrl('ProjectTime') + (projectId ? `?id=${projectId}` : ''), { replace: true });
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">

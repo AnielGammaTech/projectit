@@ -1360,7 +1360,7 @@ export default function Dashboard() {
                                           ref={provided.innerRef}
                                           {...provided.draggableProps}
                                           style={provided.draggableProps.style}
-                                          className={snapshot.combineTargetFor ? 'ring-2 ring-indigo-400 ring-offset-2 rounded-2xl' : ''}
+                                          className={snapshot.combineTargetFor ? 'ring-2 ring-[#0069AF] ring-offset-2 rounded-2xl scale-[1.02] shadow-lg transition-all' : 'transition-all'}
                                         >
                                           <ProjectCard
                                                                                             project={project}
@@ -1434,13 +1434,15 @@ export default function Dashboard() {
                         </DragDropContext>
                         )
             ) : (
-              <div className="bg-[#0F2F44]/5 rounded-2xl border border-[#0F2F44]/10 p-12 text-center">
-                  <FolderKanban className="w-12 h-12 mx-auto text-[#0F2F44]/30 mb-4" />
-                  <h3 className="text-lg font-medium text-[#0F2F44] mb-2">No projects yet</h3>
-                  <p className="text-[#0F2F44]/60 mb-6">Get started by creating your first project</p>
-                  <Button onClick={() => setShowProjectModal(true)} className="bg-[#0F2F44] hover:bg-[#1a4a6e]">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Project
+              <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 rounded-2xl border border-slate-200/60 p-16 text-center shadow-card">
+                  <div className="w-16 h-16 rounded-2xl bg-[#0F2F44]/10 flex items-center justify-center mx-auto mb-5">
+                    <FolderKanban className="w-8 h-8 text-[#0F2F44]/40" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-[#133F5C] mb-2">No projects yet</h3>
+                  <p className="text-slate-500 mb-8 max-w-sm mx-auto">Create your first project to start tracking tasks, parts, and progress.</p>
+                  <Button onClick={() => setShowProjectModal(true)} size="lg" className="bg-[#0F2F44] hover:bg-[#1a4a6e] shadow-md">
+                    <Plus className="w-5 h-5 mr-2" />
+                    Create Your First Project
                   </Button>
                 </div>
             )}

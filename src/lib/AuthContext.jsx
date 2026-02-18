@@ -67,12 +67,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('projectit_token');
 
     if (shouldRedirect) {
-      window.location.href = '/login';
+      window.location.replace('/login');
     }
-  };
-
-  const navigateToLogin = () => {
-    window.location.href = `/login?returnUrl=${encodeURIComponent(window.location.href)}`;
   };
 
   return (
@@ -84,7 +80,6 @@ export const AuthProvider = ({ children }) => {
       authError,
       appPublicSettings,
       logout,
-      navigateToLogin,
       checkAppState,
     }}>
       {children}

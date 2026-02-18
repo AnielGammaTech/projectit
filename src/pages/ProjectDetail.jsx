@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
 import { 
@@ -93,6 +93,7 @@ export default function ProjectDetail() {
   const urlParams = new URLSearchParams(window.location.search);
   const projectId = urlParams.get('id');
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -578,7 +579,7 @@ export default function ProjectDetail() {
     });
     await logActivity(projectId, 'project_archived', `archived project: ${archiveData.reason}`, currentUser);
     setShowArchiveModal(false);
-    window.location.href = createPageUrl('Dashboard');
+    navigate(createPageUrl('Dashboard'));
   };
 
   // Move project to trash (soft delete)
@@ -589,7 +590,7 @@ export default function ProjectDetail() {
     });
     await logActivity(projectId, 'project_deleted', `moved project to trash`, currentUser);
     setShowDeleteConfirm(false);
-    window.location.href = createPageUrl('Dashboard');
+    navigate(createPageUrl('Dashboard'));
   };
 
   // Progress update
@@ -853,7 +854,7 @@ export default function ProjectDetail() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => window.location.href = createPageUrl('TimeReport') + `?project_id=${projectId}`}>
+                  <DropdownMenuItem onClick={() => navigate(createPageUrl('TimeReport') + `?project_id=${projectId}`)}>
                     <Clock className="w-4 h-4 mr-2" />
                     Time Report
                   </DropdownMenuItem>
@@ -1092,7 +1093,7 @@ export default function ProjectDetail() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
             className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-fit hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
-            onClick={() => window.location.href = createPageUrl('ProjectTime') + `?id=${projectId}`}
+            onClick={() => navigate(createPageUrl('ProjectTime') + `?id=${projectId}`)}
           >
             <div className="p-4">
               <div className="flex items-center gap-3 mb-3">

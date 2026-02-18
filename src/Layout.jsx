@@ -126,7 +126,7 @@ function LayoutContent({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 h-14 bg-[#0F2F44] z-40 px-4">
+      <header className="fixed top-0 left-0 right-0 h-14 bg-gradient-to-r from-[#0F2F44] to-[#133F5C] z-40 px-4 shadow-lg shadow-[#0F2F44]/10">
         <div className="max-w-[1800px] mx-auto h-full flex items-center">
           {/* Left: Logo */}
           <div className="flex items-center gap-4 flex-shrink-0">
@@ -218,17 +218,20 @@ function LayoutContent({ children, currentPageName }) {
                     key={item.name}
                     to={createPageUrl(item.page) + (item.params || '')}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group",
-                      isActive 
-                        ? "text-[#B4E1FF] bg-white/10 font-medium" 
-                        : "text-white/80 hover:text-white hover:bg-white/10"
+                      "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group relative",
+                      isActive
+                        ? "text-white font-medium"
+                        : "text-white/70 hover:text-white hover:bg-white/5"
                     )}
                     >
                     <Icon className={cn(
                       "w-4 h-4 transition-colors",
-                      isActive ? "text-[#B4E1FF]" : "text-white/60 group-hover:text-white"
+                      isActive ? "text-[#74C7FF]" : "text-white/50 group-hover:text-white/80"
                     )} />
                     {item.name}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#74C7FF] rounded-full" />
+                    )}
                   </Link>
                 );
               })}
@@ -276,7 +279,7 @@ function LayoutContent({ children, currentPageName }) {
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-8 h-8 rounded-full bg-[#B4E1FF] flex items-center justify-center text-[#0F2F44] text-sm font-medium hover:bg-[#8fd4ff] transition-all">
+                <button className="w-8 h-8 rounded-full bg-[#B4E1FF] flex items-center justify-center text-[#0F2F44] text-sm font-medium hover:ring-2 hover:ring-[#74C7FF]/50 hover:ring-offset-2 hover:ring-offset-[#133F5C] transition-all">
                   {currentUser?.avatar_url ? (
                     <img src={currentUser.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
                   ) : (
