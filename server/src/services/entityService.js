@@ -190,6 +190,58 @@ function buildWhereClause(filterObj, paramOffset = 1) {
   return { conditions, values };
 }
 
+// Cascade delete map: when deleting a parent entity, also delete children
+// Key = parent entity type, Value = array of { entity, foreignKey } to cascade
+const CASCADE_MAP = {
+  Project: [
+    { entity: 'Task', foreignKey: 'project_id' },
+    { entity: 'Part', foreignKey: 'project_id' },
+    { entity: 'ProjectNote', foreignKey: 'project_id' },
+    { entity: 'ProjectFile', foreignKey: 'project_id' },
+    { entity: 'FileFolder', foreignKey: 'project_id' },
+    { entity: 'TaskGroup', foreignKey: 'project_id' },
+    { entity: 'TimeEntry', foreignKey: 'project_id' },
+    { entity: 'ProgressUpdate', foreignKey: 'project_id' },
+    { entity: 'ProjectActivity', foreignKey: 'project_id' },
+    { entity: 'Proposal', foreignKey: 'project_id' },
+    { entity: 'ChangeOrder', foreignKey: 'project_id' },
+  ],
+  Task: [
+    { entity: 'TaskComment', foreignKey: 'task_id' },
+  ],
+  Part: [
+    { entity: 'TaskComment', foreignKey: 'task_id' },
+  ],
+  Customer: [
+    { entity: 'Site', foreignKey: 'customer_id' },
+    { entity: 'CommunicationLog', foreignKey: 'customer_id' },
+  ],
+  TaskGroup: [
+    // Ungroup tasks instead of deleting them
+  ],
+  Workflow: [
+    { entity: 'WorkflowLog', foreignKey: 'workflow_id' },
+  ],
+};
+
+// Log a delete action to AuditLog for traceability
+async function logDeletion(client, entityType, id, data, deletedBy) {
+  try {
+    await client.query(
+      `INSERT INTO "AuditLog" (data, created_by) VALUES ($1, $2)`,
+      [JSON.stringify({
+        action: 'delete',
+        entity_type: entityType,
+        entity_id: id,
+        deleted_data: data,
+        timestamp: new Date().toISOString(),
+      }), deletedBy || 'system']
+    );
+  } catch {
+    // Don't let audit log failure block the delete
+  }
+}
+
 const entityService = {
   async list(entityType, sortField, limit) {
     validateEntity(entityType);
@@ -236,16 +288,73 @@ const entityService = {
     return formatRow(rows[0]);
   },
 
-  async delete(entityType, id) {
+  async delete(entityType, id, deletedBy) {
     validateEntity(entityType);
-    const { rowCount } = await pool.query(
-      `DELETE FROM "${entityType}" WHERE id = $1::uuid`,
-      [id]
-    );
-    if (rowCount === 0) {
-      throw Object.assign(new Error('Record not found'), { status: 404 });
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Fetch the record before deleting (for audit log)
+      const { rows: existing } = await client.query(
+        `SELECT * FROM "${entityType}" WHERE id = $1::uuid`,
+        [id]
+      );
+      if (existing.length === 0) {
+        throw Object.assign(new Error('Record not found'), { status: 404 });
+      }
+
+      const record = existing[0];
+      const cascadedDeletes = [];
+
+      // Cascade delete children
+      const cascades = CASCADE_MAP[entityType] || [];
+      for (const { entity, foreignKey } of cascades) {
+        const { rows: children } = await client.query(
+          `SELECT id, data FROM "${entity}" WHERE data->>'${foreignKey}' = $1`,
+          [id]
+        );
+        if (children.length > 0) {
+          // Recursively cascade (e.g., Task → TaskComment)
+          for (const child of children) {
+            const subCascades = CASCADE_MAP[entity] || [];
+            for (const { entity: subEntity, foreignKey: subKey } of subCascades) {
+              const { rowCount: subCount } = await client.query(
+                `DELETE FROM "${subEntity}" WHERE data->>'${subKey}' = $1`,
+                [child.id]
+              );
+              if (subCount > 0) cascadedDeletes.push({ entity: subEntity, count: subCount });
+            }
+          }
+
+          const { rowCount } = await client.query(
+            `DELETE FROM "${entity}" WHERE data->>'${foreignKey}' = $1`,
+            [id]
+          );
+          cascadedDeletes.push({ entity, count: rowCount });
+        }
+      }
+
+      // Delete the parent record
+      await client.query(
+        `DELETE FROM "${entityType}" WHERE id = $1::uuid`,
+        [id]
+      );
+
+      // Audit log
+      await logDeletion(client, entityType, id, {
+        ...record.data,
+        _cascaded: cascadedDeletes,
+      }, deletedBy);
+
+      await client.query('COMMIT');
+      return { success: true, cascaded: cascadedDeletes };
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
     }
-    return { success: true };
   },
 
   async bulkCreate(entityType, dataArray, userId) {
