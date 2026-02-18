@@ -179,9 +179,19 @@ const functions = {
   },
 };
 
+const users = {
+  async inviteUser(email, role, fullName, avatarColor) {
+    return apiFetch('/api/auth/invite', {
+      method: 'POST',
+      body: JSON.stringify({ email, full_name: fullName, role, avatar_color: avatarColor }),
+    });
+  },
+};
+
 export const base44 = {
   entities: entitiesProxy,
   auth,
   integrations,
   functions,
+  users,
 };

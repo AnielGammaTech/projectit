@@ -4,13 +4,37 @@ import authMiddleware from '../middleware/auth.js';
 
 const router = Router();
 
-router.post('/register', async (req, res, next) => {
+// Admin-only: invite a new user
+router.post('/invite', authMiddleware, async (req, res, next) => {
   try {
-    const { email, password, full_name } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can invite users' });
     }
-    const result = await authService.register(email, password, full_name);
+
+    const { email, full_name, role, avatar_color } = req.body;
+    if (!email || !full_name) {
+      return res.status(400).json({ error: 'Email and full name are required' });
+    }
+
+    const result = await authService.inviteUser(email, full_name, role, avatar_color, req.user.email);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Accept invite — set password via invite token
+router.post('/accept-invite', async (req, res, next) => {
+  try {
+    const { invite_token, password } = req.body;
+    if (!invite_token || !password) {
+      return res.status(400).json({ error: 'Invite token and password are required' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const result = await authService.acceptInvite(invite_token, password);
     res.json(result);
   } catch (err) {
     next(err);

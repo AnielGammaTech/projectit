@@ -1,36 +1,83 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import pool from '../config/database.js';
+import entityService from './entityService.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
 const JWT_EXPIRES_IN = '30d';
 
 const authService = {
-  async register(email, password, fullName) {
+  // Invite a user (admin-only). Creates user row + TeamMember entity.
+  // Returns an invite token the user can use to set their password.
+  async inviteUser(email, fullName, role, avatarColor, invitedBy) {
+    const lowerEmail = email.toLowerCase();
+
     // Check if user already exists
     const { rows: existing } = await pool.query(
       'SELECT id FROM users WHERE email = $1',
-      [email.toLowerCase()]
+      [lowerEmail]
     );
     if (existing.length > 0) {
-      throw Object.assign(new Error('User already exists'), { status: 409 });
+      throw Object.assign(new Error('User with this email already exists'), { status: 409 });
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    // Create invite token (valid 7 days)
+    const inviteToken = crypto.randomBytes(32).toString('hex');
+    const inviteExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    // Placeholder password hash — user must accept invite to set real password
+    const placeholderHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 4);
+
+    const userRole = role === 'Admin' ? 'admin' : 'member';
+
     const { rows } = await pool.query(
-      `INSERT INTO users (email, password_hash, full_name)
-       VALUES ($1, $2, $3) RETURNING id, email, full_name, role, avatar_url, avatar_color, theme, show_dashboard_widgets, created_date`,
-      [email.toLowerCase(), passwordHash, fullName]
+      `INSERT INTO users (email, password_hash, full_name, role, avatar_color, invite_token, invite_expires)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, email, full_name, role, avatar_color, created_date`,
+      [lowerEmail, placeholderHash, fullName, userRole, avatarColor || 'bg-blue-500', inviteToken, inviteExpiry]
     );
 
     const user = rows[0];
+
+    // Also create a TeamMember entity so they appear in the admin panel
+    await entityService.create('TeamMember', {
+      name: fullName,
+      email: lowerEmail,
+      role: role || '',
+      avatar_color: avatarColor || 'bg-blue-500',
+      user_id: user.id,
+    }, invitedBy);
+
+    return { user, inviteToken };
+  },
+
+  // Accept invite — user sets their password
+  async acceptInvite(inviteToken, password) {
+    const { rows } = await pool.query(
+      `SELECT * FROM users WHERE invite_token = $1 AND invite_expires > NOW()`,
+      [inviteToken]
+    );
+    if (rows.length === 0) {
+      throw Object.assign(new Error('Invalid or expired invite link'), { status: 400 });
+    }
+
+    const user = rows[0];
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    await pool.query(
+      `UPDATE users SET password_hash = $1, invite_token = NULL, invite_expires = NULL, updated_date = NOW() WHERE id = $2`,
+      [passwordHash, user.id]
+    );
+
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
 
-    return { token, user };
+    const { password_hash, invite_token, invite_expires, ...safeUser } = user;
+    return { token, user: safeUser };
   },
 
   async login(email, password) {

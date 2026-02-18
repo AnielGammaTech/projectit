@@ -256,16 +256,12 @@ function PeopleSection({ queryClient }) {
     if (editing) {
       await base44.entities.TeamMember.update(editing.id, data);
     } else {
-      // Create TeamMember record
-      await base44.entities.TeamMember.create(data);
-      
-      // Also invite as a User (backend) if it's a new member
-      try {
-        const userRole = data.role === 'Admin' ? 'admin' : 'user';
-        await base44.users.inviteUser(data.email, userRole);
-      } catch (inviteError) {
-        console.log('User may already exist or invite failed:', inviteError);
-      }
+      // Invite creates both a users row and a TeamMember entity
+      const result = await base44.users.inviteUser(data.email, data.role, data.name, data.avatar_color);
+
+      // Build invite URL for the admin to share
+      const inviteUrl = `${window.location.origin}/accept-invite?token=${result.inviteToken}`;
+      window.prompt('Share this invite link with the user:', inviteUrl);
     }
     queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
     setShowModal(false);
