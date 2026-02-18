@@ -1,6 +1,6 @@
-// Self-hosted REST client — drop-in replacement for @base44/sdk
+// ProjectIT REST API client
 // Uses a JavaScript Proxy to dynamically handle any entity name
-// so all 38+ pages continue to work with zero changes.
+// so all pages work through a single unified interface.
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -98,20 +98,16 @@ const auth = {
     });
   },
 
-  logout(redirectUrl) {
+  logout() {
     localStorage.removeItem('projectit_token');
-    if (redirectUrl) {
-      window.location.href = '/login';
-    } else {
-      window.location.href = '/login';
-    }
+    window.location.replace('/login');
   },
 
   redirectToLogin(returnUrl) {
     const url = returnUrl
       ? `/login?returnUrl=${encodeURIComponent(returnUrl)}`
       : '/login';
-    window.location.href = url;
+    window.location.replace(url);
   },
 };
 

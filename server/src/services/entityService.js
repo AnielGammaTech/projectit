@@ -19,7 +19,7 @@ function validateEntity(entityType) {
   }
 }
 
-// Format a DB row into the shape Base44 returns: { id, ...data, created_date, updated_date }
+// Format a DB row into the API shape: { id, ...data, created_date, updated_date }
 function formatRow(row) {
   if (!row) return null;
   return {

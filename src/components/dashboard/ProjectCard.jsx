@@ -207,7 +207,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
   };
 
   return (
-    <div className="group relative hover:-translate-y-1 transition-transform duration-200">
+    <div className="group relative hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200">
       {/* Selection checkbox */}
       {selectionMode && (
         <button
@@ -302,7 +302,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
           }
         }}
         className={cn(
-          "bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 border-l-4 cursor-pointer",
+          "bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card hover:shadow-card-hover hover:border-slate-300/80 transition-all duration-300 border-l-4 cursor-pointer",
           colorClass,
           isPinned && "ring-2 ring-amber-200 bg-amber-50/30",
           isSelected && "ring-2 ring-[#0069AF] bg-[#0069AF]/5"
@@ -379,12 +379,12 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2 cursor-help" onClick={(e) => e.stopPropagation()}>
-                <div 
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-2.5 cursor-help" onClick={(e) => e.stopPropagation()}>
+                <div
                   className={cn(
-                    "h-full rounded-full transition-all",
-                    healthStatus === 'issue' ? "bg-red-500" :
-                    healthStatus === 'concern' ? "bg-amber-500" : "bg-emerald-500"
+                    "h-full rounded-full transition-all duration-500 ease-out",
+                    healthStatus === 'issue' ? "bg-gradient-to-r from-red-400 to-red-500" :
+                    healthStatus === 'concern' ? "bg-gradient-to-r from-amber-400 to-amber-500" : "bg-gradient-to-r from-emerald-400 to-emerald-500"
                   )}
                   style={{ width: `${progress}%` }}
                 />
@@ -423,7 +423,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
             {/* Parts if any */}
             {pendingParts > 0 && (
               <>
-                <span className="text-slate-200">•</span>
+                <span className="text-slate-300">·</span>
                 <div className="flex items-center gap-1">
                   <Package className="w-3 h-3 text-amber-500" />
                   <span>{pendingParts}</span>
@@ -434,7 +434,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
             {/* HaloPSA Ticket */}
             {project.halopsa_ticket_id && (
               <>
-                <span className="text-slate-200">•</span>
+                <span className="text-slate-300">·</span>
                 <a
                   href={project.halopsa_ticket_url}
                   target="_blank"

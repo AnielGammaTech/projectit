@@ -5,12 +5,13 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Users, UserPlus, Settings, Shield, Edit2, Trash2, 
-  Plus, MoreHorizontal, Mail, Phone, Package, ArrowLeft,
-  Building2, Tags, FolderKanban, GitMerge, DollarSign,
+import {
+  Users, Shield, Edit2, Trash2,
+  Plus, MoreHorizontal, Mail, Phone, ArrowLeft,
+  Building2, Tags, GitMerge,
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
-  Webhook, Send, Copy, Check, FileText, Layers, MessageSquare
+  FileText, Layers, MessageSquare, Database, Activity,
+  HardDrive, AlertTriangle, CheckCircle2
 } from 'lucide-react';
 import {
   Dialog,
@@ -72,18 +73,17 @@ const adminMenuGroups = [
     ]
   },
   {
-    title: 'Automation & Reports',
+    title: 'Automation',
     items: [
       { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automation triggers', page: 'Workflows' },
-      { id: 'reports', label: 'Reports', icon: FileText, description: 'Run reports', page: 'Reports' },
-      { id: 'email-templates', label: 'Email Templates', icon: Mail, description: 'Notification templates' },
+      { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'HaloPSA & external services' },
     ]
   },
   {
     title: 'Settings',
     items: [
       { id: 'company', label: 'App Settings', icon: Building2, description: 'Branding' },
-      { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'External services & webhooks' },
+      { id: 'database-health', label: 'Database Health', icon: Database, description: 'Integrity checks & size' },
       { id: 'feedback', label: 'Feedback', icon: MessageSquare, description: 'Bug reports', page: 'FeedbackManagement' },
       { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Activity tracking', page: 'AuditLogs' },
     ]
@@ -141,8 +141,8 @@ export default function Adminland() {
         return <CompanySettingsSection queryClient={queryClient} />;
       case 'integrations':
         return <IntegrationsSection queryClient={queryClient} />;
-      case 'email-templates':
-        return <EmailTemplatesSection queryClient={queryClient} />;
+      case 'database-health':
+        return <DatabaseHealthSection />;
       case 'tags':
         return <ProjectTagsSection queryClient={queryClient} />;
       case 'project-management':
@@ -827,635 +827,6 @@ function CompanySettingsSection({ queryClient }) {
   );
 }
 
-// Email Templates Section
-function EmailTemplatesSection({ queryClient }) {
-  const [saving, setSaving] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [showVariables, setShowVariables] = useState(false);
-  const [viewMode, setViewMode] = useState('split'); // 'code', 'preview', 'split'
-
-  const templateOptions = [
-    { key: 'task_assigned', name: 'Task Assigned', description: 'When a task is assigned to someone' },
-    { key: 'task_due_reminder', name: 'Task Due Reminder', description: 'Reminder before task is due' },
-    { key: 'task_overdue', name: 'Task Overdue', description: 'When a task becomes overdue' },
-    { key: 'project_status_change', name: 'Project Status Change', description: 'When project status changes' },
-    { key: 'part_received', name: 'Part Received', description: 'When a part is marked as received' },
-    { key: 'part_installed', name: 'Part Installed', description: 'When a part is installed' },
-    { key: 'invoice_created', name: 'Invoice Created', description: 'When an invoice is generated' },
-    { key: 'payment_received', name: 'Payment Received', description: 'When payment is received' },
-  ];
-
-  const availableVariables = {
-    customer: ['{{customer.name}}', '{{customer.email}}', '{{customer.company}}', '{{customer.phone}}'],
-    project: ['{{project.name}}', '{{project.status}}', '{{project.due_date}}', '{{project.progress}}'],
-    task: ['{{task.title}}', '{{task.description}}', '{{task.due_date}}', '{{task.priority}}', '{{task.assignee}}'],
-    part: ['{{part.name}}', '{{part.quantity}}', '{{part.status}}', '{{part.supplier}}'],
-    company: ['{{company.name}}', '{{company.email}}', '{{company.phone}}', '{{company.address}}', '{{company.logo_url}}'],
-    general: ['{{current_date}}', '{{current_time}}', '{{app_url}}'],
-  };
-
-  const { data: templates = [], refetch } = useQuery({
-    queryKey: ['emailTemplates'],
-    queryFn: () => base44.entities.EmailTemplate.list()
-  });
-
-  const [formData, setFormData] = useState({
-    template_key: '',
-    name: '',
-    subject: '',
-    html_body: '',
-    is_enabled: true
-  });
-
-  useEffect(() => {
-    if (selectedTemplate) {
-      const existing = templates.find(t => t.template_key === selectedTemplate);
-      const defaultTemplate = templateOptions.find(t => t.key === selectedTemplate);
-      if (existing) {
-        setFormData({
-          template_key: existing.template_key,
-          name: existing.name,
-          subject: existing.subject,
-          html_body: existing.html_body,
-          is_enabled: existing.is_enabled !== false
-        });
-      } else {
-        setFormData({
-          template_key: selectedTemplate,
-          name: defaultTemplate?.name || '',
-          subject: getDefaultSubject(selectedTemplate),
-          html_body: getDefaultBodyForKey(selectedTemplate),
-          is_enabled: true
-        });
-      }
-    }
-  }, [selectedTemplate, templates]);
-
-  const getDefaultSubject = (key) => {
-    const defaults = {
-      task_assigned: 'New task assigned: {{task.title}}',
-      task_due_reminder: 'Reminder: {{task.title}} is due {{task.due_date}}',
-      task_overdue: 'Overdue: {{task.title}}',
-      project_status_change: 'Project Update: {{project.name}}',
-      part_received: 'Part Received: {{part.name}}',
-      part_installed: 'Part Installed: {{part.name}}',
-      invoice_created: 'Invoice Ready',
-      payment_received: 'Payment Received - Thank you!'
-    };
-    return defaults[key] || '';
-  };
-
-  const getDefaultBody = (key) => {
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #0069AF; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9fafb; }
-    .button { display: inline-block; background: #0069AF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; }
-    .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>{{company.name}}</h1>
-    </div>
-    <div class="content">
-      <p>Dear {{customer.name}},</p>
-      <p>Your content goes here...</p>
-      <p>Best regards,<br>{{company.name}}</p>
-    </div>
-    <div class="footer">
-      {{company.address}} | {{company.phone}} | {{company.email}}
-    </div>
-  </div>
-</body>
-</html>`;
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    const existing = templates.find(t => t.template_key === formData.template_key);
-    if (existing) {
-      await base44.entities.EmailTemplate.update(existing.id, formData);
-    } else {
-      await base44.entities.EmailTemplate.create(formData);
-    }
-    refetch();
-    setSaving(false);
-  };
-
-  const insertVariable = (variable) => {
-    setFormData(prev => ({
-      ...prev,
-      html_body: prev.html_body + variable
-    }));
-  };
-
-  // Replace variables with sample data for preview
-  const getPreviewHtml = () => {
-    let html = formData.html_body || '';
-    const sampleData = {
-      '{{proposal.number}}': 'P-0042',
-      '{{proposal.title}}': 'Network Infrastructure Upgrade',
-      '{{proposal.total}}': '$12,500.00',
-      '{{proposal.valid_until}}': 'December 15, 2025',
-      '{{proposal.approval_link}}': '#',
-      '{{customer.name}}': 'John Smith',
-      '{{customer.email}}': 'john@example.com',
-      '{{customer.company}}': 'Acme Corp',
-      '{{customer.phone}}': '(555) 123-4567',
-      '{{project.name}}': 'Office Renovation',
-      '{{project.status}}': 'In Progress',
-      '{{project.due_date}}': 'January 15, 2026',
-      '{{project.progress}}': '65%',
-      '{{task.title}}': 'Install Network Switches',
-      '{{task.description}}': 'Install and configure 3 network switches',
-      '{{task.due_date}}': 'December 10, 2025',
-      '{{task.priority}}': 'High',
-      '{{task.assignee}}': 'Mike Johnson',
-      '{{part.name}}': 'Cisco Switch 24-Port',
-      '{{part.quantity}}': '3',
-      '{{part.status}}': 'Received',
-      '{{part.supplier}}': 'Tech Distributors',
-      '{{company.name}}': 'Your Company',
-      '{{company.email}}': 'info@yourcompany.com',
-      '{{company.phone}}': '(555) 987-6543',
-      '{{company.address}}': '123 Business Ave, Suite 100',
-      '{{company.logo_url}}': '',
-      '{{current_date}}': new Date().toLocaleDateString(),
-      '{{current_time}}': new Date().toLocaleTimeString(),
-      '{{app_url}}': window.location.origin,
-    };
-    Object.entries(sampleData).forEach(([key, value]) => {
-      html = html.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value);
-    });
-    return html;
-  };
-
-  // Get pretty default body for proposal_accepted with celebration
-  const getDefaultBodyForKey = (key) => {
-    return getDefaultBody(key);
-  };
-
-  return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-6 border-b">
-        <h2 className="text-xl font-semibold text-slate-900">Email & Notification Templates</h2>
-        <p className="text-sm text-slate-500">Customize email templates with HTML and variables</p>
-      </div>
-
-      <div className="grid lg:grid-cols-4 divide-x">
-        {/* Template List */}
-        <div className="lg:col-span-1 p-4 bg-slate-50 max-h-[700px] overflow-y-auto">
-          <h3 className="text-sm font-medium text-slate-700 mb-3">Select Template</h3>
-          <div className="space-y-1">
-            {templateOptions.map((opt) => {
-              const exists = templates.find(t => t.template_key === opt.key);
-              return (
-                <button
-                  key={opt.key}
-                  onClick={() => setSelectedTemplate(opt.key)}
-                  className={cn(
-                    "w-full text-left p-3 rounded-lg transition-all",
-                    selectedTemplate === opt.key 
-                      ? "bg-[#0069AF] text-white" 
-                      : "hover:bg-white"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">{opt.name}</span>
-                    {exists && (
-                      <Badge className={cn("text-xs", selectedTemplate === opt.key ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700")}>
-                        ✓
-                      </Badge>
-                    )}
-                  </div>
-                  <p className={cn("text-xs mt-0.5", selectedTemplate === opt.key ? "text-white/70" : "text-slate-500")}>
-                    {opt.description}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Template Editor */}
-        <div className="lg:col-span-3 flex flex-col">
-          {selectedTemplate ? (
-            <>
-              {/* Header */}
-              <div className="p-4 border-b bg-slate-50 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <h3 className="font-semibold text-slate-900">{formData.name}</h3>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox 
-                      checked={formData.is_enabled} 
-                      onCheckedChange={(checked) => setFormData(p => ({ ...p, is_enabled: checked }))} 
-                    />
-                    <span className="text-sm">Enabled</span>
-                  </label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex border rounded-lg overflow-hidden">
-                    <button
-                      onClick={() => setViewMode('code')}
-                      className={cn("px-3 py-1.5 text-xs font-medium transition-colors", viewMode === 'code' ? "bg-[#0069AF] text-white" : "bg-white hover:bg-slate-100")}
-                    >
-                      Code
-                    </button>
-                    <button
-                      onClick={() => setViewMode('split')}
-                      className={cn("px-3 py-1.5 text-xs font-medium transition-colors border-x", viewMode === 'split' ? "bg-[#0069AF] text-white" : "bg-white hover:bg-slate-100")}
-                    >
-                      Split
-                    </button>
-                    <button
-                      onClick={() => setViewMode('preview')}
-                      className={cn("px-3 py-1.5 text-xs font-medium transition-colors", viewMode === 'preview' ? "bg-[#0069AF] text-white" : "bg-white hover:bg-slate-100")}
-                    >
-                      Preview
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Subject */}
-              <div className="px-4 py-3 border-b">
-                <div className="flex items-center gap-3">
-                  <Label className="text-xs text-slate-500 w-16">Subject:</Label>
-                  <Input 
-                    value={formData.subject} 
-                    onChange={(e) => setFormData(p => ({ ...p, subject: e.target.value }))}
-                    className="flex-1 font-mono text-sm h-9"
-                    placeholder="Email subject..."
-                  />
-                </div>
-              </div>
-
-              {/* Variables Panel */}
-              <div className="px-4 py-2 border-b bg-amber-50">
-                <button 
-                  onClick={() => setShowVariables(!showVariables)}
-                  className="text-xs text-amber-700 hover:text-amber-900 font-medium flex items-center gap-1"
-                >
-                  <span>{showVariables ? '▼' : '▶'}</span>
-                  Available Variables (click to insert)
-                </button>
-                
-                {showVariables && (
-                  <div className="mt-2 text-xs grid grid-cols-2 gap-2">
-                    {Object.entries(availableVariables).map(([category, vars]) => (
-                      <div key={category} className="bg-white rounded-lg p-2 border border-amber-200">
-                        <span className="font-semibold capitalize text-amber-800">{category}</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {vars.map(v => (
-                            <button
-                              key={v}
-                              onClick={() => insertVariable(v)}
-                              className="px-1.5 py-0.5 bg-amber-100 border border-amber-300 rounded hover:bg-[#0069AF] hover:text-white hover:border-[#0069AF] transition-colors font-mono text-[10px]"
-                            >
-                              {v.replace(/[{}]/g, '')}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Editor / Preview Area */}
-              <div className="flex-1 flex overflow-hidden" style={{ minHeight: '400px' }}>
-                {/* Code Editor */}
-                {(viewMode === 'code' || viewMode === 'split') && (
-                  <div className={cn("flex flex-col", viewMode === 'split' ? "w-1/2 border-r" : "w-full")}>
-                    <div className="px-3 py-1.5 bg-slate-800 text-slate-400 text-xs font-mono">HTML</div>
-                    <textarea 
-                      value={formData.html_body} 
-                      onChange={(e) => setFormData(p => ({ ...p, html_body: e.target.value }))}
-                      className="flex-1 font-mono text-xs p-3 bg-slate-900 text-slate-100 resize-none focus:outline-none"
-                      placeholder="HTML content..."
-                      spellCheck={false}
-                    />
-                  </div>
-                )}
-
-                {/* Live Preview */}
-                {(viewMode === 'preview' || viewMode === 'split') && (
-                  <div className={cn("flex flex-col bg-slate-100", viewMode === 'split' ? "w-1/2" : "w-full")}>
-                    <div className="px-3 py-1.5 bg-slate-200 text-slate-600 text-xs font-medium flex items-center justify-between">
-                      <span>Preview (with sample data)</span>
-                      <span className="text-slate-400">Variables are replaced with examples</span>
-                    </div>
-                    <div className="flex-1 overflow-auto p-4">
-                      <div className="bg-white rounded-lg shadow-sm border max-w-2xl mx-auto overflow-hidden">
-                        <iframe
-                          srcDoc={`<!DOCTYPE html><html><head><meta charset="UTF-8"><base target="_blank"></head><body style="margin:0;padding:0;">${getPreviewHtml()}</body></html>`}
-                          className="w-full border-0"
-                          style={{ height: '500px', minHeight: '500px' }}
-                          title="Email Preview"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Footer Actions */}
-              <div className="px-4 py-3 border-t bg-slate-50 flex justify-between">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setFormData(p => ({ ...p, html_body: getDefaultBodyForKey(selectedTemplate), subject: getDefaultSubject(selectedTemplate) }))}
-                >
-                  Reset to Default
-                </Button>
-                <Button onClick={handleSave} disabled={saving} size="sm" className="bg-[#0069AF] hover:bg-[#133F5C]">
-                  {saving ? 'Saving...' : 'Save Template'}
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-full text-slate-400 py-20">
-              <div className="text-center">
-                <Mail className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Select a template to customize</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      )}
-    </div>
-  );
-}
-
-// GammaStack Content (collapsible cards)
-function GammaStackContent({ queryClient }) {
-  const [saving, setSaving] = useState(false);
-  const [syncingQuoteIT, setSyncingQuoteIT] = useState(false);
-  const [testingQuoteIT, setTestingQuoteIT] = useState(false);
-  const [syncResult, setSyncResult] = useState(null);
-  const [expandedCard, setExpandedCard] = useState(null);
-
-  const [formData, setFormData] = useState({
-    quoteit_enabled: false,
-    quoteit_api_url: '',
-    quoteit_api_key: '',
-    portalit_enabled: false,
-    portalit_api_url: '',
-    portalit_api_key: '',
-    billingit_enabled: false,
-    billingit_api_url: '',
-    billingit_api_key: '',
-  });
-
-  const { data: settings = [], refetch } = useQuery({
-    queryKey: ['integrationSettings'],
-    queryFn: () => base44.entities.IntegrationSettings.filter({ setting_key: 'main' })
-  });
-
-  useEffect(() => {
-    if (settings[0]) {
-      setFormData({
-        quoteit_enabled: settings[0].quoteit_enabled || false,
-        quoteit_api_url: settings[0].quoteit_api_url || '',
-        quoteit_api_key: settings[0].quoteit_api_key || '',
-        portalit_enabled: settings[0].portalit_enabled || false,
-        portalit_api_url: settings[0].portalit_api_url || '',
-        portalit_api_key: settings[0].portalit_api_key || '',
-        billingit_enabled: settings[0].billingit_enabled || false,
-        billingit_api_url: settings[0].billingit_api_url || '',
-        billingit_api_key: settings[0].billingit_api_key || '',
-      });
-    }
-  }, [settings]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    if (settings[0]?.id) {
-      await base44.entities.IntegrationSettings.update(settings[0].id, { ...formData, setting_key: 'main' });
-    } else {
-      await base44.entities.IntegrationSettings.create({ ...formData, setting_key: 'main' });
-    }
-    refetch();
-    setSaving(false);
-  };
-
-  const handleTestQuoteIT = async () => {
-    setTestingQuoteIT(true);
-    setSyncResult(null);
-    try {
-      await handleSave();
-      const response = await base44.functions.invoke('syncQuoteIT', { testOnly: true });
-      const data = response.data;
-      if (data.success) {
-        setSyncResult({ success: true, message: data.message || 'Connection successful!' });
-      } else {
-        setSyncResult({ success: false, message: data.error || 'Connection failed' });
-      }
-    } catch (error) {
-      setSyncResult({ success: false, message: error.response?.data?.error || error.message || 'Connection failed' });
-    }
-    setTestingQuoteIT(false);
-  };
-
-  const handleSyncQuoteIT = async () => {
-    setSyncingQuoteIT(true);
-    setSyncResult(null);
-    try {
-      await handleSave();
-      const response = await base44.functions.invoke('syncQuoteIT', {});
-      const data = response.data;
-      if (data.success) {
-        setSyncResult({ success: true, message: data.message });
-        if (data.details?.created > 0) {
-          queryClient.invalidateQueries({ queryKey: ['projects'] });
-        }
-      } else {
-        setSyncResult({ success: false, message: data.error || 'Sync failed' });
-      }
-    } catch (error) {
-      setSyncResult({ success: false, message: error.message || 'Sync failed' });
-    }
-    setSyncingQuoteIT(false);
-  };
-
-  return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-slate-500">Connect to the GammaStack ecosystem</p>
-        <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
-          {saving ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </div>
-
-      {/* QuoteIT */}
-      <div className="border rounded-xl overflow-hidden">
-        <button
-          onClick={() => setExpandedCard(expandedCard === 'quoteit' ? null : 'quoteit')}
-          className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-orange-600" />
-            </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-slate-900">QuoteIT</h3>
-              <p className="text-xs text-slate-500">Advanced quoting and estimation</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge variant={formData.quoteit_enabled ? "default" : "outline"} className={formData.quoteit_enabled ? "bg-emerald-500" : ""}>
-              {formData.quoteit_enabled ? 'Enabled' : 'Disabled'}
-            </Badge>
-            {expandedCard === 'quoteit' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-          </div>
-        </button>
-        {expandedCard === 'quoteit' && (
-          <div className="p-4 bg-white space-y-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox checked={formData.quoteit_enabled} onCheckedChange={(checked) => setFormData(p => ({ ...p, quoteit_enabled: checked }))} />
-              <span className="text-sm font-medium">Enable QuoteIT Integration</span>
-            </label>
-            {formData.quoteit_enabled && (
-              <div className="space-y-4 pt-4 border-t">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs">QuoteIT Base44 App URL</Label>
-                    <Input value={formData.quoteit_api_url} onChange={(e) => setFormData(p => ({ ...p, quoteit_api_url: e.target.value }))} placeholder="https://quoteit-app.base44.app" className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">API Key</Label>
-                    <Input type="password" value={formData.quoteit_api_key} onChange={(e) => setFormData(p => ({ ...p, quoteit_api_key: e.target.value }))} placeholder="QuoteIT API Key" className="mt-1" />
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 pt-2 border-t">
-                  <Button 
-                    onClick={handleTestQuoteIT} 
-                    disabled={testingQuoteIT || syncingQuoteIT}
-                    variant="outline"
-                    className="border-orange-300 text-orange-600 hover:bg-orange-50"
-                  >
-                    {testingQuoteIT ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : 'Test Connection'}
-                  </Button>
-                  <Button onClick={handleSyncQuoteIT} disabled={syncingQuoteIT || testingQuoteIT} className="bg-orange-600 hover:bg-orange-700">
-                    {syncingQuoteIT ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Syncing...</> : <><RefreshCw className="w-4 h-4 mr-2" />Sync Accepted Quotes</>}
-                  </Button>
-                </div>
-                {syncResult && (
-                  <div className={cn(
-                    "mt-3 p-3 rounded-lg text-sm",
-                    syncResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
-                  )}>
-                    {syncResult.message}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* PortalIT */}
-      <div className="border rounded-xl overflow-hidden">
-        <button
-          onClick={() => setExpandedCard(expandedCard === 'portalit' ? null : 'portalit')}
-          className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-600" />
-            </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-slate-900">PortalIT</h3>
-              <p className="text-xs text-slate-500">Customer portal and ticketing</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge variant={formData.portalit_enabled ? "default" : "outline"} className={formData.portalit_enabled ? "bg-emerald-500" : ""}>
-              {formData.portalit_enabled ? 'Enabled' : 'Disabled'}
-            </Badge>
-            {expandedCard === 'portalit' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-          </div>
-        </button>
-        {expandedCard === 'portalit' && (
-          <div className="p-4 bg-white space-y-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox checked={formData.portalit_enabled} onCheckedChange={(checked) => setFormData(p => ({ ...p, portalit_enabled: checked }))} />
-              <span className="text-sm font-medium">Enable PortalIT Integration</span>
-            </label>
-            {formData.portalit_enabled && (
-              <div className="space-y-4 pt-4 border-t">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs">PortalIT Base44 App URL</Label>
-                    <Input value={formData.portalit_api_url} onChange={(e) => setFormData(p => ({ ...p, portalit_api_url: e.target.value }))} placeholder="https://portalit-app.base44.app" className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">API Key</Label>
-                    <Input type="password" value={formData.portalit_api_key} onChange={(e) => setFormData(p => ({ ...p, portalit_api_key: e.target.value }))} placeholder="PortalIT API Key" className="mt-1" />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* BillingIT */}
-      <div className="border rounded-xl overflow-hidden">
-        <button
-          onClick={() => setExpandedCard(expandedCard === 'billingit' ? null : 'billingit')}
-          className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-green-600" />
-            </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-slate-900">BillingIT</h3>
-              <p className="text-xs text-slate-500">Invoicing and payments</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge variant={formData.billingit_enabled ? "default" : "outline"} className={formData.billingit_enabled ? "bg-emerald-500" : ""}>
-              {formData.billingit_enabled ? 'Enabled' : 'Disabled'}
-            </Badge>
-            {expandedCard === 'billingit' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-          </div>
-        </button>
-        {expandedCard === 'billingit' && (
-          <div className="p-4 bg-white space-y-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox checked={formData.billingit_enabled} onCheckedChange={(checked) => setFormData(p => ({ ...p, billingit_enabled: checked }))} />
-              <span className="text-sm font-medium">Enable BillingIT Integration</span>
-            </label>
-            {formData.billingit_enabled && (
-              <div className="space-y-4 pt-4 border-t">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs">BillingIT Base44 App URL</Label>
-                    <Input value={formData.billingit_api_url} onChange={(e) => setFormData(p => ({ ...p, billingit_api_url: e.target.value }))} placeholder="https://billingit-app.base44.app" className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">API Key</Label>
-                    <Input type="password" value={formData.billingit_api_key} onChange={(e) => setFormData(p => ({ ...p, billingit_api_key: e.target.value }))} placeholder="BillingIT API Key" className="mt-1" />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // Project Tags Section
 function ProjectTagsSection({ queryClient }) {
   const [showModal, setShowModal] = useState(false);
@@ -1912,376 +1283,388 @@ function DeletedProjectsContent({ queryClient }) {
   );
 }
 
-// Webhooks Content (used inside IntegrationsSection)
-function WebhooksContent({ queryClient }) {
-  const [webhooks, setWebhooks] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [testing, setTesting] = useState(null);
-  const [testResult, setTestResult] = useState(null);
-  const [copiedId, setCopiedId] = useState(null);
 
-  const { data: settings = [], refetch } = useQuery({
-    queryKey: ['webhookSettings'],
-    queryFn: async () => {
-      const s = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
-      return s;
+// Database Health Section
+function DatabaseHealthSection() {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const [healthData, setHealthData] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const getToken = () => localStorage.getItem('projectit_token');
+
+  const fetchHealth = async () => {
+    setRunning(true);
+    try {
+      const res = await fetch(`${API_URL}/api/integrations/data-health`, {
+        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      setHealthData(data);
+    } catch (err) {
+      console.error('Health check failed:', err);
     }
-  });
+    setRunning(false);
+    setLoading(false);
+  };
+
+  const fetchHistory = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/integrations/data-health-history`, {
+        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      setHistory(data.checks || []);
+    } catch (err) {
+      console.error('Failed to fetch history:', err);
+    }
+  };
 
   useEffect(() => {
-    if (settings[0]?.webhooks) {
-      setWebhooks(settings[0].webhooks);
-    }
-  }, [settings]);
+    fetchHealth();
+    fetchHistory();
+  }, []);
 
-  const saveWebhooks = async (newWebhooks) => {
-    if (settings[0]?.id) {
-      await base44.entities.IntegrationSettings.update(settings[0].id, { webhooks: newWebhooks });
-    } else {
-      await base44.entities.IntegrationSettings.create({ setting_key: 'main', webhooks: newWebhooks });
-    }
-    refetch();
+  const formatBytes = (bytes) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   };
-
-  const handleSave = async (webhook) => {
-    let newWebhooks;
-    if (editing) {
-      newWebhooks = webhooks.map(w => w.id === editing.id ? { ...webhook, id: editing.id } : w);
-    } else {
-      newWebhooks = [...webhooks, { ...webhook, id: Date.now().toString(), created_date: new Date().toISOString() }];
-    }
-    setWebhooks(newWebhooks);
-    await saveWebhooks(newWebhooks);
-    setShowModal(false);
-    setEditing(null);
-  };
-
-  const handleDelete = async (id) => {
-    if (confirm('Delete this webhook?')) {
-      const newWebhooks = webhooks.filter(w => w.id !== id);
-      setWebhooks(newWebhooks);
-      await saveWebhooks(newWebhooks);
-    }
-  };
-
-  const handleToggle = async (id) => {
-    const newWebhooks = webhooks.map(w => w.id === id ? { ...w, enabled: !w.enabled } : w);
-    setWebhooks(newWebhooks);
-    await saveWebhooks(newWebhooks);
-  };
-
-  const handleTest = async (webhook) => {
-    setTesting(webhook.id);
-    setTestResult(null);
-    try {
-      const response = await fetch(webhook.url, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(webhook.secret ? { 'X-Webhook-Secret': webhook.secret } : {})
-        },
-        body: JSON.stringify({
-          event: 'test',
-          timestamp: new Date().toISOString(),
-          data: { message: 'This is a test webhook from IT Projects' }
-        })
-      });
-      setTestResult({ id: webhook.id, success: response.ok, status: response.status });
-    } catch (err) {
-      setTestResult({ id: webhook.id, success: false, error: err.message });
-    }
-    setTesting(null);
-  };
-
-  const copyWebhookId = (id) => {
-    navigator.clipboard.writeText(id);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const eventTypes = [
-    { value: 'project.created', label: 'Project Created' },
-    { value: 'project.completed', label: 'Project Completed' },
-    { value: 'project.status_changed', label: 'Project Status Changed' },
-    { value: 'task.completed', label: 'Task Completed' },
-    { value: 'task.assigned', label: 'Task Assigned' },
-    { value: 'part.received', label: 'Part Received' },
-    { value: 'part.installed', label: 'Part Installed' },
-    { value: 'customer.created', label: 'Customer Created' },
-  ];
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-slate-500">Send push notifications to external services when events occur</p>
-        <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Webhook
-        </Button>
-      </div>
-
-      {/* Incoming Webhook Section */}
-      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Webhook className="w-5 h-5 text-blue-600" />
-          </div>
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6 border-b flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-slate-900">Incoming Webhooks</h3>
-            <p className="text-xs text-slate-500">Send data to this application using this URL</p>
+            <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+              <Database className="w-5 h-5 text-[#0069AF]" />
+              Database Health
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">Integrity checks run automatically every 24 hours</p>
           </div>
-        </div>
-        
-        <div className="space-y-3">
-          <Label>Webhook Receiver URL</Label>
-          <div className="flex gap-2">
-            <Input 
-              value={`${window.location.origin}/api/functions/incomingWebhook?source=external`} 
-              readOnly 
-              className="font-mono text-sm bg-white"
-            />
-            <Button variant="outline" onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/api/functions/incomingWebhook?source=external`);
-              alert('Copied to clipboard!');
-            }}>
-              <Copy className="w-4 h-4" />
-            </Button>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Send POST requests to this URL. The payload will be logged in Audit Logs.
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between mb-4 pt-4 border-t">
-        <h3 className="font-semibold text-slate-900">Outgoing Webhooks</h3>
-      </div>
-
-      {webhooks.length === 0 ? (
-        <div className="p-12 text-center">
-          <Webhook className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-          <h3 className="text-lg font-medium text-slate-900 mb-2">No outgoing webhooks configured</h3>
-          <p className="text-slate-500 mb-4">Set up webhooks to push data to external services like Zapier, Make, or custom endpoints.</p>
-          <Button onClick={() => setShowModal(true)} variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Your First Webhook
+          <Button
+            onClick={() => { fetchHealth(); fetchHistory(); }}
+            disabled={running}
+            className="bg-[#0069AF] hover:bg-[#133F5C]"
+          >
+            {running ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Checking...</> : <><RefreshCw className="w-4 h-4 mr-2" />Run Check</>}
           </Button>
         </div>
-      ) : (
-        <div className="divide-y">
-          {webhooks.map((webhook) => (
-            <div key={webhook.id} className="p-4 hover:bg-slate-50 transition-colors">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-slate-900">{webhook.name}</h3>
-                    <Badge variant={webhook.enabled ? "default" : "outline"} className={webhook.enabled ? "bg-emerald-500" : ""}>
-                      {webhook.enabled ? 'Active' : 'Disabled'}
-                    </Badge>
-                    {testResult?.id === webhook.id && (
-                      <Badge variant="outline" className={testResult.success ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"}>
-                        {testResult.success ? `Success (${testResult.status})` : `Failed: ${testResult.error || testResult.status}`}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-slate-500 font-mono truncate mb-2">{webhook.url}</p>
-                  <div className="flex flex-wrap gap-1">
-                    {webhook.events?.map(event => (
-                      <Badge key={event} variant="outline" className="text-xs">{event}</Badge>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyWebhookId(webhook.id)}
-                    className="text-slate-400 hover:text-slate-600"
-                  >
-                    {copiedId === webhook.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleTest(webhook)}
-                    disabled={testing === webhook.id}
-                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                  >
-                    {testing === webhook.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleToggle(webhook.id)}>
-                        {webhook.enabled ? 'Disable' : 'Enable'}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setEditing(webhook); setShowModal(true); }}>
-                        <Edit2 className="w-4 h-4 mr-2" />Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDelete(webhook.id)} className="text-red-600">
-                        <Trash2 className="w-4 h-4 mr-2" />Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
+
+        {/* Status Banner */}
+        {healthData && (
+          <div className={cn(
+            "px-6 py-4 flex items-center gap-3 border-b",
+            healthData.status === 'healthy' ? "bg-emerald-50" : "bg-amber-50"
+          )}>
+            {healthData.status === 'healthy' ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+            ) : (
+              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            )}
+            <div>
+              <p className={cn(
+                "font-medium text-sm",
+                healthData.status === 'healthy' ? "text-emerald-800" : "text-amber-800"
+              )}>
+                {healthData.status === 'healthy' ? 'Database is healthy — no issues found' : `${healthData.issues.length} issue(s) found`}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Last checked: {new Date(healthData.checked_at).toLocaleString()}
+              </p>
             </div>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="flex border-b">
+          {[
+            { id: 'overview', label: 'Overview' },
+            { id: 'tables', label: 'Tables' },
+            { id: 'issues', label: 'Issues', count: healthData?.issues?.length || 0 },
+            { id: 'history', label: 'Check History' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
+                activeTab === tab.id ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+              )}
+            >
+              {tab.label} {tab.count !== undefined ? `(${tab.count})` : ''}
+            </button>
           ))}
         </div>
-      )}
 
-      {/* Webhook Modal */}
-      <Dialog open={showModal} onOpenChange={() => { setShowModal(false); setEditing(null); }}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editing ? 'Edit Webhook' : 'Add Webhook'}</DialogTitle>
-          </DialogHeader>
-          <WebhookForm 
-            webhook={editing} 
-            eventTypes={eventTypes}
-            onSave={handleSave} 
-            onCancel={() => { setShowModal(false); setEditing(null); }} 
-          />
-        </DialogContent>
-      </Dialog>
+        <div className="p-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+            </div>
+          ) : (
+            <>
+              {/* Overview Tab */}
+              {activeTab === 'overview' && healthData && (
+                <div className="space-y-6">
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-slate-50 rounded-xl p-4 border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <HardDrive className="w-4 h-4 text-slate-400" />
+                        <span className="text-xs font-medium text-slate-500 uppercase">Database Size</span>
+                      </div>
+                      <p className="text-2xl font-bold text-slate-900">{healthData.database?.size_pretty || 'N/A'}</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-xl p-4 border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Activity className="w-4 h-4 text-slate-400" />
+                        <span className="text-xs font-medium text-slate-500 uppercase">Connections</span>
+                      </div>
+                      <p className="text-2xl font-bold text-slate-900">{healthData.database?.active_connections || 0}</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-xl p-4 border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Database className="w-4 h-4 text-slate-400" />
+                        <span className="text-xs font-medium text-slate-500 uppercase">Total Rows</span>
+                      </div>
+                      <p className="text-2xl font-bold text-slate-900">{healthData.total_rows?.toLocaleString() || 0}</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-xl p-4 border">
+                      <div className="flex items-center gap-2 mb-2">
+                        {healthData.status === 'healthy' ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        ) : (
+                          <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        )}
+                        <span className="text-xs font-medium text-slate-500 uppercase">Status</span>
+                      </div>
+                      <p className={cn(
+                        "text-2xl font-bold",
+                        healthData.status === 'healthy' ? "text-emerald-600" : "text-amber-600"
+                      )}>
+                        {healthData.status === 'healthy' ? 'Healthy' : 'Issues'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Top Tables by Size */}
+                  {healthData.database?.table_sizes?.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-700 mb-3">Largest Tables</h3>
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-50">
+                            <tr>
+                              <th className="text-left px-4 py-2 font-medium text-slate-600">Table</th>
+                              <th className="text-right px-4 py-2 font-medium text-slate-600">Size</th>
+                              <th className="text-right px-4 py-2 font-medium text-slate-600">Rows</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y">
+                            {healthData.database.table_sizes.slice(0, 10).map((t, i) => (
+                              <tr key={i} className="hover:bg-slate-50">
+                                <td className="px-4 py-2 font-mono text-slate-700">{t.table}</td>
+                                <td className="px-4 py-2 text-right text-slate-600">{t.size_pretty}</td>
+                                <td className="px-4 py-2 text-right text-slate-600">
+                                  {healthData.counts?.[t.table]?.toLocaleString() ?? '—'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recent Deletions */}
+                  {healthData.recent_deletions?.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-700 mb-3">Recent Deletions</h3>
+                      <div className="border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-50 sticky top-0">
+                            <tr>
+                              <th className="text-left px-4 py-2 font-medium text-slate-600">Entity</th>
+                              <th className="text-left px-4 py-2 font-medium text-slate-600">ID</th>
+                              <th className="text-left px-4 py-2 font-medium text-slate-600">By</th>
+                              <th className="text-left px-4 py-2 font-medium text-slate-600">When</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y">
+                            {healthData.recent_deletions.slice(0, 20).map((d, i) => (
+                              <tr key={i} className="hover:bg-slate-50">
+                                <td className="px-4 py-2 text-slate-700">{d.entity_type}</td>
+                                <td className="px-4 py-2 font-mono text-xs text-slate-500">{d.entity_id?.slice(0, 8)}...</td>
+                                <td className="px-4 py-2 text-slate-600">{d.created_by || 'system'}</td>
+                                <td className="px-4 py-2 text-slate-500">{d.deleted_at ? new Date(d.deleted_at).toLocaleDateString() : '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tables Tab */}
+              {activeTab === 'tables' && healthData && (
+                <div>
+                  <p className="text-sm text-slate-500 mb-4">All entity tables and their row counts</p>
+                  <div className="border rounded-lg overflow-hidden max-h-[500px] overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-50 sticky top-0">
+                        <tr>
+                          <th className="text-left px-4 py-2 font-medium text-slate-600">Table</th>
+                          <th className="text-right px-4 py-2 font-medium text-slate-600">Rows</th>
+                          <th className="text-right px-4 py-2 font-medium text-slate-600">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {Object.entries(healthData.counts || {})
+                          .sort(([,a], [,b]) => b - a)
+                          .map(([table, count]) => (
+                          <tr key={table} className="hover:bg-slate-50">
+                            <td className="px-4 py-2 font-mono text-slate-700">{table}</td>
+                            <td className="px-4 py-2 text-right text-slate-600">{count.toLocaleString()}</td>
+                            <td className="px-4 py-2 text-right">
+                              {count > 0 ? (
+                                <Badge className="bg-emerald-100 text-emerald-700 border-0">Active</Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-slate-400 border-slate-200">Empty</Badge>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Issues Tab */}
+              {activeTab === 'issues' && healthData && (
+                <div>
+                  {healthData.issues.length === 0 ? (
+                    <div className="text-center py-12">
+                      <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                      <p className="text-slate-700 font-medium">No integrity issues found</p>
+                      <p className="text-slate-500 text-sm mt-1">All parent-child relationships are valid</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {healthData.issues.map((issue, i) => (
+                        <div key={i} className="border border-amber-200 bg-amber-50 rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="font-medium text-amber-800">
+                                {issue.type === 'orphaned_records'
+                                  ? `${issue.count} orphaned ${issue.entity} record(s)`
+                                  : `${issue.count} ${issue.entity} without matching user`}
+                              </p>
+                              <p className="text-sm text-amber-700 mt-1">
+                                {issue.type === 'orphaned_records'
+                                  ? `${issue.entity} references missing ${issue.parent_entity} via "${issue.foreign_key}"`
+                                  : `Team members with emails that don't match any user account`}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* History Tab */}
+              {activeTab === 'history' && (
+                <div>
+                  <p className="text-sm text-slate-500 mb-4">
+                    Automated checks run every 24 hours. Manual checks also recorded.
+                  </p>
+                  {history.length === 0 ? (
+                    <div className="text-center py-12 text-slate-500">
+                      <Activity className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                      <p>No check history yet</p>
+                    </div>
+                  ) : (
+                    <div className="border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-slate-50 sticky top-0">
+                          <tr>
+                            <th className="text-left px-4 py-2 font-medium text-slate-600">Date</th>
+                            <th className="text-left px-4 py-2 font-medium text-slate-600">Status</th>
+                            <th className="text-right px-4 py-2 font-medium text-slate-600">Issues</th>
+                            <th className="text-right px-4 py-2 font-medium text-slate-600">Rows</th>
+                            <th className="text-right px-4 py-2 font-medium text-slate-600">DB Size</th>
+                            <th className="text-left px-4 py-2 font-medium text-slate-600">Type</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {history.map((check, i) => (
+                            <tr key={i} className="hover:bg-slate-50">
+                              <td className="px-4 py-2 text-slate-700">
+                                {new Date(check.checked_at).toLocaleString()}
+                              </td>
+                              <td className="px-4 py-2">
+                                <Badge className={cn(
+                                  "border-0",
+                                  check.status === 'healthy' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                                )}>
+                                  {check.status === 'healthy' ? 'Healthy' : 'Issues'}
+                                </Badge>
+                              </td>
+                              <td className="px-4 py-2 text-right text-slate-600">{check.issue_count}</td>
+                              <td className="px-4 py-2 text-right text-slate-600">{check.total_rows?.toLocaleString() || '—'}</td>
+                              <td className="px-4 py-2 text-right text-slate-600">{check.db_size || '—'}</td>
+                              <td className="px-4 py-2">
+                                <span className={cn(
+                                  "text-xs px-2 py-0.5 rounded-full",
+                                  check.automated ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"
+                                )}>
+                                  {check.automated ? 'Auto' : 'Manual'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-// Keep WebhooksSection for backward compatibility but redirect to the content
-function WebhooksSection({ queryClient }) {
-  return <WebhooksContent queryClient={queryClient} />;
-}
-
-function WebhookForm({ webhook, eventTypes, onSave, onCancel }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    url: '',
-    secret: '',
-    events: [],
-    enabled: true
-  });
-
-  useEffect(() => {
-    if (webhook) {
-      setFormData({
-        name: webhook.name || '',
-        url: webhook.url || '',
-        secret: webhook.secret || '',
-        events: webhook.events || [],
-        enabled: webhook.enabled !== false
-      });
-    }
-  }, [webhook]);
-
-  const toggleEvent = (event) => {
-    setFormData(prev => ({
-      ...prev,
-      events: prev.events.includes(event) 
-        ? prev.events.filter(e => e !== event)
-        : [...prev.events, event]
-    }));
-  };
-
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-4 mt-4">
-      <div>
-        <Label>Name</Label>
-        <Input 
-          value={formData.name} 
-          onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} 
-          placeholder="e.g., Zapier Integration" 
-          required 
-          className="mt-1" 
-        />
-      </div>
-      <div>
-        <Label>Webhook URL</Label>
-        <Input 
-          value={formData.url} 
-          onChange={(e) => setFormData(p => ({ ...p, url: e.target.value }))} 
-          placeholder="https://hooks.zapier.com/..." 
-          required 
-          className="mt-1 font-mono text-sm" 
-        />
-        <p className="text-xs text-slate-400 mt-1">The URL to receive POST requests with event data</p>
-      </div>
-      <div>
-        <Label>Secret (Optional)</Label>
-        <Input 
-          value={formData.secret} 
-          onChange={(e) => setFormData(p => ({ ...p, secret: e.target.value }))} 
-          placeholder="Optional secret for X-Webhook-Secret header" 
-          className="mt-1" 
-        />
-        <p className="text-xs text-slate-400 mt-1">Will be sent in the X-Webhook-Secret header for verification</p>
-      </div>
-      <div>
-        <Label>Events</Label>
-        <p className="text-xs text-slate-500 mb-2">Select which events trigger this webhook</p>
-        <div className="max-h-48 overflow-y-auto border rounded-lg p-2 space-y-1">
-          {eventTypes.map(event => (
-            <label key={event.value} className="flex items-center gap-2 p-2 rounded hover:bg-slate-50 cursor-pointer">
-              <Checkbox 
-                checked={formData.events.includes(event.value)} 
-                onCheckedChange={() => toggleEvent(event.value)} 
-              />
-              <span className="text-sm">{event.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-      <label className="flex items-center gap-2 cursor-pointer">
-        <Checkbox 
-          checked={formData.enabled} 
-          onCheckedChange={(checked) => setFormData(p => ({ ...p, enabled: checked }))} 
-        />
-        <span className="text-sm">Enabled</span>
-      </label>
-      <div className="flex justify-end gap-3 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]">{webhook ? 'Update' : 'Create'}</Button>
-      </div>
-    </form>
-  );
-}
-
-
-
 function IntegrationsSection({ queryClient }) {
-  const [activeTab, setActiveTab] = useState('integrations');
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const [activeTab, setActiveTab] = useState('settings');
   const [saving, setSaving] = useState(false);
-  const [generatedKey, setGeneratedKey] = useState(null);
-  const [syncing, setSyncing] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
   const [showFieldMapping, setShowFieldMapping] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
-  const [selectedIntegration, setSelectedIntegration] = useState(null);
-  
-  // Hudu state
-  const [huduSyncing, setHuduSyncing] = useState(false);
-  const [huduTesting, setHuduTesting] = useState(false);
-  const [huduResult, setHuduResult] = useState(null);
-  const [showHuduFieldMapping, setShowHuduFieldMapping] = useState(false);
-  
-  // Email test state
-  const [testingEmail, setTestingEmail] = useState(false);
-  const [emailTestResult, setEmailTestResult] = useState(null);
-  
-  // QuickBooks state
-  const [qbTesting, setQbTesting] = useState(false);
-  const [qbSyncing, setQbSyncing] = useState(false);
-  const [qbResult, setQbResult] = useState(null);
-  const [showCustomerMapping, setShowCustomerMapping] = useState(false);
-  const [qbCustomers, setQbCustomers] = useState([]);
-  
+
+  // Customer mapping state
+  const [haloCustomers, setHaloCustomers] = useState([]);
+  const [localCustomers, setLocalCustomers] = useState([]);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [customerMappings, setCustomerMappings] = useState({});
+
   const [formData, setFormData] = useState({
     halopsa_enabled: false,
-    halopsa_url: '',
     halopsa_auth_url: '',
     halopsa_api_url: '',
     halopsa_client_id: '',
@@ -2289,141 +1672,23 @@ function IntegrationsSection({ queryClient }) {
     halopsa_tenant: '',
     halopsa_sync_customers: true,
     halopsa_sync_tickets: false,
-    halopsa_two_way_sync: false,
-    halopsa_auto_push_updates: false,
-    halopsa_webhook_secret: '',
+    halopsa_excluded_ids: '',
     halopsa_field_mapping: {
-      name: 'name',
-      email: 'email',
-      phone: 'main_phone',
-      address: 'address',
-      city: 'city',
-      state: 'county',
-      zip: 'postcode'
+      name: 'name', email: 'email', phone: 'main_phone',
+      address: 'address', city: 'city', state: 'county', zip: 'postcode'
     },
-    hudu_enabled: false,
-    hudu_base_url: '',
-    hudu_api_key: '',
-    hudu_sync_customers: true,
-    hudu_field_mapping: {
-      name: 'name',
-      email: 'email',
-      phone: 'phone_number',
-      address: 'address_line_1',
-      city: 'city',
-      state: 'state',
-      zip: 'zip'
-    },
-    projectit_api_key: '',
-    // Email (Emailit SMTP)
-    emailit_enabled: false,
-    emailit_smtp_host: 'smtp.emailit.com',
-    emailit_smtp_port: '587',
-    emailit_smtp_username: '',
-    emailit_smtp_password: '',
-    emailit_from_email: '',
-    emailit_from_name: '',
-    emailit_reply_to: '',
-    emailit_secure: true,
-    emailit_auth: true,
-    // SMS (Twilio)
-    twilio_enabled: false,
-    twilio_account_sid: '',
-    twilio_auth_token: '',
-    twilio_phone_number: '',
-    sms_notifications_enabled: false,
-    // QuickBooks
-    quickbooks_enabled: false,
-    quickbooks_realm_id: '',
-    quickbooks_sync_customers: true,
-    quickbooks_sync_invoices: true,
-    quickbooks_customer_mapping: []
-    });
+  });
 
   const { data: settings = [], refetch } = useQuery({
     queryKey: ['integrationSettings'],
     queryFn: () => base44.entities.IntegrationSettings.filter({ setting_key: 'main' })
   });
 
-  const handleTestConnection = async () => {
-    if (!formData.halopsa_auth_url || !formData.halopsa_api_url) {
-      setSyncResult({ success: false, message: 'Please enter both HaloPSA URLs first' });
-      return;
-    }
-    if (!formData.halopsa_client_id || !formData.halopsa_client_secret) {
-      setSyncResult({ success: false, message: 'Please enter your HaloPSA Client ID and Client Secret' });
-      return;
-    }
-
-    setTestingConnection(true);
-    setSyncResult(null);
-
-    try {
-      // Save settings first so the server can read the credentials from DB
-      await handleSave();
-
-      const response = await base44.functions.invoke('halopsa', { action: 'testConnection' });
-      const result = response.data;
-
-      if (result.success) {
-        setSyncResult({ success: true, message: 'Connection successful! HaloPSA credentials are valid.' });
-      } else {
-        setSyncResult({ success: false, message: result.error || 'Connection failed', details: result.details });
-      }
-    } catch (error) {
-      const errorData = error.response?.data;
-      setSyncResult({
-        success: false,
-        message: errorData?.error || 'Connection failed. Check your credentials and URLs.',
-        details: errorData?.details
-      });
-    }
-
-    setTestingConnection(false);
-  };
-
-  const handleSyncCustomers = async () => {
-    if (!formData.halopsa_auth_url || !formData.halopsa_client_id) {
-      setSyncResult({ success: false, message: 'Please configure HaloPSA credentials and URLs first' });
-      return;
-    }
-
-    setSyncing(true);
-    setSyncResult(null);
-
-    try {
-      // Save settings first so credentials are available to the server
-      await handleSave();
-
-      const response = await base44.functions.invoke('syncHaloPSACustomers', {
-        fieldMapping: formData.halopsa_field_mapping
-      });
-      const result = response.data;
-      
-      if (result.success) {
-        refetch();
-        queryClient.invalidateQueries({ queryKey: ['customers'] });
-        setSyncResult({ success: true, message: result.message });
-      } else {
-        setSyncResult({ success: false, message: result.error || 'Sync failed', details: result.details || result.debug });
-      }
-    } catch (error) {
-      const errorData = error.response?.data;
-      setSyncResult({ 
-        success: false, 
-        message: errorData?.error || 'Sync failed. Please check your credentials.',
-        details: errorData?.details || errorData?.debug 
-      });
-    }
-    
-    setSyncing(false);
-  };
-
   useEffect(() => {
     if (settings[0]) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         halopsa_enabled: settings[0].halopsa_enabled || false,
-        halopsa_url: settings[0].halopsa_url || '',
         halopsa_auth_url: settings[0].halopsa_auth_url || '',
         halopsa_api_url: settings[0].halopsa_api_url || '',
         halopsa_client_id: settings[0].halopsa_client_id || '',
@@ -2432,1012 +1697,352 @@ function IntegrationsSection({ queryClient }) {
         halopsa_sync_customers: settings[0].halopsa_sync_customers !== false,
         halopsa_sync_tickets: settings[0].halopsa_sync_tickets || false,
         halopsa_excluded_ids: settings[0].halopsa_excluded_ids || '',
-        halopsa_two_way_sync: settings[0].halopsa_two_way_sync || false,
-        halopsa_auto_push_updates: settings[0].halopsa_auto_push_updates || false,
-        halopsa_webhook_secret: settings[0].halopsa_webhook_secret || '',
-        halopsa_field_mapping: settings[0].halopsa_field_mapping || {
-          name: 'name',
-          email: 'email',
-          phone: 'main_phone',
-          address: 'address',
-          city: 'city',
-          state: 'county',
-          zip: 'postcode'
-        },
-        hudu_enabled: settings[0].hudu_enabled || false,
-        hudu_base_url: settings[0].hudu_base_url || '',
-        hudu_api_key: settings[0].hudu_api_key || '',
-        hudu_sync_customers: settings[0].hudu_sync_customers !== false,
-        hudu_field_mapping: settings[0].hudu_field_mapping || {
-          name: 'name',
-          email: 'email',
-          phone: 'phone_number',
-          address: 'address_line_1',
-          city: 'city',
-          state: 'state',
-          zip: 'zip'
-        },
-        projectit_api_key: settings[0].projectit_api_key || '',
-        // Resend
-        resend_enabled: settings[0].resend_enabled || false,
-        resend_api_key: settings[0].resend_api_key || '',
-        resend_from_email: settings[0].resend_from_email || '',
-        resend_from_name: settings[0].resend_from_name || '',
-        // Twilio
-        twilio_enabled: settings[0].twilio_enabled || false,
-        twilio_account_sid: settings[0].twilio_account_sid || '',
-        twilio_auth_token: settings[0].twilio_auth_token || '',
-        twilio_phone_number: settings[0].twilio_phone_number || '',
-        sms_notifications_enabled: settings[0].sms_notifications_enabled || false,
-        // QuickBooks
-        quickbooks_enabled: settings[0].quickbooks_enabled || false,
-        quickbooks_realm_id: settings[0].quickbooks_realm_id || '',
-        quickbooks_sync_customers: settings[0].quickbooks_sync_customers !== false,
-        quickbooks_sync_invoices: settings[0].quickbooks_sync_invoices !== false,
-        quickbooks_customer_mapping: settings[0].quickbooks_customer_mapping || []
-      });
+        halopsa_field_mapping: settings[0].halopsa_field_mapping || formData.halopsa_field_mapping,
+      }));
     }
   }, [settings]);
 
-  // Fetch local customers for mapping
-  const { data: localCustomers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list('name')
-  });
-
-  const handleQbTest = async () => {
-    setQbTesting(true);
-    setQbResult(null);
-    try {
-      await handleSave();
-      const response = await base44.functions.invoke('quickbooksSync', { action: 'test' });
-      if (response.data?.success) {
-        setQbResult({ success: true, message: response.data.message });
-        if (response.data.customers) {
-          setQbCustomers(response.data.customers);
-        }
-      } else {
-        setQbResult({ success: false, message: response.data?.error || 'Connection failed' });
-      }
-    } catch (error) {
-      setQbResult({ success: false, message: error.response?.data?.error || 'Connection failed. Check your credentials.' });
-    }
-    setQbTesting(false);
-  };
-
-  const handleQbSyncCustomers = async () => {
-    setQbSyncing(true);
-    setQbResult(null);
-    try {
-      const response = await base44.functions.invoke('quickbooksSync', { action: 'syncCustomers' });
-      if (response.data?.success) {
-        setQbResult({ success: true, message: response.data.message });
-        if (response.data.customers) {
-          setQbCustomers(response.data.customers);
-        }
-        queryClient.invalidateQueries({ queryKey: ['customers'] });
-      } else {
-        setQbResult({ success: false, message: response.data?.error || 'Sync failed' });
-      }
-    } catch (error) {
-      setQbResult({ success: false, message: error.response?.data?.error || 'Sync failed' });
-    }
-    setQbSyncing(false);
-  };
-
-  const handleMapCustomer = (localId, qbId, qbName) => {
-    const existingMapping = formData.quickbooks_customer_mapping || [];
-    const newMapping = existingMapping.filter(m => m.local_customer_id !== localId);
-    if (qbId) {
-      newMapping.push({ local_customer_id: localId, quickbooks_customer_id: qbId, quickbooks_customer_name: qbName });
-    }
-    setFormData(prev => ({ ...prev, quickbooks_customer_mapping: newMapping }));
-  };
-
-  const getQbMappingForCustomer = (localId) => {
-    return formData.quickbooks_customer_mapping?.find(m => m.local_customer_id === localId);
-  };
-
-  const handleHuduTest = async () => {
-    if (!formData.hudu_base_url || !formData.hudu_api_key) {
-      setHuduResult({ success: false, message: 'Please enter Hudu Base URL and API Key first' });
-      return;
-    }
-    
-    setHuduTesting(true);
-    setHuduResult(null);
-    
-    try {
-      // Save settings first so the function can read them
-      await handleSave();
-      
-      const response = await base44.functions.invoke('syncHuduCustomers', { testOnly: true });
-      const result = response.data;
-      
-      if (result.success) {
-        setHuduResult({ success: true, message: result.message });
-      } else {
-        setHuduResult({ success: false, message: result.error || 'Connection failed', details: result.details });
-      }
-    } catch (error) {
-      const errorData = error.response?.data;
-      setHuduResult({ 
-        success: false, 
-        message: errorData?.error || 'Connection failed. Check your credentials.',
-        details: errorData?.details
-      });
-    }
-    
-    setHuduTesting(false);
-  };
-
-  const handleHuduSync = async () => {
-    if (!formData.hudu_base_url || !formData.hudu_api_key) {
-      setHuduResult({ success: false, message: 'Please enter Hudu Base URL and API Key first' });
-      return;
-    }
-    
-    setHuduSyncing(true);
-    setHuduResult(null);
-    
-    try {
-      const response = await base44.functions.invoke('syncHuduCustomers', {});
-      const result = response.data;
-      
-      if (result.success) {
-        refetch();
-        queryClient.invalidateQueries({ queryKey: ['customers'] });
-        setHuduResult({ success: true, message: result.message });
-      } else {
-        setHuduResult({ success: false, message: result.error || 'Sync failed', details: result.details });
-      }
-    } catch (error) {
-      const errorData = error.response?.data;
-      setHuduResult({ 
-        success: false, 
-        message: errorData?.error || 'Sync failed. Please check your credentials.',
-        details: errorData?.details
-      });
-    }
-    
-    setHuduSyncing(false);
-  };
-
   const handleSave = async () => {
     setSaving(true);
-    if (settings[0]?.id) {
-      await base44.entities.IntegrationSettings.update(settings[0].id, { ...formData, setting_key: 'main' });
-    } else {
-      await base44.entities.IntegrationSettings.create({ ...formData, setting_key: 'main' });
+    try {
+      const payload = { setting_key: 'main', ...formData };
+      if (settings[0]) {
+        await base44.entities.IntegrationSettings.update(settings[0].id, payload);
+      } else {
+        await base44.entities.IntegrationSettings.create(payload);
+      }
+      refetch();
+      setSyncResult({ success: true, message: 'Settings saved' });
+    } catch (err) {
+      setSyncResult({ success: false, message: err.message || 'Failed to save' });
     }
-    refetch();
     setSaving(false);
   };
 
-  const generateApiKey = () => {
-    const key = 'pk_' + Math.random().toString(36).substring(2) + Date.now().toString(36) + Math.random().toString(36).substring(2);
-    setFormData(prev => ({ ...prev, projectit_api_key: key }));
-    setGeneratedKey(key);
+  const handleTestConnection = async () => {
+    if (!formData.halopsa_auth_url || !formData.halopsa_client_id || !formData.halopsa_client_secret) {
+      setSyncResult({ success: false, message: 'Please fill in all HaloPSA credential fields first' });
+      return;
+    }
+    setTestingConnection(true);
+    setSyncResult(null);
+    try {
+      await handleSave();
+      const response = await base44.functions.invoke('halopsa', { action: 'testConnection' });
+      const result = response.data;
+      setSyncResult(result.success
+        ? { success: true, message: 'Connection successful! Credentials are valid.' }
+        : { success: false, message: result.error || 'Connection failed', details: result.details });
+    } catch (error) {
+      setSyncResult({ success: false, message: error.data?.error || 'Connection failed. Check your credentials.' });
+    }
+    setTestingConnection(false);
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
+  const handleSyncCustomers = async () => {
+    if (!formData.halopsa_auth_url || !formData.halopsa_client_id) {
+      setSyncResult({ success: false, message: 'Configure HaloPSA credentials first' });
+      return;
+    }
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      await handleSave();
+      const response = await base44.functions.invoke('syncHaloPSACustomers', {
+        fieldMapping: formData.halopsa_field_mapping
+      });
+      const result = response.data;
+      if (result.success) {
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ['customers'] });
+        setSyncResult({ success: true, message: result.message });
+      } else {
+        setSyncResult({ success: false, message: result.error || 'Sync failed' });
+      }
+    } catch (error) {
+      setSyncResult({ success: false, message: error.data?.error || 'Sync failed' });
+    }
+    setSyncing(false);
+  };
+
+  const fetchHaloCustomers = async () => {
+    setLoadingCustomers(true);
+    try {
+      const response = await base44.functions.invoke('haloPSACustomerList', {});
+      const result = response.data || response;
+      setHaloCustomers(result.haloClients || []);
+      setLocalCustomers(result.localCustomers || []);
+      // Build mapping from existing synced customers
+      const mappings = {};
+      (result.localCustomers || []).forEach(c => {
+        if (c.halo_id) mappings[c.halo_id] = c.id;
+      });
+      setCustomerMappings(mappings);
+    } catch (err) {
+      setSyncResult({ success: false, message: 'Failed to load HaloPSA customers: ' + (err.message || err.data?.error) });
+    }
+    setLoadingCustomers(false);
+  };
+
+  const handleMapCustomer = async (haloId, localCustomerId) => {
+    setCustomerMappings(prev => ({ ...prev, [haloId]: localCustomerId }));
+    // Save mapping to the local customer record
+    if (localCustomerId) {
+      try {
+        await base44.entities.Customer.update(localCustomerId, { halo_id: String(haloId) });
+      } catch (err) {
+        console.error('Failed to save mapping:', err);
+      }
+    }
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-6 border-b flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-900">Integrations & Webhooks</h2>
-          <p className="text-sm text-slate-500">Connect external services and webhooks</p>
-        </div>
-        {activeTab === 'integrations' && (
-          <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
-        )}
-      </div>
-      
-      {/* Tabs */}
-      <div className="flex border-b">
-        <button
-          onClick={() => setActiveTab('integrations')}
-          className={cn(
-            "px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
-            activeTab === 'integrations' ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
-          )}
-        >
-          <GitMerge className="w-4 h-4" />
-          Integrations
-        </button>
-        <button
-          onClick={() => setActiveTab('webhooks')}
-          className={cn(
-            "px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
-            activeTab === 'webhooks' ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
-          )}
-        >
-          <Webhook className="w-4 h-4" />
-          Webhooks
-        </button>
-        <button
-          onClick={() => setActiveTab('gammastack')}
-          className={cn(
-            "px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
-            activeTab === 'gammastack' ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
-          )}
-        >
-          <Layers className="w-4 h-4" />
-          GammaStack
-        </button>
-      </div>
-
-      {activeTab === 'webhooks' && <WebhooksContent queryClient={queryClient} />}
-      {activeTab === 'gammastack' && <GammaStackContent queryClient={queryClient} />}
-      
-      {activeTab === 'integrations' && (
-      <div className="p-6 space-y-4">
-        {/* ProjectIT API Access */}
-        <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-[#0069AF]/10 rounded-lg">
-              <Shield className="w-5 h-5 text-[#0069AF]" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900">ProjectIT API Access</h3>
-              <p className="text-xs text-slate-500">Allow external apps (like QuoteIT) to pull data from this application</p>
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <Label>ProjectIT API Key</Label>
-            <div className="flex gap-2">
-              <Input 
-                value={formData.projectit_api_key} 
-                readOnly 
-                placeholder="No API key generated yet"
-                className="font-mono text-sm bg-white"
-                type={showSecret ? "text" : "password"}
-              />
-              <Button variant="outline" size="icon" onClick={() => setShowSecret(!showSecret)}>
-                {showSecret ? <Shield className="w-4 h-4" /> : <div className="w-4 h-4 flex items-center justify-center">●</div>}
-              </Button>
-              <Button variant="outline" onClick={() => copyToClipboard(formData.projectit_api_key)} disabled={!formData.projectit_api_key}>
-                <Copy className="w-4 h-4" />
-              </Button>
-              <Button onClick={generateApiKey} className="bg-[#0069AF] hover:bg-[#133F5C] text-white">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Generate Key
-              </Button>
-            </div>
-            {generatedKey && (
-              <p className="text-xs text-emerald-600 font-medium">
-                New key generated! Don't forget to save changes.
-              </p>
-            )}
-            <div className="mt-4 p-3 bg-white rounded-lg border text-xs text-slate-600 space-y-2">
-              <div>
-                <span className="font-semibold text-slate-900 block mb-1">ProjectIT API URL:</span>
-                <div className="flex items-center gap-2">
-                  <code className="bg-slate-100 px-2 py-1 rounded block flex-1">{window.location.origin}/api/functions/getProjectITData</code>
-                  <button onClick={() => copyToClipboard(`${window.location.origin}/api/functions/getProjectITData`)} className="text-[#0069AF] hover:underline">Copy</button>
-                </div>
-              </div>
-              <div>
-                <span className="font-semibold text-slate-900 block mb-1">Header:</span>
-                <code className="bg-slate-100 px-2 py-1 rounded">x-projectit-api-key: YOUR_KEY</code>
-              </div>
-            </div>
-          </div>
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6 border-b">
+          <h2 className="text-xl font-semibold text-slate-900">HaloPSA Integration</h2>
+          <p className="text-sm text-slate-500 mt-1">Connect and sync with your HaloPSA instance</p>
         </div>
 
-        {/* Integration Cards */}
-        
-        {/* HaloPSA Card */}
-        <div className="border rounded-xl overflow-hidden">
-          <button
-            onClick={() => setSelectedIntegration(selectedIntegration === 'halopsa' ? null : 'halopsa')}
-            className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                <GitMerge className="w-5 h-5 text-purple-600" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-slate-900">HaloPSA</h3>
-                <p className="text-xs text-slate-500">Sync customers and tickets from HaloPSA</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant={formData.halopsa_enabled ? "default" : "outline"} className={formData.halopsa_enabled ? "bg-emerald-500" : ""}>
-                {formData.halopsa_enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
-              {selectedIntegration === 'halopsa' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-            </div>
-          </button>
-          
-          {selectedIntegration === 'halopsa' && (
-          <div className="p-4 space-y-4 bg-white">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox 
-                checked={formData.halopsa_enabled} 
-                onCheckedChange={(checked) => setFormData(p => ({ ...p, halopsa_enabled: checked }))} 
-              />
-              <span className="text-sm font-medium">Enable HaloPSA Integration</span>
+        {/* Tabs */}
+        <div className="flex border-b">
+          {[
+            { id: 'settings', label: 'Settings' },
+            { id: 'customers', label: 'Customer Mapping' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
+                activeTab === tab.id ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="p-6 space-y-6">
+            {/* Enable toggle */}
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox checked={formData.halopsa_enabled} onCheckedChange={(v) => setFormData(p => ({ ...p, halopsa_enabled: v }))} />
+              <span className="font-medium text-sm">Enable HaloPSA Integration</span>
             </label>
 
-          {formData.halopsa_enabled && (
-          <div className="space-y-4 pt-4 border-t border-slate-200">
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs text-blue-700">
-                <strong>Where to find these URLs:</strong> In HaloPSA, go to <strong>Configuration → Integrations → Halo API</strong>. Copy the <em>Authorisation Server URL</em> and <em>Resource Server URL</em> from the API Details section.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs">Authorisation Server URL</Label>
-                <Input 
-                  value={formData.halopsa_auth_url} 
-                  onChange={(e) => setFormData(p => ({ ...p, halopsa_auth_url: e.target.value }))} 
-                  placeholder="https://yourcompany.halopsa.com" 
-                  className="mt-1" 
-                />
-                <p className="text-[10px] text-slate-400 mt-1">e.g., https://company.halopsa.com</p>
-              </div>
-              <div>
-                <Label className="text-xs">Resource Server URL (API)</Label>
-                <Input 
-                  value={formData.halopsa_api_url} 
-                  onChange={(e) => setFormData(p => ({ ...p, halopsa_api_url: e.target.value }))} 
-                  placeholder="https://yourcompany.haloservicedesk.com" 
-                  className="mt-1" 
-                />
-                <p className="text-[10px] text-slate-400 mt-1">e.g., https://company.haloservicedesk.com</p>
-              </div>
-            </div>
-            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <h4 className="text-sm font-semibold text-slate-700 mb-3">API Credentials</h4>
-              <p className="text-xs text-slate-500 mb-3">
-                In HaloPSA, go to <strong>Configuration &rarr; Integrations &rarr; Halo API &rarr; Applications</strong>. Create or select an API application and copy the Client ID and Client Secret.
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs">Client ID</Label>
-                  <Input
-                    value={formData.halopsa_client_id}
-                    onChange={(e) => setFormData(p => ({ ...p, halopsa_client_id: e.target.value }))}
-                    placeholder="Enter your HaloPSA Client ID"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Client Secret</Label>
-                  <Input
-                    type="password"
-                    value={formData.halopsa_client_secret}
-                    onChange={(e) => setFormData(p => ({ ...p, halopsa_client_secret: e.target.value }))}
-                    placeholder="Enter your HaloPSA Client Secret"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <div className="mt-3">
-                <Label className="text-xs">Tenant (optional)</Label>
-                <Input
-                  value={formData.halopsa_tenant}
-                  onChange={(e) => setFormData(p => ({ ...p, halopsa_tenant: e.target.value }))}
-                  placeholder="Your HaloPSA tenant name (if applicable)"
-                  className="mt-1"
-                />
-                <p className="text-[10px] text-slate-400 mt-1">Only required for multi-tenant HaloPSA instances</p>
-              </div>
-            </div>
-
-            {/* Two-Way Sync Settings */}
-            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <h4 className="text-sm font-semibold text-purple-800 mb-3 flex items-center gap-2">
-                <RefreshCw className="w-4 h-4" />
-                Two-Way Sync Settings
-              </h4>
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox 
-                    checked={formData.halopsa_two_way_sync} 
-                    onCheckedChange={(checked) => setFormData(p => ({ ...p, halopsa_two_way_sync: checked }))} 
-                  />
-                  <span className="text-sm">Enable Two-Way Sync</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox 
-                    checked={formData.halopsa_auto_push_updates} 
-                    onCheckedChange={(checked) => setFormData(p => ({ ...p, halopsa_auto_push_updates: checked }))} 
-                  />
-                  <span className="text-sm">Auto-push project/task updates to HaloPSA</span>
-                </label>
-                
-                <div className="pt-3 border-t border-purple-200">
-                  <Label className="text-xs text-purple-700">Webhook Secret (for incoming HaloPSA webhooks)</Label>
-                  <Input 
-                    value={formData.halopsa_webhook_secret || ''} 
-                    onChange={(e) => setFormData(p => ({ ...p, halopsa_webhook_secret: e.target.value }))} 
-                    placeholder="Enter a secret key for webhook authentication" 
-                    className="mt-1" 
-                  />
-                  <p className="text-[10px] text-purple-600 mt-1">
-                    Set this same secret in HaloPSA webhook configuration. The webhook URL is: <code className="bg-purple-100 px-1 rounded">/api/functions/haloPSAWebhook?secret=YOUR_SECRET</code>
-                  </p>
+            {formData.halopsa_enabled && (
+              <>
+                {/* Connection */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
+                    Connection
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs">Authorisation Server URL</Label>
+                      <Input value={formData.halopsa_auth_url} onChange={e => setFormData(p => ({ ...p, halopsa_auth_url: e.target.value }))} placeholder="https://yourcompany.halopsa.com/auth" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Resource Server URL (API)</Label>
+                      <Input value={formData.halopsa_api_url} onChange={e => setFormData(p => ({ ...p, halopsa_api_url: e.target.value }))} placeholder="https://yourcompany.halopsa.com/api" className="mt-1" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label className="text-xs">Client ID</Label>
+                      <Input value={formData.halopsa_client_id} onChange={e => setFormData(p => ({ ...p, halopsa_client_id: e.target.value }))} placeholder="Your Client ID" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Client Secret</Label>
+                      <div className="relative mt-1">
+                        <Input type={showSecret ? "text" : "password"} value={formData.halopsa_client_secret} onChange={e => setFormData(p => ({ ...p, halopsa_client_secret: e.target.value }))} placeholder="Your Client Secret" />
+                        <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600">
+                          {showSecret ? 'Hide' : 'Show'}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Tenant (optional)</Label>
+                      <Input value={formData.halopsa_tenant} onChange={e => setFormData(p => ({ ...p, halopsa_tenant: e.target.value }))} placeholder="Tenant name" className="mt-1" />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-3 bg-white rounded-lg border border-purple-200 text-xs text-purple-700">
-                  <p className="font-medium mb-1">How Two-Way Sync Works:</p>
-                  <ul className="list-disc list-inside space-y-1 text-purple-600">
-                    <li><strong>HaloPSA → ProjectIT:</strong> Set up a webhook in HaloPSA to call our endpoint when tickets change</li>
-                    <li><strong>ProjectIT → HaloPSA:</strong> Project/task updates are pushed as notes or status changes</li>
-                    <li>Progress updates are synced as private notes on linked tickets</li>
-                  </ul>
+                {/* Sync Options */}
+                <div className="space-y-3 pt-4 border-t">
+                  <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
+                    Sync Options
+                  </h3>
+                  <div className="flex flex-wrap gap-6">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox checked={formData.halopsa_sync_customers} onCheckedChange={v => setFormData(p => ({ ...p, halopsa_sync_customers: v }))} />
+                      <span className="text-sm">Sync Customers</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox checked={formData.halopsa_sync_tickets} onCheckedChange={v => setFormData(p => ({ ...p, halopsa_sync_tickets: v }))} />
+                      <span className="text-sm">Sync Tickets</span>
+                    </label>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Excluded Client IDs (comma-separated)</Label>
+                    <Input value={formData.halopsa_excluded_ids} onChange={e => setFormData(p => ({ ...p, halopsa_excluded_ids: e.target.value }))} placeholder="101, 202, 303" className="mt-1" />
+                  </div>
                 </div>
-              </div>
-            </div>
-              <div className="flex gap-4 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox 
-                    checked={formData.halopsa_sync_customers} 
-                    onCheckedChange={(checked) => setFormData(p => ({ ...p, halopsa_sync_customers: checked }))} 
-                  />
-                  <span className="text-sm">Sync Customers</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox 
-                    checked={formData.halopsa_sync_tickets} 
-                    onCheckedChange={(checked) => setFormData(p => ({ ...p, halopsa_sync_tickets: checked }))} 
-                  />
-                  <span className="text-sm">Sync Tickets</span>
-                </label>
-              </div>
 
-              <div className="pt-2 mt-2 border-t border-slate-100">
-                <Label className="text-xs mb-1.5 block">Excluded Client IDs</Label>
-                <Input 
-                  value={formData.halopsa_excluded_ids || ''} 
-                  onChange={(e) => setFormData(p => ({ ...p, halopsa_excluded_ids: e.target.value }))}
-                  placeholder="e.g. 1, 45, 99 (Comma separated)" 
-                  className="font-mono text-sm"
-                />
-                <p className="text-[10px] text-slate-500 mt-1">
-                  Enter the HaloPSA Client IDs you want to exclude from the sync, separated by commas.
-                </p>
-              </div>
-              {/* Field Mapping */}
-              <div className="pt-2 border-t border-slate-200">
-                <button 
-                  onClick={() => setShowFieldMapping(!showFieldMapping)}
-                  className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700"
-                >
-                  <Settings className="w-4 h-4" />
-                  {showFieldMapping ? 'Hide' : 'Show'} Field Mapping
-                </button>
-                
-                {showFieldMapping && (
-                  <div className="mt-3 p-3 bg-white rounded-lg border space-y-3">
-                    <p className="text-xs text-slate-500">Map HaloPSA fields to your customer fields. Common HaloPSA fields: name, client_name, email, main_email, phone_number, main_phone, address, city, county, state, postcode</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {Object.entries(formData.halopsa_field_mapping || {}).map(([key, value]) => (
-                        <div key={key}>
-                          <Label className="text-xs capitalize">{key} → HaloPSA field</Label>
-                          <Input 
-                            value={value} 
-                            onChange={(e) => setFormData(p => ({ 
-                              ...p, 
+                {/* Field Mapping (collapsible) */}
+                <div className="pt-4 border-t">
+                  <button onClick={() => setShowFieldMapping(!showFieldMapping)} className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
+                    {showFieldMapping ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    <span className="font-medium">Field Mapping</span>
+                  </button>
+                  {showFieldMapping && (
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      {Object.entries(formData.halopsa_field_mapping).map(([key, value]) => (
+                        <div key={key} className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-slate-500 w-16 capitalize">{key}</span>
+                          <span className="text-xs text-slate-300">→</span>
+                          <Input
+                            value={value}
+                            onChange={e => setFormData(p => ({
+                              ...p,
                               halopsa_field_mapping: { ...p.halopsa_field_mapping, [key]: e.target.value }
-                            }))} 
-                            className="mt-1 h-8 text-sm" 
-                            placeholder={`HaloPSA field for ${key}`}
+                            }))}
+                            className="flex-1 h-8 text-xs"
                           />
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
-                <Button 
-                  onClick={handleTestConnection} 
-                  disabled={testingConnection || syncing}
-                  variant="outline"
-                  className="border-purple-300 text-purple-600 hover:bg-purple-50"
-                >
-                  {testingConnection ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Testing...
-                    </>
-                  ) : (
-                    'Test Connection'
-                  )}
-                </Button>
-                <Button 
-                  onClick={handleSyncCustomers} 
-                  disabled={syncing || testingConnection}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  {syncing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Syncing...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Sync Customers Now
-                    </>
-                  )}
-                </Button>
-                {settings[0]?.halopsa_last_sync && (
-                  <span className="text-xs text-slate-500">
-                    Last sync: {new Date(settings[0].halopsa_last_sync).toLocaleString()}
-                  </span>
-                )}
-              </div>
-              
-              {syncResult && (
-                <div className={cn(
-                  "p-3 rounded-lg text-sm",
-                  syncResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
-                )}>
-                  <p>{syncResult.message}</p>
-                  {syncResult.details && (
-                    <pre className="mt-2 text-xs bg-white/50 p-2 rounded overflow-x-auto">
-                      {typeof syncResult.details === 'object' ? JSON.stringify(syncResult.details, null, 2) : syncResult.details}
-                    </pre>
-                  )}
-                </div>
-              )}
-
-              <p className="text-xs text-slate-500 bg-blue-50 p-3 rounded-lg border border-blue-200">
-                <strong>Note:</strong> Credentials are stored in environment variables (HALOPSA_CLIENT_ID, HALOPSA_CLIENT_SECRET, HALOPSA_TENANT). The URL is saved above. Use "Test Connection" to verify your setup.
-              </p>
-            </div>
-          )}
-          </div>
-          )}
-        </div>
-
-
-
-        {/* Twilio SMS Card */}
-        <div className="border rounded-xl overflow-hidden">
-          <button
-            onClick={() => setSelectedIntegration(selectedIntegration === 'twilio' ? null : 'twilio')}
-            className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                <Phone className="w-5 h-5 text-red-600" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-slate-900">SMS (Twilio)</h3>
-                <p className="text-xs text-slate-500">Send SMS notifications to team members</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant={formData.twilio_enabled ? "default" : "outline"} className={formData.twilio_enabled ? "bg-emerald-500" : ""}>
-                {formData.twilio_enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
-              {selectedIntegration === 'twilio' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-            </div>
-          </button>
-          
-          {selectedIntegration === 'twilio' && (
-          <div className="p-4 space-y-4 bg-white">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox 
-                checked={formData.twilio_enabled} 
-                onCheckedChange={(checked) => setFormData(p => ({ ...p, twilio_enabled: checked }))} 
-              />
-              <span className="text-sm font-medium">Enable Twilio SMS</span>
-            </label>
-
-            {formData.twilio_enabled && (
-              <div className="space-y-4 pt-4 border-t border-slate-200">
-                <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                  <p className="text-xs text-red-700">
-                    <strong>Setup:</strong> Create a Twilio account at <a href="https://twilio.com" target="_blank" rel="noopener noreferrer" className="underline">twilio.com</a>. Find your Account SID and Auth Token in the console. You'll also need to purchase a phone number.
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs">Account SID</Label>
-                    <Input 
-                      value={formData.twilio_account_sid} 
-                      onChange={(e) => setFormData(p => ({ ...p, twilio_account_sid: e.target.value }))} 
-                      placeholder="ACxxxxxxxxx" 
-                      className="mt-1 font-mono text-sm" 
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Auth Token</Label>
-                    <Input 
-                      type="password"
-                      value={formData.twilio_auth_token} 
-                      onChange={(e) => setFormData(p => ({ ...p, twilio_auth_token: e.target.value }))} 
-                      placeholder="Your auth token" 
-                      className="mt-1" 
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs">Twilio Phone Number</Label>
-                    <Input 
-                      value={formData.twilio_phone_number} 
-                      onChange={(e) => setFormData(p => ({ ...p, twilio_phone_number: e.target.value }))} 
-                      placeholder="+1234567890" 
-                      className="mt-1" 
-                    />
-                  </div>
-                </div>
-
-                <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-slate-50">
-                  <Checkbox 
-                    checked={formData.sms_notifications_enabled} 
-                    onCheckedChange={(checked) => setFormData(p => ({ ...p, sms_notifications_enabled: checked }))} 
-                  />
-                  <span className="text-sm">Enable SMS for urgent task reminders</span>
-                </label>
-              </div>
-            )}
-          </div>
-          )}
-        </div>
-
-        {/* QuickBooks Online Card */}
-        <div className="border rounded-xl overflow-hidden">
-          <button
-            onClick={() => setSelectedIntegration(selectedIntegration === 'quickbooks' ? null : 'quickbooks')}
-            className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-green-600" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-slate-900">QuickBooks Online</h3>
-                <p className="text-xs text-slate-500">Sync customers and invoices with QuickBooks</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant={formData.quickbooks_enabled ? "default" : "outline"} className={formData.quickbooks_enabled ? "bg-emerald-500" : ""}>
-                {formData.quickbooks_enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
-              {selectedIntegration === 'quickbooks' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-            </div>
-          </button>
-          
-          {selectedIntegration === 'quickbooks' && (
-          <div className="p-4 space-y-4 bg-white">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox 
-                checked={formData.quickbooks_enabled} 
-                onCheckedChange={(checked) => setFormData(p => ({ ...p, quickbooks_enabled: checked }))} 
-              />
-              <span className="text-sm font-medium">Enable QuickBooks Integration</span>
-            </label>
-
-            {formData.quickbooks_enabled && (
-              <div className="space-y-4 pt-4 border-t border-slate-200">
-                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <p className="text-xs text-green-700">
-                    <strong>Setup:</strong> Create an app at <a href="https://developer.intuit.com" target="_blank" rel="noopener noreferrer" className="underline">developer.intuit.com</a>. 
-                    Set up OAuth 2.0 credentials and add the Client ID and Secret as environment variables: <code className="bg-green-100 px-1 rounded">QUICKBOOKS_CLIENT_ID</code> and <code className="bg-green-100 px-1 rounded">QUICKBOOKS_CLIENT_SECRET</code>.
-                  </p>
-                </div>
-                
-                <div>
-                  <Label className="text-xs">Company ID (Realm ID)</Label>
-                  <Input 
-                    value={formData.quickbooks_realm_id} 
-                    onChange={(e) => setFormData(p => ({ ...p, quickbooks_realm_id: e.target.value }))} 
-                    placeholder="Enter your QuickBooks Company ID" 
-                    className="mt-1" 
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">Found in QuickBooks under Company Settings or in the URL when logged in</p>
-                </div>
-
-                <div className="flex gap-4 pt-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox 
-                      checked={formData.quickbooks_sync_customers} 
-                      onCheckedChange={(checked) => setFormData(p => ({ ...p, quickbooks_sync_customers: checked }))} 
-                    />
-                    <span className="text-sm">Sync Customers</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox 
-                      checked={formData.quickbooks_sync_invoices} 
-                      onCheckedChange={(checked) => setFormData(p => ({ ...p, quickbooks_sync_invoices: checked }))} 
-                    />
-                    <span className="text-sm">Sync Invoices</span>
-                  </label>
-                </div>
-
-                {/* Customer Mapping Section */}
-                <div className="pt-2 border-t border-slate-200">
-                  <button 
-                    onClick={() => setShowCustomerMapping(!showCustomerMapping)}
-                    className="flex items-center gap-2 text-sm text-green-600 hover:text-green-700"
-                  >
-                    <Users className="w-4 h-4" />
-                    {showCustomerMapping ? 'Hide' : 'Show'} Customer Mapping
-                  </button>
-                  
-                  {showCustomerMapping && (
-                    <div className="mt-3 p-3 bg-slate-50 rounded-lg border space-y-3">
-                      <p className="text-xs text-slate-500">Map your local customers to QuickBooks customers. Click "Fetch QuickBooks Customers" first to load the list.</p>
-                      
-                      {qbCustomers.length > 0 && (
-                        <div className="max-h-64 overflow-y-auto space-y-2">
-                          {localCustomers.filter(c => c.is_company).map(customer => {
-                            const mapping = getQbMappingForCustomer(customer.id);
-                            return (
-                              <div key={customer.id} className="flex items-center gap-3 p-2 bg-white rounded-lg border">
-                                <div className="flex-1">
-                                  <p className="font-medium text-sm text-slate-900">{customer.name}</p>
-                                  <p className="text-xs text-slate-500">{customer.email}</p>
-                                </div>
-                                <select
-                                  value={mapping?.quickbooks_customer_id || ''}
-                                  onChange={(e) => {
-                                    const qbCust = qbCustomers.find(q => q.Id === e.target.value);
-                                    handleMapCustomer(customer.id, e.target.value, qbCust?.DisplayName || '');
-                                  }}
-                                  className="text-sm border rounded-md px-2 py-1 w-48"
-                                >
-                                  <option value="">-- Select QB Customer --</option>
-                                  {qbCustomers.map(qb => (
-                                    <option key={qb.Id} value={qb.Id}>{qb.DisplayName}</option>
-                                  ))}
-                                </select>
-                                {mapping && (
-                                  <Badge className="bg-green-100 text-green-700">Mapped</Badge>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                      
-                      {qbCustomers.length === 0 && (
-                        <p className="text-sm text-slate-400 text-center py-4">
-                          Click "Test Connection" to fetch QuickBooks customers
-                        </p>
-                      )}
-                    </div>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
-                  <Button 
-                    onClick={handleQbTest} 
-                    disabled={qbTesting || qbSyncing}
-                    variant="outline"
-                    className="border-green-300 text-green-600 hover:bg-green-50"
-                  >
-                    {qbTesting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Testing...
-                      </>
-                    ) : (
-                      'Test Connection'
-                    )}
+                {/* Actions */}
+                <div className="flex items-center gap-3 pt-4 border-t">
+                  <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                    {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : 'Save Settings'}
                   </Button>
-                  <Button 
-                    onClick={handleQbSyncCustomers} 
-                    disabled={qbSyncing || qbTesting}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {qbSyncing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Syncing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Sync Customers
-                      </>
-                    )}
+                  <Button onClick={handleTestConnection} disabled={testingConnection || syncing} variant="outline">
+                    {testingConnection ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : 'Test Connection'}
                   </Button>
-                  {settings[0]?.quickbooks_last_sync && (
-                    <span className="text-xs text-slate-500">
-                      Last sync: {new Date(settings[0].quickbooks_last_sync).toLocaleString()}
+                  <Button onClick={handleSyncCustomers} disabled={syncing || testingConnection} variant="outline" className="border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                    {syncing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Syncing...</> : <><RefreshCw className="w-4 h-4 mr-2" />Sync Customers</>}
+                  </Button>
+                  {settings[0]?.halopsa_last_sync && (
+                    <span className="text-xs text-slate-400 ml-auto">
+                      Last sync: {new Date(settings[0].halopsa_last_sync).toLocaleString()}
                     </span>
                   )}
                 </div>
-                
-                {qbResult && (
+
+                {syncResult && (
                   <div className={cn(
                     "p-3 rounded-lg text-sm",
-                    qbResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+                    syncResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
                   )}>
-                    <p>{qbResult.message}</p>
+                    <p>{syncResult.message}</p>
+                    {syncResult.details && (
+                      <pre className="mt-2 text-xs bg-white/50 p-2 rounded overflow-x-auto">
+                        {typeof syncResult.details === 'object' ? JSON.stringify(syncResult.details, null, 2) : syncResult.details}
+                      </pre>
+                    )}
                   </div>
                 )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Customer Mapping Tab */}
+        {activeTab === 'customers' && (
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700">HaloPSA Customer Mapping</h3>
+                <p className="text-xs text-slate-500 mt-0.5">View customers from HaloPSA and map them to local records</p>
+              </div>
+              <Button onClick={fetchHaloCustomers} disabled={loadingCustomers} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                {loadingCustomers ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Loading...</> : <><RefreshCw className="w-4 h-4 mr-2" />Load Customers</>}
+              </Button>
+            </div>
+
+            {haloCustomers.length === 0 && !loadingCustomers && (
+              <div className="text-center py-12 text-slate-400">
+                <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Click "Load Customers" to fetch your HaloPSA client list</p>
+              </div>
+            )}
+
+            {haloCustomers.length > 0 && (
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="text-left px-4 py-2.5 font-medium text-slate-600">HaloPSA Customer</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-slate-600">Halo ID</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-slate-600">Mapped To</th>
+                      <th className="text-right px-4 py-2.5 font-medium text-slate-600">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {haloCustomers.map(hc => {
+                      const mappedId = customerMappings[hc.id];
+                      const mappedCustomer = localCustomers.find(lc => lc.id === mappedId);
+                      const autoMapped = localCustomers.find(lc => lc.halo_id === String(hc.id));
+
+                      return (
+                        <tr key={hc.id} className="hover:bg-slate-50/50">
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-slate-800">{hc.name}</p>
+                            {hc.email && <p className="text-xs text-slate-400">{hc.email}</p>}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs text-slate-500">{hc.id}</td>
+                          <td className="px-4 py-3">
+                            {autoMapped ? (
+                              <span className="text-sm text-slate-700">{autoMapped.name || autoMapped.company_name}</span>
+                            ) : (
+                              <select
+                                value={mappedId || ''}
+                                onChange={e => handleMapCustomer(hc.id, e.target.value || null)}
+                                className="text-sm border border-slate-200 rounded-md px-2 py-1.5 w-full max-w-xs bg-white"
+                              >
+                                <option value="">— Select local customer —</option>
+                                {localCustomers.filter(lc => !lc.halo_id).map(lc => (
+                                  <option key={lc.id} value={lc.id}>{lc.name || lc.company_name}</option>
+                                ))}
+                              </select>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {autoMapped ? (
+                              <Badge className="bg-emerald-100 text-emerald-700 border-0">Synced</Badge>
+                            ) : mappedId ? (
+                              <Badge className="bg-blue-100 text-blue-700 border-0">Mapped</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-slate-400 border-slate-200">Unmapped</Badge>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {syncResult && activeTab === 'customers' && (
+              <div className={cn(
+                "p-3 rounded-lg text-sm",
+                syncResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+              )}>
+                {syncResult.message}
               </div>
             )}
           </div>
-          )}
-        </div>
-
-        {/* Hudu Card */}
-        <div className="border rounded-xl overflow-hidden">
-          <button
-            onClick={() => setSelectedIntegration(selectedIntegration === 'hudu' ? null : 'hudu')}
-            className="w-full p-4 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-slate-900">Hudu</h3>
-                <p className="text-xs text-slate-500">Sync customers from Hudu documentation platform</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant={formData.hudu_enabled ? "default" : "outline"} className={formData.hudu_enabled ? "bg-emerald-500" : ""}>
-                {formData.hudu_enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
-              {selectedIntegration === 'hudu' ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
-            </div>
-          </button>
-          
-          {selectedIntegration === 'hudu' && (
-          <div className="p-4 space-y-4 bg-white">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox 
-                checked={formData.hudu_enabled} 
-                onCheckedChange={(checked) => setFormData(p => ({ ...p, hudu_enabled: checked }))} 
-              />
-              <span className="text-sm font-medium">Enable Hudu Integration</span>
-            </label>
-
-          {formData.hudu_enabled && (
-            <div className="space-y-4 pt-4 border-t border-slate-200">
-              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-xs text-blue-700">
-                  <strong>Where to find your API key:</strong> In Hudu, go to <strong>Admin → API Keys</strong> and create a new API key. Copy both the API key and your Hudu instance URL.
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs">Hudu Base URL</Label>
-                  <Input 
-                    value={formData.hudu_base_url} 
-                    onChange={(e) => setFormData(p => ({ ...p, hudu_base_url: e.target.value }))} 
-                    placeholder="https://yourcompany.huducloud.com" 
-                    className="mt-1" 
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">Your Hudu instance URL</p>
-                </div>
-                <div>
-                  <Label className="text-xs">API Key</Label>
-                  <Input 
-                    type="password"
-                    value={formData.hudu_api_key} 
-                    onChange={(e) => setFormData(p => ({ ...p, hudu_api_key: e.target.value }))} 
-                    placeholder="Enter your Hudu API key" 
-                    className="mt-1" 
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">From Admin → API Keys</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox 
-                    checked={formData.hudu_sync_customers} 
-                    onCheckedChange={(checked) => setFormData(p => ({ ...p, hudu_sync_customers: checked }))} 
-                  />
-                  <span className="text-sm">Sync Companies as Customers</span>
-                </label>
-              </div>
-
-              {/* Hudu Field Mapping */}
-              <div className="pt-2 border-t border-slate-200">
-                <button 
-                  onClick={() => setShowHuduFieldMapping(!showHuduFieldMapping)}
-                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
-                >
-                  <Settings className="w-4 h-4" />
-                  {showHuduFieldMapping ? 'Hide' : 'Show'} Field Mapping
-                </button>
-                
-                {showHuduFieldMapping && (
-                  <div className="mt-3 p-3 bg-slate-50 rounded-lg border space-y-3">
-                    <p className="text-xs text-slate-500">Map Hudu Company fields to your customer fields. Common Hudu fields: name, nickname, email, phone_number, address_line_1, address_line_2, city, state, zip, country</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {Object.entries(formData.hudu_field_mapping || {}).map(([key, value]) => (
-                        <div key={key}>
-                          <Label className="text-xs capitalize">{key} → Hudu field</Label>
-                          <Input 
-                            value={value} 
-                            onChange={(e) => setFormData(p => ({ 
-                              ...p, 
-                              hudu_field_mapping: { ...p.hudu_field_mapping, [key]: e.target.value }
-                            }))} 
-                            className="mt-1 h-8 text-sm" 
-                            placeholder={`Hudu field for ${key}`}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
-                <Button 
-                  onClick={handleHuduTest} 
-                  disabled={huduTesting || huduSyncing}
-                  variant="outline"
-                  className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                >
-                  {huduTesting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Testing...
-                    </>
-                  ) : (
-                    'Test Connection'
-                  )}
-                </Button>
-                <Button 
-                  onClick={handleHuduSync} 
-                  disabled={huduSyncing || huduTesting}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {huduSyncing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Syncing...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Sync Customers Now
-                    </>
-                  )}
-                </Button>
-                {settings[0]?.hudu_last_sync && (
-                  <span className="text-xs text-slate-500">
-                    Last sync: {new Date(settings[0].hudu_last_sync).toLocaleString()}
-                  </span>
-                )}
-              </div>
-              
-              {huduResult && (
-                <div className={cn(
-                  "p-3 rounded-lg text-sm",
-                  huduResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
-                )}>
-                  <p>{huduResult.message}</p>
-                  {huduResult.details && (
-                    <pre className="mt-2 text-xs bg-white/50 p-2 rounded overflow-x-auto">
-                      {typeof huduResult.details === 'object' ? JSON.stringify(huduResult.details, null, 2) : huduResult.details}
-                    </pre>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-          </div>
-          )}
-        </div>
+        )}
       </div>
-      )}
     </div>
   );
 }

@@ -1,7 +1,6 @@
 const smsService = {
   /**
-   * Send SMS — mirrors Base44's SendSMS integration
-   * Uses Twilio if configured
+   * Send SMS via Twilio
    */
   async send({ to, body }) {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;

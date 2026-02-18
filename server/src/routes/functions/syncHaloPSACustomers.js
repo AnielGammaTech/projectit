@@ -152,7 +152,7 @@ export default async function handler(req, res) {
     let created = 0;
     let updated = 0;
     let matched = 0;
-    const haloIdToBase44Id = {};
+    const haloIdToProjectId = {};
 
     const getField = (obj, fieldPath) => {
       if (!fieldPath) return '';
@@ -216,7 +216,7 @@ export default async function handler(req, res) {
       for (const item of customersToUpdate) {
         try {
           await entityService.update('Customer', item.id, item.data);
-          haloIdToBase44Id[item.haloId] = { id: item.id, name: item.data.name };
+          haloIdToProjectId[item.haloId] = { id: item.id, name: item.data.name };
           updated++;
           await new Promise(r => setTimeout(r, 50));
         } catch (e) {
@@ -237,7 +237,7 @@ export default async function handler(req, res) {
           for (const c of createdEntities) {
             const haloId = haloClientMap[c.external_id];
             if (haloId) {
-              haloIdToBase44Id[haloId] = { id: c.id, name: c.name };
+              haloIdToProjectId[haloId] = { id: c.id, name: c.name };
             }
           }
         } catch (e) {
@@ -272,12 +272,12 @@ export default async function handler(req, res) {
         const usersToCreate = [];
 
         for (const user of haloUsers) {
-          if (!user.client_id || !haloIdToBase44Id[user.client_id]) continue;
+          if (!user.client_id || !haloIdToProjectId[user.client_id]) continue;
 
           const userExternalId = `halo_user_${user.id}`;
           if (existingContactMap[userExternalId]) continue;
 
-          const parentInfo = haloIdToBase44Id[user.client_id];
+          const parentInfo = haloIdToProjectId[user.client_id];
           const userName = user.name || user.username || 'Unknown User';
 
           usersToCreate.push({
@@ -356,9 +356,9 @@ export default async function handler(req, res) {
 
           for (const site of haloSites) {
             if (!site.client_id) continue;
-            if (!haloIdToBase44Id[site.client_id]) continue;
+            if (!haloIdToProjectId[site.client_id]) continue;
 
-            const parentInfo = haloIdToBase44Id[site.client_id];
+            const parentInfo = haloIdToProjectId[site.client_id];
             const siteExternalId = `halo_site_${site.id}`;
             const existingSite = existingSiteMap[siteExternalId];
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -10,6 +11,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { checkAppState } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,8 +34,10 @@ export default function Login() {
       }
 
       localStorage.setItem('projectit_token', data.token);
+      // Re-check auth state so AuthenticatedApp renders
+      await checkAppState();
       const returnUrl = searchParams.get('returnUrl') || '/';
-      window.location.href = returnUrl;
+      navigate(returnUrl, { replace: true });
     } catch (err) {
       setError('Could not connect to server');
       setLoading(false);

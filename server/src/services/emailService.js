@@ -11,7 +11,7 @@ function getClient() {
 
 const emailService = {
   /**
-   * Send an email via Resend — mirrors Base44's SendEmail integration
+   * Send an email via Resend
    * @param {Object} params
    * @param {string} params.to - Recipient email
    * @param {string} params.subject - Email subject

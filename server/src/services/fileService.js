@@ -3,7 +3,7 @@ import { join } from 'path';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || '/data/uploads';
+export const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 
 // Ensure upload directory exists
 if (!existsSync(UPLOAD_DIR)) {
@@ -30,8 +30,11 @@ const fileService = {
    * Get the public URL for an uploaded file
    */
   getFileUrl(filename) {
-    const baseUrl = process.env.API_URL || `http://localhost:${process.env.PORT || 3001}`;
-    return `${baseUrl}/uploads/${filename}`;
+    if (process.env.API_URL) {
+      return `${process.env.API_URL}/uploads/${filename}`;
+    }
+    // Use relative path — works when frontend and API share the same origin
+    return `/uploads/${filename}`;
   },
 
   /**

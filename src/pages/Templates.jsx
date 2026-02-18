@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase, Loader2, Search, Building2, Users, X } from 'lucide-react';
@@ -38,6 +39,7 @@ import TemplateModal from '@/components/modals/TemplateModal';
 
 export default function Templates() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -139,7 +141,7 @@ export default function Templates() {
     
     setCreating(false);
     setCreateFromTemplate(null);
-    window.location.href = createPageUrl('ProjectDetail') + `?id=${newProject.id}`;
+    navigate(createPageUrl('ProjectDetail') + `?id=${newProject.id}`);
   };
 
   const handleNewTemplate = (type) => {
