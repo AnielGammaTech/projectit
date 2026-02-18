@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -28,7 +28,8 @@ import {
   Globe,
   RotateCcw,
   Tag,
-  Crown
+  Crown,
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -67,7 +68,6 @@ import ProjectActivityFeed from '@/components/project/ProjectActivityFeed';
 import UpcomingDueDates from '@/components/project/UpcomingDueDates';
 import TimeTracker from '@/components/project/TimeTracker';
 import HaloPSATicketLink from '@/components/project/HaloPSATicketLink';
-import ProjectInsightsWidget from '@/components/dashboard/ProjectInsightsWidget';
 import ProjectSidebar from '@/components/project/ProjectSidebar';
 import UpcomingTasksWidget from '@/components/project/UpcomingTasksWidget';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
@@ -616,7 +616,7 @@ export default function ProjectDetail() {
 
   if (loadingProject) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
         <div className="animate-pulse text-slate-400">Loading project...</div>
       </div>
     );
@@ -624,7 +624,7 @@ export default function ProjectDetail() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-slate-900 mb-2">Project not found</h2>
           <Link to={createPageUrl('Dashboard')}>
@@ -640,7 +640,7 @@ export default function ProjectDetail() {
 
   if (!hasAccess()) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-red-600" />
@@ -662,7 +662,7 @@ export default function ProjectDetail() {
     const taskProgress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
 
     return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <ProjectNavHeader project={project} currentPage="ProjectDetail" />
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -915,10 +915,10 @@ export default function ProjectDetail() {
             transition={{ delay: 0.2 }}
             className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
           >
-            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-indigo-100/50">
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-[#0069AF]/10 to-[#0069AF]/5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-200">
+                  <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
                     <ListTodo className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -929,7 +929,7 @@ export default function ProjectDetail() {
                 <Button
                   size="sm"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingTask(null); setShowTaskModal(true); }}
-                  className="bg-indigo-600 hover:bg-indigo-700 shadow-md"
+                  className="bg-[#0069AF] hover:bg-[#0F2F44] shadow-md"
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
@@ -961,10 +961,10 @@ export default function ProjectDetail() {
             transition={{ delay: 0.3 }}
             className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
           >
-            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-100/50">
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-[#0F2F44]/10 to-[#0F2F44]/5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-amber-500 shadow-lg shadow-amber-200">
+                  <div className="p-2.5 rounded-xl bg-[#0F2F44] shadow-lg shadow-[#0F2F44]/20">
                     <Package className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -975,7 +975,7 @@ export default function ProjectDetail() {
                 <Button
                   size="sm"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingPart(null); setShowPartModal(true); }}
-                  className="bg-amber-500 hover:bg-amber-600 shadow-md flex-shrink-0"
+                  className="bg-[#0F2F44] hover:bg-[#133F5C] shadow-md flex-shrink-0"
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
@@ -1011,9 +1011,9 @@ export default function ProjectDetail() {
             transition={{ delay: 0.4 }}
             className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
           >
-            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-purple-100/50">
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-[#0069AF]/10 to-[#74C7FF]/10">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-violet-600 shadow-lg shadow-violet-200">
+                <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
                   <MessageSquare className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -1024,7 +1024,7 @@ export default function ProjectDetail() {
             </div>
             <div className="p-4">
               <div className="flex items-center justify-center gap-4 text-sm">
-                <div className="flex items-center gap-1.5 text-violet-600">
+                <div className="flex items-center gap-1.5 text-[#0069AF]">
                   <MessageSquare className="w-4 h-4" />
                   <span className="font-medium">{projectNotes.filter(n => n.type === 'message' || n.type === 'note').length}</span>
                   <span className="text-slate-400">messages</span>
@@ -1047,9 +1047,9 @@ export default function ProjectDetail() {
             transition={{ delay: 0.5 }}
             className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
           >
-            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-teal-50 to-cyan-100/50">
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-[#133F5C]/10 to-[#74C7FF]/10">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-teal-600 shadow-lg shadow-teal-200">
+                <div className="p-2.5 rounded-xl bg-[#133F5C] shadow-lg shadow-[#133F5C]/20">
                   <FileText className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -1061,7 +1061,7 @@ export default function ProjectDetail() {
             <div className="p-4">
               <div className="flex items-center justify-center gap-4 text-sm">
                 {fileFolders.length > 0 && (
-                  <div className="flex items-center gap-1.5 text-teal-600">
+                  <div className="flex items-center gap-1.5 text-[#133F5C]">
                     <Folder className="w-4 h-4" />
                     <span className="font-medium">{fileFolders.length}</span>
                     <span className="text-slate-400">folders</span>
@@ -1077,40 +1077,28 @@ export default function ProjectDetail() {
           </motion.div>
           </Link>
 
-          {/* AI Project Assistant Card */}
+          {/* Recent Activity Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-fit"
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-fit md:col-span-2"
           >
-            <ProjectInsightsWidget projectId={projectId} tasks={tasks} parts={parts} />
-          </motion.div>
-
-          {/* Time Report Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-fit hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
-            onClick={() => navigate(createPageUrl('ProjectTime') + `?id=${projectId}`)}
-          >
-            <div className="p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-xl bg-purple-100">
-                  <Clock className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900">Time Report</h3>
-                  <p className="text-sm text-slate-500">Track project hours</p>
+            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-[#74C7FF]/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-[#0F2F44] shadow-lg shadow-[#0F2F44]/20">
+                    <Activity className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">Recent Activity</h3>
+                    <p className="text-sm text-slate-500">Latest project updates</p>
+                  </div>
                 </div>
               </div>
-              <TimeTracker 
-                projectId={projectId} 
-                currentUser={currentUser} 
-                timeBudgetHours={project.time_budget_hours || 0}
-                variant="compact"
-              />
+            </div>
+            <div className="p-4 max-h-[300px] overflow-y-auto">
+              <ProjectActivityFeed projectId={projectId} progressUpdates={progressUpdates} compact />
             </div>
           </motion.div>
 
@@ -1127,23 +1115,6 @@ export default function ProjectDetail() {
         </motion.div>
         </div>
 
-      {/* Activity Feed - Full Width Below */}
-      <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="mt-6"
-        >
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-indigo-50/30">
-              <h3 className="font-semibold text-slate-900 text-lg">Recent Activity</h3>
-              <p className="text-sm text-slate-500">Track all project updates and changes</p>
-            </div>
-            <div className="p-6">
-              <ProjectActivityFeed projectId={projectId} progressUpdates={progressUpdates} />
-            </div>
-          </div>
-      </motion.div>
 
       {/* Modals */}
       <ProjectModal

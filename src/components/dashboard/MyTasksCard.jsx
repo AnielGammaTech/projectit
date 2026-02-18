@@ -23,7 +23,7 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
   const activeProjectIds = projects.filter(p => p.status !== 'archived' && p.status !== 'completed').map(p => p.id);
 
   const myTasks = tasks
-    .filter(t => t.assigned_to === currentUserEmail && t.status !== 'completed' && activeProjectIds.includes(t.project_id))
+    .filter(t => t.assigned_to === currentUserEmail && t.status !== 'completed' && t.status !== 'archived' && activeProjectIds.includes(t.project_id))
     .slice(0, 5);
 
   const myParts = parts
@@ -36,8 +36,8 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
     <div className="bg-white rounded-2xl border border-slate-100 p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-indigo-50">
-            <ListTodo className="w-5 h-5 text-indigo-600" />
+          <div className="p-2 rounded-xl bg-[#0069AF]/10">
+            <ListTodo className="w-5 h-5 text-[#0069AF]" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-slate-900">My Tasks</h3>

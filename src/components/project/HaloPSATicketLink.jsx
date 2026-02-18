@@ -87,7 +87,7 @@ export default function HaloPSATicketLink({ project, onUpdate }) {
           href={project.halopsa_ticket_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-sm font-medium transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#0069AF]/10 hover:bg-[#0069AF]/20 text-[#0069AF] rounded-lg text-sm font-medium transition-colors"
         >
           <Ticket className="w-4 h-4" />
           Ticket #{project.halopsa_ticket_id}
@@ -147,9 +147,9 @@ export default function HaloPSATicketLink({ project, onUpdate }) {
           </DialogHeader>
           <div className="space-y-4 py-4">
             {project?.client && (
-              <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
-                <p className="text-xs text-indigo-600 font-medium mb-1">Customer</p>
-                <p className="text-sm font-semibold text-indigo-900">{project.client}</p>
+              <div className="p-3 bg-[#0069AF]/10 rounded-lg border border-[#0069AF]/20">
+                <p className="text-xs text-[#0069AF] font-medium mb-1">Customer</p>
+                <p className="text-sm font-semibold text-[#0F2F44]">{project.client}</p>
               </div>
             )}
             <div>

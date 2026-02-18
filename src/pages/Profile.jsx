@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -138,9 +138,9 @@ export default function Profile() {
               <div className="flex items-center gap-6">
                 <div className="relative">
                   {formData.avatar_url ? (
-                    <img 
-                      src={formData.avatar_url} 
-                      alt="Avatar" 
+                    <img
+                      src={resolveUploadUrl(formData.avatar_url)}
+                      alt="Avatar"
                       className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                     />
                   ) : (

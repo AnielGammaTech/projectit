@@ -2,45 +2,33 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { 
-  BarChart3, PieChart, TrendingUp, Calendar, Users, Package, 
-  CheckCircle2, Clock, AlertTriangle, Download, Filter, Timer,
-  DollarSign, FileText, Activity, Bell, ChevronDown, ShoppingCart, Truck, Sparkles, Crown
+import {
+  BarChart3, PieChart, TrendingUp, Users, Package,
+  CheckCircle2, Clock, DollarSign, Activity, Truck,
+  ShoppingCart, Timer, ArrowUpRight, ArrowDownRight, Minus
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { format, subDays, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, LineChart, Line } from 'recharts';
+import { format, subDays } from 'date-fns';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, AreaChart, Area } from 'recharts';
 import { cn } from '@/lib/utils';
-import AIReportAssistant from '@/components/reports/AIReportAssistant';
 
-const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const COLORS = ['#0069AF', '#22c55e', '#f59e0b', '#ef4444', '#0F2F44', '#74C7FF'];
 
 export default function Reports() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const initialType = urlParams.get('type') || 'financial';
-  
-  const [reportType, setReportType] = useState(initialType);
-  const [dateRange, setDateRange] = useState('30');
+  const [activeTab, setActiveTab] = useState('overview');
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
-  
-  // Update reportType when URL changes
-  useEffect(() => {
-    const type = urlParams.get('type');
-    if (type) setReportType(type);
-  }, [window.location.search]);
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects'],
     queryFn: () => base44.entities.Project.list('-created_date')
   });
@@ -75,606 +63,482 @@ export default function Reports() {
     queryFn: () => base44.entities.Customer.list()
   });
 
-  const { data: proposals = [] } = useQuery({
-    queryKey: ['proposals'],
-    queryFn: () => base44.entities.Proposal.list('-created_date')
-  });
-
-  // Filter by date range
-  const startDate = subDays(new Date(), parseInt(dateRange));
-  const filterByDate = (items) => items.filter(item => 
-    new Date(item.created_date) >= startDate
-  );
-
-  const filteredTasks = filterByDate(tasks);
-  const filteredProjects = filterByDate(projects);
-
-  // Stats calculations
+  // Calculations
+  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
   const completedTasks = tasks.filter(t => t.status === 'completed');
+  const activeTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived');
   const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed');
-  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived');
+  const totalHours = (timeEntries.reduce((sum, e) => sum + (e.duration_minutes || 0), 0) / 60);
 
-  // Financial calculations
+  // Financial
   const projectParts = parts.filter(p => p.project_id);
-  const stockedInventory = inventory;
-  const partsInTransit = parts.filter(p => p.status === 'ordered');
-  const partsToOrder = parts.filter(p => p.status === 'needed');
-
   const projectItemsCost = projectParts.reduce((sum, p) => sum + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
   const projectItemsRetail = projectParts.reduce((sum, p) => sum + ((p.quantity || 1) * (p.sell_price || p.unit_cost || 0)), 0);
-  const stockedCost = stockedInventory.reduce((sum, i) => sum + ((i.quantity_in_stock || 0) * (i.unit_cost || 0)), 0);
-  const stockedRetail = stockedInventory.reduce((sum, i) => sum + ((i.quantity_in_stock || 0) * (i.sell_price || i.unit_cost || 0)), 0);
+  const stockedCost = inventory.reduce((sum, i) => sum + ((i.quantity_in_stock || 0) * (i.unit_cost || 0)), 0);
+  const stockedRetail = inventory.reduce((sum, i) => sum + ((i.quantity_in_stock || 0) * (i.sell_price || i.unit_cost || 0)), 0);
+  const partsInTransit = parts.filter(p => p.status === 'ordered');
+  const partsNeeded = parts.filter(p => p.status === 'needed');
   const transitCost = partsInTransit.reduce((sum, p) => sum + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
-  const transitRetail = partsInTransit.reduce((sum, p) => sum + ((p.quantity || 1) * (p.sell_price || p.unit_cost || 0)), 0);
-  const toOrderCost = partsToOrder.reduce((sum, p) => sum + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
-  const toOrderRetail = partsToOrder.reduce((sum, p) => sum + ((p.quantity || 1) * (p.sell_price || p.unit_cost || 0)), 0);
-
+  const neededCost = partsNeeded.reduce((sum, p) => sum + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
   const totalCost = projectItemsCost + stockedCost;
   const totalRetail = projectItemsRetail + stockedRetail;
   const margin = totalRetail - totalCost;
   const marginPercent = totalRetail > 0 ? ((margin / totalRetail) * 100).toFixed(1) : 0;
 
-  // Selected project data
-  const selectedProject = projects.find(p => p.id === selectedProjectId);
-  const selectedProjectParts = parts.filter(p => p.project_id === selectedProjectId);
-  const selectedCustomer = selectedProject ? customers.find(c => c.id === selectedProject.customer_id) : null;
-
-  const getProjectPartsByStatus = (status) => selectedProjectParts.filter(p => p.status === status);
-  const getPartsCostByStatus = (status) => getProjectPartsByStatus(status).reduce((sum, p) => sum + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
-  const getPartsRetailByStatus = (status) => getProjectPartsByStatus(status).reduce((sum, p) => sum + ((p.quantity || 1) * (p.sell_price || p.unit_cost || 0)), 0);
-
-  const projectTotalCost = selectedProjectParts.reduce((sum, p) => sum + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
-  const projectTotalRetail = selectedProjectParts.reduce((sum, p) => sum + ((p.quantity || 1) * (p.sell_price || p.unit_cost || 0)), 0);
-  const projectMargin = projectTotalRetail - projectTotalCost;
-  const projectMarginPercent = projectTotalRetail > 0 ? ((projectMargin / projectTotalRetail) * 100).toFixed(1) : 0;
-
   // Task status distribution
   const taskStatusData = [
     { name: 'To Do', value: tasks.filter(t => t.status === 'todo').length, color: '#94a3b8' },
-    { name: 'In Progress', value: tasks.filter(t => t.status === 'in_progress').length, color: '#3b82f6' },
+    { name: 'In Progress', value: tasks.filter(t => t.status === 'in_progress').length, color: '#0069AF' },
     { name: 'Review', value: tasks.filter(t => t.status === 'review').length, color: '#f59e0b' },
     { name: 'Completed', value: completedTasks.length, color: '#22c55e' }
   ].filter(d => d.value > 0);
 
-  // Team performance
-  const tasksByMember = teamMembers.map(member => ({
-    name: member.name.split(' ')[0],
-    total: tasks.filter(t => t.assigned_to === member.email).length,
-    completed: tasks.filter(t => t.assigned_to === member.email && t.status === 'completed').length
-  })).filter(m => m.total > 0).sort((a, b) => b.total - a.total).slice(0, 8);
-
-  // Weekly trend
-  const weeklyTrend = Array.from({ length: 4 }, (_, i) => {
-    const weekStart = subDays(new Date(), (3 - i) * 7 + 7);
-    const weekEnd = subDays(new Date(), (3 - i) * 7);
+  // Weekly completion trend
+  const weeklyTrend = Array.from({ length: 6 }, (_, i) => {
+    const weekStart = subDays(new Date(), (5 - i) * 7 + 7);
+    const weekEnd = subDays(new Date(), (5 - i) * 7);
     const completed = tasks.filter(t => {
       if (!t.updated_date || t.status !== 'completed') return false;
       const date = new Date(t.updated_date);
       return date >= weekStart && date <= weekEnd;
     }).length;
-    return { week: `Week ${i + 1}`, completed };
+    return { week: `W${i + 1}`, completed };
   });
 
-  const renderFinancialReport = () => (
-    <div className="space-y-6">
-      {/* Overall Inventory & Pipeline */}
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Overall Inventory & Pipeline</h2>
-        
-        <div className="grid grid-cols-4 gap-4 mb-4">
-          <div className="bg-white rounded-xl border-2 border-emerald-200 p-4">
-            <div className="flex items-center gap-2 text-emerald-600 text-sm mb-2">
-              <Package className="w-4 h-4" />
-              Project Items
-            </div>
-            <p className="text-2xl font-bold text-emerald-600">${projectItemsCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-slate-500">Retail: ${projectItemsRetail.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-emerald-600">{projectParts.length} items</p>
-          </div>
-          
-          <div className="bg-white rounded-xl border-2 border-emerald-200 p-4">
-            <div className="flex items-center gap-2 text-emerald-600 text-sm mb-2">
-              <Package className="w-4 h-4" />
-              Stocked Inventory
-            </div>
-            <p className="text-2xl font-bold text-emerald-600">${stockedCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-slate-500">Retail: ${stockedRetail.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-emerald-600">{stockedInventory.length} items</p>
-          </div>
-          
-          <div className="bg-white rounded-xl border-2 border-slate-200 p-4">
-            <div className="flex items-center gap-2 text-slate-600 text-sm mb-2">
-              <Truck className="w-4 h-4" />
-              Product in Transit
-            </div>
-            <p className="text-2xl font-bold text-slate-700">${transitCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-slate-500">Retail: ${transitRetail.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-slate-500">{partsInTransit.length} items ordered</p>
-          </div>
-          
-          <div className="bg-white rounded-xl border-2 border-orange-200 p-4">
-            <div className="flex items-center gap-2 text-orange-600 text-sm mb-2">
-              <ShoppingCart className="w-4 h-4" />
-              Product to be Ordered
-            </div>
-            <p className="text-2xl font-bold text-orange-600">${toOrderCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-slate-500">Retail: ${toOrderRetail.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-orange-600">{partsToOrder.length} items pending</p>
-          </div>
-        </div>
+  // Team performance
+  const tasksByMember = teamMembers.map(member => {
+    const memberTasks = tasks.filter(t => t.assigned_to === member.email);
+    const memberCompleted = memberTasks.filter(t => t.status === 'completed').length;
+    const memberHours = timeEntries
+      .filter(e => e.user_email === member.email)
+      .reduce((sum, e) => sum + (e.duration_minutes || 0), 0) / 60;
+    return {
+      name: member.name?.split(' ')[0] || member.email.split('@')[0],
+      fullName: member.name || member.email,
+      total: memberTasks.length,
+      completed: memberCompleted,
+      hours: memberHours,
+      rate: memberTasks.length > 0 ? Math.round((memberCompleted / memberTasks.length) * 100) : 0
+    };
+  }).filter(m => m.total > 0).sort((a, b) => b.total - a.total).slice(0, 10);
 
-        <div className="grid grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-sm text-slate-500 mb-1">Total Cost</p>
-            <p className="text-2xl font-bold text-slate-900">${totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-slate-500">{projectParts.length + stockedInventory.length} items</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-sm text-slate-500 mb-1">Total Retail Value</p>
-            <p className="text-2xl font-bold text-emerald-600">${totalRetail.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-slate-500">Potential revenue</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-sm text-slate-500 mb-1">Margin</p>
-            <p className="text-2xl font-bold text-emerald-600">${margin.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-slate-500">{marginPercent}% margin</p>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-sm text-slate-500 mb-1">Total Pipeline Value</p>
-            <p className="text-2xl font-bold text-slate-900">${(totalRetail + transitRetail + toOrderRetail).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-            <p className="text-xs text-slate-500">Combined inventory value</p>
+  // Project financial breakdown
+  const selectedProject = projects.find(p => p.id === selectedProjectId);
+  const selectedProjectParts = parts.filter(p => p.project_id === selectedProjectId);
+  const selectedCustomer = selectedProject ? customers.find(c => c.id === selectedProject.customer_id) : null;
+  const getPartsByStatus = (status) => selectedProjectParts.filter(p => p.status === status);
+  const getPartsCost = (status) => getPartsByStatus(status).reduce((s, p) => s + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
+  const getPartsRetail = (status) => getPartsByStatus(status).reduce((s, p) => s + ((p.quantity || 1) * (p.sell_price || p.unit_cost || 0)), 0);
+  const projTotalCost = selectedProjectParts.reduce((s, p) => s + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
+  const projTotalRetail = selectedProjectParts.reduce((s, p) => s + ((p.quantity || 1) * (p.sell_price || p.unit_cost || 0)), 0);
+
+  const tabs = [
+    { key: 'overview', label: 'Overview', icon: BarChart3 },
+    { key: 'financial', label: 'Financial', icon: DollarSign },
+    { key: 'team', label: 'Team', icon: Users },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 w-40 bg-slate-200 rounded-lg" />
+            <div className="grid grid-cols-4 gap-4">
+              {[1,2,3,4].map(i => <div key={i} className="h-28 bg-slate-200 rounded-xl" />)}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="h-64 bg-slate-200 rounded-xl" />
+              <div className="h-64 bg-slate-200 rounded-xl" />
+            </div>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Project-Specific Reporting */}
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Project-Specific Reporting</h2>
-        
-        <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
-          <label className="text-sm text-slate-500 mb-2 block">Select Project</label>
-          <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a project..." />
-            </SelectTrigger>
-            <SelectContent>
-              {projects.map(p => {
-                const customer = customers.find(c => c.id === p.customer_id);
-                return (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} {customer ? `(${customer.name})` : ''}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+  const StatCard = ({ icon: Icon, label, value, sub, color = 'text-slate-900', iconBg = 'bg-slate-100', iconColor = 'text-slate-600' }) => (
+    <div className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-sm transition-shadow">
+      <div className="flex items-center gap-3 mb-3">
+        <div className={cn("p-2 rounded-lg", iconBg)}>
+          <Icon className={cn("w-4 h-4", iconColor)} />
         </div>
-
-        {selectedProject && (
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">{selectedProject.name}</h3>
-                <p className="text-sm text-slate-500">{selectedCustomer?.name || selectedProject.client}</p>
-              </div>
-              <Badge variant="outline">{selectedProjectParts.length} items</Badge>
-            </div>
-
-            <div className="grid grid-cols-5 gap-3 mb-6">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-xs text-red-600 mb-1">To be Ordered</p>
-                <p className="text-lg font-bold text-red-600">${getPartsCostByStatus('needed').toFixed(2)}</p>
-                <p className="text-[10px] text-slate-500">{getProjectPartsByStatus('needed').length} items | Retail: ${getPartsRetailByStatus('needed').toFixed(2)}</p>
-              </div>
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-xs text-amber-600 mb-1">In Transit</p>
-                <p className="text-lg font-bold text-amber-600">${getPartsCostByStatus('ordered').toFixed(2)}</p>
-                <p className="text-[10px] text-slate-500">{getProjectPartsByStatus('ordered').length} items | Retail: ${getPartsRetailByStatus('ordered').toFixed(2)}</p>
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-xs text-blue-600 mb-1">In Stock</p>
-                <p className="text-lg font-bold text-blue-600">${getPartsCostByStatus('received').toFixed(2)}</p>
-                <p className="text-[10px] text-slate-500">{getProjectPartsByStatus('received').length} items | Retail: ${getPartsRetailByStatus('received').toFixed(2)}</p>
-              </div>
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                <p className="text-xs text-purple-600 mb-1">Checked Out</p>
-                <p className="text-lg font-bold text-purple-600">${getPartsCostByStatus('ready_to_install').toFixed(2)}</p>
-                <p className="text-[10px] text-slate-500">{getProjectPartsByStatus('ready_to_install').length} items | Retail: ${getPartsRetailByStatus('ready_to_install').toFixed(2)}</p>
-              </div>
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-                <p className="text-xs text-emerald-600 mb-1">Installed</p>
-                <p className="text-lg font-bold text-emerald-600">${getPartsCostByStatus('installed').toFixed(2)}</p>
-                <p className="text-[10px] text-slate-500">{getProjectPartsByStatus('installed').length} items | Retail: ${getPartsRetailByStatus('installed').toFixed(2)}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-sm text-slate-500 mb-1">Total Cost</p>
-                <p className="text-xl font-bold text-slate-900">${projectTotalCost.toFixed(2)}</p>
-              </div>
-              <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-sm text-slate-500 mb-1">Total Retail Value</p>
-                <p className="text-xl font-bold text-slate-900">${projectTotalRetail.toFixed(2)}</p>
-              </div>
-              <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-sm text-slate-500 mb-1">~~ Margin</p>
-                <p className="text-xl font-bold text-emerald-600">${projectMargin.toFixed(2)}</p>
-                <p className="text-xs text-slate-500">{projectMarginPercent}%</p>
-              </div>
-            </div>
-          </div>
-        )}
+        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</span>
       </div>
-    </div>
-  );
-
-  const renderActivityReport = () => (
-    <div className="grid lg:grid-cols-2 gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <PieChart className="w-4 h-4 text-indigo-500" />
-            Task Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {taskStatusData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <RechartsPie>
-                <Pie data={taskStatusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                  {taskStatusData.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </RechartsPie>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[200px] flex items-center justify-center text-slate-400">No data</div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-blue-500" />
-            Completion Trend
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={weeklyTrend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="week" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Line type="monotone" dataKey="completed" stroke="#6366f1" strokeWidth={2} dot={{ fill: '#6366f1' }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Users className="w-4 h-4 text-violet-500" />
-            Team Performance
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {tasksByMember.length > 0 ? (
-            <div className="grid md:grid-cols-2 gap-4">
-              {tasksByMember.map((member, idx) => (
-                <div key={idx}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-slate-700">{member.name}</span>
-                    <span className="text-xs text-slate-500">{member.completed}/{member.total} completed</span>
-                  </div>
-                  <Progress value={member.total > 0 ? (member.completed / member.total) * 100 : 0} className="h-2" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-slate-400">No team data</div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderTimesheetsReport = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm">Total Hours Logged</p>
-                <p className="text-3xl font-bold mt-1">{(timeEntries.reduce((sum, e) => sum + (e.duration_minutes || 0), 0) / 60).toFixed(1)}h</p>
-              </div>
-              <Clock className="w-10 h-10 text-blue-200" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm">Time Entries</p>
-                <p className="text-3xl font-bold mt-1">{timeEntries.length}</p>
-              </div>
-              <FileText className="w-10 h-10 text-slate-200" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm">Active Timers</p>
-                <p className="text-3xl font-bold mt-1">{timeEntries.filter(e => e.is_running).length}</p>
-              </div>
-              <Timer className="w-10 h-10 text-emerald-200" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Time Entries</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {timeEntries.slice(0, 10).map(entry => (
-              <div key={entry.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <div>
-                  <p className="font-medium">{entry.user_name || entry.user_email}</p>
-                  <p className="text-sm text-slate-500">{entry.description || 'No description'}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium">{((entry.duration_minutes || 0) / 60).toFixed(1)}h</p>
-                  <p className="text-xs text-slate-500">{entry.start_time && format(new Date(entry.start_time), 'MMM d, yyyy')}</p>
-                </div>
-              </div>
-            ))}
-            {timeEntries.length === 0 && (
-              <p className="text-center py-8 text-slate-400">No time entries</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <p className={cn("text-2xl font-bold", color)}>{value}</p>
+      {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
+          className="mb-6"
         >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-emerald-100">
-              <DollarSign className="w-6 h-6 text-emerald-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                {reportType === 'financial' ? 'Cost & Value Reporting' : 
-                 reportType === 'activity' ? 'Activity Report' :
-                 reportType === 'timesheets' ? 'Timesheets Report' :
-                 reportType === 'overdue' ? 'Overdue Appointments' : 
-                 reportType === 'project_lead' ? 'Projects by Lead' : 'Notification History'}
-              </h1>
-              <p className="text-slate-500 text-sm">
-                {reportType === 'financial' ? 'Track inventory costs and retail values' : 
-                 reportType === 'activity' ? 'View task and team activity' :
-                 reportType === 'timesheets' ? 'Track time entries and hours' : 'View report details'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Select value={reportType} onValueChange={setReportType}>
-              <SelectTrigger className="w-56 bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="activity">
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4" />
-                    Activity
-                  </div>
-                </SelectItem>
-                <SelectItem value="timesheets">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    Timesheets
-                  </div>
-                </SelectItem>
-                <SelectItem value="financial">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="w-4 h-4" />
-                    Financial
-                  </div>
-                </SelectItem>
-                <SelectItem value="overdue">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4" />
-                    Overdue Appointments
-                  </div>
-                </SelectItem>
-                <SelectItem value="notifications">
-                  <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4" />
-                    Notification History
-                  </div>
-                </SelectItem>
-                <SelectItem value="project_lead">
-                  <div className="flex items-center gap-2">
-                    <Crown className="w-4 h-4" />
-                    Projects by Lead
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            {reportType !== 'financial' && (
-              <Select value={dateRange} onValueChange={setDateRange}>
-                <SelectTrigger className="w-40 bg-white">
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">Last 7 days</SelectItem>
-                  <SelectItem value="30">Last 30 days</SelectItem>
-                  <SelectItem value="90">Last 90 days</SelectItem>
-                  <SelectItem value="365">Last year</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Reports</h1>
+          <p className="text-slate-500 mt-1">Business metrics and team performance</p>
+
+          {/* Tabs */}
+          <div className="flex gap-1 mt-4 p-1 bg-slate-100 rounded-lg w-fit">
+            {tabs.map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+                    activeTab === tab.key
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </motion.div>
 
-        {/* Report Content */}
-        {reportType === 'financial' && renderFinancialReport()}
-        {reportType === 'activity' && renderActivityReport()}
-        {reportType === 'timesheets' && renderTimesheetsReport()}
-        {reportType === 'overdue' && (
-          <Card>
-            <CardContent className="p-12 text-center text-slate-400">
-              <AlertTriangle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Overdue appointments report</p>
-              <p className="text-sm">Coming soon</p>
-            </CardContent>
-          </Card>
-        )}
-        {reportType === 'notifications' && (
-          <Card>
-            <CardContent className="p-12 text-center text-slate-400">
-              <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Notification history</p>
-              <p className="text-sm">Coming soon</p>
-            </CardContent>
-          </Card>
-        )}
-        {reportType === 'project_lead' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-4 gap-4">
-              {(() => {
-                // Group projects by project lead
-                const leadCounts = {};
-                const leadProjects = {};
-                projects.filter(p => p.status !== 'archived' && p.status !== 'deleted').forEach(p => {
-                  const lead = p.project_lead || 'Unassigned';
-                  leadCounts[lead] = (leadCounts[lead] || 0) + 1;
-                  if (!leadProjects[lead]) leadProjects[lead] = [];
-                  leadProjects[lead].push(p);
-                });
-                
-                return Object.entries(leadCounts)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([email, count]) => {
-                    const member = teamMembers.find(m => m.email === email);
-                    const name = email === 'Unassigned' ? 'Unassigned' : (member?.name || email.split('@')[0]);
-                    return (
-                      <Card key={email}>
-                        <CardContent className="p-5">
-                          <div className="flex items-center gap-3 mb-3">
-                            {email === 'Unassigned' ? (
-                              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                                <Users className="w-5 h-5 text-slate-400" />
-                              </div>
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                                <Crown className="w-5 h-5 text-amber-600" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-semibold text-slate-900">{name}</p>
-                              <p className="text-xs text-slate-500">{email === 'Unassigned' ? 'No lead assigned' : email}</p>
-                            </div>
-                          </div>
-                          <p className="text-3xl font-bold text-slate-900">{count}</p>
-                          <p className="text-sm text-slate-500">active project{count !== 1 ? 's' : ''}</p>
-                        </CardContent>
-                      </Card>
-                    );
-                  });
-              })()}
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard icon={Activity} label="Active Projects" value={activeProjects.length} sub={`${completedTasks.length} tasks completed`} iconBg="bg-[#0069AF]/10" iconColor="text-[#0069AF]" />
+              <StatCard icon={CheckCircle2} label="Task Completion" value={`${tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0}%`} sub={`${activeTasks.length} active tasks`} color="text-emerald-600" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
+              <StatCard icon={Clock} label="Hours Logged" value={`${totalHours.toFixed(0)}h`} sub={`${timeEntries.length} entries`} iconBg="bg-amber-50" iconColor="text-amber-600" />
+              <StatCard icon={DollarSign} label="Portfolio Value" value={`$${totalRetail.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`} sub={`${marginPercent}% margin`} color="text-emerald-600" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-amber-500" />
-                  All Projects by Lead
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {(() => {
-                    const leadProjects = {};
-                    projects.filter(p => p.status !== 'archived' && p.status !== 'deleted').forEach(p => {
-                      const lead = p.project_lead || 'Unassigned';
-                      if (!leadProjects[lead]) leadProjects[lead] = [];
-                      leadProjects[lead].push(p);
-                    });
-
-                    return Object.entries(leadProjects)
-                      .sort((a, b) => b[1].length - a[1].length)
-                      .map(([email, projs]) => {
-                        const member = teamMembers.find(m => m.email === email);
-                        const name = email === 'Unassigned' ? 'Unassigned' : (member?.name || email.split('@')[0]);
-                        return (
-                          <div key={email}>
-                            <div className="flex items-center gap-2 mb-3">
-                              <Crown className="w-4 h-4 text-amber-500" />
-                              <h3 className="font-semibold text-slate-900">{name}</h3>
-                              <Badge variant="outline">{projs.length}</Badge>
-                            </div>
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 pl-6">
-                              {projs.map(p => {
-                                const customer = customers.find(c => c.id === p.customer_id);
-                                const projectTasks = tasks.filter(t => t.project_id === p.id);
-                                const completedCount = projectTasks.filter(t => t.status === 'completed').length;
-                                return (
-                                  <Link key={p.id} to={createPageUrl('ProjectDetail') + `?id=${p.id}`}>
-                                    <div className="p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
-                                      <p className="font-medium text-slate-900 truncate">{p.name}</p>
-                                      <p className="text-xs text-slate-500">{customer?.name || p.client}</p>
-                                      <div className="flex items-center gap-2 mt-2">
-                                        <Progress value={projectTasks.length > 0 ? (completedCount / projectTasks.length) * 100 : 0} className="h-1.5 flex-1" />
-                                        <span className="text-[10px] text-slate-400">{completedCount}/{projectTasks.length}</span>
-                                      </div>
-                                    </div>
-                                  </Link>
-                                );
-                              })}
-                            </div>
+            {/* Charts Row */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Task Status Pie */}
+              <div className="bg-white rounded-xl border border-slate-100 p-5">
+                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <PieChart className="w-4 h-4 text-[#0069AF]" />
+                  Task Status
+                </h3>
+                {taskStatusData.length > 0 ? (
+                  <div className="flex items-center gap-6">
+                    <ResponsiveContainer width="50%" height={180}>
+                      <RechartsPie>
+                        <Pie data={taskStatusData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} dataKey="value" strokeWidth={2} stroke="#fff">
+                          {taskStatusData.map((entry, i) => (
+                            <Cell key={i} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </RechartsPie>
+                    </ResponsiveContainer>
+                    <div className="flex-1 space-y-2">
+                      {taskStatusData.map(item => (
+                        <div key={item.name} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                            <span className="text-sm text-slate-600">{item.name}</span>
                           </div>
-                        );
-                      });
-                  })()}
+                          <span className="text-sm font-medium text-slate-900">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-[180px] flex items-center justify-center text-slate-400">No data</div>
+                )}
+              </div>
+
+              {/* Completion Trend */}
+              <div className="bg-white rounded-xl border border-slate-100 p-5">
+                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-[#0069AF]" />
+                  Completion Trend
+                </h3>
+                <ResponsiveContainer width="100%" height={180}>
+                  <AreaChart data={weeklyTrend}>
+                    <defs>
+                      <linearGradient id="completedGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0069AF" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#0069AF" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="week" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="completed" stroke="#0069AF" strokeWidth={2} fill="url(#completedGrad)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Overdue & Pipeline summary */}
+            <div className="grid lg:grid-cols-3 gap-4">
+              <div className="bg-white rounded-xl border border-slate-100 p-5">
+                <h3 className="font-semibold text-slate-900 mb-3 text-sm">Overdue Tasks</h3>
+                {overdueTasks.length > 0 ? (
+                  <div className="space-y-2">
+                    {overdueTasks.slice(0, 5).map(task => (
+                      <Link key={task.id} to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`} className="flex items-center gap-2 p-2 rounded-lg hover:bg-red-50 transition-colors">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                        <span className="text-sm text-slate-700 truncate flex-1">{task.title}</span>
+                        <span className="text-[10px] text-red-500 font-medium">
+                          {task.due_date && format(new Date(task.due_date), 'MMM d')}
+                        </span>
+                      </Link>
+                    ))}
+                    {overdueTasks.length > 5 && (
+                      <p className="text-xs text-slate-400 text-center">+{overdueTasks.length - 5} more</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-emerald-600 py-4">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span className="text-sm">All tasks on track!</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-100 p-5">
+                <h3 className="font-semibold text-slate-900 mb-3 text-sm">Parts Pipeline</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShoppingCart className="w-4 h-4 text-red-500" />
+                      <span className="text-sm text-slate-600">Needed</span>
+                    </div>
+                    <span className="text-sm font-medium">{partsNeeded.length} items</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-amber-500" />
+                      <span className="text-sm text-slate-600">In Transit</span>
+                    </div>
+                    <span className="text-sm font-medium">{partsInTransit.length} items</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Package className="w-4 h-4 text-emerald-500" />
+                      <span className="text-sm text-slate-600">In Stock</span>
+                    </div>
+                    <span className="text-sm font-medium">{inventory.length} items</span>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-100 p-5">
+                <h3 className="font-semibold text-slate-900 mb-3 text-sm">Project Health</h3>
+                <div className="space-y-3">
+                  {activeProjects.slice(0, 4).map(project => {
+                    const pTasks = tasks.filter(t => t.project_id === project.id);
+                    const pCompleted = pTasks.filter(t => t.status === 'completed').length;
+                    const pct = pTasks.length > 0 ? Math.round((pCompleted / pTasks.length) * 100) : 0;
+                    return (
+                      <div key={project.id}>
+                        <div className="flex items-center justify-between mb-1">
+                          <Link to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="text-xs text-slate-700 hover:text-[#0069AF] truncate">{project.name}</Link>
+                          <span className="text-[10px] text-slate-400">{pct}%</span>
+                        </div>
+                        <Progress value={pct} className="h-1.5" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </motion.div>
         )}
 
-        {/* AI Assistant - Always Visible */}
-        <div className="mt-6">
-          <AIReportAssistant 
-            projects={projects}
-            proposals={proposals}
-            tasks={tasks}
-            timeEntries={timeEntries}
-            customers={customers}
-            teamMembers={teamMembers}
-          />
-        </div>
+        {/* Financial Tab */}
+        {activeTab === 'financial' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard icon={Package} label="Project Items" value={`$${projectItemsCost.toLocaleString(undefined, {maximumFractionDigits: 0})}`} sub={`${projectParts.length} items | Retail: $${projectItemsRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}`} iconBg="bg-emerald-50" iconColor="text-emerald-600" />
+              <StatCard icon={Package} label="Stocked Inventory" value={`$${stockedCost.toLocaleString(undefined, {maximumFractionDigits: 0})}`} sub={`${inventory.length} items | Retail: $${stockedRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}`} iconBg="bg-[#0069AF]/10" iconColor="text-[#0069AF]" />
+              <StatCard icon={Truck} label="In Transit" value={`$${transitCost.toLocaleString(undefined, {maximumFractionDigits: 0})}`} sub={`${partsInTransit.length} items ordered`} iconBg="bg-amber-50" iconColor="text-amber-600" />
+              <StatCard icon={ShoppingCart} label="To be Ordered" value={`$${neededCost.toLocaleString(undefined, {maximumFractionDigits: 0})}`} sub={`${partsNeeded.length} items pending`} color="text-red-600" iconBg="bg-red-50" iconColor="text-red-600" />
+            </div>
+
+            {/* Totals Row */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-white rounded-xl border border-slate-100 p-5">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Total Cost</p>
+                <p className="text-3xl font-bold text-slate-900">${totalCost.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-slate-100 p-5">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Total Retail</p>
+                <p className="text-3xl font-bold text-emerald-600">${totalRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+              </div>
+              <div className="bg-gradient-to-r from-[#0069AF] to-[#133F5C] rounded-xl p-5 text-white">
+                <p className="text-xs font-medium text-white/70 uppercase tracking-wide mb-2">Margin</p>
+                <p className="text-3xl font-bold">${margin.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                <p className="text-sm text-white/70">{marginPercent}%</p>
+              </div>
+            </div>
+
+            {/* Project Drilldown */}
+            <div className="bg-white rounded-xl border border-slate-100 p-5">
+              <h3 className="font-semibold text-slate-900 mb-4">Project Cost Breakdown</h3>
+              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                <SelectTrigger className="w-full max-w-md mb-4">
+                  <SelectValue placeholder="Select a project to view details..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map(p => {
+                    const c = customers.find(c => c.id === p.customer_id);
+                    return (
+                      <SelectItem key={p.id} value={p.id}>{p.name}{c ? ` — ${c.name}` : ''}</SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+
+              {selectedProject && (
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="font-semibold text-slate-900">{selectedProject.name}</h4>
+                      <p className="text-sm text-slate-500">{selectedCustomer?.name || selectedProject.client}</p>
+                    </div>
+                    <Badge variant="outline">{selectedProjectParts.length} items</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-5 gap-3 mb-5">
+                    {[
+                      { label: 'Needed', status: 'needed', color: 'red' },
+                      { label: 'In Transit', status: 'ordered', color: 'amber' },
+                      { label: 'In Stock', status: 'received', color: 'blue' },
+                      { label: 'Checked Out', status: 'ready_to_install', color: 'purple' },
+                      { label: 'Installed', status: 'installed', color: 'emerald' },
+                    ].map(({ label, status, color }) => (
+                      <div key={status} className={`bg-${color}-50 border border-${color}-200 rounded-lg p-3`}>
+                        <p className={`text-xs text-${color}-600 mb-1`}>{label}</p>
+                        <p className={`text-lg font-bold text-${color}-600`}>${getPartsCost(status).toFixed(0)}</p>
+                        <p className="text-[10px] text-slate-500">{getPartsByStatus(status).length} items</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <p className="text-xs text-slate-500 mb-1">Cost</p>
+                      <p className="text-xl font-bold text-slate-900">${projTotalCost.toFixed(0)}</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <p className="text-xs text-slate-500 mb-1">Retail</p>
+                      <p className="text-xl font-bold text-slate-900">${projTotalRetail.toFixed(0)}</p>
+                    </div>
+                    <div className="bg-emerald-50 rounded-lg p-4">
+                      <p className="text-xs text-emerald-600 mb-1">Margin</p>
+                      <p className="text-xl font-bold text-emerald-600">${(projTotalRetail - projTotalCost).toFixed(0)}</p>
+                      <p className="text-[10px] text-slate-500">{projTotalRetail > 0 ? (((projTotalRetail - projTotalCost) / projTotalRetail) * 100).toFixed(1) : 0}%</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Team Tab */}
+        {activeTab === 'team' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard icon={Users} label="Team Size" value={teamMembers.length} sub="Active members" iconBg="bg-[#0069AF]/10" iconColor="text-[#0069AF]" />
+              <StatCard icon={Timer} label="Total Hours" value={`${totalHours.toFixed(0)}h`} sub={`${timeEntries.length} entries`} iconBg="bg-amber-50" iconColor="text-amber-600" />
+              <StatCard icon={CheckCircle2} label="Tasks Completed" value={completedTasks.length} sub={`out of ${tasks.length} total`} color="text-emerald-600" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
+              <StatCard icon={Clock} label="Active Timers" value={timeEntries.filter(e => e.is_running).length} sub="Running now" iconBg="bg-violet-50" iconColor="text-violet-600" />
+            </div>
+
+            {/* Team Performance */}
+            <div className="bg-white rounded-xl border border-slate-100 p-5">
+              <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#0069AF]" />
+                Team Performance
+              </h3>
+              {tasksByMember.length > 0 ? (
+                <div className="space-y-4">
+                  {tasksByMember.map((member, idx) => (
+                    <div key={idx} className="flex items-center gap-4">
+                      <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-xs font-bold text-[#0069AF] shrink-0">
+                        {member.name[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-slate-700">{member.fullName}</span>
+                          <span className="text-xs text-slate-500">{member.completed}/{member.total} tasks · {member.hours.toFixed(1)}h</span>
+                        </div>
+                        <Progress value={member.rate} className="h-2" />
+                      </div>
+                      <Badge variant="outline" className={cn(
+                        "text-xs w-12 justify-center",
+                        member.rate >= 70 ? "text-emerald-600 bg-emerald-50" : member.rate >= 40 ? "text-amber-600 bg-amber-50" : "text-slate-600"
+                      )}>
+                        {member.rate}%
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-slate-400">No team data available</div>
+              )}
+            </div>
+
+            {/* Recent Time Entries */}
+            <div className="bg-white rounded-xl border border-slate-100 p-5">
+              <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#0069AF]" />
+                Recent Time Entries
+              </h3>
+              <div className="space-y-1">
+                {timeEntries.slice(0, 8).map(entry => (
+                  <div key={entry.id} className="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-600 shrink-0">
+                        {(entry.user_name || entry.user_email || '?')[0].toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-700 truncate">{entry.user_name || entry.user_email}</p>
+                        <p className="text-xs text-slate-400 truncate">{entry.description || 'No description'}</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 ml-4">
+                      <p className="text-sm font-semibold text-slate-900">{((entry.duration_minutes || 0) / 60).toFixed(1)}h</p>
+                      <p className="text-[10px] text-slate-400">{entry.start_time && format(new Date(entry.start_time), 'MMM d')}</p>
+                    </div>
+                  </div>
+                ))}
+                {timeEntries.length === 0 && (
+                  <div className="py-8 text-center text-slate-400">No time entries</div>
+                )}
+              </div>
+            </div>
+
+            {/* Team Bar Chart */}
+            {tasksByMember.length > 0 && (
+              <div className="bg-white rounded-xl border border-slate-100 p-5">
+                <h3 className="font-semibold text-slate-900 mb-4">Tasks by Team Member</h3>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={tasksByMember} barCategoryGap="20%">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                    <Tooltip />
+                    <Bar dataKey="total" fill="#0F2F44" radius={[4, 4, 0, 0]} name="Total" />
+                    <Bar dataKey="completed" fill="#0069AF" radius={[4, 4, 0, 0]} name="Completed" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </motion.div>
+        )}
       </div>
     </div>
   );

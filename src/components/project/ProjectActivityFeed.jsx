@@ -23,7 +23,7 @@ const actionIcons = {
   default: { icon: Zap, color: 'text-slate-500', bg: 'bg-slate-500/10' }
 };
 
-export default function ProjectActivityFeed({ projectId, progressUpdates = [] }) {
+export default function ProjectActivityFeed({ projectId, progressUpdates = [], compact = false }) {
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ['projectActivity', projectId],
     queryFn: () => base44.entities.ProjectActivity.filter({ project_id: projectId }, '-created_date', 20),
@@ -82,7 +82,7 @@ export default function ProjectActivityFeed({ projectId, progressUpdates = [] })
       note: p.note,
       itemType: 'progress'
     }))
-  ].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 20);
+  ].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, compact ? 8 : 20);
 
   return (
     <div className="relative">

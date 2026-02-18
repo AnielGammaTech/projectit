@@ -55,13 +55,21 @@ export default function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCommunication, setShowCommunication] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [contactSearch, setContactSearch] = useState('');
+  const [contactPage, setContactPage] = useState(1);
+
+  // Reset contact search/page when changing selected customer
+  useEffect(() => {
+    setContactSearch('');
+    setContactPage(1);
+  }, [selectedCustomer?.id]);
   
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
 
-  const { data: customers = [], refetch } = useQuery({
+  const { data: customers = [], isLoading: loadingCustomers, refetch } = useQuery({
     queryKey: ['customers'],
     queryFn: () => base44.entities.Customer.list('-created_date')
   });
@@ -264,6 +272,48 @@ export default function Customers() {
     setSyncing(false);
   };
 
+  if (loadingCustomers) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="h-8 w-48 bg-slate-200 rounded-lg" />
+                <div className="h-4 w-64 bg-slate-100 rounded mt-2" />
+              </div>
+              <div className="flex gap-2">
+                <div className="h-10 w-40 bg-slate-200 rounded-lg" />
+                <div className="h-10 w-36 bg-slate-200 rounded-lg" />
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl border border-slate-100 p-4">
+              <div className="h-10 bg-slate-100 rounded-lg" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="bg-white rounded-xl border p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-slate-200" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-slate-200 rounded w-3/4" />
+                      <div className="h-3 bg-slate-100 rounded w-1/2" />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-3 border-t border-slate-100">
+                    <div className="h-6 w-12 bg-slate-100 rounded" />
+                    <div className="h-6 w-12 bg-slate-100 rounded" />
+                    <div className="h-6 w-12 bg-slate-100 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -281,7 +331,7 @@ export default function Customers() {
               <RefreshCw className={cn("w-4 h-4 mr-2", syncing && "animate-spin")} />
               Sync from HaloPSA
             </Button>
-            <Button onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#F97316] hover:bg-[#EA580C]">
+            <Button onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#0F2F44]">
               <Plus className="w-4 h-4 mr-2" />
               Add Customer
             </Button>
@@ -548,7 +598,7 @@ export default function Customers() {
                   <RefreshCw className={cn("w-4 h-4 mr-2", syncing && "animate-spin")} />
                   Sync from HaloPSA
                 </Button>
-                <Button onClick={() => { setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#F97316] hover:bg-[#EA580C]">
+                <Button onClick={() => { setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#0F2F44]">
                   <Plus className="w-4 h-4 mr-2" />Add Customer
                 </Button>
               </div>
@@ -855,13 +905,13 @@ export default function Customers() {
                     
                     {/* Associated Contacts */}
                     <div className="bg-white border rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center justify-between mb-3">
                         <h4 className="font-semibold text-slate-900">Associated Contacts</h4>
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{customerContacts.length}</span>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => { setAddingContactTo(selectedCustomer.id); setShowModal(true); }}
                             className="h-7 text-xs"
                           >
@@ -869,23 +919,73 @@ export default function Customers() {
                           </Button>
                         </div>
                       </div>
-                      {customerContacts.length > 0 ? (
-                        <div className="space-y-2">
-                          {customerContacts.map(contact => (
-                            <div key={contact.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                              <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm">
-                                {contact.name?.charAt(0).toUpperCase()}
-                              </div>
-                              <div className="flex-1">
-                                <p className="font-medium text-slate-800 text-sm">{contact.name}</p>
-                                {contact.email && <p className="text-xs text-slate-500">{contact.email}</p>}
-                              </div>
-                            </div>
-                          ))}
+                      {customerContacts.length > 5 && (
+                        <div className="relative mb-3">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                          <Input
+                            placeholder="Search contacts..."
+                            value={contactSearch}
+                            onChange={(e) => { setContactSearch(e.target.value); setContactPage(1); }}
+                            className="pl-9 h-8 text-sm"
+                          />
                         </div>
-                      ) : (
-                        <p className="text-slate-400 text-sm text-center py-6">No contacts</p>
                       )}
+                      {(() => {
+                        const filtered = customerContacts.filter(c =>
+                          c.name?.toLowerCase().includes(contactSearch.toLowerCase()) ||
+                          c.email?.toLowerCase().includes(contactSearch.toLowerCase())
+                        );
+                        const totalPages = Math.ceil(filtered.length / 10);
+                        const paginated = filtered.slice((contactPage - 1) * 10, contactPage * 10);
+                        return filtered.length > 0 ? (
+                          <>
+                            <div className="space-y-2">
+                              {paginated.map(contact => (
+                                <div key={contact.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                                  <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm">
+                                    {contact.name?.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-medium text-slate-800 text-sm">{contact.name}</p>
+                                    {contact.email && <p className="text-xs text-slate-500">{contact.email}</p>}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {totalPages > 1 && (
+                              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                                <span className="text-xs text-slate-500">
+                                  Showing {(contactPage - 1) * 10 + 1}-{Math.min(contactPage * 10, filtered.length)} of {filtered.length}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs"
+                                    disabled={contactPage === 1}
+                                    onClick={() => setContactPage(p => p - 1)}
+                                  >
+                                    Prev
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs"
+                                    disabled={contactPage >= totalPages}
+                                    onClick={() => setContactPage(p => p + 1)}
+                                  >
+                                    Next
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-slate-400 text-sm text-center py-6">
+                            {contactSearch ? 'No contacts match your search' : 'No contacts'}
+                          </p>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}

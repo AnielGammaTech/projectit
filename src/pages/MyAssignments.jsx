@@ -6,7 +6,7 @@ import { format, isPast, isToday, isTomorrow, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { CheckSquare, MessageSquare, ListTodo } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl, resolveUploadUrl } from '@/utils';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -217,7 +217,7 @@ export default function MyAssignments() {
             getColorForEmail(currentUser?.email)
           )}>
             {currentUser?.avatar_url ? (
-              <img src={currentUser.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+              <img src={resolveUploadUrl(currentUser.avatar_url)} alt="" className="w-full h-full rounded-full object-cover" />
             ) : (
               getInitials(currentUser?.full_name)
             )}

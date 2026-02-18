@@ -11,7 +11,7 @@ import {
   Building2, Tags, GitMerge,
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
   FileText, Layers, MessageSquare, Database, Activity,
-  HardDrive, AlertTriangle, CheckCircle2
+  HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot
 } from 'lucide-react';
 import {
   Dialog,
@@ -40,7 +40,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl, resolveUploadUrl } from '@/utils';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -786,7 +786,7 @@ function CompanySettingsSection({ queryClient }) {
                 <div className="flex-shrink-0">
                   {formData.app_logo_url ? (
                     <div className="relative">
-                      <img src={formData.app_logo_url} alt="App Logo" className="w-20 h-20 object-contain rounded-lg border bg-white p-2" />
+                      <img src={resolveUploadUrl(formData.app_logo_url)} alt="App Logo" className="w-20 h-20 object-contain rounded-lg border bg-white p-2" />
                       <button 
                         onClick={() => setFormData(p => ({ ...p, app_logo_url: '' }))}
                         className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm hover:bg-red-600"
@@ -1796,253 +1796,598 @@ function IntegrationsSection({ queryClient }) {
     }
   };
 
+  const [expandedIntegration, setExpandedIntegration] = useState(null);
+
+  const toggleIntegration = (id) => {
+    setExpandedIntegration(prev => prev === id ? null : id);
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="p-6 border-b">
-          <h2 className="text-xl font-semibold text-slate-900">HaloPSA Integration</h2>
-          <p className="text-sm text-slate-500 mt-1">Connect and sync with your HaloPSA instance</p>
-        </div>
+    <div className="space-y-4">
+      {/* Page header */}
+      <div className="mb-2">
+        <h2 className="text-xl font-semibold text-slate-900">Integrations</h2>
+        <p className="text-sm text-slate-500 mt-1">Manage your connected external services</p>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex border-b">
-          {[
-            { id: 'settings', label: 'Settings' },
-            { id: 'customers', label: 'Customer Mapping' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
-                activeTab === tab.id ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Settings Tab */}
-        {activeTab === 'settings' && (
-          <div className="p-6 space-y-6">
-            {/* Enable toggle */}
-            <label className="flex items-center gap-3 cursor-pointer">
-              <Checkbox checked={formData.halopsa_enabled} onCheckedChange={(v) => setFormData(p => ({ ...p, halopsa_enabled: v }))} />
-              <span className="font-medium text-sm">Enable HaloPSA Integration</span>
-            </label>
-
+      {/* HaloPSA Integration Card */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        {/* Collapsible Header */}
+        <button
+          onClick={() => toggleIntegration('halopsa')}
+          className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+              <GitMerge className="w-5 h-5 text-white" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-base font-semibold text-slate-900">HaloPSA</h3>
+              <p className="text-xs text-slate-500 mt-0.5">PSA ticketing, customers & sync</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
             {formData.halopsa_enabled && (
-              <>
-                {/* Connection */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
-                    Connection
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-xs">Authorisation Server URL</Label>
-                      <Input value={formData.halopsa_auth_url} onChange={e => setFormData(p => ({ ...p, halopsa_auth_url: e.target.value }))} placeholder="https://yourcompany.halopsa.com/auth" className="mt-1" />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Resource Server URL (API)</Label>
-                      <Input value={formData.halopsa_api_url} onChange={e => setFormData(p => ({ ...p, halopsa_api_url: e.target.value }))} placeholder="https://yourcompany.halopsa.com/api" className="mt-1" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label className="text-xs">Client ID</Label>
-                      <Input value={formData.halopsa_client_id} onChange={e => setFormData(p => ({ ...p, halopsa_client_id: e.target.value }))} placeholder="Your Client ID" className="mt-1" />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Client Secret</Label>
-                      <div className="relative mt-1">
-                        <Input type={showSecret ? "text" : "password"} value={formData.halopsa_client_secret} onChange={e => setFormData(p => ({ ...p, halopsa_client_secret: e.target.value }))} placeholder="Your Client Secret" />
-                        <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600">
-                          {showSecret ? 'Hide' : 'Show'}
-                        </button>
+              <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Connected</Badge>
+            )}
+            {!formData.halopsa_enabled && (
+              <Badge variant="outline" className="text-slate-400 border-slate-200 text-xs">Not configured</Badge>
+            )}
+            <ChevronDown className={cn(
+              "w-5 h-5 text-slate-400 transition-transform duration-200",
+              expandedIntegration === 'halopsa' && "rotate-180"
+            )} />
+          </div>
+        </button>
+
+        {/* Expanded Content */}
+        {expandedIntegration === 'halopsa' && (
+          <div className="border-t">
+            {/* Tabs */}
+            <div className="flex border-b bg-slate-50/50">
+              {[
+                { id: 'settings', label: 'Settings' },
+                { id: 'customers', label: 'Customer Mapping' },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
+                    activeTab === tab.id ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Settings Tab */}
+            {activeTab === 'settings' && (
+              <div className="p-6 space-y-6">
+                {/* Enable toggle */}
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <Checkbox checked={formData.halopsa_enabled} onCheckedChange={(v) => setFormData(p => ({ ...p, halopsa_enabled: v }))} />
+                  <span className="font-medium text-sm">Enable HaloPSA Integration</span>
+                </label>
+
+                {formData.halopsa_enabled && (
+                  <>
+                    {/* Connection */}
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
+                        Connection
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-xs">Authorisation Server URL</Label>
+                          <Input value={formData.halopsa_auth_url} onChange={e => setFormData(p => ({ ...p, halopsa_auth_url: e.target.value }))} placeholder="https://yourcompany.halopsa.com/auth" className="mt-1" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Resource Server URL (API)</Label>
+                          <Input value={formData.halopsa_api_url} onChange={e => setFormData(p => ({ ...p, halopsa_api_url: e.target.value }))} placeholder="https://yourcompany.halopsa.com/api" className="mt-1" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label className="text-xs">Client ID</Label>
+                          <Input value={formData.halopsa_client_id} onChange={e => setFormData(p => ({ ...p, halopsa_client_id: e.target.value }))} placeholder="Your Client ID" className="mt-1" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Client Secret</Label>
+                          <div className="relative mt-1">
+                            <Input type={showSecret ? "text" : "password"} value={formData.halopsa_client_secret} onChange={e => setFormData(p => ({ ...p, halopsa_client_secret: e.target.value }))} placeholder="Your Client Secret" />
+                            <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600">
+                              {showSecret ? 'Hide' : 'Show'}
+                            </button>
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Tenant (optional)</Label>
+                          <Input value={formData.halopsa_tenant} onChange={e => setFormData(p => ({ ...p, halopsa_tenant: e.target.value }))} placeholder="Tenant name" className="mt-1" />
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <Label className="text-xs">Tenant (optional)</Label>
-                      <Input value={formData.halopsa_tenant} onChange={e => setFormData(p => ({ ...p, halopsa_tenant: e.target.value }))} placeholder="Tenant name" className="mt-1" />
+
+                    {/* Sync Options */}
+                    <div className="space-y-3 pt-4 border-t">
+                      <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
+                        Sync Options
+                      </h3>
+                      <div className="flex flex-wrap gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox checked={formData.halopsa_sync_customers} onCheckedChange={v => setFormData(p => ({ ...p, halopsa_sync_customers: v }))} />
+                          <span className="text-sm">Sync Customers</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox checked={formData.halopsa_sync_tickets} onCheckedChange={v => setFormData(p => ({ ...p, halopsa_sync_tickets: v }))} />
+                          <span className="text-sm">Sync Tickets</span>
+                        </label>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Excluded Client IDs (comma-separated)</Label>
+                        <Input value={formData.halopsa_excluded_ids} onChange={e => setFormData(p => ({ ...p, halopsa_excluded_ids: e.target.value }))} placeholder="101, 202, 303" className="mt-1" />
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Sync Options */}
-                <div className="space-y-3 pt-4 border-t">
-                  <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
-                    Sync Options
-                  </h3>
-                  <div className="flex flex-wrap gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox checked={formData.halopsa_sync_customers} onCheckedChange={v => setFormData(p => ({ ...p, halopsa_sync_customers: v }))} />
-                      <span className="text-sm">Sync Customers</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox checked={formData.halopsa_sync_tickets} onCheckedChange={v => setFormData(p => ({ ...p, halopsa_sync_tickets: v }))} />
-                      <span className="text-sm">Sync Tickets</span>
-                    </label>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Excluded Client IDs (comma-separated)</Label>
-                    <Input value={formData.halopsa_excluded_ids} onChange={e => setFormData(p => ({ ...p, halopsa_excluded_ids: e.target.value }))} placeholder="101, 202, 303" className="mt-1" />
-                  </div>
-                </div>
-
-                {/* Field Mapping (collapsible) */}
-                <div className="pt-4 border-t">
-                  <button onClick={() => setShowFieldMapping(!showFieldMapping)} className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
-                    {showFieldMapping ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                    <span className="font-medium">Field Mapping</span>
-                  </button>
-                  {showFieldMapping && (
-                    <div className="mt-3 grid grid-cols-2 gap-3">
-                      {Object.entries(formData.halopsa_field_mapping).map(([key, value]) => (
-                        <div key={key} className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-slate-500 w-16 capitalize">{key}</span>
-                          <span className="text-xs text-slate-300">→</span>
-                          <Input
-                            value={value}
-                            onChange={e => setFormData(p => ({
-                              ...p,
-                              halopsa_field_mapping: { ...p.halopsa_field_mapping, [key]: e.target.value }
-                            }))}
-                            className="flex-1 h-8 text-xs"
-                          />
+                    {/* Field Mapping (collapsible) */}
+                    <div className="pt-4 border-t">
+                      <button onClick={() => setShowFieldMapping(!showFieldMapping)} className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
+                        {showFieldMapping ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        <span className="font-medium">Field Mapping</span>
+                      </button>
+                      {showFieldMapping && (
+                        <div className="mt-3 grid grid-cols-2 gap-3">
+                          {Object.entries(formData.halopsa_field_mapping).map(([key, value]) => (
+                            <div key={key} className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-slate-500 w-16 capitalize">{key}</span>
+                              <span className="text-xs text-slate-300">→</span>
+                              <Input
+                                value={value}
+                                onChange={e => setFormData(p => ({
+                                  ...p,
+                                  halopsa_field_mapping: { ...p.halopsa_field_mapping, [key]: e.target.value }
+                                }))}
+                                className="flex-1 h-8 text-xs"
+                              />
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  )}
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3 pt-4 border-t">
+                      <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                        {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : 'Save Settings'}
+                      </Button>
+                      <Button onClick={handleTestConnection} disabled={testingConnection || syncing} variant="outline">
+                        {testingConnection ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : 'Test Connection'}
+                      </Button>
+                      <Button onClick={handleSyncCustomers} disabled={syncing || testingConnection} variant="outline" className="border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                        {syncing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Syncing...</> : <><RefreshCw className="w-4 h-4 mr-2" />Sync Customers</>}
+                      </Button>
+                      {settings[0]?.halopsa_last_sync && (
+                        <span className="text-xs text-slate-400 ml-auto">
+                          Last sync: {new Date(settings[0].halopsa_last_sync).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+
+                    {syncResult && (
+                      <div className={cn(
+                        "p-3 rounded-lg text-sm",
+                        syncResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+                      )}>
+                        <p>{syncResult.message}</p>
+                        {syncResult.details && (
+                          <pre className="mt-2 text-xs bg-white/50 p-2 rounded overflow-x-auto">
+                            {typeof syncResult.details === 'object' ? JSON.stringify(syncResult.details, null, 2) : syncResult.details}
+                          </pre>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Customer Mapping Tab */}
+            {activeTab === 'customers' && (
+              <div className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-700">HaloPSA Customer Mapping</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">View customers from HaloPSA and map them to local records</p>
+                  </div>
+                  <Button onClick={fetchHaloCustomers} disabled={loadingCustomers} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                    {loadingCustomers ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Loading...</> : <><RefreshCw className="w-4 h-4 mr-2" />Load Customers</>}
+                  </Button>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-3 pt-4 border-t">
-                  <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
-                    {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : 'Save Settings'}
-                  </Button>
-                  <Button onClick={handleTestConnection} disabled={testingConnection || syncing} variant="outline">
-                    {testingConnection ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : 'Test Connection'}
-                  </Button>
-                  <Button onClick={handleSyncCustomers} disabled={syncing || testingConnection} variant="outline" className="border-emerald-300 text-emerald-700 hover:bg-emerald-50">
-                    {syncing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Syncing...</> : <><RefreshCw className="w-4 h-4 mr-2" />Sync Customers</>}
-                  </Button>
-                  {settings[0]?.halopsa_last_sync && (
-                    <span className="text-xs text-slate-400 ml-auto">
-                      Last sync: {new Date(settings[0].halopsa_last_sync).toLocaleString()}
-                    </span>
-                  )}
-                </div>
+                {haloCustomers.length === 0 && !loadingCustomers && (
+                  <div className="text-center py-12 text-slate-400">
+                    <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Click "Load Customers" to fetch your HaloPSA client list</p>
+                  </div>
+                )}
 
-                {syncResult && (
+                {haloCustomers.length > 0 && (
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="text-left px-4 py-2.5 font-medium text-slate-600">HaloPSA Customer</th>
+                          <th className="text-left px-4 py-2.5 font-medium text-slate-600">Halo ID</th>
+                          <th className="text-left px-4 py-2.5 font-medium text-slate-600">Mapped To</th>
+                          <th className="text-right px-4 py-2.5 font-medium text-slate-600">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {haloCustomers.map(hc => {
+                          const mappedId = customerMappings[hc.id];
+                          const mappedCustomer = localCustomers.find(lc => lc.id === mappedId);
+                          const autoMapped = localCustomers.find(lc => lc.halo_id === String(hc.id));
+
+                          return (
+                            <tr key={hc.id} className="hover:bg-slate-50/50">
+                              <td className="px-4 py-3">
+                                <p className="font-medium text-slate-800">{hc.name}</p>
+                                {hc.email && <p className="text-xs text-slate-400">{hc.email}</p>}
+                              </td>
+                              <td className="px-4 py-3 font-mono text-xs text-slate-500">{hc.id}</td>
+                              <td className="px-4 py-3">
+                                {autoMapped ? (
+                                  <span className="text-sm text-slate-700">{autoMapped.name || autoMapped.company_name}</span>
+                                ) : (
+                                  <select
+                                    value={mappedId || ''}
+                                    onChange={e => handleMapCustomer(hc.id, e.target.value || null)}
+                                    className="text-sm border border-slate-200 rounded-md px-2 py-1.5 w-full max-w-xs bg-white"
+                                  >
+                                    <option value="">— Select local customer —</option>
+                                    {localCustomers.filter(lc => !lc.halo_id).map(lc => (
+                                      <option key={lc.id} value={lc.id}>{lc.name || lc.company_name}</option>
+                                    ))}
+                                  </select>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                {autoMapped ? (
+                                  <Badge className="bg-emerald-100 text-emerald-700 border-0">Synced</Badge>
+                                ) : mappedId ? (
+                                  <Badge className="bg-blue-100 text-blue-700 border-0">Mapped</Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-slate-400 border-slate-200">Unmapped</Badge>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {syncResult && activeTab === 'customers' && (
                   <div className={cn(
                     "p-3 rounded-lg text-sm",
                     syncResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
                   )}>
-                    <p>{syncResult.message}</p>
-                    {syncResult.details && (
-                      <pre className="mt-2 text-xs bg-white/50 p-2 rounded overflow-x-auto">
-                        {typeof syncResult.details === 'object' ? JSON.stringify(syncResult.details, null, 2) : syncResult.details}
-                      </pre>
-                    )}
+                    {syncResult.message}
                   </div>
                 )}
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Customer Mapping Tab */}
-        {activeTab === 'customers' && (
-          <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700">HaloPSA Customer Mapping</h3>
-                <p className="text-xs text-slate-500 mt-0.5">View customers from HaloPSA and map them to local records</p>
-              </div>
-              <Button onClick={fetchHaloCustomers} disabled={loadingCustomers} className="bg-[#0069AF] hover:bg-[#133F5C]">
-                {loadingCustomers ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Loading...</> : <><RefreshCw className="w-4 h-4 mr-2" />Load Customers</>}
-              </Button>
-            </div>
-
-            {haloCustomers.length === 0 && !loadingCustomers && (
-              <div className="text-center py-12 text-slate-400">
-                <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Click "Load Customers" to fetch your HaloPSA client list</p>
-              </div>
-            )}
-
-            {haloCustomers.length > 0 && (
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="text-left px-4 py-2.5 font-medium text-slate-600">HaloPSA Customer</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-slate-600">Halo ID</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-slate-600">Mapped To</th>
-                      <th className="text-right px-4 py-2.5 font-medium text-slate-600">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {haloCustomers.map(hc => {
-                      const mappedId = customerMappings[hc.id];
-                      const mappedCustomer = localCustomers.find(lc => lc.id === mappedId);
-                      const autoMapped = localCustomers.find(lc => lc.halo_id === String(hc.id));
-
-                      return (
-                        <tr key={hc.id} className="hover:bg-slate-50/50">
-                          <td className="px-4 py-3">
-                            <p className="font-medium text-slate-800">{hc.name}</p>
-                            {hc.email && <p className="text-xs text-slate-400">{hc.email}</p>}
-                          </td>
-                          <td className="px-4 py-3 font-mono text-xs text-slate-500">{hc.id}</td>
-                          <td className="px-4 py-3">
-                            {autoMapped ? (
-                              <span className="text-sm text-slate-700">{autoMapped.name || autoMapped.company_name}</span>
-                            ) : (
-                              <select
-                                value={mappedId || ''}
-                                onChange={e => handleMapCustomer(hc.id, e.target.value || null)}
-                                className="text-sm border border-slate-200 rounded-md px-2 py-1.5 w-full max-w-xs bg-white"
-                              >
-                                <option value="">— Select local customer —</option>
-                                {localCustomers.filter(lc => !lc.halo_id).map(lc => (
-                                  <option key={lc.id} value={lc.id}>{lc.name || lc.company_name}</option>
-                                ))}
-                              </select>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            {autoMapped ? (
-                              <Badge className="bg-emerald-100 text-emerald-700 border-0">Synced</Badge>
-                            ) : mappedId ? (
-                              <Badge className="bg-blue-100 text-blue-700 border-0">Mapped</Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-slate-400 border-slate-200">Unmapped</Badge>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {syncResult && activeTab === 'customers' && (
-              <div className={cn(
-                "p-3 rounded-lg text-sm",
-                syncResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
-              )}>
-                {syncResult.message}
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* Resend Integration Card */}
+      <ResendIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+
+      {/* Claude AI Integration Card */}
+      <ClaudeAIIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+    </div>
+  );
+}
+
+function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
+  const [apiKey, setApiKey] = useState('');
+  const [fromEmail, setFromEmail] = useState('noreply@projectit.app');
+  const [fromName, setFromName] = useState('ProjectIT');
+  const [testEmail, setTestEmail] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
+  const [result, setResult] = useState(null);
+  const [showKey, setShowKey] = useState(false);
+  const [connected, setConnected] = useState(false);
+
+  // Load existing settings
+  const { data: resendSettings = [] } = useQuery({
+    queryKey: ['resendSettings'],
+    queryFn: () => base44.entities.IntegrationSettings.filter({ provider: 'resend' })
+  });
+
+  useEffect(() => {
+    if (resendSettings[0]) {
+      setApiKey(resendSettings[0].api_key || '');
+      setFromEmail(resendSettings[0].from_email || 'noreply@projectit.app');
+      setFromName(resendSettings[0].from_name || 'ProjectIT');
+      setConnected(!!resendSettings[0].api_key);
+    }
+  }, [resendSettings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setResult(null);
+    try {
+      const response = await base44.functions.invoke('resendEmail', {
+        action: 'saveSettings',
+        apiKey,
+        fromEmail,
+        fromName,
+      });
+      setResult({ success: true, message: 'Settings saved successfully' });
+      setConnected(!!apiKey);
+    } catch (err) {
+      setResult({ success: false, message: err.data?.error || err.message });
+    }
+    setSaving(false);
+  };
+
+  const handleTest = async () => {
+    setTesting(true);
+    setResult(null);
+    try {
+      await handleSave();
+      const response = await base44.functions.invoke('resendEmail', { action: 'testConnection' });
+      const data = response.data || response;
+      setResult(data.success
+        ? { success: true, message: 'Connected to Resend successfully!' }
+        : { success: false, message: data.error || 'Connection failed' });
+    } catch (err) {
+      setResult({ success: false, message: err.data?.error || 'Connection failed' });
+    }
+    setTesting(false);
+  };
+
+  const handleSendTest = async () => {
+    if (!testEmail) { setResult({ success: false, message: 'Enter a test email address' }); return; }
+    setSendingTest(true);
+    setResult(null);
+    try {
+      const response = await base44.functions.invoke('resendEmail', { action: 'sendTestEmail', to: testEmail });
+      const data = response.data || response;
+      setResult(data.success
+        ? { success: true, message: `Test email sent to ${testEmail}!` }
+        : { success: false, message: data.error || 'Failed to send' });
+    } catch (err) {
+      setResult({ success: false, message: err.data?.error || 'Failed to send test email' });
+    }
+    setSendingTest(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <button
+        onClick={() => toggleIntegration('resend')}
+        className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
+            <Mail className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-left">
+            <h3 className="text-base font-semibold text-slate-900">Resend</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Email notifications & transactional emails</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {connected && (
+            <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Connected</Badge>
+          )}
+          {!connected && (
+            <Badge variant="outline" className="text-slate-400 border-slate-200 text-xs">Not configured</Badge>
+          )}
+          <ChevronDown className={cn(
+            "w-5 h-5 text-slate-400 transition-transform duration-200",
+            expandedIntegration === 'resend' && "rotate-180"
+          )} />
+        </div>
+      </button>
+
+      {expandedIntegration === 'resend' && (
+        <div className="border-t p-6 space-y-5">
+          {/* API Key */}
+          <div>
+            <Label className="text-xs">Resend API Key</Label>
+            <div className="relative mt-1">
+              <Input
+                type={showKey ? "text" : "password"}
+                value={apiKey}
+                onChange={e => setApiKey(e.target.value)}
+                placeholder="re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey(!showKey)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
+              >
+                {showKey ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">Get your API key from <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-[#0069AF] hover:underline">resend.com/api-keys</a></p>
+          </div>
+
+          {/* From settings */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs">From Name</Label>
+              <Input value={fromName} onChange={e => setFromName(e.target.value)} placeholder="ProjectIT" className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">From Email</Label>
+              <Input value={fromEmail} onChange={e => setFromEmail(e.target.value)} placeholder="noreply@yourdomain.com" className="mt-1" />
+            </div>
+          </div>
+
+          {/* Test email */}
+          {apiKey && (
+            <div className="pt-4 border-t space-y-3">
+              <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
+                Send Test Email
+              </h3>
+              <div className="flex gap-2">
+                <Input
+                  value={testEmail}
+                  onChange={e => setTestEmail(e.target.value)}
+                  placeholder="test@example.com"
+                  className="flex-1"
+                />
+                <Button onClick={handleSendTest} disabled={sendingTest} variant="outline" size="sm">
+                  {sendingTest ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : 'Send Test'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Result message */}
+          {result && (
+            <div className={cn(
+              "p-3 rounded-lg text-sm flex items-center gap-2",
+              result.success ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+            )}>
+              {result.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+              {result.message}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-3 pt-4 border-t">
+            <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#0F2F44]">
+              {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Settings</>}
+            </Button>
+            <Button onClick={handleTest} disabled={testing || !apiKey} variant="outline">
+              {testing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : 'Test Connection'}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ClaudeAIIntegrationCard({ expandedIntegration, toggleIntegration }) {
+  const [testing, setTesting] = useState(false);
+  const [result, setResult] = useState(null);
+  const [connected, setConnected] = useState(false);
+
+  useEffect(() => {
+    base44.entities.IntegrationSettings.filter({ provider: 'claude_ai' })
+      .then(settings => {
+        if (settings.length > 0 && settings[0].enabled) {
+          setConnected(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleTest = async () => {
+    setTesting(true);
+    setResult(null);
+    try {
+      const res = await base44.functions.invoke('claudeAI', { action: 'testConnection' });
+      setResult({ success: true, message: res.data?.message || 'Connected!' });
+      setConnected(true);
+      // Save settings
+      await base44.functions.invoke('claudeAI', { action: 'saveSettings', api_key_configured: true });
+    } catch (err) {
+      setResult({ success: false, message: err.message || 'Connection failed. Check ANTHROPIC_API_KEY env variable.' });
+    }
+    setTesting(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+      <button
+        onClick={() => toggleIntegration('claude_ai')}
+        className="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-left">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-900">Claude AI</h3>
+              {connected && (
+                <Badge className="bg-emerald-50 text-emerald-600 text-[10px]">Connected</Badge>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">AI-powered document analysis, project insights & task suggestions</p>
+          </div>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedIntegration === 'claude_ai' ? 'rotate-180' : ''}`} />
+      </button>
+
+      {expandedIntegration === 'claude_ai' && (
+        <div className="border-t p-6 space-y-5">
+          {/* Status info */}
+          <div className="p-4 bg-violet-50 rounded-xl border border-violet-100">
+            <div className="flex items-start gap-3">
+              <Bot className="w-5 h-5 text-violet-600 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-semibold text-violet-900">Claude AI Capabilities</h4>
+                <ul className="text-xs text-violet-700 mt-2 space-y-1.5">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Document scanning — extract data from invoices, quotes, spec sheets
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Project summaries — AI-generated executive reports
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Task suggestions — smart task recommendations based on project context
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3 h-3" />
+                    AI assistant — natural language chat about your projects
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Configuration note */}
+          <div className="p-3 bg-slate-50 rounded-lg">
+            <p className="text-xs text-slate-600">
+              <span className="font-medium">Configuration:</span> Set the <code className="bg-white px-1 py-0.5 rounded text-[10px]">ANTHROPIC_API_KEY</code> environment variable on your Railway backend service.
+              The API key is stored securely as an environment variable and never exposed to the frontend.
+            </p>
+          </div>
+
+          {/* Result message */}
+          {result && (
+            <div className={`p-3 rounded-lg text-sm ${result.success ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+              {result.message}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button onClick={handleTest} disabled={testing} className="bg-violet-600 hover:bg-violet-700">
+              {testing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : <><Sparkles className="w-4 h-4 mr-2" />Test Connection</>}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

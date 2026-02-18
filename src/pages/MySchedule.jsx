@@ -6,7 +6,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isTod
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, CheckSquare, Calendar as CalendarIcon, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl, resolveUploadUrl } from '@/utils';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -153,7 +153,7 @@ export default function MySchedule() {
             getColorForEmail(currentUser?.email)
           )}>
             {currentUser?.avatar_url ? (
-              <img src={currentUser.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+              <img src={resolveUploadUrl(currentUser.avatar_url)} alt="" className="w-full h-full rounded-full object-cover" />
             ) : (
               getInitials(currentUser?.full_name)
             )}

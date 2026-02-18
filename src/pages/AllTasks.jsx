@@ -70,7 +70,7 @@ export default function AllTasks() {
     }).catch(() => {});
   }, []);
 
-  const { data: tasks = [] } = useQuery({
+  const { data: tasks = [], isLoading: loadingTasks } = useQuery({
     queryKey: ['allTasks'],
     queryFn: () => base44.entities.Task.list('-created_date')
   });
@@ -203,6 +203,12 @@ export default function AllTasks() {
     setDeletePartConfirm({ open: false, part: null });
   };
 
+  const handleQuickComplete = async (e, taskId) => {
+    e.stopPropagation();
+    await base44.entities.Task.update(taskId, { status: 'completed' });
+    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+  };
+
   const getDueDateLabel = (date) => {
     const d = new Date(date);
     if (isToday(d)) return { label: 'Today', color: 'text-amber-600 bg-amber-50' };
@@ -218,8 +224,48 @@ export default function AllTasks() {
     completed: completedTasks
   };
 
+  if (loadingTasks) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse space-y-6">
+            <div>
+              <div className="h-8 w-48 bg-slate-200 rounded-lg" />
+              <div className="h-4 w-64 bg-slate-100 rounded mt-2" />
+              <div className="flex gap-2 mt-4">
+                <div className="h-10 w-24 bg-slate-200 rounded-lg" />
+                <div className="h-10 w-24 bg-slate-200 rounded-lg" />
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl border border-slate-100 p-4">
+              <div className="h-10 bg-slate-100 rounded-lg mb-4" />
+              <div className="flex gap-2">
+                <div className="h-8 w-24 bg-slate-100 rounded-lg" />
+                <div className="h-8 w-24 bg-slate-100 rounded-lg" />
+                <div className="h-8 w-24 bg-slate-100 rounded-lg" />
+              </div>
+            </div>
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="bg-white rounded-xl border border-slate-100 p-4 flex gap-4">
+                <div className="w-8 h-8 rounded-lg bg-slate-200" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 bg-slate-200 rounded w-1/2" />
+                  <div className="h-3 bg-slate-100 rounded w-1/3" />
+                  <div className="flex gap-3">
+                    <div className="h-5 w-16 bg-slate-100 rounded" />
+                    <div className="h-5 w-20 bg-slate-100 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
@@ -236,7 +282,7 @@ export default function AllTasks() {
               onClick={() => setActiveTab('tasks')}
               className={cn(
                 "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                activeTab === 'tasks' ? "bg-indigo-600 text-white" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                activeTab === 'tasks' ? "bg-[#0069AF] text-white" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
               )}
             >
               <ListTodo className="w-4 h-4" />
@@ -246,12 +292,12 @@ export default function AllTasks() {
               onClick={() => setActiveTab('parts')}
               className={cn(
                 "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                activeTab === 'parts' ? "bg-amber-500 text-white" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                activeTab === 'parts' ? "bg-[#0F2F44] text-white" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
               )}
             >
               <Package className="w-4 h-4" />
               Parts
-              <span className={cn("text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-amber-600" : "bg-amber-100 text-amber-700")}>{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
+              <span className={cn("text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-[#133F5C]" : "bg-[#0069AF]/10 text-[#0069AF]")}>{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
             </button>
           </div>
         </motion.div>
@@ -301,19 +347,19 @@ export default function AllTasks() {
             </div>
 
             {/* Filters Row */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative flex-1 min-w-[180px] max-w-xs">
+            <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+              <div className="relative flex-1 min-w-[140px] sm:max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   placeholder="Search tasks..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9"
+                  className="pl-9 h-10 sm:h-9"
                 />
               </div>
 
-              {/* Status Pills - exclude completed since it's in separate section */}
-              <div className="flex items-center gap-1.5">
+              {/* Status Pills — horizontal scroll on mobile */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
                 {Object.entries(statusConfig).filter(([key]) => key !== 'completed').map(([key, config]) => {
                   const Icon = config.icon;
                   const count = tasksByStatus[key]?.length || 0;
@@ -322,9 +368,9 @@ export default function AllTasks() {
                       key={key}
                       onClick={() => setStatusFilter(statusFilter === key ? 'all' : key)}
                       className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all",
-                        statusFilter === key 
-                          ? "bg-[#0069AF] text-white" 
+                        "flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
+                        statusFilter === key
+                          ? "bg-[#0069AF] text-white"
                           : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       )}
                     >
@@ -340,10 +386,10 @@ export default function AllTasks() {
                   );
                 })}
               </div>
-              
-              <div className="flex items-center gap-2 ml-auto">
+
+              <div className="flex items-center gap-2 sm:ml-auto">
                 <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                  <SelectTrigger className="w-32 h-9">
+                  <SelectTrigger className="flex-1 sm:w-32 h-10 sm:h-9">
                     <SelectValue placeholder="Priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -355,7 +401,7 @@ export default function AllTasks() {
                 </Select>
 
                 <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-                  <SelectTrigger className="w-36 h-9">
+                  <SelectTrigger className="flex-1 sm:w-36 h-10 sm:h-9">
                     <SelectValue placeholder="Assignee" />
                   </SelectTrigger>
                   <SelectContent>
@@ -370,73 +416,96 @@ export default function AllTasks() {
           </motion.div>
         )}
 
-        {/* Tasks List */}
+        {/* Tasks List — grouped by project */}
         {activeTab === 'tasks' && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {filteredTasks.length > 0 ? (
-              filteredTasks.map((task, idx) => {
-                const status = statusConfig[task.status] || statusConfig.todo;
-                const StatusIcon = status.icon;
-                const dueInfo = task.due_date ? getDueDateLabel(task.due_date) : null;
+              (() => {
+                // Group tasks by project
+                const grouped = {};
+                filteredTasks.forEach(task => {
+                  const pid = task.project_id;
+                  if (!grouped[pid]) grouped[pid] = [];
+                  grouped[pid].push(task);
+                });
 
-                return (
+                return Object.entries(grouped).map(([projectId, projectTasks]) => (
                   <motion.div
-                    key={task.id}
+                    key={projectId}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.02 }}
-                    onClick={() => { setEditingTask(task); setShowTaskModal(true); }}
-                    className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group"
+                    className="bg-white rounded-xl border border-slate-100 overflow-hidden"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className={cn("p-1.5 rounded-lg", status.bg)}>
-                        <StatusIcon className={cn("w-5 h-5", status.color)} />
+                    {/* Project header */}
+                    <Link
+                      to={createPageUrl('ProjectDetail') + `?id=${projectId}`}
+                      className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FolderKanban className="w-4 h-4 text-[#0069AF]" />
+                        <span className="font-semibold text-sm text-slate-900">{getProjectName(projectId)}</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">{projectTasks.length}</Badge>
                       </div>
+                    </Link>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-medium text-slate-900">
-                            {task.title}
-                          </h4>
-                          <div className="flex items-center gap-2">
-                            <Edit2 className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <Link to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`} onClick={(e) => e.stopPropagation()}>
-                              <Badge variant="outline" className="shrink-0 hover:bg-slate-100">
-                                <FolderKanban className="w-3 h-3 mr-1" />
-                                {getProjectName(task.project_id)}
-                              </Badge>
-                            </Link>
-                          </div>
-                        </div>
+                    {/* Task rows */}
+                    <div className="divide-y divide-slate-50">
+                      {projectTasks.map((task) => {
+                        const status = statusConfig[task.status] || statusConfig.todo;
+                        const StatusIcon = status.icon;
+                        const dueInfo = task.due_date ? getDueDateLabel(task.due_date) : null;
 
-                        {task.description && (
-                          <p className="text-sm text-slate-500 mt-1 line-clamp-1">{task.description}</p>
-                        )}
+                        return (
+                          <div
+                            key={task.id}
+                            onClick={() => { setEditingTask(task); setShowTaskModal(true); }}
+                            className="flex items-center gap-3 px-3 sm:px-4 py-3 sm:py-2.5 hover:bg-slate-50 transition-colors cursor-pointer group active:bg-slate-100"
+                          >
+                            {/* Tappable checkmark */}
+                            <button
+                              onClick={(e) => handleQuickComplete(e, task.id)}
+                              className={cn(
+                                "w-7 h-7 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all active:scale-90",
+                                task.status === 'completed'
+                                  ? "bg-emerald-500 border-emerald-500 text-white"
+                                  : "border-slate-300 hover:border-[#0069AF] hover:bg-[#0069AF]/5"
+                              )}
+                              title="Mark as completed"
+                            >
+                              {task.status === 'completed' ? (
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                              ) : (
+                                <CheckCircle2 className="w-3.5 h-3.5 opacity-0 group-hover:opacity-30" />
+                              )}
+                            </button>
 
-                        <div className="flex flex-wrap items-center gap-3 mt-3">
-                          <Badge variant="outline" className={priorityColors[task.priority]}>
-                            {task.priority}
-                          </Badge>
-
-                          {task.assigned_name && (
-                            <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                              <User className="w-3.5 h-3.5" />
-                              <span>{task.assigned_name}</span>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium text-slate-900 truncate">{task.title}</h4>
                             </div>
-                          )}
 
-                          {dueInfo && (
-                            <Badge variant="outline" className={dueInfo.color}>
-                              <Calendar className="w-3 h-3 mr-1" />
-                              {dueInfo.label}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
+                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                              {task.priority && (
+                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-5 hidden sm:flex", priorityColors[task.priority])}>
+                                  {task.priority}
+                                </Badge>
+                              )}
+                              {task.assigned_name && (
+                                <span className="text-xs text-slate-400 hidden lg:inline">{task.assigned_name.split(' ')[0]}</span>
+                              )}
+                              {dueInfo && (
+                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-5", dueInfo.color)}>
+                                  {dueInfo.label}
+                                </Badge>
+                              )}
+                              <Edit2 className="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </motion.div>
-                );
-              })
+                ));
+              })()
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -451,10 +520,10 @@ export default function AllTasks() {
 
             {/* Completed Tasks Section */}
             {completedTasks.length > 0 && (
-              <div className="mt-6">
+              <div>
                 <button
                   onClick={() => setShowCompletedTasks(!showCompletedTasks)}
-                  className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-700 mb-3 transition-colors"
+                  className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-700 mb-2 transition-colors"
                 >
                   {showCompletedTasks ? (
                     <ChevronDown className="w-4 h-4" />
@@ -462,50 +531,30 @@ export default function AllTasks() {
                     <ChevronRight className="w-4 h-4" />
                   )}
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  Completed Tasks ({completedTasks.length})
+                  Completed ({completedTasks.length})
                 </button>
-                
+
                 <AnimatePresence>
                   {showCompletedTasks && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="space-y-2 overflow-hidden"
+                      className="bg-white rounded-xl border border-slate-100 overflow-hidden"
                     >
-                      {completedTasks.map((task, idx) => {
-                        const status = statusConfig.completed;
-                        const StatusIcon = status.icon;
-
-                        return (
-                          <motion.div
+                      <div className="divide-y divide-slate-50">
+                        {completedTasks.map((task) => (
+                          <div
                             key={task.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.02 }}
                             onClick={() => { setEditingTask(task); setShowTaskModal(true); }}
-                            className="bg-slate-50 rounded-xl border border-slate-100 p-3 hover:bg-slate-100 transition-all cursor-pointer group"
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 transition-colors cursor-pointer"
                           >
-                            <div className="flex items-center gap-3">
-                              <div className={cn("p-1 rounded-lg", status.bg)}>
-                                <StatusIcon className={cn("w-4 h-4", status.color)} />
-                              </div>
-
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-slate-500 line-through text-sm">
-                                  {task.title}
-                                </h4>
-                              </div>
-
-                              <Link to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`} onClick={(e) => e.stopPropagation()}>
-                                <Badge variant="outline" className="shrink-0 hover:bg-white text-xs">
-                                  {getProjectName(task.project_id)}
-                                </Badge>
-                              </Link>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <span className="text-sm text-slate-400 line-through truncate flex-1">{task.title}</span>
+                            <span className="text-[10px] text-slate-300">{getProjectName(task.project_id)}</span>
+                          </div>
+                        ))}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
