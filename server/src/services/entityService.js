@@ -1,0 +1,275 @@
+import pool from '../config/database.js';
+
+// Whitelist of valid entity table names
+const VALID_ENTITIES = new Set([
+  'AppSettings', 'AuditLog', 'ChangeOrder', 'CommunicationLog', 'CustomRole',
+  'Customer', 'DashboardView', 'EmailTemplate', 'Feedback', 'FileFolder',
+  'IncomingQuote', 'IntegrationSettings', 'InventoryItem', 'InventoryTransaction',
+  'NotificationSettings', 'Part', 'Product', 'ProgressUpdate', 'Project',
+  'ProjectActivity', 'ProjectFile', 'ProjectNote', 'ProjectStack', 'ProjectStatus',
+  'ProjectTag', 'ProjectTemplate', 'Proposal', 'ProposalSettings', 'QuoteRequest',
+  'SavedReport', 'Service', 'ServiceBundle', 'Site', 'Task', 'TaskComment', 'Ticket',
+  'TaskGroup', 'TeamMember', 'TimeEntry', 'UserGroup', 'UserNotification',
+  'UserSecuritySettings', 'Workflow', 'WorkflowLog',
+]);
+
+function validateEntity(entityType) {
+  if (!VALID_ENTITIES.has(entityType)) {
+    throw Object.assign(new Error(`Invalid entity type: ${entityType}`), { status: 400 });
+  }
+}
+
+// Format a DB row into the shape Base44 returns: { id, ...data, created_date, updated_date }
+function formatRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    ...row.data,
+    created_date: row.created_date,
+    updated_date: row.updated_date,
+    created_by: row.created_by,
+  };
+}
+
+// Parse sort field: "-created_date" → { column: "created_date", direction: "DESC" }
+function parseSort(sortField) {
+  if (!sortField) return { column: 'created_date', direction: 'DESC' };
+  if (sortField.startsWith('-')) {
+    return { column: sortField.slice(1), direction: 'DESC' };
+  }
+  return { column: sortField, direction: 'ASC' };
+}
+
+// Build ORDER BY clause — sort on created_date/updated_date uses the column directly,
+// otherwise sort on data->>field
+function buildOrderBy(sortField) {
+  const { column, direction } = parseSort(sortField);
+  const metaColumns = ['created_date', 'updated_date', 'created_by', 'id'];
+  if (metaColumns.includes(column)) {
+    return `ORDER BY "${column}" ${direction}`;
+  }
+  return `ORDER BY data->>'${column}' ${direction}`;
+}
+
+// Translate MongoDB-style filter object to PostgreSQL WHERE conditions
+// Supports: direct equality, $ne, $in, $nin, $gt, $gte, $lt, $lte, $exists, $regex
+function buildWhereClause(filterObj, paramOffset = 1) {
+  const conditions = [];
+  const values = [];
+  let paramIdx = paramOffset;
+
+  for (const [field, value] of Object.entries(filterObj)) {
+    // If the field is "id", query the id column directly
+    if (field === 'id') {
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        // Operator on id
+        for (const [op, opVal] of Object.entries(value)) {
+          switch (op) {
+            case '$in':
+              conditions.push(`id = ANY($${paramIdx}::uuid[])`);
+              values.push(opVal);
+              paramIdx++;
+              break;
+            case '$nin':
+              conditions.push(`id != ALL($${paramIdx}::uuid[])`);
+              values.push(opVal);
+              paramIdx++;
+              break;
+            case '$ne':
+              conditions.push(`id != $${paramIdx}::uuid`);
+              values.push(opVal);
+              paramIdx++;
+              break;
+            default:
+              break;
+          }
+        }
+      } else {
+        conditions.push(`id = $${paramIdx}::uuid`);
+        values.push(value);
+        paramIdx++;
+      }
+      continue;
+    }
+
+    // Meta columns (created_date, updated_date)
+    const metaColumns = ['created_date', 'updated_date'];
+    if (metaColumns.includes(field)) {
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        for (const [op, opVal] of Object.entries(value)) {
+          const pgOp = { $gt: '>', $gte: '>=', $lt: '<', $lte: '<=', $ne: '!=' }[op];
+          if (pgOp) {
+            conditions.push(`"${field}" ${pgOp} $${paramIdx}`);
+            values.push(opVal);
+            paramIdx++;
+          }
+        }
+      } else {
+        conditions.push(`"${field}" = $${paramIdx}`);
+        values.push(value);
+        paramIdx++;
+      }
+      continue;
+    }
+
+    // JSONB field queries
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      // Has operators like { $ne: 'archived' }
+      for (const [op, opVal] of Object.entries(value)) {
+        switch (op) {
+          case '$ne':
+            conditions.push(`(data->>'${field}' IS NULL OR data->>'${field}' != $${paramIdx})`);
+            values.push(String(opVal));
+            paramIdx++;
+            break;
+          case '$in':
+            conditions.push(`data->>'${field}' = ANY($${paramIdx})`);
+            values.push(opVal.map(String));
+            paramIdx++;
+            break;
+          case '$nin':
+            conditions.push(`(data->>'${field}' IS NULL OR data->>'${field}' != ALL($${paramIdx}))`);
+            values.push(opVal.map(String));
+            paramIdx++;
+            break;
+          case '$gt':
+            conditions.push(`(data->>'${field}')::numeric > $${paramIdx}`);
+            values.push(opVal);
+            paramIdx++;
+            break;
+          case '$gte':
+            conditions.push(`(data->>'${field}')::numeric >= $${paramIdx}`);
+            values.push(opVal);
+            paramIdx++;
+            break;
+          case '$lt':
+            conditions.push(`(data->>'${field}')::numeric < $${paramIdx}`);
+            values.push(opVal);
+            paramIdx++;
+            break;
+          case '$lte':
+            conditions.push(`(data->>'${field}')::numeric <= $${paramIdx}`);
+            values.push(opVal);
+            paramIdx++;
+            break;
+          case '$exists':
+            if (opVal) {
+              conditions.push(`data ? '${field}'`);
+            } else {
+              conditions.push(`NOT (data ? '${field}')`);
+            }
+            break;
+          case '$regex':
+            conditions.push(`data->>'${field}' ~* $${paramIdx}`);
+            values.push(opVal);
+            paramIdx++;
+            break;
+          default:
+            break;
+        }
+      }
+    } else if (value === null) {
+      conditions.push(`(data->>'${field}' IS NULL)`);
+    } else if (typeof value === 'boolean') {
+      conditions.push(`(data->>'${field}')::boolean = $${paramIdx}`);
+      values.push(value);
+      paramIdx++;
+    } else if (typeof value === 'number') {
+      // Numbers: try exact text match first (handles integers and floats)
+      conditions.push(`data->>'${field}' = $${paramIdx}`);
+      values.push(String(value));
+      paramIdx++;
+    } else {
+      // String equality
+      conditions.push(`data->>'${field}' = $${paramIdx}`);
+      values.push(String(value));
+      paramIdx++;
+    }
+  }
+
+  return { conditions, values };
+}
+
+const entityService = {
+  async list(entityType, sortField, limit) {
+    validateEntity(entityType);
+    const orderBy = buildOrderBy(sortField);
+    const limitClause = limit ? `LIMIT ${parseInt(limit, 10)}` : '';
+    const { rows } = await pool.query(
+      `SELECT * FROM "${entityType}" ${orderBy} ${limitClause}`
+    );
+    return rows.map(formatRow);
+  },
+
+  async filter(entityType, filterObj, sortField, limit) {
+    validateEntity(entityType);
+    const { conditions, values } = buildWhereClause(filterObj || {});
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const orderBy = buildOrderBy(sortField);
+    const limitClause = limit ? `LIMIT ${parseInt(limit, 10)}` : '';
+
+    const { rows } = await pool.query(
+      `SELECT * FROM "${entityType}" ${whereClause} ${orderBy} ${limitClause}`,
+      values
+    );
+    return rows.map(formatRow);
+  },
+
+  async create(entityType, data, userId) {
+    validateEntity(entityType);
+    const { rows } = await pool.query(
+      `INSERT INTO "${entityType}" (data, created_by) VALUES ($1, $2) RETURNING *`,
+      [JSON.stringify(data), userId || null]
+    );
+    return formatRow(rows[0]);
+  },
+
+  async update(entityType, id, patchData) {
+    validateEntity(entityType);
+    const { rows } = await pool.query(
+      `UPDATE "${entityType}" SET data = data || $1::jsonb, updated_date = NOW() WHERE id = $2::uuid RETURNING *`,
+      [JSON.stringify(patchData), id]
+    );
+    if (rows.length === 0) {
+      throw Object.assign(new Error('Record not found'), { status: 404 });
+    }
+    return formatRow(rows[0]);
+  },
+
+  async delete(entityType, id) {
+    validateEntity(entityType);
+    const { rowCount } = await pool.query(
+      `DELETE FROM "${entityType}" WHERE id = $1::uuid`,
+      [id]
+    );
+    if (rowCount === 0) {
+      throw Object.assign(new Error('Record not found'), { status: 404 });
+    }
+    return { success: true };
+  },
+
+  async bulkCreate(entityType, dataArray, userId) {
+    validateEntity(entityType);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const results = [];
+      for (const data of dataArray) {
+        const { rows } = await client.query(
+          `INSERT INTO "${entityType}" (data, created_by) VALUES ($1, $2) RETURNING *`,
+          [JSON.stringify(data), userId || null]
+        );
+        results.push(formatRow(rows[0]));
+      }
+      await client.query('COMMIT');
+      return results;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  },
+};
+
+export default entityService;
