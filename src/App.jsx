@@ -40,6 +40,12 @@ const AuthenticatedApp = () => {
     }
   }
 
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    navigateToLogin();
+    return null;
+  }
+
   // Render the main app
   return (
     <Routes>
