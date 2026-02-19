@@ -48,7 +48,10 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-          <h1 className="text-2xl font-bold text-slate-900 text-center mb-2">ProjectIT</h1>
+          <div className="flex justify-center mb-3">
+            <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 text-center mb-1">Project<span className="text-[#0069AF]">IT</span></h1>
           <p className="text-slate-500 text-center mb-6 text-sm">Sign in to your account</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">

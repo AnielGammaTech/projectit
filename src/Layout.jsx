@@ -164,15 +164,13 @@ function LayoutContent({ children, currentPageName }) {
             </Button>
 
             {/* Logo */}
-            <Link to={createPageUrl('Dashboard')} className="flex items-center gap-2">
+            <Link to={createPageUrl('Dashboard')} className="flex items-center gap-2.5">
               {appLogoUrl ? (
                 <img src={resolveUploadUrl(appLogoUrl)} alt="" className="w-7 h-7 rounded-lg object-contain" />
               ) : (
-                <div className="w-7 h-7 rounded-lg bg-[#74C7FF] flex items-center justify-center">
-                  <Globe className="w-4 h-4 text-[#133F5C]" />
-                </div>
+                <img src="/favicon.svg" alt="" className="w-7 h-7" />
               )}
-              <span className="font-semibold text-white hidden sm:inline">ProjectIT</span>
+              <span className="font-bold text-white hidden sm:inline tracking-tight">Project<span className="text-[#74C7FF]">IT</span></span>
             </Link>
           </div>
 
