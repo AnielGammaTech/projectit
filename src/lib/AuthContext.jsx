@@ -40,43 +40,83 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (!supabase) {
-      // Supabase not configured
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
       return;
     }
 
-    // Set up auth state listener FIRST (Supabase recommended pattern)
-    // onAuthStateChange fires INITIAL_SESSION immediately upon registration
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'INITIAL_SESSION') {
-          // This is the initial check — replaces getSession()
-          if (session) {
+    let mounted = true;
+
+    // Initialize auth by getting the session, which triggers a token refresh
+    // if the stored access token is expired.
+    const initAuth = async () => {
+      try {
+        // getSession reads localStorage; if token is expired, the Supabase
+        // client will auto-refresh it before resolving.
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (error) {
+          console.error('getSession error:', error);
+          setIsAuthenticated(false);
+          setUser(null);
+          setIsLoadingAuth(false);
+          initializedRef.current = true;
+          return;
+        }
+
+        if (session) {
+          // We have a session — refresh it to guarantee a valid access token
+          const { data: refreshData } = await supabase.auth.refreshSession();
+          if (!mounted) return;
+
+          if (refreshData?.session) {
             await fetchAppUser();
           } else {
+            // Refresh failed — session is invalid
             setIsAuthenticated(false);
             setUser(null);
           }
-          setIsLoadingAuth(false);
-          initializedRef.current = true;
-        } else if (event === 'SIGNED_IN' && session) {
-          // Only fetch if already initialized (skip duplicate from login)
-          if (initializedRef.current) {
-            await fetchAppUser();
-          }
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('Auth init failed:', err);
+        if (mounted) {
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      }
+
+      if (mounted) {
+        setIsLoadingAuth(false);
+        initializedRef.current = true;
+      }
+    };
+
+    initAuth();
+
+    // Listen for subsequent auth changes (sign in, sign out, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!initializedRef.current) return; // Skip during init
+
+        if (event === 'SIGNED_IN' && session) {
+          await fetchAppUser();
           setIsLoadingAuth(false);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setIsAuthenticated(false);
           setIsLoadingAuth(false);
-        } else if (event === 'TOKEN_REFRESHED' && session) {
-          // Token refreshed — session is still valid, no action needed
         }
+        // TOKEN_REFRESHED is handled automatically by the shared session state
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [fetchAppUser]);
@@ -87,7 +127,8 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Force a refresh to get a valid token
+      const { data: { session } } = await supabase.auth.refreshSession();
       if (session) {
         await fetchAppUser();
       } else {
