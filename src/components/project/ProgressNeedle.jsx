@@ -3,9 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Check, X, PartyPopper, MessageCircle, CircleDot, AlertTriangle, CheckCircle2, History, AtSign } from 'lucide-react';
-import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Check, PartyPopper, MessageCircle, CircleDot, AlertTriangle, CheckCircle2, History, Send, TrendingUp, Minus, Plus } from 'lucide-react';
+import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -27,9 +27,9 @@ import {
 
 // Project health status options
 const healthOptions = [
-  { value: 'good', label: 'On Track', icon: CheckCircle2, color: 'bg-emerald-500', textColor: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-  { value: 'concern', label: 'Some Concerns', icon: CircleDot, color: 'bg-amber-500', textColor: 'text-amber-600', bgColor: 'bg-amber-50' },
-  { value: 'issue', label: 'Has Issues', icon: AlertTriangle, color: 'bg-red-500', textColor: 'text-red-600', bgColor: 'bg-red-50' },
+  { value: 'good', label: 'On Track', icon: CheckCircle2, color: 'bg-emerald-500', textColor: 'text-emerald-600', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-300', ring: 'ring-emerald-200' },
+  { value: 'concern', label: 'At Risk', icon: CircleDot, color: 'bg-amber-500', textColor: 'text-amber-600', bgColor: 'bg-amber-50', borderColor: 'border-amber-300', ring: 'ring-amber-200' },
+  { value: 'issue', label: 'Blocked', icon: AlertTriangle, color: 'bg-red-500', textColor: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-300', ring: 'ring-red-200' },
 ];
 
 export default function ProgressNeedle({ projectId, value = 0, onSave, currentUser, onStatusChange, halopsaTicketId, hasUpdates = false, lastUpdateNote = '' }) {
@@ -38,11 +38,9 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
   const [note, setNote] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
   const [projectHealth, setProjectHealth] = useState('good');
-  const [showHistory, setShowHistory] = useState(false);
   const [mentionSearch, setMentionSearch] = useState('');
   const [showMentions, setShowMentions] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
@@ -63,7 +61,6 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   const lastUpdate = updates[0];
 
-  // Set initial health from last update
   useEffect(() => {
     if (lastUpdate?.health_status) {
       setProjectHealth(lastUpdate.health_status);
@@ -88,13 +85,12 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   const saveMutation = useMutation({
     mutationFn: async (skipCompletionCheck = false) => {
-      // Check if hitting 100% for the first time
       if (localValue === 100 && value !== 100 && !skipCompletionCheck) {
         setPendingSave(true);
         setShowCompletionDialog(true);
         return;
       }
-      
+
       await base44.entities.ProgressUpdate.create({
         project_id: projectId,
         progress_value: localValue,
@@ -103,10 +99,8 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
         author_email: currentUser?.email,
         author_name: currentUser?.full_name || currentUser?.email
       });
-      
-      // Push to HaloPSA as private note
+
       await pushToHalo(note, localValue);
-      
       onSave(localValue);
     },
     onSuccess: () => {
@@ -115,6 +109,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
         setNote('');
         setShowUpdateModal(false);
         setProjectHealth('good');
+        toast.success('Progress updated');
       }
     }
   });
@@ -129,10 +124,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
       author_email: currentUser?.email,
       author_name: currentUser?.full_name || currentUser?.email
     });
-    
-    // Push to HaloPSA
     await pushToHalo(completionNote, 100);
-    
     onSave(100);
     onStatusChange?.('completed');
     queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
@@ -144,7 +136,6 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
   };
 
   const handleCompletionCancel = async () => {
-    // Save progress without changing status
     await base44.entities.ProgressUpdate.create({
       project_id: projectId,
       progress_value: 100,
@@ -153,10 +144,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
       author_email: currentUser?.email,
       author_name: currentUser?.full_name || currentUser?.email
     });
-    
-    // Push to HaloPSA
     await pushToHalo(note, 100);
-    
     onSave(100);
     queryClient.invalidateQueries({ queryKey: ['progressUpdates', projectId] });
     setNote('');
@@ -166,33 +154,20 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
     setProjectHealth('good');
   };
 
-
-
   const getColor = () => {
-    // Color based on project health status
     if (projectHealth === 'issue') return { bg: 'bg-red-500', hex: '#ef4444' };
     if (projectHealth === 'concern') return { bg: 'bg-amber-500', hex: '#f59e0b' };
     return { bg: 'bg-emerald-500', hex: '#10b981' };
   };
 
+  // Slider drag handlers
   const handleMouseDown = (e) => {
     e.preventDefault();
     setIsDragging(true);
     updateValue(e);
   };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    updateValue(e);
-  };
-
-  const handleMouseUp = () => {
-    if (isDragging && localValue !== value) {
-      setShowUpdateModal(true);
-    }
-    setIsDragging(false);
-  };
-
+  const handleMouseMove = (e) => { if (isDragging) updateValue(e); };
+  const handleMouseUp = () => { setIsDragging(false); };
   const updateValue = (e) => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
@@ -200,63 +175,46 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
     const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
     setLocalValue(Math.round(percentage));
   };
-
-  const handleTouchStart = (e) => {
-    setIsDragging(true);
-    updateValue(e);
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging) return;
-    updateValue(e);
-  };
-
-  const handleTouchEnd = () => {
-    if (isDragging && localValue !== value) {
-      setShowUpdateModal(true);
-    }
-    setIsDragging(false);
-  };
+  const handleTouchStart = (e) => { setIsDragging(true); updateValue(e); };
+  const handleTouchMove = (e) => { if (isDragging) updateValue(e); };
+  const handleTouchEnd = () => { setIsDragging(false); };
 
   useEffect(() => {
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      const onMove = (e) => handleMouseMove(e);
+      const onUp = () => handleMouseUp();
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
       window.addEventListener('touchmove', handleTouchMove);
       window.addEventListener('touchend', handleTouchEnd);
       return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
         window.removeEventListener('touchmove', handleTouchMove);
         window.removeEventListener('touchend', handleTouchEnd);
       };
     }
   }, [isDragging]);
 
-  useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
+  useEffect(() => { setLocalValue(value); }, [value]);
 
   const handleCancel = () => {
     setLocalValue(value);
     setShowUpdateModal(false);
     setNote('');
-    setProjectHealth('good');
+    setProjectHealth(lastUpdate?.health_status || 'good');
   };
 
   const handleSaveUpdate = async () => {
-    // Extract mentions from note and create notifications
     const mentionRegex = /@(\w+(?:\s+\w+)?)/g;
     const mentions = note.match(mentionRegex) || [];
-    
     for (const mention of mentions) {
       const name = mention.slice(1).trim();
-      const member = teamMembers.find(m => 
+      const member = teamMembers.find(m =>
         m.name?.toLowerCase().includes(name.toLowerCase()) ||
         m.email?.toLowerCase().includes(name.toLowerCase())
       );
       if (member?.email && member.email !== currentUser?.email) {
-        // Create in-app notification
         await base44.entities.UserNotification.create({
           user_email: member.email,
           type: 'mention',
@@ -268,8 +226,6 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
           link: `/ProjectDetail?id=${projectId}`,
           is_read: false
         });
-        
-        // Send email notification via Resend
         try {
           await base44.functions.invoke('sendNotificationEmail', {
             to: member.email,
@@ -285,18 +241,16 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
         }
       }
     }
-    
     saveMutation.mutate();
   };
 
+  // Mention handling
   const handleNoteChange = (e) => {
-    const value = e.target.value;
+    const val = e.target.value;
     const position = e.target.selectionStart;
-    setNote(value);
+    setNote(val);
     setCursorPosition(position);
-    
-    // Check for @ trigger
-    const textBeforeCursor = value.slice(0, position);
+    const textBeforeCursor = val.slice(0, position);
     const atIndex = textBeforeCursor.lastIndexOf('@');
     if (atIndex !== -1) {
       const textAfterAt = textBeforeCursor.slice(atIndex + 1);
@@ -319,27 +273,28 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
     textareaRef.current?.focus();
   };
 
-  const filteredMembers = teamMembers.filter(m => 
+  const filteredMembers = teamMembers.filter(m =>
     m.name?.toLowerCase().includes(mentionSearch.toLowerCase()) ||
     m.email?.toLowerCase().includes(mentionSearch.toLowerCase())
   ).slice(0, 5);
 
-  const isActive = isHovered || isDragging;
-
   const color = getColor();
-
-  // Get current health option for display
   const currentHealth = healthOptions.find(h => h.value === projectHealth) || healthOptions[0];
   const HealthIcon = currentHealth.icon;
 
+  // Quick increment/decrement
+  const adjustProgress = (delta) => {
+    setLocalValue(prev => Math.max(0, Math.min(100, prev + delta)));
+  };
+
   return (
     <>
+      {/* Compact inline progress bar — click to open modal */}
       <div className="w-full">
         <button
           className="w-full text-left group cursor-pointer"
           onClick={() => setShowUpdateModal(true)}
         >
-          {/* Label row */}
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-1.5">
               <HealthIcon className={cn("w-3.5 h-3.5", currentHealth.textColor)} />
@@ -354,8 +309,6 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               {localValue}%
             </span>
           </div>
-
-          {/* Animated progress track */}
           <div className="relative w-full h-2 bg-slate-100 rounded-full overflow-hidden group-hover:h-2.5 transition-all">
             <motion.div
               className={cn("h-full rounded-full", color.bg)}
@@ -363,7 +316,6 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               animate={{ width: `${localValue}%` }}
               transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
             />
-            {/* Shimmer effect on hover */}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
               <div
                 className="absolute inset-y-0 w-1/4 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"
@@ -374,60 +326,79 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
         </button>
       </div>
 
-      {/* Update Modal */}
-      <Dialog open={showUpdateModal} onOpenChange={setShowUpdateModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className={cn("p-1.5 rounded-lg", color.bg)}>
-                <MessageCircle className="w-4 h-4 text-white" />
+      {/* ─── UPDATE MODAL ─── */}
+      <Dialog open={showUpdateModal} onOpenChange={(open) => { if (!open) handleCancel(); else setShowUpdateModal(true); }}>
+        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
+          {/* Header with large progress display */}
+          <div className={cn("px-6 pt-6 pb-4", currentHealth.bgColor)}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className={cn("w-5 h-5", currentHealth.textColor)} />
+                <h2 className="text-base font-semibold text-slate-900">Progress Update</h2>
               </div>
-              Progress Update
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Progress Slider in Modal */}
-            <div className="p-4 bg-slate-50 rounded-xl">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-slate-600">Progress</span>
-                <div className={cn("px-3 py-1 rounded-lg text-white font-bold text-sm", color.bg)}>
-                  {localValue}%
-                </div>
-              </div>
-              <div 
-                ref={trackRef}
-                className="relative h-8 flex items-center cursor-pointer"
-                onMouseDown={handleMouseDown}
-                onTouchStart={handleTouchStart}
-              >
-                {/* Track Background */}
-                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                  <motion.div 
-                    className={cn("h-full rounded-full", color.bg)}
-                    animate={{ width: `${localValue}%` }}
-                    transition={{ duration: isDragging ? 0 : 0.15, ease: 'easeOut' }}
-                  />
-                </div>
-                {/* Thumb */}
-                <motion.div
-                  className="absolute top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
-                  style={{ left: `${localValue}%` }}
-                  animate={{ left: `${localValue}%`, scale: isDragging ? 1.15 : 1 }}
-                  transition={{ duration: isDragging ? 0 : 0.15 }}
-                >
-                  <div 
-                    className={cn("w-5 h-5 -ml-2.5 rounded-full shadow-md border-2 border-white", color.bg)}
-                    style={{ boxShadow: isDragging ? `0 0 0 4px ${color.hex}25, 0 2px 8px rgba(0,0,0,0.2)` : '0 2px 6px rgba(0,0,0,0.15)' }}
-                  />
-                </motion.div>
-              </div>
+              {lastUpdate && (
+                <span className="text-[11px] text-slate-400">
+                  Last: {formatDistanceToNow(new Date(lastUpdate.created_date), { addSuffix: true })}
+                </span>
+              )}
             </div>
 
-            {/* Project Health Status */}
+            {/* Big progress number + stepper */}
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <button
+                onClick={() => adjustProgress(-5)}
+                className="w-9 h-9 rounded-full bg-white/80 hover:bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all shadow-sm"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              <div className="text-center">
+                <div className={cn("text-5xl font-bold tabular-nums tracking-tight", currentHealth.textColor)}>
+                  {localValue}
+                  <span className="text-2xl">%</span>
+                </div>
+              </div>
+              <button
+                onClick={() => adjustProgress(5)}
+                className="w-9 h-9 rounded-full bg-white/80 hover:bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Slider track */}
+            <div
+              ref={trackRef}
+              className="relative h-10 flex items-center cursor-pointer px-1"
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+            >
+              <div className="w-full h-2.5 bg-white/60 rounded-full overflow-hidden backdrop-blur-sm border border-white/40">
+                <motion.div
+                  className={cn("h-full rounded-full", color.bg)}
+                  animate={{ width: `${localValue}%` }}
+                  transition={{ duration: isDragging ? 0 : 0.15, ease: 'easeOut' }}
+                />
+              </div>
+              <motion.div
+                className="absolute top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+                style={{ left: `calc(${localValue}% + 4px)` }}
+                animate={{ left: `calc(${localValue}% + 4px)`, scale: isDragging ? 1.2 : 1 }}
+                transition={{ duration: isDragging ? 0 : 0.15 }}
+              >
+                <div
+                  className={cn("w-5 h-5 -ml-2.5 rounded-full shadow-lg border-[3px] border-white", color.bg)}
+                  style={{ boxShadow: isDragging ? `0 0 0 4px ${color.hex}30, 0 2px 8px rgba(0,0,0,0.2)` : '0 2px 8px rgba(0,0,0,0.15)' }}
+                />
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="px-6 py-5 space-y-5">
+            {/* Health status — horizontal pills */}
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-2 block">Project Status</label>
-              <div className="grid grid-cols-3 gap-2">
+              <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2.5 block">How's the project going?</label>
+              <div className="flex gap-2">
                 {healthOptions.map((option) => {
                   const Icon = option.icon;
                   const isSelected = projectHealth === option.value;
@@ -436,148 +407,129 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                       key={option.value}
                       onClick={() => setProjectHealth(option.value)}
                       className={cn(
-                        "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all",
-                        isSelected 
-                          ? cn(option.bgColor, "border-current", option.textColor)
-                          : "border-slate-200 hover:border-slate-300 bg-white"
+                        "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 transition-all text-sm font-medium",
+                        isSelected
+                          ? cn(option.bgColor, option.borderColor, option.textColor, "ring-2", option.ring)
+                          : "border-slate-200 hover:border-slate-300 bg-white text-slate-500 hover:text-slate-700"
                       )}
                     >
-                      <Icon className={cn("w-5 h-5", isSelected ? option.textColor : "text-slate-400")} />
-                      <span className={cn("text-xs font-medium", isSelected ? option.textColor : "text-slate-500")}>
-                        {option.label}
-                      </span>
+                      <Icon className="w-4 h-4" />
+                      {option.label}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Note Input with @ mentions */}
+            {/* Note — prominent, feels like a chat/post input */}
             <div className="relative">
-              <label className="text-sm font-medium text-slate-700 mb-2 block flex items-center gap-2">
-                Add a Note (optional)
-                <span className="text-xs text-slate-400 font-normal">Type @ to mention someone</span>
+              <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">
+                What's new?
+                <span className="text-slate-400 font-normal normal-case tracking-normal ml-1.5">@ to mention</span>
               </label>
               <Textarea
                 ref={textareaRef}
                 value={note}
                 onChange={handleNoteChange}
-                placeholder="What's the latest on this project? Use @ to mention team members..."
-                className="min-h-[80px] text-sm resize-none"
+                placeholder="Share a quick update with your team..."
+                className="min-h-[80px] text-sm resize-none rounded-xl border-slate-200 focus:border-[#0069AF] focus:ring-[#0069AF]/20"
               />
-              {showMentions && filteredMembers.length > 0 && (
-                <div className="absolute z-50 bottom-full mb-1 left-0 w-full bg-white rounded-lg border border-slate-200 shadow-lg overflow-hidden">
-                  {filteredMembers.map(member => (
-                    <button
-                      key={member.id}
-                      onClick={() => insertMention(member)}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 text-left"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-600">
-                        {member.name?.[0] || member.email?.[0]}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{member.name}</p>
-                        <p className="text-xs text-slate-500">{member.email}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Progress History */}
-            <div>
-              <button
-                onClick={() => setShowHistory(!showHistory)}
-                className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-indigo-600 transition-colors"
-              >
-                <History className="w-4 h-4" />
-                Update History ({updates.length})
-              </button>
-              
-              {showHistory && updates.length > 0 && (
-                <div className="mt-3 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50">
-                  <div className="p-3 space-y-3">
-                    {updates.map((update) => (
-                      <div key={update.id} className={cn(
-                        "rounded-lg p-3 border overflow-hidden",
-                        update.health_status === 'issue' ? "bg-red-50 border-red-200" :
-                        update.health_status === 'concern' ? "bg-amber-50 border-amber-200" :
-                        "bg-white border-slate-100"
-                      )}>
-                        <div className="flex items-center justify-between mb-1 gap-2">
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <div className={cn(
-                              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0",
-                              update.health_status === 'issue' ? "bg-red-100 text-red-600" :
-                              update.health_status === 'concern' ? "bg-amber-100 text-amber-600" :
-                              "bg-emerald-100 text-emerald-600"
-                            )}>
-                              {update.author_name?.[0] || '?'}
-                            </div>
-                            <span className="text-xs font-medium text-slate-700 truncate">{update.author_name || 'Unknown'}</span>
-                            <span className={cn(
-                              "text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0",
-                              update.health_status === 'issue' ? "bg-red-100 text-red-700" :
-                              update.health_status === 'concern' ? "bg-amber-100 text-amber-700" :
-                              "bg-emerald-100 text-emerald-700"
-                            )}>
-                              {update.health_status === 'issue' ? 'Has Issues' :
-                               update.health_status === 'concern' ? 'Some Concerns' : 'On Track'}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className={cn(
-                              "text-xs font-bold",
-                              update.health_status === 'issue' ? "text-red-600" :
-                              update.health_status === 'concern' ? "text-amber-600" :
-                              "text-emerald-600"
-                            )}>{update.progress_value}%</span>
-                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
-                              {format(new Date(update.created_date), 'MMM d, h:mm a')}
-                            </span>
-                          </div>
+              {/* Mention dropdown */}
+              <AnimatePresence>
+                {showMentions && filteredMembers.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    className="absolute z-50 bottom-full mb-1 left-0 w-full bg-white rounded-xl border border-slate-200 shadow-lg overflow-hidden"
+                  >
+                    {filteredMembers.map(member => (
+                      <button
+                        key={member.id}
+                        onClick={() => insertMention(member)}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 text-left transition-colors"
+                      >
+                        <div className="w-7 h-7 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-xs font-semibold text-[#0069AF]">
+                          {member.name?.[0] || member.email?.[0]}
                         </div>
-                        {update.note && (
-                          <p className={cn(
-                            "text-sm mt-2 break-all whitespace-pre-wrap",
-                            update.health_status === 'issue' ? "text-red-700" :
-                            update.health_status === 'concern' ? "text-amber-700" :
-                            "text-slate-600"
-                          )} style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{update.note}</p>
-                        )}
-                      </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">{member.name}</p>
+                          <p className="text-xs text-slate-400">{member.email}</p>
+                        </div>
+                      </button>
                     ))}
-                  </div>
-                </div>
-              )}
-              
-              {showHistory && updates.length === 0 && (
-                <p className="mt-2 text-sm text-slate-400">No updates yet</p>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 pt-2">
-              <button 
+            <div className="flex gap-2.5">
+              <Button
+                variant="outline"
                 onClick={handleCancel}
-                className="flex-1 h-10 rounded-lg bg-slate-100 text-slate-600 font-medium hover:bg-slate-200 transition-colors"
+                className="flex-1 h-11 rounded-xl"
               >
                 Cancel
-              </button>
-              <button 
+              </Button>
+              <Button
                 onClick={handleSaveUpdate}
                 disabled={saveMutation.isPending}
-                className={cn(
-                  "flex-1 h-10 rounded-lg text-white font-medium transition-colors flex items-center justify-center gap-2",
-                  "bg-[#0F2F44] hover:bg-[#1a4a6e]"
-                )}
+                className="flex-1 h-11 rounded-xl bg-[#0069AF] hover:bg-[#0F2F44] text-white gap-2"
               >
-                <Check className="w-4 h-4" />
-                Save Update
-              </button>
+                <Send className="w-4 h-4" />
+                Post Update
+              </Button>
             </div>
+
+            {/* Timeline / History — always visible, scrollable */}
+            {updates.length > 0 && (
+              <div className="border-t pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <History className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Timeline</span>
+                  <span className="text-[10px] text-slate-400 bg-slate-100 rounded-full px-1.5 py-0.5">{updates.length}</span>
+                </div>
+                <div className="max-h-56 overflow-y-auto -mx-1 px-1 space-y-0">
+                  {updates.map((update, idx) => {
+                    const health = healthOptions.find(h => h.value === update.health_status) || healthOptions[0];
+                    const UpdateIcon = health.icon;
+                    return (
+                      <div key={update.id} className="relative flex gap-3 pb-4 last:pb-0">
+                        {/* Timeline line */}
+                        {idx < updates.length - 1 && (
+                          <div className="absolute left-[13px] top-8 bottom-0 w-px bg-slate-200" />
+                        )}
+                        {/* Avatar dot */}
+                        <div className={cn(
+                          "w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold border-2 border-white shadow-sm",
+                          health.bgColor, health.textColor
+                        )}>
+                          {update.author_name?.[0]?.toUpperCase() || '?'}
+                        </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-semibold text-slate-800">{update.author_name || 'Unknown'}</span>
+                            <span className={cn("inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full", health.bgColor, health.textColor)}>
+                              <UpdateIcon className="w-2.5 h-2.5" />
+                              {health.label}
+                            </span>
+                            <span className={cn("text-xs font-bold tabular-nums", health.textColor)}>{update.progress_value}%</span>
+                            <span className="text-[10px] text-slate-400 ml-auto flex-shrink-0">
+                              {format(new Date(update.created_date), 'MMM d, h:mm a')}
+                            </span>
+                          </div>
+                          {update.note && (
+                            <p className="text-sm text-slate-600 mt-1 break-words whitespace-pre-wrap leading-relaxed">{update.note}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -600,7 +552,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
             <AlertDialogCancel onClick={handleCompletionCancel} className="flex-1">
               Not yet
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleCompletionConfirm}
               className="flex-1 bg-emerald-600 hover:bg-emerald-700"
             >
