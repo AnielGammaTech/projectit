@@ -11,15 +11,17 @@ export async function getHaloPSAConfig() {
   const settingsArr = await entityService.filter('IntegrationSettings', { setting_key: 'main' });
   const settings = settingsArr[0] || {};
 
-  // Credentials: DB first, env var fallback
+  // Credentials: client_id from DB or env, secret ONLY from env for security
   const clientId = settings.halopsa_client_id || process.env.HALOPSA_CLIENT_ID;
-  const clientSecret = settings.halopsa_client_secret || process.env.HALOPSA_CLIENT_SECRET;
+  const clientSecret = process.env.HALOPSA_CLIENT_SECRET;
   const tenant = settings.halopsa_tenant || process.env.HALOPSA_TENANT;
 
   if (!clientId || !clientSecret) {
     const err = new Error('HaloPSA credentials not configured.');
     err.status = 400;
-    err.details = 'Please configure your HaloPSA Client ID and Client Secret in Adminland → Integrations.';
+    err.details = !clientSecret
+      ? 'The HALOPSA_CLIENT_SECRET environment variable is not set on the server. Please add it to your Railway environment variables.'
+      : 'Please configure your HaloPSA Client ID in Adminland → Integrations.';
     throw err;
   }
 

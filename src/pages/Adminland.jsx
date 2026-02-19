@@ -1655,7 +1655,7 @@ function IntegrationsSection({ queryClient }) {
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
   const [showFieldMapping, setShowFieldMapping] = useState(false);
-  const [showSecret, setShowSecret] = useState(false);
+  const [hasEnvSecret, setHasEnvSecret] = useState(null); // null = loading, true/false = result
 
   // Customer mapping state
   const [haloCustomers, setHaloCustomers] = useState([]);
@@ -1668,7 +1668,6 @@ function IntegrationsSection({ queryClient }) {
     halopsa_auth_url: '',
     halopsa_api_url: '',
     halopsa_client_id: '',
-    halopsa_client_secret: '',
     halopsa_tenant: '',
     halopsa_sync_customers: true,
     halopsa_sync_tickets: false,
@@ -1692,7 +1691,6 @@ function IntegrationsSection({ queryClient }) {
         halopsa_auth_url: settings[0].halopsa_auth_url || '',
         halopsa_api_url: settings[0].halopsa_api_url || '',
         halopsa_client_id: settings[0].halopsa_client_id || '',
-        halopsa_client_secret: settings[0].halopsa_client_secret || '',
         halopsa_tenant: settings[0].halopsa_tenant || '',
         halopsa_sync_customers: settings[0].halopsa_sync_customers !== false,
         halopsa_sync_tickets: settings[0].halopsa_sync_tickets || false,
@@ -1701,6 +1699,13 @@ function IntegrationsSection({ queryClient }) {
       }));
     }
   }, [settings]);
+
+  // Check if server has env vars configured for secrets
+  useEffect(() => {
+    base44.functions.invoke('halopsa', { action: 'checkEnvStatus' })
+      .then(r => setHasEnvSecret(r.data?.hasClientSecret || false))
+      .catch(() => setHasEnvSecret(false));
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
@@ -1720,8 +1725,12 @@ function IntegrationsSection({ queryClient }) {
   };
 
   const handleTestConnection = async () => {
-    if (!formData.halopsa_auth_url || !formData.halopsa_client_id || !formData.halopsa_client_secret) {
-      setSyncResult({ success: false, message: 'Please fill in all HaloPSA credential fields first' });
+    if (!formData.halopsa_auth_url || !formData.halopsa_client_id) {
+      setSyncResult({ success: false, message: 'Please fill in the HaloPSA URL and Client ID fields first' });
+      return;
+    }
+    if (!hasEnvSecret) {
+      setSyncResult({ success: false, message: 'HALOPSA_CLIENT_SECRET is not set as an environment variable on the server. Please add it to your Railway variables.' });
       return;
     }
     setTestingConnection(true);
@@ -1896,11 +1905,20 @@ function IntegrationsSection({ queryClient }) {
                         </div>
                         <div>
                           <Label className="text-xs">Client Secret</Label>
-                          <div className="relative mt-1">
-                            <Input type={showSecret ? "text" : "password"} value={formData.halopsa_client_secret} onChange={e => setFormData(p => ({ ...p, halopsa_client_secret: e.target.value }))} placeholder="Your Client Secret" />
-                            <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600">
-                              {showSecret ? 'Hide' : 'Show'}
-                            </button>
+                          <div className="mt-1">
+                            {hasEnvSecret === null ? (
+                              <div className="h-9 flex items-center px-3 rounded-md border border-slate-200 bg-slate-50 text-xs text-slate-400">Checking...</div>
+                            ) : hasEnvSecret ? (
+                              <div className="h-9 flex items-center gap-2 px-3 rounded-md border border-emerald-200 bg-emerald-50 text-xs text-emerald-700 font-medium">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                Configured via environment variable
+                              </div>
+                            ) : (
+                              <div className="h-9 flex items-center gap-2 px-3 rounded-md border border-red-200 bg-red-50 text-xs text-red-600 font-medium">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                Set HALOPSA_CLIENT_SECRET in Railway env vars
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div>
@@ -2095,7 +2113,6 @@ function IntegrationsSection({ queryClient }) {
 }
 
 function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
-  const [apiKey, setApiKey] = useState('');
   const [fromEmail, setFromEmail] = useState('noreply@projectit.app');
   const [fromName, setFromName] = useState('ProjectIT');
   const [testEmail, setTestEmail] = useState('');
@@ -2103,10 +2120,16 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
   const [testing, setTesting] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   const [result, setResult] = useState(null);
-  const [showKey, setShowKey] = useState(false);
-  const [connected, setConnected] = useState(false);
+  const [hasEnvApiKey, setHasEnvApiKey] = useState(false);
 
-  // Load existing settings
+  // Check if RESEND_API_KEY env var is set on the server
+  useEffect(() => {
+    base44.functions.invoke('resendEmail', { action: 'checkEnvStatus' })
+      .then(r => setHasEnvApiKey(r.data?.hasApiKey || false))
+      .catch(() => setHasEnvApiKey(false));
+  }, []);
+
+  // Load existing settings (from/name only — API key is env-only)
   const { data: resendSettings = [] } = useQuery({
     queryKey: ['resendSettings'],
     queryFn: () => base44.entities.IntegrationSettings.filter({ provider: 'resend' })
@@ -2114,10 +2137,8 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
 
   useEffect(() => {
     if (resendSettings[0]) {
-      setApiKey(resendSettings[0].api_key || '');
       setFromEmail(resendSettings[0].from_email || 'noreply@projectit.app');
       setFromName(resendSettings[0].from_name || 'ProjectIT');
-      setConnected(!!resendSettings[0].api_key);
     }
   }, [resendSettings]);
 
@@ -2125,14 +2146,12 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
     setSaving(true);
     setResult(null);
     try {
-      const response = await base44.functions.invoke('resendEmail', {
+      await base44.functions.invoke('resendEmail', {
         action: 'saveSettings',
-        apiKey,
         fromEmail,
         fromName,
       });
       setResult({ success: true, message: 'Settings saved successfully' });
-      setConnected(!!apiKey);
     } catch (err) {
       setResult({ success: false, message: err.data?.error || err.message });
     }
@@ -2140,6 +2159,10 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
   };
 
   const handleTest = async () => {
+    if (!hasEnvApiKey) {
+      setResult({ success: false, message: 'RESEND_API_KEY environment variable is not set on the server' });
+      return;
+    }
     setTesting(true);
     setResult(null);
     try {
@@ -2187,10 +2210,9 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {connected && (
+          {hasEnvApiKey ? (
             <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Connected</Badge>
-          )}
-          {!connected && (
+          ) : (
             <Badge variant="outline" className="text-slate-400 border-slate-200 text-xs">Not configured</Badge>
           )}
           <ChevronDown className={cn(
@@ -2202,24 +2224,20 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
 
       {expandedIntegration === 'resend' && (
         <div className="border-t p-6 space-y-5">
-          {/* API Key */}
+          {/* API Key — env var only */}
           <div>
             <Label className="text-xs">Resend API Key</Label>
-            <div className="relative mt-1">
-              <Input
-                type={showKey ? "text" : "password"}
-                value={apiKey}
-                onChange={e => setApiKey(e.target.value)}
-                placeholder="re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-              />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
-              >
-                {showKey ? 'Hide' : 'Show'}
-              </button>
-            </div>
+            {hasEnvApiKey ? (
+              <div className="mt-1 h-9 flex items-center gap-2 px-3 rounded-md border border-emerald-200 bg-emerald-50 text-xs text-emerald-700 font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Configured via environment variable
+              </div>
+            ) : (
+              <div className="mt-1 h-9 flex items-center gap-2 px-3 rounded-md border border-red-200 bg-red-50 text-xs text-red-600 font-medium">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Set RESEND_API_KEY in Railway env vars
+              </div>
+            )}
             <p className="text-xs text-slate-400 mt-1">Get your API key from <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-[#0069AF] hover:underline">resend.com/api-keys</a></p>
           </div>
 
@@ -2236,7 +2254,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
           </div>
 
           {/* Test email */}
-          {apiKey && (
+          {hasEnvApiKey && (
             <div className="pt-4 border-t space-y-3">
               <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
@@ -2272,7 +2290,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
             <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#0F2F44]">
               {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Settings</>}
             </Button>
-            <Button onClick={handleTest} disabled={testing || !apiKey} variant="outline">
+            <Button onClick={handleTest} disabled={testing || !hasEnvApiKey} variant="outline">
               {testing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : 'Test Connection'}
             </Button>
           </div>

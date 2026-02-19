@@ -37,7 +37,14 @@ export default async function handler(req, res) {
       });
     }
 
-    return res.json({ success: true, message: 'HaloPSA handler — use action: testConnection' });
+    if (action === 'checkEnvStatus') {
+      return res.json({
+        success: true,
+        hasClientSecret: !!process.env.HALOPSA_CLIENT_SECRET,
+      });
+    }
+
+    return res.json({ success: true, message: 'HaloPSA handler — use action: testConnection, checkEnvStatus' });
   } catch (error) {
     return res.status(error.status || 500).json({
       success: false,
