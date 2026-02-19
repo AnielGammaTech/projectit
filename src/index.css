@@ -55,6 +55,8 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Poppins', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
@@ -105,6 +107,10 @@ body[data-scroll-locked] {
   .shadow-card-lg {
     box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.04);
   }
+  /* Touch manipulation - prevents 300ms delay */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
 }
 
 /* ── Smooth transitions ── */
@@ -117,23 +123,66 @@ a, button {
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
 }
 
 /* ── Mobile bottom nav spacing ── */
 @media (max-width: 1023px) {
   main {
-    padding-bottom: 72px; /* space for bottom nav */
+    padding-bottom: 80px; /* space for bottom nav + safe area */
   }
 }
 
-/* ── Touch targets: ensure min 44px ── */
+/* ── Touch targets: ensure min 44px on touch devices ── */
 @media (pointer: coarse) {
-  button, a, [role="button"] {
-    min-height: 40px;
+  /* Only apply min-height to specific interactive elements, not all buttons */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 
 /* ── PWA: disable pull-to-refresh on overscroll ── */
 html {
   overscroll-behavior-y: contain;
+}
+
+/* ── PWA standalone mode adjustments ── */
+@media (display-mode: standalone) {
+  /* Extra top padding for standalone PWA (no browser chrome) */
+  header {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Make bottom nav respect home indicator */
+  nav.pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+  }
+}
+
+/* ── Mobile: horizontal scroll containers ── */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+/* ── Focus visible for keyboard navigation ── */
+*:focus-visible {
+  outline: 2px solid #0069AF;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Prevent text selection on interactive elements (mobile) ── */
+@media (pointer: coarse) {
+  button, a, [role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 }

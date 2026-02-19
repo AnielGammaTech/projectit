@@ -226,39 +226,42 @@ export default function MyAssignments() {
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex justify-center gap-2 mb-8">
+        <div className="flex flex-wrap justify-center gap-2 mb-6 sm:mb-8">
           <button
             onClick={() => setActiveTab('all')}
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium transition-all",
+              "px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-manipulation",
               activeTab === 'all'
                 ? "bg-slate-900 text-white"
                 : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
             )}
           >
-            My assignments
+            <span className="sm:hidden">All</span>
+            <span className="hidden sm:inline">My assignments</span>
           </button>
           <button
             onClick={() => setActiveTab('with_dates')}
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium transition-all",
+              "px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-manipulation",
               activeTab === 'with_dates'
                 ? "bg-slate-900 text-white"
                 : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
             )}
           >
-            My assignments with dates
+            <span className="sm:hidden">With dates</span>
+            <span className="hidden sm:inline">My assignments with dates</span>
           </button>
           <button
             onClick={() => setActiveTab('assigned_by_me')}
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium transition-all",
+              "px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-manipulation",
               activeTab === 'assigned_by_me'
                 ? "bg-slate-900 text-white"
                 : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
             )}
           >
-            Stuff I've assigned
+            <span className="sm:hidden">Assigned</span>
+            <span className="hidden sm:inline">Stuff I've assigned</span>
           </button>
         </div>
 
@@ -276,7 +279,7 @@ export default function MyAssignments() {
                   return (
                     <div key={projectId} className="mb-3 last:mb-0">
                       <div className="flex items-baseline gap-4 py-2">
-                        <span className="text-xs font-medium text-slate-400 w-24 shrink-0 uppercase">
+                        <span className="text-xs font-medium text-slate-400 w-20 sm:w-24 shrink-0 uppercase">
                           {format(parseISO(tasks[0].due_date), 'EEE, MMM d')}
                         </span>
                         <div className="flex-1">
@@ -305,7 +308,7 @@ export default function MyAssignments() {
                   return (
                     <div key={projectId} className="mb-3 last:mb-0">
                       <div className="flex items-baseline gap-4 py-2">
-                        <span className="text-xs font-medium text-slate-400 w-24 shrink-0 uppercase">
+                        <span className="text-xs font-medium text-slate-400 w-20 sm:w-24 shrink-0 uppercase">
                           {format(new Date(), 'EEE, MMM d')}
                         </span>
                         <div className="flex-1">
@@ -336,7 +339,7 @@ export default function MyAssignments() {
                     return (
                       <div key={`${date}-${projectId}`} className="mb-3 last:mb-0">
                         <div className="flex items-baseline gap-4 py-2">
-                          <span className="text-xs font-medium text-slate-400 w-24 shrink-0 uppercase">
+                          <span className="text-xs font-medium text-slate-400 w-20 sm:w-24 shrink-0 uppercase">
                             {format(parseISO(date), 'EEE, MMM d')}
                           </span>
                           <div className="flex-1">

@@ -759,26 +759,24 @@ export default function Dashboard() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
         <div className="mb-6">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-[#133F5C]">Howdy, Fellow Tech Enthusiast! 🤠</h1>
-
+              <h1 className="text-xl sm:text-2xl font-bold text-[#133F5C]">Howdy, Fellow Tech Enthusiast! 🤠</h1>
             </div>
-            <div className="flex items-start gap-6">
-              <div className="text-right text-sm">
+            <div className="flex items-center sm:items-start gap-3 sm:gap-6 w-full sm:w-auto">
+              <div className="hidden sm:block text-right text-sm">
                 <p className="font-medium text-slate-700">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                 <p className="text-slate-500">{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} • Naples, FL</p>
               </div>
-              <div className="flex flex-col items-end gap-1">
+              <div className="flex flex-col items-stretch sm:items-end gap-1 flex-1 sm:flex-initial">
                 <Button
                   onClick={() => setShowProjectModal(true)}
-                  size="lg"
-                  className="bg-[#0F2F44] hover:bg-[#1a4a6e] shadow-lg text-base px-6 py-3 h-12"
+                  className="bg-[#0F2F44] hover:bg-[#1a4a6e] shadow-lg text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3 h-10 sm:h-12 w-full sm:w-auto"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   New Project
                 </Button>
-                <Link to={createPageUrl('Templates')} className="text-sm text-[#0069AF] hover:text-[#133F5C] font-medium transition-colors underline underline-offset-2">
+                <Link to={createPageUrl('Templates')} className="text-xs sm:text-sm text-[#0069AF] hover:text-[#133F5C] font-medium transition-colors underline underline-offset-2 text-center sm:text-right">
                   or use a template →
                 </Link>
               </div>
@@ -802,16 +800,16 @@ export default function Dashboard() {
               <div className="absolute inset-0 bg-red-400/30 animate-pulse" />
             )}
             
-            <div className="relative flex items-start justify-between">
-              <div className="flex items-start gap-4">
+            <div className="relative flex flex-col sm:flex-row items-start justify-between gap-3">
+              <div className="flex items-start gap-3 sm:gap-4">
                 <div className={cn(
-                  "p-3 rounded-xl shadow-lg",
+                  "p-2.5 sm:p-3 rounded-xl shadow-lg shrink-0",
                   overdueTasks.length > 0 ? "bg-white/20" : "bg-white/20"
                 )}>
                   {overdueTasks.length > 0 ? (
-                    <AlertTriangle className="w-6 h-6 animate-bounce" />
+                    <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 animate-bounce" />
                   ) : (
-                    <Clock className="w-6 h-6" />
+                    <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                   )}
                 </div>
                 <div>
@@ -855,26 +853,26 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 self-end sm:self-start">
                 <Link to={createPageUrl('AllTasks') + '?view=mine_due'}>
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     className={cn(
-                      "font-semibold shadow-lg",
-                      overdueTasks.length > 0 
-                        ? "bg-white text-red-600 hover:bg-red-50" 
+                      "font-semibold shadow-lg h-9",
+                      overdueTasks.length > 0
+                        ? "bg-white text-red-600 hover:bg-red-50"
                         : "bg-white text-amber-600 hover:bg-amber-50"
                     )}
                   >
                     View Tasks
                   </Button>
                 </Link>
-                <button 
+                <button
                   onClick={() => setDismissedAlert(true)}
-                  className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
+                  className="p-2 rounded-lg hover:bg-white/20 transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -925,29 +923,30 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Projects Section */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
+          <div className="lg:col-span-2 min-w-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-lg font-semibold text-[#0F2F44]">
+                <h2 className="text-base sm:text-lg font-semibold text-[#0F2F44]">
                   {showArchived ? 'Archived Projects' : 'Active Projects'}
                 </h2>
                 <button
                   onClick={() => setShowArchived(!showArchived)}
-                  className="flex items-center gap-1.5 text-sm text-[#0F2F44]/60 hover:text-[#0F2F44]"
+                  className="flex items-center gap-1.5 text-xs sm:text-sm text-[#0F2F44]/60 hover:text-[#0F2F44]"
                 >
                   <Archive className="w-4 h-4" />
-                  {showArchived ? 'Show Active' : `Archived (${archivedProjects.length})`}
+                  <span className="hidden sm:inline">{showArchived ? 'Show Active' : `Archived (${archivedProjects.length})`}</span>
+                  <span className="sm:hidden">{showArchived ? 'Active' : `(${archivedProjects.length})`}</span>
                 </button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 {/* Selection Mode Toggle */}
                 {!showArchived && (
                   <button
                     onClick={() => { setSelectionMode(!selectionMode); setSelectedProjects([]); }}
                     className={cn(
-                      "p-1.5 rounded-md transition-all",
+                      "p-2 rounded-md transition-all",
                       selectionMode ? "bg-[#0069AF] text-white" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
                     )}
                     title="Select multiple projects"
@@ -960,7 +959,7 @@ export default function Dashboard() {
                     <button
                       onClick={() => setViewMode('cards')}
                       className={cn(
-                        "p-1.5 rounded-md transition-all",
+                        "p-2 rounded-md transition-all",
                         viewMode === 'cards' ? "bg-white shadow-sm text-[#0F2F44]" : "text-[#0F2F44]/60 hover:text-[#0F2F44]"
                       )}
                     >
@@ -969,20 +968,20 @@ export default function Dashboard() {
                     <button
                       onClick={() => setViewMode('list')}
                       className={cn(
-                        "p-1.5 rounded-md transition-all",
+                        "p-2 rounded-md transition-all",
                         viewMode === 'list' ? "bg-white shadow-sm text-[#0F2F44]" : "text-[#0F2F44]/60 hover:text-[#0F2F44]"
                       )}
                     >
                       <List className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-initial">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0F2F44]/40" />
                     <Input
                       placeholder="Search..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 w-48 bg-[#0F2F44]/5 border-[#0F2F44]/10 h-9"
+                      className="pl-9 w-full sm:w-48 bg-[#0F2F44]/5 border-[#0F2F44]/10 h-9"
                     />
                   </div>
               </div>
@@ -990,7 +989,7 @@ export default function Dashboard() {
 
             {/* Bulk Actions Bar */}
             {selectionMode && (
-              <div className="mb-4 p-3 bg-[#0069AF]/10 rounded-xl border border-[#0069AF]/20 flex items-center justify-between">
+              <div className="mb-4 p-3 bg-[#0069AF]/10 rounded-xl border border-[#0069AF]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={selectAllProjects}
@@ -1034,9 +1033,9 @@ export default function Dashboard() {
 
             {/* Alphabet Quick Filter - shows when more than 25 projects */}
             {unpinnedProjects.length > 25 && viewMode === 'cards' && !showArchived && (
-              <div className="mb-4 flex items-center gap-2">
-                <span className="text-xs text-slate-500 mr-2">Jump to:</span>
-                <div className="flex items-center gap-0.5 bg-white rounded-xl border border-slate-200 p-1.5">
+              <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <span className="text-xs text-slate-500 sm:mr-2 shrink-0">Jump to:</span>
+                <div className="flex items-center gap-0.5 bg-white rounded-xl border border-slate-200 p-1.5 overflow-x-auto max-w-full scrollbar-thin">
                   <button
                     onClick={() => { setActiveLetter(null); setCurrentPage(1); }}
                     className={cn(
@@ -1471,7 +1470,7 @@ export default function Dashboard() {
                         </DragDropContext>
                         )
             ) : (
-              <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 rounded-2xl border border-slate-200/60 p-16 text-center shadow-card">
+              <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 rounded-2xl border border-slate-200/60 p-8 sm:p-16 text-center shadow-card">
                   <div className="w-16 h-16 rounded-2xl bg-[#0F2F44]/10 flex items-center justify-center mx-auto mb-5">
                     <FolderKanban className="w-8 h-8 text-[#0F2F44]/40" />
                   </div>
@@ -1512,7 +1511,7 @@ export default function Dashboard() {
       {isAdmin && (
         <Link 
           to={createPageUrl('Adminland')}
-          className="fixed bottom-6 right-6 z-30 flex items-center gap-2 px-4 py-2.5 bg-[#133F5C] hover:bg-[#0F2F44] text-white rounded-lg shadow-lg transition-all"
+          className="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 z-30 flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 bg-[#133F5C] hover:bg-[#0F2F44] text-white rounded-lg shadow-lg transition-all"
         >
           <Settings className="w-4 h-4" />
           Adminland

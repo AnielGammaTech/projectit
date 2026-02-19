@@ -135,7 +135,7 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Avatar Section */}
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6">
                 <div className="relative">
                   {formData.avatar_url ? (
                     <img
@@ -244,7 +244,7 @@ export default function Profile() {
             </CardHeader>
             <CardContent>
               {notifications.length > 0 ? (
-                <ScrollArea className="h-64">
+                <ScrollArea className="h-48 sm:h-64">
                   <div className="space-y-2">
                     {notifications.map(notification => (
                       <div
@@ -344,7 +344,7 @@ export default function Profile() {
             </CardHeader>
             <CardContent>
               <Label className="mb-4 block">Theme</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {themeOptions.map(option => {
                   const Icon = option.icon;
                   return (
