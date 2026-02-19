@@ -2,32 +2,15 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ListTodo, Filter, Search, Plus, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, User, FolderKanban, Package, Edit2, Truck, Trash2, ChevronDown, ChevronRight, ShoppingCart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ListTodo, Search, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, User, FolderKanban, Package, Truck, ChevronDown, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { format, isPast, isToday, isTomorrow, addDays } from 'date-fns';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarPicker } from '@/components/ui/calendar';
+import { format, isPast, isToday, isTomorrow } from 'date-fns';
 import { cn } from '@/lib/utils';
-import TaskModal from '@/components/modals/TaskModal';
-import PartModal from '@/components/modals/PartModal';
-import PartDetailModal from '@/components/modals/PartDetailModal';
-import QuickOrderModal from '@/components/parts/QuickOrderModal';
-import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { sendTaskCompletionNotification } from '@/utils/notifications';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -43,9 +26,10 @@ const priorityColors = {
 };
 
 export default function AllTasks() {
+  const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const initialTab = urlParams.get('tab') || 'tasks';
-  
+
   const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -54,14 +38,7 @@ export default function AllTasks() {
   const [viewMode, setViewMode] = useState('all'); // 'all', 'mine', 'mine_due'
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
-  const [editingPart, setEditingPart] = useState(null);
-  const [selectedPart, setSelectedPart] = useState(null);
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [showPartModal, setShowPartModal] = useState(false);
-  const [deletePartConfirm, setDeletePartConfirm] = useState({ open: false, part: null });
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
-  const [quickOrderPart, setQuickOrderPart] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -161,60 +138,6 @@ export default function AllTasks() {
   const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
   const myTasksCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed').length;
   const myTasksWithDueCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.due_date && t.status !== 'completed').length;
-
-  const handleSaveTask = async (data) => {
-    if (editingTask) {
-      const wasAssigned = editingTask.assigned_to;
-      const isNewlyAssigned = data.assigned_to && data.assigned_to !== 'unassigned' && data.assigned_to !== wasAssigned;
-      await base44.entities.Task.update(editingTask.id, data);
-
-      if (isNewlyAssigned) {
-        await sendTaskAssignmentNotification({
-          assigneeEmail: data.assigned_to,
-          taskTitle: data.title,
-          projectId: data.project_id || editingTask.project_id,
-          projectName: getProjectName(data.project_id || editingTask.project_id),
-          currentUser,
-        });
-      }
-    }
-    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
-    setShowTaskModal(false);
-    setEditingTask(null);
-  };
-
-  const handleSavePart = async (data) => {
-    if (editingPart) {
-      await base44.entities.Part.update(editingPart.id, data);
-    }
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
-    setShowPartModal(false);
-    setEditingPart(null);
-    setSelectedPart(null);
-  };
-
-  const handleSetDeliveryDate = async (part, date) => {
-    await base44.entities.Part.update(part.id, { est_delivery_date: format(date, 'yyyy-MM-dd') });
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
-  };
-
-  const handlePartStatusChange = async (part, status) => {
-    await base44.entities.Part.update(part.id, { status });
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
-  };
-
-  const handleQuickOrderSave = async (partId, data) => {
-    await base44.entities.Part.update(partId, data);
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
-  };
-
-  const handleDeletePart = async () => {
-    if (deletePartConfirm.part) {
-      await base44.entities.Part.delete(deletePartConfirm.part.id);
-      queryClient.invalidateQueries({ queryKey: ['allParts'] });
-    }
-    setDeletePartConfirm({ open: false, part: null });
-  };
 
   const handleQuickComplete = async (e, taskId) => {
     e.stopPropagation();
@@ -483,7 +406,7 @@ export default function AllTasks() {
                         return (
                           <div
                             key={task.id}
-                            onClick={() => { setEditingTask(task); setShowTaskModal(true); }}
+                            onClick={() => navigate(createPageUrl('ProjectTasks') + `?id=${task.project_id}`)}
                             className="flex items-center gap-2 px-3 sm:px-4 py-1.5 hover:bg-slate-50 transition-colors cursor-pointer group active:bg-slate-100"
                           >
                             {/* Tappable checkmark */}
@@ -522,7 +445,6 @@ export default function AllTasks() {
                                   {dueInfo.label}
                                 </Badge>
                               )}
-                              <Edit2 className="w-3 h-3 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
                             </div>
                           </div>
                         );
@@ -571,8 +493,8 @@ export default function AllTasks() {
                         {completedTasks.map((task) => (
                           <div
                             key={task.id}
-                            onClick={() => { setEditingTask(task); setShowTaskModal(true); }}
-                            className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 transition-colors cursor-pointer"
+                            onClick={() => navigate(createPageUrl('ProjectTasks') + `?id=${task.project_id}`)}
+                            className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 transition-colors cursor-pointer"
                           >
                             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                             <span className="text-sm text-slate-400 line-through truncate flex-1">{task.title}</span>
@@ -670,127 +592,93 @@ export default function AllTasks() {
           </div>
         )}
 
-        {/* Parts List */}
+        {/* Parts List — grouped by project */}
         {activeTab === 'parts' && (
           <div className="space-y-3">
             {filteredParts.length > 0 ? (
-              filteredParts.map((part, idx) => {
-                const dueInfo = part.due_date && !isNaN(new Date(part.due_date).getTime()) ? getDueDateLabel(part.due_date) : null;
-                const deliveryInfo = part.est_delivery_date && !isNaN(new Date(part.est_delivery_date).getTime()) ? getDueDateLabel(part.est_delivery_date) : null;
-                
-                return (
+              (() => {
+                const grouped = {};
+                filteredParts.forEach(part => {
+                  const pid = part.project_id;
+                  if (!grouped[pid]) grouped[pid] = [];
+                  grouped[pid].push(part);
+                });
+
+                return Object.entries(grouped).map(([projectId, projectParts]) => (
                   <motion.div
-                    key={part.id}
+                    key={projectId}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.02 }}
-                    onClick={() => setSelectedPart(part)}
-                    className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group"
+                    className="bg-white rounded-xl border border-slate-100 overflow-hidden"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="p-1.5 rounded-lg bg-amber-100">
-                        <Package className="w-5 h-5 text-amber-600" />
+                    {/* Project header */}
+                    <Link
+                      to={createPageUrl('ProjectParts') + `?id=${projectId}`}
+                      className="flex items-center justify-between px-4 py-1.5 bg-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FolderKanban className="w-3.5 h-3.5 text-[#0F2F44]" />
+                        <span className="font-semibold text-sm text-slate-900">{getProjectName(projectId)}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">#{projectId.slice(0, 8)}</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">{projectParts.length}</Badge>
                       </div>
+                    </Link>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-medium text-slate-900">{part.name}</h4>
-                          <div className="flex items-center gap-2">
-                            {/* Quick Order button */}
-                            {part.status === 'needed' && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                onClick={(e) => { e.stopPropagation(); setQuickOrderPart(part); }}
-                              >
-                                <ShoppingCart className="w-3 h-3 mr-1" />
-                                Order
-                              </Button>
-                            )}
-                            {/* Quick set delivery date button */}
-                            {!part.est_delivery_date && part.status === 'ordered' && (
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Truck className="w-3 h-3 mr-1" />
-                                    Set ETA
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
-                                  <CalendarPicker
-                                    mode="single"
-                                    selected={undefined}
-                                    onSelect={(date) => date && handleSetDeliveryDate(part, date)}
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => { e.stopPropagation(); setDeletePartConfirm({ open: true, part }); }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                            <Link to={createPageUrl('ProjectDetail') + `?id=${part.project_id}`} onClick={(e) => e.stopPropagation()}>
-                              <Badge variant="outline" className="shrink-0 hover:bg-slate-100">
-                                <FolderKanban className="w-3 h-3 mr-1" />
-                                {getProjectName(part.project_id)}
-                              </Badge>
-                            </Link>
-                          </div>
-                        </div>
+                    {/* Part rows */}
+                    <div className="divide-y divide-slate-50">
+                      {projectParts.map((part) => {
+                        const dueInfo = part.due_date && !isNaN(new Date(part.due_date).getTime()) ? getDueDateLabel(part.due_date) : null;
+                        const deliveryInfo = part.est_delivery_date && !isNaN(new Date(part.est_delivery_date).getTime()) ? getDueDateLabel(part.est_delivery_date) : null;
+                        const statusColors = {
+                          needed: 'bg-red-100 text-red-700',
+                          ordered: 'bg-blue-100 text-blue-700',
+                          received: 'bg-amber-100 text-amber-700',
+                          installed: 'bg-emerald-100 text-emerald-700',
+                        };
 
-                        {part.part_number && (
-                          <p className="text-sm text-slate-500 mt-1">#{part.part_number}</p>
-                        )}
+                        return (
+                          <div
+                            key={part.id}
+                            onClick={() => navigate(createPageUrl('ProjectParts') + `?id=${part.project_id}`)}
+                            className="flex items-center gap-2 px-3 sm:px-4 py-1.5 hover:bg-slate-50 transition-colors cursor-pointer group active:bg-slate-100"
+                          >
+                            <Package className="w-4 h-4 text-amber-500 shrink-0" />
 
-                        <div className="flex flex-wrap items-center gap-3 mt-3">
-                          <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200">
-                            {part.status?.replace('_', ' ')}
-                          </Badge>
-
-                          {part.quantity > 1 && (
-                            <Badge variant="outline">Qty: {part.quantity}</Badge>
-                          )}
-
-                          {part.assigned_name && (
-                            <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                              <User className="w-3.5 h-3.5" />
-                              <span>{part.assigned_name}</span>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium text-slate-900 truncate">{part.name}</h4>
                             </div>
-                          )}
 
-                          {deliveryInfo && (
-                            <Badge variant="outline" className="bg-cyan-50 text-cyan-700 border-cyan-200">
-                              <Truck className="w-3 h-3 mr-1" />
-                              ETA: {deliveryInfo.label}
-                            </Badge>
-                          )}
-
-                          {dueInfo && (
-                            <Badge variant="outline" className={dueInfo.color}>
-                              <Calendar className="w-3 h-3 mr-1" />
-                              {dueInfo.label}
-                            </Badge>
-                          )}
-
-                          {part.supplier && (
-                            <span className="text-xs text-slate-400">{part.supplier}</span>
-                          )}
-                        </div>
-                      </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", statusColors[part.status] || 'bg-slate-100 text-slate-600')}>
+                                {part.status?.replace('_', ' ')}
+                              </Badge>
+                              {part.part_number && (
+                                <span className="text-[10px] text-slate-400 hidden sm:inline font-mono">#{part.part_number}</span>
+                              )}
+                              {part.assigned_name && (
+                                <span className="text-[11px] text-slate-400 hidden lg:inline">{part.assigned_name.split(' ')[0]}</span>
+                              )}
+                              {deliveryInfo && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-cyan-50 text-cyan-700 border-cyan-200 hidden sm:flex">
+                                  ETA: {deliveryInfo.label}
+                                </Badge>
+                              )}
+                              {dueInfo && (
+                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", dueInfo.color)}>
+                                  {dueInfo.label}
+                                </Badge>
+                              )}
+                              {part.quantity > 1 && (
+                                <span className="text-[10px] text-slate-400 hidden sm:inline">x{part.quantity}</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </motion.div>
-                );
-              })
+                ));
+              })()
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -806,61 +694,6 @@ export default function AllTasks() {
         )}
       </div>
 
-      {/* Task Edit Modal */}
-      <TaskModal
-        open={showTaskModal}
-        onClose={() => { setShowTaskModal(false); setEditingTask(null); }}
-        task={editingTask}
-        projectId={editingTask?.project_id}
-        teamMembers={teamMembers}
-        groups={[]}
-        onSave={handleSaveTask}
-      />
-
-      {/* Part Edit Modal */}
-      <PartModal
-        open={showPartModal}
-        onClose={() => { setShowPartModal(false); setEditingPart(null); }}
-        part={editingPart}
-        projectId={editingPart?.project_id}
-        teamMembers={teamMembers}
-        onSave={handleSavePart}
-      />
-
-      {/* Part Detail Modal */}
-      <PartDetailModal
-        open={!!selectedPart}
-        onClose={() => setSelectedPart(null)}
-        part={selectedPart}
-        teamMembers={teamMembers}
-        currentUser={currentUser}
-        onEdit={(part) => { setSelectedPart(null); setEditingPart(part); setShowPartModal(true); }}
-        onStatusChange={handlePartStatusChange}
-      />
-
-      {/* Quick Order Modal */}
-      <QuickOrderModal
-        open={!!quickOrderPart}
-        onClose={() => setQuickOrderPart(null)}
-        part={quickOrderPart}
-        onSave={handleQuickOrderSave}
-      />
-
-      {/* Delete Part Confirmation */}
-      <AlertDialog open={deletePartConfirm.open} onOpenChange={(open) => !open && setDeletePartConfirm({ open: false, part: null })}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete part?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{deletePartConfirm.part?.name}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePart} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
