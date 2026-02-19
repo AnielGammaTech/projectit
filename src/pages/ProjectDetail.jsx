@@ -882,10 +882,10 @@ export default function ProjectDetail() {
 
         {/* ── Tool Cards Grid + Sidebar ── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
-          {/* Main Cards — 3-col grid with Due Dates spanning right column */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min">
+          {/* Main Cards — 2x2 grid + Due Dates right column */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_240px] gap-3 auto-rows-min">
 
-            {/* Upcoming Due Dates — spans all rows on desktop right column */}
+            {/* Upcoming Due Dates — spans right column */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -895,32 +895,45 @@ export default function ProjectDetail() {
               <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
             </motion.div>
 
-            {/* Tasks Card — with task groups preview */}
-            <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-1 lg:col-span-1">
+            {/* ─── Tasks Card ─── */}
+            <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-1 lg:col-span-1 group">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full border border-blue-100/60 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-0.5"
               >
-                <div className="p-3 bg-gradient-to-r from-[#0069AF]/10 to-[#0069AF]/5 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-lg bg-[#0069AF] shadow-md shadow-[#0069AF]/20">
-                      <ListTodo className="w-4 h-4 text-white" />
+                {/* Decorative accent */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
+                <div className="p-3.5 pb-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/50">
+                        <ListTodo className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-800 text-sm leading-none">Tasks</h3>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[11px] text-slate-500 font-medium">{completedTasks} of {tasks.length}</span>
+                          {tasks.length > 0 && (
+                            <div className="w-12 h-1.5 rounded-full bg-blue-100 overflow-hidden">
+                              <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all" style={{ width: `${taskProgress}%` }} />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-slate-900 text-sm">Tasks</h3>
-                    <span className="text-[10px] text-slate-400">{completedTasks}/{tasks.length}</span>
+                    <Button
+                      size="sm"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingTask(null); setShowTaskModal(true); }}
+                      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-md shadow-blue-200/40 h-7 w-7 p-0 rounded-lg"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingTask(null); setShowTaskModal(true); }}
-                    className="bg-[#0069AF] hover:bg-[#0F2F44] shadow-sm h-7 w-7 p-0"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </Button>
                 </div>
                 {/* Task groups preview */}
-                <div className="p-2 space-y-1.5 max-h-[180px] overflow-y-auto">
+                <div className="px-3 pb-3 space-y-1 max-h-[160px] overflow-y-auto">
                   {(() => {
                     const activeTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived');
                     const ungrouped = activeTasks.filter(t => !t.group_id);
@@ -934,44 +947,48 @@ export default function ProjectDetail() {
                         {Object.entries(grouped).map(([gid, gTasks]) => {
                           const group = taskGroups.find(g => g.id === parseInt(gid));
                           return (
-                            <div key={gid}>
-                              <div className="flex items-center gap-1.5 px-1.5 mb-0.5">
-                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: group?.color || '#94a3b8' }} />
-                                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{group?.name || 'Group'}</span>
-                                <span className="text-[10px] text-slate-300">{gTasks.length}</span>
+                            <div key={gid} className="mb-1">
+                              <div className="flex items-center gap-1.5 px-1 mb-0.5">
+                                <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: group?.color || '#94a3b8' }} />
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{group?.name || 'Group'}</span>
+                                <span className="text-[10px] text-slate-300 font-medium">{gTasks.length}</span>
                               </div>
                               {gTasks.slice(0, 3).map(t => (
-                                <div key={t.id} className="flex items-center gap-1.5 px-1.5 py-0.5">
-                                  <div className={cn("w-3 h-3 rounded-full border flex items-center justify-center shrink-0", t.status === 'in_progress' ? "border-blue-400 bg-blue-50" : "border-slate-200")}>
-                                    {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
+                                <div key={t.id} className="flex items-center gap-1.5 px-1 py-[3px] rounded-md hover:bg-blue-50/60 transition-colors">
+                                  <div className={cn("w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0",
+                                    t.status === 'in_progress' ? "border-blue-400 bg-blue-50" : t.status === 'review' ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white")}>
+                                    {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />}
+                                    {t.status === 'review' && <div className="w-1.5 h-1.5 rounded-sm bg-amber-500" />}
                                   </div>
-                                  <span className="text-xs text-slate-700 truncate">{t.title}</span>
+                                  <span className="text-xs text-slate-600 truncate leading-tight">{t.title}</span>
                                 </div>
                               ))}
-                              {gTasks.length > 3 && <p className="text-[10px] text-slate-400 px-1.5">+{gTasks.length - 3} more</p>}
+                              {gTasks.length > 3 && <p className="text-[10px] text-blue-400 font-medium px-1">+{gTasks.length - 3} more</p>}
                             </div>
                           );
                         })}
                         {ungrouped.length > 0 && (
-                          <div>
+                          <div className="mb-1">
                             {Object.keys(grouped).length > 0 && (
-                              <div className="flex items-center gap-1.5 px-1.5 mb-0.5">
-                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Ungrouped</span>
-                                <span className="text-[10px] text-slate-300">{ungrouped.length}</span>
+                              <div className="flex items-center gap-1.5 px-1 mb-0.5">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ungrouped</span>
+                                <span className="text-[10px] text-slate-300 font-medium">{ungrouped.length}</span>
                               </div>
                             )}
                             {ungrouped.slice(0, 4).map(t => (
-                              <div key={t.id} className="flex items-center gap-1.5 px-1.5 py-0.5">
-                                <div className={cn("w-3 h-3 rounded-full border flex items-center justify-center shrink-0", t.status === 'in_progress' ? "border-blue-400 bg-blue-50" : "border-slate-200")}>
-                                  {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
+                              <div key={t.id} className="flex items-center gap-1.5 px-1 py-[3px] rounded-md hover:bg-blue-50/60 transition-colors">
+                                <div className={cn("w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0",
+                                  t.status === 'in_progress' ? "border-blue-400 bg-blue-50" : t.status === 'review' ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white")}>
+                                  {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />}
+                                  {t.status === 'review' && <div className="w-1.5 h-1.5 rounded-sm bg-amber-500" />}
                                 </div>
-                                <span className="text-xs text-slate-700 truncate">{t.title}</span>
+                                <span className="text-xs text-slate-600 truncate leading-tight">{t.title}</span>
                               </div>
                             ))}
-                            {ungrouped.length > 4 && <p className="text-[10px] text-slate-400 px-1.5">+{ungrouped.length - 4} more</p>}
+                            {ungrouped.length > 4 && <p className="text-[10px] text-blue-400 font-medium px-1">+{ungrouped.length - 4} more</p>}
                           </div>
                         )}
-                        {activeTasks.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No active tasks</p>}
+                        {activeTasks.length === 0 && <p className="text-xs text-slate-400 text-center py-3">No active tasks</p>}
                       </>
                     );
                   })()}
@@ -979,104 +996,132 @@ export default function ProjectDetail() {
               </motion.div>
             </Link>
 
-            {/* Messages Card — with recent messages preview */}
-            <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-2 lg:col-start-2 lg:row-start-1">
+            {/* ─── Messages Card ─── */}
+            <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-2 lg:col-start-2 lg:row-start-1 group">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full border border-violet-100/60 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 hover:shadow-lg hover:shadow-violet-100/50 hover:-translate-y-0.5"
               >
-                <div className="p-3 bg-gradient-to-r from-[#0069AF]/10 to-[#74C7FF]/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-lg bg-[#0069AF] shadow-md shadow-[#0069AF]/20">
-                      <MessageSquare className="w-4 h-4 text-white" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-400" />
+                <div className="p-3.5 pb-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-200/50">
+                        <MessageSquare className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-800 text-sm leading-none">Messages</h3>
+                        <span className="text-[11px] text-slate-500 font-medium">{projectNotes.length} total</span>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-slate-900 text-sm">Messages</h3>
-                    <span className="text-[10px] text-slate-400">{projectNotes.length}</span>
                   </div>
                 </div>
                 {/* Recent messages preview */}
-                <div className="p-2 space-y-1 max-h-[180px] overflow-y-auto">
+                <div className="px-3 pb-3 space-y-0.5 max-h-[160px] overflow-y-auto">
                   {projectNotes.length > 0 ? (
                     [...projectNotes].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 5).map(note => (
-                      <div key={note.id} className="flex items-start gap-2 px-1.5 py-1 rounded-lg hover:bg-slate-50">
-                        <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[8px] font-medium shrink-0 mt-0.5",
-                          note.type === 'update' ? "bg-emerald-500" : "bg-[#0069AF]"
+                      <div key={note.id} className="flex items-start gap-2 px-1.5 py-1.5 rounded-lg hover:bg-violet-50/60 transition-colors">
+                        <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center text-white shrink-0 mt-0.5",
+                          note.type === 'update' ? "bg-gradient-to-br from-emerald-400 to-teal-500" : "bg-gradient-to-br from-violet-400 to-purple-500"
                         )}>
                           {note.type === 'update' ? <Users className="w-3 h-3" /> : <MessageSquare className="w-3 h-3" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-slate-700 truncate">{note.content?.replace(/[#*_]/g, '').slice(0, 60)}</p>
-                          <p className="text-[10px] text-slate-400">{note.created_by_name?.split(' ')[0] || 'Unknown'}</p>
+                          <p className="text-xs text-slate-600 truncate leading-tight">{note.content?.replace(/[#*_]/g, '').slice(0, 60)}</p>
+                          <p className="text-[10px] text-violet-400 font-medium">{note.created_by_name?.split(' ')[0] || 'Unknown'}</p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-slate-400 text-center py-2">No messages yet</p>
+                    <p className="text-xs text-slate-400 text-center py-3">No messages yet</p>
                   )}
                 </div>
               </motion.div>
             </Link>
 
-            {/* Parts Card — compact with status breakdown */}
-            <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`} className="lg:col-start-1 lg:row-start-2">
+            {/* ─── Parts Card ─── */}
+            <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`} className="lg:col-start-1 lg:row-start-2 group">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full border border-emerald-100/60 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 hover:shadow-lg hover:shadow-emerald-100/50 hover:-translate-y-0.5"
               >
-                <div className="p-3 bg-gradient-to-r from-[#0F2F44]/10 to-[#0F2F44]/5 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-lg bg-[#0F2F44] shadow-md shadow-[#0F2F44]/20">
-                      <Package className="w-4 h-4 text-white" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
+                <div className="p-3.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200/50">
+                        <Package className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-800 text-sm leading-none">Parts</h3>
+                        <span className="text-[11px] text-slate-500 font-medium">{parts.length} total</span>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-slate-900 text-sm">Parts</h3>
-                    <span className="text-[10px] text-slate-400">{parts.length}</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1 text-[11px]">
+                        <span className="px-1.5 py-0.5 rounded-md bg-red-50 text-red-600 font-semibold border border-red-100">{parts.filter(p => p.status === 'needed').length}</span>
+                        <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 font-semibold border border-blue-100">{parts.filter(p => p.status === 'ordered').length}</span>
+                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-600 font-semibold border border-emerald-100">{parts.filter(p => p.status === 'installed').length}</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingPart(null); setShowPartModal(true); }}
+                        className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-200/40 h-7 w-7 p-0 rounded-lg flex-shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-red-500 font-medium">{parts.filter(p => p.status === 'needed').length} need</span>
-                    <span className="text-blue-500 font-medium">{parts.filter(p => p.status === 'ordered').length} ord</span>
-                    <span className="text-emerald-500 font-medium">{parts.filter(p => p.status === 'installed').length} inst</span>
-                    <Button
-                      size="sm"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingPart(null); setShowPartModal(true); }}
-                      className="bg-[#0F2F44] hover:bg-[#133F5C] shadow-sm h-7 w-7 p-0 flex-shrink-0"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </Button>
+                  {/* Mini legend */}
+                  <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-400">
+                    <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400" />Needed</span>
+                    <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-400" />Ordered</span>
+                    <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />Installed</span>
                   </div>
                 </div>
               </motion.div>
             </Link>
 
-            {/* Files Card — compact */}
-            <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`} className="lg:col-start-2 lg:row-start-2">
+            {/* ─── Files Card ─── */}
+            <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`} className="lg:col-start-2 lg:row-start-2 group">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
-                className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full border border-amber-100/60 bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 hover:shadow-lg hover:shadow-amber-100/50 hover:-translate-y-0.5"
               >
-                <div className="p-3 bg-gradient-to-r from-[#133F5C]/10 to-[#74C7FF]/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-lg bg-[#133F5C] shadow-md shadow-[#133F5C]/20">
-                      <FileText className="w-4 h-4 text-white" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-400" />
+                <div className="p-3.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-200/50">
+                        <FileText className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-800 text-sm leading-none">Files</h3>
+                        <span className="text-[11px] text-slate-500 font-medium">{projectFiles.length} files</span>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-slate-900 text-sm">Files</h3>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    {fileFolders.length > 0 && (
-                      <span className="text-[#133F5C] font-medium"><Folder className="w-3 h-3 inline mr-0.5" />{fileFolders.length}</span>
-                    )}
-                    <span className="text-slate-500 font-medium"><File className="w-3 h-3 inline mr-0.5" />{projectFiles.length}</span>
+                    <div className="flex items-center gap-2 text-[11px]">
+                      {fileFolders.length > 0 && (
+                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 font-semibold border border-amber-100">
+                          <Folder className="w-3 h-3" />{fileFolders.length}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-600 font-semibold border border-orange-100">
+                        <File className="w-3 h-3" />{projectFiles.length}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
             </Link>
 
-            {/* Recent Activity — collapsed by default, minimal strip */}
+            {/* ─── Recent Activity ─── */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1085,14 +1130,16 @@ export default function ProjectDetail() {
             >
               <button
                 onClick={() => setShowActivity(!showActivity)}
-                className="w-full flex items-center justify-between px-4 py-2.5 bg-white rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-slate-50 to-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200"
               >
-                <div className="flex items-center gap-2">
-                  <Activity className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-sm text-slate-500 font-medium">Recent Activity</span>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-slate-100">
+                    <Activity className="w-3.5 h-3.5 text-slate-500" />
+                  </div>
+                  <span className="text-sm text-slate-600 font-semibold">Recent Activity</span>
                 </div>
                 <ChevronDown className={cn(
-                  "w-4 h-4 text-slate-400 transition-transform",
+                  "w-4 h-4 text-slate-400 transition-transform duration-200",
                   showActivity && "rotate-180"
                 )} />
               </button>
@@ -1100,7 +1147,7 @@ export default function ProjectDetail() {
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="bg-white rounded-b-xl border border-t-0 border-slate-100 p-4 max-h-[250px] overflow-y-auto -mt-1"
+                  className="bg-white rounded-b-2xl border border-t-0 border-slate-100 p-4 max-h-[250px] overflow-y-auto -mt-1"
                 >
                   <ProjectActivityFeed projectId={projectId} progressUpdates={progressUpdates} compact />
                 </motion.div>
