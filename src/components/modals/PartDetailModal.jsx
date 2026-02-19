@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,7 +82,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
 
   const { data: comments = [], refetch: refetchComments } = useQuery({
     queryKey: ['partComments', part?.id],
-    queryFn: () => base44.entities.TaskComment.filter({ task_id: part?.id }),
+    queryFn: () => api.entities.TaskComment.filter({ task_id: part?.id }),
     enabled: !!part?.id && open
   });
 
@@ -91,7 +91,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
     if (!part) return;
     setSaving(true);
     try {
-      await base44.entities.Part.update(part.id, updates);
+      await api.entities.Part.update(part.id, updates);
       queryClient.invalidateQueries({ queryKey: ['parts'] });
       queryClient.invalidateQueries({ queryKey: ['projectParts'] });
     } catch (err) {
@@ -188,7 +188,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
   const handleAddComment = async () => {
     if (!newComment.trim() || !part) return;
     setSubmitting(true);
-    await base44.entities.TaskComment.create({
+    await api.entities.TaskComment.create({
       task_id: part.id,
       content: newComment,
       author_email: currentUser?.email,
@@ -200,7 +200,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
   };
 
   const handleDeleteComment = async (commentId) => {
-    await base44.entities.TaskComment.delete(commentId);
+    await api.entities.TaskComment.delete(commentId);
     refetchComments();
   };
 

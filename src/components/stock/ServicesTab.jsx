@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +25,7 @@ export default function ServicesTab() {
 
   const { data: services = [], refetch } = useQuery({
     queryKey: ['services'],
-    queryFn: () => base44.entities.Service.list('-created_date'),
+    queryFn: () => api.entities.Service.list('-created_date'),
     staleTime: 300000
   });
 
@@ -36,9 +36,9 @@ export default function ServicesTab() {
 
   const handleSave = async (data) => {
     if (editingService) {
-      await base44.entities.Service.update(editingService.id, data);
+      await api.entities.Service.update(editingService.id, data);
     } else {
-      await base44.entities.Service.create(data);
+      await api.entities.Service.create(data);
     }
     refetch();
     setShowModal(false);
@@ -47,7 +47,7 @@ export default function ServicesTab() {
 
   const handleDelete = async () => {
     if (deleteConfirm) {
-      await base44.entities.Service.delete(deleteConfirm.id);
+      await api.entities.Service.delete(deleteConfirm.id);
       refetch();
       setDeleteConfirm(null);
     }

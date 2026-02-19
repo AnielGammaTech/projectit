@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +28,7 @@ export default function AITaskAssistant({ task, project, onSubTasksGenerated, on
   const handleSuggestPriority = async () => {
     setLoading('priority');
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await api.integrations.Core.InvokeLLM({
         prompt: `Analyze this task and suggest an appropriate priority level (low, medium, or high).
 
 Task Title: ${task.title}
@@ -63,7 +63,7 @@ Respond with JSON only.`,
   const handleGenerateSubTasks = async () => {
     setLoading('subtasks');
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await api.integrations.Core.InvokeLLM({
         prompt: `Break down this task into smaller, actionable sub-tasks.
 
 Task Title: ${task.title}
@@ -102,7 +102,7 @@ Respond with JSON only.`,
   const handleSummarize = async () => {
     setLoading('summary');
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await api.integrations.Core.InvokeLLM({
         prompt: `Summarize this task in 2-3 concise sentences:
 
 Task Title: ${task.title}
@@ -131,7 +131,7 @@ Provide a brief, actionable summary.`,
   const handleDraftReply = async () => {
     setLoading('reply');
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await api.integrations.Core.InvokeLLM({
         prompt: `Draft a professional response or update for this task:
 
 Task Title: ${task.title}

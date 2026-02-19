@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus, Upload, Loader2, MessageSquare, Send, CheckSquare, Square, X, Globe, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -71,12 +71,12 @@ export default function Customers() {
 
   const { data: customers = [], isLoading: loadingCustomers, refetch } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list('-created_date')
+    queryFn: () => api.entities.Customer.list('-created_date')
   });
 
   const { data: sites = [], refetch: refetchSites } = useQuery({
     queryKey: ['sites'],
-    queryFn: () => base44.entities.Site.list()
+    queryFn: () => api.entities.Site.list()
   });
 
   // Separate companies and contacts
@@ -109,12 +109,12 @@ export default function Customers() {
 
   const { data: incomingQuotes = [] } = useQuery({
     queryKey: ['incomingQuotes'],
-    queryFn: () => base44.entities.IncomingQuote.list()
+    queryFn: () => api.entities.IncomingQuote.list()
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list()
+    queryFn: () => api.entities.Project.list()
   });
 
   useEffect(() => {
@@ -173,9 +173,9 @@ export default function Customers() {
 
   const handleSave = async () => {
     if (editingCustomer) {
-      await base44.entities.Customer.update(editingCustomer.id, formData);
+      await api.entities.Customer.update(editingCustomer.id, formData);
     } else {
-      await base44.entities.Customer.create(formData);
+      await api.entities.Customer.create(formData);
     }
     refetch();
     setShowModal(false);
@@ -185,7 +185,7 @@ export default function Customers() {
 
   const handleDelete = async () => {
     if (deleteConfirm.customer) {
-      await base44.entities.Customer.delete(deleteConfirm.customer.id);
+      await api.entities.Customer.delete(deleteConfirm.customer.id);
       refetch();
     }
     setDeleteConfirm({ open: false, customer: null });
@@ -221,7 +221,7 @@ export default function Customers() {
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
     for (let i = 0; i < ids.length; i++) {
-      await base44.entities.Customer.delete(ids[i]);
+      await api.entities.Customer.delete(ids[i]);
       // Small delay to avoid rate limiting
       if (i < ids.length - 1) {
         await new Promise(r => setTimeout(r, 100));
@@ -251,7 +251,7 @@ export default function Customers() {
         if (header === 'zip') customer.zip = values[idx];
       });
       if (customer.name) {
-        await base44.entities.Customer.create({ ...customer, source: 'import' });
+        await api.entities.Customer.create({ ...customer, source: 'import' });
       }
     }
     refetch();
@@ -263,7 +263,7 @@ export default function Customers() {
   const handleHaloPSASync = async () => {
     setSyncing(true);
     try {
-      await base44.functions.invoke('syncHaloPSACustomers', {});
+      await api.functions.invoke('syncHaloPSACustomers', {});
       refetch();
       refetchSites();
     } catch (e) {

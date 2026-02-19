@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,7 +47,7 @@ export default function QuoteRequestDetailModal({
 
   const handleStatusChange = async (newStatus) => {
     setLoading(true);
-    await base44.entities.QuoteRequest.update(quote.id, { status: newStatus });
+    await api.entities.QuoteRequest.update(quote.id, { status: newStatus });
     onUpdated();
     setLoading(false);
   };
@@ -61,7 +61,7 @@ export default function QuoteRequestDetailModal({
     if (adminData.install_date) updates.install_date = adminData.install_date;
     if (adminData.notes) updates.notes = adminData.notes;
 
-    await base44.entities.QuoteRequest.update(quote.id, updates);
+    await api.entities.QuoteRequest.update(quote.id, updates);
     onUpdated();
     setAdminData({ quote_amount: '', vendor: '', expected_delivery: '', install_date: '', notes: '' });
     setLoading(false);

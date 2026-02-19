@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ListTodo, Search, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar as CalendarIcon, User, UserPlus, FolderKanban, Package, Truck, ChevronDown, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -388,7 +388,7 @@ export default function AllTasks() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    base44.auth.me().then(user => {
+    api.auth.me().then(user => {
       setCurrentUser(user);
       setIsAdmin(user?.role === 'admin');
     }).catch(() => {});
@@ -396,27 +396,27 @@ export default function AllTasks() {
 
   const { data: tasks = [], isLoading: loadingTasks } = useQuery({
     queryKey: ['allTasks'],
-    queryFn: () => base44.entities.Task.list('-created_date')
+    queryFn: () => api.entities.Task.list('-created_date')
   });
 
   const { data: parts = [] } = useQuery({
     queryKey: ['allParts'],
-    queryFn: () => base44.entities.Part.list('-created_date')
+    queryFn: () => api.entities.Part.list('-created_date')
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list()
+    queryFn: () => api.entities.Project.list()
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const { data: taskGroups = [] } = useQuery({
     queryKey: ['allTaskGroups'],
-    queryFn: () => base44.entities.TaskGroup.list()
+    queryFn: () => api.entities.TaskGroup.list()
   });
 
   const getGroupName = (groupId) => {
@@ -504,7 +504,7 @@ export default function AllTasks() {
   const handleQuickComplete = async (e, taskId) => {
     e.stopPropagation();
     const task = tasks.find(t => t.id === taskId);
-    await base44.entities.Task.update(taskId, { status: 'completed' });
+    await api.entities.Task.update(taskId, { status: 'completed' });
 
     if (task) {
       await sendTaskCompletionNotification({
@@ -520,7 +520,7 @@ export default function AllTasks() {
 
   const handleTaskAssign = async (task, email) => {
     const member = teamMembers.find(m => m.email === email);
-    await base44.entities.Task.update(task.id, {
+    await api.entities.Task.update(task.id, {
       assigned_to: email,
       assigned_name: member?.name || email
     });
@@ -537,12 +537,12 @@ export default function AllTasks() {
   };
 
   const handleTaskUnassign = async (task) => {
-    await base44.entities.Task.update(task.id, { assigned_to: '', assigned_name: '' });
+    await api.entities.Task.update(task.id, { assigned_to: '', assigned_name: '' });
     queryClient.invalidateQueries({ queryKey: ['allTasks'] });
   };
 
   const handleTaskDueDateChange = async (task, date) => {
-    await base44.entities.Task.update(task.id, {
+    await api.entities.Task.update(task.id, {
       due_date: date ? format(date, 'yyyy-MM-dd') : ''
     });
     queryClient.invalidateQueries({ queryKey: ['allTasks'] });
@@ -550,7 +550,7 @@ export default function AllTasks() {
 
   const handlePartAssign = async (part, email) => {
     const member = teamMembers.find(m => m.email === email);
-    await base44.entities.Part.update(part.id, {
+    await api.entities.Part.update(part.id, {
       assigned_to: email,
       assigned_name: member?.name || email
     });
@@ -558,24 +558,24 @@ export default function AllTasks() {
   };
 
   const handlePartUnassign = async (part) => {
-    await base44.entities.Part.update(part.id, { assigned_to: '', assigned_name: '' });
+    await api.entities.Part.update(part.id, { assigned_to: '', assigned_name: '' });
     queryClient.invalidateQueries({ queryKey: ['allParts'] });
   };
 
   const handlePartDueDateChange = async (part, date) => {
-    await base44.entities.Part.update(part.id, {
+    await api.entities.Part.update(part.id, {
       due_date: date ? format(date, 'yyyy-MM-dd') : ''
     });
     queryClient.invalidateQueries({ queryKey: ['allParts'] });
   };
 
   const handlePartStatusChange = async (part, newStatus) => {
-    await base44.entities.Part.update(part.id, { status: newStatus });
+    await api.entities.Part.update(part.id, { status: newStatus });
     queryClient.invalidateQueries({ queryKey: ['allParts'] });
   };
 
   const handlePartETAChange = async (part, date) => {
-    await base44.entities.Part.update(part.id, {
+    await api.entities.Part.update(part.id, {
       est_delivery_date: date ? format(date, 'yyyy-MM-dd') : ''
     });
     queryClient.invalidateQueries({ queryKey: ['allParts'] });

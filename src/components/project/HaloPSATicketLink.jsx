@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,7 +32,7 @@ export default function HaloPSATicketLink({ project, onUpdate }) {
 
   const ticketMutation = useMutation({
     mutationFn: async (params) => {
-      const response = await base44.functions.invoke('haloPSATicket', params);
+      const response = await api.functions.invoke('haloPSATicket', params);
       return response.data;
     },
     onSuccess: (data) => {

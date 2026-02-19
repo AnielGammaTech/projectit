@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { motion } from 'framer-motion';
@@ -101,7 +101,7 @@ export default function ProjectDetail() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -128,7 +128,7 @@ export default function ProjectDetail() {
   const { data: project, isLoading: loadingProject, refetch: refetchProject } = useQuery({
     queryKey: ['project', projectId],
     queryFn: async () => {
-      const projects = await base44.entities.Project.filter({ id: projectId });
+      const projects = await api.entities.Project.filter({ id: projectId });
       return projects[0];
     },
     enabled: !!projectId
@@ -144,25 +144,25 @@ export default function ProjectDetail() {
 
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks', projectId],
-    queryFn: () => base44.entities.Task.filter({ project_id: projectId }),
+    queryFn: () => api.entities.Task.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: taskGroups = [], refetch: refetchGroups } = useQuery({
     queryKey: ['taskGroups', projectId],
-    queryFn: () => base44.entities.TaskGroup.filter({ project_id: projectId }),
+    queryFn: () => api.entities.TaskGroup.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: parts = [], refetch: refetchParts } = useQuery({
     queryKey: ['parts', projectId],
-    queryFn: () => base44.entities.Part.filter({ project_id: projectId }),
+    queryFn: () => api.entities.Part.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   // Filter teamMembers to only those on this project (for assignment dropdowns)
@@ -170,37 +170,37 @@ export default function ProjectDetail() {
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
-    queryFn: () => base44.entities.ProjectTemplate.list()
+    queryFn: () => api.entities.ProjectTemplate.list()
   });
 
   const { data: projectNotes = [] } = useQuery({
     queryKey: ['projectNotes', projectId],
-    queryFn: () => base44.entities.ProjectNote.filter({ project_id: projectId }),
+    queryFn: () => api.entities.ProjectNote.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: projectFiles = [] } = useQuery({
     queryKey: ['projectFiles', projectId],
-    queryFn: () => base44.entities.ProjectFile.filter({ project_id: projectId }),
+    queryFn: () => api.entities.ProjectFile.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: fileFolders = [] } = useQuery({
     queryKey: ['fileFolders', projectId],
-    queryFn: () => base44.entities.FileFolder.filter({ project_id: projectId }),
+    queryFn: () => api.entities.FileFolder.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: progressUpdates = [] } = useQuery({
     queryKey: ['progressUpdates', projectId],
-    queryFn: () => base44.entities.ProgressUpdate.filter({ project_id: projectId }, '-created_date', 10),
+    queryFn: () => api.entities.ProgressUpdate.filter({ project_id: projectId }, '-created_date', 10),
     enabled: !!projectId
   });
 
   const { data: integrationSettings } = useQuery({
     queryKey: ['integrationSettings'],
     queryFn: async () => {
-      const settings = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
+      const settings = await api.entities.IntegrationSettings.filter({ setting_key: 'main' });
       return settings[0] || {};
     }
   });
@@ -209,7 +209,7 @@ export default function ProjectDetail() {
     queryKey: ['linkedQuote', project?.incoming_quote_id],
     queryFn: async () => {
       if (!project?.incoming_quote_id) return null;
-      const quotes = await base44.entities.IncomingQuote.filter({ id: project.incoming_quote_id });
+      const quotes = await api.entities.IncomingQuote.filter({ id: project.incoming_quote_id });
       return quotes[0];
     },
     enabled: !!project?.incoming_quote_id
@@ -218,14 +218,14 @@ export default function ProjectDetail() {
   const { data: appSettings } = useQuery({
     queryKey: ['appSettings'],
     queryFn: async () => {
-      const settings = await base44.entities.ProposalSettings.filter({ setting_key: 'main' });
+      const settings = await api.entities.ProposalSettings.filter({ setting_key: 'main' });
       return settings[0] || {};
     }
   });
 
   const { data: projectTags = [], refetch: refetchTags } = useQuery({
     queryKey: ['projectTags'],
-    queryFn: () => base44.entities.ProjectTag.list()
+    queryFn: () => api.entities.ProjectTag.list()
   });
 
   const appLogoUrl = appSettings?.app_logo_url;
@@ -271,14 +271,14 @@ export default function ProjectDetail() {
         newTags.push(onHoldTag.id);
       }
       
-      await base44.entities.Project.update(projectId, { 
+      await api.entities.Project.update(projectId, { 
         tags: newTags,
         status: 'on_hold',
         on_hold_reason: reason
       });
       
       // Add the reason as a project note
-      await base44.entities.ProjectNote.create({
+      await api.entities.ProjectNote.create({
         project_id: projectId,
         type: 'note',
         content: `🔸 **Project put on hold:** ${reason}`,
@@ -309,14 +309,14 @@ export default function ProjectDetail() {
       newTags.push(completedTag.id);
     }
     
-    await base44.entities.Project.update(projectId, { 
+    await api.entities.Project.update(projectId, { 
       tags: newTags,
       status: 'completed'
     });
     
     // Add completion notes if provided
     if (notes?.trim()) {
-      await base44.entities.ProjectNote.create({
+      await api.entities.ProjectNote.create({
         project_id: projectId,
         type: 'note',
         content: `✅ **Project completed:** ${notes}`,
@@ -341,7 +341,7 @@ export default function ProjectDetail() {
       newTags.push(inProgressTag.id);
     }
     
-    await base44.entities.Project.update(projectId, { 
+    await api.entities.Project.update(projectId, { 
       tags: newTags,
       status: 'planning',
       on_hold_reason: ''
@@ -357,10 +357,10 @@ export default function ProjectDetail() {
       const isNewlyAssigned = data.assigned_to && data.assigned_to !== 'unassigned' && data.assigned_to !== wasAssigned;
 
       if (editingTask) {
-        await base44.entities.Task.update(editingTask.id, data);
+        await api.entities.Task.update(editingTask.id, data);
         await logActivity(projectId, ActivityActions.TASK_UPDATED, `updated task "${data.title}"`, currentUser, 'task', editingTask.id);
       } else {
-        const newTask = await base44.entities.Task.create(data);
+        const newTask = await api.entities.Task.create(data);
         await logActivity(projectId, ActivityActions.TASK_CREATED, `created task "${data.title}"`, currentUser, 'task', newTask.id);
       }
 
@@ -382,7 +382,7 @@ export default function ProjectDetail() {
     };
 
   const handleTaskStatusChange = async (task, status) => {
-    await base44.entities.Task.update(task.id, { ...task, status });
+    await api.entities.Task.update(task.id, { ...task, status });
     if (status === 'completed') {
       await logActivity(projectId, ActivityActions.TASK_COMPLETED, `completed task "${task.title}"`, currentUser, 'task', task.id);
 
@@ -402,15 +402,15 @@ export default function ProjectDetail() {
 
   // Groups
   const handleCreateGroup = async (data) => {
-    await base44.entities.TaskGroup.create({ ...data, project_id: projectId });
+    await api.entities.TaskGroup.create({ ...data, project_id: projectId });
     refetchGroups();
   };
 
   const handleSaveGroup = async (data) => {
     if (editingGroup) {
-      await base44.entities.TaskGroup.update(editingGroup.id, data);
+      await api.entities.TaskGroup.update(editingGroup.id, data);
     } else {
-      await base44.entities.TaskGroup.create(data);
+      await api.entities.TaskGroup.create(data);
     }
     refetchGroups();
     setShowGroupModal(false);
@@ -418,11 +418,11 @@ export default function ProjectDetail() {
   };
 
   const handleDeleteGroup = async (group) => {
-    await base44.entities.TaskGroup.delete(group.id);
+    await api.entities.TaskGroup.delete(group.id);
     // Ungroup tasks
     const groupTasks = tasks.filter(t => t.group_id === group.id);
     for (const task of groupTasks) {
-      await base44.entities.Task.update(task.id, { ...task, group_id: '' });
+      await api.entities.Task.update(task.id, { ...task, group_id: '' });
     }
     refetchGroups();
     refetchTasks();
@@ -431,10 +431,10 @@ export default function ProjectDetail() {
   // Parts
   const handleSavePart = async (data) => {
     if (editingPart) {
-      await base44.entities.Part.update(editingPart.id, data);
+      await api.entities.Part.update(editingPart.id, data);
       await logActivity(projectId, ActivityActions.PART_UPDATED, `updated part "${data.name}"`, currentUser, 'part', editingPart.id);
     } else {
-      const newPart = await base44.entities.Part.create(data);
+      const newPart = await api.entities.Part.create(data);
       await logActivity(projectId, ActivityActions.PART_CREATED, `added part "${data.name}"`, currentUser, 'part', newPart.id);
     }
     refetchParts();
@@ -444,7 +444,7 @@ export default function ProjectDetail() {
   };
 
   const handlePartStatusChange = async (part, status) => {
-    await base44.entities.Part.update(part.id, { ...part, status });
+    await api.entities.Part.update(part.id, { ...part, status });
     const actionMap = {
       ordered: ActivityActions.PART_ORDERED,
       received: ActivityActions.PART_RECEIVED,
@@ -455,7 +455,7 @@ export default function ProjectDetail() {
     // Notify assigned installer when part is ready to install
     if (status === 'ready_to_install' && part.installer_email && part.installer_email !== currentUser?.email) {
       try {
-        await base44.entities.UserNotification.create({
+        await api.entities.UserNotification.create({
           user_email: part.installer_email,
           type: 'part_status',
           title: 'Part ready for installation',
@@ -468,7 +468,7 @@ export default function ProjectDetail() {
           is_read: false
         });
 
-        await base44.functions.invoke('sendNotificationEmail', {
+        await api.functions.invoke('sendNotificationEmail', {
           to: part.installer_email,
           type: 'part_status',
           title: 'Part ready for installation',
@@ -489,10 +489,10 @@ export default function ProjectDetail() {
 
   // Project
   const handleUpdateProject = async (data) => {
-    await base44.entities.Project.update(projectId, data);
+    await api.entities.Project.update(projectId, data);
     // Auto-archive when completed
     if (data.status === 'completed') {
-      await base44.entities.Project.update(projectId, { ...data, status: 'archived' });
+      await api.entities.Project.update(projectId, { ...data, status: 'archived' });
     }
     refetchProject();
     setShowProjectModal(false);
@@ -500,21 +500,21 @@ export default function ProjectDetail() {
 
   // Quick inline update
   const handleQuickUpdate = async (field, value) => {
-    await base44.entities.Project.update(projectId, { ...project, [field]: value });
+    await api.entities.Project.update(projectId, { ...project, [field]: value });
     refetchProject();
   };
 
   const handleTeamUpdate = async (emails) => {
     const previousMembers = project?.team_members || [];
     const newMembers = emails.filter(e => !previousMembers.includes(e));
-    await base44.entities.Project.update(projectId, { ...project, team_members: emails });
+    await api.entities.Project.update(projectId, { ...project, team_members: emails });
     refetchProject();
 
     // Send notifications to newly added team members
     for (const memberEmail of newMembers) {
       if (memberEmail !== currentUser?.email) {
         try {
-          await base44.entities.UserNotification.create({
+          await api.entities.UserNotification.create({
             user_email: memberEmail,
             type: 'project_assigned',
             title: 'You have been added to a project',
@@ -526,7 +526,7 @@ export default function ProjectDetail() {
             link: `/ProjectDetail?id=${projectId}`,
             is_read: false
           });
-          await base44.functions.invoke('sendNotificationEmail', {
+          await api.functions.invoke('sendNotificationEmail', {
             to: memberEmail,
             type: 'project_assigned',
             title: 'You have been added to a project',
@@ -559,7 +559,7 @@ export default function ProjectDetail() {
         quantity: p.quantity || 1
       }))
     };
-    await base44.entities.ProjectTemplate.create(templateData);
+    await api.entities.ProjectTemplate.create(templateData);
     alert('Project saved as template!');
   };
 
@@ -569,7 +569,7 @@ export default function ProjectDetail() {
     setIsProcessing(true);
     setProcessingType('archive');
     try {
-      await base44.entities.Project.update(projectId, {
+      await api.entities.Project.update(projectId, {
         ...project,
         status: 'archived',
         archive_reason: archiveData.reason,
@@ -594,7 +594,7 @@ export default function ProjectDetail() {
     setIsProcessing(true);
     setProcessingType('delete');
     try {
-      await base44.entities.Project.delete(projectId);
+      await api.entities.Project.delete(projectId);
       toast.success('Project permanently deleted');
       navigate(createPageUrl('Dashboard'));
     } catch (error) {
@@ -608,7 +608,7 @@ export default function ProjectDetail() {
 
   // Progress update
   const handleProgressUpdate = async (progressValue) => {
-    await base44.entities.Project.update(projectId, { ...project, progress: progressValue });
+    await api.entities.Project.update(projectId, { ...project, progress: progressValue });
     await logActivity(projectId, ActivityActions.PROGRESS_UPDATED, `updated progress to ${progressValue}%`, currentUser);
     refetchProject();
     queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
@@ -618,10 +618,10 @@ export default function ProjectDetail() {
   const handleDelete = async () => {
     const { type, item } = deleteConfirm;
     if (type === 'task') {
-      await base44.entities.Task.delete(item.id);
+      await api.entities.Task.delete(item.id);
       refetchTasks();
     } else if (type === 'part') {
-      await base44.entities.Part.delete(item.id);
+      await api.entities.Part.delete(item.id);
       refetchParts();
     }
     setDeleteConfirm({ open: false, type: null, item: null });
@@ -725,7 +725,7 @@ export default function ProjectDetail() {
                     setIsProcessing(true);
                     setProcessingType('archive');
                     try {
-                      await base44.entities.Project.update(projectId, {
+                      await api.entities.Project.update(projectId, {
                         status: 'planning',
                         archive_reason: '',
                         archive_type: '',

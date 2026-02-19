@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { 
   Mail, MessageSquare, Phone, Send, Loader2, Sparkles, 
   Clock, CheckCircle2, XCircle, ChevronDown
@@ -25,14 +25,14 @@ export default function CustomerCommunication({ customer, proposals = [], onClos
 
   const { data: commLogs = [] } = useQuery({
     queryKey: ['commLogs', customer?.id],
-    queryFn: () => base44.entities.CommunicationLog.filter({ customer_id: customer.id }, '-created_date', 20),
+    queryFn: () => api.entities.CommunicationLog.filter({ customer_id: customer.id }, '-created_date', 20),
     enabled: !!customer?.id
   });
 
   const { data: integrationSettings } = useQuery({
     queryKey: ['integrationSettings'],
     queryFn: async () => {
-      const settings = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
+      const settings = await api.entities.IntegrationSettings.filter({ setting_key: 'main' });
       return settings[0];
     }
   });
@@ -55,7 +55,7 @@ ${acceptedProposals.length > 0 ? `- Recent accepted: ${acceptedProposals[0]?.tit
 
 Generate suggestions for different scenarios (follow-up, thank you, check-in). Each should have a subject and short body.`;
 
-    const result = await base44.integrations.Core.InvokeLLM({
+    const result = await api.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: {
         type: "object",
@@ -84,10 +84,10 @@ Generate suggestions for different scenarios (follow-up, thank you, check-in). E
     if (!emailData.subject || !emailData.body) return;
     setSending(true);
     
-    const user = await base44.auth.me();
+    const user = await api.auth.me();
     
     // Log communication
-    await base44.entities.CommunicationLog.create({
+    await api.entities.CommunicationLog.create({
       customer_id: customer.id,
       type: 'email',
       direction: 'outbound',
@@ -101,7 +101,7 @@ Generate suggestions for different scenarios (follow-up, thank you, check-in). E
 
     // Send via Emailit if configured
     if (integrationSettings?.emailit_enabled) {
-      await base44.functions.invoke('sendEmailit', {
+      await api.functions.invoke('sendEmailit', {
         to: customer.email,
         subject: emailData.subject,
         html: emailData.body.replace(/\n/g, '<br/>')
@@ -117,9 +117,9 @@ Generate suggestions for different scenarios (follow-up, thank you, check-in). E
     if (!smsData.message || !customer.phone) return;
     setSending(true);
     
-    const user = await base44.auth.me();
+    const user = await api.auth.me();
     
-    await base44.entities.CommunicationLog.create({
+    await api.entities.CommunicationLog.create({
       customer_id: customer.id,
       type: 'sms',
       direction: 'outbound',

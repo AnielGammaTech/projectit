@@ -32,7 +32,7 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
-// Entity proxy: base44.entities.Project.list() etc.
+// Entity proxy: api.entities.Project.list() etc.
 function createEntityProxy(entityType) {
   return {
     async list(sort, limit) {
@@ -184,7 +184,7 @@ const users = {
   },
 };
 
-export const base44 = {
+export const api = {
   entities: entitiesProxy,
   auth,
   integrations,

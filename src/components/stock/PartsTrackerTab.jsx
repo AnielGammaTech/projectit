@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -44,19 +44,19 @@ export default function PartsTrackerTab() {
 
   const { data: parts = [], refetch: refetchParts } = useQuery({
     queryKey: ['allParts'],
-    queryFn: () => base44.entities.Part.list('-created_date'),
+    queryFn: () => api.entities.Part.list('-created_date'),
     staleTime: 60000
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list(),
+    queryFn: () => api.entities.Project.list(),
     staleTime: 300000
   });
 
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list(),
+    queryFn: () => api.entities.Product.list(),
     staleTime: 300000
   });
 
@@ -89,7 +89,7 @@ export default function PartsTrackerTab() {
 
   const handleStatusChange = async (part, newStatus) => {
     setSavingPart(part.id);
-    await base44.entities.Part.update(part.id, { status: newStatus });
+    await api.entities.Part.update(part.id, { status: newStatus });
     refetchParts();
     queryClient.invalidateQueries({ queryKey: ['parts', part.project_id] });
     setSavingPart(null);
@@ -98,7 +98,7 @@ export default function PartsTrackerTab() {
   const handleSaveTracking = async (part) => {
     setSavingPart(part.id);
     const updates = editingNotes[part.id] || {};
-    await base44.entities.Part.update(part.id, {
+    await api.entities.Part.update(part.id, {
       tracking_notes: updates.tracking_notes ?? part.tracking_notes,
       tracking_number: updates.tracking_number ?? part.tracking_number,
       carrier: updates.carrier ?? part.carrier,

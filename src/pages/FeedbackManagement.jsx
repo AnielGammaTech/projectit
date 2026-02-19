@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { 
   MessageSquare, 
@@ -77,7 +77,7 @@ export default function FeedbackManagement() {
 
   const { data: feedbackList = [], isLoading } = useQuery({
     queryKey: ['feedback'],
-    queryFn: () => base44.entities.Feedback.list('-created_date')
+    queryFn: () => api.entities.Feedback.list('-created_date')
   });
 
   const filteredFeedback = feedbackList.filter(f => {
@@ -89,7 +89,7 @@ export default function FeedbackManagement() {
   const handleStatusChange = async (feedback, status) => {
     // When marking as resolved, automatically set to closed
     const finalStatus = status === 'resolved' ? 'closed' : status;
-    await base44.entities.Feedback.update(feedback.id, { status: finalStatus });
+    await api.entities.Feedback.update(feedback.id, { status: finalStatus });
     queryClient.invalidateQueries({ queryKey: ['feedback'] });
     if (selectedFeedback?.id === feedback.id) {
       setSelectedFeedback({ ...selectedFeedback, status: finalStatus });
@@ -98,7 +98,7 @@ export default function FeedbackManagement() {
 
   const handleDelete = async () => {
     if (deleteConfirm.feedback) {
-      await base44.entities.Feedback.delete(deleteConfirm.feedback.id);
+      await api.entities.Feedback.delete(deleteConfirm.feedback.id);
       queryClient.invalidateQueries({ queryKey: ['feedback'] });
       if (selectedFeedback?.id === deleteConfirm.feedback.id) {
         setSelectedFeedback(null);

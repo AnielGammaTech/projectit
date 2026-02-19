@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ export default function QuoteRequestModal({ open, onClose, quote, projects = [],
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list(),
+    queryFn: () => api.entities.TeamMember.list(),
     enabled: open
   });
 
@@ -97,9 +97,9 @@ export default function QuoteRequestModal({ open, onClose, quote, projects = [],
     };
 
     if (quote) {
-      await base44.entities.QuoteRequest.update(quote.id, data);
+      await api.entities.QuoteRequest.update(quote.id, data);
     } else {
-      await base44.entities.QuoteRequest.create(data);
+      await api.entities.QuoteRequest.create(data);
     }
 
     setLoading(false);

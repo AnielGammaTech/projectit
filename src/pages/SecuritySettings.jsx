@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { 
   Shield, Smartphone, MessageSquare, Key, Check, Copy, 
@@ -66,12 +66,12 @@ export default function SecuritySettings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: securitySettings = [], refetch } = useQuery({
     queryKey: ['securitySettings', currentUser?.email],
-    queryFn: () => base44.entities.UserSecuritySettings.filter({ user_email: currentUser?.email }),
+    queryFn: () => api.entities.UserSecuritySettings.filter({ user_email: currentUser?.email }),
     enabled: !!currentUser?.email
   });
 
@@ -116,9 +116,9 @@ export default function SecuritySettings() {
     };
 
     if (settings.id) {
-      await base44.entities.UserSecuritySettings.update(settings.id, data);
+      await api.entities.UserSecuritySettings.update(settings.id, data);
     } else {
-      await base44.entities.UserSecuritySettings.create(data);
+      await api.entities.UserSecuritySettings.create(data);
     }
 
     refetch();
@@ -146,9 +146,9 @@ export default function SecuritySettings() {
     };
 
     if (settings.id) {
-      await base44.entities.UserSecuritySettings.update(settings.id, data);
+      await api.entities.UserSecuritySettings.update(settings.id, data);
     } else {
-      await base44.entities.UserSecuritySettings.create(data);
+      await api.entities.UserSecuritySettings.create(data);
     }
 
     refetch();
@@ -158,7 +158,7 @@ export default function SecuritySettings() {
 
   const handleDisable2FA = async () => {
     setSaving(true);
-    await base44.entities.UserSecuritySettings.update(settings.id, {
+    await api.entities.UserSecuritySettings.update(settings.id, {
       two_factor_enabled: false,
       two_factor_method: 'none',
       authenticator_secret: '',

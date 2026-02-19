@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 
 // Audit action types
 export const AuditActions = {
@@ -102,7 +102,7 @@ export async function logAudit(action, options = {}) {
   try {
     let user = options.user;
     if (!user) {
-      user = await base44.auth.me();
+      user = await api.auth.me();
     }
     
     if (!user) return;
@@ -119,7 +119,7 @@ export async function logAudit(action, options = {}) {
       changes: options.changes || null,
     };
 
-    await base44.entities.AuditLog.create(logEntry);
+    await api.entities.AuditLog.create(logEntry);
   } catch (error) {
     console.error('Failed to log audit event:', error);
   }

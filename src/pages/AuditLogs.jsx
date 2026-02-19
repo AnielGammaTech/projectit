@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { 
@@ -83,12 +83,12 @@ export default function AuditLogs() {
 
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['auditLogs'],
-    queryFn: () => base44.entities.AuditLog.list('-created_date', 500)
+    queryFn: () => api.entities.AuditLog.list('-created_date', 500)
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   // Get unique users from logs

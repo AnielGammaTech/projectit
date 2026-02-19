@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,12 +28,12 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser, 
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ['projectNotes', projectId],
-    queryFn: () => base44.entities.ProjectNote.filter({ project_id: projectId }, '-created_date'),
+    queryFn: () => api.entities.ProjectNote.filter({ project_id: projectId }, '-created_date'),
     enabled: !!projectId && open
   });
 
   const addMutation = useMutation({
-    mutationFn: (data) => base44.entities.ProjectNote.create(data),
+    mutationFn: (data) => api.entities.ProjectNote.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
       setNewContent('');
@@ -41,7 +41,7 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser, 
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.ProjectNote.delete(id),
+    mutationFn: (id) => api.entities.ProjectNote.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] })
   });
 

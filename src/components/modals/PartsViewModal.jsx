@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +41,7 @@ export default function PartsViewModal({
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const handleFileUpload = async (e) => {
@@ -50,9 +50,9 @@ export default function PartsViewModal({
 
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await api.integrations.Core.UploadFile({ file });
       
-      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+      const result = await api.integrations.Core.ExtractDataFromUploadedFile({
         file_url,
         json_schema: {
           type: "object",
@@ -76,7 +76,7 @@ export default function PartsViewModal({
 
       if (result.status === 'success' && result.output?.parts) {
         for (const part of result.output.parts) {
-          await base44.entities.Part.create({
+          await api.entities.Part.create({
             ...part,
             project_id: projectId,
             status: 'needed'
@@ -93,7 +93,7 @@ export default function PartsViewModal({
 
   const handleAssign = async (part, email) => {
     const member = teamMembers.find(m => m.email === email);
-    await base44.entities.Part.update(part.id, {
+    await api.entities.Part.update(part.id, {
       ...part,
       assigned_to: email,
       assigned_name: member?.name || email
@@ -102,7 +102,7 @@ export default function PartsViewModal({
   };
 
   const handleUnassign = async (part) => {
-    await base44.entities.Part.update(part.id, {
+    await api.entities.Part.update(part.id, {
       ...part,
       assigned_to: '',
       assigned_name: ''

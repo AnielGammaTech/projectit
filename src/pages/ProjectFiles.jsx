@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -78,13 +78,13 @@ export default function ProjectFiles() {
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: null, item: null });
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
     queryFn: async () => {
-      const projects = await base44.entities.Project.filter({ id: projectId });
+      const projects = await api.entities.Project.filter({ id: projectId });
       return projects[0];
     },
     enabled: !!projectId
@@ -92,28 +92,28 @@ export default function ProjectFiles() {
 
   const { data: files = [] } = useQuery({
     queryKey: ['projectFiles', projectId],
-    queryFn: () => base44.entities.ProjectFile.filter({ project_id: projectId }, '-created_date'),
+    queryFn: () => api.entities.ProjectFile.filter({ project_id: projectId }, '-created_date'),
     enabled: !!projectId
   });
 
   const { data: folders = [] } = useQuery({
     queryKey: ['fileFolders', projectId],
-    queryFn: () => base44.entities.FileFolder.filter({ project_id: projectId }),
+    queryFn: () => api.entities.FileFolder.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const deleteFileMutation = useMutation({
-    mutationFn: (id) => base44.entities.ProjectFile.delete(id),
+    mutationFn: (id) => api.entities.ProjectFile.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projectFiles', projectId] })
   });
 
   const deleteFolderMutation = useMutation({
-    mutationFn: (id) => base44.entities.FileFolder.delete(id),
+    mutationFn: (id) => api.entities.FileFolder.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['fileFolders', projectId] })
   });
 
   const createFolderMutation = useMutation({
-    mutationFn: (data) => base44.entities.FileFolder.create(data),
+    mutationFn: (data) => api.entities.FileFolder.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fileFolders', projectId] });
       setShowNewFolder(false);
@@ -135,8 +135,8 @@ export default function ProjectFiles() {
     setUploading(true);
     for (const file of uploadedFiles) {
       try {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        await base44.entities.ProjectFile.create({
+        const { file_url } = await api.integrations.Core.UploadFile({ file });
+        await api.entities.ProjectFile.create({
           project_id: projectId,
           name: file.name,
           file_url,

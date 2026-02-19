@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +37,7 @@ export default function ProductsTab() {
 
   const { data: products = [], refetch } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list('-created_date'),
+    queryFn: () => api.entities.Product.list('-created_date'),
     staleTime: 300000
   });
 
@@ -84,9 +84,9 @@ export default function ProductsTab() {
 
   const handleSave = async (data) => {
     if (editingProduct) {
-      await base44.entities.Product.update(editingProduct.id, data);
+      await api.entities.Product.update(editingProduct.id, data);
     } else {
-      await base44.entities.Product.create(data);
+      await api.entities.Product.create(data);
     }
     refetch();
     setShowModal(false);
@@ -95,7 +95,7 @@ export default function ProductsTab() {
 
   const handleDelete = async () => {
     if (deleteConfirm) {
-      await base44.entities.Product.delete(deleteConfirm.id);
+      await api.entities.Product.delete(deleteConfirm.id);
       refetch();
       setDeleteConfirm(null);
     }

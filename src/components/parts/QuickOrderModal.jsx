@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Truck, Camera, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 
 export default function QuickOrderModal({ open, onClose, part, onSave }) {
   const [estDeliveryDate, setEstDeliveryDate] = useState(null);
@@ -21,7 +21,7 @@ export default function QuickOrderModal({ open, onClose, part, onSave }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await api.integrations.Core.UploadFile({ file });
     setImageUrl(file_url);
     setUploading(false);
   };

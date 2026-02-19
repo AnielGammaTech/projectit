@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import {
   BarChart3, PieChart, TrendingUp, Users, Package,
@@ -26,42 +26,42 @@ export default function Reports() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list('-created_date')
+    queryFn: () => api.entities.Project.list('-created_date')
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['tasks'],
-    queryFn: () => base44.entities.Task.list('-created_date')
+    queryFn: () => api.entities.Task.list('-created_date')
   });
 
   const { data: parts = [] } = useQuery({
     queryKey: ['allParts'],
-    queryFn: () => base44.entities.Part.list('-created_date')
+    queryFn: () => api.entities.Part.list('-created_date')
   });
 
   const { data: inventory = [] } = useQuery({
     queryKey: ['inventory'],
-    queryFn: () => base44.entities.InventoryItem.list()
+    queryFn: () => api.entities.InventoryItem.list()
   });
 
   const { data: timeEntries = [] } = useQuery({
     queryKey: ['allTimeEntries'],
-    queryFn: () => base44.entities.TimeEntry.list('-created_date')
+    queryFn: () => api.entities.TimeEntry.list('-created_date')
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list()
+    queryFn: () => api.entities.Customer.list()
   });
 
   // Calculations — filter tasks/parts to only active projects

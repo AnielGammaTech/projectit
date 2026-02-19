@@ -6,7 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { format, formatDistanceToNow } from 'date-fns';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -58,17 +58,17 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   useEffect(() => { if (task) { setNotes(task.notes || ''); setNotifyOnComplete(task.notify_on_complete || []); setChecklistItems(task.checklist_items || []); } }, [task?.id]);
 
-  const { data: comments = [], refetch: refetchComments } = useQuery({ queryKey: ['taskComments', task?.id], queryFn: () => base44.entities.TaskComment.filter({ task_id: task?.id }, '-created_date'), enabled: !!task?.id && open });
+  const { data: comments = [], refetch: refetchComments } = useQuery({ queryKey: ['taskComments', task?.id], queryFn: () => api.entities.TaskComment.filter({ task_id: task?.id }, '-created_date'), enabled: !!task?.id && open });
 
   const addCommentMutation = useMutation({
     mutationFn: async (commentData) => {
-      const newComment = await base44.entities.TaskComment.create(commentData);
+      const newComment = await api.entities.TaskComment.create(commentData);
       if (commentData.mentions?.length > 0) {
         for (const email of commentData.mentions) {
           if (email !== currentUser?.email) {
             try {
-              await base44.entities.UserNotification.create({ user_email: email, type: 'mention', title: 'You were mentioned in a comment', message: `${currentUser?.full_name || currentUser?.email} mentioned you on "${task.title}"`, project_id: task.project_id, project_name: project?.name, from_user_email: currentUser?.email, from_user_name: currentUser?.full_name || currentUser?.email, link: `/ProjectDetail?id=${task.project_id}`, is_read: false });
-              await base44.functions.invoke('sendNotificationEmail', { to: email, type: 'mention', title: 'You were mentioned in a comment', message: `${currentUser?.full_name || currentUser?.email} mentioned you on "${task.title}": "${commentData.content}"`, projectId: task.project_id, projectName: project?.name, fromUserName: currentUser?.full_name || currentUser?.email, link: `${window.location.origin}/ProjectDetail?id=${task.project_id}` });
+              await api.entities.UserNotification.create({ user_email: email, type: 'mention', title: 'You were mentioned in a comment', message: `${currentUser?.full_name || currentUser?.email} mentioned you on "${task.title}"`, project_id: task.project_id, project_name: project?.name, from_user_email: currentUser?.email, from_user_name: currentUser?.full_name || currentUser?.email, link: `/ProjectDetail?id=${task.project_id}`, is_read: false });
+              await api.functions.invoke('sendNotificationEmail', { to: email, type: 'mention', title: 'You were mentioned in a comment', message: `${currentUser?.full_name || currentUser?.email} mentioned you on "${task.title}": "${commentData.content}"`, projectId: task.project_id, projectName: project?.name, fromUserName: currentUser?.full_name || currentUser?.email, link: `${window.location.origin}/ProjectDetail?id=${task.project_id}` });
             } catch (err) { console.error('Failed to send mention notification:', err); }
           }
         }
@@ -78,7 +78,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     onSuccess: () => { refetchComments(); setComment(''); setCommentAttachments([]); }
   });
 
-  const handleUpdateTask = async (updates) => { await base44.entities.Task.update(task.id, updates); queryClient.invalidateQueries({ queryKey: ['tasks'] }); };
+  const handleUpdateTask = async (updates) => { await api.entities.Task.update(task.id, updates); queryClient.invalidateQueries({ queryKey: ['tasks'] }); };
   const handleStatusToggle = async () => { const newStatus = task.status === 'completed' ? 'todo' : 'completed'; await handleUpdateTask({ status: newStatus }); };
   const handleStatusChange = async (status) => { await handleUpdateTask({ status }); setShowStatusDropdown(false); };
 
@@ -117,11 +117,11 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     await addCommentMutation.mutateAsync({ task_id: task.id, content: comment, author_email: currentUser.email, author_name: currentUser.full_name || currentUser.email, mentions: mentionedEmails, attachments: commentAttachments.length > 0 ? commentAttachments : undefined });
   };
 
-  const handleCommentFileUpload = async (e) => { const file = e.target.files?.[0]; if (!file) return; setUploadingCommentFile(true); try { const { file_url } = await base44.integrations.Core.UploadFile({ file }); setCommentAttachments(prev => [...prev, { name: file.name, url: file_url, type: file.type }]); } catch (err) { console.error('Failed to upload file:', err); } setUploadingCommentFile(false); };
+  const handleCommentFileUpload = async (e) => { const file = e.target.files?.[0]; if (!file) return; setUploadingCommentFile(true); try { const { file_url } = await api.integrations.Core.UploadFile({ file }); setCommentAttachments(prev => [...prev, { name: file.name, url: file_url, type: file.type }]); } catch (err) { console.error('Failed to upload file:', err); } setUploadingCommentFile(false); };
 
-  const handlePaste = async (e) => { const items = e.clipboardData?.items; if (!items) return; for (const item of items) { if (item.type.startsWith('image/')) { e.preventDefault(); const file = item.getAsFile(); if (!file) continue; setUploadingCommentFile(true); try { const { file_url } = await base44.integrations.Core.UploadFile({ file }); setCommentAttachments(prev => [...prev, { name: `pasted-image-${Date.now()}.png`, url: file_url, type: file.type }]); } catch (err) { console.error('Failed to upload pasted image:', err); } setUploadingCommentFile(false); break; } } };
+  const handlePaste = async (e) => { const items = e.clipboardData?.items; if (!items) return; for (const item of items) { if (item.type.startsWith('image/')) { e.preventDefault(); const file = item.getAsFile(); if (!file) continue; setUploadingCommentFile(true); try { const { file_url } = await api.integrations.Core.UploadFile({ file }); setCommentAttachments(prev => [...prev, { name: `pasted-image-${Date.now()}.png`, url: file_url, type: file.type }]); } catch (err) { console.error('Failed to upload pasted image:', err); } setUploadingCommentFile(false); break; } } };
 
-  const handleTaskFileUpload = async (e) => { const file = e.target.files?.[0]; if (!file) return; setUploadingTaskFile(true); try { const { file_url } = await base44.integrations.Core.UploadFile({ file }); const currentAttachments = task.attachments || []; await handleUpdateTask({ attachments: [...currentAttachments, { name: file.name, url: file_url, type: file.type }] }); } catch (err) { console.error('Failed to upload file:', err); } setUploadingTaskFile(false); };
+  const handleTaskFileUpload = async (e) => { const file = e.target.files?.[0]; if (!file) return; setUploadingTaskFile(true); try { const { file_url } = await api.integrations.Core.UploadFile({ file }); const currentAttachments = task.attachments || []; await handleUpdateTask({ attachments: [...currentAttachments, { name: file.name, url: file_url, type: file.type }] }); } catch (err) { console.error('Failed to upload file:', err); } setUploadingTaskFile(false); };
   const handleRemoveAttachment = async (index) => { const newAttachments = [...(task.attachments || [])]; newAttachments.splice(index, 1); await handleUpdateTask({ attachments: newAttachments }); };
 
   const handleAddChecklistItem = async () => { if (!newChecklistItem.trim()) return; const newItem = { id: Date.now().toString(36) + Math.random().toString(36).substr(2), title: newChecklistItem.trim(), completed: false, due_date: null, assigned_to: null, assigned_name: null }; const updated = [...checklistItems, newItem]; setChecklistItems(updated); setNewChecklistItem(''); await handleUpdateTask({ checklist_items: updated }); };

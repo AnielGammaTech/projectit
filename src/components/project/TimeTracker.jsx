@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,7 +21,7 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
 
   const { data: timeEntries = [] } = useQuery({
     queryKey: ['timeEntries', projectId],
-    queryFn: () => base44.entities.TimeEntry.filter({ project_id: projectId }, '-created_date'),
+    queryFn: () => api.entities.TimeEntry.filter({ project_id: projectId }, '-created_date'),
     enabled: !!projectId
   });
 
@@ -48,7 +48,7 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
   }, [activeEntry]);
 
   const startMutation = useMutation({
-    mutationFn: () => base44.entities.TimeEntry.create({
+    mutationFn: () => api.entities.TimeEntry.create({
       project_id: projectId,
       user_email: currentUser.email,
       user_name: currentUser.full_name || currentUser.email,
@@ -66,7 +66,7 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
       const startTime = new Date(activeEntry.start_time);
       const durationMinutes = Math.round((endTime - startTime) / 60000);
       
-      await base44.entities.TimeEntry.update(activeEntry.id, {
+      await api.entities.TimeEntry.update(activeEntry.id, {
         end_time: endTime.toISOString(),
         duration_minutes: durationMinutes,
         is_running: false,

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -49,13 +49,13 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   const { data: updates = [] } = useQuery({
     queryKey: ['progressUpdates', projectId],
-    queryFn: () => base44.entities.ProgressUpdate.filter({ project_id: projectId }, '-created_date', 50),
+    queryFn: () => api.entities.ProgressUpdate.filter({ project_id: projectId }, '-created_date', 50),
     enabled: !!projectId
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list(),
+    queryFn: () => api.entities.TeamMember.list(),
     enabled: showUpdateModal
   });
 
@@ -72,7 +72,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
     if (!halopsaTicketId) return;
     try {
       const haloNote = `[Progress Update: ${progressValue}%] ${noteText || 'Progress updated'}`;
-      await base44.functions.invoke('haloPSATicket', {
+      await api.functions.invoke('haloPSATicket', {
         action: 'addNote',
         ticketId: halopsaTicketId,
         note: haloNote,
@@ -91,7 +91,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
         return;
       }
 
-      await base44.entities.ProgressUpdate.create({
+      await api.entities.ProgressUpdate.create({
         project_id: projectId,
         progress_value: localValue,
         note: note,
@@ -116,7 +116,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
   const handleCompletionConfirm = async () => {
     const completionNote = note || 'Project completed and ready for billing';
-    await base44.entities.ProgressUpdate.create({
+    await api.entities.ProgressUpdate.create({
       project_id: projectId,
       progress_value: 100,
       note: completionNote,
@@ -136,7 +136,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
   };
 
   const handleCompletionCancel = async () => {
-    await base44.entities.ProgressUpdate.create({
+    await api.entities.ProgressUpdate.create({
       project_id: projectId,
       progress_value: 100,
       note: note,
@@ -215,7 +215,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
         m.email?.toLowerCase().includes(name.toLowerCase())
       );
       if (member?.email && member.email !== currentUser?.email) {
-        await base44.entities.UserNotification.create({
+        await api.entities.UserNotification.create({
           user_email: member.email,
           type: 'mention',
           title: 'You were mentioned in a progress update',
@@ -227,7 +227,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
           is_read: false
         });
         try {
-          await base44.functions.invoke('sendNotificationEmail', {
+          await api.functions.invoke('sendNotificationEmail', {
             to: member.email,
             type: 'mention',
             title: 'You were mentioned in a progress update',

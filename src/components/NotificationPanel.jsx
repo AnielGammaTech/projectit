@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
@@ -38,7 +38,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
   // Fetch all projects to filter out archived ones
   const { data: projects = [] } = useQuery({
     queryKey: ['allProjectsForNotifications'],
-    queryFn: () => base44.entities.Project.list(),
+    queryFn: () => api.entities.Project.list(),
     enabled: !!currentUser?.email,
     staleTime: 60000
   });
@@ -50,7 +50,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
   // Fetch notifications
   const { data: rawNotifications = [], refetch: refetchNotifications } = useQuery({
     queryKey: ['panelNotifications', currentUser?.email],
-    queryFn: () => base44.entities.UserNotification.filter(
+    queryFn: () => api.entities.UserNotification.filter(
       { user_email: currentUser.email }, '-created_date', 50
     ),
     enabled: !!currentUser?.email,
@@ -68,7 +68,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
   const { data: savedSettings, isLoading: settingsLoading } = useQuery({
     queryKey: ['notificationSettings', currentUser?.email],
     queryFn: async () => {
-      const results = await base44.entities.NotificationSettings.filter({ user_email: currentUser.email });
+      const results = await api.entities.NotificationSettings.filter({ user_email: currentUser.email });
       return results[0] || null;
     },
     enabled: !!currentUser?.email
@@ -107,9 +107,9 @@ export default function NotificationPanel({ currentUser, onClose }) {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (savedSettings) {
-        return base44.entities.NotificationSettings.update(savedSettings.id, data);
+        return api.entities.NotificationSettings.update(savedSettings.id, data);
       } else {
-        return base44.entities.NotificationSettings.create({
+        return api.entities.NotificationSettings.create({
           ...data,
           user_email: currentUser.email
         });
@@ -123,7 +123,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
   });
 
   const markAsRead = useMutation({
-    mutationFn: (id) => base44.entities.UserNotification.update(id, { is_read: true }),
+    mutationFn: (id) => api.entities.UserNotification.update(id, { is_read: true }),
     onSuccess: () => {
       refetchNotifications();
       queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
@@ -133,7 +133,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
   const markAllAsRead = useMutation({
     mutationFn: async () => {
       for (const n of notifications.filter(n => !n.is_read)) {
-        await base44.entities.UserNotification.update(n.id, { is_read: true });
+        await api.entities.UserNotification.update(n.id, { is_read: true });
       }
     },
     onSuccess: () => {
@@ -143,7 +143,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
   });
 
   const dismissNotification = useMutation({
-    mutationFn: (id) => base44.entities.UserNotification.delete(id),
+    mutationFn: (id) => api.entities.UserNotification.delete(id),
     onSuccess: () => {
       refetchNotifications();
       queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });

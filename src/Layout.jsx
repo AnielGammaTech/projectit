@@ -35,7 +35,7 @@ import NotificationPanel from '@/components/NotificationPanel';
 import FeedbackButton from '@/components/FeedbackButton';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import {
   Popover,
   PopoverTrigger,
@@ -70,7 +70,7 @@ function LayoutContent({ children, currentPageName }) {
   const { data: appSettings } = useQuery({
     queryKey: ['appSettings'],
     queryFn: async () => {
-      const settings = await base44.entities.AppSettings.filter({ setting_key: 'main' });
+      const settings = await api.entities.AppSettings.filter({ setting_key: 'main' });
       return settings[0] || {};
     },
     staleTime: 300000 // 5 minutes - prevent refetching and logo flickering
@@ -79,7 +79,7 @@ function LayoutContent({ children, currentPageName }) {
   // Fetch projects to filter out archived ones from notifications
   const { data: allProjects = [] } = useQuery({
     queryKey: ['allProjectsForLayout'],
-    queryFn: () => base44.entities.Project.list(),
+    queryFn: () => api.entities.Project.list(),
     enabled: !!currentUser?.email,
     staleTime: 60000
   });
@@ -91,7 +91,7 @@ function LayoutContent({ children, currentPageName }) {
   // Fetch user notifications
   const { data: rawUserNotifications = [] } = useQuery({
     queryKey: ['layoutNotifications', currentUser?.email],
-    queryFn: () => base44.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
+    queryFn: () => api.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
     enabled: !!currentUser?.email,
     refetchInterval: 10000 // Check every 10 seconds for new notifications
   });
@@ -134,7 +134,7 @@ function LayoutContent({ children, currentPageName }) {
   }, []);
 
   useEffect(() => {
-    base44.auth.me().then(user => {
+    api.auth.me().then(user => {
       setCurrentUser(user);
       setIsAdmin(user?.role === 'admin');
     }).catch(() => {});
@@ -382,7 +382,7 @@ function LayoutContent({ children, currentPageName }) {
                 )}
                 <DropdownMenuSeparator />
                 <div className="py-1">
-                  <DropdownMenuItem onClick={() => base44.auth.logout(window.location.origin)} className="text-red-600 cursor-pointer">
+                  <DropdownMenuItem onClick={() => api.auth.logout(window.location.origin)} className="text-red-600 cursor-pointer">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>

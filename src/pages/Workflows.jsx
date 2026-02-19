@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { 
   Zap, Plus, Edit2, Trash2, MoreHorizontal, Play, Pause,
@@ -72,29 +72,29 @@ export default function Workflows() {
 
   const { data: workflows = [], refetch } = useQuery({
     queryKey: ['workflows'],
-    queryFn: () => base44.entities.Workflow.list('-created_date')
+    queryFn: () => api.entities.Workflow.list('-created_date')
   });
 
   const { data: workflowLogs = [] } = useQuery({
     queryKey: ['workflowLogs'],
-    queryFn: () => base44.entities.WorkflowLog.list('-created_date', 50)
+    queryFn: () => api.entities.WorkflowLog.list('-created_date', 50)
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const { data: projectStatuses = [] } = useQuery({
     queryKey: ['projectStatuses'],
-    queryFn: () => base44.entities.ProjectStatus.list('order')
+    queryFn: () => api.entities.ProjectStatus.list('order')
   });
 
   const handleSave = async (data) => {
     if (editingWorkflow) {
-      await base44.entities.Workflow.update(editingWorkflow.id, data);
+      await api.entities.Workflow.update(editingWorkflow.id, data);
     } else {
-      await base44.entities.Workflow.create(data);
+      await api.entities.Workflow.create(data);
     }
     refetch();
     setShowModal(false);
@@ -102,13 +102,13 @@ export default function Workflows() {
   };
 
   const handleDelete = async () => {
-    await base44.entities.Workflow.delete(deleteConfirm.id);
+    await api.entities.Workflow.delete(deleteConfirm.id);
     refetch();
     setDeleteConfirm(null);
   };
 
   const handleToggleActive = async (workflow) => {
-    await base44.entities.Workflow.update(workflow.id, { ...workflow, is_active: !workflow.is_active });
+    await api.entities.Workflow.update(workflow.id, { ...workflow, is_active: !workflow.is_active });
     refetch();
   };
 
@@ -250,7 +250,7 @@ export default function Workflows() {
               <AIWorkflowSuggestions 
                 existingWorkflows={workflows}
                 onCreateWorkflow={async (workflow) => {
-                  await base44.entities.Workflow.create(workflow);
+                  await api.entities.Workflow.create(workflow);
                   refetch();
                 }}
               />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Save, Send, Plus, Trash2, ChevronDown
@@ -52,14 +52,14 @@ export default function ChangeOrderEditor() {
   });
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: changeOrder, isLoading } = useQuery({
     queryKey: ['changeOrder', changeOrderId],
     queryFn: async () => {
       if (!changeOrderId) return null;
-      const orders = await base44.entities.ChangeOrder.filter({ id: changeOrderId });
+      const orders = await api.entities.ChangeOrder.filter({ id: changeOrderId });
       return orders[0];
     },
     enabled: !!changeOrderId
@@ -69,7 +69,7 @@ export default function ChangeOrderEditor() {
     queryKey: ['originalProposal', formData.original_proposal_id],
     queryFn: async () => {
       if (!formData.original_proposal_id) return null;
-      const proposals = await base44.entities.Proposal.filter({ id: formData.original_proposal_id });
+      const proposals = await api.entities.Proposal.filter({ id: formData.original_proposal_id });
       return proposals[0];
     },
     enabled: !!formData.original_proposal_id
@@ -135,7 +135,7 @@ export default function ChangeOrderEditor() {
 
   const handleSave = async () => {
     setSaving(true);
-    await base44.entities.ChangeOrder.update(changeOrderId, {
+    await api.entities.ChangeOrder.update(changeOrderId, {
       ...formData,
       created_by_email: currentUser?.email,
       created_by_name: currentUser?.full_name

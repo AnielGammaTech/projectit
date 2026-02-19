@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { 
   Sparkles, Loader2, Zap, Mail, Bell, ListTodo, 
   CheckCircle2, Clock, Users, FileText, Plus
@@ -110,7 +110,7 @@ Available actions:
 
 Suggest 3 useful automation workflows that DON'T already exist. Focus on common business needs like follow-ups, reminders, and team coordination.`;
 
-    const result = await base44.integrations.Core.InvokeLLM({
+    const result = await api.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: {
         type: "object",

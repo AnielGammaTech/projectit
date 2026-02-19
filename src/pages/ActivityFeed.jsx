@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
@@ -44,39 +44,39 @@ export default function ActivityFeed() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(user => {
+    api.auth.me().then(user => {
       setCurrentUser(user);
       setShowingFor(user);
       setIsAdmin(user?.role === 'admin');
     }).catch(() => {
       // Redirect to login if not authenticated
-      base44.auth.redirectToLogin();
+      api.auth.redirectToLogin();
     });
   }, []);
 
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ['globalActivities'],
-    queryFn: () => base44.entities.ProjectActivity.list('-created_date', 100)
+    queryFn: () => api.entities.ProjectActivity.list('-created_date', 100)
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list()
+    queryFn: () => api.entities.Project.list()
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const { data: appUsers = [] } = useQuery({
     queryKey: ['appUsers'],
-    queryFn: () => base44.entities.User.list()
+    queryFn: () => api.entities.User.list()
   });
 
   const { data: projectTags = [] } = useQuery({
     queryKey: ['projectTags'],
-    queryFn: () => base44.entities.ProjectTag.list()
+    queryFn: () => api.entities.ProjectTag.list()
   });
 
   const getMemberAvatarUrl = (email) => {

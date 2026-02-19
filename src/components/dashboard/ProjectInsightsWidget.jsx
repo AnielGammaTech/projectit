@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   AlertTriangle, UserX, Clock, RotateCcw, TrendingUp, CheckCircle2,
@@ -17,13 +17,13 @@ export default function ProjectInsightsWidget({ projectId, tasks: propTasks, par
   
   const { data: fetchedTasks = [] } = useQuery({
     queryKey: ['tasks', projectId],
-    queryFn: () => base44.entities.Task.filter({ project_id: projectId }),
+    queryFn: () => api.entities.Task.filter({ project_id: projectId }),
     enabled: !!projectId && !propTasks
   });
 
   const { data: fetchedParts = [] } = useQuery({
     queryKey: ['parts', projectId],
-    queryFn: () => base44.entities.Part.filter({ project_id: projectId }),
+    queryFn: () => api.entities.Part.filter({ project_id: projectId }),
     enabled: !!projectId && !propParts
   });
 

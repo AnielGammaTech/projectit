@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { Bell, Mail, Clock, CheckCircle2, AlertTriangle, Save, Loader2, Package, MessageSquare, AtSign, FolderOpen, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -30,13 +30,13 @@ export default function NotificationSettings() {
   const [sendingTest, setSendingTest] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: savedSettings, isLoading } = useQuery({
     queryKey: ['notificationSettings', currentUser?.email],
     queryFn: async () => {
-      const results = await base44.entities.NotificationSettings.filter({ user_email: currentUser.email });
+      const results = await api.entities.NotificationSettings.filter({ user_email: currentUser.email });
       return results[0] || null;
     },
     enabled: !!currentUser?.email
@@ -45,7 +45,7 @@ export default function NotificationSettings() {
   const { data: integrationSettings } = useQuery({
     queryKey: ['integrationSettings'],
     queryFn: async () => {
-      const settings = await base44.entities.IntegrationSettings.filter({ setting_key: 'main' });
+      const settings = await api.entities.IntegrationSettings.filter({ setting_key: 'main' });
       return settings[0] || {};
     }
   });
@@ -71,7 +71,7 @@ export default function NotificationSettings() {
   const sendTestEmail = async () => {
     setSendingTest(true);
     try {
-      await base44.integrations.Core.SendEmail({
+      await api.integrations.Core.SendEmail({
         to: currentUser.email,
         subject: 'Test Email from ProjectIT',
         body: `<h2>Test Email</h2><p>This is a test email to confirm your notification settings are working correctly.</p><p>Sent at ${new Date().toLocaleString()}</p>`
@@ -86,9 +86,9 @@ export default function NotificationSettings() {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (savedSettings) {
-        return base44.entities.NotificationSettings.update(savedSettings.id, data);
+        return api.entities.NotificationSettings.update(savedSettings.id, data);
       } else {
-        return base44.entities.NotificationSettings.create({
+        return api.entities.NotificationSettings.create({
           ...data,
           user_email: currentUser.email
         });

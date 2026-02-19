@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Mail, Phone, MoreHorizontal, Edit2, Trash2, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -30,17 +30,17 @@ export default function Team() {
 
   const { data: teamMembers = [], refetch } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['allTasks'],
-    queryFn: () => base44.entities.Task.list()
+    queryFn: () => api.entities.Task.list()
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list()
+    queryFn: () => api.entities.Project.list()
   });
 
   // Get active project IDs (exclude archived, deleted, completed)
@@ -53,9 +53,9 @@ export default function Team() {
 
   const handleSave = async (data) => {
     if (editingMember) {
-      await base44.entities.TeamMember.update(editingMember.id, data);
+      await api.entities.TeamMember.update(editingMember.id, data);
     } else {
-      await base44.entities.TeamMember.create(data);
+      await api.entities.TeamMember.create(data);
     }
     refetch();
     setShowModal(false);
@@ -63,7 +63,7 @@ export default function Team() {
   };
 
   const handleDelete = async () => {
-    await base44.entities.TeamMember.delete(deleteConfirm.member.id);
+    await api.entities.TeamMember.delete(deleteConfirm.member.id);
     refetch();
     setDeleteConfirm({ open: false, member: null });
   };

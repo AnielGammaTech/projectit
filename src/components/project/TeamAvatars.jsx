@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Plus, X, Check, Users, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -49,7 +49,7 @@ export default function TeamAvatars({
   // Fetch user groups
   const { data: userGroups = [] } = useQuery({
     queryKey: ['userGroups'],
-    queryFn: () => base44.entities.UserGroup.list()
+    queryFn: () => api.entities.UserGroup.list()
   });
 
   useEffect(() => {

@@ -10,7 +10,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Loader2, FileStack, Check, X, Bell } from 'lucide-react';
 import { format } from 'date-fns';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -35,7 +35,7 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
   const { data: todoTemplates = [] } = useQuery({
     queryKey: ['todoTemplates'],
     queryFn: async () => {
-      const templates = await base44.entities.ProjectTemplate.list();
+      const templates = await api.entities.ProjectTemplate.list();
       return templates.filter(t => t.template_type === 'todo');
     },
     enabled: open

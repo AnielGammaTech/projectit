@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2, Sun, Moon, Monitor, Palette, Bell, CheckCircle2, AtSign, MessageCircle, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,7 +44,7 @@ export default function Profile() {
   });
 
   useEffect(() => {
-    base44.auth.me().then(user => {
+    api.auth.me().then(user => {
       setCurrentUser(user);
       setFormData({
         full_name: user.full_name || '',
@@ -60,21 +60,21 @@ export default function Profile() {
   // Fetch user notifications
   const { data: notifications = [], refetch: refetchNotifications } = useQuery({
     queryKey: ['userNotifications', currentUser?.email],
-    queryFn: () => base44.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
+    queryFn: () => api.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
     enabled: !!currentUser?.email
   });
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const markAsRead = useMutation({
-    mutationFn: (notificationId) => base44.entities.UserNotification.update(notificationId, { is_read: true }),
+    mutationFn: (notificationId) => api.entities.UserNotification.update(notificationId, { is_read: true }),
     onSuccess: () => refetchNotifications()
   });
 
   const markAllAsRead = useMutation({
     mutationFn: async () => {
       for (const n of notifications.filter(n => !n.is_read)) {
-        await base44.entities.UserNotification.update(n.id, { is_read: true });
+        await api.entities.UserNotification.update(n.id, { is_read: true });
       }
     },
     onSuccess: () => refetchNotifications()
@@ -84,21 +84,21 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await api.integrations.Core.UploadFile({ file });
     setFormData(prev => ({ ...prev, avatar_url: file_url }));
     setUploading(false);
   };
 
   const handleSave = async () => {
     setSaving(true);
-    await base44.auth.updateMe(formData);
-    const updated = await base44.auth.me();
+    await api.auth.updateMe(formData);
+    const updated = await api.auth.me();
     setCurrentUser(updated);
     setSaving(false);
   };
 
   const handleLogout = () => {
-    base44.auth.logout();
+    api.auth.logout();
   };
 
   const getInitials = (name) => {

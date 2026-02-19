@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -120,13 +120,13 @@ export default function ProjectTasks() {
   const [viewMode, setViewMode] = useState('list');
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
     queryFn: async () => {
-      const projects = await base44.entities.Project.filter({ id: projectId });
+      const projects = await api.entities.Project.filter({ id: projectId });
       return projects[0];
     },
     enabled: !!projectId
@@ -134,19 +134,19 @@ export default function ProjectTasks() {
 
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks', projectId],
-    queryFn: () => base44.entities.Task.filter({ project_id: projectId }),
+    queryFn: () => api.entities.Task.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: taskGroups = [], refetch: refetchGroups } = useQuery({
     queryKey: ['taskGroups', projectId],
-    queryFn: () => base44.entities.TaskGroup.filter({ project_id: projectId }),
+    queryFn: () => api.entities.TaskGroup.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   // Filter to only project members for assignment dropdowns
@@ -160,7 +160,7 @@ export default function ProjectTasks() {
     queryFn: async () => {
       const taskIds = tasks.map(t => t.id);
       if (taskIds.length === 0) return [];
-      const comments = await base44.entities.TaskComment.list();
+      const comments = await api.entities.TaskComment.list();
       return comments.filter(c => taskIds.includes(c.task_id));
     },
     enabled: tasks.length > 0
@@ -235,7 +235,7 @@ export default function ProjectTasks() {
 
   const handleBulkArchive = async () => {
     for (const taskId of selectedTasks) {
-      await base44.entities.Task.update(taskId, { status: 'archived' });
+      await api.entities.Task.update(taskId, { status: 'archived' });
     }
     refetchTasks();
     clearSelection();
@@ -243,7 +243,7 @@ export default function ProjectTasks() {
 
   const handleBulkDelete = async () => {
     for (const taskId of selectedTasks) {
-      await base44.entities.Task.delete(taskId);
+      await api.entities.Task.delete(taskId);
     }
     refetchTasks();
     clearSelection();
@@ -257,7 +257,7 @@ export default function ProjectTasks() {
       if (task && task.assigned_to !== email) {
         tasksToNotify.push(task);
       }
-      await base44.entities.Task.update(taskId, {
+      await api.entities.Task.update(taskId, {
         assigned_to: email,
         assigned_name: member?.name || email
       });
@@ -279,7 +279,7 @@ export default function ProjectTasks() {
 
   const handleBulkDueDate = async (date) => {
     for (const taskId of selectedTasks) {
-      await base44.entities.Task.update(taskId, {
+      await api.entities.Task.update(taskId, {
         due_date: date ? format(date, 'yyyy-MM-dd') : ''
       });
     }
@@ -289,7 +289,7 @@ export default function ProjectTasks() {
 
   const handleBulkMoveToGroup = async (groupId) => {
     for (const taskId of selectedTasks) {
-      await base44.entities.Task.update(taskId, { group_id: groupId || '' });
+      await api.entities.Task.update(taskId, { group_id: groupId || '' });
     }
     refetchTasks();
     clearSelection();
@@ -305,7 +305,7 @@ export default function ProjectTasks() {
 
     if (destGroupId === sourceGroupId) return;
 
-    await base44.entities.Task.update(draggableId, { group_id: destGroupId });
+    await api.entities.Task.update(draggableId, { group_id: destGroupId });
     refetchTasks();
   };
 
@@ -327,7 +327,7 @@ export default function ProjectTasks() {
     const member = teamMembers.find(m => m.email === inlineTaskData.assigned_to);
     const taskTitle = inlineTaskData.title.trim();
     const assigneeEmail = inlineTaskData.assigned_to || '';
-    await base44.entities.Task.create({
+    await api.entities.Task.create({
       title: taskTitle,
       project_id: projectId,
       status: 'todo',
@@ -363,7 +363,7 @@ export default function ProjectTasks() {
   };
 
   const handleStatusChange = async (task, status) => {
-    await base44.entities.Task.update(task.id, { status });
+    await api.entities.Task.update(task.id, { status });
 
     if (status === 'completed') {
       await sendTaskCompletionNotification({
@@ -382,9 +382,9 @@ export default function ProjectTasks() {
     const isNewlyAssigned = data.assigned_to && data.assigned_to !== 'unassigned' && data.assigned_to !== wasAssigned;
 
     if (editingTask) {
-      await base44.entities.Task.update(editingTask.id, data);
+      await api.entities.Task.update(editingTask.id, data);
     } else {
-      await base44.entities.Task.create(data);
+      await api.entities.Task.create(data);
     }
 
     if (isNewlyAssigned) {
@@ -404,7 +404,7 @@ export default function ProjectTasks() {
 
   const handleBulkCreateTasks = async (tasksData) => {
     for (const taskData of tasksData) {
-      await base44.entities.Task.create({
+      await api.entities.Task.create({
         ...taskData,
         project_id: projectId
       });
@@ -415,9 +415,9 @@ export default function ProjectTasks() {
 
   const handleSaveGroup = async (data, existingGroup) => {
     if (existingGroup) {
-      await base44.entities.TaskGroup.update(existingGroup.id, data);
+      await api.entities.TaskGroup.update(existingGroup.id, data);
     } else {
-      await base44.entities.TaskGroup.create({ ...data, project_id: projectId });
+      await api.entities.TaskGroup.create({ ...data, project_id: projectId });
     }
     refetchGroups();
     setShowGroupModal(false);
@@ -425,10 +425,10 @@ export default function ProjectTasks() {
   };
 
   const handleDeleteGroup = async (group) => {
-    await base44.entities.TaskGroup.delete(group.id);
+    await api.entities.TaskGroup.delete(group.id);
     const groupTasks = tasks.filter(t => t.group_id === group.id);
     for (const task of groupTasks) {
-      await base44.entities.Task.update(task.id, { group_id: '' });
+      await api.entities.Task.update(task.id, { group_id: '' });
     }
     refetchGroups();
     refetchTasks();
@@ -437,7 +437,7 @@ export default function ProjectTasks() {
   const handleDelete = async () => {
     const { type, item } = deleteConfirm;
     if (type === 'task') {
-      await base44.entities.Task.delete(item.id);
+      await api.entities.Task.delete(item.id);
       refetchTasks();
     } else if (type === 'group') {
       await handleDeleteGroup(item);
@@ -447,7 +447,7 @@ export default function ProjectTasks() {
 
   const handleTaskAssign = async (task, email) => {
     const member = teamMembers.find(m => m.email === email);
-    await base44.entities.Task.update(task.id, {
+    await api.entities.Task.update(task.id, {
       assigned_to: email,
       assigned_name: member?.name || email
     });
@@ -466,7 +466,7 @@ export default function ProjectTasks() {
   };
 
   const handleTaskUnassign = async (task) => {
-    await base44.entities.Task.update(task.id, {
+    await api.entities.Task.update(task.id, {
       assigned_to: '',
       assigned_name: ''
     });
@@ -474,7 +474,7 @@ export default function ProjectTasks() {
   };
 
   const handleTaskDueDateChange = async (task, date) => {
-    await base44.entities.Task.update(task.id, {
+    await api.entities.Task.update(task.id, {
       due_date: date ? format(date, 'yyyy-MM-dd') : ''
     });
     refetchTasks();

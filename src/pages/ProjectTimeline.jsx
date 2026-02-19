@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { ArrowLeft, Plus, Calendar, LayoutList } from 'lucide-react';
@@ -20,13 +20,13 @@ export default function ProjectTimeline() {
   const [editingTask, setEditingTask] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: project, isLoading: loadingProject } = useQuery({
     queryKey: ['project', projectId],
     queryFn: async () => {
-      const projects = await base44.entities.Project.filter({ id: projectId });
+      const projects = await api.entities.Project.filter({ id: projectId });
       return projects[0];
     },
     enabled: !!projectId
@@ -34,25 +34,25 @@ export default function ProjectTimeline() {
 
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks', projectId],
-    queryFn: () => base44.entities.Task.filter({ project_id: projectId }),
+    queryFn: () => api.entities.Task.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: taskGroups = [] } = useQuery({
     queryKey: ['taskGroups', projectId],
-    queryFn: () => base44.entities.TaskGroup.filter({ project_id: projectId }),
+    queryFn: () => api.entities.TaskGroup.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const handleTaskUpdate = async (taskId, updates) => {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
-      await base44.entities.Task.update(taskId, { ...task, ...updates });
+      await api.entities.Task.update(taskId, { ...task, ...updates });
       refetchTasks();
       
       // Recalculate project end date based on tasks
@@ -69,7 +69,7 @@ export default function ProjectTimeline() {
     
     // Only update if tasks extend beyond current due date
     if (!currentDueDate || latestDate > currentDueDate) {
-      await base44.entities.Project.update(projectId, {
+      await api.entities.Project.update(projectId, {
         ...project,
         due_date: format(latestDate, 'yyyy-MM-dd')
       });
@@ -79,9 +79,9 @@ export default function ProjectTimeline() {
 
   const handleSaveTask = async (data) => {
     if (editingTask) {
-      await base44.entities.Task.update(editingTask.id, data);
+      await api.entities.Task.update(editingTask.id, data);
     } else {
-      await base44.entities.Task.create(data);
+      await api.entities.Task.create(data);
     }
     refetchTasks();
     setShowTaskModal(false);

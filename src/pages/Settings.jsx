@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings as SettingsIcon, 
@@ -192,7 +192,7 @@ export default function Settings() {
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(user => {
+    api.auth.me().then(user => {
       setCurrentUser(user);
       setIsAdmin(user?.role === 'admin');
     }).catch(() => {});
@@ -201,7 +201,7 @@ export default function Settings() {
   const { data: savedSettings, isLoading } = useQuery({
     queryKey: ['appSettings'],
     queryFn: async () => {
-      const results = await base44.entities.AppSettings.filter({ setting_key: 'main' });
+      const results = await api.entities.AppSettings.filter({ setting_key: 'main' });
       return results[0];
     }
   });
@@ -215,9 +215,9 @@ export default function Settings() {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (savedSettings?.id) {
-        return base44.entities.AppSettings.update(savedSettings.id, data);
+        return api.entities.AppSettings.update(savedSettings.id, data);
       } else {
-        return base44.entities.AppSettings.create(data);
+        return api.entities.AppSettings.create(data);
       }
     },
     onSuccess: () => {

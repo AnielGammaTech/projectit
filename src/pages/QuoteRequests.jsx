@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, Plus, Clock, CheckCircle2, Package, Truck, 
@@ -43,23 +43,23 @@ export default function QuoteRequests() {
   const [editingQuote, setEditingQuote] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const isAdmin = currentUser?.role === 'admin';
 
   const { data: quotes = [], isLoading } = useQuery({
     queryKey: ['quoteRequests'],
-    queryFn: () => base44.entities.QuoteRequest.list('-created_date')
+    queryFn: () => api.entities.QuoteRequest.list('-created_date')
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list()
+    queryFn: () => api.entities.Project.list()
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.QuoteRequest.delete(id),
+    mutationFn: (id) => api.entities.QuoteRequest.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['quoteRequests'] })
   });
 

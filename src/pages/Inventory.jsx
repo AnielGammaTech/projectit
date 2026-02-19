@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,9 +56,9 @@ export default function Inventory() {
 
   useEffect(() => {
     const loadUser = async () => {
-      const user = await base44.auth.me();
+      const user = await api.auth.me();
       setCurrentUser(user);
-      const groups = await base44.entities.UserGroup.list();
+      const groups = await api.entities.UserGroup.list();
       const memberGroups = groups.filter(g => g.member_emails?.includes(user.email));
       setUserGroups(memberGroups);
     };
@@ -67,22 +67,22 @@ export default function Inventory() {
 
   const { data: items = [] } = useQuery({
     queryKey: ['inventoryItems'],
-    queryFn: () => base44.entities.InventoryItem.list('name')
+    queryFn: () => api.entities.InventoryItem.list('name')
   });
 
   const { data: bundles = [] } = useQuery({
     queryKey: ['serviceBundles'],
-    queryFn: () => base44.entities.ServiceBundle.list('name')
+    queryFn: () => api.entities.ServiceBundle.list('name')
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.filter({ status: { $ne: 'archived' } })
+    queryFn: () => api.entities.Project.filter({ status: { $ne: 'archived' } })
   });
 
   const { data: settings = [] } = useQuery({
     queryKey: ['appSettings'],
-    queryFn: () => base44.entities.AppSettings.filter({ setting_key: 'main' })
+    queryFn: () => api.entities.AppSettings.filter({ setting_key: 'main' })
   });
 
   const appSettings = settings[0] || {};
@@ -113,7 +113,7 @@ export default function Inventory() {
 
   const handleDelete = async () => {
     if (deleteConfirm) {
-      await base44.entities.InventoryItem.delete(deleteConfirm.id);
+      await api.entities.InventoryItem.delete(deleteConfirm.id);
       queryClient.invalidateQueries({ queryKey: ['inventoryItems'] });
       setDeleteConfirm(null);
     }
@@ -468,7 +468,7 @@ export default function Inventory() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             onClick={async () => { 
-                              await base44.entities.ServiceBundle.delete(bundle.id); 
+                              await api.entities.ServiceBundle.delete(bundle.id); 
                               queryClient.invalidateQueries({ queryKey: ['serviceBundles'] }); 
                             }} 
                             className="text-red-600"
@@ -602,7 +602,7 @@ function ItemModal({ open, onClose, item, onSaved, defaultType = 'product' }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await api.integrations.Core.UploadFile({ file });
     setFormData(prev => ({ ...prev, image_url: file_url }));
     setUploading(false);
   };
@@ -622,9 +622,9 @@ function ItemModal({ open, onClose, item, onSaved, defaultType = 'product' }) {
       minimum_stock: formData.item_type === 'service' ? 0 : formData.minimum_stock
     };
     if (item) {
-      await base44.entities.InventoryItem.update(item.id, data);
+      await api.entities.InventoryItem.update(item.id, data);
     } else {
-      await base44.entities.InventoryItem.create(data);
+      await api.entities.InventoryItem.create(data);
     }
     onSaved();
     onClose();
@@ -766,7 +766,7 @@ function CheckoutModal({ open, onClose, item, projects, currentUser, onSaved }) 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    await base44.entities.InventoryTransaction.create({
+    await api.entities.InventoryTransaction.create({
       inventory_item_id: item.id,
       project_id: formData.project_id || null,
       type: formData.type,
@@ -780,7 +780,7 @@ function CheckoutModal({ open, onClose, item, projects, currentUser, onSaved }) 
       ? item.quantity_in_stock + formData.quantity 
       : item.quantity_in_stock - formData.quantity;
 
-    await base44.entities.InventoryItem.update(item.id, {
+    await api.entities.InventoryItem.update(item.id, {
       quantity_in_stock: Math.max(0, newQty)
     });
 
@@ -884,7 +884,7 @@ function AISearchModal({ open, onClose, onAddItem }) {
     if (!searchQuery.trim()) return;
     setSearching(true);
     
-    const result = await base44.integrations.Core.InvokeLLM({
+    const result = await api.integrations.Core.InvokeLLM({
       prompt: `Find real product information for: "${searchQuery}"
 
 Search online and return 3-5 REAL products with:
@@ -1098,9 +1098,9 @@ function BundleModal({ open, onClose, bundle, inventoryItems, onSaved }) {
       total_price: formData.total_price ? Number(formData.total_price) : calculatedTotal
     };
     if (bundle) {
-      await base44.entities.ServiceBundle.update(bundle.id, data);
+      await api.entities.ServiceBundle.update(bundle.id, data);
     } else {
-      await base44.entities.ServiceBundle.create(data);
+      await api.entities.ServiceBundle.create(data);
     }
     onSaved();
     onClose();

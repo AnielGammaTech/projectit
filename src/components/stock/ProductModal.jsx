@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ImagePlus, X, Plus } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 
 export default function ProductModal({ open, onClose, product, onSave }) {
   const [formData, setFormData] = useState({
@@ -61,7 +61,7 @@ export default function ProductModal({ open, onClose, product, onSave }) {
         if (file) {
           setUploading(true);
           try {
-            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+            const { file_url } = await api.integrations.Core.UploadFile({ file });
             setFormData(prev => ({ ...prev, image_url: file_url }));
           } catch (err) {
             console.error('Upload failed:', err);
@@ -77,7 +77,7 @@ export default function ProductModal({ open, onClose, product, onSave }) {
     if (file) {
       setUploading(true);
       try {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const { file_url } = await api.integrations.Core.UploadFile({ file });
         setFormData(prev => ({ ...prev, image_url: file_url }));
       } catch (err) {
         console.error('Upload failed:', err);

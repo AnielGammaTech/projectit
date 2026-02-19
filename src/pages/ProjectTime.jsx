@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { 
   Clock, 
@@ -51,7 +51,7 @@ export default function ProjectTime() {
   const { data: project, refetch: refetchProject } = useQuery({
     queryKey: ['project', projectId],
     queryFn: async () => {
-      const projects = await base44.entities.Project.filter({ id: projectId });
+      const projects = await api.entities.Project.filter({ id: projectId });
       return projects[0];
     },
     enabled: !!projectId
@@ -59,13 +59,13 @@ export default function ProjectTime() {
 
   const { data: timeEntries = [] } = useQuery({
     queryKey: ['timeEntries', projectId],
-    queryFn: () => base44.entities.TimeEntry.filter({ project_id: projectId }),
+    queryFn: () => api.entities.TimeEntry.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export default function ProjectTime() {
 
   const handleSaveBudget = async () => {
     const hours = parseFloat(budgetValue) || 0;
-    await base44.entities.Project.update(projectId, { time_budget_hours: hours });
+    await api.entities.Project.update(projectId, { time_budget_hours: hours });
     refetchProject();
     setEditingBudget(false);
   };

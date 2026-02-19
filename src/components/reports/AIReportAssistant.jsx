@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { 
   Sparkles, Send, Loader2, TrendingUp, TrendingDown, 
   AlertTriangle, CheckCircle2, BarChart3, X
@@ -115,7 +115,7 @@ Analyze the query and provide:
 
 Format your response as JSON.`;
 
-    const response = await base44.integrations.Core.InvokeLLM({
+    const response = await api.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: {
         type: "object",

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, StickyNote, Bell, Send, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,12 +22,12 @@ export default function ProjectNotes({ projectId, currentUser }) {
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ['projectNotes', projectId],
-    queryFn: () => base44.entities.ProjectNote.filter({ project_id: projectId }, '-created_date'),
+    queryFn: () => api.entities.ProjectNote.filter({ project_id: projectId }, '-created_date'),
     enabled: !!projectId
   });
 
   const addNoteMutation = useMutation({
-    mutationFn: (data) => base44.entities.ProjectNote.create(data),
+    mutationFn: (data) => api.entities.ProjectNote.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
       setNewContent('');
@@ -35,7 +35,7 @@ export default function ProjectNotes({ projectId, currentUser }) {
   });
 
   const deleteNoteMutation = useMutation({
-    mutationFn: (id) => base44.entities.ProjectNote.delete(id),
+    mutationFn: (id) => api.entities.ProjectNote.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] })
   });
 

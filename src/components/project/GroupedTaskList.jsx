@@ -20,7 +20,7 @@ import {
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { sendTaskAssignmentNotification } from '@/utils/notifications';
 
 const avatarColors = [
@@ -91,7 +91,7 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
   const handleAssign = async (email) => {
     const member = teamMembers.find(m => m.email === email);
     const wasAssigned = task.assigned_to;
-    await base44.entities.Task.update(task.id, {
+    await api.entities.Task.update(task.id, {
       assigned_to: email,
       assigned_name: member?.name || email
     });
@@ -110,7 +110,7 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
   };
 
   const handleUnassign = async () => {
-    await base44.entities.Task.update(task.id, {
+    await api.entities.Task.update(task.id, {
       assigned_to: '',
       assigned_name: ''
     });
@@ -118,7 +118,7 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
   };
 
   const handleDateChange = async (date) => {
-    await base44.entities.Task.update(task.id, {
+    await api.entities.Task.update(task.id, {
       due_date: date ? format(date, 'yyyy-MM-dd') : ''
     });
     setDateOpen(false);
@@ -336,7 +336,7 @@ export default function GroupedTaskList({
       setDragOverGroup(null);
       return;
     }
-    await base44.entities.Task.update(draggedTask.id, { group_id: targetGroupId });
+    await api.entities.Task.update(draggedTask.id, { group_id: targetGroupId });
     onTaskUpdate?.();
     setDraggedTask(null);
     setDragOverGroup(null);

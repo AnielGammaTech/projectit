@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -96,37 +96,37 @@ export default function ReportBuilder() {
   // Fetch all data
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list()
+    queryFn: () => api.entities.Project.list()
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['tasks'],
-    queryFn: () => base44.entities.Task.list()
+    queryFn: () => api.entities.Task.list()
   });
 
   const { data: timeEntries = [] } = useQuery({
     queryKey: ['timeEntries'],
-    queryFn: () => base44.entities.TimeEntry.list()
+    queryFn: () => api.entities.TimeEntry.list()
   });
 
   const { data: proposals = [] } = useQuery({
     queryKey: ['proposals'],
-    queryFn: () => base44.entities.Proposal.list()
+    queryFn: () => api.entities.Proposal.list()
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list()
+    queryFn: () => api.entities.Customer.list()
   });
 
   const { data: parts = [] } = useQuery({
     queryKey: ['parts'],
-    queryFn: () => base44.entities.Part.list()
+    queryFn: () => api.entities.Part.list()
   });
 
   const { data: savedReports = [], refetch: refetchReports } = useQuery({
     queryKey: ['savedReports'],
-    queryFn: () => base44.entities.SavedReport.list('-created_date')
+    queryFn: () => api.entities.SavedReport.list('-created_date')
   });
 
   // Calculate date range
@@ -213,7 +213,7 @@ export default function ReportBuilder() {
       chart_type: reportConfig.chart_type,
       filters: reportConfig.filters,
     };
-    await base44.entities.SavedReport.create(reportData);
+    await api.entities.SavedReport.create(reportData);
     refetchReports();
     setShowSaveModal(false);
   };
@@ -552,7 +552,7 @@ export default function ReportBuilder() {
                             variant="ghost"
                             size="sm"
                             onClick={async () => {
-                              await base44.entities.SavedReport.delete(report.id);
+                              await api.entities.SavedReport.delete(report.id);
                               refetchReports();
                             }}
                           >

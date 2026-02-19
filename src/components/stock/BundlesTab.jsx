@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -25,19 +25,19 @@ export default function BundlesTab() {
 
   const { data: bundles = [], refetch } = useQuery({
     queryKey: ['bundles'],
-    queryFn: () => base44.entities.ServiceBundle.list('-created_date'),
+    queryFn: () => api.entities.ServiceBundle.list('-created_date'),
     staleTime: 300000
   });
 
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list(),
+    queryFn: () => api.entities.Product.list(),
     staleTime: 300000
   });
 
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
-    queryFn: () => base44.entities.Service.list(),
+    queryFn: () => api.entities.Service.list(),
     staleTime: 300000
   });
 
@@ -65,9 +65,9 @@ export default function BundlesTab() {
 
   const handleSave = async (data) => {
     if (editingBundle) {
-      await base44.entities.ServiceBundle.update(editingBundle.id, data);
+      await api.entities.ServiceBundle.update(editingBundle.id, data);
     } else {
-      await base44.entities.ServiceBundle.create(data);
+      await api.entities.ServiceBundle.create(data);
     }
     refetch();
     setShowModal(false);
@@ -76,7 +76,7 @@ export default function BundlesTab() {
 
   const handleDelete = async () => {
     if (deleteConfirm) {
-      await base44.entities.ServiceBundle.delete(deleteConfirm.id);
+      await api.entities.ServiceBundle.delete(deleteConfirm.id);
       refetch();
       setDeleteConfirm(null);
     }

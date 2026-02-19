@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -70,12 +70,12 @@ export default function TaskDetailView({
 
   const { data: comments = [] } = useQuery({
     queryKey: ['taskComments', task?.id],
-    queryFn: () => base44.entities.TaskComment.filter({ task_id: task?.id }, '-created_date'),
+    queryFn: () => api.entities.TaskComment.filter({ task_id: task?.id }, '-created_date'),
     enabled: !!task?.id
   });
 
   const addCommentMutation = useMutation({
-    mutationFn: (data) => base44.entities.TaskComment.create(data),
+    mutationFn: (data) => api.entities.TaskComment.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['taskComments', task?.id] });
       setComment('');
@@ -87,7 +87,7 @@ export default function TaskDetailView({
     if (onAssigneeChange) {
       onAssigneeChange(email, member?.name || email);
     } else {
-      await base44.entities.Task.update(task.id, {
+      await api.entities.Task.update(task.id, {
         ...task,
         assigned_to: email,
         assigned_name: member?.name || email
@@ -99,7 +99,7 @@ export default function TaskDetailView({
     if (onAssigneeChange) {
       onAssigneeChange('', '');
     } else {
-      await base44.entities.Task.update(task.id, {
+      await api.entities.Task.update(task.id, {
         ...task,
         assigned_to: '',
         assigned_name: ''

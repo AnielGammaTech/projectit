@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -92,13 +92,13 @@ export default function Dashboard() {
   };
 
   const handleDismissQuote = async (quote) => {
-    await base44.entities.IncomingQuote.update(quote.id, { status: 'dismissed' });
+    await api.entities.IncomingQuote.update(quote.id, { status: 'dismissed' });
     refetchIncomingQuotes();
   };
 
   const { data: incomingQuotesRaw = [], refetch: refetchIncomingQuotes } = useQuery({
     queryKey: ['incomingQuotes'],
-    queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' }),
+    queryFn: () => api.entities.IncomingQuote.filter({ status: 'pending' }),
     staleTime: 300000,
     gcTime: 600000
   });
@@ -106,7 +106,7 @@ export default function Dashboard() {
   const handleSyncQuotes = async () => {
     setIsSyncingQuotes(true);
     try {
-      await base44.functions.invoke('pullQuoteITQuotes', {});
+      await api.functions.invoke('pullQuoteITQuotes', {});
       refetchIncomingQuotes();
     } catch (error) {
       console.error("Sync failed", error);
@@ -116,7 +116,7 @@ export default function Dashboard() {
 
   const { data: dashboardViews = [], refetch: refetchViews } = useQuery({
     queryKey: ['dashboardViews', currentUser?.id],
-    queryFn: () => base44.entities.DashboardView.filter({ user_id: currentUser?.id }),
+    queryFn: () => api.entities.DashboardView.filter({ user_id: currentUser?.id }),
     enabled: !!currentUser?.id,
     staleTime: 600000,
     gcTime: 900000
@@ -124,7 +124,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     let mounted = true;
-    base44.auth.me().then(user => {
+    api.auth.me().then(user => {
       if (mounted) {
         setCurrentUser(user);
         setIsAdmin(user?.role === 'admin');
@@ -135,7 +135,7 @@ export default function Dashboard() {
 
   const { data: projects = [], isLoading: loadingProjects, refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list('-created_date'),
+    queryFn: () => api.entities.Project.list('-created_date'),
     staleTime: 120000, // 2 minutes
     gcTime: 300000
   });
@@ -148,45 +148,45 @@ export default function Dashboard() {
 
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks'],
-    queryFn: () => base44.entities.Task.list('-created_date'),
+    queryFn: () => api.entities.Task.list('-created_date'),
     staleTime: 120000,
     gcTime: 300000
   });
 
   const { data: parts = [] } = useQuery({
     queryKey: ['parts'],
-    queryFn: () => base44.entities.Part.list('-created_date'),
+    queryFn: () => api.entities.Part.list('-created_date'),
     staleTime: 180000, // 3 minutes
     gcTime: 300000
   });
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
-    queryFn: () => base44.entities.ProjectTemplate.list(),
+    queryFn: () => api.entities.ProjectTemplate.list(),
     staleTime: 600000 // 10 minutes
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list(),
+    queryFn: () => api.entities.TeamMember.list(),
     staleTime: 600000
   });
 
   const { data: quoteRequests = [] } = useQuery({
     queryKey: ['quoteRequests'],
-    queryFn: () => base44.entities.QuoteRequest.list(),
+    queryFn: () => api.entities.QuoteRequest.list(),
     staleTime: 300000 // 5 minutes - synced by scheduled task
   });
 
   const { data: customStatuses = [] } = useQuery({
     queryKey: ['projectStatuses'],
-    queryFn: () => base44.entities.ProjectStatus.list('order'),
+    queryFn: () => api.entities.ProjectStatus.list('order'),
     staleTime: 600000
   });
 
   const { data: projectStacksData = [], refetch: refetchStacks } = useQuery({
     queryKey: ['projectStacks'],
-    queryFn: () => base44.entities.ProjectStack.list('order'),
+    queryFn: () => api.entities.ProjectStack.list('order'),
     staleTime: 300000
   });
   
@@ -326,22 +326,22 @@ export default function Dashboard() {
   const allGroups = [...new Set(projects.map(p => p.group).filter(Boolean))];
 
   const handleProjectColorChange = async (project, color) => {
-    await base44.entities.Project.update(project.id, { color });
+    await api.entities.Project.update(project.id, { color });
     refetchProjects();
   };
 
   const handleProjectGroupChange = async (project, group) => {
-    await base44.entities.Project.update(project.id, { group });
+    await api.entities.Project.update(project.id, { group });
     refetchProjects();
   };
 
   const handleProjectStatusChange = async (project, status) => {
-    await base44.entities.Project.update(project.id, { status });
+    await api.entities.Project.update(project.id, { status });
     refetchProjects();
   };
 
   const handleProjectDueDateChange = async (project, date) => {
-    await base44.entities.Project.update(project.id, { due_date: date ? format(date, 'yyyy-MM-dd') : '' });
+    await api.entities.Project.update(project.id, { due_date: date ? format(date, 'yyyy-MM-dd') : '' });
     refetchProjects();
   };
 
@@ -385,9 +385,9 @@ export default function Dashboard() {
         
         // Server update (fire and forget, refetch will sync)
         if (newIds.length === 0) {
-          base44.entities.ProjectStack.delete(currentStack.id).then(() => refetchStacks());
+          api.entities.ProjectStack.delete(currentStack.id).then(() => refetchStacks());
         } else {
-          base44.entities.ProjectStack.update(currentStack.id, { project_ids: newIds }).then(() => refetchStacks());
+          api.entities.ProjectStack.update(currentStack.id, { project_ids: newIds }).then(() => refetchStacks());
         }
         return true;
       }
@@ -415,7 +415,7 @@ export default function Dashboard() {
         
         await removeFromCurrentStack(draggedProjectId);
         if (!targetStack.project_ids?.includes(draggedProjectId)) {
-          base44.entities.ProjectStack.update(targetStack.id, {
+          api.entities.ProjectStack.update(targetStack.id, {
             project_ids: [...targetStack.project_ids, draggedProjectId]
           }).then(() => refetchStacks());
         }
@@ -432,7 +432,7 @@ export default function Dashboard() {
         order: stacks.length
       }]);
       
-      base44.entities.ProjectStack.create({
+      api.entities.ProjectStack.create({
         name: 'New Stack',
         color: 'slate',
         project_ids: [targetProjectId, draggedProjectId],
@@ -477,7 +477,7 @@ export default function Dashboard() {
         if (sourceIsStack && source.droppableId !== destination.droppableId) {
           removeFromCurrentStack(draggableId);
         }
-        base44.entities.ProjectStack.update(stackId, {
+        api.entities.ProjectStack.update(stackId, {
           project_ids: [...(stack.project_ids || []), draggableId]
         }).then(() => refetchStacks());
       }
@@ -509,22 +509,22 @@ export default function Dashboard() {
 
   // Stack handlers
   const handleStackToggleCollapse = async (stack) => {
-    await base44.entities.ProjectStack.update(stack.id, { is_collapsed: !stack.is_collapsed });
+    await api.entities.ProjectStack.update(stack.id, { is_collapsed: !stack.is_collapsed });
     refetchStacks();
   };
 
   const handleStackRename = async (stack, newName) => {
-    await base44.entities.ProjectStack.update(stack.id, { name: newName });
+    await api.entities.ProjectStack.update(stack.id, { name: newName });
     refetchStacks();
   };
 
   const handleStackDelete = async (stack) => {
-    await base44.entities.ProjectStack.delete(stack.id);
+    await api.entities.ProjectStack.delete(stack.id);
     refetchStacks();
   };
 
   const handleStackColorChange = async (stack, color) => {
-    await base44.entities.ProjectStack.update(stack.id, { color });
+    await api.entities.ProjectStack.update(stack.id, { color });
     refetchStacks();
   };
 
@@ -533,7 +533,7 @@ export default function Dashboard() {
   const unstackedProjects = unpinnedProjects.filter(p => !projectsInStacks.includes(p.id));
 
   const handleTaskComplete = async (task) => {
-    await base44.entities.Task.update(task.id, { ...task, status: 'completed' });
+    await api.entities.Task.update(task.id, { ...task, status: 'completed' });
     refetchTasks();
   };
 
@@ -557,7 +557,7 @@ export default function Dashboard() {
     setProcessingType('delete');
     try {
       for (const projectId of selectedProjects) {
-        await base44.entities.Project.delete(projectId);
+        await api.entities.Project.delete(projectId);
       }
       toast.success(`${selectedProjects.length} project(s) permanently deleted`);
     } catch (error) {
@@ -573,7 +573,7 @@ export default function Dashboard() {
   };
 
   const handleRestoreProject = async (project) => {
-    await base44.entities.Project.update(project.id, {
+    await api.entities.Project.update(project.id, {
       status: 'planning',
       deleted_date: null
     });
@@ -586,7 +586,7 @@ export default function Dashboard() {
     setIsProcessing(true);
     setProcessingType('delete');
     try {
-      await base44.entities.Project.delete(project.id);
+      await api.entities.Project.delete(project.id);
       toast.success('Project permanently deleted');
     } catch (error) {
       console.error('Error deleting project:', error);
@@ -608,7 +608,7 @@ export default function Dashboard() {
       collapsed: collapsedGroups
     };
 
-    await base44.entities.DashboardView.create({
+    await api.entities.DashboardView.create({
       name: viewName,
       user_id: currentUser.id,
       config: viewConfig,
@@ -634,7 +634,7 @@ export default function Dashboard() {
     setProcessingType('archive');
     try {
       for (const projectId of selectedProjects) {
-        await base44.entities.Project.update(projectId, {
+        await api.entities.Project.update(projectId, {
           status: 'archived',
           archived_date: new Date().toISOString()
         });
@@ -653,11 +653,11 @@ export default function Dashboard() {
 
   const handleCreateProject = async (data, template, extractedParts) => {
         // Get highest project number and increment
-        const allProjects = await base44.entities.Project.list('-project_number', 1);
+        const allProjects = await api.entities.Project.list('-project_number', 1);
         const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
 
         // Get "In Progress" tag to auto-assign
-        const allTags = await base44.entities.ProjectTag.list();
+        const allTags = await api.entities.ProjectTag.list();
         const inProgressTag = allTags.find(t => t.name === 'In Progress');
 
         // Ensure team_members includes the creator if not already
@@ -677,14 +677,14 @@ export default function Dashboard() {
           team_members: teamMembersList
         };
 
-        const newProject = await base44.entities.Project.create(projectData);
+        const newProject = await api.entities.Project.create(projectData);
 
         // Send project assignment notifications to team members (excluding creator)
         for (const memberEmail of teamMembersList) {
           if (memberEmail !== currentUser?.email) {
             try {
               // Create in-app notification
-              await base44.entities.UserNotification.create({
+              await api.entities.UserNotification.create({
                 user_email: memberEmail,
                 type: 'project_assigned',
                 title: 'You have been added to a project',
@@ -698,7 +698,7 @@ export default function Dashboard() {
               });
 
               // Send email notification
-              await base44.functions.invoke('sendNotificationEmail', {
+              await api.functions.invoke('sendNotificationEmail', {
                 to: memberEmail,
                 type: 'project_assigned',
                 title: 'You have been added to a project',
@@ -719,7 +719,7 @@ export default function Dashboard() {
           // Link project on QuoteIT if ID is available
           if (prefillData.quoteit_quote_id) {
             try {
-              await base44.functions.invoke('linkQuoteToProject', { 
+              await api.functions.invoke('linkQuoteToProject', { 
                 quote_id: prefillData.quoteit_quote_id, 
                 project_id: newProject.id,
                 project_number: newProject.project_number
@@ -730,7 +730,7 @@ export default function Dashboard() {
           }
 
           // Delete the incoming quote record
-          await base44.entities.IncomingQuote.delete(prefillData.incoming_quote_id);
+          await api.entities.IncomingQuote.delete(prefillData.incoming_quote_id);
 
           // Refresh the list
           if (typeof refetchIncomingQuotes === 'function') refetchIncomingQuotes();
@@ -738,20 +738,20 @@ export default function Dashboard() {
 
         if (template?.default_tasks?.length) {
           for (const task of template.default_tasks) {
-            await base44.entities.Task.create({ ...task, project_id: newProject.id });
+            await api.entities.Task.create({ ...task, project_id: newProject.id });
           }
           refetchTasks();
         }
 
         if (template?.default_parts?.length) {
           for (const part of template.default_parts) {
-            await base44.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
+            await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
           }
         }
 
         if (extractedParts?.length) {
           for (const part of extractedParts) {
-            await base44.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
+            await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
           }
         }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO, addMonths, subMonths, isSameDay, startOfWeek, endOfWeek } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -37,7 +37,7 @@ export default function MySchedule() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -46,17 +46,17 @@ export default function MySchedule() {
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['myScheduleTasks'],
-    queryFn: () => base44.entities.Task.list('-due_date')
+    queryFn: () => api.entities.Task.list('-due_date')
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list()
+    queryFn: () => api.entities.Project.list()
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   // Get active project IDs (exclude archived, deleted, completed)
@@ -79,7 +79,7 @@ export default function MySchedule() {
 
   const handleToggleComplete = async (task) => {
     const newStatus = task.status === 'completed' ? 'todo' : 'completed';
-    await base44.entities.Task.update(task.id, { status: newStatus });
+    await api.entities.Task.update(task.id, { status: newStatus });
     queryClient.invalidateQueries({ queryKey: ['myScheduleTasks'] });
   };
 

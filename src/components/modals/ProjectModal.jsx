@@ -13,7 +13,7 @@ import {
   Timer, ArrowRight, Plus, ChevronRight
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { cn } from '@/lib/utils';
 
 const colorOptions = [
@@ -65,25 +65,25 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
   const { data: userGroups = [] } = useQuery({
     queryKey: ['userGroups'],
-    queryFn: () => base44.entities.UserGroup.list(),
+    queryFn: () => api.entities.UserGroup.list(),
     enabled: open
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list('name'),
+    queryFn: () => api.entities.Customer.list('name'),
     enabled: open
   });
 
   const { data: projectStatuses = [] } = useQuery({
     queryKey: ['projectStatuses'],
-    queryFn: () => base44.entities.ProjectStatus.list('order'),
+    queryFn: () => api.entities.ProjectStatus.list('order'),
     enabled: open
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list('name'),
+    queryFn: () => api.entities.TeamMember.list('name'),
     enabled: open
   });
 
@@ -206,8 +206,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+      const { file_url } = await api.integrations.Core.UploadFile({ file });
+      const result = await api.integrations.Core.ExtractDataFromUploadedFile({
         file_url,
         json_schema: {
           type: "object",

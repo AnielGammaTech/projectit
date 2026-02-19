@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { ChevronDown, Search, FolderKanban, Check, Star } from 'lucide-react';
@@ -21,7 +21,7 @@ export default function ProjectSwitcher({ currentProject, currentPage = 'Project
   
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list('-created_date')
+    queryFn: () => api.entities.Project.list('-created_date')
   });
   
   const activeProjects = projects.filter(p => p.status !== 'archived' && p.status !== 'completed' && p.status !== 'deleted');

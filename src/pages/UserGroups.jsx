@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { Users, Plus, Edit2, Trash2, UserPlus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,20 +36,20 @@ export default function UserGroups() {
 
   const { data: groups = [], isLoading } = useQuery({
     queryKey: ['userGroups'],
-    queryFn: () => base44.entities.UserGroup.list()
+    queryFn: () => api.entities.UserGroup.list()
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (editingGroup) {
-        return base44.entities.UserGroup.update(editingGroup.id, data);
+        return api.entities.UserGroup.update(editingGroup.id, data);
       }
-      return base44.entities.UserGroup.create(data);
+      return api.entities.UserGroup.create(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userGroups'] });
@@ -58,7 +58,7 @@ export default function UserGroups() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.UserGroup.delete(id),
+    mutationFn: (id) => api.entities.UserGroup.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userGroups'] });
       setDeleteConfirm(null);

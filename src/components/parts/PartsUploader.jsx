@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Upload, Loader2, Image, FileText, Clipboard, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { cn } from '@/lib/utils';
 
 export default function PartsUploader({ projectId, onPartsExtracted, compact = false }) {
@@ -75,11 +75,11 @@ export default function PartsUploader({ projectId, onPartsExtracted, compact = f
 
     try {
       // Upload the file
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await api.integrations.Core.UploadFile({ file });
 
       // For images, use AI to identify parts
       if (file.type.startsWith('image/')) {
-        const result = await base44.integrations.Core.InvokeLLM({
+        const result = await api.integrations.Core.InvokeLLM({
           prompt: `Analyze this image and identify any parts, components, equipment, or materials visible. For each item found, extract:
 - name: descriptive name of the part/item
 - part_number: any visible model/part numbers
@@ -102,7 +102,7 @@ Be thorough - identify all visible items that could be parts for a project. Incl
         }
       } else {
         // For PDFs/documents, use ExtractDataFromUploadedFile
-        const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+        const result = await api.integrations.Core.ExtractDataFromUploadedFile({
           file_url,
           json_schema: partsSchema
         });
@@ -184,7 +184,7 @@ Be thorough - identify all visible items that could be parts for a project. Incl
       const validStatuses = ['needed', 'ordered', 'received', 'ready_to_install', 'installed'];
       const partStatus = validStatuses.includes(part.status) ? part.status : 'needed';
 
-      await base44.entities.Part.create({
+      await api.entities.Part.create({
         name: part.name,
         part_number: part.part_number || '',
         quantity: part.quantity || 1,

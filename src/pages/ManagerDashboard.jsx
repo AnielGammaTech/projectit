@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { format, isPast, isToday, differenceInDays } from 'date-fns';
 import {
@@ -28,30 +28,30 @@ export default function ManagerDashboard() {
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list('-created_date'),
+    queryFn: () => api.entities.Project.list('-created_date'),
     refetchInterval: 30000
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['allTasks'],
-    queryFn: () => base44.entities.Task.list(),
+    queryFn: () => api.entities.Task.list(),
     refetchInterval: 30000
   });
 
   const { data: parts = [] } = useQuery({
     queryKey: ['allParts'],
-    queryFn: () => base44.entities.Part.list(),
+    queryFn: () => api.entities.Part.list(),
     refetchInterval: 30000
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const { data: timeEntries = [] } = useQuery({
     queryKey: ['timeEntries'],
-    queryFn: () => base44.entities.TimeEntry.list('-created_date', 100),
+    queryFn: () => api.entities.TimeEntry.list('-created_date', 100),
     refetchInterval: 30000
   });
 
@@ -84,7 +84,7 @@ export default function ManagerDashboard() {
   const generateInsights = async () => {
     setLoadingInsights(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await api.integrations.Core.InvokeLLM({
         prompt: `Analyze this project management data and provide 3-4 actionable insights for a manager:
 
 Active Projects: ${activeProjects.length}

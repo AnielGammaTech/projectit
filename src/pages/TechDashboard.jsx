@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import {
@@ -20,33 +20,33 @@ export default function TechDashboard() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['myTasks', currentUser?.email],
-    queryFn: () => base44.entities.Task.filter({ assigned_to: currentUser.email }),
+    queryFn: () => api.entities.Task.filter({ assigned_to: currentUser.email }),
     enabled: !!currentUser?.email,
     refetchInterval: 30000
   });
 
   const { data: parts = [] } = useQuery({
     queryKey: ['myParts', currentUser?.email],
-    queryFn: () => base44.entities.Part.filter({ installer_email: currentUser.email }),
+    queryFn: () => api.entities.Part.filter({ installer_email: currentUser.email }),
     enabled: !!currentUser?.email,
     refetchInterval: 30000
   });
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list()
+    queryFn: () => api.entities.Project.list()
   });
 
   const { data: timeEntries = [], refetch: refetchTime } = useQuery({
     queryKey: ['myTimeEntries', currentUser?.email],
-    queryFn: () => base44.entities.TimeEntry.filter({ user_email: currentUser.email }, '-created_date', 50),
+    queryFn: () => api.entities.TimeEntry.filter({ user_email: currentUser.email }, '-created_date', 50),
     enabled: !!currentUser?.email,
     refetchInterval: 30000
   });
@@ -72,7 +72,7 @@ export default function TechDashboard() {
   };
 
   const handleCompleteTask = async (task) => {
-    await base44.entities.Task.update(task.id, { status: 'completed' });
+    await api.entities.Task.update(task.id, { status: 'completed' });
     refetchTasks();
   };
 

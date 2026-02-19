@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { 
   Shield, Plus, Edit2, Trash2, Check, X, Users, 
@@ -173,12 +173,12 @@ export default function RolesPermissions() {
 
   const { data: customRoles = [], refetch } = useQuery({
     queryKey: ['customRoles'],
-    queryFn: () => base44.entities.CustomRole.list('name')
+    queryFn: () => api.entities.CustomRole.list('name')
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   // Combine system roles with custom roles
@@ -186,9 +186,9 @@ export default function RolesPermissions() {
 
   const handleSaveRole = async (data) => {
     if (editingRole?.id) {
-      await base44.entities.CustomRole.update(editingRole.id, data);
+      await api.entities.CustomRole.update(editingRole.id, data);
     } else {
-      await base44.entities.CustomRole.create(data);
+      await api.entities.CustomRole.create(data);
     }
     refetch();
     setShowRoleModal(false);
@@ -197,7 +197,7 @@ export default function RolesPermissions() {
 
   const handleDeleteRole = async () => {
     if (deleteConfirm?.id) {
-      await base44.entities.CustomRole.delete(deleteConfirm.id);
+      await api.entities.CustomRole.delete(deleteConfirm.id);
       refetch();
     }
     setDeleteConfirm(null);

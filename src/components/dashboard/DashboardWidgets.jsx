@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format, isPast, isToday, isTomorrow, addDays } from 'date-fns';
@@ -199,7 +199,7 @@ function AISummaryWidget({ projects, tasks }) {
       const pendingTasks = tasks.filter(t => t.status !== 'completed').length;
       const overdueTasks = tasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed'; }).length;
 
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await api.integrations.Core.InvokeLLM({
         prompt: `Generate a brief, actionable daily summary for a project manager based on this data:
 
 Active Projects: ${activeProjects.map(p => p.name).join(', ')}
@@ -536,7 +536,7 @@ export default function DashboardWidgets() {
 
   useEffect(() => {
     let mounted = true;
-    base44.auth.me().then(user => {
+    api.auth.me().then(user => {
       if (mounted) setCurrentUser(user);
     }).catch(() => {});
     return () => { mounted = false; };
@@ -548,37 +548,37 @@ export default function DashboardWidgets() {
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
-    queryFn: () => base44.entities.Project.list()
+    queryFn: () => api.entities.Project.list()
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['allTasks'],
-    queryFn: () => base44.entities.Task.list()
+    queryFn: () => api.entities.Task.list()
   });
 
   const { data: parts = [] } = useQuery({
     queryKey: ['allParts'],
-    queryFn: () => base44.entities.Part.list()
+    queryFn: () => api.entities.Part.list()
   });
 
   const { data: activities = [] } = useQuery({
     queryKey: ['recentActivities'],
-    queryFn: () => base44.entities.ProjectActivity.list('-created_date', 20)
+    queryFn: () => api.entities.ProjectActivity.list('-created_date', 20)
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const { data: timeEntries = [] } = useQuery({
     queryKey: ['timeEntries'],
-    queryFn: () => base44.entities.TimeEntry.list()
+    queryFn: () => api.entities.TimeEntry.list()
   });
 
   const { data: quotes = [] } = useQuery({
     queryKey: ['incomingQuotesWidget'],
-    queryFn: () => base44.entities.IncomingQuote.filter({ status: 'pending' })
+    queryFn: () => api.entities.IncomingQuote.filter({ status: 'pending' })
   });
 
   const handleAddWidget = (type) => {

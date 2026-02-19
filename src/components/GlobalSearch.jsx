@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { AnimatePresence } from 'framer-motion';
 import { 
   Search, X, FolderKanban, FileText, Users, Package, 
@@ -51,35 +51,35 @@ export default function GlobalSearch({ isOpen, onClose }) {
 
   const { data: projects = [] } = useQuery({
     queryKey: ['searchProjects'],
-    queryFn: () => base44.entities.Project.list('-created_date', 100),
+    queryFn: () => api.entities.Project.list('-created_date', 100),
     enabled: isOpen && filters.project,
     staleTime: 60000
   });
 
   const { data: proposals = [] } = useQuery({
     queryKey: ['searchProposals'],
-    queryFn: () => base44.entities.Proposal.list('-created_date', 100),
+    queryFn: () => api.entities.Proposal.list('-created_date', 100),
     enabled: isOpen && filters.proposal,
     staleTime: 60000
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['searchCustomers'],
-    queryFn: () => base44.entities.Customer.list('name', 100),
+    queryFn: () => api.entities.Customer.list('name', 100),
     enabled: isOpen && filters.customer,
     staleTime: 60000
   });
 
   const { data: inventory = [] } = useQuery({
     queryKey: ['searchInventory'],
-    queryFn: () => base44.entities.InventoryItem.list('name', 100),
+    queryFn: () => api.entities.InventoryItem.list('name', 100),
     enabled: isOpen && filters.inventory,
     staleTime: 60000
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['searchTasks'],
-    queryFn: () => base44.entities.Task.list('-created_date', 100),
+    queryFn: () => api.entities.Task.list('-created_date', 100),
     enabled: isOpen && filters.task,
     staleTime: 60000
   });

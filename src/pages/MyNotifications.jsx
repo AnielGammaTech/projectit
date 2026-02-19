@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { Inbox, AtSign, CheckCircle2, Clock, ArrowLeft, Loader2, Package, FolderOpen, MessageSquare, AlertTriangle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ export default function MyNotifications() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    base44.auth.me().then(user => {
+    api.auth.me().then(user => {
       setCurrentUser(user);
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -39,7 +39,7 @@ export default function MyNotifications() {
 
   const { data: allProjects = [] } = useQuery({
     queryKey: ['allProjectsForNotifPage'],
-    queryFn: () => base44.entities.Project.list(),
+    queryFn: () => api.entities.Project.list(),
     enabled: !!currentUser?.email,
     staleTime: 60000
   });
@@ -50,7 +50,7 @@ export default function MyNotifications() {
 
   const { data: rawNotifications = [], refetch: refetchNotifications } = useQuery({
     queryKey: ['myNotifications', currentUser?.email],
-    queryFn: () => base44.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
+    queryFn: () => api.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
     enabled: !!currentUser?.email
   });
 
@@ -62,7 +62,7 @@ export default function MyNotifications() {
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const markAsRead = useMutation({
-    mutationFn: (notificationId) => base44.entities.UserNotification.update(notificationId, { is_read: true }),
+    mutationFn: (notificationId) => api.entities.UserNotification.update(notificationId, { is_read: true }),
     onSuccess: () => {
       refetchNotifications();
       queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
@@ -72,7 +72,7 @@ export default function MyNotifications() {
   const markAllAsRead = useMutation({
     mutationFn: async () => {
       for (const n of notifications.filter(n => !n.is_read)) {
-        await base44.entities.UserNotification.update(n.id, { is_read: true });
+        await api.entities.UserNotification.update(n.id, { is_read: true });
       }
     },
     onSuccess: () => {
@@ -82,7 +82,7 @@ export default function MyNotifications() {
   });
 
   const dismissNotification = useMutation({
-    mutationFn: (notificationId) => base44.entities.UserNotification.delete(notificationId),
+    mutationFn: (notificationId) => api.entities.UserNotification.delete(notificationId),
     onSuccess: () => {
       refetchNotifications();
       queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });

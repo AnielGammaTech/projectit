@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { cn } from '@/lib/utils';
 
 const feedbackTypes = [
@@ -46,7 +46,7 @@ export default function FeedbackButton() {
 
     for (const file of files) {
       if (file.type.startsWith('image/')) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const { file_url } = await api.integrations.Core.UploadFile({ file });
         newScreenshots.push(file_url);
       }
     }
@@ -66,7 +66,7 @@ export default function FeedbackButton() {
         setUploadingImage(true);
         const file = item.getAsFile();
         if (file) {
-          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          const { file_url } = await api.integrations.Core.UploadFile({ file });
           setFormData(prev => ({ ...prev, screenshots: [...prev.screenshots, file_url] }));
         }
         setUploadingImage(false);
@@ -89,10 +89,10 @@ export default function FeedbackButton() {
     
     let user = null;
     try {
-      user = await base44.auth.me();
+      user = await api.auth.me();
     } catch (e) {}
 
-    await base44.entities.Feedback.create({
+    await api.entities.Feedback.create({
       ...formData,
       page_url: window.location.href,
       user_agent: navigator.userAgent,

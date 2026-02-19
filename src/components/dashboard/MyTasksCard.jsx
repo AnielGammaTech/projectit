@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { format, isPast, isToday, isTomorrow } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { parseLocalDate } from '@/utils/dateUtils';
 
 const statusConfig = {

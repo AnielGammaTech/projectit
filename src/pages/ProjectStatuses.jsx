@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { 
@@ -57,15 +57,15 @@ export default function ProjectStatuses() {
 
   const { data: statuses = [], refetch } = useQuery({
     queryKey: ['projectStatuses'],
-    queryFn: () => base44.entities.ProjectStatus.list('order')
+    queryFn: () => api.entities.ProjectStatus.list('order')
   });
 
   const handleSave = async (data) => {
     if (editingStatus) {
-      await base44.entities.ProjectStatus.update(editingStatus.id, data);
+      await api.entities.ProjectStatus.update(editingStatus.id, data);
     } else {
       const maxOrder = Math.max(0, ...statuses.map(s => s.order || 0));
-      await base44.entities.ProjectStatus.create({ ...data, order: maxOrder + 1 });
+      await api.entities.ProjectStatus.create({ ...data, order: maxOrder + 1 });
     }
     refetch();
     setShowModal(false);
@@ -73,7 +73,7 @@ export default function ProjectStatuses() {
   };
 
   const handleDelete = async () => {
-    await base44.entities.ProjectStatus.delete(deleteConfirm.id);
+    await api.entities.ProjectStatus.delete(deleteConfirm.id);
     refetch();
     setDeleteConfirm(null);
   };
@@ -82,10 +82,10 @@ export default function ProjectStatuses() {
     // Remove default from all others
     for (const s of statuses) {
       if (s.is_default && s.id !== status.id) {
-        await base44.entities.ProjectStatus.update(s.id, { is_default: false });
+        await api.entities.ProjectStatus.update(s.id, { is_default: false });
       }
     }
-    await base44.entities.ProjectStatus.update(status.id, { is_default: true });
+    await api.entities.ProjectStatus.update(status.id, { is_default: true });
     refetch();
   };
 
@@ -99,7 +99,7 @@ export default function ProjectStatuses() {
     // Update order in database
     for (let i = 0; i < items.length; i++) {
       if (items[i].order !== i) {
-        await base44.entities.ProjectStatus.update(items[i].id, { order: i });
+        await api.entities.ProjectStatus.update(items[i].id, { order: i });
       }
     }
     refetch();

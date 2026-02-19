@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { toast } from 'sonner';
 
 /**
@@ -15,7 +15,7 @@ export async function sendTaskAssignmentNotification({
 
   // Create in-app notification
   try {
-    await base44.entities.UserNotification.create({
+    await api.entities.UserNotification.create({
       user_email: assigneeEmail,
       type: 'task_assigned',
       title: 'New task assigned to you',
@@ -34,7 +34,7 @@ export async function sendTaskAssignmentNotification({
 
   // Send email notification (non-blocking, don't fail the whole operation)
   try {
-    await base44.functions.invoke('sendNotificationEmail', {
+    await api.functions.invoke('sendNotificationEmail', {
       to: assigneeEmail,
       type: 'task_assigned',
       title: 'New task assigned to you',
@@ -64,7 +64,7 @@ export async function sendTaskCompletionNotification({
   for (const email of task.notify_on_complete) {
     if (email === currentUser?.email) continue;
     try {
-      await base44.entities.UserNotification.create({
+      await api.entities.UserNotification.create({
         user_email: email,
         type: 'task_completed',
         title: 'Task completed',
@@ -82,7 +82,7 @@ export async function sendTaskCompletionNotification({
     }
 
     try {
-      await base44.functions.invoke('sendNotificationEmail', {
+      await api.functions.invoke('sendNotificationEmail', {
         to: email,
         type: 'task_completed',
         title: 'Task completed',

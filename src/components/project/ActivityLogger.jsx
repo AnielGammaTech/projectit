@@ -1,8 +1,8 @@
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 
 export async function logActivity(projectId, action, description, currentUser, entityType = null, entityId = null) {
   try {
-    await base44.entities.ProjectActivity.create({
+    await api.entities.ProjectActivity.create({
       project_id: projectId,
       action,
       description,

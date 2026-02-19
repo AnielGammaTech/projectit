@@ -6,7 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Plus, ChevronLeft, Calendar as CalendarIcon, UserPlus, User } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -82,7 +82,7 @@ export default function TasksViewModal({
     setIsCreating(true);
     const taskTitle = quickTaskTitle.trim();
     const assigneeEmail = quickTaskAssignee?.email || '';
-    await base44.entities.Task.create({
+    await api.entities.Task.create({
       title: taskTitle,
       project_id: projectId,
       status: 'todo',
@@ -129,11 +129,11 @@ export default function TasksViewModal({
             currentUser={currentUser}
             onStatusChange={(status) => { onStatusChange(selectedTask, status); }}
             onPriorityChange={async (priority) => {
-              await base44.entities.Task.update(selectedTask.id, { ...selectedTask, priority });
+              await api.entities.Task.update(selectedTask.id, { ...selectedTask, priority });
             }}
             onAssigneeChange={async (email, name) => {
               const wasAssigned = selectedTask.assigned_to;
-              await base44.entities.Task.update(selectedTask.id, { ...selectedTask, assigned_to: email, assigned_name: name });
+              await api.entities.Task.update(selectedTask.id, { ...selectedTask, assigned_to: email, assigned_name: name });
               if (email && email !== wasAssigned) {
                 await sendTaskAssignmentNotification({
                   assigneeEmail: email,

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { 
@@ -26,14 +26,14 @@ const actionIcons = {
 export default function ProjectActivityFeed({ projectId, progressUpdates = [], compact = false }) {
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ['projectActivity', projectId],
-    queryFn: () => base44.entities.ProjectActivity.filter({ project_id: projectId }, '-created_date', 20),
+    queryFn: () => api.entities.ProjectActivity.filter({ project_id: projectId }, '-created_date', 20),
     enabled: !!projectId,
     refetchInterval: 30000
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const getMemberAvatarUrl = (email) => {

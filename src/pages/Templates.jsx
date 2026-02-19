@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase, Loader2, Search, Building2, Users, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -54,12 +54,12 @@ export default function Templates() {
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list('name')
+    queryFn: () => api.entities.Customer.list('name')
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list('name')
+    queryFn: () => api.entities.TeamMember.list('name')
   });
 
   const filteredCustomers = customers.filter(c => 
@@ -70,7 +70,7 @@ export default function Templates() {
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
-    queryFn: () => base44.entities.ProjectTemplate.list('-created_date')
+    queryFn: () => api.entities.ProjectTemplate.list('-created_date')
   });
 
   // Separate templates by type
@@ -80,9 +80,9 @@ export default function Templates() {
   const handleSave = async (data) => {
     const templateData = { ...data, template_type: newTemplateType };
     if (editingTemplate) {
-      await base44.entities.ProjectTemplate.update(editingTemplate.id, templateData);
+      await api.entities.ProjectTemplate.update(editingTemplate.id, templateData);
     } else {
-      await base44.entities.ProjectTemplate.create(templateData);
+      await api.entities.ProjectTemplate.create(templateData);
     }
     queryClient.invalidateQueries({ queryKey: ['templates'] });
     setShowModal(false);
@@ -90,7 +90,7 @@ export default function Templates() {
   };
 
   const handleDelete = async () => {
-    await base44.entities.ProjectTemplate.delete(deleteConfirm.id);
+    await api.entities.ProjectTemplate.delete(deleteConfirm.id);
     queryClient.invalidateQueries({ queryKey: ['templates'] });
     setDeleteConfirm(null);
   };
@@ -115,10 +115,10 @@ export default function Templates() {
     setCreating(true);
     
     // Get highest project number and increment
-    const allProjects = await base44.entities.Project.list('-project_number', 1);
+    const allProjects = await api.entities.Project.list('-project_number', 1);
     const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
     
-    const newProject = await base44.entities.Project.create({
+    const newProject = await api.entities.Project.create({
       name: projectName.trim(),
       status: 'planning',
       project_number: nextNumber,
@@ -129,13 +129,13 @@ export default function Templates() {
     
     if (createFromTemplate.default_tasks?.length) {
       for (const task of createFromTemplate.default_tasks) {
-        await base44.entities.Task.create({ ...task, project_id: newProject.id, status: 'todo' });
+        await api.entities.Task.create({ ...task, project_id: newProject.id, status: 'todo' });
       }
     }
     
     if (createFromTemplate.default_parts?.length) {
       for (const part of createFromTemplate.default_parts) {
-        await base44.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
+        await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
       }
     }
     

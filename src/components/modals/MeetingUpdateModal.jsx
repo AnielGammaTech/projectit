@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Plus, Trash2, Send, UserPlus, Calendar as CalendarIcon, CheckCircle2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { format } from 'date-fns';
 import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
@@ -132,7 +132,7 @@ ${formData.additionalNotes || 'None'}`;
     const today = new Date();
     const defaultTitle = `Weekly Update - ${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     
-    await base44.entities.ProjectNote.create({
+    await api.entities.ProjectNote.create({
       project_id: projectId,
       title: meetingTitle.trim() || defaultTitle,
       content: noteContent,
@@ -144,7 +144,7 @@ ${formData.additionalNotes || 'None'}`;
     // Create tasks for next steps
     const tasksToCreate = formData.nextSteps.filter(a => a.title.trim());
     for (const action of tasksToCreate) {
-      await base44.entities.Task.create({
+      await api.entities.Task.create({
         title: action.title,
         project_id: projectId,
         assigned_to: action.assigned_to || '',

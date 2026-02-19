@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,13 +46,13 @@ export default function ProjectNotes() {
   const [showMeetingModal, setShowMeetingModal] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
     queryFn: async () => {
-      const projects = await base44.entities.Project.filter({ id: projectId });
+      const projects = await api.entities.Project.filter({ id: projectId });
       return projects[0];
     },
     enabled: !!projectId
@@ -60,17 +60,17 @@ export default function ProjectNotes() {
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ['projectNotes', projectId],
-    queryFn: () => base44.entities.ProjectNote.filter({ project_id: projectId }, '-created_date'),
+    queryFn: () => api.entities.ProjectNote.filter({ project_id: projectId }, '-created_date'),
     enabled: !!projectId
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   const addMutation = useMutation({
-    mutationFn: (data) => base44.entities.ProjectNote.create(data),
+    mutationFn: (data) => api.entities.ProjectNote.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
       setNewContent('');
@@ -79,7 +79,7 @@ export default function ProjectNotes() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.ProjectNote.delete(id),
+    mutationFn: (id) => api.entities.ProjectNote.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] })
   });
 

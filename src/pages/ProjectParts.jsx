@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -109,13 +109,13 @@ export default function ProjectParts() {
   const [receiveDialog, setReceiveDialog] = useState({ open: false, part: null, installer: '', location: '', createTask: false });
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
     queryFn: async () => {
-      const projects = await base44.entities.Project.filter({ id: projectId });
+      const projects = await api.entities.Project.filter({ id: projectId });
       return projects[0];
     },
     enabled: !!projectId
@@ -123,13 +123,13 @@ export default function ProjectParts() {
 
   const { data: parts = [], refetch: refetchParts } = useQuery({
     queryKey: ['parts', projectId],
-    queryFn: () => base44.entities.Part.filter({ project_id: projectId }),
+    queryFn: () => api.entities.Part.filter({ project_id: projectId }),
     enabled: !!projectId
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list()
+    queryFn: () => api.entities.TeamMember.list()
   });
 
   // Filter to only project members for assignment dropdowns
@@ -142,7 +142,7 @@ export default function ProjectParts() {
   const { data: approvedProposals = [] } = useQuery({
     queryKey: ['approvedProposals', projectId],
     queryFn: async () => {
-      const proposals = await base44.entities.Proposal.filter({ project_id: projectId, status: 'approved' });
+      const proposals = await api.entities.Proposal.filter({ project_id: projectId, status: 'approved' });
       return proposals;
     },
     enabled: !!projectId
@@ -159,9 +159,9 @@ export default function ProjectParts() {
 
   const handleSavePart = async (data) => {
     if (editingPart) {
-      await base44.entities.Part.update(editingPart.id, data);
+      await api.entities.Part.update(editingPart.id, data);
     } else {
-      await base44.entities.Part.create(data);
+      await api.entities.Part.create(data);
     }
     refetchParts();
     setShowPartModal(false);
@@ -169,13 +169,13 @@ export default function ProjectParts() {
   };
 
   const handleStatusChange = async (part, status) => {
-    await base44.entities.Part.update(part.id, { ...part, status });
+    await api.entities.Part.update(part.id, { ...part, status });
     refetchParts();
   };
 
   const handleDelete = async () => {
     if (deleteConfirm.part) {
-      await base44.entities.Part.delete(deleteConfirm.part.id);
+      await api.entities.Part.delete(deleteConfirm.part.id);
       refetchParts();
     }
     setDeleteConfirm({ open: false, part: null });
@@ -187,9 +187,9 @@ export default function ProjectParts() {
 
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await api.integrations.Core.UploadFile({ file });
       
-      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+      const result = await api.integrations.Core.ExtractDataFromUploadedFile({
         file_url,
         json_schema: {
           type: "object",
@@ -212,7 +212,7 @@ export default function ProjectParts() {
 
       if (result.status === 'success' && result.output?.parts) {
         for (const part of result.output.parts) {
-          await base44.entities.Part.create({
+          await api.entities.Part.create({
             ...part,
             project_id: projectId,
             status: 'needed'
@@ -263,7 +263,7 @@ export default function ProjectParts() {
   const handleBulkAssign = async (email) => {
     const member = teamMembers.find(m => m.email === email);
     for (const partId of selectedParts) {
-      await base44.entities.Part.update(partId, {
+      await api.entities.Part.update(partId, {
         assigned_to: email,
         assigned_name: member?.name || email
       });
@@ -274,7 +274,7 @@ export default function ProjectParts() {
 
   const handleBulkStatusChange = async (status) => {
     for (const partId of selectedParts) {
-      await base44.entities.Part.update(partId, { status });
+      await api.entities.Part.update(partId, { status });
     }
     refetchParts();
     clearSelection();
@@ -282,7 +282,7 @@ export default function ProjectParts() {
 
   const handleBulkDelete = async () => {
     for (const partId of selectedParts) {
-      await base44.entities.Part.delete(partId);
+      await api.entities.Part.delete(partId);
     }
     refetchParts();
     clearSelection();
@@ -290,7 +290,7 @@ export default function ProjectParts() {
 
   const handleQuickAssign = async (part, email) => {
     const member = teamMembers.find(m => m.email === email);
-    await base44.entities.Part.update(part.id, {
+    await api.entities.Part.update(part.id, {
       assigned_to: email,
       assigned_name: member?.name || email
     });
@@ -298,7 +298,7 @@ export default function ProjectParts() {
   };
 
   const handleSetDeliveryDate = async (part, date) => {
-    await base44.entities.Part.update(part.id, { est_delivery_date: format(date, 'yyyy-MM-dd') });
+    await api.entities.Part.update(part.id, { est_delivery_date: format(date, 'yyyy-MM-dd') });
     refetchParts();
   };
 
@@ -311,7 +311,7 @@ export default function ProjectParts() {
     if (!part || !installer) return;
     
     const member = teamMembers.find(m => m.email === installer);
-    await base44.entities.Part.update(part.id, {
+    await api.entities.Part.update(part.id, {
       status: 'ready_to_install',
       installer_email: installer,
       installer_name: member?.name || installer,
@@ -321,7 +321,7 @@ export default function ProjectParts() {
     
     // Create installation task if checkbox is checked
     if (createTask) {
-      await base44.entities.Task.create({
+      await api.entities.Task.create({
         title: `Install: ${part.name}`,
         description: `Install part${part.part_number ? ` #${part.part_number}` : ''}${location ? `\n📍 Location: ${location}` : ''}`,
         project_id: projectId,
@@ -338,7 +338,7 @@ export default function ProjectParts() {
   };
 
   const handleMarkInstalled = async (part) => {
-    await base44.entities.Part.update(part.id, {
+    await api.entities.Part.update(part.id, {
       status: 'installed',
       installed_date: format(new Date(), 'yyyy-MM-dd')
     });

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -100,7 +100,7 @@ export default function Adminland() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    base44.auth.me().then(user => {
+    api.auth.me().then(user => {
       setCurrentUser(user);
       setIsLoading(false);
     }).catch(() => setIsLoading(false));
@@ -244,20 +244,20 @@ function PeopleSection({ queryClient }) {
 
   const { data: members = [] } = useQuery({
     queryKey: ['teamMembers'],
-    queryFn: () => base44.entities.TeamMember.list('name')
+    queryFn: () => api.entities.TeamMember.list('name')
   });
 
   const { data: groups = [] } = useQuery({
     queryKey: ['userGroups'],
-    queryFn: () => base44.entities.UserGroup.list('name')
+    queryFn: () => api.entities.UserGroup.list('name')
   });
 
   const handleSaveMember = async (data) => {
     if (editing) {
-      await base44.entities.TeamMember.update(editing.id, data);
+      await api.entities.TeamMember.update(editing.id, data);
     } else {
       // Invite creates both a users row and a TeamMember entity
-      const result = await base44.users.inviteUser(data.email, data.role, data.name, data.avatar_color);
+      const result = await api.users.inviteUser(data.email, data.role, data.name, data.avatar_color);
 
       // Build invite URL for the admin to share
       const inviteUrl = `${window.location.origin}/accept-invite?token=${result.inviteToken}`;
@@ -270,9 +270,9 @@ function PeopleSection({ queryClient }) {
 
   const handleSaveGroup = async (data) => {
     if (editingGroup) {
-      await base44.entities.UserGroup.update(editingGroup.id, data);
+      await api.entities.UserGroup.update(editingGroup.id, data);
     } else {
-      await base44.entities.UserGroup.create(data);
+      await api.entities.UserGroup.create(data);
     }
     queryClient.invalidateQueries({ queryKey: ['userGroups'] });
     setShowGroupModal(false);
@@ -281,10 +281,10 @@ function PeopleSection({ queryClient }) {
 
   const handleDelete = async () => {
     if (deleteConfirm.type === 'member') {
-      await base44.entities.TeamMember.delete(deleteConfirm.item.id);
+      await api.entities.TeamMember.delete(deleteConfirm.item.id);
       queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
     } else {
-      await base44.entities.UserGroup.delete(deleteConfirm.item.id);
+      await api.entities.UserGroup.delete(deleteConfirm.item.id);
       queryClient.invalidateQueries({ queryKey: ['userGroups'] });
     }
     setDeleteConfirm(null);
@@ -292,7 +292,7 @@ function PeopleSection({ queryClient }) {
 
   const toggleAdmin = async (member) => {
     const newRole = member.role === 'Admin' ? '' : 'Admin';
-    await base44.entities.TeamMember.update(member.id, { ...member, role: newRole });
+    await api.entities.TeamMember.update(member.id, { ...member, role: newRole });
     queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
   };
 
@@ -507,7 +507,7 @@ function TeamMemberModal({ open, onClose, member, onSave }) {
 
   const { data: customRoles = [] } = useQuery({
     queryKey: ['customRoles'],
-    queryFn: () => base44.entities.CustomRole.list('name'),
+    queryFn: () => api.entities.CustomRole.list('name'),
     enabled: open
   });
 
@@ -710,7 +710,7 @@ function CompanySettingsSection({ queryClient }) {
 
   const { data: settings = [], refetch } = useQuery({
     queryKey: ['appSettingsMain'],
-    queryFn: () => base44.entities.AppSettings.filter({ setting_key: 'main' }),
+    queryFn: () => api.entities.AppSettings.filter({ setting_key: 'main' }),
     refetchOnWindowFocus: false
   });
 
@@ -727,9 +727,9 @@ function CompanySettingsSection({ queryClient }) {
   const handleSave = async () => {
     setSaving(true);
     if (settings[0]?.id) {
-      await base44.entities.AppSettings.update(settings[0].id, { ...formData, setting_key: 'main' });
+      await api.entities.AppSettings.update(settings[0].id, { ...formData, setting_key: 'main' });
     } else {
-      await base44.entities.AppSettings.create({ ...formData, setting_key: 'main' });
+      await api.entities.AppSettings.create({ ...formData, setting_key: 'main' });
     }
     refetch();
     queryClient.invalidateQueries({ queryKey: ['appSettings'] });
@@ -740,7 +740,7 @@ function CompanySettingsSection({ queryClient }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await api.integrations.Core.UploadFile({ file });
     setFormData(prev => ({ ...prev, app_logo_url: file_url }));
     setUploading(false);
   };
@@ -806,7 +806,7 @@ function CompanySettingsSection({ queryClient }) {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         setUploading(true);
-                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                        const { file_url } = await api.integrations.Core.UploadFile({ file });
                         setFormData(prev => ({ ...prev, app_logo_url: file_url }));
                         setUploading(false);
                       }} disabled={uploading} />
@@ -835,14 +835,14 @@ function ProjectTagsSection({ queryClient }) {
 
   const { data: tags = [], refetch } = useQuery({
     queryKey: ['projectTags'],
-    queryFn: () => base44.entities.ProjectTag.list('name')
+    queryFn: () => api.entities.ProjectTag.list('name')
   });
 
   const handleSave = async (data) => {
     if (editing) {
-      await base44.entities.ProjectTag.update(editing.id, data);
+      await api.entities.ProjectTag.update(editing.id, data);
     } else {
-      await base44.entities.ProjectTag.create(data);
+      await api.entities.ProjectTag.create(data);
     }
     queryClient.invalidateQueries({ queryKey: ['projectTags'] });
     refetch();
@@ -851,7 +851,7 @@ function ProjectTagsSection({ queryClient }) {
   };
 
   const handleDelete = async () => {
-    await base44.entities.ProjectTag.delete(deleteConfirm.id);
+    await api.entities.ProjectTag.delete(deleteConfirm.id);
     queryClient.invalidateQueries({ queryKey: ['projectTags'] });
     refetch();
     setDeleteConfirm(null);
@@ -1041,13 +1041,13 @@ function ArchivedProjectsContent({ queryClient }) {
   const { data: archivedProjects = [], refetch } = useQuery({
     queryKey: ['archivedProjects'],
     queryFn: async () => {
-      const projects = await base44.entities.Project.list('-archived_date');
+      const projects = await api.entities.Project.list('-archived_date');
       return projects.filter(p => p.status === 'archived' || p.status === 'completed');
     }
   });
 
   const handleRestore = async (project) => {
-    await base44.entities.Project.update(project.id, {
+    await api.entities.Project.update(project.id, {
       status: 'planning',
       archive_reason: '',
       archive_type: '',
@@ -1060,15 +1060,15 @@ function ArchivedProjectsContent({ queryClient }) {
   const handlePermanentDelete = async (project) => {
     if (confirm(`Are you sure you want to permanently delete "${project.name}"? This action cannot be undone.`)) {
       // Delete related entities
-      const tasks = await base44.entities.Task.filter({ project_id: project.id });
-      const parts = await base44.entities.Part.filter({ project_id: project.id });
-      const notes = await base44.entities.ProjectNote.filter({ project_id: project.id });
+      const tasks = await api.entities.Task.filter({ project_id: project.id });
+      const parts = await api.entities.Part.filter({ project_id: project.id });
+      const notes = await api.entities.ProjectNote.filter({ project_id: project.id });
       
-      for (const task of tasks) await base44.entities.Task.delete(task.id);
-      for (const part of parts) await base44.entities.Part.delete(part.id);
-      for (const note of notes) await base44.entities.ProjectNote.delete(note.id);
+      for (const task of tasks) await api.entities.Task.delete(task.id);
+      for (const part of parts) await api.entities.Part.delete(part.id);
+      for (const note of notes) await api.entities.ProjectNote.delete(note.id);
       
-      await base44.entities.Project.delete(project.id);
+      await api.entities.Project.delete(project.id);
       refetch();
     }
   };
@@ -1153,13 +1153,13 @@ function DeletedProjectsContent({ queryClient }) {
   const { data: deletedProjects = [], refetch } = useQuery({
     queryKey: ['deletedProjects'],
     queryFn: async () => {
-      const projects = await base44.entities.Project.list('-deleted_date');
+      const projects = await api.entities.Project.list('-deleted_date');
       return projects.filter(p => p.status === 'deleted');
     }
   });
 
   const handleRestore = async (project) => {
-    await base44.entities.Project.update(project.id, {
+    await api.entities.Project.update(project.id, {
       status: 'planning',
       deleted_date: ''
     });
@@ -1170,15 +1170,15 @@ function DeletedProjectsContent({ queryClient }) {
 
   const handlePermanentDelete = async (project) => {
     // Delete related entities
-    const tasks = await base44.entities.Task.filter({ project_id: project.id });
-    const parts = await base44.entities.Part.filter({ project_id: project.id });
-    const notes = await base44.entities.ProjectNote.filter({ project_id: project.id });
+    const tasks = await api.entities.Task.filter({ project_id: project.id });
+    const parts = await api.entities.Part.filter({ project_id: project.id });
+    const notes = await api.entities.ProjectNote.filter({ project_id: project.id });
     
-    for (const task of tasks) await base44.entities.Task.delete(task.id);
-    for (const part of parts) await base44.entities.Part.delete(part.id);
-    for (const note of notes) await base44.entities.ProjectNote.delete(note.id);
+    for (const task of tasks) await api.entities.Task.delete(task.id);
+    for (const part of parts) await api.entities.Part.delete(part.id);
+    for (const note of notes) await api.entities.ProjectNote.delete(note.id);
     
-    await base44.entities.Project.delete(project.id);
+    await api.entities.Project.delete(project.id);
     refetch();
     setDeleteConfirm(null);
   };
@@ -1680,7 +1680,7 @@ function IntegrationsSection({ queryClient }) {
 
   const { data: settings = [], refetch } = useQuery({
     queryKey: ['integrationSettings'],
-    queryFn: () => base44.entities.IntegrationSettings.filter({ setting_key: 'main' })
+    queryFn: () => api.entities.IntegrationSettings.filter({ setting_key: 'main' })
   });
 
   useEffect(() => {
@@ -1702,7 +1702,7 @@ function IntegrationsSection({ queryClient }) {
 
   // Check if server has env vars configured for secrets
   useEffect(() => {
-    base44.functions.invoke('halopsa', { action: 'checkEnvStatus' })
+    api.functions.invoke('halopsa', { action: 'checkEnvStatus' })
       .then(r => setHasEnvSecret(r.hasClientSecret || false))
       .catch(() => setHasEnvSecret(false));
   }, []);
@@ -1712,9 +1712,9 @@ function IntegrationsSection({ queryClient }) {
     try {
       const payload = { setting_key: 'main', ...formData };
       if (settings[0]) {
-        await base44.entities.IntegrationSettings.update(settings[0].id, payload);
+        await api.entities.IntegrationSettings.update(settings[0].id, payload);
       } else {
-        await base44.entities.IntegrationSettings.create(payload);
+        await api.entities.IntegrationSettings.create(payload);
       }
       refetch();
       setSyncResult({ success: true, message: 'Settings saved' });
@@ -1737,7 +1737,7 @@ function IntegrationsSection({ queryClient }) {
     setSyncResult(null);
     try {
       await handleSave();
-      const response = await base44.functions.invoke('halopsa', { action: 'testConnection' });
+      const response = await api.functions.invoke('halopsa', { action: 'testConnection' });
       const result = response.data;
       setSyncResult(result.success
         ? { success: true, message: 'Connection successful! Credentials are valid.' }
@@ -1757,7 +1757,7 @@ function IntegrationsSection({ queryClient }) {
     setSyncResult(null);
     try {
       await handleSave();
-      const response = await base44.functions.invoke('syncHaloPSACustomers', {
+      const response = await api.functions.invoke('syncHaloPSACustomers', {
         fieldMapping: formData.halopsa_field_mapping
       });
       const result = response.data;
@@ -1777,7 +1777,7 @@ function IntegrationsSection({ queryClient }) {
   const fetchHaloCustomers = async () => {
     setLoadingCustomers(true);
     try {
-      const response = await base44.functions.invoke('haloPSACustomerList', {});
+      const response = await api.functions.invoke('haloPSACustomerList', {});
       const result = response.data || response;
       setHaloCustomers(result.haloClients || []);
       setLocalCustomers(result.localCustomers || []);
@@ -1798,7 +1798,7 @@ function IntegrationsSection({ queryClient }) {
     // Save mapping to the local customer record
     if (localCustomerId) {
       try {
-        await base44.entities.Customer.update(localCustomerId, { halo_id: String(haloId) });
+        await api.entities.Customer.update(localCustomerId, { halo_id: String(haloId) });
       } catch (err) {
         console.error('Failed to save mapping:', err);
       }
@@ -2124,7 +2124,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
 
   // Check if RESEND_API_KEY env var is set on the server
   useEffect(() => {
-    base44.functions.invoke('resendEmail', { action: 'checkEnvStatus' })
+    api.functions.invoke('resendEmail', { action: 'checkEnvStatus' })
       .then(r => setHasEnvApiKey(r.hasApiKey || false))
       .catch(() => setHasEnvApiKey(false));
   }, []);
@@ -2132,7 +2132,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
   // Load existing settings (from/name only — API key is env-only)
   const { data: resendSettings = [] } = useQuery({
     queryKey: ['resendSettings'],
-    queryFn: () => base44.entities.IntegrationSettings.filter({ provider: 'resend' })
+    queryFn: () => api.entities.IntegrationSettings.filter({ provider: 'resend' })
   });
 
   useEffect(() => {
@@ -2146,7 +2146,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
     setSaving(true);
     setResult(null);
     try {
-      await base44.functions.invoke('resendEmail', {
+      await api.functions.invoke('resendEmail', {
         action: 'saveSettings',
         fromEmail,
         fromName,
@@ -2167,7 +2167,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
     setResult(null);
     try {
       await handleSave();
-      const response = await base44.functions.invoke('resendEmail', { action: 'testConnection' });
+      const response = await api.functions.invoke('resendEmail', { action: 'testConnection' });
       const data = response.data || response;
       setResult(data.success
         ? { success: true, message: 'Connected to Resend successfully!' }
@@ -2183,7 +2183,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
     setSendingTest(true);
     setResult(null);
     try {
-      const response = await base44.functions.invoke('resendEmail', { action: 'sendTestEmail', to: testEmail });
+      const response = await api.functions.invoke('resendEmail', { action: 'sendTestEmail', to: testEmail });
       const data = response.data || response;
       setResult(data.success
         ? { success: true, message: `Test email sent to ${testEmail}!` }
@@ -2306,7 +2306,7 @@ function ClaudeAIIntegrationCard({ expandedIntegration, toggleIntegration }) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    base44.entities.IntegrationSettings.filter({ provider: 'claude_ai' })
+    api.entities.IntegrationSettings.filter({ provider: 'claude_ai' })
       .then(settings => {
         if (settings.length > 0 && settings[0].enabled) {
           setConnected(true);
@@ -2319,11 +2319,11 @@ function ClaudeAIIntegrationCard({ expandedIntegration, toggleIntegration }) {
     setTesting(true);
     setResult(null);
     try {
-      const res = await base44.functions.invoke('claudeAI', { action: 'testConnection' });
+      const res = await api.functions.invoke('claudeAI', { action: 'testConnection' });
       setResult({ success: true, message: res.data?.message || 'Connected!' });
       setConnected(true);
       // Save settings
-      await base44.functions.invoke('claudeAI', { action: 'saveSettings', api_key_configured: true });
+      await api.functions.invoke('claudeAI', { action: 'saveSettings', api_key_configured: true });
     } catch (err) {
       setResult({ success: false, message: err.message || 'Connection failed. Check ANTHROPIC_API_KEY env variable.' });
     }
