@@ -41,6 +41,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
+import ProcessingOverlay from '@/components/ui/ProcessingOverlay';
 
 export default function Dashboard() {
     const [showProjectModal, setShowProjectModal] = useState(false);
@@ -70,6 +72,9 @@ export default function Dashboard() {
   const [viewName, setViewName] = useState('');
   const [showSaveViewModal, setShowSaveViewModal] = useState(false);
   const [isSyncingQuotes, setIsSyncingQuotes] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingType, setProcessingType] = useState(null);
+  const [permanentDeleteConfirm, setPermanentDeleteConfirm] = useState({ open: false, project: null });
   const [showProposalsModal, setShowProposalsModal] = useState(false);
 
   const handleCreateProjectFromQuote = (quote) => {
@@ -547,24 +552,50 @@ export default function Dashboard() {
   };
 
   const handleBulkDelete = async () => {
-    for (const projectId of selectedProjects) {
-      await base44.entities.Project.update(projectId, {
-        status: 'deleted',
-        deleted_date: new Date().toISOString()
-      });
-    }
-    setSelectedProjects([]);
-    setSelectionMode(false);
     setShowBulkDeleteConfirm(false);
-    refetchProjects();
+    setIsProcessing(true);
+    setProcessingType('delete');
+    try {
+      for (const projectId of selectedProjects) {
+        await base44.entities.Project.delete(projectId);
+      }
+      toast.success(`${selectedProjects.length} project(s) permanently deleted`);
+    } catch (error) {
+      console.error('Error in bulk delete:', error);
+      toast.error('Some projects could not be deleted. Please try again.');
+    } finally {
+      setSelectedProjects([]);
+      setSelectionMode(false);
+      setIsProcessing(false);
+      setProcessingType(null);
+      refetchProjects();
+    }
   };
 
   const handleRestoreProject = async (project) => {
     await base44.entities.Project.update(project.id, {
-      status: 'planning', // Default back to planning
+      status: 'planning',
       deleted_date: null
     });
+    toast.success('Project restored');
     refetchProjects();
+  };
+
+  const handlePermanentDelete = async (project) => {
+    setPermanentDeleteConfirm({ open: false, project: null });
+    setIsProcessing(true);
+    setProcessingType('delete');
+    try {
+      await base44.entities.Project.delete(project.id);
+      toast.success('Project permanently deleted');
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error('Failed to delete project');
+    } finally {
+      setIsProcessing(false);
+      setProcessingType(null);
+      refetchProjects();
+    }
   };
 
   const handleSaveView = async () => {
@@ -598,16 +629,26 @@ export default function Dashboard() {
   };
 
   const handleBulkArchive = async () => {
-    for (const projectId of selectedProjects) {
-      await base44.entities.Project.update(projectId, {
-        status: 'archived',
-        archived_date: new Date().toISOString()
-      });
-    }
-    setSelectedProjects([]);
-    setSelectionMode(false);
     setShowBulkArchiveConfirm(false);
-    refetchProjects();
+    setIsProcessing(true);
+    setProcessingType('archive');
+    try {
+      for (const projectId of selectedProjects) {
+        await base44.entities.Project.update(projectId, {
+          status: 'archived',
+          archived_date: new Date().toISOString()
+        });
+      }
+      toast.success(`${selectedProjects.length} project(s) archived`);
+    } catch (error) {
+      toast.error('Failed to archive some projects');
+    } finally {
+      setSelectedProjects([]);
+      setSelectionMode(false);
+      setIsProcessing(false);
+      setProcessingType(null);
+      refetchProjects();
+    }
   };
 
   const handleCreateProject = async (data, template, extractedParts) => {
@@ -757,6 +798,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+      <ProcessingOverlay isVisible={isProcessing} type={processingType} />
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
         <div className="mb-6">
@@ -1190,14 +1232,25 @@ export default function Dashboard() {
                                   )}
                                 </div>
                                 {project.status === 'deleted' ? (
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    className="ml-4 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
-                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRestoreProject(project); }}
-                                  >
-                                    Restore
-                                  </Button>
+                                  <div className="flex items-center gap-2 ml-4">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRestoreProject(project); }}
+                                    >
+                                      Restore
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-red-600 border-red-200 hover:bg-red-50"
+                                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPermanentDeleteConfirm({ open: true, project }); }}
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5 mr-1" />
+                                      Delete
+                                    </Button>
+                                  </div>
                                 ) : (
                                   <button
                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePinToggle(project); }}
@@ -1513,16 +1566,37 @@ export default function Dashboard() {
       <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedProjects.length} project{selectedProjects.length > 1 ? 's' : ''}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              These projects will be moved to the trash. You can restore them later from Adminland → Deleted Projects.
+            <AlertDialogTitle className="text-red-600">Permanently Delete {selectedProjects.length} Project{selectedProjects.length > 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">This will permanently delete the selected project{selectedProjects.length > 1 ? 's' : ''} and ALL associated data including tasks, parts, notes, files, time entries, and proposals.</span>
+              <span className="block font-semibold text-red-600">This action cannot be undone.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleBulkDelete} className="bg-red-600 hover:bg-red-700">
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete Projects
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Permanent Delete Confirmation (individual) */}
+      <AlertDialog open={permanentDeleteConfirm.open} onOpenChange={(open) => !open && setPermanentDeleteConfirm({ open: false, project: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-600">Permanently Delete Project?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">This will permanently delete <strong>"{permanentDeleteConfirm.project?.name}"</strong> and ALL associated data including tasks, parts, notes, files, time entries, and proposals.</span>
+              <span className="block font-semibold text-red-600">This action cannot be undone.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handlePermanentDelete(permanentDeleteConfirm.project)} className="bg-red-600 hover:bg-red-700">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

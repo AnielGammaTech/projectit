@@ -4,6 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
+import ProcessingOverlay from '@/components/ui/ProcessingOverlay';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -119,6 +121,8 @@ export default function ProjectDetail() {
   const [showOnHoldModal, setShowOnHoldModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingType, setProcessingType] = useState(null);
 
   const { data: project, isLoading: loadingProject, refetch: refetchProject } = useQuery({
     queryKey: ['project', projectId],
@@ -557,27 +561,45 @@ export default function ProjectDetail() {
 
   // Archive project
   const handleArchiveProject = async (archiveData) => {
-    await base44.entities.Project.update(projectId, { 
-      ...project, 
-      status: 'archived',
-      archive_reason: archiveData.reason,
-      archive_type: archiveData.archiveType,
-      archived_date: new Date().toISOString()
-    });
-    await logActivity(projectId, 'project_archived', `archived project: ${archiveData.reason}`, currentUser);
     setShowArchiveModal(false);
-    navigate(createPageUrl('Dashboard'));
+    setIsProcessing(true);
+    setProcessingType('archive');
+    try {
+      await base44.entities.Project.update(projectId, {
+        ...project,
+        status: 'archived',
+        archive_reason: archiveData.reason,
+        archive_type: archiveData.archiveType,
+        archived_date: new Date().toISOString()
+      });
+      await logActivity(projectId, 'project_archived', `archived project: ${archiveData.reason}`, currentUser);
+      toast.success('Project archived successfully');
+      navigate(createPageUrl('Dashboard'));
+    } catch (error) {
+      console.error('Error archiving project:', error);
+      toast.error('Failed to archive project. Please try again.');
+    } finally {
+      setIsProcessing(false);
+      setProcessingType(null);
+    }
   };
 
-  // Move project to trash (soft delete)
+  // Permanently delete project and all associated data
   const handleDeleteProject = async () => {
-    await base44.entities.Project.update(projectId, {
-      status: 'deleted',
-      deleted_date: new Date().toISOString()
-    });
-    await logActivity(projectId, 'project_deleted', `moved project to trash`, currentUser);
     setShowDeleteConfirm(false);
-    navigate(createPageUrl('Dashboard'));
+    setIsProcessing(true);
+    setProcessingType('delete');
+    try {
+      await base44.entities.Project.delete(projectId);
+      toast.success('Project permanently deleted');
+      navigate(createPageUrl('Dashboard'));
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error('Failed to delete project. Please try again.');
+    } finally {
+      setIsProcessing(false);
+      setProcessingType(null);
+    }
   };
 
   // Progress update
@@ -645,10 +667,84 @@ export default function ProjectDetail() {
     );
     }
 
+    // Block access to archived or deleted projects
+    if (project.status === 'archived' || project.status === 'deleted') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+          <ProcessingOverlay isVisible={isProcessing} type={processingType} />
+          <ProjectNavHeader project={project} currentPage="ProjectDetail" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8"
+          >
+            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${
+              project.status === 'archived'
+                ? 'bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-200/50'
+                : 'bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-200/50'
+            }`}>
+              {project.status === 'archived' ? (
+                <Archive className="w-10 h-10 text-white" />
+              ) : (
+                <Trash2 className="w-10 h-10 text-white" />
+              )}
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800">
+              {project.status === 'archived' ? 'Project Archived' : 'Project Deleted'}
+            </h2>
+            <p className="text-slate-500 text-center max-w-md">
+              {project.status === 'archived'
+                ? 'This project has been archived and is no longer active. You can restore it from the Dashboard or click below.'
+                : 'This project has been deleted.'}
+            </p>
+            {project.archive_reason && (
+              <p className="text-sm text-slate-400 italic">Reason: {project.archive_reason}</p>
+            )}
+            <div className="flex items-center gap-3 mt-2">
+              <Link to={createPageUrl('Dashboard')}>
+                <Button variant="outline">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+              {project.status === 'archived' && (
+                <Button
+                  onClick={async () => {
+                    setIsProcessing(true);
+                    setProcessingType('archive');
+                    try {
+                      await base44.entities.Project.update(projectId, {
+                        status: 'planning',
+                        archive_reason: '',
+                        archive_type: '',
+                        archived_date: ''
+                      });
+                      toast.success('Project restored successfully');
+                      refetchProject();
+                    } catch (error) {
+                      toast.error('Failed to restore project');
+                    } finally {
+                      setIsProcessing(false);
+                      setProcessingType(null);
+                    }
+                  }}
+                  className="bg-amber-600 hover:bg-amber-700"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Restore Project
+                </Button>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      );
+    }
+
     const completedTasks = tasks.filter(t => t.status === 'completed').length;
     const taskProgress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
     return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+      <ProcessingOverlay isVisible={isProcessing} type={processingType} />
       <ProjectNavHeader project={project} currentPage="ProjectDetail" />
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -675,39 +771,6 @@ export default function ProjectDetail() {
             >
               <RotateCcw className="w-3 h-3 mr-1" />
               Resume
-            </Button>
-          </motion.div>
-        )}
-
-        {/* Archived Banner */}
-        {(project.status === 'archived' || project.status === 'completed') && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-6 flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <Archive className="w-5 h-5 text-amber-600" />
-              <div>
-                <p className="font-semibold text-amber-800">This project is archived</p>
-                {project.archive_reason && (
-                  <p className="text-sm text-amber-600">{project.archive_reason}</p>
-                )}
-              </div>
-            </div>
-            <Button
-              onClick={async () => {
-                await base44.entities.Project.update(projectId, {
-                  status: 'planning',
-                  archive_reason: '',
-                  archive_type: '',
-                  archived_date: ''
-                });
-                refetchProject();
-              }}
-              className="bg-amber-600 hover:bg-amber-700"
-            >
-              Restore Project
             </Button>
           </motion.div>
         )}
@@ -1309,16 +1372,20 @@ export default function ProjectDetail() {
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this project?</AlertDialogTitle>
-            <AlertDialogDescription>
-              "{project?.name}" will be moved to the trash. You can restore it later from Adminland → Deleted Projects.
+            <AlertDialogTitle className="text-red-600">Permanently Delete Project?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">This will permanently delete <strong>"{project?.name}"</strong> and ALL associated data including:</span>
+              <span className="block text-sm text-slate-500">• All tasks and comments ({tasks?.length || 0} tasks)</span>
+              <span className="block text-sm text-slate-500">• All parts ({parts?.length || 0} parts)</span>
+              <span className="block text-sm text-slate-500">• All notes, files, time entries, and proposals</span>
+              <span className="block font-semibold text-red-600 mt-2">This action cannot be undone.</span>
             </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteProject} className="bg-red-600 hover:bg-red-700">
               <Trash2 className="w-4 h-4 mr-2" />
-              Move to Trash
+              Delete Permanently
             </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
