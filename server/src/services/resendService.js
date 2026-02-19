@@ -13,11 +13,13 @@ export async function getResendConfig() {
   const settings = await entityService.filter('IntegrationSettings', { provider: 'resend' });
   const setting = settings[0];
 
+  // API key ONLY from env var for security (never stored in DB)
+  const apiKey = process.env.RESEND_API_KEY || '';
   cachedConfig = {
-    apiKey: setting?.api_key || process.env.RESEND_API_KEY || '',
+    apiKey,
     fromEmail: setting?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@projectit.app',
     fromName: setting?.from_name || process.env.RESEND_FROM_NAME || 'ProjectIT',
-    enabled: setting?.enabled !== false && !!(setting?.api_key || process.env.RESEND_API_KEY),
+    enabled: !!apiKey,
   };
   configCacheTime = now;
   return cachedConfig;

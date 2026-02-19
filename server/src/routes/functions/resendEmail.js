@@ -25,12 +25,12 @@ export default async function handler(req, res) {
     }
 
     if (action === 'saveSettings') {
-      const { apiKey, fromEmail, fromName } = req.body;
+      const { fromEmail, fromName } = req.body;
 
       const existing = await entityService.filter('IntegrationSettings', { provider: 'resend' });
+      // API key is stored ONLY as env var (RESEND_API_KEY) — never saved to DB
       const data = {
         provider: 'resend',
-        api_key: apiKey,
         from_email: fromEmail || 'noreply@projectit.app',
         from_name: fromName || 'ProjectIT',
         enabled: true,
@@ -44,6 +44,13 @@ export default async function handler(req, res) {
 
       clearResendConfigCache();
       return res.json({ success: true, message: 'Resend settings saved' });
+    }
+
+    if (action === 'checkEnvStatus') {
+      return res.json({
+        success: true,
+        hasApiKey: !!process.env.RESEND_API_KEY,
+      });
     }
 
     if (action === 'sendTestEmail') {
