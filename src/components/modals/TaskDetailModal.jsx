@@ -72,6 +72,17 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 link: `/ProjectDetail?id=${task.project_id}`,
                 is_read: false
               });
+              // Send email notification for mention
+              await base44.functions.invoke('sendNotificationEmail', {
+                to: email,
+                type: 'mention',
+                title: 'You were mentioned in a comment',
+                message: `${currentUser?.full_name || currentUser?.email} mentioned you on "${task.title}": "${commentData.content}"`,
+                projectId: task.project_id,
+                projectName: project?.name,
+                fromUserName: currentUser?.full_name || currentUser?.email,
+                link: `${window.location.origin}/ProjectDetail?id=${task.project_id}`
+              });
             } catch (err) {
               console.error('Failed to send mention notification:', err);
             }

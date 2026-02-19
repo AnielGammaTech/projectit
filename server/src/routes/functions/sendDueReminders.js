@@ -22,10 +22,14 @@ export default async function handler(req, res) {
     const settingsMap = {};
     allSettings.forEach(s => { settingsMap[s.user_email] = s; });
 
-    // Get all projects for context
+    // Get all projects for context and to filter archived ones
     const allProjects = await entityService.list('Project');
     const projectMap = {};
-    allProjects.forEach(p => { projectMap[p.id] = p; });
+    const archivedProjectIds = new Set();
+    allProjects.forEach(p => {
+      projectMap[p.id] = p;
+      if (p.status === 'archived') archivedProjectIds.add(p.id);
+    });
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -34,6 +38,9 @@ export default async function handler(req, res) {
     let overduesSent = 0;
 
     for (const task of activeTasks) {
+      // Skip tasks from archived projects
+      if (task.project_id && archivedProjectIds.has(task.project_id)) continue;
+
       const dueDate = new Date(task.due_date);
       dueDate.setHours(0, 0, 0, 0);
 
