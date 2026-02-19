@@ -109,7 +109,7 @@ export default function Adminland() {
   // Block non-admin users
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
         <div className="animate-pulse text-slate-400">Loading...</div>
       </div>
     );
@@ -117,11 +117,11 @@ export default function Adminland() {
 
   if (currentUser?.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
         <div className="text-center">
           <Shield className="w-16 h-16 mx-auto text-red-400 mb-4" />
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
-          <p className="text-slate-500 mb-4">You need administrator privileges to access this page.</p>
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Access Denied</h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">You need administrator privileges to access this page.</p>
           <Link to={createPageUrl('Dashboard')}>
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -153,7 +153,7 @@ export default function Adminland() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeSection ? (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
@@ -173,9 +173,9 @@ export default function Adminland() {
                 <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Adminland</h1>
+                <h1 className="text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Adminland</h1>
               </div>
-              <p className="text-slate-500">Manage your workspace settings</p>
+              <p className="text-slate-500 dark:text-slate-400">Manage your workspace settings</p>
             </div>
             
             <div className="grid md:grid-cols-2 gap-6">
@@ -185,10 +185,10 @@ export default function Adminland() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: gIdx * 0.1 }}
-                  className="bg-white rounded-2xl border shadow-sm overflow-hidden"
+                  className="bg-white dark:bg-[#1e2a3a] rounded-2xl border dark:border-slate-700/50 shadow-sm overflow-hidden"
                 >
-                  <div className="px-4 py-3 bg-slate-50 border-b">
-                    <h2 className="font-semibold text-slate-700">{group.title}</h2>
+                  <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b] border-b dark:border-slate-700/50">
+                    <h2 className="font-semibold text-slate-700 dark:text-slate-200">{group.title}</h2>
                   </div>
                   <div className="divide-y">
                     {group.items.map((item) => (
@@ -196,28 +196,28 @@ export default function Adminland() {
                         <Link
                           key={item.id}
                           to={createPageUrl(item.page)}
-                          className="flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors group"
+                          className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group"
                         >
-                          <div className="p-1.5 rounded-lg bg-[#0069AF]/10 group-hover:bg-[#0069AF] transition-colors">
-                            <item.icon className="w-4 h-4 text-[#0069AF] group-hover:text-white transition-colors" />
+                          <div className="p-1.5 rounded-lg bg-[#0069AF]/10 dark:bg-blue-900/30 group-hover:bg-[#0069AF] transition-colors">
+                            <item.icon className="w-4 h-4 text-[#0069AF] dark:text-blue-400 group-hover:text-white transition-colors" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium text-slate-900 block">{item.label}</span>
-                            <span className="text-xs text-slate-500">{item.description}</span>
+                            <span className="text-sm font-medium text-slate-900 dark:text-slate-100 block">{item.label}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">{item.description}</span>
                           </div>
                         </Link>
                       ) : (
                         <button
                           key={item.id}
                           onClick={() => setActiveSection(item.id)}
-                          className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors group text-left"
+                          className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group text-left"
                         >
-                          <div className="p-1.5 rounded-lg bg-[#0069AF]/10 group-hover:bg-[#0069AF] transition-colors">
-                            <item.icon className="w-4 h-4 text-[#0069AF] group-hover:text-white transition-colors" />
+                          <div className="p-1.5 rounded-lg bg-[#0069AF]/10 dark:bg-blue-900/30 group-hover:bg-[#0069AF] transition-colors">
+                            <item.icon className="w-4 h-4 text-[#0069AF] dark:text-blue-400 group-hover:text-white transition-colors" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium text-slate-900 block">{item.label}</span>
-                            <span className="text-xs text-slate-500">{item.description}</span>
+                            <span className="text-sm font-medium text-slate-900 dark:text-slate-100 block">{item.label}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">{item.description}</span>
                           </div>
                         </button>
                       )

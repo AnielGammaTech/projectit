@@ -40,7 +40,7 @@ function TaskRow({ task, teamMembers, currentUser, statusConfig, priorityColors,
   return (
     <div
       onClick={() => onNavigate(task)}
-      className="bg-white rounded-lg border border-slate-100 p-3 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group"
+      className="bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-100 dark:border-slate-700/50 p-3 hover:shadow-md hover:border-slate-200 dark:hover:border-slate-600 transition-all cursor-pointer group"
     >
       <div className="flex items-start gap-2">
         {/* Checkmark */}
@@ -62,7 +62,7 @@ function TaskRow({ task, teamMembers, currentUser, statusConfig, priorityColors,
         </button>
 
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium text-slate-900 truncate">{task.title}</h4>
+          <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{task.title}</h4>
           {groupName && (
             <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mt-0.5 inline-block">{groupName}</span>
           )}
@@ -185,12 +185,12 @@ function PartRow({ part, teamMembers, getDueDateLabel, onAssign, onUnassign, onD
   return (
     <div
       onClick={() => onNavigate(part)}
-      className="bg-white rounded-lg border border-slate-100 p-3 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group"
+      className="bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-100 dark:border-slate-700/50 p-3 hover:shadow-md hover:border-slate-200 dark:hover:border-slate-600 transition-all cursor-pointer group"
     >
       <div className="flex items-start gap-2">
         <Package className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium text-slate-900 truncate">{part.name}</h4>
+          <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{part.name}</h4>
           {part.part_number && (
             <span className="text-[10px] text-slate-400 font-mono">#{part.part_number}</span>
           )}
@@ -584,7 +584,7 @@ export default function AllTasks() {
 
   if (loadingTasks) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse space-y-6">
             <div>
@@ -623,7 +623,7 @@ export default function AllTasks() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
@@ -631,8 +631,8 @@ export default function AllTasks() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Tasks & Parts</h1>
-          <p className="text-slate-500 mt-1">View and filter all tasks and parts across projects</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tasks & Parts</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">View and filter all tasks and parts across projects</p>
 
           {/* Main Tabs */}
           <div className="flex gap-2 mt-4">
@@ -665,10 +665,10 @@ export default function AllTasks() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl border border-slate-100 p-4 mb-6"
+            className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6"
           >
             {/* View Mode Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg w-fit mb-4">
+            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg w-fit mb-4">
               <button
                 onClick={() => setViewMode('all')}
                 className={cn(
@@ -796,16 +796,16 @@ export default function AllTasks() {
                         key={projectId}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-xl border border-slate-100 overflow-hidden"
+                        className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
                       >
                         {/* Project header */}
                         <Link
                           to={createPageUrl('ProjectDetail') + `?id=${projectId}`}
-                          className="flex items-center justify-between px-3 py-1.5 bg-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors"
+                          className="flex items-center justify-between px-3 py-1.5 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
                         >
                           <div className="flex items-center gap-2 min-w-0">
-                            <FolderKanban className="w-3.5 h-3.5 text-[#0069AF] shrink-0" />
-                            <span className="font-semibold text-sm text-slate-900 truncate">{getProjectName(projectId)}</span>
+                            <FolderKanban className="w-3.5 h-3.5 text-[#0069AF] dark:text-blue-400 shrink-0" />
+                            <span className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{getProjectName(projectId)}</span>
                             {getProjectNumber(projectId) && <span className="px-1.5 py-0.5 bg-slate-800 text-white rounded text-[10px] font-mono font-semibold shrink-0">#{getProjectNumber(projectId)}</span>}
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">{projectTasks.length}</Badge>
                           </div>
@@ -840,11 +840,11 @@ export default function AllTasks() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white rounded-2xl border border-slate-100 p-12 text-center"
+                className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-12 text-center"
               >
                 <ListTodo className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No active tasks found</h3>
-                <p className="text-slate-500">Try adjusting your filters or create a new task in a project</p>
+                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No active tasks found</h3>
+                <p className="text-slate-500 dark:text-slate-400">Try adjusting your filters or create a new task in a project</p>
               </motion.div>
             )}
 
@@ -898,7 +898,7 @@ export default function AllTasks() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl border border-slate-100 p-4 mb-6"
+            className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6"
           >
             <div className="flex flex-wrap gap-4">
               <div className="relative flex-1 min-w-[200px]">
@@ -956,7 +956,7 @@ export default function AllTasks() {
                   animate={{ opacity: 1, y: 0 }}
                   className={cn(
                     "p-4 rounded-xl border transition-all cursor-pointer hover:shadow-md",
-                    statusFilter === status.key ? "border-amber-300 bg-amber-50" : "border-slate-100 bg-white"
+                    statusFilter === status.key ? "border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-500/50" : "border-slate-100 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a]"
                   )}
                   onClick={() => setStatusFilter(statusFilter === status.key ? 'all' : status.key)}
                 >
@@ -965,8 +965,8 @@ export default function AllTasks() {
                       <Package className={cn("w-4 h-4", status.color)} />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900">{count}</p>
-                      <p className="text-xs text-slate-500">{status.label}</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{count}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{status.label}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -994,12 +994,12 @@ export default function AllTasks() {
                         key={projectId}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-xl border border-slate-100 overflow-hidden"
+                        className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
                       >
                         {/* Project header */}
                         <Link
                           to={createPageUrl('ProjectParts') + `?id=${projectId}`}
-                          className="flex items-center justify-between px-3 py-1.5 bg-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors"
+                          className="flex items-center justify-between px-3 py-1.5 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <FolderKanban className="w-3.5 h-3.5 text-[#0F2F44] shrink-0" />
@@ -1035,11 +1035,11 @@ export default function AllTasks() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white rounded-2xl border border-slate-100 p-12 text-center"
+                className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-12 text-center"
               >
                 <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No parts found</h3>
-                <p className="text-slate-500">{statusFilter !== 'all' ? 'Try adjusting your filters' : 'Parts will appear here when added to active projects'}</p>
+                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No parts found</h3>
+                <p className="text-slate-500 dark:text-slate-400">{statusFilter !== 'all' ? 'Try adjusting your filters' : 'Parts will appear here when added to active projects'}</p>
               </motion.div>
             )}
           </div>

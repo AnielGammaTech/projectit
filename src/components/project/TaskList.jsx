@@ -58,9 +58,9 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -20 }}
       className={cn(
-        "group bg-white rounded-xl border p-3 hover:shadow-md transition-all",
-        task.status === 'completed' ? "opacity-60 border-slate-100" : 
-        dueDateInfo?.urgent ? "border-red-200 bg-red-50/30" : "border-slate-100 hover:border-slate-200"
+        "group bg-white dark:bg-[#1e2a3a] rounded-xl border p-3 hover:shadow-md transition-all",
+        task.status === 'completed' ? "opacity-60 border-slate-100 dark:border-slate-700/50" :
+        dueDateInfo?.urgent ? "border-red-200 bg-red-50/30 dark:bg-red-900/20 dark:border-red-800/50" : "border-slate-100 dark:border-slate-700/50 hover:border-slate-200"
       )}
     >
       <div className="flex items-start gap-3">
@@ -86,7 +86,7 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onTaskClick?.(task)}>
           <div className="flex items-start justify-between gap-2">
             <h4 className={cn(
-              "font-medium text-sm text-slate-900 hover:text-indigo-600 transition-colors",
+              "font-medium text-sm text-slate-900 dark:text-slate-100 hover:text-indigo-600 transition-colors",
               task.status === 'completed' && "line-through text-slate-500"
             )}>
               {task.title}
@@ -123,7 +123,7 @@ const TaskItem = ({ task, onStatusChange, onEdit, onDelete, onTaskClick }) => {
             </Badge>
 
             {task.assigned_name && (
-              <span className="text-xs text-slate-500 flex items-center gap-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                 <User className="w-3 h-3" />
                 {task.assigned_name}
               </span>
@@ -174,12 +174,12 @@ export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete,
     <div className="space-y-3">
       {/* Filter Tabs */}
       {currentUserEmail && (
-        <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
+        <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
           <button
             onClick={() => setViewFilter('all')}
             className={cn(
               "flex-1 text-xs font-medium py-1.5 px-2 rounded-md transition-all",
-              viewFilter === 'all' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              viewFilter === 'all' ? "bg-white dark:bg-[#1e2a3a] text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             )}
           >
             All
@@ -188,7 +188,7 @@ export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete,
             onClick={() => setViewFilter('my_tasks')}
             className={cn(
               "flex-1 text-xs font-medium py-1.5 px-2 rounded-md transition-all",
-              viewFilter === 'my_tasks' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              viewFilter === 'my_tasks' ? "bg-white dark:bg-[#1e2a3a] text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             )}
           >
             My Tasks
@@ -197,7 +197,7 @@ export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete,
             onClick={() => setViewFilter('my_due')}
             className={cn(
               "flex-1 text-xs font-medium py-1.5 px-2 rounded-md transition-all",
-              viewFilter === 'my_due' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              viewFilter === 'my_due' ? "bg-white dark:bg-[#1e2a3a] text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             )}
           >
             My Due
@@ -221,10 +221,10 @@ export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete,
           <div key={statusKey} className="space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <StatusIcon className={cn("w-4 h-4", config.color)} />
-              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">
                 {config.label}
               </span>
-              <span className="text-xs text-slate-400">({taskGroup.length})</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">({taskGroup.length})</span>
             </div>
             <AnimatePresence>
               {taskGroup.map(task => (
@@ -243,13 +243,13 @@ export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete,
       })}
 
       {hasCompleted && (
-        <div className="space-y-2 pt-2 border-t border-slate-100">
+        <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-700/50">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">
               Completed
             </span>
-            <span className="text-xs text-slate-400">({groupedTasks.completed.length})</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">({groupedTasks.completed.length})</span>
           </div>
           <AnimatePresence>
             {groupedTasks.completed.map(task => (

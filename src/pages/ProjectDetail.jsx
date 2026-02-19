@@ -629,7 +629,7 @@ export default function ProjectDetail() {
 
   if (loadingProject) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
         <div className="animate-pulse text-slate-400">Loading project...</div>
       </div>
     );
@@ -637,9 +637,9 @@ export default function ProjectDetail() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Project not found</h2>
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Project not found</h2>
           <Link to={createPageUrl('Dashboard')}>
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -653,7 +653,7 @@ export default function ProjectDetail() {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
         <div className="animate-pulse text-slate-400">Loading project...</div>
       </div>
     );
@@ -661,13 +661,13 @@ export default function ProjectDetail() {
 
   if (!hasAccess()) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-red-600" />
           </div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
-          <p className="text-slate-500 mb-4">You don't have access to this project.</p>
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Access Denied</h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">You don't have access to this project.</p>
           <Link to={createPageUrl('Dashboard')}>
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -682,7 +682,7 @@ export default function ProjectDetail() {
     // Block access to archived or deleted projects
     if (project.status === 'archived' || project.status === 'deleted') {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
           <ProcessingOverlay isVisible={isProcessing} type={processingType} />
           <ProjectNavHeader project={project} currentPage="ProjectDetail" />
           <motion.div
@@ -755,7 +755,7 @@ export default function ProjectDetail() {
     const completedTasks = tasks.filter(t => t.status === 'completed').length;
     const taskProgress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
     return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <ProcessingOverlay isVisible={isProcessing} type={processingType} />
       <ProjectNavHeader project={project} currentPage="ProjectDetail" />
 
@@ -792,7 +792,7 @@ export default function ProjectDetail() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-5"
+          className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-sm p-4 mb-5"
         >
           {/* Row 1: Title + Actions */}
           <div className="flex items-start justify-between gap-4">
@@ -804,7 +804,7 @@ export default function ProjectDetail() {
                     #{project.project_number}
                   </span>
                 )}
-                <h1 className="text-lg font-bold text-slate-900 truncate">{project.name}</h1>
+                <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 truncate">{project.name}</h1>
                 {getProjectTags().map(tag => (
                   <span
                     key={tag.id}
@@ -904,10 +904,10 @@ export default function ProjectDetail() {
             </div>
           </div>
 
-          {project.description && <p className="text-slate-500 text-sm mt-2 line-clamp-2">{project.description}</p>}
+          {project.description && <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 line-clamp-2">{project.description}</p>}
 
           {/* Row 2: Progress bar + status actions */}
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100">
+          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
             <div className="flex-1 min-w-0">
               <ProgressNeedle
                 projectId={projectId}
@@ -920,6 +920,7 @@ export default function ProjectDetail() {
                 lastUpdateNote={progressUpdates[0]?.note}
               />
             </div>
+
             {project.status !== 'archived' && project.status !== 'completed' && (
               <div className="flex items-center gap-1.5 shrink-0">
                 {project.status === 'on_hold' ? (
@@ -987,7 +988,7 @@ export default function ProjectDetail() {
                         <ListTodo className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-800 text-sm leading-none">Tasks</h3>
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Tasks</h3>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="text-[11px] text-slate-500 font-medium">{completedTasks} of {tasks.length}</span>
                           {tasks.length > 0 && (
@@ -1087,7 +1088,7 @@ export default function ProjectDetail() {
                         <MessageSquare className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-800 text-sm leading-none">Messages</h3>
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Messages</h3>
                         <span className="text-[11px] text-slate-500 font-medium">{projectNotes.length} total</span>
                       </div>
                     </div>
@@ -1132,7 +1133,7 @@ export default function ProjectDetail() {
                         <Package className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-800 text-sm leading-none">Parts</h3>
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Parts</h3>
                         <span className="text-[11px] text-slate-500 font-medium">{parts.length} total</span>
                       </div>
                     </div>
@@ -1177,7 +1178,7 @@ export default function ProjectDetail() {
                         <FileText className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-800 text-sm leading-none">Files</h3>
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Files</h3>
                         <span className="text-[11px] text-slate-500 font-medium">{projectFiles.length} files</span>
                       </div>
                     </div>
@@ -1205,13 +1206,13 @@ export default function ProjectDetail() {
             >
               <button
                 onClick={() => setShowActivity(!showActivity)}
-                className="w-full flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-slate-50 to-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200"
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-slate-50 to-white dark:from-[#1e2a3a] dark:to-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 hover:border-slate-200 dark:hover:border-slate-600 hover:shadow-sm transition-all duration-200"
               >
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 rounded-lg bg-slate-100">
                     <Activity className="w-3.5 h-3.5 text-slate-500" />
                   </div>
-                  <span className="text-sm text-slate-600 font-semibold">Recent Activity</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">Recent Activity</span>
                 </div>
                 <ChevronDown className={cn(
                   "w-4 h-4 text-slate-400 transition-transform duration-200",
@@ -1222,7 +1223,7 @@ export default function ProjectDetail() {
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="bg-white rounded-b-2xl border border-t-0 border-slate-100 p-4 max-h-[250px] overflow-y-auto -mt-1"
+                  className="bg-white dark:bg-[#1e2a3a] rounded-b-2xl border border-t-0 border-slate-100 dark:border-slate-700/50 p-4 max-h-[250px] overflow-y-auto -mt-1"
                 >
                   <ProjectActivityFeed projectId={projectId} progressUpdates={progressUpdates} compact />
                 </motion.div>

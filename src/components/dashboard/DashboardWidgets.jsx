@@ -46,10 +46,10 @@ function PendingProposalsWidget({ quotes }) {
         <p className="text-sm text-slate-500 text-center py-4">No pending proposals</p>
       ) : (
         pendingQuotes.map((quote) => (
-          <div key={quote.id} className="flex items-center gap-2 p-2 bg-indigo-50 rounded-lg">
+          <div key={quote.id} className="flex items-center gap-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
             <FileText className="w-4 h-4 text-indigo-500" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-slate-700 truncate">{quote.title}</p>
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{quote.title}</p>
               <p className="text-[10px] text-slate-500 truncate">{quote.customer_name}</p>
             </div>
             <Badge className="text-[10px] bg-indigo-100 text-indigo-700">
@@ -77,21 +77,21 @@ function MetricsWidget({ projects, tasks, parts }) {
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      <div className="p-3 bg-blue-50 rounded-lg">
-        <p className="text-2xl font-bold text-blue-700">{activeProjects.length}</p>
-        <p className="text-xs text-blue-600">Active Projects</p>
+      <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+        <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{activeProjects.length}</p>
+        <p className="text-xs text-blue-600 dark:text-blue-400">Active Projects</p>
       </div>
-      <div className="p-3 bg-emerald-50 rounded-lg">
-        <p className="text-2xl font-bold text-emerald-700">{completedTasks}</p>
-        <p className="text-xs text-emerald-600">Completed Tasks</p>
+      <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg">
+        <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{completedTasks}</p>
+        <p className="text-xs text-emerald-600 dark:text-emerald-400">Completed Tasks</p>
       </div>
-      <div className="p-3 bg-amber-50 rounded-lg">
-        <p className="text-2xl font-bold text-amber-700">{pendingParts}</p>
-        <p className="text-xs text-amber-600">Pending Parts</p>
+      <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
+        <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{pendingParts}</p>
+        <p className="text-xs text-amber-600 dark:text-amber-400">Pending Parts</p>
       </div>
-      <div className="p-3 bg-red-50 rounded-lg">
-        <p className="text-2xl font-bold text-red-700">{overdueTasks}</p>
-        <p className="text-xs text-red-600">Overdue Tasks</p>
+      <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
+        <p className="text-2xl font-bold text-red-700 dark:text-red-300">{overdueTasks}</p>
+        <p className="text-xs text-red-600 dark:text-red-400">Overdue Tasks</p>
       </div>
     </div>
   );
@@ -107,12 +107,12 @@ function ActivityWidget({ activities }) {
         <p className="text-sm text-slate-500 text-center py-4">No recent activity</p>
       ) : (
         recentActivities.map((activity, idx) => (
-          <div key={activity.id || idx} className="flex items-start gap-2 p-2 bg-slate-50 rounded-lg">
-            <div className="w-6 h-6 rounded-full bg-violet-100 flex items-center justify-center">
-              <Activity className="w-3 h-3 text-violet-600" />
+          <div key={activity.id || idx} className="flex items-start gap-2 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+            <div className="w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+              <Activity className="w-3 h-3 text-violet-600 dark:text-violet-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-slate-700 line-clamp-1">{activity.description}</p>
+              <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-1">{activity.description}</p>
               <p className="text-[10px] text-slate-400">{activity.actor_name}</p>
             </div>
           </div>
@@ -168,14 +168,14 @@ function DeadlinesWidget({ tasks, projects }) {
             <Link 
               key={idx} 
               to={createPageUrl('ProjectDetail') + `?id=${item.projectId}`}
-              className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+              className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600/50 transition-colors"
             >
               {item.type === 'task' ? (
                 <ListTodo className="w-4 h-4 text-blue-500" />
               ) : (
                 <FolderKanban className="w-4 h-4 text-indigo-500" />
               )}
-              <span className="flex-1 text-xs text-slate-700 truncate">{item.title}</span>
+              <span className="flex-1 text-xs text-slate-700 dark:text-slate-300 truncate">{item.title}</span>
               <Badge className={cn("text-[10px]", dateInfo.color)}>{dateInfo.label}</Badge>
             </Link>
           );
@@ -239,7 +239,7 @@ Provide 2-3 sentences focusing on priorities and recommendations. Be concise and
           <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />
         </div>
       ) : summary ? (
-        <p className="text-sm text-slate-700 leading-relaxed">{summary}</p>
+        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{summary}</p>
       ) : (
         <p className="text-sm text-slate-500 text-center py-4">Click to generate AI summary</p>
       )}
@@ -274,13 +274,13 @@ function MyTasksWidget({ tasks, currentUser, projects }) {
           <Link 
             key={task.id}
             to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`}
-            className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+            className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600/50 transition-colors"
           >
             <CheckCircle2 className={cn(
               "w-4 h-4",
               task.status === 'in_progress' ? 'text-blue-500' : 'text-slate-400'
             )} />
-            <span className="flex-1 text-xs text-slate-700 truncate">{task.title}</span>
+            <span className="flex-1 text-xs text-slate-700 dark:text-slate-300 truncate">{task.title}</span>
             {task.due_date && (() => { const d = parseLocalDate(task.due_date); return d && isPast(d) && !isToday(d); })() && (
               <AlertTriangle className="w-3 h-3 text-red-500" />
             )}
@@ -318,11 +318,11 @@ function TeamWorkloadWidget({ tasks, teamMembers, projects }) {
         <p className="text-sm text-slate-500 text-center py-4">No team members found</p>
       ) : (
         workload.map((member, idx) => (
-          <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+          <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
             <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] font-medium">
               {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
             </div>
-            <span className="flex-1 text-xs text-slate-700 truncate">{member.name}</span>
+            <span className="flex-1 text-xs text-slate-700 dark:text-slate-300 truncate">{member.name}</span>
             <div className="flex items-center gap-1">
               <Badge variant="outline" className="text-[10px]">{member.count} tasks</Badge>
               {member.overdue > 0 && (
@@ -350,9 +350,9 @@ function OverduePartsWidget({ parts, projects }) {
         <p className="text-sm text-slate-500 text-center py-4">No overdue parts</p>
       ) : (
         overdueParts.map((part) => (
-          <div key={part.id} className="flex items-center gap-2 p-2 bg-red-50 rounded-lg">
+          <div key={part.id} className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
             <Package className="w-4 h-4 text-red-500" />
-            <span className="flex-1 text-xs text-slate-700 truncate">{part.name}</span>
+            <span className="flex-1 text-xs text-slate-700 dark:text-slate-300 truncate">{part.name}</span>
             <Badge className="text-[10px] bg-red-100 text-red-700">
               {format(parseLocalDate(part.due_date), 'MMM d')}
             </Badge>
@@ -377,10 +377,10 @@ function ProjectProgressWidget({ projects }) {
         activeProjects.map((project) => (
           <div key={project.id} className="space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-700 truncate flex-1">{project.name}</span>
-              <span className="text-xs font-medium text-slate-600">{project.progress || 0}%</span>
+              <span className="text-xs text-slate-700 dark:text-slate-300 truncate flex-1">{project.name}</span>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{project.progress || 0}%</span>
             </div>
-            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-teal-500 rounded-full transition-all"
                 style={{ width: `${project.progress || 0}%` }}
@@ -406,13 +406,13 @@ function BillableHoursWidget({ timeEntries }) {
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
-        <div className="p-3 bg-orange-50 rounded-lg text-center">
-          <p className="text-xl font-bold text-orange-700">{pendingHours.toFixed(1)}h</p>
-          <p className="text-[10px] text-orange-600">Pending</p>
+        <div className="p-3 bg-orange-50 dark:bg-orange-900/30 rounded-lg text-center">
+          <p className="text-xl font-bold text-orange-700 dark:text-orange-300">{pendingHours.toFixed(1)}h</p>
+          <p className="text-[10px] text-orange-600 dark:text-orange-400">Pending</p>
         </div>
-        <div className="p-3 bg-emerald-50 rounded-lg text-center">
-          <p className="text-xl font-bold text-emerald-700">{readyToBill.toFixed(1)}h</p>
-          <p className="text-[10px] text-emerald-600">Ready to Bill</p>
+        <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-center">
+          <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{readyToBill.toFixed(1)}h</p>
+          <p className="text-[10px] text-emerald-600 dark:text-emerald-400">Ready to Bill</p>
         </div>
       </div>
       <Link to={createPageUrl('Billing')}>
@@ -462,14 +462,14 @@ function DashboardWidget({ type, onRemove, projects, tasks, parts, activities, t
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+      className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden"
     >
-      <div className="flex items-center justify-between p-3 border-b border-slate-100 bg-slate-50">
+      <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-[#151d2b]">
         <div className="flex items-center gap-2">
           <div className={cn("p-1.5 rounded-lg", config?.color || 'bg-slate-500')}>
             <Icon className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="text-sm font-medium text-slate-700">{config?.label || 'Widget'}</span>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{config?.label || 'Widget'}</span>
         </div>
         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRemove}>
           <X className="w-3.5 h-3.5" />
@@ -507,12 +507,12 @@ function WidgetSelector({ pinnedWidgets, onAddWidget }) {
               <button
                 key={key}
                 onClick={() => onAddWidget(key)}
-                className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all text-left"
+                className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all text-left"
               >
                 <div className={cn("p-2 rounded-lg", config.color)}>
                   <Icon className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-sm font-medium text-slate-700">{config.label}</span>
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{config.label}</span>
               </button>
             );
           })}
@@ -597,7 +597,7 @@ export default function DashboardWidgets() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Pin className="w-4 h-4 text-slate-500" />
-          <span className="text-sm font-medium text-slate-700">Pinned Widgets</span>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Pinned Widgets</span>
         </div>
         <WidgetSelector pinnedWidgets={pinnedWidgets} onAddWidget={handleAddWidget} />
       </div>

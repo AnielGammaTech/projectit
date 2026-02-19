@@ -274,7 +274,7 @@ export default function Customers() {
 
   if (loadingCustomers) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse space-y-6">
             <div className="flex items-center justify-between">
@@ -315,7 +315,7 @@ export default function Customers() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -323,7 +323,7 @@ export default function Customers() {
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
         >
           <div>
-            <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Customers</h1>
+            <h1 className="text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Customers</h1>
             <p className="text-slate-500 mt-1">Manage your client relationships</p>
           </div>
           <div className="flex gap-2">
@@ -366,7 +366,7 @@ export default function Customers() {
           </motion.div>
         )}
 
-        <div className="bg-white rounded-2xl border border-slate-100 p-4 mb-6">
+        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -441,8 +441,8 @@ export default function Customers() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.02 }}
                     className={cn(
-                      "bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
-                      selectedIds.has(company.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 hover:border-slate-300"
+                      "bg-white dark:bg-[#1e2a3a] rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
+                      selectedIds.has(company.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
                     )}
                     onClick={() => setSelectedCustomer(company)}
                   >
@@ -532,8 +532,8 @@ export default function Customers() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.02 }}
                   className={cn(
-                    "bg-white rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
-                    selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 hover:border-slate-300"
+                    "bg-white dark:bg-[#1e2a3a] rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
+                    selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
                   )}
                   onClick={() => setSelectedCustomer(customer)}
                 >
@@ -589,10 +589,10 @@ export default function Customers() {
           {((viewFilter === 'all' && filteredCompanies.length === 0 && filteredStandaloneContacts.length === 0) ||
             (viewFilter === 'companies' && filteredCompanies.length === 0) ||
             (viewFilter === 'contacts' && filteredStandaloneContacts.length === 0)) && (
-            <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-12 text-center">
               <Users className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">No customers yet</h3>
-              <p className="text-slate-500 mb-6">Add your first company or sync from HaloPSA</p>
+              <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No customers yet</h3>
+              <p className="text-slate-500 dark:text-slate-400 mb-6">Add your first company or sync from HaloPSA</p>
               <div className="flex justify-center gap-2">
                 <Button variant="outline" onClick={handleHaloPSASync} disabled={syncing}>
                   <RefreshCw className={cn("w-4 h-4 mr-2", syncing && "animate-spin")} />

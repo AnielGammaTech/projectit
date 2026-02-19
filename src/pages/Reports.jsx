@@ -145,7 +145,7 @@ export default function Reports() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-8 w-40 bg-slate-200 rounded-lg" />
@@ -163,12 +163,12 @@ export default function Reports() {
   }
 
   const StatCard = ({ icon: Icon, label, value, sub, color = 'text-slate-900', iconBg = 'bg-slate-100', iconColor = 'text-slate-600' }) => (
-    <div className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-sm transition-shadow">
+    <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-center gap-3 mb-3">
         <div className={cn("p-2 rounded-lg", iconBg)}>
           <Icon className={cn("w-4 h-4", iconColor)} />
         </div>
-        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">{label}</span>
       </div>
       <p className={cn("text-2xl font-bold", color)}>{value}</p>
       {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
@@ -176,7 +176,7 @@ export default function Reports() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
@@ -184,11 +184,11 @@ export default function Reports() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Reports</h1>
-          <p className="text-slate-500 mt-1">Business metrics and team performance</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Reports</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Business metrics and team performance</p>
 
           {/* Tabs */}
-          <div className="flex gap-1 mt-4 p-1 bg-slate-100 rounded-lg w-fit">
+          <div className="flex gap-1 mt-4 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg w-fit">
             {tabs.map(tab => {
               const Icon = tab.icon;
               return (
@@ -198,8 +198,8 @@ export default function Reports() {
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
                     activeTab === tab.key
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
+                      ? "bg-white dark:bg-[#1e2a3a] text-slate-900 dark:text-slate-100 shadow-sm"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -224,9 +224,9 @@ export default function Reports() {
             {/* Charts Row */}
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Task Status Pie */}
-              <div className="bg-white rounded-xl border border-slate-100 p-5">
-                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                  <PieChart className="w-4 h-4 text-[#0069AF]" />
+              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                  <PieChart className="w-4 h-4 text-[#0069AF] dark:text-blue-400" />
                   Task Status
                 </h3>
                 {taskStatusData.length > 0 ? (
@@ -246,9 +246,9 @@ export default function Reports() {
                         <div key={item.name} className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                            <span className="text-sm text-slate-600">{item.name}</span>
+                            <span className="text-sm text-slate-600 dark:text-slate-300">{item.name}</span>
                           </div>
-                          <span className="text-sm font-medium text-slate-900">{item.value}</span>
+                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.value}</span>
                         </div>
                       ))}
                     </div>
@@ -259,9 +259,9 @@ export default function Reports() {
               </div>
 
               {/* Completion Trend */}
-              <div className="bg-white rounded-xl border border-slate-100 p-5">
-                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-[#0069AF]" />
+              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-[#0069AF] dark:text-blue-400" />
                   Completion Trend
                 </h3>
                 <ResponsiveContainer width="100%" height={180}>
@@ -284,14 +284,14 @@ export default function Reports() {
 
             {/* Overdue & Pipeline summary */}
             <div className="grid lg:grid-cols-3 gap-4">
-              <div className="bg-white rounded-xl border border-slate-100 p-5">
-                <h3 className="font-semibold text-slate-900 mb-3 text-sm">Overdue Tasks</h3>
+              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3 text-sm">Overdue Tasks</h3>
                 {overdueTasks.length > 0 ? (
                   <div className="space-y-2">
                     {overdueTasks.slice(0, 5).map(task => (
                       <Link key={task.id} to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`} className="flex items-center gap-2 p-2 rounded-lg hover:bg-red-50 transition-colors">
                         <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                        <span className="text-sm text-slate-700 truncate flex-1">{task.title}</span>
+                        <span className="text-sm text-slate-700 dark:text-slate-300 truncate flex-1">{task.title}</span>
                         <span className="text-[10px] text-red-500 font-medium">
                           {task.due_date && format(parseLocalDate(task.due_date) || new Date(), 'MMM d')}
                         </span>
@@ -309,8 +309,8 @@ export default function Reports() {
                 )}
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-100 p-5">
-                <h3 className="font-semibold text-slate-900 mb-3 text-sm">Parts Pipeline</h3>
+              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3 text-sm">Parts Pipeline</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -336,8 +336,8 @@ export default function Reports() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-100 p-5">
-                <h3 className="font-semibold text-slate-900 mb-3 text-sm">Project Health</h3>
+              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3 text-sm">Project Health</h3>
                 <div className="space-y-3">
                   {activeProjects.slice(0, 4).map(project => {
                     const pTasks = projectTasks.filter(t => t.project_id === project.id);
@@ -372,12 +372,12 @@ export default function Reports() {
 
             {/* Totals Row */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white rounded-xl border border-slate-100 p-5">
-                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Total Cost</p>
-                <p className="text-3xl font-bold text-slate-900">${totalCost.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Total Cost</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">${totalCost.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-100 p-5">
-                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Total Retail</p>
+              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Total Retail</p>
                 <p className="text-3xl font-bold text-emerald-600">${totalRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
               </div>
               <div className="bg-gradient-to-r from-[#0069AF] to-[#133F5C] rounded-xl p-5 text-white">
@@ -388,8 +388,8 @@ export default function Reports() {
             </div>
 
             {/* Project Drilldown */}
-            <div className="bg-white rounded-xl border border-slate-100 p-5">
-              <h3 className="font-semibold text-slate-900 mb-4">Project Cost Breakdown</h3>
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Project Cost Breakdown</h3>
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger className="w-full max-w-md mb-4">
                   <SelectValue placeholder="Select a project to view details..." />
@@ -408,8 +408,8 @@ export default function Reports() {
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h4 className="font-semibold text-slate-900">{selectedProject.name}</h4>
-                      <p className="text-sm text-slate-500">{selectedCustomer?.name || selectedProject.client}</p>
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100">{selectedProject.name}</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{selectedCustomer?.name || selectedProject.client}</p>
                     </div>
                     <Badge variant="outline">{selectedProjectParts.length} items</Badge>
                   </div>
@@ -431,13 +431,13 @@ export default function Reports() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-slate-50 rounded-lg p-4">
-                      <p className="text-xs text-slate-500 mb-1">Cost</p>
-                      <p className="text-xl font-bold text-slate-900">${projTotalCost.toFixed(0)}</p>
+                    <div className="bg-slate-50 dark:bg-[#151d2b] rounded-lg p-4">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Cost</p>
+                      <p className="text-xl font-bold text-slate-900 dark:text-slate-100">${projTotalCost.toFixed(0)}</p>
                     </div>
-                    <div className="bg-slate-50 rounded-lg p-4">
-                      <p className="text-xs text-slate-500 mb-1">Retail</p>
-                      <p className="text-xl font-bold text-slate-900">${projTotalRetail.toFixed(0)}</p>
+                    <div className="bg-slate-50 dark:bg-[#151d2b] rounded-lg p-4">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Retail</p>
+                      <p className="text-xl font-bold text-slate-900 dark:text-slate-100">${projTotalRetail.toFixed(0)}</p>
                     </div>
                     <div className="bg-emerald-50 rounded-lg p-4">
                       <p className="text-xs text-emerald-600 mb-1">Margin</p>
@@ -463,9 +463,9 @@ export default function Reports() {
             </div>
 
             {/* Team Performance */}
-            <div className="bg-white rounded-xl border border-slate-100 p-5">
-              <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#0069AF]" />
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#0069AF] dark:text-blue-400" />
                 Team Performance
               </h3>
               {tasksByMember.length > 0 ? (
@@ -477,7 +477,7 @@ export default function Reports() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-slate-700">{member.fullName}</span>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{member.fullName}</span>
                           <span className="text-xs text-slate-500">{member.completed}/{member.total} tasks · {member.hours.toFixed(1)}h</span>
                         </div>
                         <Progress value={member.rate} className="h-2" />
@@ -497,25 +497,25 @@ export default function Reports() {
             </div>
 
             {/* Recent Time Entries */}
-            <div className="bg-white rounded-xl border border-slate-100 p-5">
-              <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#0069AF]" />
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#0069AF] dark:text-blue-400" />
                 Recent Time Entries
               </h3>
               <div className="space-y-1">
                 {timeEntries.slice(0, 8).map(entry => (
-                  <div key={entry.id} className="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0">
+                  <div key={entry.id} className="flex items-center justify-between py-2.5 border-b border-slate-50 dark:border-slate-700/30 last:border-0">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-600 shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-300 shrink-0">
                         {(entry.user_name || entry.user_email || '?')[0].toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-700 truncate">{entry.user_name || entry.user_email}</p>
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{entry.user_name || entry.user_email}</p>
                         <p className="text-xs text-slate-400 truncate">{entry.description || 'No description'}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0 ml-4">
-                      <p className="text-sm font-semibold text-slate-900">{((entry.duration_minutes || 0) / 60).toFixed(1)}h</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{((entry.duration_minutes || 0) / 60).toFixed(1)}h</p>
                       <p className="text-[10px] text-slate-400">{entry.start_time && format(new Date(entry.start_time), 'MMM d')}</p>
                     </div>
                   </div>
@@ -528,8 +528,8 @@ export default function Reports() {
 
             {/* Team Bar Chart */}
             {tasksByMember.length > 0 && (
-              <div className="bg-white rounded-xl border border-slate-100 p-5">
-                <h3 className="font-semibold text-slate-900 mb-4">Tasks by Team Member</h3>
+              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Tasks by Team Member</h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={tasksByMember} barCategoryGap="20%">
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />

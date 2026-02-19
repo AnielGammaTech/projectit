@@ -761,31 +761,31 @@ export default function Dashboard() {
 
   if (loadingProjects) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="h-8 w-64 bg-slate-200 rounded-lg" />
-                <div className="h-4 w-40 bg-slate-100 rounded mt-2" />
+                <div className="h-8 w-64 bg-slate-200 dark:bg-slate-700 rounded-lg" />
+                <div className="h-4 w-40 bg-slate-100 dark:bg-slate-700/50 rounded mt-2" />
               </div>
-              <div className="h-12 w-36 bg-slate-200 rounded-lg" />
+              <div className="h-12 w-36 bg-slate-200 dark:bg-slate-700 rounded-lg" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
+                <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6 space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-200" />
+                    <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-5 bg-slate-200 rounded w-3/4" />
-                      <div className="h-3 bg-slate-100 rounded w-1/2" />
+                      <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
+                      <div className="h-3 bg-slate-100 dark:bg-slate-700/50 rounded w-1/2" />
                     </div>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full" />
+                  <div className="h-2 bg-slate-100 dark:bg-slate-700/50 rounded-full" />
                   <div className="flex gap-4">
-                    <div className="h-4 bg-slate-100 rounded w-16" />
-                    <div className="h-4 bg-slate-100 rounded w-16" />
-                    <div className="h-4 bg-slate-100 rounded w-16" />
+                    <div className="h-4 bg-slate-100 dark:bg-slate-700/50 rounded w-16" />
+                    <div className="h-4 bg-slate-100 dark:bg-slate-700/50 rounded w-16" />
+                    <div className="h-4 bg-slate-100 dark:bg-slate-700/50 rounded w-16" />
                   </div>
                 </div>
               ))}
@@ -797,29 +797,29 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <ProcessingOverlay isVisible={isProcessing} type={processingType} />
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-[#133F5C]">Howdy, Fellow Tech Enthusiast! 🤠</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-[#133F5C] dark:text-slate-100">Howdy, Fellow Tech Enthusiast! 🤠</h1>
             </div>
             <div className="flex items-center sm:items-start gap-3 sm:gap-6 w-full sm:w-auto">
               <div className="hidden sm:block text-right text-sm">
-                <p className="font-medium text-slate-700">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                <p className="text-slate-500">{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} • Naples, FL</p>
+                <p className="font-medium text-slate-700 dark:text-slate-300">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                <p className="text-slate-500 dark:text-slate-400">{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} • Naples, FL</p>
               </div>
               <div className="flex flex-col items-stretch sm:items-end gap-1 flex-1 sm:flex-initial">
                 <Button
                   onClick={() => setShowProjectModal(true)}
-                  className="bg-[#0F2F44] hover:bg-[#1a4a6e] shadow-lg text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3 h-10 sm:h-12 w-full sm:w-auto"
+                  className="bg-[#0F2F44] hover:bg-[#1a4a6e] dark:bg-blue-600 dark:hover:bg-blue-700 shadow-lg text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3 h-10 sm:h-12 w-full sm:w-auto"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   New Project
                 </Button>
-                <Link to={createPageUrl('Templates')} className="text-xs sm:text-sm text-[#0069AF] hover:text-[#133F5C] font-medium transition-colors underline underline-offset-2 text-center sm:text-right">
+                <Link to={createPageUrl('Templates')} className="text-xs sm:text-sm text-[#0069AF] hover:text-[#133F5C] dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors underline underline-offset-2 text-center sm:text-right">
                   or use a template →
                 </Link>
               </div>
@@ -971,12 +971,12 @@ export default function Dashboard() {
           <div className="lg:col-span-2 min-w-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-base sm:text-lg font-semibold text-[#0F2F44]">
+                <h2 className="text-base sm:text-lg font-semibold text-[#0F2F44] dark:text-slate-100">
                   {showArchived ? 'Archived Projects' : 'Active Projects'}
                 </h2>
                 <button
                   onClick={() => setShowArchived(!showArchived)}
-                  className="flex items-center gap-1.5 text-xs sm:text-sm text-[#0F2F44]/60 hover:text-[#0F2F44]"
+                  className="flex items-center gap-1.5 text-xs sm:text-sm text-[#0F2F44]/60 hover:text-[#0F2F44] dark:text-slate-400 dark:hover:text-slate-200"
                 >
                   <Archive className="w-4 h-4" />
                   <span className="hidden sm:inline">{showArchived ? 'Show Active' : `Archived (${archivedProjects.length})`}</span>
@@ -998,12 +998,12 @@ export default function Dashboard() {
                   </button>
                 )}
                 {/* View Mode Toggle */}
-                <div className="flex items-center bg-[#0F2F44]/10 rounded-lg p-1">
+                <div className="flex items-center bg-[#0F2F44]/10 dark:bg-slate-700/50 rounded-lg p-1">
                     <button
                       onClick={() => setViewMode('cards')}
                       className={cn(
                         "p-2 rounded-md transition-all",
-                        viewMode === 'cards' ? "bg-white shadow-sm text-[#0F2F44]" : "text-[#0F2F44]/60 hover:text-[#0F2F44]"
+                        viewMode === 'cards' ? "bg-white dark:bg-slate-600 shadow-sm text-[#0F2F44] dark:text-slate-100" : "text-[#0F2F44]/60 dark:text-slate-400 hover:text-[#0F2F44] dark:hover:text-slate-200"
                       )}
                     >
                       <LayoutGrid className="w-4 h-4" />
@@ -1012,19 +1012,19 @@ export default function Dashboard() {
                       onClick={() => setViewMode('list')}
                       className={cn(
                         "p-2 rounded-md transition-all",
-                        viewMode === 'list' ? "bg-white shadow-sm text-[#0F2F44]" : "text-[#0F2F44]/60 hover:text-[#0F2F44]"
+                        viewMode === 'list' ? "bg-white dark:bg-slate-600 shadow-sm text-[#0F2F44] dark:text-slate-100" : "text-[#0F2F44]/60 dark:text-slate-400 hover:text-[#0F2F44] dark:hover:text-slate-200"
                       )}
                     >
                       <List className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="relative flex-1 sm:flex-initial">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0F2F44]/40" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0F2F44]/40 dark:text-slate-500" />
                     <Input
                       placeholder="Search..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 w-full sm:w-48 bg-[#0F2F44]/5 border-[#0F2F44]/10 h-9"
+                      className="pl-9 w-full sm:w-48 bg-[#0F2F44]/5 dark:bg-slate-700/50 border-[#0F2F44]/10 dark:border-slate-600 h-9"
                     />
                   </div>
               </div>
@@ -1032,11 +1032,11 @@ export default function Dashboard() {
 
             {/* Bulk Actions Bar */}
             {selectionMode && (
-              <div className="mb-4 p-3 bg-[#0069AF]/10 rounded-xl border border-[#0069AF]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div className="mb-4 p-3 bg-[#0069AF]/10 dark:bg-blue-900/30 rounded-xl border border-[#0069AF]/20 dark:border-blue-700/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={selectAllProjects}
-                    className="flex items-center gap-2 text-sm font-medium text-[#0069AF] hover:text-[#133F5C]"
+                    className="flex items-center gap-2 text-sm font-medium text-[#0069AF] hover:text-[#133F5C] dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     {selectedProjects.length === filteredProjects.length ? (
                       <CheckSquare className="w-4 h-4" />
@@ -1078,7 +1078,7 @@ export default function Dashboard() {
             {unpinnedProjects.length > 25 && viewMode === 'cards' && !showArchived && (
               <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <span className="text-xs text-slate-500 sm:mr-2 shrink-0">Jump to:</span>
-                <div className="flex items-center gap-0.5 bg-white rounded-xl border border-slate-200 p-1.5 overflow-x-auto max-w-full scrollbar-thin">
+                <div className="flex items-center gap-0.5 bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700 p-1.5 overflow-x-auto max-w-full scrollbar-thin">
                   <button
                     onClick={() => { setActiveLetter(null); setCurrentPage(1); }}
                     className={cn(
@@ -1126,10 +1126,10 @@ export default function Dashboard() {
             {filteredProjects.length > 0 ? (
               viewMode === 'list' ? (
                 /* List View */
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
                   {/* List Header */}
-                  <div className="p-6 border-b border-slate-100 bg-slate-50">
-                    <h2 className="text-2xl font-bold text-slate-900 text-center mb-4">All Projects</h2>
+                  <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-[#1a2535]">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center mb-4">All Projects</h2>
                     <div className="relative max-w-xl mx-auto mb-4">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
@@ -1163,8 +1163,8 @@ export default function Dashboard() {
                           className={cn(
                             "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
                             listFilter === filter.key
-                              ? "bg-[#0F2F44] text-white"
-                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                              ? "bg-[#0F2F44] dark:bg-blue-600 text-white"
+                              : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
                           )}
                         >
                           {filter.label}
@@ -1211,17 +1211,17 @@ export default function Dashboard() {
                               <Link
                                 key={project.id}
                                 to={createPageUrl('ProjectDetail') + `?id=${project.id}`}
-                                className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors group"
+                                className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group"
                               >
                                 {idx === 0 && (
-                                  <span className="w-6 text-slate-400 font-semibold">{letter}</span>
+                                  <span className="w-6 text-slate-400 dark:text-slate-500 font-semibold">{letter}</span>
                                 )}
                                 {idx > 0 && <span className="w-6" />}
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <h3 className="font-semibold text-slate-900 truncate">{project.name}</h3>
+                                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">{project.name}</h3>
                                     {project.client && (
-                                      <span className="text-[#0F2F44]/60 text-sm">• {project.client}</span>
+                                      <span className="text-[#0F2F44]/60 dark:text-slate-400 text-sm">• {project.client}</span>
                                     )}
                                     {project.status === 'deleted' && (
                                       <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded">Deleted</span>
@@ -1274,13 +1274,13 @@ export default function Dashboard() {
                         <Link
                           key={project.id}
                           to={createPageUrl('ProjectDetail') + `?id=${project.id}`}
-                          className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors group"
+                          className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group"
                         >
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <h3 className="font-semibold text-slate-900 truncate">{project.name}</h3>
+                              <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">{project.name}</h3>
                               {project.client && (
-                                <span className="text-[#0F2F44]/60 text-sm">• {project.client}</span>
+                                <span className="text-[#0F2F44]/60 dark:text-slate-400 text-sm">• {project.client}</span>
                               )}
                             </div>
                             {project.description && (
@@ -1315,7 +1315,7 @@ export default function Dashboard() {
                           {...provided.droppableProps}
                           className={cn(
                             "mb-6 p-4 rounded-2xl border-2 border-dashed transition-all",
-                            snapshot.isDraggingOver ? "border-amber-400 bg-amber-50" : "border-amber-200 bg-amber-50/50"
+                            snapshot.isDraggingOver ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-600" : "border-amber-200 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-900/10"
                           )}
                         >
                           <div className="flex items-center gap-2 mb-3">
@@ -1370,7 +1370,7 @@ export default function Dashboard() {
                           {...provided.droppableProps}
                           className={cn(
                             "mb-4 p-4 rounded-2xl border-2 border-dashed text-center transition-all",
-                            snapshot.isDraggingOver ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-slate-50/50"
+                            snapshot.isDraggingOver ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-600" : "border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30"
                           )}
                         >
                           <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
@@ -1491,7 +1491,7 @@ export default function Dashboard() {
                         <button
                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                         disabled={currentPage === 1}
-                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                         Previous
                         </button>
@@ -1502,9 +1502,9 @@ export default function Dashboard() {
                             onClick={() => setCurrentPage(page)}
                             className={cn(
                               "w-8 h-8 rounded-lg text-sm font-medium transition-all",
-                              currentPage === page 
-                                ? "bg-[#0069AF] text-white" 
-                                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                              currentPage === page
+                                ? "bg-[#0069AF] text-white"
+                                : "bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
                             )}
                           >
                             {page}
@@ -1524,13 +1524,13 @@ export default function Dashboard() {
                         </DragDropContext>
                         )
             ) : (
-              <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 rounded-2xl border border-slate-200/60 p-8 sm:p-16 text-center shadow-card">
-                  <div className="w-16 h-16 rounded-2xl bg-[#0F2F44]/10 flex items-center justify-center mx-auto mb-5">
-                    <FolderKanban className="w-8 h-8 text-[#0F2F44]/40" />
+              <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 dark:from-[#1a2535] dark:to-[#1e2a3a] rounded-2xl border border-slate-200/60 dark:border-slate-700/50 p-8 sm:p-16 text-center shadow-card">
+                  <div className="w-16 h-16 rounded-2xl bg-[#0F2F44]/10 dark:bg-slate-700/50 flex items-center justify-center mx-auto mb-5">
+                    <FolderKanban className="w-8 h-8 text-[#0F2F44]/40 dark:text-slate-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-[#133F5C] mb-2">No projects yet</h3>
-                  <p className="text-slate-500 mb-8 max-w-sm mx-auto">Create your first project to start tracking tasks, parts, and progress.</p>
-                  <Button onClick={() => setShowProjectModal(true)} size="lg" className="bg-[#0F2F44] hover:bg-[#1a4a6e] shadow-md">
+                  <h3 className="text-xl font-semibold text-[#133F5C] dark:text-slate-100 mb-2">No projects yet</h3>
+                  <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm mx-auto">Create your first project to start tracking tasks, parts, and progress.</p>
+                  <Button onClick={() => setShowProjectModal(true)} size="lg" className="bg-[#0F2F44] hover:bg-[#1a4a6e] dark:bg-blue-600 dark:hover:bg-blue-700 shadow-md">
                     <Plus className="w-5 h-5 mr-2" />
                     Create Your First Project
                   </Button>

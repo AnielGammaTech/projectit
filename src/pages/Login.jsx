@@ -47,14 +47,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#151d2b] px-4">
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+        <div className="bg-white dark:bg-[#1e2a3a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/50 p-8">
           <div className="flex justify-center mb-3">
             <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 text-center mb-1">Project<span className="text-[#0069AF]">IT</span></h1>
-          <p className="text-slate-500 text-center mb-6 text-sm">Sign in to your account</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center mb-1">Project<span className="text-[#0069AF] dark:text-blue-400">IT</span></h1>
+          <p className="text-slate-500 dark:text-slate-400 text-center mb-6 text-sm">Sign in to your account</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -64,7 +64,7 @@ export default function Login() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
               <input
                 type="email"
                 value={email}
@@ -76,7 +76,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
               <input
                 type="password"
                 value={password}
@@ -96,7 +96,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-slate-500 mt-6">
+          <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
             Contact your administrator to get an invite.
           </p>
         </div>

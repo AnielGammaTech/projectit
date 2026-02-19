@@ -53,7 +53,7 @@ export default function ProjectNotes({ projectId, currentUser }) {
   return (
     <div className="space-y-4">
       {/* Add new note */}
-      <div className="bg-slate-50 rounded-xl p-4">
+      <div className="bg-slate-50 dark:bg-[#151d2b] rounded-xl p-4">
         <div className="flex gap-2 mb-3">
           {Object.entries(typeConfig).map(([key, config]) => {
             const Icon = config.icon;
@@ -63,7 +63,7 @@ export default function ProjectNotes({ projectId, currentUser }) {
                 onClick={() => setNewType(key)}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
-                  newType === key ? config.color : "bg-white text-slate-600 hover:bg-slate-100"
+                  newType === key ? config.color : "bg-white dark:bg-[#1e2a3a] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50"
                 )}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -76,7 +76,7 @@ export default function ProjectNotes({ projectId, currentUser }) {
           value={newContent}
           onChange={(e) => setNewContent(e.target.value)}
           placeholder={`Add a ${newType}...`}
-          className="bg-white min-h-[80px] mb-3"
+          className="bg-white dark:bg-[#1e2a3a] min-h-[80px] mb-3"
         />
         <div className="flex justify-end">
           <Button
@@ -111,7 +111,7 @@ export default function ProjectNotes({ projectId, currentUser }) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="bg-white rounded-xl border border-slate-100 p-4"
+                  className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-4"
                 >
                   <div className="flex items-start gap-3">
                     <div className={cn("p-2 rounded-lg", config.color.split(' ')[0])}>
@@ -120,7 +120,7 @@ export default function ProjectNotes({ projectId, currentUser }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm text-slate-900">{note.author_name}</span>
+                          <span className="font-medium text-sm text-slate-900 dark:text-slate-100">{note.author_name}</span>
                           <Badge variant="outline" className={cn("text-xs", config.color)}>
                             {config.label}
                           </Badge>
@@ -139,7 +139,7 @@ export default function ProjectNotes({ projectId, currentUser }) {
                           )}
                         </div>
                       </div>
-                      <p className="text-slate-700 text-sm whitespace-pre-wrap">{note.content}</p>
+                      <p className="text-slate-700 dark:text-slate-300 text-sm whitespace-pre-wrap">{note.content}</p>
                     </div>
                   </div>
                 </motion.div>

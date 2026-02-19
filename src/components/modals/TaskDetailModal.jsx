@@ -158,16 +158,16 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 max-h-[90vh] overflow-hidden flex flex-col rounded-2xl">
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 max-h-[90vh] overflow-hidden flex flex-col rounded-2xl dark:bg-[#1e2a3a]">
         <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400 flex-shrink-0" />
-        <div className="p-6 pb-4 border-b border-slate-100">
+        <div className="p-6 pb-4 border-b border-slate-100 dark:border-slate-700/50">
           <div className="flex items-start gap-4">
             <motion.button onClick={handleStatusToggle} whileTap={{ scale: 0.85 }} className={cn("w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 mt-0.5", isCompleted ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 hover:border-emerald-400")}>
               <AnimatePresence>{isCompleted && (<motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }}><Check className="w-4 h-4" /></motion.div>)}</AnimatePresence>
             </motion.button>
             <div className="flex-1 min-w-0">
-              <h2 className={cn("text-xl font-semibold text-slate-900 leading-tight", isCompleted && "line-through text-slate-400")}>{task.title}</h2>
-              <p className="text-sm text-slate-500 mt-1">Added by {task.created_by || 'Unknown'} · {format(new Date(task.created_date), 'MMM d, yyyy')}</p>
+              <h2 className={cn("text-xl font-semibold text-slate-900 dark:text-slate-100 leading-tight", isCompleted && "line-through text-slate-400")}>{task.title}</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Added by {task.created_by || 'Unknown'} · {format(new Date(task.created_date), 'MMM d, yyyy')}</p>
             </div>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={() => onEdit(task)} className="h-8 w-8 rounded-xl hover:bg-slate-100"><Edit2 className="w-4 h-4" /></Button>
@@ -191,9 +191,9 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 border-b border-slate-100">
+          <div className="p-6 border-b border-slate-100 dark:border-slate-700/50">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2.5"><div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500"><StickyNote className="w-3.5 h-3.5 text-white" /></div><label className="text-sm font-semibold text-slate-700">Notes</label></div>
+              <div className="flex items-center gap-2.5"><div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500"><StickyNote className="w-3.5 h-3.5 text-white" /></div><label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Notes</label></div>
               <Button variant="outline" size="sm" onClick={() => taskFileInputRef.current?.click()} disabled={uploadingTaskFile} className="h-7 text-xs rounded-lg">{uploadingTaskFile ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Paperclip className="w-3 h-3 mr-1" />}Attach file</Button>
               <input ref={taskFileInputRef} type="file" className="hidden" onChange={handleTaskFileUpload} />
             </div>
@@ -206,9 +206,9 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
             )}
           </div>
 
-          <div className="p-6 border-b border-slate-100">
+          <div className="p-6 border-b border-slate-100 dark:border-slate-700/50">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2.5"><div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500"><ListChecks className="w-3.5 h-3.5 text-white" /></div><label className="text-sm font-semibold text-slate-700">Checklist</label>{checklistItems.length > 0 && (<span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{completedChecklistCount}/{checklistItems.length}</span>)}</div>
+              <div className="flex items-center gap-2.5"><div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500"><ListChecks className="w-3.5 h-3.5 text-white" /></div><label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Checklist</label>{checklistItems.length > 0 && (<span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{completedChecklistCount}/{checklistItems.length}</span>)}</div>
               {checklistItems.length > 0 && (<button onClick={() => setGroupCompletedAtBottom(!groupCompletedAtBottom)} className={cn("text-[11px] px-2 py-1 rounded-lg transition-colors font-medium", groupCompletedAtBottom ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100" : "bg-slate-50 text-slate-500 hover:bg-slate-100")}>{groupCompletedAtBottom ? 'Sorted ✓' : 'Sort done'}</button>)}
             </div>
             {checklistItems.length > 0 && (<div className="flex items-center gap-2.5 mb-3"><div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden"><motion.div className={cn("h-2 rounded-full", checklistProgress === 100 ? "bg-gradient-to-r from-emerald-500 to-teal-400" : "bg-gradient-to-r from-blue-500 to-indigo-400")} initial={{ width: 0 }} animate={{ width: `${checklistProgress}%` }} transition={{ duration: 0.5, ease: 'easeOut' }} /></div><span className={cn("text-xs font-bold tabular-nums min-w-[32px] text-right", checklistProgress === 100 ? "text-emerald-600" : "text-slate-500")}>{checklistProgress}%</span></div>)}
@@ -257,15 +257,15 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
           </div>
 
           <div className="p-6">
-            <div className="flex items-center gap-2.5 mb-4"><div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500"><MessageSquare className="w-3.5 h-3.5 text-white" /></div><label className="text-sm font-semibold text-slate-700">Comments</label>{comments.length > 0 && (<span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{comments.length}</span>)}</div>
+            <div className="flex items-center gap-2.5 mb-4"><div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500"><MessageSquare className="w-3.5 h-3.5 text-white" /></div><label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Comments</label>{comments.length > 0 && (<span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{comments.length}</span>)}</div>
             <div className="space-y-4">
-              {comments.map((c) => (<div key={c.id} className="flex gap-3"><UserAvatar email={c.author_email} name={c.author_name} avatarUrl={teamMembers.find(m => m.email === c.author_email)?.avatar_url} size="md" /><div className="flex-1 min-w-0"><div className="flex items-center gap-2 mb-1"><span className="font-medium text-slate-900 text-sm">{c.author_name}</span><span className="text-xs text-slate-400">{formatDistanceToNow(new Date(c.created_date), { addSuffix: true })}</span></div><p className="text-sm text-slate-600 whitespace-pre-wrap">{c.content.split(/(@\w+(?:\s\w+)?)/g).map((part, i) => part.startsWith('@') ? <span key={i} className="text-[#0069AF] font-medium">{part}</span> : part)}</p>{c.attachments?.length > 0 && (<div className="mt-2 flex flex-wrap gap-2">{c.attachments.map((att, idx) => { const isImage = att.type?.startsWith('image/'); const FileIcon = getFileIcon(att.type); return isImage ? (<a key={idx} href={att.url} target="_blank" rel="noopener noreferrer"><img src={att.url} alt={att.name} className="h-24 w-auto rounded-xl object-cover border border-slate-200 hover:opacity-90 transition-opacity" /></a>) : (<a key={idx} href={att.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 bg-slate-100 rounded-lg px-2 py-1 text-xs text-[#0069AF] hover:bg-slate-200"><FileIcon className="w-3 h-3" /><span className="truncate max-w-[100px]">{att.name}</span></a>); })}</div>)}</div></div>))}
+              {comments.map((c) => (<div key={c.id} className="flex gap-3"><UserAvatar email={c.author_email} name={c.author_name} avatarUrl={teamMembers.find(m => m.email === c.author_email)?.avatar_url} size="md" /><div className="flex-1 min-w-0"><div className="flex items-center gap-2 mb-1"><span className="font-medium text-slate-900 dark:text-slate-100 text-sm">{c.author_name}</span><span className="text-xs text-slate-400">{formatDistanceToNow(new Date(c.created_date), { addSuffix: true })}</span></div><p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{c.content.split(/(@\w+(?:\s\w+)?)/g).map((part, i) => part.startsWith('@') ? <span key={i} className="text-[#0069AF] font-medium">{part}</span> : part)}</p>{c.attachments?.length > 0 && (<div className="mt-2 flex flex-wrap gap-2">{c.attachments.map((att, idx) => { const isImage = att.type?.startsWith('image/'); const FileIcon = getFileIcon(att.type); return isImage ? (<a key={idx} href={att.url} target="_blank" rel="noopener noreferrer"><img src={att.url} alt={att.name} className="h-24 w-auto rounded-xl object-cover border border-slate-200 hover:opacity-90 transition-opacity" /></a>) : (<a key={idx} href={att.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 bg-slate-100 rounded-lg px-2 py-1 text-xs text-[#0069AF] hover:bg-slate-200"><FileIcon className="w-3 h-3" /><span className="truncate max-w-[100px]">{att.name}</span></a>); })}</div>)}</div></div>))}
               {comments.length === 0 && (<div className="text-center py-6"><MessageSquare className="w-8 h-8 text-slate-200 mx-auto mb-2" /><p className="text-sm text-slate-400">No comments yet</p></div>)}
             </div>
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-100 bg-slate-50/80 flex-shrink-0">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-700/50 bg-slate-50/80 dark:bg-[#151d2b] flex-shrink-0">
           <div className="flex gap-3">
             <UserAvatar email={currentUser?.email} name={currentUser?.full_name} avatarUrl={currentUser?.avatar_url} size="md" />
             <div className="flex-1 relative">

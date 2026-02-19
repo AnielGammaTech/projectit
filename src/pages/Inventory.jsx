@@ -150,18 +150,18 @@ export default function Inventory() {
 
   if (!canView) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
         <div className="text-center">
           <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
-          <p className="text-slate-500">You don't have permission to view inventory.</p>
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Access Denied</h2>
+          <p className="text-slate-500 dark:text-slate-400">You don't have permission to view inventory.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -169,8 +169,8 @@ export default function Inventory() {
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
         >
           <div>
-            <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Catalog</h1>
-            <p className="text-slate-500 mt-1">Manage products and services</p>
+            <h1 className="text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Catalog</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">Manage products and services</p>
           </div>
           <div className="flex gap-2">
             {activeTab === 'products' && (
@@ -243,48 +243,48 @@ export default function Inventory() {
         {/* Stats - Only show for products */}
         {activeTab === 'products' && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border dark:border-slate-700/50 p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#74C7FF]/20">
-                  <Package className="w-5 h-5 text-[#0069AF]" />
+                <div className="p-2 rounded-lg bg-[#74C7FF]/20 dark:bg-blue-900/30">
+                  <Package className="w-5 h-5 text-[#0069AF] dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#133F5C]">{products.length}</p>
-                  <p className="text-sm text-slate-500">Total Products</p>
+                  <p className="text-2xl font-bold text-[#133F5C] dark:text-slate-100">{products.length}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Total Products</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border dark:border-slate-700/50 p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-green-100">
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#133F5C]">
+                  <p className="text-2xl font-bold text-[#133F5C] dark:text-slate-100">
                     {products.filter(i => i.quantity_in_stock > i.minimum_stock).length}
                   </p>
                   <p className="text-sm text-slate-500">In Stock</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border dark:border-slate-700/50 p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-amber-100">
                   <AlertTriangle className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#133F5C]">{lowStockItems.length}</p>
+                  <p className="text-2xl font-bold text-[#133F5C] dark:text-slate-100">{lowStockItems.length}</p>
                   <p className="text-sm text-slate-500">Low Stock</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border dark:border-slate-700/50 p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-red-100">
                   <X className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#133F5C]">{outOfStockItems.length}</p>
+                  <p className="text-2xl font-bold text-[#133F5C] dark:text-slate-100">{outOfStockItems.length}</p>
                   <p className="text-sm text-slate-500">Out of Stock</p>
                 </div>
               </div>
@@ -304,8 +304,8 @@ export default function Inventory() {
         </div>
 
         {/* Items List */}
-        <div className="bg-white rounded-xl border">
-          <div className="grid grid-cols-12 gap-4 p-4 border-b bg-slate-50 text-sm font-medium text-slate-600">
+        <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border dark:border-slate-700/50">
+          <div className="grid grid-cols-12 gap-4 p-4 border-b bg-slate-50 dark:bg-[#151d2b] dark:border-slate-700/50 text-sm font-medium text-slate-600 dark:text-slate-400">
             <div className="col-span-4">Item</div>
             <div className="col-span-2">SKU / Barcode</div>
             <div className="col-span-1 text-center">Stock</div>
@@ -336,12 +336,12 @@ export default function Inventory() {
                       </div>
                     )}
                     <div>
-                      <p className="font-medium text-slate-900">{item.name}</p>
-                      {item.category && <p className="text-xs text-slate-500">{item.category}</p>}
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{item.name}</p>
+                      {item.category && <p className="text-xs text-slate-500 dark:text-slate-400">{item.category}</p>}
                     </div>
                   </div>
                   <div className="col-span-2">
-                    {item.sku && <p className="text-sm text-slate-600">{item.sku}</p>}
+                    {item.sku && <p className="text-sm text-slate-600 dark:text-slate-300">{item.sku}</p>}
                     {item.barcode && <p className="text-xs text-slate-400 font-mono">{item.barcode}</p>}
                   </div>
                   <div className="col-span-1 text-center">
@@ -415,8 +415,8 @@ export default function Inventory() {
 
         {/* Bundles Tab Content */}
         {activeTab === 'bundles' && (
-          <div className="bg-white rounded-xl border mt-6">
-            <div className="grid grid-cols-12 gap-4 p-4 border-b bg-slate-50 text-sm font-medium text-slate-600">
+          <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border dark:border-slate-700/50 mt-6">
+            <div className="grid grid-cols-12 gap-4 p-4 border-b bg-slate-50 dark:bg-[#151d2b] dark:border-slate-700/50 text-sm font-medium text-slate-600 dark:text-slate-400">
               <div className="col-span-4">Bundle</div>
               <div className="col-span-3">Items</div>
               <div className="col-span-2">Category</div>

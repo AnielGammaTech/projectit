@@ -136,7 +136,7 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-6">
+    <div className="min-h-screen bg-slate-900 dark:bg-[#151d2b] text-white p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">

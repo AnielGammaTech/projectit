@@ -31,9 +31,9 @@ export default function PartsList({ parts = [], onStatusChange, onEdit, onDelete
   return (
     <div>
       {parts.length > 0 && (
-        <div className="flex items-center justify-between mb-4 p-4 bg-slate-50 rounded-xl">
-          <span className="text-sm text-slate-600">Total Parts Cost</span>
-          <span className="text-lg font-semibold text-slate-900">${totalCost.toFixed(2)}</span>
+        <div className="flex items-center justify-between mb-4 p-4 bg-slate-50 dark:bg-[#151d2b] rounded-xl">
+          <span className="text-sm text-slate-600 dark:text-slate-300">Total Parts Cost</span>
+          <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">${totalCost.toFixed(2)}</span>
         </div>
       )}
 
@@ -49,19 +49,19 @@ export default function PartsList({ parts = [], onStatusChange, onEdit, onDelete
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ delay: idx * 0.03 }}
-                className="group bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all"
+                className="group bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-4 hover:shadow-md hover:border-slate-200 transition-all"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-2.5 rounded-xl bg-slate-100">
-                    <Package className="w-5 h-5 text-slate-600" />
+                  <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700/50">
+                    <Package className="w-5 h-5 text-slate-600 dark:text-slate-300" />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h4 className="font-medium text-slate-900">{part.name}</h4>
+                        <h4 className="font-medium text-slate-900 dark:text-slate-100">{part.name}</h4>
                         {part.part_number && (
-                          <p className="text-sm text-slate-500 flex items-center gap-1 mt-0.5">
+                          <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
                             <Hash className="w-3 h-3" />
                             {part.part_number}
                           </p>
@@ -118,19 +118,19 @@ export default function PartsList({ parts = [], onStatusChange, onEdit, onDelete
                         </DropdownMenuContent>
                       </DropdownMenu>
 
-                      <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                      <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
                         <span className="font-medium">Qty: {part.quantity || 1}</span>
                       </div>
 
                       {part.unit_cost > 0 && (
-                        <div className="flex items-center gap-1 text-sm text-slate-600">
+                        <div className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
                           <DollarSign className="w-3.5 h-3.5" />
                           <span>{part.unit_cost.toFixed(2)} ea</span>
                         </div>
                       )}
 
                       {part.supplier && (
-                        <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                        <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
                           <Truck className="w-3.5 h-3.5" />
                           <span>{part.supplier}</span>
                         </div>

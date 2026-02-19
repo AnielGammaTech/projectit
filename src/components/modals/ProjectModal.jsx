@@ -258,7 +258,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden max-h-[90vh] gap-0">
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden max-h-[90vh] gap-0 dark:bg-[#1e2a3a]">
 
         {/* ── Colored Header ── */}
         <div
@@ -274,10 +274,10 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                 <FolderOpen className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-900">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                   {isEdit ? 'Edit Project' : 'New Project'}
                 </h2>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {isEdit ? 'Update project details' : 'Set up a new project for your team'}
                 </p>
               </div>
@@ -339,7 +339,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             <div className="space-y-4">
               {/* Client Selection — Modern dropdown */}
               <div className="relative">
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">
+                <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
                   Client
                 </Label>
                 <div
@@ -451,7 +451,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
               {/* Description */}
               <div>
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">
+                <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
                   Description
                 </Label>
                 <Textarea
@@ -465,12 +465,12 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             </div>
 
             {/* ── Team Section ── */}
-            <div className="rounded-xl border-2 border-slate-200 overflow-hidden">
+            <div className="rounded-xl border-2 border-slate-200 dark:border-slate-600 overflow-hidden">
               {/* Team Header */}
-              <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-200 dark:border-slate-600 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-slate-600" />
-                  <span className="text-sm font-semibold text-slate-700">Team</span>
+                  <Users className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Team</span>
                   <span className="text-xs text-slate-400 bg-white px-1.5 py-0.5 rounded-full border border-slate-200">
                     {formData.team_members.length}
                   </span>
@@ -644,7 +644,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             <div className="grid grid-cols-2 gap-3">
               {/* Start Date */}
               <div>
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">
+                <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
                   Start Date
                 </Label>
                 <Popover>
@@ -690,7 +690,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
               {/* Due Date */}
               <div>
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">
+                <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
                   Due Date
                 </Label>
                 <Popover>
@@ -736,7 +736,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
               {/* Time Budget */}
               <div>
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">
+                <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
                   Time Budget
                 </Label>
                 <div className="relative">
@@ -755,7 +755,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
               {/* Template — only show on create */}
               {!isEdit && (
                 <div>
-                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">
+                  <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
                     Template
                   </Label>
                   <Popover open={showTemplatePicker} onOpenChange={setShowTemplatePicker}>
@@ -821,7 +821,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
           </div>
 
           {/* ── Footer ── */}
-          <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+          <div className="px-6 py-4 bg-slate-50 dark:bg-[#151d2b] border-t border-slate-200 dark:border-slate-600 flex items-center justify-between">
             <button
               type="button"
               onClick={onClose}

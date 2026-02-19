@@ -74,10 +74,10 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [] }) {
   return (
     <div className="space-y-3">
       {/* Mini Calendar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-4">
         <div className="flex items-center gap-2 mb-3">
           <CalendarIcon className="w-4 h-4 text-indigo-500" />
-          <h3 className="font-semibold text-slate-900 text-sm">Calendar</h3>
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Calendar</h3>
         </div>
         <Calendar
           mode="single"
@@ -118,7 +118,7 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [] }) {
             },
           }}
         />
-        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100 text-[10px] text-slate-500">
+        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50 text-[10px] text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-amber-100" />
             <span>Task due</span>

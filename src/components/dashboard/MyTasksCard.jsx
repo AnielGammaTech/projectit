@@ -26,9 +26,9 @@ function getDueStatus(dateStr) {
 }
 
 function getRowBg(dueStatus) {
-  if (dueStatus === 'overdue') return 'bg-red-50 hover:bg-red-100/70';
-  if (dueStatus === 'soon') return 'bg-amber-50 hover:bg-amber-100/60';
-  return 'hover:bg-slate-50';
+  if (dueStatus === 'overdue') return 'bg-red-50 hover:bg-red-100/70 dark:bg-red-900/20 dark:hover:bg-red-900/30';
+  if (dueStatus === 'soon') return 'bg-amber-50 hover:bg-amber-100/60 dark:bg-amber-900/20 dark:hover:bg-amber-900/30';
+  return 'hover:bg-slate-50 dark:hover:bg-slate-700/50';
 }
 
 function getDueBadge(dateStr) {
@@ -98,15 +98,15 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
   const totalItems = allItems.length;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-6">
+    <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-[#0069AF]/10">
-            <ListTodo className="w-5 h-5 text-[#0069AF]" />
+          <div className="p-2 rounded-xl bg-[#0069AF]/10 dark:bg-blue-900/30">
+            <ListTodo className="w-5 h-5 text-[#0069AF] dark:text-blue-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">My Tasks</h3>
-            <p className="text-xs text-slate-500">{totalItems} items assigned to you</p>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">My Tasks</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{totalItems} items assigned to you</p>
           </div>
         </div>
         <Link to={createPageUrl('AllTasks')}>
@@ -143,7 +143,7 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                       <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
                     </button>
                     <Link to={createPageUrl('ProjectTasks') + `?id=${item.project_id}`} className="flex-1 min-w-0 flex items-center gap-2">
-                      <p className="font-medium text-slate-900 text-sm truncate">{item.title}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm truncate">{item.title}</p>
                     </Link>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
@@ -174,7 +174,7 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                       <div className="p-1 rounded-md bg-amber-100 shrink-0">
                         <Package className="w-3.5 h-3.5 text-amber-600" />
                       </div>
-                      <p className="font-medium text-slate-900 text-sm truncate flex-1 min-w-0">{item.name}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100 text-sm truncate flex-1 min-w-0">{item.name}</p>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
                           {getProjectName(item.project_id)}

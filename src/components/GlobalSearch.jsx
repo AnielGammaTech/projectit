@@ -157,9 +157,9 @@ export default function GlobalSearch({ isOpen, onClose }) {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       
       {/* Search Panel */}
-      <div className="relative max-w-2xl mx-auto mt-20 bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative max-w-2xl mx-auto mt-20 bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-2xl overflow-hidden">
         {/* Search Input */}
-        <div className="flex items-center gap-3 p-4 border-b">
+        <div className="flex items-center gap-3 p-4 border-b dark:border-slate-700">
           <Search className="w-5 h-5 text-slate-400" />
           <input
             ref={inputRef}
@@ -167,7 +167,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search projects, proposals, customers, tasks..."
-            className="flex-1 text-lg outline-none placeholder:text-slate-400"
+            className="flex-1 text-lg outline-none placeholder:text-slate-400 dark:text-slate-100 dark:bg-transparent"
             autoFocus
           />
           <Button
@@ -188,7 +188,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
         {/* Filters */}
         <AnimatePresence>
           {showFilters && (
-            <div className="border-b bg-slate-50 overflow-hidden">
+            <div className="border-b dark:border-slate-700 bg-slate-50 dark:bg-[#151d2b] overflow-hidden">
             <div className="p-3 flex flex-wrap gap-3">
               {Object.entries(RESULT_TYPES).map(([key, config]) => (
                 <label key={key} className="flex items-center gap-2 cursor-pointer">

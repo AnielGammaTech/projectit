@@ -167,8 +167,8 @@ export default function Profile() {
                   </label>
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-900">{currentUser?.full_name || 'User'}</h2>
-                  <p className="text-slate-500">{currentUser?.email}</p>
+                  <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{currentUser?.full_name || 'User'}</h2>
+                  <p className="text-slate-500 dark:text-slate-400">{currentUser?.email}</p>
                   <p className="text-xs text-slate-400 mt-1 capitalize">{currentUser?.role || 'user'}</p>
                 </div>
               </div>
@@ -363,8 +363,8 @@ export default function Profile() {
                       className={cn(
                         "flex items-start gap-3 p-4 rounded-xl border-2 transition-all text-left",
                         formData.theme === option.value
-                          ? "border-[#0069AF] bg-blue-50"
-                          : "border-slate-200 hover:border-slate-300"
+                          ? "border-[#0069AF] bg-blue-50 dark:bg-blue-900/30 dark:border-blue-500"
+                          : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                       )}
                     >
                       <div className={cn(
@@ -374,8 +374,8 @@ export default function Profile() {
                         <Icon className="w-4 h-4" />
                       </div>
                       <div>
-                        <div className="font-medium text-slate-900">{option.label}</div>
-                        <div className="text-xs text-slate-500">{option.description}</div>
+                        <div className="font-medium text-slate-900 dark:text-slate-100">{option.label}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">{option.description}</div>
                       </div>
                     </button>
                   );

@@ -10,30 +10,30 @@ export default function Stock() {
   const [activeTab, setActiveTab] = useState('products');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#0F2F44]">Stock</h1>
-          <p className="text-[#0F2F44]/60">Manage your products, services, and bundles</p>
+          <h1 className="text-2xl font-bold text-[#0F2F44] dark:text-slate-100">Stock</h1>
+          <p className="text-[#0F2F44]/60 dark:text-slate-400">Manage your products, services, and bundles</p>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-white border border-slate-200 mb-6">
-            <TabsTrigger value="products" className="gap-2 data-[state=active]:bg-[#0F2F44] data-[state=active]:text-white">
+          <TabsList className="bg-white dark:bg-[#1e2a3a] border border-slate-200 dark:border-slate-700/50 mb-6">
+            <TabsTrigger value="products" className="gap-2 data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Package className="w-4 h-4" />
               Products
             </TabsTrigger>
-            <TabsTrigger value="services" className="gap-2 data-[state=active]:bg-[#0F2F44] data-[state=active]:text-white">
+            <TabsTrigger value="services" className="gap-2 data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Wrench className="w-4 h-4" />
               Services
             </TabsTrigger>
-            <TabsTrigger value="bundles" className="gap-2 data-[state=active]:bg-[#0F2F44] data-[state=active]:text-white">
+            <TabsTrigger value="bundles" className="gap-2 data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Layers className="w-4 h-4" />
               Bundles
             </TabsTrigger>
-            <TabsTrigger value="parts-tracker" className="gap-2 data-[state=active]:bg-[#0F2F44] data-[state=active]:text-white">
+            <TabsTrigger value="parts-tracker" className="gap-2 data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Truck className="w-4 h-4" />
               Parts Tracker
             </TabsTrigger>

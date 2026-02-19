@@ -305,10 +305,10 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
           }
         }}
         className={cn(
-          "bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card hover:shadow-card-hover hover:border-slate-300/80 transition-all duration-300 border-l-4 cursor-pointer",
+          "bg-white dark:bg-[#1e2a3a] rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/50 shadow-card hover:shadow-card-hover hover:border-slate-300/80 dark:hover:border-slate-600 transition-all duration-300 border-l-4 cursor-pointer",
           colorClass,
-          isPinned && "ring-2 ring-amber-200 bg-amber-50/30",
-          isSelected && "ring-2 ring-[#0069AF] bg-[#0069AF]/5"
+          isPinned && "ring-2 ring-amber-200 dark:ring-amber-700 bg-amber-50/30 dark:bg-amber-900/10",
+          isSelected && "ring-2 ring-[#0069AF] dark:ring-blue-500 bg-[#0069AF]/5 dark:bg-blue-900/20"
         )}
       >
         <div className="flex items-start justify-between mb-2">
@@ -348,7 +348,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
         </div>
 
         <div className="mb-2">
-          <h3 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
             {project.name}
           </h3>
           <div className="flex items-center gap-2">
@@ -382,7 +382,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-2.5 cursor-help" onClick={(e) => e.stopPropagation()}>
+              <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden mb-2.5 cursor-help" onClick={(e) => e.stopPropagation()}>
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-500 ease-out",
@@ -415,7 +415,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
         </TooltipProvider>
 
         {/* Stats Row - Clean Layout */}
-        <div className="flex items-center justify-between text-xs text-slate-500">
+        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
             {/* Tasks count - completed/total */}
             <div className="flex items-center gap-1">
