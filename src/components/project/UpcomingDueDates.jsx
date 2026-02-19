@@ -22,7 +22,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
 
   const allItems = [...tasksWithDue, ...partsWithDue]
     .sort((a, b) => a.date - b.date)
-    .slice(0, 8); // Show max 8 items
+    .slice(0, 12); // Show max 12 items
 
   const overdueItems = allItems.filter(item => isBefore(item.date, today));
   const upcomingItems = allItems.filter(item => !isBefore(item.date, today));
@@ -38,7 +38,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
 
   if (allItems.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden h-full">
+      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden h-full flex flex-col">
         <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-rose-50/80 to-pink-50/80">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-rose-500 shadow-md shadow-rose-200">
@@ -58,7 +58,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden h-full">
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden h-full flex flex-col">
       <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-rose-50/80 to-pink-50/80">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-lg bg-rose-500 shadow-md shadow-rose-200">
@@ -71,7 +71,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
         </div>
       </div>
 
-      <div className="p-3 space-y-1.5 max-h-[240px] overflow-y-auto">
+      <div className="p-3 space-y-1.5 overflow-y-auto flex-1">
         {overdueItems.length > 0 && (
           <div className="flex items-center gap-2 px-2 py-1">
             <AlertCircle className="w-3 h-3 text-red-500" />

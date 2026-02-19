@@ -882,27 +882,44 @@ export default function ProjectDetail() {
 
         {/* ── Tool Cards Grid + Sidebar ── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
-          {/* Main Cards — 3-col grid */}
+          {/* Main Cards — 3-col grid with Due Dates spanning right column */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min">
 
-            {/* Tasks Card */}
-            <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
+            {/* Upcoming Due Dates — spans 2 rows on desktop, placed first for grid ordering */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="sm:col-start-2 sm:row-span-2 lg:col-start-3 lg:row-start-1 lg:row-span-2"
+            >
+              <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
+            </motion.div>
+
+            {/* Tasks Card — compact single-row */}
+            <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-1">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
+                transition={{ delay: 0.2 }}
                 className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
               >
-                <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-[#0069AF]/10 to-[#0069AF]/5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-lg bg-[#0069AF] shadow-md shadow-[#0069AF]/20">
-                        <ListTodo className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900 text-sm">Tasks</h3>
-                        <p className="text-xs text-slate-500">{completedTasks}/{tasks.length} completed</p>
-                      </div>
+                <div className="p-3 bg-gradient-to-r from-[#0069AF]/10 to-[#0069AF]/5 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-[#0069AF] shadow-md shadow-[#0069AF]/20">
+                      <ListTodo className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 text-sm">Tasks</h3>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <div className="flex items-center gap-1 text-emerald-600">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span className="font-medium">{completedTasks}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-slate-500">
+                      <CircleDot className="w-3 h-3" />
+                      <span className="font-medium">{tasks.length - completedTasks}</span>
                     </div>
                     <Button
                       size="sm"
@@ -913,41 +930,69 @@ export default function ProjectDetail() {
                     </Button>
                   </div>
                 </div>
-                <div className="p-3">
-                  <div className="flex items-center justify-center gap-4 text-xs">
-                    <div className="flex items-center gap-1.5 text-emerald-600">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span className="font-medium">{completedTasks}</span>
-                      <span className="text-slate-400">done</span>
+              </motion.div>
+            </Link>
+
+            {/* Messages & Meetings Card — compact single-row */}
+            <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-2 lg:col-start-2 lg:row-start-1">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
+              >
+                <div className="p-3 bg-gradient-to-r from-[#0069AF]/10 to-[#74C7FF]/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-[#0069AF] shadow-md shadow-[#0069AF]/20">
+                      <MessageSquare className="w-4 h-4 text-white" />
                     </div>
-                    <div className="flex items-center gap-1.5 text-slate-600">
-                      <CircleDot className="w-3.5 h-3.5" />
-                      <span className="font-medium">{tasks.length - completedTasks}</span>
-                      <span className="text-slate-400">remaining</span>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 text-sm">Messages</h3>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <div className="flex items-center gap-1 text-[#0069AF]">
+                      <MessageSquare className="w-3 h-3" />
+                      <span className="font-medium">{projectNotes.filter(n => n.type === 'message' || n.type === 'note').length}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-emerald-600">
+                      <Users className="w-3 h-3" />
+                      <span className="font-medium">{projectNotes.filter(n => n.type === 'update').length}</span>
                     </div>
                   </div>
                 </div>
               </motion.div>
             </Link>
 
-            {/* Parts Card */}
-            <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`}>
+            {/* Parts Card — compact single-row */}
+            <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`} className="lg:col-start-1 lg:row-start-2">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.3 }}
                 className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
               >
-                <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-[#0F2F44]/10 to-[#0F2F44]/5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-lg bg-[#0F2F44] shadow-md shadow-[#0F2F44]/20">
-                        <Package className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900 text-sm">Parts</h3>
-                        <p className="text-xs text-slate-500">{parts.length} items tracked</p>
-                      </div>
+                <div className="p-3 bg-gradient-to-r from-[#0F2F44]/10 to-[#0F2F44]/5 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-[#0F2F44] shadow-md shadow-[#0F2F44]/20">
+                      <Package className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 text-sm">Parts</h3>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <div className="flex items-center gap-1 text-blue-600">
+                      <span className="font-medium">{parts.filter(p => p.status === 'ordered').length}</span>
+                      <span className="text-slate-400">ord</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-amber-600">
+                      <span className="font-medium">{parts.filter(p => p.status === 'received' || p.status === 'ready_to_install').length}</span>
+                      <span className="text-slate-400">rec</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-emerald-600">
+                      <span className="font-medium">{parts.filter(p => p.status === 'installed').length}</span>
+                      <span className="text-slate-400">inst</span>
                     </div>
                     <Button
                       size="sm"
@@ -958,105 +1003,36 @@ export default function ProjectDetail() {
                     </Button>
                   </div>
                 </div>
-                <div className="p-3">
-                  <div className="flex items-center justify-center gap-3 text-xs flex-wrap">
-                    <div className="flex items-center gap-1 text-blue-600">
-                      <Package className="w-3 h-3" />
-                      <span className="font-medium">{parts.filter(p => p.status === 'ordered').length}</span>
-                      <span className="text-slate-400">ordered</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-amber-600">
-                      <Truck className="w-3 h-3" />
-                      <span className="font-medium">{parts.filter(p => p.status === 'received' || p.status === 'ready_to_install').length}</span>
-                      <span className="text-slate-400">received</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-emerald-600">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span className="font-medium">{parts.filter(p => p.status === 'installed').length}</span>
-                      <span className="text-slate-400">installed</span>
-                    </div>
-                  </div>
-                </div>
               </motion.div>
             </Link>
 
-            {/* Upcoming Due Dates — PROMOTED to main card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-            >
-              <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
-            </motion.div>
-
-            {/* Messages & Meetings Card */}
-            <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
-              >
-                <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-[#0069AF]/10 to-[#74C7FF]/10">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-lg bg-[#0069AF] shadow-md shadow-[#0069AF]/20">
-                      <MessageSquare className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 text-sm">Messages & Meetings</h3>
-                      <p className="text-xs text-slate-500">Project communication</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-3">
-                  <div className="flex items-center justify-center gap-4 text-xs">
-                    <div className="flex items-center gap-1.5 text-[#0069AF]">
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      <span className="font-medium">{projectNotes.filter(n => n.type === 'message' || n.type === 'note').length}</span>
-                      <span className="text-slate-400">messages</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-emerald-600">
-                      <Users className="w-3.5 h-3.5" />
-                      <span className="font-medium">{projectNotes.filter(n => n.type === 'update').length}</span>
-                      <span className="text-slate-400">meetings</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </Link>
-
-            {/* Files Card */}
-            <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`}>
+            {/* Files Card — compact single-row */}
+            <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`} className="lg:col-start-2 lg:row-start-2">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
                 className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
               >
-                <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-[#133F5C]/10 to-[#74C7FF]/10">
+                <div className="p-3 bg-gradient-to-r from-[#133F5C]/10 to-[#74C7FF]/10 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-lg bg-[#133F5C] shadow-md shadow-[#133F5C]/20">
+                    <div className="p-1.5 rounded-lg bg-[#133F5C] shadow-md shadow-[#133F5C]/20">
                       <FileText className="w-4 h-4 text-white" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900 text-sm">Files</h3>
-                      <p className="text-xs text-slate-500">{projectFiles.length} uploaded</p>
                     </div>
                   </div>
-                </div>
-                <div className="p-3">
-                  <div className="flex items-center justify-center gap-4 text-xs">
+                  <div className="flex items-center gap-3 text-xs">
                     {fileFolders.length > 0 && (
-                      <div className="flex items-center gap-1.5 text-[#133F5C]">
-                        <Folder className="w-3.5 h-3.5" />
+                      <div className="flex items-center gap-1 text-[#133F5C]">
+                        <Folder className="w-3 h-3" />
                         <span className="font-medium">{fileFolders.length}</span>
-                        <span className="text-slate-400">folders</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-1.5 text-slate-600">
-                      <File className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1 text-slate-600">
+                      <File className="w-3 h-3" />
                       <span className="font-medium">{projectFiles.length}</span>
-                      <span className="text-slate-400">files</span>
                     </div>
                   </div>
                 </div>
