@@ -65,18 +65,26 @@ export default function MyAssignments() {
     queryClient.invalidateQueries({ queryKey: ['myTasks'] });
   };
 
+  // Get active project IDs (exclude archived, deleted, completed)
+  const activeProjectIds = projects
+    .filter(p => p.status !== 'archived' && p.status !== 'deleted' && p.status !== 'completed')
+    .map(p => p.id);
+
+  // Only consider tasks from active projects
+  const activeProjectTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
+
   // Filter tasks based on active tab
   const getFilteredTasks = () => {
-    let filtered = tasks;
-    
+    let filtered = activeProjectTasks;
+
     if (activeTab === 'all') {
-      filtered = tasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed');
+      filtered = activeProjectTasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed');
     } else if (activeTab === 'with_dates') {
-      filtered = tasks.filter(t => t.assigned_to === currentUser?.email && t.due_date && t.status !== 'completed');
+      filtered = activeProjectTasks.filter(t => t.assigned_to === currentUser?.email && t.due_date && t.status !== 'completed');
     } else if (activeTab === 'assigned_by_me') {
-      filtered = tasks.filter(t => t.created_by === currentUser?.email && t.assigned_to !== currentUser?.email && t.status !== 'completed');
+      filtered = activeProjectTasks.filter(t => t.created_by === currentUser?.email && t.assigned_to !== currentUser?.email && t.status !== 'completed');
     }
-    
+
     return filtered;
   };
 

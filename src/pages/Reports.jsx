@@ -64,21 +64,25 @@ export default function Reports() {
     queryFn: () => base44.entities.Customer.list()
   });
 
-  // Calculations
+  // Calculations — filter tasks/parts to only active projects
   const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
-  const completedTasks = tasks.filter(t => t.status === 'completed');
-  const activeTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived');
-  const overdueTasks = tasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && t.status !== 'completed'; });
-  const totalHours = (timeEntries.reduce((sum, e) => sum + (e.duration_minutes || 0), 0) / 60);
+  const activeProjectIds = activeProjects.map(p => p.id);
 
-  // Financial
-  const projectParts = parts.filter(p => p.project_id);
+  // Only count tasks/parts from active projects
+  const projectTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
+  const completedTasks = projectTasks.filter(t => t.status === 'completed');
+  const activeTasks = projectTasks.filter(t => t.status !== 'completed' && t.status !== 'archived');
+  const overdueTasks = projectTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && t.status !== 'completed'; });
+  const totalHours = (timeEntries.filter(e => activeProjectIds.includes(e.project_id)).reduce((sum, e) => sum + (e.duration_minutes || 0), 0) / 60);
+
+  // Financial — only parts from active projects
+  const projectParts = parts.filter(p => p.project_id && activeProjectIds.includes(p.project_id));
   const projectItemsCost = projectParts.reduce((sum, p) => sum + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
   const projectItemsRetail = projectParts.reduce((sum, p) => sum + ((p.quantity || 1) * (p.sell_price || p.unit_cost || 0)), 0);
   const stockedCost = inventory.reduce((sum, i) => sum + ((i.quantity_in_stock || 0) * (i.unit_cost || 0)), 0);
   const stockedRetail = inventory.reduce((sum, i) => sum + ((i.quantity_in_stock || 0) * (i.sell_price || i.unit_cost || 0)), 0);
-  const partsInTransit = parts.filter(p => p.status === 'ordered');
-  const partsNeeded = parts.filter(p => p.status === 'needed');
+  const partsInTransit = projectParts.filter(p => p.status === 'ordered');
+  const partsNeeded = projectParts.filter(p => p.status === 'needed');
   const transitCost = partsInTransit.reduce((sum, p) => sum + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
   const neededCost = partsNeeded.reduce((sum, p) => sum + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
   const totalCost = projectItemsCost + stockedCost;
@@ -86,19 +90,19 @@ export default function Reports() {
   const margin = totalRetail - totalCost;
   const marginPercent = totalRetail > 0 ? ((margin / totalRetail) * 100).toFixed(1) : 0;
 
-  // Task status distribution
+  // Task status distribution — active projects only
   const taskStatusData = [
-    { name: 'To Do', value: tasks.filter(t => t.status === 'todo').length, color: '#94a3b8' },
-    { name: 'In Progress', value: tasks.filter(t => t.status === 'in_progress').length, color: '#0069AF' },
-    { name: 'Review', value: tasks.filter(t => t.status === 'review').length, color: '#f59e0b' },
+    { name: 'To Do', value: projectTasks.filter(t => t.status === 'todo').length, color: '#94a3b8' },
+    { name: 'In Progress', value: projectTasks.filter(t => t.status === 'in_progress').length, color: '#0069AF' },
+    { name: 'Review', value: projectTasks.filter(t => t.status === 'review').length, color: '#f59e0b' },
     { name: 'Completed', value: completedTasks.length, color: '#22c55e' }
   ].filter(d => d.value > 0);
 
-  // Weekly completion trend
+  // Weekly completion trend — active projects only
   const weeklyTrend = Array.from({ length: 6 }, (_, i) => {
     const weekStart = subDays(new Date(), (5 - i) * 7 + 7);
     const weekEnd = subDays(new Date(), (5 - i) * 7);
-    const completed = tasks.filter(t => {
+    const completed = projectTasks.filter(t => {
       if (!t.updated_date || t.status !== 'completed') return false;
       const date = new Date(t.updated_date);
       return date >= weekStart && date <= weekEnd;
@@ -106,12 +110,12 @@ export default function Reports() {
     return { week: `W${i + 1}`, completed };
   });
 
-  // Team performance
+  // Team performance — active projects only
   const tasksByMember = teamMembers.map(member => {
-    const memberTasks = tasks.filter(t => t.assigned_to === member.email);
+    const memberTasks = projectTasks.filter(t => t.assigned_to === member.email);
     const memberCompleted = memberTasks.filter(t => t.status === 'completed').length;
     const memberHours = timeEntries
-      .filter(e => e.user_email === member.email)
+      .filter(e => e.user_email === member.email && activeProjectIds.includes(e.project_id))
       .reduce((sum, e) => sum + (e.duration_minutes || 0), 0) / 60;
     return {
       name: member.name?.split(' ')[0] || member.email.split('@')[0],
@@ -212,7 +216,7 @@ export default function Reports() {
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard icon={Activity} label="Active Projects" value={activeProjects.length} sub={`${completedTasks.length} tasks completed`} iconBg="bg-[#0069AF]/10" iconColor="text-[#0069AF]" />
-              <StatCard icon={CheckCircle2} label="Task Completion" value={`${tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0}%`} sub={`${activeTasks.length} active tasks`} color="text-emerald-600" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
+              <StatCard icon={CheckCircle2} label="Task Completion" value={`${projectTasks.length > 0 ? Math.round((completedTasks.length / projectTasks.length) * 100) : 0}%`} sub={`${activeTasks.length} active tasks`} color="text-emerald-600" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
               <StatCard icon={Clock} label="Hours Logged" value={`${totalHours.toFixed(0)}h`} sub={`${timeEntries.length} entries`} iconBg="bg-amber-50" iconColor="text-amber-600" />
               <StatCard icon={DollarSign} label="Portfolio Value" value={`$${totalRetail.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`} sub={`${marginPercent}% margin`} color="text-emerald-600" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
             </div>
@@ -336,7 +340,7 @@ export default function Reports() {
                 <h3 className="font-semibold text-slate-900 mb-3 text-sm">Project Health</h3>
                 <div className="space-y-3">
                   {activeProjects.slice(0, 4).map(project => {
-                    const pTasks = tasks.filter(t => t.project_id === project.id);
+                    const pTasks = projectTasks.filter(t => t.project_id === project.id);
                     const pCompleted = pTasks.filter(t => t.status === 'completed').length;
                     const pct = pTasks.length > 0 ? Math.round((pCompleted / pTasks.length) * 100) : 0;
                     return (
@@ -454,7 +458,7 @@ export default function Reports() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard icon={Users} label="Team Size" value={teamMembers.length} sub="Active members" iconBg="bg-[#0069AF]/10" iconColor="text-[#0069AF]" />
               <StatCard icon={Timer} label="Total Hours" value={`${totalHours.toFixed(0)}h`} sub={`${timeEntries.length} entries`} iconBg="bg-amber-50" iconColor="text-amber-600" />
-              <StatCard icon={CheckCircle2} label="Tasks Completed" value={completedTasks.length} sub={`out of ${tasks.length} total`} color="text-emerald-600" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
+              <StatCard icon={CheckCircle2} label="Tasks Completed" value={completedTasks.length} sub={`out of ${projectTasks.length} total`} color="text-emerald-600" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
               <StatCard icon={Clock} label="Active Timers" value={timeEntries.filter(e => e.is_running).length} sub="Running now" iconBg="bg-violet-50" iconColor="text-violet-600" />
             </div>
 

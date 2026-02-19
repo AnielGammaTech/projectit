@@ -59,10 +59,16 @@ export default function MySchedule() {
     queryFn: () => base44.entities.TeamMember.list()
   });
 
-  // Filter tasks for current user with due dates
-  const myTasks = tasks.filter(t => 
-    t.assigned_to === currentUser?.email && 
-    t.due_date && 
+  // Get active project IDs (exclude archived, deleted, completed)
+  const activeProjectIds = projects
+    .filter(p => p.status !== 'archived' && p.status !== 'deleted' && p.status !== 'completed')
+    .map(p => p.id);
+
+  // Filter tasks for current user with due dates, only from active projects
+  const myTasks = tasks.filter(t =>
+    activeProjectIds.includes(t.project_id) &&
+    t.assigned_to === currentUser?.email &&
+    t.due_date &&
     t.status !== 'completed'
   );
 
