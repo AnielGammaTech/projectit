@@ -144,7 +144,7 @@ export default function QuoteRequestDetailModal({
             <div className="flex items-center gap-3 text-sm">
               <Clock className="w-4 h-4 text-slate-400" />
               <span className="text-slate-600">Created</span>
-              <span className="font-medium">{format(new Date(quote.created_date), 'PPP')}</span>
+              <span className="font-medium">{format(new Date(quote.created_date), 'MMM d, yyyy')}</span>
             </div>
             {quote.quote_link && (
               <a 

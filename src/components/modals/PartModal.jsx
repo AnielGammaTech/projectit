@@ -278,7 +278,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full mt-1.5 justify-start font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.due_date ? format(new Date(formData.due_date.split('T')[0] + 'T12:00:00'), 'PPP') : 'Pick date'}
+                    {formData.due_date ? format(new Date(formData.due_date.split('T')[0] + 'T12:00:00'), 'MMM d, yyyy') : 'Pick date'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -298,7 +298,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full mt-1.5 justify-start font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.est_delivery_date ? format(new Date(formData.est_delivery_date.split('T')[0] + 'T12:00:00'), 'PPP') : 'Pick delivery date'}
+                  {formData.est_delivery_date ? format(new Date(formData.est_delivery_date.split('T')[0] + 'T12:00:00'), 'MMM d, yyyy') : 'Pick delivery date'}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
