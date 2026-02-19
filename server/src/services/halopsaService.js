@@ -1,6 +1,44 @@
 import entityService from './entityService.js';
 
 /**
+ * Validate that a URL is a safe external HTTPS endpoint.
+ * Blocks private IPs, localhost, and non-HTTPS protocols to prevent SSRF.
+ */
+function validateExternalUrl(urlStr, label) {
+  let parsed;
+  try {
+    parsed = new URL(urlStr);
+  } catch {
+    throw Object.assign(new Error(`Invalid ${label}: not a valid URL`), { status: 400 });
+  }
+
+  if (parsed.protocol !== 'https:') {
+    throw Object.assign(
+      new Error(`Invalid ${label}: must use HTTPS (got ${parsed.protocol})`),
+      { status: 400 }
+    );
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+
+  // Block localhost and loopback
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '[::1]') {
+    throw Object.assign(new Error(`Invalid ${label}: localhost not allowed`), { status: 400 });
+  }
+
+  // Block cloud metadata endpoints and private IP ranges
+  const privatePatterns = [
+    /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,   // RFC 1918
+    /^169\.254\./, /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./, // link-local & CGN
+    /^0\./, /^127\./,                                           // loopback
+  ];
+
+  if (privatePatterns.some(p => p.test(hostname))) {
+    throw Object.assign(new Error(`Invalid ${label}: private/internal addresses not allowed`), { status: 400 });
+  }
+}
+
+/**
  * Resolves HaloPSA credentials and URLs from IntegrationSettings (database),
  * falling back to environment variables if not set in DB.
  *
@@ -39,6 +77,10 @@ export async function getHaloPSAConfig() {
   // Normalize URLs — strip trailing slashes and /auth/ or /api/ suffixes
   authUrl = authUrl.replace(/\/+$/, '').replace(/\/auth\/?$/, '').replace(/\/api\/?$/, '');
   apiUrl = apiUrl.replace(/\/+$/, '').replace(/\/api\/?$/, '');
+
+  // SSRF protection: ensure URLs are external HTTPS endpoints
+  validateExternalUrl(`${authUrl}/auth/token`, 'Auth URL');
+  validateExternalUrl(`${apiUrl}/api`, 'API URL');
 
   return {
     clientId,
