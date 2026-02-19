@@ -1,14 +1,18 @@
 import { Router } from 'express';
 import entityService from '../services/entityService.js';
+import projectAccessMiddleware from '../middleware/projectAccess.js';
 
 const router = Router();
+
+// Project-based access control — runs before all entity routes
+router.use(projectAccessMiddleware);
 
 // GET /api/entities/:entityType/list?sort=...&limit=...
 router.get('/:entityType/list', async (req, res, next) => {
   try {
     const { entityType } = req.params;
     const { sort, limit } = req.query;
-    const results = await entityService.list(entityType, sort, limit ? parseInt(limit) : undefined);
+    const results = await entityService.list(entityType, sort, limit ? parseInt(limit) : undefined, req.accessFilter || null);
     res.json(results);
   } catch (err) {
     next(err);
@@ -20,7 +24,7 @@ router.post('/:entityType/filter', async (req, res, next) => {
   try {
     const { entityType } = req.params;
     const { filter, sort, limit } = req.body;
-    const results = await entityService.filter(entityType, filter, sort, limit);
+    const results = await entityService.filter(entityType, filter, sort, limit, req.accessFilter || null);
     res.json(results);
   } catch (err) {
     next(err);

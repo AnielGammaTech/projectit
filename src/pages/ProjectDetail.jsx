@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import ProcessingOverlay from '@/components/ui/ProcessingOverlay';
+import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -135,11 +136,14 @@ export default function ProjectDetail() {
 
   // Check if user has access to this project
   const hasAccess = () => {
-    if (!project || !currentUser) return true; // Still loading
+    if (!project || !currentUser) return false; // Deny by default while loading
     if (currentUser.role === 'admin') return true;
-    if (!project.team_members || project.team_members.length === 0) return true; // Legacy projects
+    if (!project.team_members || project.team_members.length === 0) return false; // No members = admin only
     return project.team_members.includes(currentUser.email);
   };
+
+  // Filter teamMembers to only those on this project (for assignment dropdowns)
+  const projectMembers = useProjectMembers(teamMembers, project);
 
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks', projectId],
@@ -1245,7 +1249,7 @@ export default function ProjectDetail() {
         onClose={() => { setShowTaskModal(false); setEditingTask(null); }}
         task={editingTask}
         projectId={projectId}
-        teamMembers={teamMembers}
+        teamMembers={projectMembers}
         groups={taskGroups}
         onSave={handleSaveTask}
       />
@@ -1255,7 +1259,7 @@ export default function ProjectDetail() {
         onClose={() => { setShowPartModal(false); setEditingPart(null); }}
         part={editingPart}
         projectId={projectId}
-        teamMembers={teamMembers}
+        teamMembers={projectMembers}
         onSave={handleSavePart}
       />
 
@@ -1276,7 +1280,7 @@ export default function ProjectDetail() {
         onClose={() => setShowNotesView(false)}
         projectId={projectId}
         currentUser={currentUser}
-        teamMembers={teamMembers}
+        teamMembers={projectMembers}
         onTasksCreated={refetchTasks}
       />
 
@@ -1287,7 +1291,7 @@ export default function ProjectDetail() {
         groups={taskGroups}
         projectId={projectId}
         projectName={project?.name}
-        teamMembers={teamMembers}
+        teamMembers={projectMembers}
         currentUser={currentUser}
         onStatusChange={handleTaskStatusChange}
         onEdit={(task) => { setShowTasksView(false); setEditingTask(task); setShowTaskModal(true); }}
@@ -1313,7 +1317,7 @@ export default function ProjectDetail() {
         open={!!selectedTask}
         onClose={() => setSelectedTask(null)}
         task={selectedTask}
-        teamMembers={teamMembers}
+        teamMembers={projectMembers}
         currentUser={currentUser}
         onEdit={(task) => { setSelectedTask(null); setEditingTask(task); setShowTaskModal(true); }}
       />

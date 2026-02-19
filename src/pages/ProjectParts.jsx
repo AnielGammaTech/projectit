@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -131,6 +131,12 @@ export default function ProjectParts() {
     queryKey: ['teamMembers'],
     queryFn: () => base44.entities.TeamMember.list()
   });
+
+  // Filter to only project members for assignment dropdowns
+  const projectMembers = useMemo(() => {
+    if (!project?.team_members?.length) return [];
+    return teamMembers.filter(tm => project.team_members.includes(tm.email));
+  }, [teamMembers, project]);
 
   // Check for approved proposals linked to this project
   const { data: approvedProposals = [] } = useQuery({
@@ -441,7 +447,7 @@ export default function ProjectParts() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  {teamMembers.map((member) => (
+                  {projectMembers.map((member) => (
                     <DropdownMenuItem key={member.id} onClick={() => handleBulkAssign(member.email)}>
                       <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
                         {getInitials(member.name)}
@@ -656,7 +662,7 @@ export default function ProjectParts() {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-                              {teamMembers.map((member) => (
+                              {projectMembers.map((member) => (
                                 <DropdownMenuItem key={member.id} onClick={() => handleQuickAssign(part, member.email)}>
                                   <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
                                     {getInitials(member.name)}
@@ -734,7 +740,7 @@ export default function ProjectParts() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
                             <div className="px-2 py-1.5 text-xs text-slate-500 font-medium">Assign installer:</div>
-                            {teamMembers.map((member) => (
+                            {projectMembers.map((member) => (
                               <DropdownMenuItem key={member.id} onClick={() => openReceiveDialog(part, member.email)}>
                                 <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
                                   {getInitials(member.name)}
@@ -762,7 +768,7 @@ export default function ProjectParts() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
                             <div className="px-2 py-1.5 text-xs text-slate-500 font-medium">Assign installer:</div>
-                            {teamMembers.map((member) => (
+                            {projectMembers.map((member) => (
                               <DropdownMenuItem key={member.id} onClick={() => openReceiveDialog(part, member.email)}>
                                 <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
                                   {getInitials(member.name)}
@@ -809,7 +815,7 @@ export default function ProjectParts() {
         onClose={() => { setShowPartModal(false); setEditingPart(null); }}
         part={editingPart}
         projectId={projectId}
-        teamMembers={teamMembers}
+        teamMembers={projectMembers}
         onSave={handleSavePart}
       />
 
@@ -817,7 +823,7 @@ export default function ProjectParts() {
         open={!!selectedPartDetail}
         onClose={() => setSelectedPartDetail(null)}
         part={selectedPartDetail}
-        teamMembers={teamMembers}
+        teamMembers={projectMembers}
         currentUser={currentUser}
         onStatusChange={(part, status) => { handleStatusChange(part, status); setSelectedPartDetail({ ...part, status }); }}
         onDelete={(part) => { setSelectedPartDetail(null); setDeleteConfirm({ open: true, part }); }}

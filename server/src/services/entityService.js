@@ -242,20 +242,66 @@ async function logDeletion(client, entityType, id, data, deletedBy) {
   }
 }
 
+/**
+ * Build SQL condition + values for project-based access filtering.
+ * accessFilter = { projectIds: string[], scope: 'project'|'child'|'indirect', entityType: string }
+ * paramOffset = next available $N index
+ * Returns { condition: string|null, values: any[] }
+ */
+function buildAccessCondition(accessFilter, paramOffset) {
+  if (!accessFilter || !accessFilter.projectIds) return { condition: null, values: [] };
+  const { projectIds, scope, entityType } = accessFilter;
+  const idx = paramOffset;
+
+  if (scope === 'project') {
+    // Filter Project table by id
+    return { condition: `id = ANY($${idx}::uuid[])`, values: [projectIds] };
+  }
+  if (scope === 'child') {
+    // Filter child entities by data->>'project_id'
+    return { condition: `data->>'project_id' = ANY($${idx}::text[])`, values: [projectIds] };
+  }
+  if (scope === 'indirect') {
+    // TaskComment etc — subquery through parent entity
+    const parentEntity = entityType === 'TaskComment' ? 'Task' : null;
+    const foreignKey = entityType === 'TaskComment' ? 'task_id' : null;
+    if (parentEntity && foreignKey) {
+      return {
+        condition: `data->>'${foreignKey}' IN (SELECT id::text FROM "${parentEntity}" WHERE data->>'project_id' = ANY($${idx}::text[]))`,
+        values: [projectIds],
+      };
+    }
+  }
+  return { condition: null, values: [] };
+}
+
 const entityService = {
-  async list(entityType, sortField, limit) {
+  async list(entityType, sortField, limit, accessFilter) {
     validateEntity(entityType);
     const orderBy = buildOrderBy(sortField);
     const limitClause = limit ? `LIMIT ${parseInt(limit, 10)}` : '';
+
+    const { condition: accessCond, values: accessVals } = buildAccessCondition(accessFilter, 1);
+    const whereClause = accessCond ? `WHERE ${accessCond}` : '';
+
     const { rows } = await pool.query(
-      `SELECT * FROM "${entityType}" ${orderBy} ${limitClause}`
+      `SELECT * FROM "${entityType}" ${whereClause} ${orderBy} ${limitClause}`,
+      accessVals
     );
     return rows.map(formatRow);
   },
 
-  async filter(entityType, filterObj, sortField, limit) {
+  async filter(entityType, filterObj, sortField, limit, accessFilter) {
     validateEntity(entityType);
     const { conditions, values } = buildWhereClause(filterObj || {});
+
+    // Append access filter condition after the user's filter conditions
+    const { condition: accessCond, values: accessVals } = buildAccessCondition(accessFilter, values.length + 1);
+    if (accessCond) {
+      conditions.push(accessCond);
+      values.push(...accessVals);
+    }
+
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     const orderBy = buildOrderBy(sortField);
     const limitClause = limit ? `LIMIT ${parseInt(limit, 10)}` : '';
