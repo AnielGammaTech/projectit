@@ -9,6 +9,7 @@ import { createPageUrl } from '@/utils';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
@@ -230,15 +231,15 @@ export default function Dashboard() {
       if (t.assigned_to !== currentUser?.email) return false;
       if (t.status === 'completed' || t.status === 'archived') return false;
       if (!t.due_date) return false;
-      const dueDate = new Date(t.due_date);
-      return isPast(dueDate) || isToday(dueDate) || isTomorrow(dueDate);
-    }).sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-    
+      const dueDate = parseLocalDate(t.due_date);
+      return dueDate && (isPast(dueDate) || isToday(dueDate) || isTomorrow(dueDate));
+    }).sort((a, b) => (parseLocalDate(a.due_date) || 0) - (parseLocalDate(b.due_date) || 0));
+
     return {
       myUrgentTasks: urgent,
-      overdueTasks: urgent.filter(t => isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date))),
-      dueTodayTasks: urgent.filter(t => isToday(new Date(t.due_date))),
-      dueTomorrowTasks: urgent.filter(t => isTomorrow(new Date(t.due_date)))
+      overdueTasks: urgent.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d); }),
+      dueTodayTasks: urgent.filter(t => { const d = parseLocalDate(t.due_date); return d && isToday(d); }),
+      dueTomorrowTasks: urgent.filter(t => { const d = parseLocalDate(t.due_date); return d && isTomorrow(d); })
     };
   }, [activeTasks, currentUser?.email]);
 
@@ -825,7 +826,7 @@ export default function Dashboard() {
                   </h3>
                   <div className="mt-2 space-y-1">
                     {overdueTasks.slice(0, 3).map(task => {
-                      const daysOverdue = differenceInDays(new Date(), new Date(task.due_date));
+                      const daysOverdue = differenceInDays(new Date(), parseLocalDate(task.due_date));
                       return (
                         <div key={task.id} className="flex items-center gap-2 text-sm">
                           <span className="font-medium">{task.title}</span>
@@ -907,7 +908,7 @@ export default function Dashboard() {
           <StatsCard
             title="All Tasks"
             value={activeTasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}
-            subtitle={activeTasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length > 0 ? `${activeTasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length} overdue` : null}
+            subtitle={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && !isToday(d) && t.status !== 'completed'; }).length > 0 ? `${activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && !isToday(d) && t.status !== 'completed'; }).length} overdue` : null}
             icon={ClipboardList}
             iconColor="bg-[#0069AF]"
             href={createPageUrl('AllTasks')}

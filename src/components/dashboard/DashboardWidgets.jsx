@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format, isPast, isToday, isTomorrow, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { motion } from 'framer-motion';
 import { 
   Pin, Settings, X, Plus, GripVertical, Activity, 
@@ -72,7 +73,7 @@ function MetricsWidget({ projects, tasks, parts }) {
   
   const completedTasks = activeTasks.filter(t => t.status === 'completed').length;
   const pendingParts = activeParts.filter(p => p.status !== 'installed').length;
-  const overdueTasks = activeTasks.filter(t => t.due_date && isPast(new Date(t.due_date)) && t.status !== 'completed').length;
+  const overdueTasks = activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed'; }).length;
 
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -145,10 +146,11 @@ function DeadlinesWidget({ tasks, projects }) {
       date: p.due_date,
       projectId: p.id
     }))
-  ].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 5);
+  ].sort((a, b) => (parseLocalDate(a.date) || 0) - (parseLocalDate(b.date) || 0)).slice(0, 5);
 
   const getDateLabel = (date) => {
-    const d = new Date(date);
+    const d = parseLocalDate(date);
+    if (!d) return { label: '—', color: 'text-slate-400 bg-slate-50' };
     if (isPast(d) && !isToday(d)) return { label: 'Overdue', color: 'text-red-600 bg-red-50' };
     if (isToday(d)) return { label: 'Today', color: 'text-amber-600 bg-amber-50' };
     if (isTomorrow(d)) return { label: 'Tomorrow', color: 'text-blue-600 bg-blue-50' };
@@ -195,7 +197,7 @@ function AISummaryWidget({ projects, tasks }) {
     try {
       const activeProjects = projects.filter(p => p.status !== 'archived').slice(0, 5);
       const pendingTasks = tasks.filter(t => t.status !== 'completed').length;
-      const overdueTasks = tasks.filter(t => t.due_date && isPast(new Date(t.due_date)) && t.status !== 'completed').length;
+      const overdueTasks = tasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed'; }).length;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Generate a brief, actionable daily summary for a project manager based on this data:
@@ -278,7 +280,7 @@ function MyTasksWidget({ tasks, currentUser, projects }) {
               task.status === 'in_progress' ? 'text-blue-500' : 'text-slate-400'
             )} />
             <span className="flex-1 text-xs text-slate-700 truncate">{task.title}</span>
-            {task.due_date && isPast(new Date(task.due_date)) && (
+            {task.due_date && (() => { const d = parseLocalDate(task.due_date); return d && isPast(d) && !isToday(d); })() && (
               <AlertTriangle className="w-3 h-3 text-red-500" />
             )}
           </Link>
@@ -305,7 +307,7 @@ function TeamWorkloadWidget({ tasks, teamMembers, projects }) {
       name: member.name,
       email: member.email,
       count: memberTasks.length,
-      overdue: memberTasks.filter(t => t.due_date && isPast(new Date(t.due_date))).length
+      overdue: memberTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d); }).length
     };
   }).sort((a, b) => b.count - a.count).slice(0, 5);
 
@@ -338,7 +340,7 @@ function OverduePartsWidget({ parts, projects }) {
   // Only show parts from active projects
   const activeProjectIds = projects.filter(p => p.status !== 'archived' && p.status !== 'completed').map(p => p.id);
   const overdueParts = parts
-    .filter(p => p.due_date && isPast(new Date(p.due_date)) && p.status !== 'installed' && activeProjectIds.includes(p.project_id))
+    .filter(p => { const d = parseLocalDate(p.due_date); return d && isPast(d) && !isToday(d) && p.status !== 'installed' && activeProjectIds.includes(p.project_id); })
     .slice(0, 5);
 
   return (
@@ -351,7 +353,7 @@ function OverduePartsWidget({ parts, projects }) {
             <Package className="w-4 h-4 text-red-500" />
             <span className="flex-1 text-xs text-slate-700 truncate">{part.name}</span>
             <Badge className="text-[10px] bg-red-100 text-red-700">
-              {format(new Date(part.due_date), 'MMM d')}
+              {format(parseLocalDate(part.due_date), 'MMM d')}
             </Badge>
           </div>
         ))

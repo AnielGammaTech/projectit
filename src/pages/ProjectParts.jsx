@@ -46,6 +46,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { format, isToday, isPast } from 'date-fns';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -568,8 +569,9 @@ export default function ProjectParts() {
             {otherParts.length > 0 ? (
               filteredParts.map((part, idx) => {
                 const isSelected = selectedParts.has(part.id);
-                const estDeliveryDateValid = part.est_delivery_date && !isNaN(new Date(part.est_delivery_date).getTime());
-                const isDeliveryDue = estDeliveryDateValid && (isToday(new Date(part.est_delivery_date)) || isPast(new Date(part.est_delivery_date)));
+                const estDeliveryDate = parseLocalDate(part.est_delivery_date);
+                const estDeliveryDateValid = !!estDeliveryDate;
+                const isDeliveryDue = estDeliveryDateValid && (isToday(estDeliveryDate) || isPast(estDeliveryDate));
                 return (
                 <motion.div
                   key={part.id}
@@ -674,14 +676,14 @@ export default function ProjectParts() {
                             )}
                           >
                             <Truck className="w-3 h-3" />
-                            ETA: {format(new Date(part.est_delivery_date), 'MMM d')}
+                            ETA: {format(parseLocalDate(part.est_delivery_date), 'MMM d')}
                             {isDeliveryDue && " ⚠️"}
                           </Badge>
                         )}
-                        {part.due_date && !isNaN(new Date(part.due_date).getTime()) && (
+                        {part.due_date && parseLocalDate(part.due_date) && (
                           <div className="flex items-center gap-1.5 text-sm text-slate-500">
                             <Calendar className="w-3.5 h-3.5" />
-                            <span>{format(new Date(part.due_date), 'MMM d')}</span>
+                            <span>{format(parseLocalDate(part.due_date), 'MMM d')}</span>
                           </div>
                         )}
                       </div>

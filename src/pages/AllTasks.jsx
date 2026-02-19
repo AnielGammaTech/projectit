@@ -15,6 +15,7 @@ import { createPageUrl } from '@/utils';
 import { format, isPast, isToday, isTomorrow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -184,8 +185,8 @@ function TaskRow({ task, teamMembers, currentUser, statusConfig, priorityColors,
 // Part row component with its own state for date picker
 function PartRow({ part, teamMembers, getDueDateLabel, onAssign, onUnassign, onDueDateChange, onNavigate }) {
   const [dateOpen, setDateOpen] = useState(false);
-  const dueInfo = part.due_date && !isNaN(new Date(part.due_date).getTime()) ? getDueDateLabel(part.due_date) : null;
-  const deliveryInfo = part.est_delivery_date && !isNaN(new Date(part.est_delivery_date).getTime()) ? getDueDateLabel(part.est_delivery_date) : null;
+  const dueInfo = part.due_date && parseLocalDate(part.due_date) ? getDueDateLabel(part.due_date) : null;
+  const deliveryInfo = part.est_delivery_date && parseLocalDate(part.est_delivery_date) ? getDueDateLabel(part.est_delivery_date) : null;
   const statusColors = {
     needed: 'bg-red-100 text-red-700',
     ordered: 'bg-blue-100 text-blue-700',
@@ -403,7 +404,7 @@ export default function AllTasks() {
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
   }).sort((a, b) => {
     if (viewMode === 'mine_due') {
-      return new Date(a.due_date) - new Date(b.due_date);
+      return (parseLocalDate(a.due_date) || 0) - (parseLocalDate(b.due_date) || 0);
     }
     return 0;
   });
@@ -506,7 +507,8 @@ export default function AllTasks() {
   };
 
   const getDueDateLabel = (date) => {
-    const d = new Date(date);
+    const d = parseLocalDate(date);
+    if (!d) return null;
     if (isToday(d)) return { label: 'Today', color: 'text-amber-600 bg-amber-50' };
     if (isTomorrow(d)) return { label: 'Tomorrow', color: 'text-blue-600 bg-blue-50' };
     if (isPast(d)) return { label: 'Overdue', color: 'text-red-600 bg-red-50' };

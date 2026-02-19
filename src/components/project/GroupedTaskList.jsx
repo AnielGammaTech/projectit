@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
 import { sendTaskAssignmentNotification } from '@/utils/notifications';
@@ -69,7 +70,7 @@ const groupColors = {
 
 const getDueDateInfo = (dueDate, status) => {
   if (!dueDate || status === 'completed') return null;
-  const date = new Date(dueDate);
+  const date = parseLocalDate(dueDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -180,7 +181,7 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
             <PopoverContent className="w-auto p-0" align="end">
               <CalendarPicker
                 mode="single"
-                selected={task.due_date ? new Date(task.due_date) : undefined}
+                selected={task.due_date ? parseLocalDate(task.due_date) : undefined}
                 onSelect={(date) => handleDateChange(date)}
                 initialFocus
               />
