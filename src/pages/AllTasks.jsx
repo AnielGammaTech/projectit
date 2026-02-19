@@ -387,20 +387,20 @@ export default function AllTasks() {
   const allFilteredTasks = tasks.filter(task => {
     // Only show tasks from active projects (exclude archived)
     if (!activeProjectIds.includes(task.project_id)) return false;
-    
+
     const matchesSearch = task.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
     const matchesAssignee = assigneeFilter === 'all' || task.assigned_to === assigneeFilter;
-    
+
     let matchesViewMode = true;
     if (viewMode === 'mine') {
       matchesViewMode = task.assigned_to === currentUser?.email;
     } else if (viewMode === 'mine_due') {
       matchesViewMode = task.assigned_to === currentUser?.email && task.due_date;
     }
-    
+
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
   }).sort((a, b) => {
     if (viewMode === 'mine_due') {
@@ -414,7 +414,7 @@ export default function AllTasks() {
   const completedTasks = allFilteredTasks.filter(t => t.status === 'completed');
 
   // My assigned parts (with due dates)
-  const myParts = parts.filter(part => 
+  const myParts = parts.filter(part =>
     part.assigned_to === currentUser?.email && part.due_date
   );
 
@@ -425,7 +425,7 @@ export default function AllTasks() {
   const filteredParts = parts.filter(part => {
     // Only include parts from active projects
     if (!activeProjectIds.includes(part.project_id)) return false;
-    
+
     const matchesSearch = part.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          part.part_number?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || part.status === statusFilter;
@@ -573,7 +573,7 @@ export default function AllTasks() {
         >
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Tasks & Parts</h1>
           <p className="text-slate-500 mt-1">View and filter all tasks and parts across projects</p>
-          
+
           {/* Main Tabs */}
           <div className="flex gap-2 mt-4">
             <button
@@ -613,8 +613,8 @@ export default function AllTasks() {
                 onClick={() => setViewMode('all')}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  viewMode === 'all' 
-                    ? "bg-white text-slate-900 shadow-sm" 
+                  viewMode === 'all'
+                    ? "bg-white text-slate-900 shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
                 )}
               >
@@ -624,8 +624,8 @@ export default function AllTasks() {
                 onClick={() => setViewMode('mine')}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  viewMode === 'mine' 
-                    ? "bg-white text-slate-900 shadow-sm" 
+                  viewMode === 'mine'
+                    ? "bg-white text-slate-900 shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
                 )}
               >
@@ -635,8 +635,8 @@ export default function AllTasks() {
                 onClick={() => setViewMode('mine_due')}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  viewMode === 'mine_due' 
-                    ? "bg-white text-slate-900 shadow-sm" 
+                  viewMode === 'mine_due'
+                    ? "bg-white text-slate-900 shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
                 )}
               >
@@ -844,7 +844,7 @@ export default function AllTasks() {
                   className="pl-10"
                 />
               </div>
-              
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Status" />
