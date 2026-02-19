@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/UserAvatar';
+import { sendTaskAssignmentNotification } from '@/utils/notifications';
 
 const priorityConfig = {
   low: { label: 'Low', color: 'text-slate-500', bg: 'bg-slate-100' },
@@ -114,10 +115,22 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   const handleAssign = async (email) => {
     const member = teamMembers.find(m => m.email === email);
+    const wasAssigned = task.assigned_to;
+    const newEmail = email === 'unassigned' ? '' : email;
     await handleUpdateTask({
-      assigned_to: email === 'unassigned' ? '' : email,
+      assigned_to: newEmail,
       assigned_name: email === 'unassigned' ? '' : (member?.name || email)
     });
+
+    if (newEmail && newEmail !== wasAssigned) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail: newEmail,
+        taskTitle: task.title,
+        projectId: task.project_id,
+        projectName: project?.name || '',
+        currentUser,
+      });
+    }
   };
 
   const [localPriority, setLocalPriority] = useState(task?.priority || 'medium');

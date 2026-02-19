@@ -72,6 +72,7 @@ import ProjectSidebar from '@/components/project/ProjectSidebar';
 import UpcomingTasksWidget from '@/components/project/UpcomingTasksWidget';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
+import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
 import ArchiveProjectModal from '@/components/modals/ArchiveProjectModal';
 import OnHoldReasonModal from '@/components/modals/OnHoldReasonModal';
 import CompleteProjectModal from '@/components/modals/CompleteProjectModal';
@@ -355,36 +356,14 @@ export default function ProjectDetail() {
       }
 
       // Send notification if task is newly assigned to someone
-      if (isNewlyAssigned && data.assigned_to !== currentUser?.email) {
-        try {
-          // Create in-app notification
-          await base44.entities.UserNotification.create({
-            user_email: data.assigned_to,
-            type: 'task_assigned',
-            title: 'New task assigned to you',
-            message: `"${data.title}" has been assigned to you by ${currentUser?.full_name || currentUser?.email}`,
-            project_id: projectId,
-            project_name: project?.name,
-            from_user_email: currentUser?.email,
-            from_user_name: currentUser?.full_name || currentUser?.email,
-            link: `/ProjectDetail?id=${projectId}`,
-            is_read: false
-          });
-
-          // Send email notification via Resend
-          await base44.functions.invoke('sendNotificationEmail', {
-            to: data.assigned_to,
-            type: 'task_assigned',
-            title: 'New task assigned to you',
-            message: `"${data.title}" has been assigned to you by ${currentUser?.full_name || currentUser?.email}`,
-            projectId: projectId,
-            projectName: project?.name,
-            fromUserName: currentUser?.full_name || currentUser?.email,
-            link: `${window.location.origin}/ProjectDetail?id=${projectId}`
-          });
-        } catch (notifErr) {
-          console.error('Failed to send task notification:', notifErr);
-        }
+      if (isNewlyAssigned) {
+        await sendTaskAssignmentNotification({
+          assigneeEmail: data.assigned_to,
+          taskTitle: data.title,
+          projectId,
+          projectName: project?.name,
+          currentUser,
+        });
       }
 
       refetchTasks();
@@ -399,39 +378,12 @@ export default function ProjectDetail() {
       await logActivity(projectId, ActivityActions.TASK_COMPLETED, `completed task "${task.title}"`, currentUser, 'task', task.id);
 
       // Notify people who should be notified on task completion
-      if (task.notify_on_complete?.length > 0) {
-        for (const email of task.notify_on_complete) {
-          if (email !== currentUser?.email) {
-            try {
-              await base44.entities.UserNotification.create({
-                user_email: email,
-                type: 'task_completed',
-                title: 'Task completed',
-                message: `"${task.title}" was completed by ${currentUser?.full_name || currentUser?.email}`,
-                project_id: projectId,
-                project_name: project?.name,
-                from_user_email: currentUser?.email,
-                from_user_name: currentUser?.full_name || currentUser?.email,
-                link: `/ProjectDetail?id=${projectId}`,
-                is_read: false
-              });
-
-              await base44.functions.invoke('sendNotificationEmail', {
-                to: email,
-                type: 'task_completed',
-                title: 'Task completed',
-                message: `"${task.title}" was completed by ${currentUser?.full_name || currentUser?.email}`,
-                projectId: projectId,
-                projectName: project?.name,
-                fromUserName: currentUser?.full_name || currentUser?.email,
-                link: `${window.location.origin}/ProjectDetail?id=${projectId}`
-              });
-            } catch (err) {
-              console.error('Failed to send completion notification:', err);
-            }
-          }
-        }
-      }
+      await sendTaskCompletionNotification({
+        task,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
     } else {
       await logActivity(projectId, ActivityActions.TASK_UPDATED, `changed task "${task.title}" status to ${status.replace('_', ' ')}`, currentUser, 'task', task.id);
     }
@@ -1205,6 +1157,7 @@ export default function ProjectDetail() {
         tasks={tasks}
         groups={taskGroups}
         projectId={projectId}
+        projectName={project?.name}
         teamMembers={teamMembers}
         currentUser={currentUser}
         onStatusChange={handleTaskStatusChange}

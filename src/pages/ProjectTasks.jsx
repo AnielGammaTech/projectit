@@ -37,6 +37,7 @@ import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import GroupModal from '@/components/modals/GroupModal';
 import TaskGroupCard from '@/components/project/TaskGroupCard';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
+import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -239,12 +240,28 @@ export default function ProjectTasks() {
 
   const handleBulkAssign = async (email) => {
     const member = teamMembers.find(m => m.email === email);
+    const tasksToNotify = [];
     for (const taskId of selectedTasks) {
+      const task = tasks.find(t => t.id === taskId);
+      if (task && task.assigned_to !== email) {
+        tasksToNotify.push(task);
+      }
       await base44.entities.Task.update(taskId, {
         assigned_to: email,
         assigned_name: member?.name || email
       });
     }
+
+    for (const task of tasksToNotify) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail: email,
+        taskTitle: task.title,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
+    }
+
     refetchTasks();
     clearSelection();
   };
@@ -297,20 +314,33 @@ export default function ProjectTasks() {
 
   const handleInlineCreate = async (groupId) => {
     if (!inlineTaskData.title.trim() || isCreating) return;
-    
+
     setIsCreating(true);
     const member = teamMembers.find(m => m.email === inlineTaskData.assigned_to);
+    const taskTitle = inlineTaskData.title.trim();
+    const assigneeEmail = inlineTaskData.assigned_to || '';
     await base44.entities.Task.create({
-      title: inlineTaskData.title.trim(),
+      title: taskTitle,
       project_id: projectId,
       status: 'todo',
       priority: 'medium',
       group_id: groupId || '',
       due_date: inlineTaskData.due_date ? format(inlineTaskData.due_date, 'yyyy-MM-dd') : '',
-      assigned_to: inlineTaskData.assigned_to || '',
+      assigned_to: assigneeEmail,
       assigned_name: member?.name || '',
       description: inlineTaskData.description || ''
     });
+
+    if (assigneeEmail) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail,
+        taskTitle,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
+    }
+
     setInlineTaskData({ title: '', assigned_to: '', due_date: null, description: '' });
     setInlineTaskGroupId(null);
     setIsCreating(false);
@@ -324,15 +354,39 @@ export default function ProjectTasks() {
 
   const handleStatusChange = async (task, status) => {
     await base44.entities.Task.update(task.id, { status });
+
+    if (status === 'completed') {
+      await sendTaskCompletionNotification({
+        task,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
+    }
+
     refetchTasks();
   };
 
   const handleSaveTask = async (data) => {
+    const wasAssigned = editingTask?.assigned_to;
+    const isNewlyAssigned = data.assigned_to && data.assigned_to !== 'unassigned' && data.assigned_to !== wasAssigned;
+
     if (editingTask) {
       await base44.entities.Task.update(editingTask.id, data);
     } else {
       await base44.entities.Task.create(data);
     }
+
+    if (isNewlyAssigned) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail: data.assigned_to,
+        taskTitle: data.title,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
+    }
+
     await refetchTasks();
     setShowTaskModal(false);
     setEditingTask(null);
@@ -389,6 +443,17 @@ export default function ProjectTasks() {
       assigned_to: email,
       assigned_name: member?.name || email
     });
+
+    if (email !== task.assigned_to) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail: email,
+        taskTitle: task.title,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
+    }
+
     refetchTasks();
   };
 
