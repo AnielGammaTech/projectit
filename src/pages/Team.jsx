@@ -38,6 +38,19 @@ export default function Team() {
     queryFn: () => base44.entities.Task.list()
   });
 
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => base44.entities.Project.list()
+  });
+
+  // Get active project IDs (exclude archived, deleted, completed)
+  const activeProjectIds = projects
+    .filter(p => p.status !== 'archived' && p.status !== 'deleted' && p.status !== 'completed')
+    .map(p => p.id);
+
+  // Only count tasks from active projects
+  const activeProjectTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
+
   const handleSave = async (data) => {
     if (editingMember) {
       await base44.entities.TeamMember.update(editingMember.id, data);
@@ -55,7 +68,7 @@ export default function Team() {
     setDeleteConfirm({ open: false, member: null });
   };
 
-  const getAssignedTasks = (email) => tasks.filter(t => t.assigned_to === email);
+  const getAssignedTasks = (email) => activeProjectTasks.filter(t => t.assigned_to === email);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">

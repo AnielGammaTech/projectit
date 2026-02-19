@@ -84,23 +84,32 @@ export default function GlobalSearch({ isOpen, onClose }) {
     staleTime: 60000
   });
 
+  // Get active project IDs (exclude archived, deleted, completed)
+  const activeProjectIds = useMemo(() =>
+    projects
+      .filter(p => p.status !== 'archived' && p.status !== 'deleted' && p.status !== 'completed')
+      .map(p => p.id),
+    [projects]
+  );
+
   const searchResults = useMemo(() => {
     const results = [];
     const lowerQuery = query.toLowerCase().trim();
     if (!lowerQuery) return results;
 
     if (filters.project) {
-      projects.filter(p => 
-        p.name?.toLowerCase().includes(lowerQuery) ||
+      projects.filter(p =>
+        p.status !== 'deleted' &&
+        (p.name?.toLowerCase().includes(lowerQuery) ||
         p.client?.toLowerCase().includes(lowerQuery) ||
         p.description?.toLowerCase().includes(lowerQuery) ||
         p.project_number?.toString().includes(lowerQuery) ||
-        p.halopsa_ticket_id?.includes(lowerQuery)
+        p.halopsa_ticket_id?.includes(lowerQuery))
       ).forEach(p => results.push({ type: 'project', item: p, url: createPageUrl('ProjectDetail') + `?id=${p.id}` }));
     }
 
     if (filters.proposal) {
-      proposals.filter(p => 
+      proposals.filter(p =>
         p.title?.toLowerCase().includes(lowerQuery) ||
         p.customer_name?.toLowerCase().includes(lowerQuery) ||
         p.proposal_number?.toLowerCase().includes(lowerQuery)
@@ -108,7 +117,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
     }
 
     if (filters.customer) {
-      customers.filter(c => 
+      customers.filter(c =>
         c.name?.toLowerCase().includes(lowerQuery) ||
         c.email?.toLowerCase().includes(lowerQuery) ||
         c.company?.toLowerCase().includes(lowerQuery)
@@ -116,7 +125,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
     }
 
     if (filters.inventory) {
-      inventory.filter(i => 
+      inventory.filter(i =>
         i.name?.toLowerCase().includes(lowerQuery) ||
         i.sku?.toLowerCase().includes(lowerQuery) ||
         i.category?.toLowerCase().includes(lowerQuery)
@@ -124,14 +133,15 @@ export default function GlobalSearch({ isOpen, onClose }) {
     }
 
     if (filters.task) {
-      tasks.filter(t => 
-        t.title?.toLowerCase().includes(lowerQuery) ||
-        t.description?.toLowerCase().includes(lowerQuery)
+      tasks.filter(t =>
+        activeProjectIds.includes(t.project_id) &&
+        (t.title?.toLowerCase().includes(lowerQuery) ||
+        t.description?.toLowerCase().includes(lowerQuery))
       ).forEach(t => results.push({ type: 'task', item: t, url: createPageUrl('AllTasks') }));
     }
 
     return results;
-  }, [query, filters, projects, proposals, customers, inventory, tasks]);
+  }, [query, filters, projects, proposals, customers, inventory, tasks, activeProjectIds]);
 
   const toggleFilter = (key) => {
     setFilters(prev => ({ ...prev, [key]: !prev[key] }));
