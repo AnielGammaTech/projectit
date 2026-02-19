@@ -52,7 +52,7 @@ const getInitials = (name) => {
 };
 
 // Task row component with its own state for date picker
-function TaskRow({ task, teamMembers, currentUser, statusConfig, priorityColors, getDueDateLabel, onComplete, onAssign, onUnassign, onDueDateChange, onNavigate }) {
+function TaskRow({ task, teamMembers, currentUser, statusConfig, priorityColors, getDueDateLabel, groupName, onComplete, onAssign, onUnassign, onDueDateChange, onNavigate }) {
   const [dateOpen, setDateOpen] = useState(false);
   const status = statusConfig[task.status] || statusConfig.todo;
   const dueInfo = task.due_date ? getDueDateLabel(task.due_date) : null;
@@ -81,7 +81,12 @@ function TaskRow({ task, teamMembers, currentUser, statusConfig, priorityColors,
       </button>
 
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-medium text-slate-900 truncate">{task.title}</h4>
+        <div className="flex items-center gap-1.5">
+          <h4 className="text-sm font-medium text-slate-900 truncate">{task.title}</h4>
+          {groupName && (
+            <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0 hidden sm:inline">{groupName}</span>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-1.5 shrink-0">
@@ -344,6 +349,17 @@ export default function AllTasks() {
     queryKey: ['teamMembers'],
     queryFn: () => base44.entities.TeamMember.list()
   });
+
+  const { data: taskGroups = [] } = useQuery({
+    queryKey: ['allTaskGroups'],
+    queryFn: () => base44.entities.TaskGroup.list()
+  });
+
+  const getGroupName = (groupId) => {
+    if (!groupId) return null;
+    const group = taskGroups.find(g => g.id === groupId);
+    return group?.name || null;
+  };
 
   const getProjectName = (projectId) => {
     const project = projects.find(p => p.id === projectId);
@@ -740,6 +756,7 @@ export default function AllTasks() {
                           statusConfig={statusConfig}
                           priorityColors={priorityColors}
                           getDueDateLabel={getDueDateLabel}
+                          groupName={getGroupName(task.group_id)}
                           onComplete={handleQuickComplete}
                           onAssign={handleTaskAssign}
                           onUnassign={handleTaskUnassign}
