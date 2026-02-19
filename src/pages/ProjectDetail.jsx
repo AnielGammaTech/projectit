@@ -651,6 +651,14 @@ export default function ProjectDetail() {
     );
   }
 
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
+        <div className="animate-pulse text-slate-400">Loading project...</div>
+      </div>
+    );
+  }
+
   if (!hasAccess()) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
