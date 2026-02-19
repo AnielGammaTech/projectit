@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, Settings, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square } from 'lucide-react';
+import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -1507,16 +1507,6 @@ export default function Dashboard() {
         currentUserEmail={currentUser?.email}
       />
 
-      {/* Adminland Corner Link (Admin Only) */}
-      {isAdmin && (
-        <Link 
-          to={createPageUrl('Adminland')}
-          className="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 z-30 flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2.5 bg-[#133F5C] hover:bg-[#0F2F44] text-white rounded-lg shadow-lg transition-all"
-        >
-          <Settings className="w-4 h-4" />
-          Adminland
-        </Link>
-      )}
 
       {/* Bulk Delete Confirmation */}
       <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
