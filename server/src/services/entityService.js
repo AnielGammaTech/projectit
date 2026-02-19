@@ -48,7 +48,20 @@ function buildOrderBy(sortField) {
   if (metaColumns.includes(column)) {
     return `ORDER BY "${column}" ${direction}`;
   }
+  // Validate sort column before interpolating
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(column)) {
+    return 'ORDER BY created_date DESC'; // fallback to safe default
+  }
   return `ORDER BY data->>'${column}' ${direction}`;
+}
+
+// Only allow safe identifiers as JSONB field names (letters, digits, underscores)
+const SAFE_FIELD_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
+function validateFieldName(field) {
+  if (!SAFE_FIELD_RE.test(field)) {
+    throw Object.assign(new Error(`Invalid filter field: ${field}`), { status: 400 });
+  }
 }
 
 // Translate MongoDB-style filter object to PostgreSQL WHERE conditions
@@ -111,6 +124,9 @@ function buildWhereClause(filterObj, paramOffset = 1) {
       }
       continue;
     }
+
+    // Validate field name before interpolating into SQL
+    validateFieldName(field);
 
     // JSONB field queries
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
