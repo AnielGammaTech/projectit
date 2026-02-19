@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { api } from '@/api/apiClient';
 
@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false);
   const [authError, setAuthError] = useState(null);
   const [appPublicSettings, setAppPublicSettings] = useState(null);
+  const initializedRef = useRef(false);
 
   // Fetch app-level user data from our API
   const fetchAppUser = useCallback(async () => {
@@ -37,66 +38,71 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const checkAppState = useCallback(async () => {
-    try {
-      setIsLoadingAuth(true);
-      setAuthError(null);
-
-      if (!supabase) {
-        // Supabase not configured — fall back to checking for token
-        setIsLoadingAuth(false);
-        setIsAuthenticated(false);
-        return;
-      }
-
-      // Check for existing Supabase session
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session) {
-        setIsLoadingAuth(false);
-        setIsAuthenticated(false);
-        return;
-      }
-
-      // We have a valid Supabase session — fetch app user data
-      await fetchAppUser();
+  useEffect(() => {
+    if (!supabase) {
+      // Supabase not configured
       setIsLoadingAuth(false);
+      setIsAuthenticated(false);
+      return;
+    }
+
+    // Set up auth state listener FIRST (Supabase recommended pattern)
+    // onAuthStateChange fires INITIAL_SESSION immediately upon registration
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'INITIAL_SESSION') {
+          // This is the initial check — replaces getSession()
+          if (session) {
+            await fetchAppUser();
+          } else {
+            setIsAuthenticated(false);
+            setUser(null);
+          }
+          setIsLoadingAuth(false);
+          initializedRef.current = true;
+        } else if (event === 'SIGNED_IN' && session) {
+          // Only fetch if already initialized (skip duplicate from login)
+          if (initializedRef.current) {
+            await fetchAppUser();
+          }
+          setIsLoadingAuth(false);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setIsAuthenticated(false);
+          setIsLoadingAuth(false);
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          // Token refreshed — session is still valid, no action needed
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetchAppUser]);
+
+  const checkAppState = useCallback(async () => {
+    if (!supabase) return;
+    setIsLoadingAuth(true);
+    setAuthError(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await fetchAppUser();
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+      }
     } catch (error) {
       console.error('Auth check failed:', error);
       setAuthError({
         type: 'unknown',
         message: error.message || 'An unexpected error occurred',
       });
-      setIsLoadingAuth(false);
     }
+    setIsLoadingAuth(false);
   }, [fetchAppUser]);
-
-  useEffect(() => {
-    checkAppState();
-
-    // Listen for Supabase auth state changes
-    if (supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          if (event === 'INITIAL_SESSION') {
-            // Initial session check — handled by checkAppState above, skip
-            return;
-          } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-            await fetchAppUser();
-            setIsLoadingAuth(false);
-          } else if (event === 'SIGNED_OUT') {
-            setUser(null);
-            setIsAuthenticated(false);
-            setIsLoadingAuth(false);
-          }
-        }
-      );
-
-      return () => {
-        subscription.unsubscribe();
-      };
-    }
-  }, [checkAppState, fetchAppUser]);
 
   const logout = useCallback(async (shouldRedirect = true) => {
     setUser(null);
