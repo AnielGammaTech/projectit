@@ -142,9 +142,6 @@ export default function ProjectDetail() {
     return project.team_members.includes(currentUser.email);
   };
 
-  // Filter teamMembers to only those on this project (for assignment dropdowns)
-  const projectMembers = useProjectMembers(teamMembers, project);
-
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks', projectId],
     queryFn: () => base44.entities.Task.filter({ project_id: projectId }),
@@ -167,6 +164,9 @@ export default function ProjectDetail() {
     queryKey: ['teamMembers'],
     queryFn: () => base44.entities.TeamMember.list()
   });
+
+  // Filter teamMembers to only those on this project (for assignment dropdowns)
+  const projectMembers = useProjectMembers(teamMembers, project);
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
