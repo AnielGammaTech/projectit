@@ -12,13 +12,24 @@ Deno.serve(async (req) => {
 
     console.log('Starting due date reminder check...');
 
-    // Get all tasks with due dates that are not completed
+    // Get all projects for context and build active project filter
+    const allProjects = await base44.asServiceRole.entities.Project.list();
+    const projectMap = {};
+    allProjects.forEach(p => { projectMap[p.id] = p; });
+    const activeProjectIds = new Set(
+      allProjects
+        .filter(p => p.status !== 'archived' && p.status !== 'deleted' && p.status !== 'completed')
+        .map(p => p.id)
+    );
+
+    // Get all tasks with due dates that are not completed, only from active projects
     const allTasks = await base44.asServiceRole.entities.Task.list();
-    const activeTasks = allTasks.filter(t => 
-      t.due_date && 
-      t.status !== 'completed' && 
+    const activeTasks = allTasks.filter(t =>
+      t.due_date &&
+      t.status !== 'completed' &&
       t.status !== 'archived' &&
-      t.assigned_to
+      t.assigned_to &&
+      activeProjectIds.has(t.project_id)
     );
 
     console.log(`Found ${activeTasks.length} active tasks with due dates and assignments`);
@@ -27,11 +38,6 @@ Deno.serve(async (req) => {
     const allSettings = await base44.asServiceRole.entities.NotificationSettings.list();
     const settingsMap = {};
     allSettings.forEach(s => { settingsMap[s.user_email] = s; });
-
-    // Get all projects for context
-    const allProjects = await base44.asServiceRole.entities.Project.list();
-    const projectMap = {};
-    allProjects.forEach(p => { projectMap[p.id] = p; });
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
