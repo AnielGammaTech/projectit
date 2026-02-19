@@ -37,11 +37,27 @@ export default function MyNotifications() {
     }).catch(() => setLoading(false));
   }, []);
 
-  const { data: notifications = [], refetch: refetchNotifications } = useQuery({
+  const { data: allProjects = [] } = useQuery({
+    queryKey: ['allProjectsForNotifPage'],
+    queryFn: () => base44.entities.Project.list(),
+    enabled: !!currentUser?.email,
+    staleTime: 60000
+  });
+
+  const archivedProjectIds = new Set(
+    allProjects.filter(p => p.status === 'archived').map(p => p.id)
+  );
+
+  const { data: rawNotifications = [], refetch: refetchNotifications } = useQuery({
     queryKey: ['myNotifications', currentUser?.email],
     queryFn: () => base44.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
     enabled: !!currentUser?.email
   });
+
+  // Filter out notifications from archived projects
+  const notifications = rawNotifications.filter(n =>
+    !n.project_id || !archivedProjectIds.has(n.project_id)
+  );
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
