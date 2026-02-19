@@ -78,15 +78,16 @@ export const AuthProvider = ({ children }) => {
     if (supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
-          if (event === 'SIGNED_IN' && session) {
+          if (event === 'INITIAL_SESSION') {
+            // Initial session check — handled by checkAppState above, skip
+            return;
+          } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
             await fetchAppUser();
             setIsLoadingAuth(false);
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
             setIsAuthenticated(false);
             setIsLoadingAuth(false);
-          } else if (event === 'TOKEN_REFRESHED') {
-            // Token was refreshed — no action needed, session is still valid
           }
         }
       );
