@@ -121,9 +121,9 @@ Format your response as JSON.`;
         type: "object",
         properties: {
           answer: { type: "string", description: "Direct answer to the query" },
-          insights: { 
-            type: "array", 
-            items: { 
+          insights: {
+            type: "array",
+            items: {
               type: "object",
               properties: {
                 type: { type: "string", enum: ["positive", "negative", "neutral", "warning"] },
@@ -151,7 +151,8 @@ Format your response as JSON.`;
             }
           }
         }
-      }
+      },
+      feature: 'report_assistant'
     });
 
     setResult(response);

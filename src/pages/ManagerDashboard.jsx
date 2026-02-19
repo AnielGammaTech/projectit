@@ -113,7 +113,8 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
               }
             }
           }
-        }
+        },
+        feature: 'manager_insights'
       });
       setAiInsights(result.insights);
     } catch (err) {

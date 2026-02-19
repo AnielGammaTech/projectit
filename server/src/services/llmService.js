@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import entityService from './entityService.js';
 
 let client = null;
 
@@ -9,17 +10,63 @@ function getClient() {
   return client;
 }
 
+// --- AI Instructions Cache ---
+let instructionsCache = null;
+let instructionsCacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getAIInstructions(feature) {
+  const now = Date.now();
+
+  // Refresh cache if stale
+  if (!instructionsCache || now - instructionsCacheTime > CACHE_TTL) {
+    try {
+      const settings = await entityService.filter('IntegrationSettings', { provider: 'claude_ai' });
+      instructionsCache = settings[0]?.instructions || {};
+      instructionsCacheTime = now;
+    } catch {
+      instructionsCache = {};
+      instructionsCacheTime = now;
+    }
+  }
+
+  // Build system message from global + feature-specific instructions
+  const parts = [];
+
+  if (instructionsCache.global?.trim()) {
+    parts.push(instructionsCache.global.trim());
+  }
+
+  if (feature && instructionsCache[feature]?.trim()) {
+    parts.push(instructionsCache[feature].trim());
+  }
+
+  return parts.length > 0 ? parts.join('\n\n') : null;
+}
+
+// Allow external cache invalidation (e.g., after settings save)
+function clearInstructionsCache() {
+  instructionsCache = null;
+  instructionsCacheTime = 0;
+}
+
 const llmService = {
+  clearInstructionsCache,
+
   /**
    * Invoke LLM via Anthropic Claude
    * @param {Object} params
    * @param {string} params.prompt - The user prompt
    * @param {Object} [params.response_json_schema] - Optional JSON schema for structured output
    * @param {string[]} [params.file_urls] - Optional file URLs to include as context
+   * @param {string} [params.feature] - Feature identifier for per-feature instructions
    * @returns {Promise<string|Object>} Text response or parsed JSON if schema provided
    */
-  async invoke({ prompt, response_json_schema, file_urls }) {
+  async invoke({ prompt, response_json_schema, file_urls, feature }) {
     const anthropic = getClient();
+
+    // Load custom AI instructions
+    const systemMessage = await getAIInstructions(feature);
 
     const messages = [];
 
@@ -44,11 +91,18 @@ const llmService = {
 
     messages.push({ role: 'user', content });
 
-    const response = await anthropic.messages.create({
+    const requestParams = {
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       messages,
-    });
+    };
+
+    // Add system message if custom instructions exist
+    if (systemMessage) {
+      requestParams.system = systemMessage;
+    }
+
+    const response = await anthropic.messages.create(requestParams);
 
     const responseText = response.content
       .filter(block => block.type === 'text')

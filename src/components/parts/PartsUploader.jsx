@@ -92,7 +92,8 @@ export default function PartsUploader({ projectId, onPartsExtracted, compact = f
 
 Be thorough - identify all visible items that could be parts for a project. Include hardware, cables, equipment, tools, materials, etc. Pay special attention to order/purchase IDs and delivery dates as these are critical for tracking.`,
           file_urls: [file_url],
-          response_json_schema: partsSchema
+          response_json_schema: partsSchema,
+          feature: 'parts_extraction'
         });
 
         if (result?.parts?.length > 0) {

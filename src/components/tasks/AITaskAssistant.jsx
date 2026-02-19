@@ -51,7 +51,8 @@ Respond with JSON only.`,
             reasoning: { type: 'string' }
           },
           required: ['priority', 'reasoning']
-        }
+        },
+        feature: 'task_suggestions'
       });
       setSuggestedPriority(result);
     } catch (err) {
@@ -90,7 +91,8 @@ Respond with JSON only.`,
             }
           },
           required: ['subtasks']
-        }
+        },
+        feature: 'task_suggestions'
       });
       setSubTasks(result.subtasks || []);
     } catch (err) {
@@ -119,7 +121,8 @@ Provide a brief, actionable summary.`,
             summary: { type: 'string' }
           },
           required: ['summary']
-        }
+        },
+        feature: 'task_suggestions'
       });
       setSummary(result.summary);
     } catch (err) {
@@ -146,7 +149,8 @@ Generate a brief, professional message that could be used as a task comment or s
             reply: { type: 'string' }
           },
           required: ['reply']
-        }
+        },
+        feature: 'task_suggestions'
       });
       setDraftReply(result.reply);
     } catch (err) {

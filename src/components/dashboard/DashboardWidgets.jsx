@@ -214,7 +214,8 @@ Provide 2-3 sentences focusing on priorities and recommendations. Be concise and
             summary: { type: 'string' }
           },
           required: ['summary']
-        }
+        },
+        feature: 'dashboard_summary'
       });
       setSummary(result.summary);
     } catch (err) {

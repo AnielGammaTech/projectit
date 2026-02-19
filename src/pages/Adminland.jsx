@@ -2311,16 +2311,35 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
   );
 }
 
+const AI_FEATURES = [
+  { key: 'task_suggestions', label: 'Task Suggestions', description: 'Priority suggestions, sub-task generation, task summaries, and draft replies' },
+  { key: 'project_summary', label: 'Project Summary', description: 'AI-generated executive summaries for projects' },
+  { key: 'document_analysis', label: 'Document Analysis', description: 'Extract data from invoices, quotes, spec sheets, and uploaded files' },
+  { key: 'report_assistant', label: 'Report Assistant', description: 'Answer questions about your data with charts and insights' },
+  { key: 'chat', label: 'AI Chat', description: 'General AI assistant for project-related questions' },
+  { key: 'workflow_suggestions', label: 'Workflow Suggestions', description: 'AI-powered automation workflow recommendations' },
+  { key: 'dashboard_summary', label: 'Dashboard Summary', description: 'Daily summary widget on the dashboard' },
+  { key: 'manager_insights', label: 'Manager Insights', description: 'Actionable insights on the manager dashboard' },
+  { key: 'parts_extraction', label: 'Parts Extraction', description: 'Identify parts from images/documents and AI product search' },
+  { key: 'customer_communication', label: 'Customer Communication', description: 'AI-suggested follow-up emails for customers' },
+];
+
 function ClaudeAIIntegrationCard({ expandedIntegration, toggleIntegration }) {
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState(null);
   const [connected, setConnected] = useState(false);
+  const [activeTab, setActiveTab] = useState('status');
+  const [instructions, setInstructions] = useState({});
+  const [savingInstructions, setSavingInstructions] = useState(false);
+  const [instructionsSaved, setInstructionsSaved] = useState(false);
+  const [expandedFeature, setExpandedFeature] = useState(null);
 
   useEffect(() => {
     api.entities.IntegrationSettings.filter({ provider: 'claude_ai' })
       .then(settings => {
-        if (settings.length > 0 && settings[0].enabled) {
-          setConnected(true);
+        if (settings.length > 0) {
+          if (settings[0].enabled) setConnected(true);
+          if (settings[0].instructions) setInstructions(settings[0].instructions);
         }
       })
       .catch(() => {});
@@ -2333,12 +2352,29 @@ function ClaudeAIIntegrationCard({ expandedIntegration, toggleIntegration }) {
       const res = await api.functions.invoke('claudeAI', { action: 'testConnection' });
       setResult({ success: true, message: res.data?.message || 'Connected!' });
       setConnected(true);
-      // Save settings
       await api.functions.invoke('claudeAI', { action: 'saveSettings', api_key_configured: true });
     } catch (err) {
       setResult({ success: false, message: err.message || 'Connection failed. Check ANTHROPIC_API_KEY env variable.' });
     }
     setTesting(false);
+  };
+
+  const handleSaveInstructions = async () => {
+    setSavingInstructions(true);
+    setInstructionsSaved(false);
+    try {
+      await api.functions.invoke('claudeAI', { action: 'saveSettings', instructions });
+      setInstructionsSaved(true);
+      setTimeout(() => setInstructionsSaved(false), 3000);
+    } catch (err) {
+      console.error('Failed to save instructions:', err);
+    }
+    setSavingInstructions(false);
+  };
+
+  const updateInstruction = (key, value) => {
+    setInstructions(prev => ({ ...prev, [key]: value }));
+    setInstructionsSaved(false);
   };
 
   return (
@@ -2365,56 +2401,164 @@ function ClaudeAIIntegrationCard({ expandedIntegration, toggleIntegration }) {
       </button>
 
       {expandedIntegration === 'claude_ai' && (
-        <div className="border-t p-6 space-y-5">
-          {/* Status info */}
-          <div className="p-4 bg-violet-50 rounded-xl border border-violet-100">
-            <div className="flex items-start gap-3">
-              <Bot className="w-5 h-5 text-violet-600 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-semibold text-violet-900">Claude AI Capabilities</h4>
-                <ul className="text-xs text-violet-700 mt-2 space-y-1.5">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Document scanning — extract data from invoices, quotes, spec sheets
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Project summaries — AI-generated executive reports
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Task suggestions — smart task recommendations based on project context
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3 h-3" />
-                    AI assistant — natural language chat about your projects
-                  </li>
-                </ul>
+        <div className="border-t">
+          {/* Tabs */}
+          <div className="flex border-b bg-slate-50">
+            <button
+              onClick={() => setActiveTab('status')}
+              className={cn(
+                "flex-1 px-4 py-3 text-sm font-medium transition-colors",
+                activeTab === 'status'
+                  ? "text-violet-700 border-b-2 border-violet-600 bg-white"
+                  : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              <Bot className="w-4 h-4 inline mr-1.5" />
+              Status
+            </button>
+            <button
+              onClick={() => setActiveTab('instructions')}
+              className={cn(
+                "flex-1 px-4 py-3 text-sm font-medium transition-colors",
+                activeTab === 'instructions'
+                  ? "text-violet-700 border-b-2 border-violet-600 bg-white"
+                  : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              <FileText className="w-4 h-4 inline mr-1.5" />
+              AI Instructions
+            </button>
+          </div>
+
+          {/* Status Tab */}
+          {activeTab === 'status' && (
+            <div className="p-6 space-y-5">
+              <div className="p-4 bg-violet-50 rounded-xl border border-violet-100">
+                <div className="flex items-start gap-3">
+                  <Bot className="w-5 h-5 text-violet-600 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-semibold text-violet-900">Claude AI Capabilities</h4>
+                    <ul className="text-xs text-violet-700 mt-2 space-y-1.5">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Document scanning — extract data from invoices, quotes, spec sheets
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Project summaries — AI-generated executive reports
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Task suggestions — smart task recommendations based on project context
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-3 h-3" />
+                        AI assistant — natural language chat about your projects
+                      </li>
+                    </ul>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Configuration note */}
-          <div className="p-3 bg-slate-50 rounded-lg">
-            <p className="text-xs text-slate-600">
-              <span className="font-medium">Configuration:</span> Set the <code className="bg-white px-1 py-0.5 rounded text-[10px]">ANTHROPIC_API_KEY</code> environment variable on your Railway backend service.
-              The API key is stored securely as an environment variable and never exposed to the frontend.
-            </p>
-          </div>
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <p className="text-xs text-slate-600">
+                  <span className="font-medium">Configuration:</span> Set the <code className="bg-white px-1 py-0.5 rounded text-[10px]">ANTHROPIC_API_KEY</code> environment variable on your Railway backend service.
+                  The API key is stored securely as an environment variable and never exposed to the frontend.
+                </p>
+              </div>
 
-          {/* Result message */}
-          {result && (
-            <div className={`p-3 rounded-lg text-sm ${result.success ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-              {result.message}
+              {result && (
+                <div className={`p-3 rounded-lg text-sm ${result.success ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                  {result.message}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <Button onClick={handleTest} disabled={testing} className="bg-violet-600 hover:bg-violet-700">
+                  {testing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : <><Sparkles className="w-4 h-4 mr-2" />Test Connection</>}
+                </Button>
+              </div>
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex gap-3">
-            <Button onClick={handleTest} disabled={testing} className="bg-violet-600 hover:bg-violet-700">
-              {testing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : <><Sparkles className="w-4 h-4 mr-2" />Test Connection</>}
-            </Button>
-          </div>
+          {/* AI Instructions Tab */}
+          {activeTab === 'instructions' && (
+            <div className="p-6 space-y-5">
+              <div className="p-3 bg-violet-50 rounded-lg border border-violet-100">
+                <p className="text-xs text-violet-700">
+                  <span className="font-medium">How it works:</span> Global instructions are prepended to every AI request.
+                  Per-feature instructions are added only when that specific feature is used.
+                  Leave blank for default behavior.
+                </p>
+              </div>
+
+              {/* Global Instructions */}
+              <div>
+                <Label className="text-sm font-semibold text-slate-900">Global Instructions</Label>
+                <p className="text-xs text-slate-500 mt-0.5 mb-2">Applied to all AI features (e.g., company name, preferred language, tone)</p>
+                <Textarea
+                  value={instructions.global || ''}
+                  onChange={(e) => updateInstruction('global', e.target.value)}
+                  placeholder="e.g., Our company is Gamma Tech. Always use metric units. Be concise and professional."
+                  className="min-h-[80px] text-sm"
+                />
+              </div>
+
+              {/* Per-Feature Instructions */}
+              <div>
+                <Label className="text-sm font-semibold text-slate-900 mb-3 block">Per-Feature Instructions</Label>
+                <div className="space-y-2">
+                  {AI_FEATURES.map(({ key, label, description }) => (
+                    <div key={key} className="border rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => setExpandedFeature(expandedFeature === key ? null : key)}
+                        className="w-full flex items-center justify-between p-3 hover:bg-slate-50 transition-colors text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-slate-700">{label}</span>
+                          {instructions[key]?.trim() && (
+                            <Badge className="bg-violet-100 text-violet-700 text-[10px]">Custom</Badge>
+                          )}
+                        </div>
+                        <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform", expandedFeature === key && "rotate-180")} />
+                      </button>
+                      {expandedFeature === key && (
+                        <div className="px-3 pb-3 border-t bg-slate-50/50">
+                          <p className="text-xs text-slate-500 mt-2 mb-2">{description}</p>
+                          <Textarea
+                            value={instructions[key] || ''}
+                            onChange={(e) => updateInstruction(key, e.target.value)}
+                            placeholder={`Custom instructions for ${label}...`}
+                            className="min-h-[60px] text-sm bg-white"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={handleSaveInstructions}
+                  disabled={savingInstructions}
+                  className="bg-violet-600 hover:bg-violet-700"
+                >
+                  {savingInstructions ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                  ) : instructionsSaved ? (
+                    <><CheckCircle2 className="w-4 h-4 mr-2" />Saved</>
+                  ) : (
+                    <><Save className="w-4 h-4 mr-2" />Save Instructions</>
+                  )}
+                </Button>
+                {instructionsSaved && (
+                  <span className="text-xs text-emerald-600">Instructions saved and applied to all AI features</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

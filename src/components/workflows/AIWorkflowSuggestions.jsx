@@ -137,7 +137,8 @@ Suggest 3 useful automation workflows that DON'T already exist. Focus on common 
             }
           }
         }
-      }
+      },
+      feature: 'workflow_suggestions'
     });
 
     setAiSuggestions(result.suggestions || []);

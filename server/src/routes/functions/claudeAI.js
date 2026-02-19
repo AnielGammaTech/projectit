@@ -34,7 +34,7 @@ Document URL: ${fileUrl}
 
 Respond with structured JSON containing the extracted data.`;
 
-        const result = await llmService.invoke({ prompt, file_urls: fileUrl ? [fileUrl] : [] });
+        const result = await llmService.invoke({ prompt, file_urls: fileUrl ? [fileUrl] : [], feature: 'document_analysis' });
         return res.json({ data: { success: true, analysis: result } });
       }
 
@@ -73,7 +73,8 @@ Respond as JSON: { "summary": "...", "health": "good|warning|critical", "recomme
               health: { type: 'string' },
               recommendations: { type: 'array', items: { type: 'string' } }
             }
-          }
+          },
+          feature: 'project_summary'
         });
 
         return res.json({ data: { success: true, ...result } });
@@ -111,7 +112,8 @@ Respond as JSON: { "suggestions": [{ "title": "...", "description": "...", "prio
                 }
               }
             }
-          }
+          },
+          feature: 'task_suggestions'
         });
 
         return res.json({ data: { success: true, ...result } });
@@ -128,12 +130,12 @@ Respond as JSON: { "suggestions": [{ "title": "...", "description": "...", "prio
 
         const prompt = `You are an AI assistant for ProjectIT, an IT project management application. Help the user with their question.${contextStr}\n\nUser: ${message}`;
 
-        const result = await llmService.invoke({ prompt });
+        const result = await llmService.invoke({ prompt, feature: 'chat' });
         return res.json({ data: { success: true, response: result } });
       }
 
       case 'saveSettings': {
-        const { api_key_configured } = params;
+        const { api_key_configured, instructions } = params;
         // Save that AI is enabled (the actual API key is in env vars)
         const existing = await entityService.filter('IntegrationSettings', { provider: 'claude_ai' });
         const settingsData = {
@@ -143,11 +145,20 @@ Respond as JSON: { "suggestions": [{ "title": "...", "description": "...", "prio
           updated_at: new Date().toISOString()
         };
 
+        // Include instructions if provided
+        if (instructions !== undefined) {
+          settingsData.instructions = instructions;
+        }
+
         if (existing.length > 0) {
           await entityService.update('IntegrationSettings', existing[0].id, settingsData);
         } else {
           await entityService.create('IntegrationSettings', settingsData);
         }
+
+        // Clear cached instructions so next AI call picks up the changes
+        llmService.clearInstructionsCache();
+
         return res.json({ data: { success: true, message: 'Claude AI settings saved' } });
       }
 

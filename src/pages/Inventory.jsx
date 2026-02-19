@@ -913,7 +913,8 @@ Be specific with actual product names and real pricing from the market.`,
           }
         }
       },
-      add_context_from_internet: true
+      add_context_from_internet: true,
+      feature: 'parts_extraction'
     });
 
     // Use Unsplash for real product images

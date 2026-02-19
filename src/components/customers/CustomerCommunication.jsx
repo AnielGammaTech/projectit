@@ -72,7 +72,8 @@ Generate suggestions for different scenarios (follow-up, thank you, check-in). E
             }
           }
         }
-      }
+      },
+      feature: 'customer_communication'
     });
 
     setAiSuggestions(result.suggestions || []);

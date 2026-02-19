@@ -10,11 +10,11 @@ const router = Router();
 // POST /api/integrations/invoke-llm
 router.post('/invoke-llm', async (req, res, next) => {
   try {
-    const { prompt, response_json_schema, file_urls } = req.body;
+    const { prompt, response_json_schema, file_urls, feature } = req.body;
     if (!prompt) {
       return res.status(400).json({ error: 'prompt is required' });
     }
-    const result = await llmService.invoke({ prompt, response_json_schema, file_urls });
+    const result = await llmService.invoke({ prompt, response_json_schema, file_urls, feature });
     res.json(result);
   } catch (err) {
     next(err);
@@ -75,6 +75,7 @@ router.post('/extract-data', async (req, res, next) => {
       prompt,
       response_json_schema: json_schema,
       file_urls: [file_url],
+      feature: 'document_analysis',
     });
     res.json(result);
   } catch (err) {
