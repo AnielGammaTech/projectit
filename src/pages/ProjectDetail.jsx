@@ -29,7 +29,8 @@ import {
   RotateCcw,
   Tag,
   Crown,
-  Activity
+  Activity,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,9 +70,9 @@ import UpcomingDueDates from '@/components/project/UpcomingDueDates';
 import TimeTracker from '@/components/project/TimeTracker';
 import HaloPSATicketLink from '@/components/project/HaloPSATicketLink';
 import ProjectSidebar from '@/components/project/ProjectSidebar';
-import UpcomingTasksWidget from '@/components/project/UpcomingTasksWidget';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
+import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
 import ArchiveProjectModal from '@/components/modals/ArchiveProjectModal';
 import OnHoldReasonModal from '@/components/modals/OnHoldReasonModal';
 import CompleteProjectModal from '@/components/modals/CompleteProjectModal';
@@ -117,6 +118,7 @@ export default function ProjectDetail() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showOnHoldModal, setShowOnHoldModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
 
   const { data: project, isLoading: loadingProject, refetch: refetchProject } = useQuery({
     queryKey: ['project', projectId],
@@ -355,36 +357,14 @@ export default function ProjectDetail() {
       }
 
       // Send notification if task is newly assigned to someone
-      if (isNewlyAssigned && data.assigned_to !== currentUser?.email) {
-        try {
-          // Create in-app notification
-          await base44.entities.UserNotification.create({
-            user_email: data.assigned_to,
-            type: 'task_assigned',
-            title: 'New task assigned to you',
-            message: `"${data.title}" has been assigned to you by ${currentUser?.full_name || currentUser?.email}`,
-            project_id: projectId,
-            project_name: project?.name,
-            from_user_email: currentUser?.email,
-            from_user_name: currentUser?.full_name || currentUser?.email,
-            link: `/ProjectDetail?id=${projectId}`,
-            is_read: false
-          });
-
-          // Send email notification via Resend
-          await base44.functions.invoke('sendNotificationEmail', {
-            to: data.assigned_to,
-            type: 'task_assigned',
-            title: 'New task assigned to you',
-            message: `"${data.title}" has been assigned to you by ${currentUser?.full_name || currentUser?.email}`,
-            projectId: projectId,
-            projectName: project?.name,
-            fromUserName: currentUser?.full_name || currentUser?.email,
-            link: `${window.location.origin}/ProjectDetail?id=${projectId}`
-          });
-        } catch (notifErr) {
-          console.error('Failed to send task notification:', notifErr);
-        }
+      if (isNewlyAssigned) {
+        await sendTaskAssignmentNotification({
+          assigneeEmail: data.assigned_to,
+          taskTitle: data.title,
+          projectId,
+          projectName: project?.name,
+          currentUser,
+        });
       }
 
       refetchTasks();
@@ -399,39 +379,12 @@ export default function ProjectDetail() {
       await logActivity(projectId, ActivityActions.TASK_COMPLETED, `completed task "${task.title}"`, currentUser, 'task', task.id);
 
       // Notify people who should be notified on task completion
-      if (task.notify_on_complete?.length > 0) {
-        for (const email of task.notify_on_complete) {
-          if (email !== currentUser?.email) {
-            try {
-              await base44.entities.UserNotification.create({
-                user_email: email,
-                type: 'task_completed',
-                title: 'Task completed',
-                message: `"${task.title}" was completed by ${currentUser?.full_name || currentUser?.email}`,
-                project_id: projectId,
-                project_name: project?.name,
-                from_user_email: currentUser?.email,
-                from_user_name: currentUser?.full_name || currentUser?.email,
-                link: `/ProjectDetail?id=${projectId}`,
-                is_read: false
-              });
-
-              await base44.functions.invoke('sendNotificationEmail', {
-                to: email,
-                type: 'task_completed',
-                title: 'Task completed',
-                message: `"${task.title}" was completed by ${currentUser?.full_name || currentUser?.email}`,
-                projectId: projectId,
-                projectName: project?.name,
-                fromUserName: currentUser?.full_name || currentUser?.email,
-                link: `${window.location.origin}/ProjectDetail?id=${projectId}`
-              });
-            } catch (err) {
-              console.error('Failed to send completion notification:', err);
-            }
-          }
-        }
-      }
+      await sendTaskCompletionNotification({
+        task,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
     } else {
       await logActivity(projectId, ActivityActions.TASK_UPDATED, `changed task "${task.title}" status to ${status.replace('_', ' ')}`, currentUser, 'task', task.id);
     }
@@ -694,12 +647,11 @@ export default function ProjectDetail() {
 
     const completedTasks = tasks.filter(t => t.status === 'completed').length;
     const taskProgress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
-
     return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <ProjectNavHeader project={project} currentPage="ProjectDetail" />
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         {/* On Hold Banner */}
         {project.status === 'on_hold' && (
@@ -745,7 +697,7 @@ export default function ProjectDetail() {
             </div>
             <Button
               onClick={async () => {
-                await base44.entities.Project.update(projectId, { 
+                await base44.entities.Project.update(projectId, {
                   status: 'planning',
                   archive_reason: '',
                   archive_type: '',
@@ -760,27 +712,29 @@ export default function ProjectDetail() {
           </motion.div>
         )}
 
-        {/* Project Header - Compact */}
+        {/* ── Project Header ── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-6"
+          className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-5"
         >
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
-            <div className="flex-1 min-w-0 w-full">
-              {/* Project Number + Tags Row */}
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
+          {/* Row 1: Title + Actions */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              {/* Project number + tags inline with title */}
+              <div className="flex items-center gap-2 flex-wrap">
                 {project.project_number && (
                   <span className="px-2 py-0.5 bg-slate-800 text-white rounded text-xs font-mono font-semibold">
                     #{project.project_number}
                   </span>
                 )}
+                <h1 className="text-lg font-bold text-slate-900 truncate">{project.name}</h1>
                 {getProjectTags().map(tag => (
-                  <span 
-                    key={tag.id} 
+                  <span
+                    key={tag.id}
                     className={cn(
-                      "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium",
+                      "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium",
                       tagColors[tag.color] || tagColors.slate
                     )}
                   >
@@ -789,102 +743,58 @@ export default function ProjectDetail() {
                 ))}
               </div>
 
-              {/* Project Title */}
-              <h1 className="text-xl font-bold text-slate-900">{project.name}</h1>
-
-              <div className="flex items-center gap-3 flex-wrap">
+              {/* Meta row: client, lead, quote link */}
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 {project.client && (
-                  <Link 
-                    to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')} 
+                  <Link
+                    to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')}
                     className="text-[#0069AF] hover:underline text-sm"
                   >
                     {project.client} →
                   </Link>
                 )}
                 {project.project_lead && (
-                  <div className="flex items-center gap-1.5 text-sm text-amber-700 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
-                    <Crown className="w-4 h-4 text-amber-500" />
+                  <div className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">
+                    <Crown className="w-3 h-3 text-amber-500" />
                     <span className="font-medium">
                       {teamMembers.find(m => m.email === project.project_lead)?.name || project.project_lead.split('@')[0]}
                     </span>
                   </div>
                 )}
-              </div>
-
-              {(integrationSettings?.quoteit_api_url && (project.quoteit_quote_id || linkedQuote?.quoteit_id)) && (
-                <a 
-                  href={`${integrationSettings.quoteit_api_url}/QuoteView?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-2 py-0.5 mt-1 rounded text-xs font-medium bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors border border-orange-200"
-                >
-                  <FileText className="w-3 h-3" />
-                  View Quote on QuoteIT
-                </a>
-              )}
-
-              {project.description && <p className="text-slate-600 text-sm mt-2">{project.description}</p>}
-
-              {/* Status Action Buttons */}
-              {project.status !== 'archived' && project.status !== 'completed' && (
-                <div className="flex items-center gap-2 mt-3 flex-wrap">
-                  {project.status === 'on_hold' ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleResumeProject}
-                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-1" />
-                      Resume Project
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowOnHoldModal(true)}
-                      className="text-amber-600 border-amber-200 hover:bg-amber-50"
-                    >
-                      Put On Hold
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    onClick={() => setShowCompleteModal(true)}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                {(integrationSettings?.quoteit_api_url && (project.quoteit_quote_id || linkedQuote?.quoteit_id)) && (
+                  <a
+                    href={`${integrationSettings.quoteit_api_url}/QuoteView?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors border border-orange-200"
                   >
-                    <CheckCircle2 className="w-4 h-4 mr-1" />
-                    Complete Project
-                  </Button>
+                    <FileText className="w-3 h-3" />
+                    QuoteIT
+                  </a>
+                )}
+                {project.status !== 'archived' && project.status !== 'completed' && (
                   <TeamAvatars
                     members={project.team_members || []}
                     teamMembers={teamMembers}
                     onUpdate={handleTeamUpdate}
                   />
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
-            {/* Actions Row */}
-            <div className="flex flex-col items-start sm:items-end gap-2 w-full sm:w-auto sm:flex-shrink-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <HaloPSATicketLink
-                  project={project}
-                  onUpdate={refetchProject}
-                />
-                <TimeTracker
-                  projectId={projectId}
-                  currentUser={currentUser}
-                  timeBudgetHours={project.time_budget_hours || 0}
-                />
-                <Button variant="outline" size="sm" onClick={() => setShowProjectModal(true)} className="h-9 touch-manipulation">
-                  <Edit2 className="w-4 h-4 mr-1" />
-                  Edit
-                </Button>
-                <DropdownMenu>
+            {/* Right: actions */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <HaloPSATicketLink
+                project={project}
+                onUpdate={refetchProject}
+              />
+              <Button variant="outline" size="sm" onClick={() => setShowProjectModal(true)} className="h-8 px-2.5 touch-manipulation">
+                <Edit2 className="w-3.5 h-3.5" />
+              </Button>
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-9 w-9 touch-manipulation">
-                    <MoreHorizontal className="w-4 h-4" />
+                  <Button variant="outline" size="icon" className="h-8 w-8 touch-manipulation">
+                    <MoreHorizontal className="w-3.5 h-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -897,9 +807,9 @@ export default function ProjectDetail() {
                     Save as Template
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowArchiveModal(true)}>
-                      <Archive className="w-4 h-4 mr-2" />
-                      Archive Project
-                    </DropdownMenuItem>
+                    <Archive className="w-4 h-4 mr-2" />
+                    Archive Project
+                  </DropdownMenuItem>
                   {currentUser?.role === 'admin' && (
                     <>
                       <DropdownMenuSeparator />
@@ -909,244 +819,292 @@ export default function ProjectDetail() {
                       </DropdownMenuItem>
                     </>
                   )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                </div>
-
-                <div className="flex items-stretch gap-4 w-full sm:w-auto">
-                  {/* Upcoming Tasks Widget */}
-                  <div className="hidden xl:block w-[300px]">
-                    <UpcomingTasksWidget projectId={projectId} tasks={tasks} />
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="w-full sm:w-full sm:max-w-xs">
-                    <ProgressNeedle 
-                      projectId={projectId} 
-                      value={project.progress || 0} 
-                      onSave={handleProgressUpdate} 
-                      currentUser={currentUser}
-                      onStatusChange={(status) => handleQuickUpdate('status', status)}
-                      halopsaTicketId={project.halopsa_ticket_id}
-                      hasUpdates={progressUpdates.length > 0}
-                      lastUpdateNote={progressUpdates[0]?.note}
-                    />
-                  </div>
-                </div>
-                </div>
-                </div>
-                </motion.div>
-
-      {/* Cards Grid with Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 sm:gap-6">
-        {/* Main Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 auto-rows-min">
-          {/* Tasks Card - Clickable */}
-          <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
-          >
-            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-[#0069AF]/10 to-[#0069AF]/5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
-                    <ListTodo className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900">Tasks</h3>
-                    <p className="text-sm text-slate-500">{completedTasks}/{tasks.length} completed</p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingTask(null); setShowTaskModal(true); }}
-                  className="bg-[#0069AF] hover:bg-[#0F2F44] shadow-md"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            <div className="p-4">
-              <div className="flex items-center justify-center gap-4 text-sm">
-                <div className="flex items-center gap-1.5 text-emerald-600">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span className="font-medium">{completedTasks}</span>
-                  <span className="text-slate-400">done</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-slate-600">
-                  <CircleDot className="w-4 h-4" />
-                  <span className="font-medium">{tasks.length - completedTasks}</span>
-                  <span className="text-slate-400">remaining</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-          </Link>
+          </div>
 
-          {/* Parts Card - Clickable */}
-          <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
-          >
-            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-[#0F2F44]/10 to-[#0F2F44]/5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-[#0F2F44] shadow-lg shadow-[#0F2F44]/20">
-                    <Package className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900">Parts</h3>
-                    <p className="text-sm text-slate-500">{parts.length} items tracked</p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingPart(null); setShowPartModal(true); }}
-                  className="bg-[#0F2F44] hover:bg-[#133F5C] shadow-md flex-shrink-0"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="flex items-center justify-center gap-3 text-xs flex-wrap">
-                <div className="flex items-center gap-1 text-blue-600">
-                  <Package className="w-3.5 h-3.5" />
-                  <span className="font-medium">{parts.filter(p => p.status === 'ordered').length}</span>
-                  <span className="text-slate-400">ordered</span>
-                </div>
-                <div className="flex items-center gap-1 text-amber-600">
-                  <Truck className="w-3.5 h-3.5" />
-                  <span className="font-medium">{parts.filter(p => p.status === 'received' || p.status === 'ready_to_install').length}</span>
-                  <span className="text-slate-400">received</span>
-                </div>
-                <div className="flex items-center gap-1 text-emerald-600">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span className="font-medium">{parts.filter(p => p.status === 'installed').length}</span>
-                  <span className="text-slate-400">installed</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-          </Link>
+          {project.description && <p className="text-slate-500 text-sm mt-2 line-clamp-2">{project.description}</p>}
 
-          {/* Messages & Meetings Card - Clickable */}
-          <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
-          >
-            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-[#0069AF]/10 to-[#74C7FF]/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
-                  <MessageSquare className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900">Messages & Meetings</h3>
-                  <p className="text-sm text-slate-500">Project communication</p>
-                </div>
-              </div>
+          {/* Row 2: Progress + Timer + Status actions — all in one tight strip */}
+          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100 flex-wrap">
+            <div className="flex-1 min-w-[200px] max-w-sm">
+              <ProgressNeedle
+                projectId={projectId}
+                value={project.progress || 0}
+                onSave={handleProgressUpdate}
+                currentUser={currentUser}
+                onStatusChange={(status) => handleQuickUpdate('status', status)}
+                halopsaTicketId={project.halopsa_ticket_id}
+                hasUpdates={progressUpdates.length > 0}
+                lastUpdateNote={progressUpdates[0]?.note}
+              />
             </div>
-            <div className="p-4">
-              <div className="flex items-center justify-center gap-4 text-sm">
-                <div className="flex items-center gap-1.5 text-[#0069AF]">
-                  <MessageSquare className="w-4 h-4" />
-                  <span className="font-medium">{projectNotes.filter(n => n.type === 'message' || n.type === 'note').length}</span>
-                  <span className="text-slate-400">messages</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-emerald-600">
-                  <Users className="w-4 h-4" />
-                  <span className="font-medium">{projectNotes.filter(n => n.type === 'update').length}</span>
-                  <span className="text-slate-400">meetings</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-          </Link>
-
-          {/* Files Card - Clickable */}
-          <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all"
-          >
-            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-[#133F5C]/10 to-[#74C7FF]/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-[#133F5C] shadow-lg shadow-[#133F5C]/20">
-                  <FileText className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900">Documents & Files</h3>
-                  <p className="text-sm text-slate-500">Upload and manage files</p>
-                </div>
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="flex items-center justify-center gap-4 text-sm">
-                {fileFolders.length > 0 && (
-                  <div className="flex items-center gap-1.5 text-[#133F5C]">
-                    <Folder className="w-4 h-4" />
-                    <span className="font-medium">{fileFolders.length}</span>
-                    <span className="text-slate-400">folders</span>
-                  </div>
+            <TimeTracker
+              projectId={projectId}
+              currentUser={currentUser}
+              timeBudgetHours={project.time_budget_hours || 0}
+            />
+            {project.status !== 'archived' && project.status !== 'completed' && (
+              <div className="flex items-center gap-2 ml-auto">
+                {project.status === 'on_hold' ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleResumeProject}
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50 h-8 text-xs"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                    Resume
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowOnHoldModal(true)}
+                    className="text-amber-600 border-amber-200 hover:bg-amber-50 h-8 text-xs"
+                  >
+                    On Hold
+                  </Button>
                 )}
-                <div className="flex items-center gap-1.5 text-slate-600">
-                  <File className="w-4 h-4" />
-                  <span className="font-medium">{projectFiles.length}</span>
-                  <span className="text-slate-400">files</span>
-                </div>
+                <Button
+                  size="sm"
+                  onClick={() => setShowCompleteModal(true)}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white h-8 text-xs"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                  Complete
+                </Button>
               </div>
-            </div>
-          </motion.div>
-          </Link>
+            )}
+          </div>
+        </motion.div>
 
-          {/* Recent Activity Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-fit md:col-span-2"
-          >
-            <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-[#74C7FF]/10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-[#0F2F44] shadow-lg shadow-[#0F2F44]/20">
-                    <Activity className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900">Recent Activity</h3>
-                    <p className="text-sm text-slate-500">Latest project updates</p>
+        {/* ── Tool Cards Grid + Sidebar ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
+          {/* Main Cards — 2-col grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 auto-rows-min">
+
+            {/* Tasks Card */}
+            <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
+              >
+                <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-[#0069AF]/10 to-[#0069AF]/5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-lg bg-[#0069AF] shadow-md shadow-[#0069AF]/20">
+                        <ListTodo className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-900 text-sm">Tasks</h3>
+                        <p className="text-xs text-slate-500">{completedTasks}/{tasks.length} completed</p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingTask(null); setShowTaskModal(true); }}
+                      className="bg-[#0069AF] hover:bg-[#0F2F44] shadow-sm h-7 w-7 p-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div className="p-4 max-h-[300px] overflow-y-auto">
-              <ProjectActivityFeed projectId={projectId} progressUpdates={progressUpdates} compact />
-            </div>
-          </motion.div>
+                <div className="p-3">
+                  <div className="flex items-center justify-center gap-4 text-xs">
+                    <div className="flex items-center gap-1.5 text-emerald-600">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span className="font-medium">{completedTasks}</span>
+                      <span className="text-slate-400">done</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-600">
+                      <CircleDot className="w-3.5 h-3.5" />
+                      <span className="font-medium">{tasks.length - completedTasks}</span>
+                      <span className="text-slate-400">remaining</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </Link>
+
+            {/* Parts Card */}
+            <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
+              >
+                <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-[#0F2F44]/10 to-[#0F2F44]/5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-lg bg-[#0F2F44] shadow-md shadow-[#0F2F44]/20">
+                        <Package className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-900 text-sm">Parts</h3>
+                        <p className="text-xs text-slate-500">{parts.length} items tracked</p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingPart(null); setShowPartModal(true); }}
+                      className="bg-[#0F2F44] hover:bg-[#133F5C] shadow-sm h-7 w-7 p-0 flex-shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center justify-center gap-3 text-xs flex-wrap">
+                    <div className="flex items-center gap-1 text-blue-600">
+                      <Package className="w-3 h-3" />
+                      <span className="font-medium">{parts.filter(p => p.status === 'ordered').length}</span>
+                      <span className="text-slate-400">ordered</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-amber-600">
+                      <Truck className="w-3 h-3" />
+                      <span className="font-medium">{parts.filter(p => p.status === 'received' || p.status === 'ready_to_install').length}</span>
+                      <span className="text-slate-400">received</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-emerald-600">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span className="font-medium">{parts.filter(p => p.status === 'installed').length}</span>
+                      <span className="text-slate-400">installed</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </Link>
+
+            {/* Upcoming Due Dates — PROMOTED to main card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
+            </motion.div>
+
+            {/* Messages & Meetings Card */}
+            <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
+              >
+                <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-[#0069AF]/10 to-[#74C7FF]/10">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-lg bg-[#0069AF] shadow-md shadow-[#0069AF]/20">
+                      <MessageSquare className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 text-sm">Messages & Meetings</h3>
+                      <p className="text-xs text-slate-500">Project communication</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center justify-center gap-4 text-xs">
+                    <div className="flex items-center gap-1.5 text-[#0069AF]">
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span className="font-medium">{projectNotes.filter(n => n.type === 'message' || n.type === 'note').length}</span>
+                      <span className="text-slate-400">messages</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-emerald-600">
+                      <Users className="w-3.5 h-3.5" />
+                      <span className="font-medium">{projectNotes.filter(n => n.type === 'update').length}</span>
+                      <span className="text-slate-400">meetings</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </Link>
+
+            {/* Files Card */}
+            <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-all h-full"
+              >
+                <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-[#133F5C]/10 to-[#74C7FF]/10">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-lg bg-[#133F5C] shadow-md shadow-[#133F5C]/20">
+                      <FileText className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 text-sm">Documents & Files</h3>
+                      <p className="text-xs text-slate-500">Upload and manage files</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center justify-center gap-4 text-xs">
+                    {fileFolders.length > 0 && (
+                      <div className="flex items-center gap-1.5 text-[#133F5C]">
+                        <Folder className="w-3.5 h-3.5" />
+                        <span className="font-medium">{fileFolders.length}</span>
+                        <span className="text-slate-400">folders</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1.5 text-slate-600">
+                      <File className="w-3.5 h-3.5" />
+                      <span className="font-medium">{projectFiles.length}</span>
+                      <span className="text-slate-400">files</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </Link>
+
+            {/* Recent Activity — collapsed by default, minimal strip */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="sm:col-span-2"
+            >
+              <button
+                onClick={() => setShowActivity(!showActivity)}
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-white rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Activity className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-sm text-slate-500 font-medium">Recent Activity</span>
+                </div>
+                <ChevronDown className={cn(
+                  "w-4 h-4 text-slate-400 transition-transform",
+                  showActivity && "rotate-180"
+                )} />
+              </button>
+              {showActivity && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="bg-white rounded-b-xl border border-t-0 border-slate-100 p-4 max-h-[250px] overflow-y-auto -mt-1"
+                >
+                  <ProjectActivityFeed projectId={projectId} progressUpdates={progressUpdates} compact />
+                </motion.div>
+              )}
+            </motion.div>
 
           </div>
 
-        {/* Sidebar - Calendar */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="hidden lg:block"
-        >
-          <ProjectSidebar projectId={projectId} tasks={tasks} parts={parts} />
-        </motion.div>
+          {/* Sidebar — Calendar */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="hidden lg:block"
+          >
+            <ProjectSidebar projectId={projectId} tasks={tasks} parts={parts} />
+          </motion.div>
         </div>
 
 
@@ -1205,6 +1163,7 @@ export default function ProjectDetail() {
         tasks={tasks}
         groups={taskGroups}
         projectId={projectId}
+        projectName={project?.name}
         teamMembers={teamMembers}
         currentUser={currentUser}
         onStatusChange={handleTaskStatusChange}

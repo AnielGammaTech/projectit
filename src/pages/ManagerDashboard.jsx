@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { format, isPast, isToday, differenceInDays } from 'date-fns';
-import { 
-  Monitor, Users, AlertTriangle, TrendingUp, Clock, 
+import {
+  Monitor, Users, AlertTriangle, TrendingUp, Clock,
   CheckCircle2, Package, ListTodo, Sparkles, RefreshCw,
   BarChart3, Calendar, Loader2, ArrowLeft
 } from 'lucide-react';
@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 
 export default function ManagerDashboard() {
@@ -56,7 +57,7 @@ export default function ManagerDashboard() {
 
   // Calculate metrics
   const activeProjects = projects.filter(p => p.status !== 'archived' && p.status !== 'completed');
-  const overdueTasks = tasks.filter(t => t.due_date && isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date)) && t.status !== 'completed');
+  const overdueTasks = tasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed'; });
   const unassignedTasks = tasks.filter(t => !t.assigned_to && t.status !== 'completed' && t.status !== 'archived');
   const pendingParts = parts.filter(p => p.status === 'ordered');
   const readyToInstall = parts.filter(p => p.status === 'ready_to_install');
@@ -64,8 +65,8 @@ export default function ManagerDashboard() {
   // Workload per tech
   const techWorkload = teamMembers.map(member => {
     const memberTasks = tasks.filter(t => t.assigned_to === member.email && t.status !== 'completed' && t.status !== 'archived');
-    const overdue = memberTasks.filter(t => t.due_date && isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date)));
-    const dueToday = memberTasks.filter(t => t.due_date && isToday(new Date(t.due_date)));
+    const overdue = memberTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d); });
+    const dueToday = memberTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isToday(d); });
     const hoursToday = timeEntries
       .filter(e => e.user_email === member.email && e.start_time && isToday(new Date(e.start_time)))
       .reduce((sum, e) => sum + (e.duration_minutes || 0), 0) / 60;
@@ -317,7 +318,7 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
         </div>
         <div className="grid grid-cols-4 gap-4">
           {overdueTasks.slice(0, 8).map(task => {
-            const daysOverdue = differenceInDays(new Date(), new Date(task.due_date));
+            const daysOverdue = differenceInDays(new Date(), parseLocalDate(task.due_date));
             return (
               <div key={task.id} className="bg-slate-700/50 rounded-xl p-3 border border-red-500/20">
                 <p className="font-medium text-sm truncate">{task.title}</p>

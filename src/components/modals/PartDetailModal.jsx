@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Package, Calendar, User, MessageSquare, Send, Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 
 const statusConfig = {
@@ -162,7 +163,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
                 <p className="text-slate-500">Est. Delivery</p>
                 <p className="font-medium flex items-center gap-1.5">
                   <Calendar className="w-4 h-4" />
-                  {format(new Date(part.est_delivery_date), 'MMM d, yyyy')}
+                  {format(parseLocalDate(part.est_delivery_date), 'MMM d, yyyy')}
                 </p>
               </div>
             )}
@@ -171,20 +172,20 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
                 <p className="text-slate-500">Due Date</p>
                 <p className="font-medium flex items-center gap-1.5">
                   <Calendar className="w-4 h-4" />
-                  {format(new Date(part.due_date), 'MMM d, yyyy')}
+                  {format(parseLocalDate(part.due_date), 'MMM d, yyyy')}
                 </p>
               </div>
             )}
             {part.received_date && (
               <div>
                 <p className="text-slate-500">Received</p>
-                <p className="font-medium">{format(new Date(part.received_date), 'MMM d, yyyy')}</p>
+                <p className="font-medium">{format(parseLocalDate(part.received_date), 'MMM d, yyyy')}</p>
               </div>
             )}
             {part.installed_date && (
               <div>
                 <p className="text-slate-500">Installed</p>
-                <p className="font-medium">{format(new Date(part.installed_date), 'MMM d, yyyy')}</p>
+                <p className="font-medium">{format(parseLocalDate(part.installed_date), 'MMM d, yyyy')}</p>
               </div>
             )}
           </div>

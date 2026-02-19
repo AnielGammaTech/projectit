@@ -1,5 +1,5 @@
 import entityService from '../../services/entityService.js';
-import emailService from '../../services/emailService.js';
+import { sendEmail, getResendConfig } from '../../services/resendService.js';
 
 export default async function handler(req, res) {
   try {
@@ -43,6 +43,13 @@ export default async function handler(req, res) {
       return res.json({ success: true, skipped: true, reason: 'User prefers digest emails' });
     }
 
+    // Check if Resend is configured before building the email
+    const resendConfig = await getResendConfig();
+    if (!resendConfig.enabled || !resendConfig.apiKey) {
+      console.warn('Resend not configured — skipping notification email to', to);
+      return res.json({ success: false, skipped: true, reason: 'Email service not configured. Add your Resend API key in Adminland > Integrations.' });
+    }
+
     // Get app settings for branding
     let appConfig = {};
     try {
@@ -52,18 +59,7 @@ export default async function handler(req, res) {
       console.log('Could not fetch app settings, using defaults:', e.message);
     }
 
-    // Get integration settings for email configuration
-    let integrationConfig = {};
-    try {
-      const integrationSettings = await entityService.filter('IntegrationSettings', { setting_key: 'main' });
-      integrationConfig = integrationSettings[0] || {};
-    } catch (e) {
-      console.log('Could not fetch integration settings:', e.message);
-    }
-
     const appName = appConfig.app_name || 'ProjectIT';
-    const fromEmail = integrationConfig.resend_from_email || 'no-reply@projectit.gtools.io';
-    const fromName = integrationConfig.resend_from_name || appName;
 
     // Build email body
     const emailBody = buildEmailHtml({
@@ -77,13 +73,11 @@ export default async function handler(req, res) {
       link,
     });
 
-    // Send email via emailService
-    await emailService.send({
-      from_name: fromName,
-      from_email: fromEmail,
-      to: to,
+    // Send email via resendService (reads API key from database IntegrationSettings)
+    await sendEmail({
+      to,
       subject: `${appName}: ${title}`,
-      body: emailBody,
+      html: emailBody,
     });
 
     console.log(`Notification email sent to ${to}: ${title}`);
@@ -142,20 +136,20 @@ function buildEmailHtml({ appName, appLogo, type, title, message, projectName, f
               <span style="display: inline-block; padding: 4px 12px; background-color: ${color}20; color: ${color}; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">${label}</span>
             </td>
           </tr>
-          
+
           <!-- Content -->
           <tr>
             <td style="padding: 32px;">
               <h2 style="margin: 0 0 16px 0; color: #0f172a; font-size: 20px; font-weight: 600;">${title}</h2>
-              
+
               ${projectName ? `<p style="margin: 0 0 16px 0; color: #64748b; font-size: 14px;">Project: <strong style="color: #334155;">${projectName}</strong></p>` : ''}
-              
+
               ${fromUserName ? `<p style="margin: 0 0 16px 0; color: #64748b; font-size: 14px;">From: <strong style="color: #334155;">${fromUserName}</strong></p>` : ''}
-              
+
               <div style="padding: 16px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid ${color};">
                 <p style="margin: 0; color: #334155; font-size: 15px; line-height: 1.6;">${message || ''}</p>
               </div>
-              
+
               ${link ? `
               <div style="margin-top: 24px; text-align: center;">
                 <a href="${link}" style="display: inline-block; padding: 12px 32px; background-color: ${color}; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View Details</a>
@@ -163,7 +157,7 @@ function buildEmailHtml({ appName, appLogo, type, title, message, projectName, f
               ` : ''}
             </td>
           </tr>
-          
+
           <!-- Footer -->
           <tr>
             <td style="padding: 24px 32px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; border-radius: 0 0 12px 12px;">

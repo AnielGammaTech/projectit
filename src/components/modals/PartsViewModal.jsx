@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Package, User, Calendar, MoreHorizontal, Edit2, Trash2, Upload, Loader2, ChevronLeft, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
 import {
@@ -169,10 +170,10 @@ export default function PartsViewModal({
                   <p className="font-medium">{part.supplier}</p>
                 </div>
               )}
-              {part.due_date && !isNaN(new Date(part.due_date).getTime()) && (
+              {part.due_date && !isNaN(parseLocalDate(part.due_date)?.getTime()) && (
                 <div>
                   <span className="text-slate-500">Due Date</span>
-                  <p className="font-medium">{format(new Date(part.due_date), 'MMM d, yyyy')}</p>
+                  <p className="font-medium">{format(parseLocalDate(part.due_date), 'MMM d, yyyy')}</p>
                 </div>
               )}
             </div>
@@ -301,10 +302,10 @@ export default function PartsViewModal({
                               ))}
                             </DropdownMenuContent>
                           </DropdownMenu>
-                          {part.due_date && !isNaN(new Date(part.due_date).getTime()) && (
+                          {part.due_date && !isNaN(parseLocalDate(part.due_date)?.getTime()) && (
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              {format(new Date(part.due_date), 'MMM d')}
+                              {format(parseLocalDate(part.due_date), 'MMM d')}
                             </span>
                           )}
                         </div>

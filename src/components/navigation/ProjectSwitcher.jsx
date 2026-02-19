@@ -24,7 +24,7 @@ export default function ProjectSwitcher({ currentProject, currentPage = 'Project
     queryFn: () => base44.entities.Project.list('-created_date')
   });
   
-  const activeProjects = projects.filter(p => p.status !== 'archived' && p.status !== 'completed');
+  const activeProjects = projects.filter(p => p.status !== 'archived' && p.status !== 'completed' && p.status !== 'deleted');
   const filteredProjects = activeProjects.filter(p => 
     p.name?.toLowerCase().includes(search.toLowerCase()) ||
     p.client?.toLowerCase().includes(search.toLowerCase())

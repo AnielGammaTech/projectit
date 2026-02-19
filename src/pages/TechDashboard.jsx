@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
-import { 
-  Monitor, CheckCircle2, Clock, Package, ListTodo, 
+import {
+  Monitor, CheckCircle2, Clock, Package, ListTodo,
   AlertTriangle, Wrench, ArrowLeft, Play, Square
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 export default function TechDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -55,9 +56,9 @@ export default function TechDashboard() {
 
   // Calculate metrics
   const activeTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived');
-  const overdueTasks = activeTasks.filter(t => t.due_date && isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date)));
-  const dueTodayTasks = activeTasks.filter(t => t.due_date && isToday(new Date(t.due_date)));
-  const dueTomorrowTasks = activeTasks.filter(t => t.due_date && isTomorrow(new Date(t.due_date)));
+  const overdueTasks = activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d); });
+  const dueTodayTasks = activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isToday(d); });
+  const dueTomorrowTasks = activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isTomorrow(d); });
   const completedToday = tasks.filter(t => t.status === 'completed' && t.updated_date && isToday(new Date(t.updated_date)));
   const readyToInstall = parts.filter(p => p.status === 'ready_to_install');
 
@@ -165,7 +166,7 @@ export default function TechDashboard() {
             <div className="space-y-3">
               {/* Overdue */}
               {overdueTasks.map(task => {
-                const daysOverdue = differenceInDays(new Date(), new Date(task.due_date));
+                const daysOverdue = differenceInDays(new Date(), parseLocalDate(task.due_date));
                 return (
                   <motion.div 
                     key={task.id}

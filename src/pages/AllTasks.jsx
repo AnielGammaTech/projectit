@@ -2,31 +2,20 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ListTodo, Filter, Search, Plus, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, User, FolderKanban, Package, Edit2, Truck, Trash2, ChevronDown, ChevronRight, ShoppingCart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ListTodo, Search, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar as CalendarIcon, User, UserPlus, FolderKanban, Package, Truck, ChevronDown, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { format, isPast, isToday, isTomorrow, addDays } from 'date-fns';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarPicker } from '@/components/ui/calendar';
+import { Link, useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { format, isPast, isToday, isTomorrow } from 'date-fns';
 import { cn } from '@/lib/utils';
-import TaskModal from '@/components/modals/TaskModal';
-import PartModal from '@/components/modals/PartModal';
-import PartDetailModal from '@/components/modals/PartDetailModal';
-import QuickOrderModal from '@/components/parts/QuickOrderModal';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -41,10 +30,289 @@ const priorityColors = {
   high: 'bg-red-100 text-red-700'
 };
 
+const avatarColors = [
+  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
+  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
+  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
+];
+
+const getColorForEmail = (email) => {
+  if (!email) return avatarColors[0];
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) {
+    hash = email.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+};
+
+const getInitials = (name) => {
+  if (!name) return '?';
+  const parts = name.split(' ');
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
+// Task row component with its own state for date picker
+function TaskRow({ task, teamMembers, currentUser, statusConfig, priorityColors, getDueDateLabel, groupName, onComplete, onAssign, onUnassign, onDueDateChange, onNavigate }) {
+  const [dateOpen, setDateOpen] = useState(false);
+  const status = statusConfig[task.status] || statusConfig.todo;
+  const dueInfo = task.due_date ? getDueDateLabel(task.due_date) : null;
+
+  return (
+    <div
+      onClick={() => onNavigate(task)}
+      className="flex items-center gap-2 px-3 sm:px-4 py-1.5 hover:bg-slate-50 transition-colors cursor-pointer group active:bg-slate-100"
+    >
+      {/* Checkmark */}
+      <button
+        onClick={(e) => onComplete(e, task.id)}
+        className={cn(
+          "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all active:scale-90",
+          task.status === 'completed'
+            ? "bg-emerald-500 border-emerald-500 text-white"
+            : "border-slate-300 hover:border-[#0069AF] hover:bg-[#0069AF]/5"
+        )}
+        title="Mark as completed"
+      >
+        {task.status === 'completed' ? (
+          <CheckCircle2 className="w-3 h-3" />
+        ) : (
+          <CheckCircle2 className="w-3 h-3 opacity-0 group-hover:opacity-30" />
+        )}
+      </button>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <h4 className="text-sm font-medium text-slate-900 truncate">{task.title}</h4>
+          {groupName && (
+            <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0 hidden sm:inline">{groupName}</span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1.5 shrink-0">
+        {task.priority && (
+          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 hidden sm:flex", priorityColors[task.priority])}>
+            {task.priority}
+          </Badge>
+        )}
+
+        {/* Inline assignee dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {task.assigned_name ? (
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 shrink-0", getColorForEmail(task.assigned_to))}
+                title={task.assigned_name}
+              >
+                {getInitials(task.assigned_name)}
+              </button>
+            ) : (
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 hover:border-[#0069AF]"
+                title="Assign"
+              >
+                <UserPlus className="w-3 h-3 text-slate-400" />
+              </button>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+            {task.assigned_to && (
+              <DropdownMenuItem onClick={() => onUnassign(task)}>
+                <User className="w-4 h-4 mr-2" />
+                Unassign
+              </DropdownMenuItem>
+            )}
+            {teamMembers.map((member) => (
+              <DropdownMenuItem key={member.id} onClick={() => onAssign(task, member.email)}>
+                <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                  {getInitials(member.name)}
+                </div>
+                {member.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Inline due date picker */}
+        <Popover open={dateOpen} onOpenChange={setDateOpen}>
+          <PopoverTrigger asChild>
+            {dueInfo ? (
+              <Badge
+                onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                variant="outline"
+                className={cn("text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80", dueInfo.color)}
+              >
+                {dueInfo.label}
+              </Badge>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                className="p-0.5 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                title="Set due date"
+              >
+                <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            )}
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
+            <Calendar
+              mode="single"
+              selected={task.due_date ? (() => {
+                const dateStr = task.due_date.split('T')[0];
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return new Date(year, month - 1, day);
+              })() : undefined}
+              onSelect={(date) => { onDueDateChange(task, date); setDateOpen(false); }}
+            />
+            {task.due_date && (
+              <div className="p-2 border-t">
+                <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => { onDueDateChange(task, null); setDateOpen(false); }}>
+                  Clear date
+                </Button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
+}
+
+// Part row component with its own state for date picker
+function PartRow({ part, teamMembers, getDueDateLabel, onAssign, onUnassign, onDueDateChange, onNavigate }) {
+  const [dateOpen, setDateOpen] = useState(false);
+  const dueInfo = part.due_date && parseLocalDate(part.due_date) ? getDueDateLabel(part.due_date) : null;
+  const deliveryInfo = part.est_delivery_date && parseLocalDate(part.est_delivery_date) ? getDueDateLabel(part.est_delivery_date) : null;
+  const statusColors = {
+    needed: 'bg-red-100 text-red-700',
+    ordered: 'bg-blue-100 text-blue-700',
+    received: 'bg-amber-100 text-amber-700',
+    installed: 'bg-emerald-100 text-emerald-700',
+  };
+
+  return (
+    <div
+      onClick={() => onNavigate(part)}
+      className="flex items-center gap-2 px-3 sm:px-4 py-1.5 hover:bg-slate-50 transition-colors cursor-pointer group active:bg-slate-100"
+    >
+      <Package className="w-4 h-4 text-amber-500 shrink-0" />
+
+      <div className="flex-1 min-w-0">
+        <h4 className="text-sm font-medium text-slate-900 truncate">{part.name}</h4>
+      </div>
+
+      <div className="flex items-center gap-1.5 shrink-0">
+        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", statusColors[part.status] || 'bg-slate-100 text-slate-600')}>
+          {part.status?.replace('_', ' ')}
+        </Badge>
+        {part.part_number && (
+          <span className="text-[10px] text-slate-400 hidden sm:inline font-mono">#{part.part_number}</span>
+        )}
+
+        {/* Inline assignee dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {part.assigned_name ? (
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 shrink-0", getColorForEmail(part.assigned_to))}
+                title={part.assigned_name}
+              >
+                {getInitials(part.assigned_name)}
+              </button>
+            ) : (
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 hover:border-[#0069AF]"
+                title="Assign"
+              >
+                <UserPlus className="w-3 h-3 text-slate-400" />
+              </button>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+            {part.assigned_to && (
+              <DropdownMenuItem onClick={() => onUnassign(part)}>
+                <User className="w-4 h-4 mr-2" />
+                Unassign
+              </DropdownMenuItem>
+            )}
+            {teamMembers.map((member) => (
+              <DropdownMenuItem key={member.id} onClick={() => onAssign(part, member.email)}>
+                <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                  {getInitials(member.name)}
+                </div>
+                {member.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {deliveryInfo && (
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-cyan-50 text-cyan-700 border-cyan-200 hidden sm:flex">
+            ETA: {deliveryInfo.label}
+          </Badge>
+        )}
+
+        {/* Inline due date picker */}
+        <Popover open={dateOpen} onOpenChange={setDateOpen}>
+          <PopoverTrigger asChild>
+            {dueInfo ? (
+              <Badge
+                onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                variant="outline"
+                className={cn("text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80", dueInfo.color)}
+              >
+                {dueInfo.label}
+              </Badge>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                className="p-0.5 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                title="Set due date"
+              >
+                <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            )}
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
+            <Calendar
+              mode="single"
+              selected={part.due_date ? (() => {
+                const dateStr = part.due_date.split('T')[0];
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return new Date(year, month - 1, day);
+              })() : undefined}
+              onSelect={(date) => { onDueDateChange(part, date); setDateOpen(false); }}
+            />
+            {part.due_date && (
+              <div className="p-2 border-t">
+                <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => { onDueDateChange(part, null); setDateOpen(false); }}>
+                  Clear date
+                </Button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
+
+        {part.quantity > 1 && (
+          <span className="text-[10px] text-slate-400 hidden sm:inline">x{part.quantity}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AllTasks() {
+  const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const initialTab = urlParams.get('tab') || 'tasks';
-  
+
   const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -53,14 +321,7 @@ export default function AllTasks() {
   const [viewMode, setViewMode] = useState('all'); // 'all', 'mine', 'mine_due'
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
-  const [editingPart, setEditingPart] = useState(null);
-  const [selectedPart, setSelectedPart] = useState(null);
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [showPartModal, setShowPartModal] = useState(false);
-  const [deletePartConfirm, setDeletePartConfirm] = useState({ open: false, part: null });
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
-  const [quickOrderPart, setQuickOrderPart] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -90,9 +351,25 @@ export default function AllTasks() {
     queryFn: () => base44.entities.TeamMember.list()
   });
 
+  const { data: taskGroups = [] } = useQuery({
+    queryKey: ['allTaskGroups'],
+    queryFn: () => base44.entities.TaskGroup.list()
+  });
+
+  const getGroupName = (groupId) => {
+    if (!groupId) return null;
+    const group = taskGroups.find(g => g.id === groupId);
+    return group?.name || null;
+  };
+
   const getProjectName = (projectId) => {
     const project = projects.find(p => p.id === projectId);
     return project?.name || 'Unknown Project';
+  };
+
+  const getProjectNumber = (projectId) => {
+    const project = projects.find(p => p.id === projectId);
+    return project?.project_number || null;
   };
 
   // Helper to check if user has access to a project
@@ -110,24 +387,24 @@ export default function AllTasks() {
   const allFilteredTasks = tasks.filter(task => {
     // Only show tasks from active projects (exclude archived)
     if (!activeProjectIds.includes(task.project_id)) return false;
-    
+
     const matchesSearch = task.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
     const matchesAssignee = assigneeFilter === 'all' || task.assigned_to === assigneeFilter;
-    
+
     let matchesViewMode = true;
     if (viewMode === 'mine') {
       matchesViewMode = task.assigned_to === currentUser?.email;
     } else if (viewMode === 'mine_due') {
       matchesViewMode = task.assigned_to === currentUser?.email && task.due_date;
     }
-    
+
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
   }).sort((a, b) => {
     if (viewMode === 'mine_due') {
-      return new Date(a.due_date) - new Date(b.due_date);
+      return (parseLocalDate(a.due_date) || 0) - (parseLocalDate(b.due_date) || 0);
     }
     return 0;
   });
@@ -137,7 +414,7 @@ export default function AllTasks() {
   const completedTasks = allFilteredTasks.filter(t => t.status === 'completed');
 
   // My assigned parts (with due dates)
-  const myParts = parts.filter(part => 
+  const myParts = parts.filter(part =>
     part.assigned_to === currentUser?.email && part.due_date
   );
 
@@ -148,7 +425,7 @@ export default function AllTasks() {
   const filteredParts = parts.filter(part => {
     // Only include parts from active projects
     if (!activeProjectIds.includes(part.project_id)) return false;
-    
+
     const matchesSearch = part.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          part.part_number?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || part.status === statusFilter;
@@ -161,56 +438,77 @@ export default function AllTasks() {
   const myTasksCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed').length;
   const myTasksWithDueCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.due_date && t.status !== 'completed').length;
 
-  const handleSaveTask = async (data) => {
-    if (editingTask) {
-      await base44.entities.Task.update(editingTask.id, data);
-    }
-    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
-    setShowTaskModal(false);
-    setEditingTask(null);
-  };
-
-  const handleSavePart = async (data) => {
-    if (editingPart) {
-      await base44.entities.Part.update(editingPart.id, data);
-    }
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
-    setShowPartModal(false);
-    setEditingPart(null);
-    setSelectedPart(null);
-  };
-
-  const handleSetDeliveryDate = async (part, date) => {
-    await base44.entities.Part.update(part.id, { est_delivery_date: format(date, 'yyyy-MM-dd') });
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
-  };
-
-  const handlePartStatusChange = async (part, status) => {
-    await base44.entities.Part.update(part.id, { status });
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
-  };
-
-  const handleQuickOrderSave = async (partId, data) => {
-    await base44.entities.Part.update(partId, data);
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
-  };
-
-  const handleDeletePart = async () => {
-    if (deletePartConfirm.part) {
-      await base44.entities.Part.delete(deletePartConfirm.part.id);
-      queryClient.invalidateQueries({ queryKey: ['allParts'] });
-    }
-    setDeletePartConfirm({ open: false, part: null });
-  };
-
   const handleQuickComplete = async (e, taskId) => {
     e.stopPropagation();
+    const task = tasks.find(t => t.id === taskId);
     await base44.entities.Task.update(taskId, { status: 'completed' });
+
+    if (task) {
+      await sendTaskCompletionNotification({
+        task,
+        projectId: task.project_id,
+        projectName: getProjectName(task.project_id),
+        currentUser,
+      });
+    }
+
     queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+  };
+
+  const handleTaskAssign = async (task, email) => {
+    const member = teamMembers.find(m => m.email === email);
+    await base44.entities.Task.update(task.id, {
+      assigned_to: email,
+      assigned_name: member?.name || email
+    });
+    if (email !== task.assigned_to) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail: email,
+        taskTitle: task.title,
+        projectId: task.project_id,
+        projectName: getProjectName(task.project_id),
+        currentUser,
+      });
+    }
+    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+  };
+
+  const handleTaskUnassign = async (task) => {
+    await base44.entities.Task.update(task.id, { assigned_to: '', assigned_name: '' });
+    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+  };
+
+  const handleTaskDueDateChange = async (task, date) => {
+    await base44.entities.Task.update(task.id, {
+      due_date: date ? format(date, 'yyyy-MM-dd') : ''
+    });
+    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+  };
+
+  const handlePartAssign = async (part, email) => {
+    const member = teamMembers.find(m => m.email === email);
+    await base44.entities.Part.update(part.id, {
+      assigned_to: email,
+      assigned_name: member?.name || email
+    });
+    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+  };
+
+  const handlePartUnassign = async (part) => {
+    await base44.entities.Part.update(part.id, { assigned_to: '', assigned_name: '' });
+    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+  };
+
+  const handlePartDueDateChange = async (part, date) => {
+    await base44.entities.Part.update(part.id, {
+      due_date: date ? format(date, 'yyyy-MM-dd') : ''
+    });
+    queryClient.invalidateQueries({ queryKey: ['allParts'] });
   };
 
   const getDueDateLabel = (date) => {
-    const d = new Date(date);
+    const d = parseLocalDate(date);
+    if (!d) return null;
     if (isToday(d)) return { label: 'Today', color: 'text-amber-600 bg-amber-50' };
     if (isTomorrow(d)) return { label: 'Tomorrow', color: 'text-blue-600 bg-blue-50' };
     if (isPast(d)) return { label: 'Overdue', color: 'text-red-600 bg-red-50' };
@@ -227,7 +525,7 @@ export default function AllTasks() {
   if (loadingTasks) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse space-y-6">
             <div>
               <div className="h-8 w-48 bg-slate-200 rounded-lg" />
@@ -266,7 +564,7 @@ export default function AllTasks() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -275,7 +573,7 @@ export default function AllTasks() {
         >
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Tasks & Parts</h1>
           <p className="text-slate-500 mt-1">View and filter all tasks and parts across projects</p>
-          
+
           {/* Main Tabs */}
           <div className="flex gap-2 mt-4">
             <button
@@ -315,8 +613,8 @@ export default function AllTasks() {
                 onClick={() => setViewMode('all')}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  viewMode === 'all' 
-                    ? "bg-white text-slate-900 shadow-sm" 
+                  viewMode === 'all'
+                    ? "bg-white text-slate-900 shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
                 )}
               >
@@ -326,8 +624,8 @@ export default function AllTasks() {
                 onClick={() => setViewMode('mine')}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  viewMode === 'mine' 
-                    ? "bg-white text-slate-900 shadow-sm" 
+                  viewMode === 'mine'
+                    ? "bg-white text-slate-900 shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
                 )}
               >
@@ -337,8 +635,8 @@ export default function AllTasks() {
                 onClick={() => setViewMode('mine_due')}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  viewMode === 'mine_due' 
-                    ? "bg-white text-slate-900 shadow-sm" 
+                  viewMode === 'mine_due'
+                    ? "bg-white text-slate-900 shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
                 )}
               >
@@ -418,7 +716,7 @@ export default function AllTasks() {
 
         {/* Tasks List — grouped by project */}
         {activeTab === 'tasks' && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredTasks.length > 0 ? (
               (() => {
                 // Group tasks by project
@@ -439,69 +737,35 @@ export default function AllTasks() {
                     {/* Project header */}
                     <Link
                       to={createPageUrl('ProjectDetail') + `?id=${projectId}`}
-                      className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors"
+                      className="flex items-center justify-between px-4 py-1.5 bg-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <FolderKanban className="w-4 h-4 text-[#0069AF]" />
+                        <FolderKanban className="w-3.5 h-3.5 text-[#0069AF]" />
                         <span className="font-semibold text-sm text-slate-900">{getProjectName(projectId)}</span>
+                        {getProjectNumber(projectId) && <span className="px-1.5 py-0.5 bg-slate-800 text-white rounded text-[10px] font-mono font-semibold">#{getProjectNumber(projectId)}</span>}
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">{projectTasks.length}</Badge>
                       </div>
                     </Link>
 
                     {/* Task rows */}
                     <div className="divide-y divide-slate-50">
-                      {projectTasks.map((task) => {
-                        const status = statusConfig[task.status] || statusConfig.todo;
-                        const StatusIcon = status.icon;
-                        const dueInfo = task.due_date ? getDueDateLabel(task.due_date) : null;
-
-                        return (
-                          <div
-                            key={task.id}
-                            onClick={() => { setEditingTask(task); setShowTaskModal(true); }}
-                            className="flex items-center gap-3 px-3 sm:px-4 py-3 sm:py-2.5 hover:bg-slate-50 transition-colors cursor-pointer group active:bg-slate-100"
-                          >
-                            {/* Tappable checkmark */}
-                            <button
-                              onClick={(e) => handleQuickComplete(e, task.id)}
-                              className={cn(
-                                "w-7 h-7 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all active:scale-90",
-                                task.status === 'completed'
-                                  ? "bg-emerald-500 border-emerald-500 text-white"
-                                  : "border-slate-300 hover:border-[#0069AF] hover:bg-[#0069AF]/5"
-                              )}
-                              title="Mark as completed"
-                            >
-                              {task.status === 'completed' ? (
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                              ) : (
-                                <CheckCircle2 className="w-3.5 h-3.5 opacity-0 group-hover:opacity-30" />
-                              )}
-                            </button>
-
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-medium text-slate-900 truncate">{task.title}</h4>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                              {task.priority && (
-                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-5 hidden sm:flex", priorityColors[task.priority])}>
-                                  {task.priority}
-                                </Badge>
-                              )}
-                              {task.assigned_name && (
-                                <span className="text-xs text-slate-400 hidden lg:inline">{task.assigned_name.split(' ')[0]}</span>
-                              )}
-                              {dueInfo && (
-                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-5", dueInfo.color)}>
-                                  {dueInfo.label}
-                                </Badge>
-                              )}
-                              <Edit2 className="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
-                            </div>
-                          </div>
-                        );
-                      })}
+                      {projectTasks.map((task) => (
+                        <TaskRow
+                          key={task.id}
+                          task={task}
+                          teamMembers={teamMembers}
+                          currentUser={currentUser}
+                          statusConfig={statusConfig}
+                          priorityColors={priorityColors}
+                          getDueDateLabel={getDueDateLabel}
+                          groupName={getGroupName(task.group_id)}
+                          onComplete={handleQuickComplete}
+                          onAssign={handleTaskAssign}
+                          onUnassign={handleTaskUnassign}
+                          onDueDateChange={handleTaskDueDateChange}
+                          onNavigate={(t) => navigate(createPageUrl('ProjectTasks') + `?id=${t.project_id}`)}
+                        />
+                      ))}
                     </div>
                   </motion.div>
                 ));
@@ -546,8 +810,8 @@ export default function AllTasks() {
                         {completedTasks.map((task) => (
                           <div
                             key={task.id}
-                            onClick={() => { setEditingTask(task); setShowTaskModal(true); }}
-                            className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 transition-colors cursor-pointer"
+                            onClick={() => navigate(createPageUrl('ProjectTasks') + `?id=${task.project_id}`)}
+                            className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 transition-colors cursor-pointer"
                           >
                             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                             <span className="text-sm text-slate-400 line-through truncate flex-1">{task.title}</span>
@@ -580,7 +844,7 @@ export default function AllTasks() {
                   className="pl-10"
                 />
               </div>
-              
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Status" />
@@ -645,127 +909,56 @@ export default function AllTasks() {
           </div>
         )}
 
-        {/* Parts List */}
+        {/* Parts List — grouped by project */}
         {activeTab === 'parts' && (
           <div className="space-y-3">
             {filteredParts.length > 0 ? (
-              filteredParts.map((part, idx) => {
-                const dueInfo = part.due_date && !isNaN(new Date(part.due_date).getTime()) ? getDueDateLabel(part.due_date) : null;
-                const deliveryInfo = part.est_delivery_date && !isNaN(new Date(part.est_delivery_date).getTime()) ? getDueDateLabel(part.est_delivery_date) : null;
-                
-                return (
+              (() => {
+                const grouped = {};
+                filteredParts.forEach(part => {
+                  const pid = part.project_id;
+                  if (!grouped[pid]) grouped[pid] = [];
+                  grouped[pid].push(part);
+                });
+
+                return Object.entries(grouped).map(([projectId, projectParts]) => (
                   <motion.div
-                    key={part.id}
+                    key={projectId}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.02 }}
-                    onClick={() => setSelectedPart(part)}
-                    className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group"
+                    className="bg-white rounded-xl border border-slate-100 overflow-hidden"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="p-1.5 rounded-lg bg-amber-100">
-                        <Package className="w-5 h-5 text-amber-600" />
+                    {/* Project header */}
+                    <Link
+                      to={createPageUrl('ProjectParts') + `?id=${projectId}`}
+                      className="flex items-center justify-between px-4 py-1.5 bg-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FolderKanban className="w-3.5 h-3.5 text-[#0F2F44]" />
+                        <span className="font-semibold text-sm text-slate-900">{getProjectName(projectId)}</span>
+                        {getProjectNumber(projectId) && <span className="px-1.5 py-0.5 bg-slate-800 text-white rounded text-[10px] font-mono font-semibold">#{getProjectNumber(projectId)}</span>}
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">{projectParts.length}</Badge>
                       </div>
+                    </Link>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-medium text-slate-900">{part.name}</h4>
-                          <div className="flex items-center gap-2">
-                            {/* Quick Order button */}
-                            {part.status === 'needed' && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                onClick={(e) => { e.stopPropagation(); setQuickOrderPart(part); }}
-                              >
-                                <ShoppingCart className="w-3 h-3 mr-1" />
-                                Order
-                              </Button>
-                            )}
-                            {/* Quick set delivery date button */}
-                            {!part.est_delivery_date && part.status === 'ordered' && (
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Truck className="w-3 h-3 mr-1" />
-                                    Set ETA
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
-                                  <CalendarPicker
-                                    mode="single"
-                                    selected={undefined}
-                                    onSelect={(date) => date && handleSetDeliveryDate(part, date)}
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => { e.stopPropagation(); setDeletePartConfirm({ open: true, part }); }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                            <Link to={createPageUrl('ProjectDetail') + `?id=${part.project_id}`} onClick={(e) => e.stopPropagation()}>
-                              <Badge variant="outline" className="shrink-0 hover:bg-slate-100">
-                                <FolderKanban className="w-3 h-3 mr-1" />
-                                {getProjectName(part.project_id)}
-                              </Badge>
-                            </Link>
-                          </div>
-                        </div>
-
-                        {part.part_number && (
-                          <p className="text-sm text-slate-500 mt-1">#{part.part_number}</p>
-                        )}
-
-                        <div className="flex flex-wrap items-center gap-3 mt-3">
-                          <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200">
-                            {part.status?.replace('_', ' ')}
-                          </Badge>
-
-                          {part.quantity > 1 && (
-                            <Badge variant="outline">Qty: {part.quantity}</Badge>
-                          )}
-
-                          {part.assigned_name && (
-                            <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                              <User className="w-3.5 h-3.5" />
-                              <span>{part.assigned_name}</span>
-                            </div>
-                          )}
-
-                          {deliveryInfo && (
-                            <Badge variant="outline" className="bg-cyan-50 text-cyan-700 border-cyan-200">
-                              <Truck className="w-3 h-3 mr-1" />
-                              ETA: {deliveryInfo.label}
-                            </Badge>
-                          )}
-
-                          {dueInfo && (
-                            <Badge variant="outline" className={dueInfo.color}>
-                              <Calendar className="w-3 h-3 mr-1" />
-                              {dueInfo.label}
-                            </Badge>
-                          )}
-
-                          {part.supplier && (
-                            <span className="text-xs text-slate-400">{part.supplier}</span>
-                          )}
-                        </div>
-                      </div>
+                    {/* Part rows */}
+                    <div className="divide-y divide-slate-50">
+                      {projectParts.map((part) => (
+                        <PartRow
+                          key={part.id}
+                          part={part}
+                          teamMembers={teamMembers}
+                          getDueDateLabel={getDueDateLabel}
+                          onAssign={handlePartAssign}
+                          onUnassign={handlePartUnassign}
+                          onDueDateChange={handlePartDueDateChange}
+                          onNavigate={(p) => navigate(createPageUrl('ProjectParts') + `?id=${p.project_id}`)}
+                        />
+                      ))}
                     </div>
                   </motion.div>
-                );
-              })
+                ));
+              })()
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -781,61 +974,6 @@ export default function AllTasks() {
         )}
       </div>
 
-      {/* Task Edit Modal */}
-      <TaskModal
-        open={showTaskModal}
-        onClose={() => { setShowTaskModal(false); setEditingTask(null); }}
-        task={editingTask}
-        projectId={editingTask?.project_id}
-        teamMembers={teamMembers}
-        groups={[]}
-        onSave={handleSaveTask}
-      />
-
-      {/* Part Edit Modal */}
-      <PartModal
-        open={showPartModal}
-        onClose={() => { setShowPartModal(false); setEditingPart(null); }}
-        part={editingPart}
-        projectId={editingPart?.project_id}
-        teamMembers={teamMembers}
-        onSave={handleSavePart}
-      />
-
-      {/* Part Detail Modal */}
-      <PartDetailModal
-        open={!!selectedPart}
-        onClose={() => setSelectedPart(null)}
-        part={selectedPart}
-        teamMembers={teamMembers}
-        currentUser={currentUser}
-        onEdit={(part) => { setSelectedPart(null); setEditingPart(part); setShowPartModal(true); }}
-        onStatusChange={handlePartStatusChange}
-      />
-
-      {/* Quick Order Modal */}
-      <QuickOrderModal
-        open={!!quickOrderPart}
-        onClose={() => setQuickOrderPart(null)}
-        part={quickOrderPart}
-        onSave={handleQuickOrderSave}
-      />
-
-      {/* Delete Part Confirmation */}
-      <AlertDialog open={deletePartConfirm.open} onOpenChange={(open) => !open && setDeletePartConfirm({ open: false, part: null })}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete part?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{deletePartConfirm.part?.name}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePart} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

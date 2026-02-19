@@ -37,6 +37,7 @@ import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import GroupModal from '@/components/modals/GroupModal';
 import TaskGroupCard from '@/components/project/TaskGroupCard';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
+import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -97,7 +98,7 @@ export default function ProjectTasks() {
   const [currentUser, setCurrentUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewFilter, setViewFilter] = useState('all');
-  const [expandedGroups, setExpandedGroups] = useState(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState(new Set());
   
   // Inline task creation state
   const [inlineTaskGroupId, setInlineTaskGroupId] = useState(null);
@@ -160,25 +161,18 @@ export default function ProjectTasks() {
     enabled: tasks.length > 0
   });
 
-  // Initialize expanded groups
-  useEffect(() => {
-    if (taskGroups.length > 0 && expandedGroups.size === 0) {
-      setExpandedGroups(new Set(['ungrouped', ...taskGroups.map(g => g.id)]));
-    }
-  }, [taskGroups]);
-
   const getCommentCount = (taskId) => {
     return allComments.filter(c => c.task_id === taskId).length;
   };
 
   const toggleGroup = (groupId) => {
-    const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(groupId)) {
-      newExpanded.delete(groupId);
+    const newCollapsed = new Set(collapsedGroups);
+    if (newCollapsed.has(groupId)) {
+      newCollapsed.delete(groupId);
     } else {
-      newExpanded.add(groupId);
+      newCollapsed.add(groupId);
     }
-    setExpandedGroups(newExpanded);
+    setCollapsedGroups(newCollapsed);
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -239,12 +233,28 @@ export default function ProjectTasks() {
 
   const handleBulkAssign = async (email) => {
     const member = teamMembers.find(m => m.email === email);
+    const tasksToNotify = [];
     for (const taskId of selectedTasks) {
+      const task = tasks.find(t => t.id === taskId);
+      if (task && task.assigned_to !== email) {
+        tasksToNotify.push(task);
+      }
       await base44.entities.Task.update(taskId, {
         assigned_to: email,
         assigned_name: member?.name || email
       });
     }
+
+    for (const task of tasksToNotify) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail: email,
+        taskTitle: task.title,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
+    }
+
     refetchTasks();
     clearSelection();
   };
@@ -297,20 +307,33 @@ export default function ProjectTasks() {
 
   const handleInlineCreate = async (groupId) => {
     if (!inlineTaskData.title.trim() || isCreating) return;
-    
+
     setIsCreating(true);
     const member = teamMembers.find(m => m.email === inlineTaskData.assigned_to);
+    const taskTitle = inlineTaskData.title.trim();
+    const assigneeEmail = inlineTaskData.assigned_to || '';
     await base44.entities.Task.create({
-      title: inlineTaskData.title.trim(),
+      title: taskTitle,
       project_id: projectId,
       status: 'todo',
       priority: 'medium',
       group_id: groupId || '',
       due_date: inlineTaskData.due_date ? format(inlineTaskData.due_date, 'yyyy-MM-dd') : '',
-      assigned_to: inlineTaskData.assigned_to || '',
+      assigned_to: assigneeEmail,
       assigned_name: member?.name || '',
       description: inlineTaskData.description || ''
     });
+
+    if (assigneeEmail) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail,
+        taskTitle,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
+    }
+
     setInlineTaskData({ title: '', assigned_to: '', due_date: null, description: '' });
     setInlineTaskGroupId(null);
     setIsCreating(false);
@@ -324,15 +347,39 @@ export default function ProjectTasks() {
 
   const handleStatusChange = async (task, status) => {
     await base44.entities.Task.update(task.id, { status });
+
+    if (status === 'completed') {
+      await sendTaskCompletionNotification({
+        task,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
+    }
+
     refetchTasks();
   };
 
   const handleSaveTask = async (data) => {
+    const wasAssigned = editingTask?.assigned_to;
+    const isNewlyAssigned = data.assigned_to && data.assigned_to !== 'unassigned' && data.assigned_to !== wasAssigned;
+
     if (editingTask) {
       await base44.entities.Task.update(editingTask.id, data);
     } else {
       await base44.entities.Task.create(data);
     }
+
+    if (isNewlyAssigned) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail: data.assigned_to,
+        taskTitle: data.title,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
+    }
+
     await refetchTasks();
     setShowTaskModal(false);
     setEditingTask(null);
@@ -389,6 +436,17 @@ export default function ProjectTasks() {
       assigned_to: email,
       assigned_name: member?.name || email
     });
+
+    if (email !== task.assigned_to) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail: email,
+        taskTitle: task.title,
+        projectId,
+        projectName: project?.name,
+        currentUser,
+      });
+    }
+
     refetchTasks();
   };
 
@@ -806,7 +864,7 @@ export default function ProjectTasks() {
           {taskGroups.map((group) => {
             const groupTasks = getTasksForGroup(group.id);
             const completedCount = groupTasks.filter(t => t.status === 'completed').length;
-            const isExpanded = expandedGroups.has(group.id);
+            const isExpanded = !collapsedGroups.has(group.id);
 
             return (
               <div key={group.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
@@ -944,13 +1002,13 @@ export default function ProjectTasks() {
               className="flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
               onClick={() => toggleGroup('ungrouped')}
             >
-              {expandedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+              {!collapsedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
               <span className="font-semibold text-slate-500 flex-1">Ungrouped</span>
               <span className="text-sm text-slate-500">
                 {ungroupedTasks.filter(t => t.status === 'completed').length}/{ungroupedTasks.length}
               </span>
             </div>
-            {expandedGroups.has('ungrouped') && (
+            {!collapsedGroups.has('ungrouped') && (
               <Droppable droppableId="ungrouped">
                 {(provided, snapshot) => (
                   <div
