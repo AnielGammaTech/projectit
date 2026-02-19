@@ -1295,11 +1295,8 @@ function DatabaseHealthSection() {
 
   const getToken = async () => {
     try {
-      const { supabase } = await import('@/lib/supabase');
-      if (supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
-        return session?.access_token || null;
-      }
+      const { getAccessToken } = await import('@/lib/supabase');
+      return await getAccessToken();
     } catch { /* fallback */ }
     return null;
   };

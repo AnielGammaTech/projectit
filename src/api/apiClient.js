@@ -2,15 +2,15 @@
 // Uses a JavaScript Proxy to dynamically handle any entity name
 // so all pages work through a single unified interface.
 
-import { supabase } from '@/lib/supabase';
+import { supabase, getAccessToken } from '@/lib/supabase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 async function getToken() {
-  // Get token from Supabase session
+  // Get token from the shared session state (kept in sync by onAuthStateChange).
+  // This waits for the initial session event so we never send an expired JWT.
   if (supabase) {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session?.access_token || null;
+    return getAccessToken();
   }
   // Fallback to legacy localStorage token
   return localStorage.getItem('projectit_token');

@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, getAccessToken } from '@/lib/supabase';
 
 // App configuration parameters
 export const appParams = {
@@ -7,8 +7,7 @@ export const appParams = {
   token: null,
   async getToken() {
     if (supabase) {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session?.access_token || null;
+      return getAccessToken();
     }
     return null;
   },
