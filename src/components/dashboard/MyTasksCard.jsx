@@ -117,6 +117,7 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
       {totalItems === 0 ? (
         <p className="text-slate-500 text-center py-6">No tasks assigned to you</p>
       ) : (
+        <>
         <div className="space-y-1">
           {pagedItems.map((item, idx) => {
             if (item._type === 'task') {
@@ -213,6 +214,7 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
             </button>
           </div>
         )}
+        </>
       )}
     </div>
   );
