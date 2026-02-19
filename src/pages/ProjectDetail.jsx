@@ -544,8 +544,42 @@ export default function ProjectDetail() {
   };
 
   const handleTeamUpdate = async (emails) => {
+    const previousMembers = project?.team_members || [];
+    const newMembers = emails.filter(e => !previousMembers.includes(e));
     await base44.entities.Project.update(projectId, { ...project, team_members: emails });
     refetchProject();
+
+    // Send notifications to newly added team members
+    for (const memberEmail of newMembers) {
+      if (memberEmail !== currentUser?.email) {
+        try {
+          await base44.entities.UserNotification.create({
+            user_email: memberEmail,
+            type: 'project_assigned',
+            title: 'You have been added to a project',
+            message: `${currentUser?.full_name || currentUser?.email} added you to "${project?.name}"`,
+            project_id: projectId,
+            project_name: project?.name,
+            from_user_email: currentUser?.email,
+            from_user_name: currentUser?.full_name || currentUser?.email,
+            link: `/ProjectDetail?id=${projectId}`,
+            is_read: false
+          });
+          await base44.functions.invoke('sendNotificationEmail', {
+            to: memberEmail,
+            type: 'project_assigned',
+            title: 'You have been added to a project',
+            message: `${currentUser?.full_name || currentUser?.email} added you to "${project?.name}"`,
+            projectId: projectId,
+            projectName: project?.name,
+            fromUserName: currentUser?.full_name || currentUser?.email,
+            link: `${window.location.origin}/ProjectDetail?id=${projectId}`
+          });
+        } catch (notifErr) {
+          console.error('Failed to send project assignment notification:', notifErr);
+        }
+      }
+    }
   };
 
   // Save as Template

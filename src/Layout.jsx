@@ -31,10 +31,16 @@ import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import GlobalSearch from '@/components/GlobalSearch';
 import NotificationToast from '@/components/NotificationToast';
+import NotificationPanel from '@/components/NotificationPanel';
 import FeedbackButton from '@/components/FeedbackButton';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@/components/ui/popover';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,13 +76,30 @@ function LayoutContent({ children, currentPageName }) {
     staleTime: 300000 // 5 minutes - prevent refetching and logo flickering
   });
 
+  // Fetch projects to filter out archived ones from notifications
+  const { data: allProjects = [] } = useQuery({
+    queryKey: ['allProjectsForLayout'],
+    queryFn: () => base44.entities.Project.list(),
+    enabled: !!currentUser?.email,
+    staleTime: 60000
+  });
+
+  const archivedProjectIds = new Set(
+    allProjects.filter(p => p.status === 'archived').map(p => p.id)
+  );
+
   // Fetch user notifications
-  const { data: userNotifications = [] } = useQuery({
+  const { data: rawUserNotifications = [] } = useQuery({
     queryKey: ['layoutNotifications', currentUser?.email],
     queryFn: () => base44.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
     enabled: !!currentUser?.email,
     refetchInterval: 10000 // Check every 10 seconds for new notifications
   });
+
+  // Filter out notifications from archived projects
+  const userNotifications = rawUserNotifications.filter(n =>
+    !n.project_id || !archivedProjectIds.has(n.project_id)
+  );
 
   const unreadNotifications = userNotifications.filter(n => !n.is_read);
   const unreadCount = unreadNotifications.length;
@@ -264,20 +287,26 @@ function LayoutContent({ children, currentPageName }) {
             </Link>
 
             {/* Notifications Bell */}
-            <Link
-              to={createPageUrl('MyNotifications')}
-              className={cn(
-                "relative p-2 rounded-lg transition-colors",
-                unreadCount > 0 ? "bg-white/15 hover:bg-white/25" : "hover:bg-white/10"
-              )}
-            >
-              <Bell className={cn("w-5 h-5", unreadCount > 0 ? "text-white" : "text-white/70")} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[20px] text-center ring-2 ring-[#133F5C] animate-pulse">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </Link>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={cn(
+                    "relative p-2 rounded-lg transition-colors",
+                    unreadCount > 0 ? "bg-white/15 hover:bg-white/25" : "hover:bg-white/10"
+                  )}
+                >
+                  <Bell className={cn("w-5 h-5", unreadCount > 0 ? "text-white" : "text-white/70")} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[20px] text-center ring-2 ring-[#133F5C] animate-pulse">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" sideOffset={8} className="w-auto p-0 border-slate-200 shadow-xl">
+                <NotificationPanel currentUser={currentUser} onClose={() => {}} />
+              </PopoverContent>
+            </Popover>
 
             {/* User Menu */}
             <DropdownMenu>
