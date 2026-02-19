@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 /**
  * Send in-app + email notification when a task is assigned to someone.
@@ -12,6 +13,7 @@ export async function sendTaskAssignmentNotification({
 }) {
   if (!assigneeEmail || assigneeEmail === 'unassigned' || assigneeEmail === currentUser?.email) return;
 
+  // Create in-app notification
   try {
     await base44.entities.UserNotification.create({
       user_email: assigneeEmail,
@@ -25,7 +27,13 @@ export async function sendTaskAssignmentNotification({
       link: `/ProjectDetail?id=${projectId}`,
       is_read: false,
     });
+  } catch (err) {
+    console.error('Failed to create in-app notification:', err);
+    toast.error('Failed to create notification for assignee');
+  }
 
+  // Send email notification (non-blocking, don't fail the whole operation)
+  try {
     await base44.functions.invoke('sendNotificationEmail', {
       to: assigneeEmail,
       type: 'task_assigned',
@@ -37,7 +45,7 @@ export async function sendTaskAssignmentNotification({
       link: `${window.location.origin}/ProjectDetail?id=${projectId}`,
     });
   } catch (err) {
-    console.error('Failed to send task assignment notification:', err);
+    console.error('Failed to send notification email:', err);
   }
 }
 
@@ -68,7 +76,12 @@ export async function sendTaskCompletionNotification({
         link: `/ProjectDetail?id=${projectId}`,
         is_read: false,
       });
+    } catch (err) {
+      console.error('Failed to create completion notification:', err);
+      toast.error('Failed to create completion notification');
+    }
 
+    try {
       await base44.functions.invoke('sendNotificationEmail', {
         to: email,
         type: 'task_completed',
@@ -80,7 +93,7 @@ export async function sendTaskCompletionNotification({
         link: `${window.location.origin}/ProjectDetail?id=${projectId}`,
       });
     } catch (err) {
-      console.error('Failed to send completion notification:', err);
+      console.error('Failed to send completion email:', err);
     }
   }
 }
