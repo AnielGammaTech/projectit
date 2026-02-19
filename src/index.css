@@ -369,3 +369,58 @@ html.dark {
 html {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/* ══════════════════════════════════════════════════════════
+   DARK MODE: Brand color overrides
+   #0F2F44, #133F5C, #0069AF are dark-blue brand colors
+   used as text/bg/border. In dark mode they need to flip.
+   ══════════════════════════════════════════════════════════ */
+
+/* Text: dark-blue → light-blue in dark mode */
+.dark .text-\[\#0F2F44\]  { color: hsl(199 60% 82%) !important; }
+.dark .text-\[\#133F5C\]  { color: hsl(199 60% 82%) !important; }
+.dark .text-\[\#0069AF\]  { color: hsl(199 80% 72%) !important; }
+
+/* Text with opacity — lighter */
+.dark .text-\[\#0F2F44\]\/70 { color: hsl(199 60% 75% / 0.8) !important; }
+.dark .text-\[\#0F2F44\]\/60 { color: hsl(199 60% 70% / 0.7) !important; }
+.dark .text-\[\#0F2F44\]\/50 { color: hsl(199 60% 65% / 0.6) !important; }
+.dark .text-\[\#0F2F44\]\/40 { color: hsl(199 60% 60% / 0.5) !important; }
+.dark .text-\[\#0F2F44\]\/30 { color: hsl(199 60% 55% / 0.4) !important; }
+
+/* Backgrounds: dark-blue at low opacity → card-like tones */
+.dark .bg-\[\#0F2F44\]\/5  { background-color: hsl(var(--muted)) !important; }
+.dark .bg-\[\#0F2F44\]\/10 { background-color: hsl(220 15% 18%) !important; }
+.dark .bg-\[\#0069AF\]\/5  { background-color: hsl(210 40% 18% / 0.3) !important; }
+.dark .bg-\[\#0069AF\]\/10 { background-color: hsl(210 40% 22% / 0.4) !important; }
+.dark .bg-\[\#0069AF\]\/20 { background-color: hsl(210 40% 25% / 0.4) !important; }
+
+/* Solid brand backgrounds — keep vibrant but adjust for dark context */
+.dark .bg-\[\#0F2F44\] { background-color: hsl(199 60% 72%) !important; }
+.dark .bg-\[\#0F2F44\].text-white { color: hsl(220 20% 10%) !important; }
+.dark .bg-\[\#133F5C\] { background-color: hsl(199 60% 68%) !important; }
+
+/* Border overrides */
+.dark .border-\[\#0F2F44\]\/10 { border-color: hsl(var(--border)) !important; }
+.dark .border-\[\#0F2F44\]\/20 { border-color: hsl(220 15% 25%) !important; }
+.dark .border-\[\#0F2F44\]\/30 { border-color: hsl(220 15% 28%) !important; }
+.dark .border-\[\#0F2F44\]\/50 { border-color: hsl(220 15% 32%) !important; }
+.dark .border-\[\#0069AF\]\/20 { border-color: hsl(210 50% 30%) !important; }
+.dark .border-\[\#0069AF\]\/30 { border-color: hsl(210 50% 35%) !important; }
+.dark .border-\[\#0069AF\]\/40 { border-color: hsl(210 50% 38%) !important; }
+
+/* Hover overrides */
+.dark .hover\:bg-\[\#0F2F44\]:hover { background-color: hsl(199 60% 65%) !important; }
+.dark .hover\:bg-\[\#133F5C\]:hover { background-color: hsl(199 60% 60%) !important; }
+.dark .hover\:bg-\[\#1a4a6e\]:hover { background-color: hsl(199 60% 65%) !important; }
+.dark .hover\:text-\[\#133F5C\]:hover { color: hsl(199 60% 90%) !important; }
+.dark .hover\:text-\[\#0F2F44\]:hover { color: hsl(199 60% 90%) !important; }
+.dark .hover\:border-\[\#0F2F44\]\/20:hover { border-color: hsl(220 15% 30%) !important; }
+
+/* Empty state gradient backgrounds */
+.dark .bg-gradient-to-br.from-slate-50.to-indigo-50\/40 {
+  background: hsl(var(--background)) !important;
+}
+
+/* Ring offset overrides for dark backgrounds */
+.dark .ring-offset-white { --tw-ring-offset-color: hsl(var(--card)) !important; }
