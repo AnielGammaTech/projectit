@@ -4,7 +4,10 @@ import jwt from 'jsonwebtoken';
 import pool from '../config/database.js';
 import entityService from './entityService.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is not set. Server cannot start without it.');
+}
 const JWT_EXPIRES_IN = '30d';
 
 const authService = {
