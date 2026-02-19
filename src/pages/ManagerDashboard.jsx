@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import UserAvatar from '@/components/UserAvatar';
 import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 
@@ -234,9 +235,12 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-medium">
-                        {getInitials(tech.name)}
-                      </div>
+                      <UserAvatar
+                        email={tech.email}
+                        name={tech.name}
+                        avatarUrl={teamMembers.find(m => m.email === tech.email)?.avatar_url}
+                        size="lg"
+                      />
                       <div>
                         <p className="font-medium">{tech.name}</p>
                         <p className="text-xs text-slate-400">{tech.hoursToday}h logged today</p>

@@ -22,28 +22,7 @@ import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 import { api } from '@/api/apiClient';
 import { sendTaskAssignmentNotification } from '@/utils/notifications';
-
-const avatarColors = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
-  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
-  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
-];
-
-const getColorForEmail = (email) => {
-  if (!email) return avatarColors[0];
-  let hash = 0;
-  for (let i = 0; i < email.length; i++) {
-    hash = email.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return avatarColors[Math.abs(hash) % avatarColors.length];
-};
-
-const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-};
+import UserAvatar from '@/components/UserAvatar';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -206,15 +185,17 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               {task.assigned_name ? (
-                <button 
+                <button
                   onClick={(e) => e.stopPropagation()}
-                  className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 transition-all",
-                    getColorForEmail(task.assigned_to)
-                  )} 
+                  className="hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 transition-all rounded-full"
                   title={task.assigned_name}
                 >
-                  {getInitials(task.assigned_name)}
+                  <UserAvatar
+                    email={task.assigned_to}
+                    name={task.assigned_name}
+                    avatarUrl={teamMembers.find(m => m.email === task.assigned_to)?.avatar_url}
+                    size="sm"
+                  />
                 </button>
               ) : (
                 <button 
@@ -235,9 +216,7 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
               )}
               {teamMembers.map((member) => (
                 <DropdownMenuItem key={member.id} onClick={() => handleAssign(member.email)}>
-                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
-                    {getInitials(member.name)}
-                  </div>
+                  <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="xs" className="mr-2" />
                   {member.name}
                 </DropdownMenuItem>
               ))}
@@ -246,9 +225,9 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="h-6 w-6 opacity-0 group-hover:opacity-100"
                 onClick={(e) => e.stopPropagation()}
               >

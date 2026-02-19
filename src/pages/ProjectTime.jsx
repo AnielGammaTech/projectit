@@ -19,28 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { format, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
-
-const avatarColors = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
-  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
-  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
-];
-
-const getColorForEmail = (email) => {
-  if (!email) return avatarColors[0];
-  let hash = 0;
-  for (let i = 0; i < email.length; i++) {
-    hash = email.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return avatarColors[Math.abs(hash) % avatarColors.length];
-};
-
-const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-};
+import UserAvatar from '@/components/UserAvatar';
 
 export default function ProjectTime() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -297,9 +276,12 @@ export default function ProjectTime() {
                   const memberPercent = totalHours > 0 ? (data.hours / totalHours) * 100 : 0;
                   return (
                     <div key={email} className="flex items-center gap-4">
-                      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium", getColorForEmail(email))}>
-                        {getInitials(data.name)}
-                      </div>
+                      <UserAvatar
+                        email={email}
+                        name={data.name}
+                        avatarUrl={teamMembers.find(m => m.email === email)?.avatar_url}
+                        size="lg"
+                      />
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-medium text-slate-900">{data.name}</span>
@@ -338,9 +320,12 @@ export default function ProjectTime() {
                 .slice(0, 10)
                 .map((entry) => (
                   <div key={entry.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
-                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium", getColorForEmail(entry.user_email))}>
-                      {getInitials(entry.user_name)}
-                    </div>
+                    <UserAvatar
+                      email={entry.user_email}
+                      name={entry.user_name}
+                      avatarUrl={teamMembers.find(m => m.email === entry.user_email)?.avatar_url}
+                      size="md"
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-slate-900 truncate">{entry.description || 'Time logged'}</p>
                       <div className="flex items-center gap-3 text-sm text-slate-500">

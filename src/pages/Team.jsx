@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import TeamMemberModal from '@/components/modals/TeamMemberModal';
+import UserAvatar from '@/components/UserAvatar';
 
 export default function Team() {
   const [showModal, setShowModal] = useState(false);
@@ -110,9 +111,14 @@ export default function Team() {
                     className="group bg-white rounded-2xl border border-slate-100 p-6 hover:shadow-lg hover:border-slate-200 transition-all"
                   >
                     <div className="flex items-start justify-between mb-4">
-                      <div className={`w-14 h-14 rounded-full ${member.avatar_color || 'bg-indigo-500'} flex items-center justify-center text-white text-lg font-semibold`}>
-                        {member.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                      </div>
+                      <UserAvatar
+                        email={member.email}
+                        name={member.name}
+                        avatarUrl={member.avatar_url}
+                        avatarColor={member.avatar_color}
+                        size="xl"
+                        className="font-semibold"
+                      />
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import UserAvatar from '@/components/UserAvatar';
 
 const statusConfig = {
   todo: { label: 'To Do', color: 'bg-slate-100 text-slate-700 border-slate-200' },
@@ -27,28 +28,6 @@ const priorityConfig = {
   low: { label: 'Low', color: 'bg-slate-100 text-slate-600 border-slate-200' },
   medium: { label: 'Medium', color: 'bg-amber-100 text-amber-700 border-amber-200' },
   high: { label: 'High', color: 'bg-red-100 text-red-700 border-red-200' }
-};
-
-const avatarColors = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
-  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
-  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
-];
-
-const getColorForEmail = (email) => {
-  if (!email) return avatarColors[0];
-  let hash = 0;
-  for (let i = 0; i < email.length; i++) {
-    hash = email.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return avatarColors[Math.abs(hash) % avatarColors.length];
-};
-
-const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
 };
 
 export default function TaskDetailView({ 
@@ -230,9 +209,12 @@ export default function TaskDetailView({
               <DropdownMenuTrigger asChild>
                 {task.assigned_name ? (
                   <button className="flex items-center gap-2 hover:bg-slate-50 rounded-lg p-1.5 -m-1.5 transition-colors w-full">
-                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium", getColorForEmail(task.assigned_to))}>
-                      {getInitials(task.assigned_name)}
-                    </div>
+                    <UserAvatar
+                      email={task.assigned_to}
+                      name={task.assigned_name}
+                      avatarUrl={teamMembers.find(m => m.email === task.assigned_to)?.avatar_url}
+                      size="md"
+                    />
                     <span className="font-medium text-slate-900">{task.assigned_name}</span>
                   </button>
                 ) : (
@@ -251,9 +233,7 @@ export default function TaskDetailView({
                 )}
                 {teamMembers.map((member) => (
                   <DropdownMenuItem key={member.id} onClick={() => handleAssign(member.email)}>
-                    <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-xs mr-2", getColorForEmail(member.email))}>
-                      {getInitials(member.name)}
-                    </div>
+                    <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="xs" className="mr-2" />
                     {member.name}
                   </DropdownMenuItem>
                 ))}
@@ -299,9 +279,13 @@ export default function TaskDetailView({
                   transition={{ delay: idx * 0.05 }}
                   className="flex gap-3"
                 >
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0", getColorForEmail(c.author_email))}>
-                    {getInitials(c.author_name)}
-                  </div>
+                  <UserAvatar
+                    email={c.author_email}
+                    name={c.author_name}
+                    avatarUrl={teamMembers.find(m => m.email === c.author_email)?.avatar_url}
+                    size="md"
+                    className="shrink-0"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-slate-900 text-sm">{c.author_name}</span>
@@ -354,9 +338,7 @@ export default function TaskDetailView({
                       onClick={() => insertMention(member)}
                       className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-sm"
                     >
-                      <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-xs", getColorForEmail(member.email))}>
-                        {getInitials(member.name)}
-                      </div>
+                      <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="sm" />
                       {member.name}
                     </button>
                   ))}

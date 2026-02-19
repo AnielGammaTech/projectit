@@ -12,6 +12,7 @@ import { api } from '@/api/apiClient';
 import { format } from 'date-fns';
 import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
+import UserAvatar from '@/components/UserAvatar';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -273,9 +274,7 @@ ${formData.additionalNotes || 'None'}`;
                         <SelectValue placeholder="Assign to...">
                           {step.assigned_name ? (
                             <div className="flex items-center gap-2">
-                              <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(step.assigned_to))}>
-                                {getInitials(step.assigned_name)}
-                              </div>
+                              <UserAvatar email={step.assigned_to} name={step.assigned_name} avatarUrl={teamMembers.find(m => m.email === step.assigned_to)?.avatar_url} size="xs" />
                               {step.assigned_name}
                             </div>
                           ) : 'Assign to...'}
@@ -285,9 +284,7 @@ ${formData.additionalNotes || 'None'}`;
                         {teamMembers.map(m => (
                           <SelectItem key={m.id} value={m.email}>
                             <div className="flex items-center gap-2">
-                              <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(m.email))}>
-                                {getInitials(m.name)}
-                              </div>
+                              <UserAvatar email={m.email} name={m.name} avatarUrl={m.avatar_url} size="xs" />
                               {m.name}
                             </div>
                           </SelectItem>

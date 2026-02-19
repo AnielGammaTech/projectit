@@ -4,6 +4,7 @@ import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Plus, X, Check, Users, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { resolveUploadUrl } from '@/utils';
 import {
   Popover,
   PopoverContent,
@@ -151,12 +152,16 @@ export default function TeamAvatars({
                     checked={selectedEmails.includes(member.email)}
                     onCheckedChange={() => handleToggle(member.email)}
                   />
-                  <div className={cn(
-                    "w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium",
-                    getColorForEmail(member.email)
-                  )}>
-                    {getInitials(member.name)}
-                  </div>
+                  {member.avatar_url ? (
+                    <img src={resolveUploadUrl(member.avatar_url)} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className={cn(
+                      "w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium",
+                      getColorForEmail(member.email)
+                    )}>
+                      {getInitials(member.name)}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-900 truncate">{member.name}</p>
                     <p className="text-xs text-slate-500 truncate">{member.email}</p>
@@ -176,19 +181,32 @@ export default function TeamAvatars({
       </Popover>
 
       <div className="flex -space-x-2">
-        {visibleMembers.map((email, idx) => (
-          <div
-            key={email}
-            className={cn(
-              "w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white",
-              getColorForEmail(email)
-            )}
-            title={getMemberName(email)}
-            style={{ zIndex: maxVisible - idx }}
-          >
-            {getInitials(getMemberName(email))}
-          </div>
-        ))}
+        {visibleMembers.map((email, idx) => {
+          const member = teamMembers.find(m => m.email === email);
+          const avatarUrl = member?.avatar_url;
+          return avatarUrl ? (
+            <img
+              key={email}
+              src={resolveUploadUrl(avatarUrl)}
+              alt={getMemberName(email)}
+              title={getMemberName(email)}
+              className="w-8 h-8 rounded-full object-cover border-2 border-white flex-shrink-0"
+              style={{ zIndex: maxVisible - idx }}
+            />
+          ) : (
+            <div
+              key={email}
+              className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white",
+                getColorForEmail(email)
+              )}
+              title={getMemberName(email)}
+              style={{ zIndex: maxVisible - idx }}
+            >
+              {getInitials(getMemberName(email))}
+            </div>
+          );
+        })}
         {extraCount > 0 && (
           <div className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-200 text-slate-600 text-xs font-medium border-2 border-white">
             +{extraCount}

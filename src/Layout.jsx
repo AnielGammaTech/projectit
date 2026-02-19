@@ -48,6 +48,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import UserAvatar from '@/components/UserAvatar';
 
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
@@ -309,13 +310,14 @@ function LayoutContent({ children, currentPageName }) {
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-8 h-8 rounded-full bg-[#B4E1FF] flex items-center justify-center text-[#0F2F44] text-sm font-medium hover:ring-2 hover:ring-[#74C7FF]/50 hover:ring-offset-2 hover:ring-offset-[#133F5C] transition-all">
-                  {currentUser?.avatar_url ? (
-                    <img src={resolveUploadUrl(currentUser.avatar_url)} alt="" className="w-8 h-8 rounded-full object-cover" />
-                  ) : (
-                    getInitials(currentUser?.full_name || currentUser?.email)
-                  )}
-                </button>
+                <div className="hover:ring-2 hover:ring-[#74C7FF]/50 hover:ring-offset-2 hover:ring-offset-[#133F5C] transition-all rounded-full">
+                  <UserAvatar
+                    email={currentUser?.email}
+                    name={currentUser?.full_name || currentUser?.email}
+                    avatarUrl={currentUser?.avatar_url}
+                    size="md"
+                  />
+                </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-3 py-2 border-b border-slate-100">

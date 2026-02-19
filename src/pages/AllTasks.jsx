@@ -16,6 +16,7 @@ import { format, isPast, isToday, isTomorrow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
 import { parseLocalDate } from '@/utils/dateUtils';
+import UserAvatar from '@/components/UserAvatar';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -28,28 +29,6 @@ const priorityColors = {
   low: 'bg-slate-100 text-slate-600',
   medium: 'bg-amber-100 text-amber-700',
   high: 'bg-red-100 text-red-700'
-};
-
-const avatarColors = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
-  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
-  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
-];
-
-const getColorForEmail = (email) => {
-  if (!email) return avatarColors[0];
-  let hash = 0;
-  for (let i = 0; i < email.length; i++) {
-    hash = email.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return avatarColors[Math.abs(hash) % avatarColors.length];
-};
-
-const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
 };
 
 // Task row component with its own state for date picker
@@ -107,10 +86,15 @@ function TaskRow({ task, teamMembers, currentUser, statusConfig, priorityColors,
               {task.assigned_name ? (
                 <button
                   onClick={(e) => e.stopPropagation()}
-                  className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 shrink-0", getColorForEmail(task.assigned_to))}
+                  className="hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 rounded-full shrink-0"
                   title={task.assigned_name}
                 >
-                  {getInitials(task.assigned_name)}
+                  <UserAvatar
+                    email={task.assigned_to}
+                    name={task.assigned_name}
+                    avatarUrl={teamMembers.find(m => m.email === task.assigned_to)?.avatar_url}
+                    size="sm"
+                  />
                 </button>
               ) : (
                 <button
@@ -131,9 +115,7 @@ function TaskRow({ task, teamMembers, currentUser, statusConfig, priorityColors,
               )}
               {teamMembers.map((member) => (
                 <DropdownMenuItem key={member.id} onClick={() => onAssign(task, member.email)}>
-                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
-                    {getInitials(member.name)}
-                  </div>
+                  <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="xs" className="mr-2" />
                   {member.name}
                 </DropdownMenuItem>
               ))}
@@ -249,10 +231,15 @@ function PartRow({ part, teamMembers, getDueDateLabel, onAssign, onUnassign, onD
               {part.assigned_name ? (
                 <button
                   onClick={(e) => e.stopPropagation()}
-                  className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 shrink-0", getColorForEmail(part.assigned_to))}
+                  className="hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 rounded-full shrink-0"
                   title={part.assigned_name}
                 >
-                  {getInitials(part.assigned_name)}
+                  <UserAvatar
+                    email={part.assigned_to}
+                    name={part.assigned_name}
+                    avatarUrl={teamMembers.find(m => m.email === part.assigned_to)?.avatar_url}
+                    size="sm"
+                  />
                 </button>
               ) : (
                 <button
@@ -273,9 +260,7 @@ function PartRow({ part, teamMembers, getDueDateLabel, onAssign, onUnassign, onD
               )}
               {teamMembers.map((member) => (
                 <DropdownMenuItem key={member.id} onClick={() => onAssign(part, member.email)}>
-                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
-                    {getInitials(member.name)}
-                  </div>
+                  <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="xs" className="mr-2" />
                   {member.name}
                 </DropdownMenuItem>
               ))}

@@ -145,7 +145,31 @@ const authService = {
        RETURNING id, email, full_name, role, avatar_url, avatar_color, theme, show_dashboard_widgets, created_date, updated_date`,
       values
     );
-    return rows[0];
+    const user = rows[0];
+
+    // Sync avatar_url and avatar_color to the matching TeamMember entity
+    if (user && (data.avatar_url !== undefined || data.avatar_color !== undefined)) {
+      try {
+        const { rows: members } = await pool.query(
+          `SELECT id FROM "TeamMember" WHERE data->>'email' = $1`,
+          [user.email]
+        );
+        if (members.length > 0) {
+          const patch = {};
+          if (data.avatar_url !== undefined) patch.avatar_url = data.avatar_url;
+          if (data.avatar_color !== undefined) patch.avatar_color = data.avatar_color;
+          if (data.full_name !== undefined) patch.name = data.full_name;
+          await pool.query(
+            `UPDATE "TeamMember" SET data = data || $1::jsonb, updated_date = NOW() WHERE id = $2::uuid`,
+            [JSON.stringify(patch), members[0].id]
+          );
+        }
+      } catch (err) {
+        console.error('Failed to sync avatar to TeamMember:', err.message);
+      }
+    }
+
+    return user;
   },
 
   verifyToken(token) {

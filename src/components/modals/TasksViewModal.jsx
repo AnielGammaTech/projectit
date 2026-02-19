@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import GroupedTaskList from '@/components/project/GroupedTaskList';
 import { sendTaskAssignmentNotification } from '@/utils/notifications';
 import TaskDetailView from '@/components/project/TaskDetailView';
+import UserAvatar from '@/components/UserAvatar';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -208,9 +209,7 @@ export default function TasksViewModal({
               <DropdownMenuTrigger asChild>
                 {quickTaskAssignee ? (
                   <Button type="button" variant="outline" size="sm" className="h-8 text-xs gap-1.5">
-                    <div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px]", getColorForEmail(quickTaskAssignee.email))}>
-                      {getInitials(quickTaskAssignee.name)}
-                    </div>
+                    <UserAvatar email={quickTaskAssignee.email} name={quickTaskAssignee.name} avatarUrl={quickTaskAssignee.avatar_url} size="xs" />
                     {quickTaskAssignee.name.split(' ')[0]}
                   </Button>
                 ) : (
@@ -229,9 +228,7 @@ export default function TasksViewModal({
                 )}
                 {teamMembers.map((member) => (
                   <DropdownMenuItem key={member.id} onClick={() => setQuickTaskAssignee(member)}>
-                    <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
-                      {getInitials(member.name)}
-                    </div>
+                    <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="xs" className="mr-2" />
                     {member.name}
                   </DropdownMenuItem>
                 ))}
