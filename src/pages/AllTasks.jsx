@@ -350,6 +350,11 @@ export default function AllTasks() {
     return project?.name || 'Unknown Project';
   };
 
+  const getProjectNumber = (projectId) => {
+    const project = projects.find(p => p.id === projectId);
+    return project?.project_number || null;
+  };
+
   // Helper to check if user has access to a project
   const userHasProjectAccess = (project) => {
     if (isAdmin) return true;
@@ -719,7 +724,7 @@ export default function AllTasks() {
                       <div className="flex items-center gap-2">
                         <FolderKanban className="w-3.5 h-3.5 text-[#0069AF]" />
                         <span className="font-semibold text-sm text-slate-900">{getProjectName(projectId)}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">#{projectId.slice(0, 8)}</span>
+                        {getProjectNumber(projectId) && <span className="px-1.5 py-0.5 bg-slate-800 text-white rounded text-[10px] font-mono font-semibold">#{getProjectNumber(projectId)}</span>}
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">{projectTasks.length}</Badge>
                       </div>
                     </Link>
@@ -912,7 +917,7 @@ export default function AllTasks() {
                       <div className="flex items-center gap-2">
                         <FolderKanban className="w-3.5 h-3.5 text-[#0F2F44]" />
                         <span className="font-semibold text-sm text-slate-900">{getProjectName(projectId)}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">#{projectId.slice(0, 8)}</span>
+                        {getProjectNumber(projectId) && <span className="px-1.5 py-0.5 bg-slate-800 text-white rounded text-[10px] font-mono font-semibold">#{getProjectNumber(projectId)}</span>}
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">{projectParts.length}</Badge>
                       </div>
                     </Link>
