@@ -1703,7 +1703,7 @@ function IntegrationsSection({ queryClient }) {
   // Check if server has env vars configured for secrets
   useEffect(() => {
     base44.functions.invoke('halopsa', { action: 'checkEnvStatus' })
-      .then(r => setHasEnvSecret(r.data?.hasClientSecret || false))
+      .then(r => setHasEnvSecret(r.hasClientSecret || false))
       .catch(() => setHasEnvSecret(false));
   }, []);
 
@@ -2125,7 +2125,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
   // Check if RESEND_API_KEY env var is set on the server
   useEffect(() => {
     base44.functions.invoke('resendEmail', { action: 'checkEnvStatus' })
-      .then(r => setHasEnvApiKey(r.data?.hasApiKey || false))
+      .then(r => setHasEnvApiKey(r.hasApiKey || false))
       .catch(() => setHasEnvApiKey(false));
   }, []);
 
