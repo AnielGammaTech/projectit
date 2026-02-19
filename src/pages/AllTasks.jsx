@@ -17,6 +17,7 @@ import TaskModal from '@/components/modals/TaskModal';
 import PartModal from '@/components/modals/PartModal';
 import PartDetailModal from '@/components/modals/PartDetailModal';
 import QuickOrderModal from '@/components/parts/QuickOrderModal';
+import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -163,7 +164,19 @@ export default function AllTasks() {
 
   const handleSaveTask = async (data) => {
     if (editingTask) {
+      const wasAssigned = editingTask.assigned_to;
+      const isNewlyAssigned = data.assigned_to && data.assigned_to !== 'unassigned' && data.assigned_to !== wasAssigned;
       await base44.entities.Task.update(editingTask.id, data);
+
+      if (isNewlyAssigned) {
+        await sendTaskAssignmentNotification({
+          assigneeEmail: data.assigned_to,
+          taskTitle: data.title,
+          projectId: data.project_id || editingTask.project_id,
+          projectName: getProjectName(data.project_id || editingTask.project_id),
+          currentUser,
+        });
+      }
     }
     queryClient.invalidateQueries({ queryKey: ['allTasks'] });
     setShowTaskModal(false);
@@ -205,7 +218,18 @@ export default function AllTasks() {
 
   const handleQuickComplete = async (e, taskId) => {
     e.stopPropagation();
+    const task = tasks.find(t => t.id === taskId);
     await base44.entities.Task.update(taskId, { status: 'completed' });
+
+    if (task) {
+      await sendTaskCompletionNotification({
+        task,
+        projectId: task.project_id,
+        projectName: getProjectName(task.project_id),
+        currentUser,
+      });
+    }
+
     queryClient.invalidateQueries({ queryKey: ['allTasks'] });
   };
 

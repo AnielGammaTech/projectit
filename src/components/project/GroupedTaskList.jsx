@@ -20,6 +20,7 @@ import {
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
+import { sendTaskAssignmentNotification } from '@/utils/notifications';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -80,7 +81,7 @@ const getDueDateInfo = (dueDate, status) => {
   return { label: format(date, 'MMM d'), color: 'bg-slate-100 text-slate-600', urgent: false };
 };
 
-const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, onTaskClick, onTaskUpdate }) => {
+const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, onTaskClick, onTaskUpdate, currentUser, projectName }) => {
   const [dateOpen, setDateOpen] = useState(false);
   const status = statusConfig[task.status] || statusConfig.todo;
   const StatusIcon = status.icon;
@@ -88,10 +89,22 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
 
   const handleAssign = async (email) => {
     const member = teamMembers.find(m => m.email === email);
+    const wasAssigned = task.assigned_to;
     await base44.entities.Task.update(task.id, {
       assigned_to: email,
       assigned_name: member?.name || email
     });
+
+    if (email !== wasAssigned) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail: email,
+        taskTitle: task.title,
+        projectId: task.project_id,
+        projectName,
+        currentUser,
+      });
+    }
+
     onTaskUpdate?.();
   };
 
@@ -249,20 +262,22 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
   );
 };
 
-export default function GroupedTaskList({ 
-  tasks = [], 
-  groups = [], 
+export default function GroupedTaskList({
+  tasks = [],
+  groups = [],
   teamMembers = [],
-  onStatusChange, 
-  onEdit, 
-  onDelete, 
+  onStatusChange,
+  onEdit,
+  onDelete,
   onTaskClick,
   onCreateGroup,
   onEditGroup,
   onDeleteGroup,
   onTaskUpdate,
   onAddTaskToGroup,
-  currentUserEmail
+  currentUserEmail,
+  currentUser,
+  projectName,
 }) {
   const [expandedGroups, setExpandedGroups] = useState(new Set(['ungrouped', ...groups.map(g => g.id)]));
   const [newGroupName, setNewGroupName] = useState('');
@@ -364,6 +379,8 @@ export default function GroupedTaskList({
                       onDelete={onDelete}
                       onTaskClick={onTaskClick}
                       onTaskUpdate={onTaskUpdate}
+                      currentUser={currentUser}
+                      projectName={projectName}
                     />
                   ))}
                   {/* Add task button inside group */}
@@ -410,6 +427,8 @@ export default function GroupedTaskList({
                     onDelete={onDelete}
                     onTaskClick={onTaskClick}
                     onTaskUpdate={onTaskUpdate}
+                    currentUser={currentUser}
+                    projectName={projectName}
                   />
                 ))}
                 {/* Add task button */}

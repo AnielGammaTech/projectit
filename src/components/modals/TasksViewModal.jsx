@@ -11,6 +11,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import GroupedTaskList from '@/components/project/GroupedTaskList';
+import { sendTaskAssignmentNotification } from '@/utils/notifications';
 import TaskDetailView from '@/components/project/TaskDetailView';
 
 const avatarColors = [
@@ -35,24 +36,25 @@ const getInitials = (name) => {
   return name.slice(0, 2).toUpperCase();
 };
 
-export default function TasksViewModal({ 
-  open, 
-  onClose, 
-  tasks, 
-  groups, 
+export default function TasksViewModal({
+  open,
+  onClose,
+  tasks,
+  groups,
   projectId,
+  projectName,
   teamMembers = [],
   currentUser,
-  onStatusChange, 
-  onEdit, 
-  onDelete, 
+  onStatusChange,
+  onEdit,
+  onDelete,
   onTaskClick,
   onCreateGroup,
   onEditGroup,
   onDeleteGroup,
   onAddTask,
   onTasksRefresh,
-  currentUserEmail 
+  currentUserEmail
 }) {
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [quickTaskTitle, setQuickTaskTitle] = useState('');
@@ -76,17 +78,30 @@ export default function TasksViewModal({
   const handleQuickCreate = async (e) => {
     e.preventDefault();
     if (!quickTaskTitle.trim() || isCreating) return;
-    
+
     setIsCreating(true);
+    const taskTitle = quickTaskTitle.trim();
+    const assigneeEmail = quickTaskAssignee?.email || '';
     await base44.entities.Task.create({
-      title: quickTaskTitle.trim(),
+      title: taskTitle,
       project_id: projectId,
       status: 'todo',
       priority: 'medium',
       due_date: quickTaskDueDate ? format(quickTaskDueDate, 'yyyy-MM-dd') : '',
-      assigned_to: quickTaskAssignee?.email || '',
+      assigned_to: assigneeEmail,
       assigned_name: quickTaskAssignee?.name || ''
     });
+
+    if (assigneeEmail) {
+      await sendTaskAssignmentNotification({
+        assigneeEmail,
+        taskTitle,
+        projectId,
+        projectName,
+        currentUser,
+      });
+    }
+
     setQuickTaskTitle('');
     setQuickTaskDueDate(null);
     setQuickTaskAssignee(null);
@@ -117,7 +132,17 @@ export default function TasksViewModal({
               await base44.entities.Task.update(selectedTask.id, { ...selectedTask, priority });
             }}
             onAssigneeChange={async (email, name) => {
+              const wasAssigned = selectedTask.assigned_to;
               await base44.entities.Task.update(selectedTask.id, { ...selectedTask, assigned_to: email, assigned_name: name });
+              if (email && email !== wasAssigned) {
+                await sendTaskAssignmentNotification({
+                  assigneeEmail: email,
+                  taskTitle: selectedTask.title,
+                  projectId,
+                  projectName,
+                  currentUser,
+                });
+              }
             }}
             onEdit={() => { onEdit(selectedTask); }}
             onDelete={() => { onDelete(selectedTask); setSelectedTaskId(null); }}
@@ -229,6 +254,8 @@ export default function TasksViewModal({
             onDeleteGroup={onDeleteGroup}
             onTaskUpdate={onTasksRefresh}
             currentUserEmail={currentUserEmail}
+            currentUser={currentUser}
+            projectName={projectName}
           />
         </div>
       </DialogContent>
