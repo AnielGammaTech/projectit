@@ -418,23 +418,23 @@ export default function ProjectTasks() {
     return (
       <div
         className={cn(
-          "group flex items-center gap-3 p-3 bg-white rounded-xl border hover:shadow-md transition-all cursor-pointer",
-          task.status === 'completed' || task.status === 'archived' ? "opacity-60 border-slate-100" : 
+          "group flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white rounded-xl border hover:shadow-md transition-all cursor-pointer",
+          task.status === 'completed' || task.status === 'archived' ? "opacity-60 border-slate-100" :
           dueDateInfo?.urgent ? "border-red-200 bg-red-50/30" : "border-slate-200",
           isSelected && "ring-2 ring-indigo-500 bg-indigo-50/50",
           isDragging && "shadow-lg ring-2 ring-indigo-400"
         )}
         onClick={() => selectionMode ? toggleTaskSelection(task.id) : setSelectedTask(task)}
       >
-        {/* Drag handle */}
-        <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing p-1 -ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Drag handle - always visible on touch devices */}
+        <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing p-1 -ml-1 opacity-40 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity touch-manipulation">
           <GripVertical className="w-4 h-4 text-slate-400" />
         </div>
         {/* Selection checkbox */}
         {selectionMode && (
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); toggleTaskSelection(task.id); }}
-            className="p-1"
+            className="p-1.5 touch-manipulation"
           >
             {isSelected ? (
               <CheckSquare className="w-5 h-5 text-indigo-600" />
@@ -445,37 +445,37 @@ export default function ProjectTasks() {
         )}
 
         {/* Status */}
-        <button 
+        <button
           onClick={(e) => {
             e.stopPropagation();
             if (!selectionMode) handleStatusChange(task, task.status === 'completed' ? 'todo' : 'completed');
           }}
-          className={cn("p-1.5 rounded-lg transition-all hover:scale-110", status.bg, "hover:bg-emerald-100")}
+          className={cn("p-2 sm:p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 touch-manipulation shrink-0", status.bg, "hover:bg-emerald-100")}
         >
-          <StatusIcon className={cn("w-4 h-4", status.color)} />
+          <StatusIcon className={cn("w-5 h-5 sm:w-4 sm:h-4", status.color)} />
         </button>
 
         {/* Title */}
         <span className={cn(
-          "flex-1 font-medium truncate",
+          "flex-1 font-medium text-sm sm:text-base truncate min-w-0",
           task.status === 'completed' && "line-through text-slate-500"
         )}>
           {task.title}
         </span>
 
-        {/* Indicators */}
-        <div className="flex items-center gap-2">
-          {/* Comment count */}
+        {/* Indicators - hide some on mobile */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Comment count - hidden on mobile */}
           {commentCount > 0 && (
-            <div className="flex items-center gap-1 text-slate-400">
+            <div className="hidden sm:flex items-center gap-1 text-slate-400">
               <MessageCircle className="w-3.5 h-3.5" />
               <span className="text-xs">{commentCount}</span>
             </div>
           )}
 
-          {/* Attachments indicator */}
+          {/* Attachments indicator - hidden on mobile */}
           {task.attachments?.length > 0 && (
-            <div className="flex items-center gap-1 text-slate-400">
+            <div className="hidden sm:flex items-center gap-1 text-slate-400">
               <Paperclip className="w-3.5 h-3.5" />
               <span className="text-xs">{task.attachments.length}</span>
             </div>
@@ -525,19 +525,19 @@ export default function ProjectTasks() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               {task.assigned_name ? (
-                <button 
+                <button
                   onClick={(e) => e.stopPropagation()}
-                  className={cn("w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300", getColorForEmail(task.assigned_to))}
+                  className={cn("w-8 h-8 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 touch-manipulation shrink-0", getColorForEmail(task.assigned_to))}
                   title={task.assigned_name}
                 >
                   {getInitials(task.assigned_name)}
                 </button>
               ) : (
-                <button 
+                <button
                   onClick={(e) => e.stopPropagation()}
-                  className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-indigo-300"
+                  className="w-8 h-8 sm:w-7 sm:h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-indigo-300 touch-manipulation shrink-0"
                 >
-                  <UserPlus className="w-3 h-3 text-slate-400" />
+                  <UserPlus className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-slate-400" />
                 </button>
               )}
             </DropdownMenuTrigger>
@@ -559,11 +559,11 @@ export default function ProjectTasks() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Archive button */}
+          {/* Archive button - hidden on mobile (available in more menu) */}
           {task.status !== 'archived' && (
             <button
               onClick={(e) => { e.stopPropagation(); handleStatusChange(task, 'archived'); }}
-              className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all"
+              className="hidden sm:block p-1.5 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all"
               title="Archive"
             >
               <Archive className="w-4 h-4 text-slate-400" />
@@ -573,7 +573,7 @@ export default function ProjectTasks() {
           {/* More menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7 sm:opacity-0 sm:group-hover:opacity-100 touch-manipulation" onClick={(e) => e.stopPropagation()}>
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -606,14 +606,15 @@ export default function ProjectTasks() {
       
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Tasks</h1>
-            <p className="text-sm text-slate-500">{completedTasks}/{tasks.length} completed</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Tasks</h1>
+            <p className="text-xs sm:text-sm text-slate-500">{completedTasks}/{tasks.length} completed</p>
           </div>
-          <Button onClick={() => setShowGroupModal(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white">
-            <Plus className="w-4 h-4 mr-2" />
-            New Group
+          <Button onClick={() => setShowGroupModal(true)} size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 sm:h-10">
+            <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">New Group</span>
+            <span className="sm:hidden">Group</span>
           </Button>
         </div>
 
@@ -624,18 +625,18 @@ export default function ProjectTasks() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-indigo-600 text-white rounded-xl p-3 mb-4 flex items-center justify-between shadow-lg"
+            className="bg-indigo-600 text-white rounded-xl p-3 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-lg"
           >
             <div className="flex items-center gap-3">
-              <button onClick={clearSelection} className="p-1 hover:bg-indigo-500 rounded">
+              <button onClick={clearSelection} className="p-1.5 hover:bg-indigo-500 rounded touch-manipulation">
                 <X className="w-4 h-4" />
               </button>
-              <span className="font-medium">{selectedTasks.size} selected</span>
+              <span className="font-medium text-sm">{selectedTasks.size} selected</span>
               <button onClick={selectAllTasks} className="text-sm underline hover:no-underline">
                 {selectedTasks.size === filteredTasks.length ? 'Deselect all' : 'Select all'}
               </button>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto max-w-full">
               {/* Move to Group */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -710,66 +711,68 @@ export default function ProjectTasks() {
         )}
 
         {/* Filters */}
-        <div className="flex items-center gap-4 mb-4 flex-wrap">
-          <div className="relative flex-1 max-w-xs">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 mb-4">
+          <div className="relative flex-1 sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tasks..."
-              className="pl-9 h-9"
+              className="pl-9 h-10 sm:h-9"
             />
           </div>
-          <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
-            {[['all', 'All'], ['my_tasks', 'My Tasks'], ['overdue', 'Overdue'], ['archived', 'Archived']].map(([key, label]) => (
+          <div className="flex items-center gap-2 overflow-x-auto">
+            <div className="flex gap-1 p-1 bg-slate-100 rounded-lg shrink-0">
+              {[['all', 'All'], ['my_tasks', 'Mine'], ['overdue', 'Overdue'], ['archived', 'Archived']].map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setViewFilter(key)}
+                  className={cn(
+                    "text-xs font-medium py-2 px-3 rounded-md transition-all whitespace-nowrap touch-manipulation",
+                    viewFilter === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {/* View Mode Toggle */}
+            <div className="flex gap-1 p-1 bg-slate-100 rounded-lg shrink-0">
               <button
-                key={key}
-                onClick={() => setViewFilter(key)}
+                onClick={() => setViewMode('list')}
                 className={cn(
-                  "text-xs font-medium py-1.5 px-3 rounded-md transition-all",
-                  viewFilter === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  "text-xs font-medium py-2 px-3 rounded-md transition-all touch-manipulation",
+                  viewMode === 'list' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
                 )}
               >
-                {label}
+                List
               </button>
-            ))}
-          </div>
-          {/* View Mode Toggle */}
-          <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
-            <button
-              onClick={() => setViewMode('list')}
-              className={cn(
-                "text-xs font-medium py-1.5 px-3 rounded-md transition-all",
-                viewMode === 'list' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
-              )}
+              <button
+                onClick={() => setViewMode('cards')}
+                className={cn(
+                  "text-xs font-medium py-2 px-3 rounded-md transition-all touch-manipulation",
+                  viewMode === 'cards' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                Cards
+              </button>
+            </div>
+            <Button
+              variant={selectionMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
+              className={cn("h-9 shrink-0 touch-manipulation", selectionMode && "bg-indigo-600")}
             >
-              List
-            </button>
-            <button
-              onClick={() => setViewMode('cards')}
-              className={cn(
-                "text-xs font-medium py-1.5 px-3 rounded-md transition-all",
-                viewMode === 'cards' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
-              )}
-            >
-              Cards
-            </button>
+              <CheckSquare className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">{selectionMode ? 'Done' : 'Select'}</span>
+            </Button>
           </div>
-          <Button 
-            variant={selectionMode ? "default" : "outline"} 
-            size="sm" 
-            onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
-            className={cn("h-9", selectionMode && "bg-indigo-600")}
-          >
-            <CheckSquare className="w-4 h-4 mr-2" />
-            {selectionMode ? 'Done' : 'Select'}
-          </Button>
         </div>
 
         {/* Card View */}
         {viewMode === 'cards' && (
-          <div className="overflow-x-auto pb-4">
-            <div className="flex gap-4 min-w-max">
+          <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex gap-3 sm:gap-4 min-w-max sm:min-w-0 sm:grid sm:grid-cols-2 lg:grid-cols-3">
               {taskGroups.map((group) => {
                 const groupTasks = getTasksForGroup(group.id);
                 return (
@@ -871,7 +874,7 @@ export default function ProjectTasks() {
                               autoFocus
                               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleInlineCreate(group.id); } }}
                             />
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <div>
                                 <label className="text-xs text-slate-500 mb-1 block">Assigned to</label>
                                 <Select value={inlineTaskData.assigned_to} onValueChange={(v) => setInlineTaskData(p => ({ ...p, assigned_to: v }))}>
@@ -987,7 +990,7 @@ export default function ProjectTasks() {
                           autoFocus
                           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleInlineCreate(''); } }}
                         />
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <label className="text-xs text-slate-500 mb-1 block">Assigned to</label>
                             <Select value={inlineTaskData.assigned_to} onValueChange={(v) => setInlineTaskData(p => ({ ...p, assigned_to: v }))}>

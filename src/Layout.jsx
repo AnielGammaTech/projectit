@@ -404,7 +404,7 @@ function LayoutContent({ children, currentPageName }) {
                 <div key={item.name}>
                   <button
                     onClick={() => setExpandedMenus(prev => ({ ...prev, [item.name]: !prev[item.name] }))}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 text-sm"
+                    className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 text-sm touch-manipulation"
                   >
                     <div className="flex items-center gap-3">
                       <Icon className="w-4 h-4" />
@@ -421,7 +421,7 @@ function LayoutContent({ children, currentPageName }) {
                             key={subItem.name}
                             to={createPageUrl(subItem.page) + (subItem.params || '')}
                             onClick={() => setMobileMenuOpen(false)}
-                            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50 touch-manipulation"
                           >
                             <SubIcon className="w-4 h-4" />
                             {subItem.name}
@@ -439,9 +439,9 @@ function LayoutContent({ children, currentPageName }) {
                 key={item.name}
                 to={createPageUrl(item.page) + (item.params || '')}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 text-sm"
+                className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 text-sm touch-manipulation active:bg-slate-100"
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-5 h-5" />
                 {item.name}
               </Link>
             );
@@ -471,9 +471,12 @@ function LayoutContent({ children, currentPageName }) {
       <FeedbackButton />
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-safe">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 z-40 pb-safe">
         <div className="flex items-center justify-around h-16">
-          {navItems.slice(0, 4).map((item) => {
+          {[
+            ...navItems.slice(0, 4),
+            { name: 'Reports', icon: PieChart, page: 'Reports' }
+          ].map((item) => {
             const Icon = item.icon;
             const isActive = currentPageName === item.page;
             return (
@@ -481,27 +484,18 @@ function LayoutContent({ children, currentPageName }) {
                 key={item.name}
                 to={createPageUrl(item.page) + (item.params || '')}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors",
-                  isActive ? "text-[#0069AF]" : "text-slate-400"
+                  "relative flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors touch-manipulation active:scale-95",
+                  isActive ? "text-[#0069AF]" : "text-slate-400 active:text-slate-600"
                 )}
               >
-                <Icon className={cn("w-5 h-5", isActive && "text-[#0069AF]")} />
-                <span className="text-[10px] font-medium">{item.name}</span>
-                {isActive && <div className="absolute top-0 w-8 h-0.5 bg-[#0069AF] rounded-full" />}
+                {isActive && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#0069AF] rounded-full" />
+                )}
+                <Icon className={cn("w-5 h-5 transition-colors", isActive && "text-[#0069AF]")} />
+                <span className={cn("text-[10px] font-medium", isActive && "font-semibold")}>{item.name}</span>
               </Link>
             );
           })}
-          {/* More menu for mobile */}
-          <Link
-            to={createPageUrl('Reports')}
-            className={cn(
-              "flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors",
-              currentPageName === 'Reports' ? "text-[#0069AF]" : "text-slate-400"
-            )}
-          >
-            <PieChart className={cn("w-5 h-5", currentPageName === 'Reports' && "text-[#0069AF]")} />
-            <span className="text-[10px] font-medium">Reports</span>
-          </Link>
         </div>
       </nav>
 

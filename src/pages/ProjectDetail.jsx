@@ -733,8 +733,8 @@ export default function ProjectDetail() {
           transition={{ delay: 0.1 }}
           className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-6"
         >
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
+            <div className="flex-1 min-w-0 w-full">
               {/* Project Number + Tags Row */}
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 {project.project_number && (
@@ -793,7 +793,7 @@ export default function ProjectDetail() {
 
               {/* Status Action Buttons */}
               {project.status !== 'archived' && project.status !== 'completed' && (
-                <div className="flex items-center gap-2 mt-3">
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
                   {project.status === 'on_hold' ? (
                     <Button
                       size="sm"
@@ -832,24 +832,24 @@ export default function ProjectDetail() {
             </div>
 
             {/* Actions Row */}
-            <div className="flex flex-col items-end gap-2 flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <HaloPSATicketLink 
-                  project={project} 
+            <div className="flex flex-col items-start sm:items-end gap-2 w-full sm:w-auto sm:flex-shrink-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <HaloPSATicketLink
+                  project={project}
                   onUpdate={refetchProject}
                 />
-                <TimeTracker 
-                  projectId={projectId} 
-                  currentUser={currentUser} 
-                  timeBudgetHours={project.time_budget_hours || 0} 
+                <TimeTracker
+                  projectId={projectId}
+                  currentUser={currentUser}
+                  timeBudgetHours={project.time_budget_hours || 0}
                 />
-                <Button variant="outline" size="sm" onClick={() => setShowProjectModal(true)}>
+                <Button variant="outline" size="sm" onClick={() => setShowProjectModal(true)} className="h-9 touch-manipulation">
                   <Edit2 className="w-4 h-4 mr-1" />
                   Edit
                 </Button>
                 <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-8 w-8">
+                  <Button variant="outline" size="icon" className="h-9 w-9 touch-manipulation">
                     <MoreHorizontal className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -879,14 +879,14 @@ export default function ProjectDetail() {
                 </DropdownMenu>
                 </div>
 
-                <div className="flex items-stretch gap-4">
+                <div className="flex items-stretch gap-4 w-full sm:w-auto">
                   {/* Upcoming Tasks Widget */}
                   <div className="hidden xl:block w-[300px]">
                     <UpcomingTasksWidget projectId={projectId} tasks={tasks} />
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="w-full max-w-xs">
+                  <div className="w-full sm:w-full sm:max-w-xs">
                     <ProgressNeedle 
                       projectId={projectId} 
                       value={project.progress || 0} 
@@ -904,9 +904,9 @@ export default function ProjectDetail() {
                 </motion.div>
 
       {/* Cards Grid with Sidebar */}
-      <div className="grid lg:grid-cols-[1fr_280px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 sm:gap-6">
         {/* Main Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-min">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 auto-rows-min">
           {/* Tasks Card - Clickable */}
           <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
           <motion.div
