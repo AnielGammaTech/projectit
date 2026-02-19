@@ -651,7 +651,7 @@ export default function ProjectDetail() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <ProjectNavHeader project={project} currentPage="ProjectDetail" />
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         {/* On Hold Banner */}
         {project.status === 'on_hold' && (
@@ -782,8 +782,13 @@ export default function ProjectDetail() {
               </div>
             </div>
 
-            {/* Right: actions */}
+            {/* Right: actions — timer + ticket + edit + more */}
             <div className="flex items-center gap-1.5 shrink-0">
+              <TimeTracker
+                projectId={projectId}
+                currentUser={currentUser}
+                timeBudgetHours={project.time_budget_hours || 0}
+              />
               <HaloPSATicketLink
                 project={project}
                 onUpdate={refetchProject}
@@ -826,9 +831,9 @@ export default function ProjectDetail() {
 
           {project.description && <p className="text-slate-500 text-sm mt-2 line-clamp-2">{project.description}</p>}
 
-          {/* Row 2: Progress + Timer + Status actions — all in one tight strip */}
-          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100 flex-wrap">
-            <div className="flex-1 min-w-[200px] max-w-sm">
+          {/* Row 2: Progress bar + status actions */}
+          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100">
+            <div className="flex-1 min-w-0">
               <ProgressNeedle
                 projectId={projectId}
                 value={project.progress || 0}
@@ -840,21 +845,16 @@ export default function ProjectDetail() {
                 lastUpdateNote={progressUpdates[0]?.note}
               />
             </div>
-            <TimeTracker
-              projectId={projectId}
-              currentUser={currentUser}
-              timeBudgetHours={project.time_budget_hours || 0}
-            />
             {project.status !== 'archived' && project.status !== 'completed' && (
-              <div className="flex items-center gap-2 ml-auto">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {project.status === 'on_hold' ? (
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={handleResumeProject}
-                    className="text-blue-600 border-blue-200 hover:bg-blue-50 h-8 text-xs"
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50 h-7 text-xs"
                   >
-                    <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                    <RotateCcw className="w-3 h-3 mr-1" />
                     Resume
                   </Button>
                 ) : (
@@ -862,7 +862,7 @@ export default function ProjectDetail() {
                     size="sm"
                     variant="outline"
                     onClick={() => setShowOnHoldModal(true)}
-                    className="text-amber-600 border-amber-200 hover:bg-amber-50 h-8 text-xs"
+                    className="text-amber-600 border-amber-200 hover:bg-amber-50 h-7 text-xs"
                   >
                     On Hold
                   </Button>
@@ -870,9 +870,9 @@ export default function ProjectDetail() {
                 <Button
                   size="sm"
                   onClick={() => setShowCompleteModal(true)}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white h-8 text-xs"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white h-7 text-xs"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
                   Complete
                 </Button>
               </div>
@@ -882,8 +882,8 @@ export default function ProjectDetail() {
 
         {/* ── Tool Cards Grid + Sidebar ── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
-          {/* Main Cards — 2-col grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 auto-rows-min">
+          {/* Main Cards — 3-col grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min">
 
             {/* Tasks Card */}
             <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
@@ -1039,8 +1039,8 @@ export default function ProjectDetail() {
                       <FileText className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900 text-sm">Documents & Files</h3>
-                      <p className="text-xs text-slate-500">Upload and manage files</p>
+                      <h3 className="font-semibold text-slate-900 text-sm">Files</h3>
+                      <p className="text-xs text-slate-500">{projectFiles.length} uploaded</p>
                     </div>
                   </div>
                 </div>
@@ -1068,7 +1068,7 @@ export default function ProjectDetail() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="sm:col-span-2"
+              className="sm:col-span-2 lg:col-span-3"
             >
               <button
                 onClick={() => setShowActivity(!showActivity)}

@@ -335,44 +335,43 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
   return (
     <>
       <div className="w-full">
-        <div 
-          className="bg-white rounded-xl border border-slate-200 w-full cursor-pointer hover:border-indigo-300 hover:shadow-sm transition-all group"
+        <button
+          className="w-full text-left group cursor-pointer"
           onClick={() => setShowUpdateModal(true)}
         >
-          <div className="px-4 py-3 w-full">
-            {/* Top row with label, note indicator, and percentage */}
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-500">Progress</span>
-                {hasUpdates && lastUpdateNote && (
-                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 rounded-full">
-                    <MessageCircle className="w-3 h-3 text-indigo-500" />
-                    <span className="text-[10px] text-indigo-600 font-medium max-w-[120px] truncate">{lastUpdateNote}</span>
-                  </div>
-                )}
-              </div>
-              <div className={cn(
-                "px-2.5 py-1 rounded-lg text-sm font-bold text-white",
-                color.bg
-              )}>
-                {localValue}%
-              </div>
+          {/* Label row */}
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <HealthIcon className={cn("w-3.5 h-3.5", currentHealth.textColor)} />
+              <span className="text-xs font-medium text-slate-500 group-hover:text-slate-700 transition-colors">Progress</span>
+              {hasUpdates && lastUpdateNote && (
+                <span className="text-[10px] text-slate-400 max-w-[140px] truncate hidden sm:inline">
+                  · {lastUpdateNote}
+                </span>
+              )}
             </div>
-
-            {/* Progress Bar - Clean Style */}
-            <div className="relative h-3 flex items-center">
-              <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                <div 
-                  className={cn("h-full rounded-full transition-all duration-300", color.bg)}
-                  style={{ width: `${localValue}%` }}
-                />
-              </div>
-            </div>
-            
-            {/* Click hint */}
-            <p className="text-[10px] text-slate-400 mt-2 group-hover:text-indigo-500 transition-colors">Click to update progress</p>
+            <span className={cn("text-xs font-bold tabular-nums", currentHealth.textColor)}>
+              {localValue}%
+            </span>
           </div>
-        </div>
+
+          {/* Animated progress track */}
+          <div className="relative w-full h-2 bg-slate-100 rounded-full overflow-hidden group-hover:h-2.5 transition-all">
+            <motion.div
+              className={cn("h-full rounded-full", color.bg)}
+              initial={{ width: 0 }}
+              animate={{ width: `${localValue}%` }}
+              transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+            />
+            {/* Shimmer effect on hover */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div
+                className="absolute inset-y-0 w-1/4 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"
+                style={{ left: `${localValue * 0.5}%` }}
+              />
+            </div>
+          </div>
+        </button>
       </div>
 
       {/* Update Modal */}
