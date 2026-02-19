@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { supabase } from '@/lib/supabase';
 
 export default function Register() {
   const [fullName, setFullName] = useState('');
@@ -16,21 +15,34 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, full_name: fullName }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Registration failed');
+      if (!supabase) {
+        setError('Authentication service not configured');
         setLoading(false);
         return;
       }
 
-      localStorage.setItem('projectit_token', data.token);
+      // Sign up via Supabase Auth
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName },
+        },
+      });
+
+      if (signUpError) {
+        setError(signUpError.message || 'Registration failed');
+        setLoading(false);
+        return;
+      }
+
+      if (data?.user?.identities?.length === 0) {
+        setError('An account with this email already exists');
+        setLoading(false);
+        return;
+      }
+
+      // Supabase auto-stores session — redirect to app
       window.location.href = '/';
     } catch (err) {
       setError('Could not connect to server');

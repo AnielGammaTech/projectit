@@ -4,7 +4,7 @@ import authMiddleware from '../middleware/auth.js';
 
 const router = Router();
 
-// Admin-only: invite a new user
+// Admin-only: invite a new user (sends Supabase invite email)
 router.post('/invite', authMiddleware, async (req, res, next) => {
   try {
     if (req.user.role !== 'admin') {
@@ -23,24 +23,22 @@ router.post('/invite', authMiddleware, async (req, res, next) => {
   }
 });
 
-// Accept invite — set password via invite token
+// Accept invite — handle Supabase auth tokens from invite email redirect
 router.post('/accept-invite', async (req, res, next) => {
   try {
-    const { invite_token, password } = req.body;
-    if (!invite_token || !password) {
-      return res.status(400).json({ error: 'Invite token and password are required' });
-    }
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    const { access_token, refresh_token } = req.body;
+    if (!access_token || !refresh_token) {
+      return res.status(400).json({ error: 'Access token and refresh token are required' });
     }
 
-    const result = await authService.acceptInvite(invite_token, password);
+    const result = await authService.acceptInvite(access_token, refresh_token);
     res.json(result);
   } catch (err) {
     next(err);
   }
 });
 
+// Login — proxy to Supabase Auth (frontend can also call Supabase directly)
 router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -54,6 +52,7 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
+// Get current user profile
 router.get('/me', authMiddleware, async (req, res, next) => {
   try {
     const user = await authService.me(req.user.userId);
@@ -63,6 +62,7 @@ router.get('/me', authMiddleware, async (req, res, next) => {
   }
 });
 
+// Update current user profile
 router.put('/update-me', authMiddleware, async (req, res, next) => {
   try {
     const user = await authService.updateMe(req.user.userId, req.body);
@@ -72,7 +72,22 @@ router.put('/update-me', authMiddleware, async (req, res, next) => {
   }
 });
 
-// Logout is client-side (clear token), but provide an endpoint for consistency
+// Change password (requires authentication)
+router.post('/change-password', authMiddleware, async (req, res, next) => {
+  try {
+    const { new_password } = req.body;
+    if (!new_password || new_password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const result = await authService.changePassword(req.user.supabaseUserId, new_password);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Logout is client-side (Supabase handles session), but provide endpoint for consistency
 router.post('/logout', (req, res) => {
   res.json({ success: true });
 });

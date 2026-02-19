@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { supabase } from '@/lib/supabase';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,21 +18,24 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Login failed');
+      if (!supabase) {
+        setError('Authentication service not configured');
         setLoading(false);
         return;
       }
 
-      localStorage.setItem('projectit_token', data.token);
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        setError(authError.message || 'Invalid credentials');
+        setLoading(false);
+        return;
+      }
+
+      // Supabase stores the session automatically
       // Re-check auth state so AuthenticatedApp renders
       await checkAppState();
       const returnUrl = searchParams.get('returnUrl') || '/';

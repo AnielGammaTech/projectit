@@ -2,8 +2,10 @@ import pg from 'pg';
 
 function getSslConfig() {
   const flag = process.env.DATABASE_SSL;
-  if (flag === 'true') return { rejectUnauthorized: true };
+  if (flag === 'true') return { rejectUnauthorized: false };
   if (flag === 'false') return false;
+  // Default: use relaxed SSL for Supabase connections
+  if (process.env.DATABASE_URL?.includes('supabase')) return { rejectUnauthorized: false };
   return undefined; // let pg / connection string decide
 }
 

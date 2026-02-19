@@ -8,12 +8,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: (process.env.DATABASE_SSL === 'true' || process.env.DATABASE_URL?.includes('supabase'))
+    ? { rejectUnauthorized: false }
+    : (process.env.DATABASE_SSL === 'false' ? false : undefined),
 });
 
 const migrations = [
   '001_create_users.sql',
   '002_create_entity_tables.sql',
+  '003_add_invite_columns.sql',
+  '004_add_supabase_uid.sql',
 ];
 
 async function migrate() {

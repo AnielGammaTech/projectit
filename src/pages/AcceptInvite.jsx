@@ -1,24 +1,72 @@
-import React, { useState } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function AcceptInvite() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [searchParams] = useSearchParams();
+  const [sessionReady, setSessionReady] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const navigate = useNavigate();
-  const inviteToken = searchParams.get('token');
+  const { checkAppState } = useAuth();
 
-  if (!inviteToken) {
+  useEffect(() => {
+    // Supabase invite links redirect with hash fragments containing access_token and refresh_token.
+    // The Supabase client auto-detects these from the URL hash and establishes a session.
+    // We just need to wait for the auth state to settle.
+    if (!supabase) {
+      setError('Authentication service not configured');
+      setInitializing(false);
+      return;
+    }
+
+    const handleAuthChange = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setSessionReady(true);
+      }
+      setInitializing(false);
+    };
+
+    // Listen for auth state change (Supabase processes the URL hash automatically)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY' || event === 'TOKEN_REFRESHED') {
+        setSessionReady(true);
+        setInitializing(false);
+      }
+    });
+
+    // Also check immediately (the session might already be set)
+    handleAuthChange();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  if (initializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="w-full max-w-sm">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-4"></div>
+            <p className="text-slate-500 text-sm">Setting up your account...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!sessionReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
         <div className="w-full max-w-sm">
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
             <h1 className="text-2xl font-bold text-slate-900 mb-2">Invalid Invite</h1>
-            <p className="text-slate-500 text-sm mb-4">This invite link is invalid or missing a token.</p>
+            <p className="text-slate-500 text-sm mb-4">This invite link is invalid or has expired.</p>
             <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
               Go to login
             </Link>
@@ -37,24 +85,27 @@ export default function AcceptInvite() {
       return;
     }
 
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/accept-invite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ invite_token: inviteToken, password }),
+      // Update the user's password via Supabase Auth
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Failed to accept invite');
+      if (updateError) {
+        setError(updateError.message || 'Failed to set password');
         setLoading(false);
         return;
       }
 
-      localStorage.setItem('projectit_token', data.token);
+      // Password set successfully — re-check app state and navigate
+      await checkAppState();
       navigate('/', { replace: true });
     } catch (err) {
       setError('Could not connect to server');

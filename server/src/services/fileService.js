@@ -1,24 +1,11 @@
-import { existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
+import supabase from '../config/supabase.js';
 
-export const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
+const STORAGE_BUCKET = 'uploads';
 
-// Ensure upload directory exists
-if (!existsSync(UPLOAD_DIR)) {
-  mkdirSync(UPLOAD_DIR, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, UPLOAD_DIR);
-  },
-  filename: (req, file, cb) => {
-    const ext = file.originalname.split('.').pop();
-    cb(null, `${uuidv4()}.${ext}`);
-  },
-});
+// Use memory storage — file buffer stays in RAM until uploaded to Supabase
+const storage = multer.memoryStorage();
 
 export const upload = multer({
   storage,
@@ -27,34 +14,78 @@ export const upload = multer({
 
 const fileService = {
   /**
-   * Get the public URL for an uploaded file.
-   * Accepts an optional Express `req` object to build an absolute URL
-   * even when the API_URL env var is not configured.
+   * Upload a file to Supabase Storage and return the public URL.
+   * Called after multer has processed the upload into req.file (with buffer).
    */
-  getFileUrl(filename, req) {
-    if (process.env.API_URL) {
-      return `${process.env.API_URL}/uploads/${filename}`;
+  async processUpload(file) {
+    if (!supabase) {
+      throw new Error('Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
     }
-    if (req) {
-      const protocol = req.get('x-forwarded-proto') || req.protocol;
-      const host = req.get('host');
-      return `${protocol}://${host}/uploads/${filename}`;
-    }
-    // Fallback: relative path
-    return `/uploads/${filename}`;
-  },
 
-  /**
-   * Handle an uploaded file and return the URL
-   * Called after multer has saved the file to disk
-   */
-  processUpload(file, req) {
+    const ext = file.originalname.split('.').pop();
+    const filename = `${uuidv4()}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(filename, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('Supabase Storage upload error:', error);
+      throw new Error(`File upload failed: ${error.message}`);
+    }
+
+    const { data } = supabase.storage
+      .from(STORAGE_BUCKET)
+      .getPublicUrl(filename);
+
     return {
-      file_url: this.getFileUrl(file.filename, req),
+      file_url: data.publicUrl,
       file_name: file.originalname,
       file_size: file.size,
       mime_type: file.mimetype,
     };
+  },
+
+  /**
+   * Delete a file from Supabase Storage by its URL or filename.
+   */
+  async deleteFile(fileUrl) {
+    if (!supabase || !fileUrl) return;
+
+    // Extract filename from the Supabase public URL
+    // URL format: https://<ref>.supabase.co/storage/v1/object/public/uploads/<filename>
+    let filename;
+    try {
+      const url = new URL(fileUrl);
+      const parts = url.pathname.split('/');
+      filename = parts[parts.length - 1];
+    } catch {
+      // If it's just a filename (e.g., from legacy /uploads/), use it directly
+      filename = fileUrl.replace(/^\/uploads\//, '');
+    }
+
+    if (filename) {
+      const { error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .remove([filename]);
+      if (error) {
+        console.error('Supabase Storage delete error:', error);
+      }
+    }
+  },
+
+  /**
+   * Get the public URL for a file in Supabase Storage.
+   */
+  getFileUrl(filename) {
+    if (!supabase) return `/uploads/${filename}`;
+    const { data } = supabase.storage
+      .from(STORAGE_BUCKET)
+      .getPublicUrl(filename);
+    return data.publicUrl;
   },
 };
 

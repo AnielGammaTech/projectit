@@ -1293,13 +1293,23 @@ function DatabaseHealthSection() {
   const [running, setRunning] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
-  const getToken = () => localStorage.getItem('projectit_token');
+  const getToken = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        return session?.access_token || null;
+      }
+    } catch { /* fallback */ }
+    return null;
+  };
 
   const fetchHealth = async () => {
     setRunning(true);
     try {
+      const token = await getToken();
       const res = await fetch(`${API_URL}/api/integrations/data-health`, {
-        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
       const data = await res.json();
       setHealthData(data);
@@ -1312,8 +1322,9 @@ function DatabaseHealthSection() {
 
   const fetchHistory = async () => {
     try {
+      const token = await getToken();
       const res = await fetch(`${API_URL}/api/integrations/data-health-history`, {
-        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
       const data = await res.json();
       setHistory(data.checks || []);

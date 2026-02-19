@@ -2,22 +2,31 @@
 // Uses a JavaScript Proxy to dynamically handle any entity name
 // so all pages work through a single unified interface.
 
+import { supabase } from '@/lib/supabase';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-function getToken() {
+async function getToken() {
+  // Get token from Supabase session
+  if (supabase) {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  }
+  // Fallback to legacy localStorage token
   return localStorage.getItem('projectit_token');
 }
 
-function authHeaders() {
-  const token = getToken();
+async function authHeaders() {
+  const token = await getToken();
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
   return headers;
 }
 
 async function apiFetch(path, options = {}) {
+  const headers = await authHeaders();
   const res = await fetch(`${API_URL}${path}`, {
-    headers: authHeaders(),
+    headers,
     ...options,
   });
 
@@ -98,7 +107,10 @@ const auth = {
     });
   },
 
-  logout() {
+  async logout() {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     localStorage.removeItem('projectit_token');
     window.location.replace('/login');
   },
@@ -121,7 +133,7 @@ const integrations = {
     },
 
     async UploadFile({ file }) {
-      const token = getToken();
+      const token = await getToken();
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch(`${API_URL}/api/integrations/upload-file`, {

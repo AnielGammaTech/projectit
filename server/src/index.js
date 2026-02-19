@@ -10,7 +10,7 @@ import functionRoutes from './routes/functions/index.js';
 import authMiddleware from './middleware/auth.js';
 import { optionalAuth } from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
-import { UPLOAD_DIR } from './services/fileService.js';
+// File uploads now go to Supabase Storage (no local UPLOAD_DIR needed)
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -25,8 +25,7 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Serve uploaded files
-app.use('/uploads', express.static(UPLOAD_DIR));
+// File uploads are served directly from Supabase Storage CDN
 
 // Health check
 app.get('/health', (req, res) => {
