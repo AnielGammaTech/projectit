@@ -148,9 +148,9 @@ function LayoutContent({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-background">
       {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 h-14 bg-gradient-to-r from-[#0F2F44] to-[#133F5C] z-40 px-4 shadow-lg shadow-[#0F2F44]/10">
+      <header className="fixed top-0 left-0 right-0 h-14 bg-gradient-to-r from-[#0F2F44] to-[#133F5C] dark:from-[#0a1e2e] dark:to-[#0e2d40] z-40 px-4 shadow-lg shadow-[#0F2F44]/10">
         <div className="max-w-[1800px] mx-auto h-full flex items-center">
           {/* Left: Logo */}
           <div className="flex items-center gap-4 flex-shrink-0">
@@ -302,7 +302,7 @@ function LayoutContent({ children, currentPageName }) {
                   )}
                 </button>
               </PopoverTrigger>
-              <PopoverContent align="end" sideOffset={8} className="w-auto p-0 border-slate-200 shadow-xl">
+              <PopoverContent align="end" sideOffset={8} className="w-auto p-0 border-slate-200 dark:border-border shadow-xl">
                 <NotificationPanel currentUser={currentUser} onClose={() => {}} />
               </PopoverContent>
             </Popover>
@@ -320,9 +320,9 @@ function LayoutContent({ children, currentPageName }) {
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <div className="px-3 py-2 border-b border-slate-100">
-                  <p className="text-sm font-medium text-slate-900">{currentUser?.full_name || 'User'}</p>
-                  <p className="text-xs text-slate-500">{currentUser?.email}</p>
+                <div className="px-3 py-2 border-b border-slate-100 dark:border-border">
+                  <p className="text-sm font-medium text-slate-900 dark:text-foreground">{currentUser?.full_name || 'User'}</p>
+                  <p className="text-xs text-slate-500 dark:text-muted-foreground">{currentUser?.email}</p>
                 </div>
                 <div className="py-1">
                   <DropdownMenuItem asChild>
@@ -405,10 +405,10 @@ function LayoutContent({ children, currentPageName }) {
 
       {/* Mobile Menu Drawer */}
       <div className={cn(
-        "lg:hidden fixed top-0 left-0 h-full w-72 bg-white z-50 transition-transform duration-300 flex flex-col",
+        "lg:hidden fixed top-0 left-0 h-full w-72 bg-white dark:bg-card z-50 transition-transform duration-300 flex flex-col",
         mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-100 dark:border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             {appLogoUrl ? (
               <img src={resolveUploadUrl(appLogoUrl)} alt="" className="w-7 h-7 rounded-lg object-contain" />
@@ -417,7 +417,7 @@ function LayoutContent({ children, currentPageName }) {
                 <Globe className="w-4 h-4 text-[#133F5C]" />
               </div>
             )}
-            <span className="font-semibold text-slate-900">{appName}</span>
+            <span className="font-semibold text-slate-900 dark:text-foreground">{appName}</span>
           </div>
           <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
             <X className="w-5 h-5" />
@@ -433,7 +433,7 @@ function LayoutContent({ children, currentPageName }) {
                 <div key={item.name}>
                   <button
                     onClick={() => setExpandedMenus(prev => ({ ...prev, [item.name]: !prev[item.name] }))}
-                    className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 text-sm touch-manipulation"
+                    className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-muted text-sm touch-manipulation"
                   >
                     <div className="flex items-center gap-3">
                       <Icon className="w-4 h-4" />
@@ -450,7 +450,7 @@ function LayoutContent({ children, currentPageName }) {
                             key={subItem.name}
                             to={createPageUrl(subItem.page) + (subItem.params || '')}
                             onClick={() => setMobileMenuOpen(false)}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50 touch-manipulation"
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-muted touch-manipulation"
                           >
                             <SubIcon className="w-4 h-4" />
                             {subItem.name}
@@ -468,7 +468,7 @@ function LayoutContent({ children, currentPageName }) {
                 key={item.name}
                 to={createPageUrl(item.page) + (item.params || '')}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 hover:bg-slate-50 text-sm touch-manipulation active:bg-slate-100"
+                className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-muted text-sm touch-manipulation active:bg-slate-100 dark:active:bg-muted"
               >
                 <Icon className="w-5 h-5" />
                 {item.name}
@@ -500,7 +500,7 @@ function LayoutContent({ children, currentPageName }) {
       <FeedbackButton />
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 z-40 pb-safe">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-card/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-border z-40 pb-safe">
         <div className="flex items-center justify-around h-16">
           {[
             ...navItems.slice(0, 4),

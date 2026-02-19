@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/lib/ThemeProvider';
 import { format } from 'date-fns';
 
 const avatarColors = [
@@ -31,6 +32,7 @@ const themeOptions = [
 
 export default function Profile() {
   const queryClient = useQueryClient();
+  const { setTheme: applyTheme } = useTheme();
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -94,6 +96,10 @@ export default function Profile() {
     await api.auth.updateMe(formData);
     const updated = await api.auth.me();
     setCurrentUser(updated);
+    // Apply theme change immediately
+    if (formData.theme) {
+      applyTheme(formData.theme);
+    }
     setSaving(false);
   };
 
@@ -111,14 +117,14 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-background dark:via-background dark:to-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#0069AF]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-background dark:via-background dark:to-background">
       <div className="max-w-2xl mx-auto px-4 py-8">
         <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-[#0069AF] hover:text-[#133F5C] mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -350,7 +356,10 @@ export default function Profile() {
                   return (
                     <button
                       key={option.value}
-                      onClick={() => setFormData(prev => ({ ...prev, theme: option.value }))}
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, theme: option.value }));
+                        applyTheme(option.value);
+                      }}
                       className={cn(
                         "flex items-start gap-3 p-4 rounded-xl border-2 transition-all text-left",
                         formData.theme === option.value

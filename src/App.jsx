@@ -1,3 +1,4 @@
+import React from 'react';
 import './App.css'
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -6,6 +7,7 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { ThemeProvider, useTheme } from '@/lib/ThemeProvider';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Login from '@/pages/Login';
 import AcceptInvite from '@/pages/AcceptInvite';
@@ -18,6 +20,24 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+// Syncs the user's DB theme preference into ThemeProvider
+const ThemeSyncer = () => {
+  const { user } = useAuth();
+  const { setTheme, theme } = useTheme();
+  const syncedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (user?.theme && !syncedRef.current) {
+      syncedRef.current = true;
+      if (user.theme !== theme) {
+        setTheme(user.theme);
+      }
+    }
+  }, [user, setTheme, theme]);
+
+  return null;
+};
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } = useAuth();
   const location = useLocation();
@@ -25,8 +45,8 @@ const AuthenticatedApp = () => {
   // Show loading spinner while checking auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-muted border-t-foreground rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -47,6 +67,8 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
+    <>
+    <ThemeSyncer />
     <Routes>
       <Route path="/" element={
         <LayoutWrapper currentPageName={mainPageKey}>
@@ -66,6 +88,7 @@ const AuthenticatedApp = () => {
       ))}
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </>
   );
 };
 
@@ -73,18 +96,20 @@ const AuthenticatedApp = () => {
 function App() {
 
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/accept-invite" element={<AcceptInvite />} />
-            <Route path="/*" element={<AuthenticatedApp />} />
-          </Routes>
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/accept-invite" element={<AcceptInvite />} />
+              <Route path="/*" element={<AuthenticatedApp />} />
+            </Routes>
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 
