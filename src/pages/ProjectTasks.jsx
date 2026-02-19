@@ -98,7 +98,7 @@ export default function ProjectTasks() {
   const [currentUser, setCurrentUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewFilter, setViewFilter] = useState('all');
-  const [expandedGroups, setExpandedGroups] = useState(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState(new Set());
   
   // Inline task creation state
   const [inlineTaskGroupId, setInlineTaskGroupId] = useState(null);
@@ -161,25 +161,18 @@ export default function ProjectTasks() {
     enabled: tasks.length > 0
   });
 
-  // Initialize expanded groups
-  useEffect(() => {
-    if (taskGroups.length > 0 && expandedGroups.size === 0) {
-      setExpandedGroups(new Set(['ungrouped', ...taskGroups.map(g => g.id)]));
-    }
-  }, [taskGroups]);
-
   const getCommentCount = (taskId) => {
     return allComments.filter(c => c.task_id === taskId).length;
   };
 
   const toggleGroup = (groupId) => {
-    const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(groupId)) {
-      newExpanded.delete(groupId);
+    const newCollapsed = new Set(collapsedGroups);
+    if (newCollapsed.has(groupId)) {
+      newCollapsed.delete(groupId);
     } else {
-      newExpanded.add(groupId);
+      newCollapsed.add(groupId);
     }
-    setExpandedGroups(newExpanded);
+    setCollapsedGroups(newCollapsed);
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -871,7 +864,7 @@ export default function ProjectTasks() {
           {taskGroups.map((group) => {
             const groupTasks = getTasksForGroup(group.id);
             const completedCount = groupTasks.filter(t => t.status === 'completed').length;
-            const isExpanded = expandedGroups.has(group.id);
+            const isExpanded = !collapsedGroups.has(group.id);
 
             return (
               <div key={group.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
@@ -1009,13 +1002,13 @@ export default function ProjectTasks() {
               className="flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
               onClick={() => toggleGroup('ungrouped')}
             >
-              {expandedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+              {!collapsedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
               <span className="font-semibold text-slate-500 flex-1">Ungrouped</span>
               <span className="text-sm text-slate-500">
                 {ungroupedTasks.filter(t => t.status === 'completed').length}/{ungroupedTasks.length}
               </span>
             </div>
-            {expandedGroups.has('ungrouped') && (
+            {!collapsedGroups.has('ungrouped') && (
               <Droppable droppableId="ungrouped">
                 {(provided, snapshot) => (
                   <div

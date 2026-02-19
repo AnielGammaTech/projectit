@@ -3,9 +3,11 @@ import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
 import { ListTodo, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, Package, FolderKanban } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
 import { format, isPast, isToday, isTomorrow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100' },
@@ -16,8 +18,8 @@ const statusConfig = {
 
 function getDueStatus(dateStr) {
   if (!dateStr) return null;
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return null;
+  const d = parseLocalDate(dateStr);
+  if (!d) return null;
   if (isPast(d) && !isToday(d)) return 'overdue';
   if (isToday(d) || isTomorrow(d)) return 'soon';
   return null;
@@ -31,8 +33,8 @@ function getRowBg(dueStatus) {
 
 function getDueBadge(dateStr) {
   if (!dateStr) return null;
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return null;
+  const d = parseLocalDate(dateStr);
+  if (!d) return null;
   const dueStatus = getDueStatus(dateStr);
   const label = format(d, 'MMM d');
   if (dueStatus === 'overdue') return { label: `Overdue · ${label}`, className: 'bg-red-100 text-red-700 border-red-200' };
@@ -66,12 +68,11 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
       const aOrder = aStatus ? order[aStatus] ?? 2 : 3;
       const bOrder = bStatus ? order[bStatus] ?? 2 : 3;
       if (aOrder !== bOrder) return aOrder - bOrder;
-      if (a.due_date && b.due_date) return new Date(a.due_date) - new Date(b.due_date);
+      if (a.due_date && b.due_date) return parseLocalDate(a.due_date) - parseLocalDate(b.due_date);
       if (a.due_date) return -1;
       if (b.due_date) return 1;
       return 0;
-    })
-    .slice(0, 8);
+    });
 
   const myParts = parts
     .filter(p => p.assigned_to === currentUserEmail && p.status !== 'installed' && activeProjectIds.includes(p.project_id) && p.due_date)
@@ -82,11 +83,19 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
       const aOrder = aStatus ? order[aStatus] ?? 2 : 3;
       const bOrder = bStatus ? order[bStatus] ?? 2 : 3;
       if (aOrder !== bOrder) return aOrder - bOrder;
-      return new Date(a.due_date) - new Date(b.due_date);
-    })
-    .slice(0, 5);
+      return parseLocalDate(a.due_date) - parseLocalDate(b.due_date);
+    });
 
-  const totalItems = myTasks.length + myParts.length;
+  // Combine tasks + parts into a single paginated list
+  const allItems = [
+    ...myTasks.map(t => ({ ...t, _type: 'task' })),
+    ...myParts.map(p => ({ ...p, _type: 'part' })),
+  ];
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.max(1, Math.ceil(allItems.length / ITEMS_PER_PAGE));
+  const [page, setPage] = useState(0);
+  const pagedItems = allItems.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
+  const totalItems = allItems.length;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-6">
@@ -109,66 +118,35 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
         <p className="text-slate-500 text-center py-6">No tasks assigned to you</p>
       ) : (
         <div className="space-y-1">
-          {myTasks.map((task, idx) => {
-            const status = statusConfig[task.status] || statusConfig.todo;
-            const StatusIcon = status.icon;
-            const dueStatus = getDueStatus(task.due_date);
-            const dueBadge = getDueBadge(task.due_date);
-            return (
-              <motion.div
-                key={task.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.03 }}
-              >
-                <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onTaskComplete?.(task);
-                    }}
-                    className={cn("p-1 rounded-md hover:scale-110 transition-transform shrink-0", status.bg)}
-                  >
-                    <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
-                  </button>
-                  <Link to={createPageUrl('ProjectTasks') + `?id=${task.project_id}`} className="flex-1 min-w-0 flex items-center gap-2">
-                    <p className="font-medium text-slate-900 text-sm truncate">{task.title}</p>
-                  </Link>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
-                      {getProjectName(task.project_id)}
-                    </span>
-                    {dueBadge && (
-                      <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", dueBadge.className)}>
-                        <Calendar className="w-2.5 h-2.5 mr-0.5" />
-                        {dueBadge.label}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-
-          {myParts.map((part, idx) => {
-            const dueStatus = getDueStatus(part.due_date);
-            const dueBadge = getDueBadge(part.due_date);
-            return (
-              <motion.div
-                key={part.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: (myTasks.length + idx) * 0.03 }}
-              >
-                <Link to={createPageUrl('ProjectParts') + `?id=${part.project_id}`}>
+          {pagedItems.map((item, idx) => {
+            if (item._type === 'task') {
+              const status = statusConfig[item.status] || statusConfig.todo;
+              const StatusIcon = status.icon;
+              const dueStatus = getDueStatus(item.due_date);
+              const dueBadge = getDueBadge(item.due_date);
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.03 }}
+                >
                   <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}>
-                    <div className="p-1 rounded-md bg-amber-100 shrink-0">
-                      <Package className="w-3.5 h-3.5 text-amber-600" />
-                    </div>
-                    <p className="font-medium text-slate-900 text-sm truncate flex-1 min-w-0">{part.name}</p>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onTaskComplete?.(item);
+                      }}
+                      className={cn("p-1 rounded-md hover:scale-110 transition-transform shrink-0", status.bg)}
+                    >
+                      <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
+                    </button>
+                    <Link to={createPageUrl('ProjectTasks') + `?id=${item.project_id}`} className="flex-1 min-w-0 flex items-center gap-2">
+                      <p className="font-medium text-slate-900 text-sm truncate">{item.title}</p>
+                    </Link>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
-                        {getProjectName(part.project_id)}
+                        {getProjectName(item.project_id)}
                       </span>
                       {dueBadge && (
                         <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", dueBadge.className)}>
@@ -178,11 +156,63 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                       )}
                     </div>
                   </div>
-                </Link>
-              </motion.div>
-            );
+                </motion.div>
+              );
+            } else {
+              const dueStatus = getDueStatus(item.due_date);
+              const dueBadge = getDueBadge(item.due_date);
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.03 }}
+                >
+                  <Link to={createPageUrl('ProjectParts') + `?id=${item.project_id}`}>
+                    <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}>
+                      <div className="p-1 rounded-md bg-amber-100 shrink-0">
+                        <Package className="w-3.5 h-3.5 text-amber-600" />
+                      </div>
+                      <p className="font-medium text-slate-900 text-sm truncate flex-1 min-w-0">{item.name}</p>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
+                          {getProjectName(item.project_id)}
+                        </span>
+                        {dueBadge && (
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", dueBadge.className)}>
+                            <Calendar className="w-2.5 h-2.5 mr-0.5" />
+                            {dueBadge.label}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            }
           })}
         </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-3 pt-3 border-t border-slate-100">
+            <button
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Prev
+            </button>
+            <span className="text-xs text-slate-400">
+              {page + 1} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className="px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        )}
       )}
     </div>
   );

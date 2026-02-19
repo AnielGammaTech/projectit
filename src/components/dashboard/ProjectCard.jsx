@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { format } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -144,7 +145,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
     const unassigned = activeTasks.filter(t => !t.assigned_to && t.status !== 'completed').length;
     const overdue = activeTasks.filter(t => {
       if (t.status === 'completed' || !t.due_date) return false;
-      const dueDate = new Date(t.due_date);
+      const dueDate = parseLocalDate(t.due_date);
       return dueDate < new Date() && dueDate.toDateString() !== new Date().toDateString();
     }).length;
     const active = pending;

@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
 import { Calendar as CalendarIcon, ListTodo, Package, AlertCircle } from 'lucide-react';
-import { format, isBefore, startOfDay, parseISO, differenceInDays } from 'date-fns';
+import { format, isBefore, startOfDay, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) {
   const today = startOfDay(new Date());
@@ -11,11 +12,13 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
   // Get items with due dates, sorted by date
   const tasksWithDue = tasks
     .filter(t => t.due_date && t.status !== 'completed')
-    .map(t => ({ ...t, type: 'task', date: parseISO(t.due_date) }));
-  
+    .map(t => ({ ...t, type: 'task', date: parseLocalDate(t.due_date) }))
+    .filter(t => t.date);
+
   const partsWithDue = parts
     .filter(p => p.due_date && p.status !== 'installed')
-    .map(p => ({ ...p, type: 'part', date: parseISO(p.due_date) }));
+    .map(p => ({ ...p, type: 'part', date: parseLocalDate(p.due_date) }))
+    .filter(p => p.date);
 
   const allItems = [...tasksWithDue, ...partsWithDue]
     .sort((a, b) => a.date - b.date)
@@ -35,23 +38,30 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
 
   if (allItems.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-xl bg-rose-100">
-            <CalendarIcon className="w-4 h-4 text-rose-600" />
+      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden h-full">
+        <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-rose-50/80 to-pink-50/80">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-rose-500 shadow-md shadow-rose-200">
+              <CalendarIcon className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900 text-sm">Upcoming</h3>
+              <p className="text-xs text-slate-500">Due dates & deadlines</p>
+            </div>
           </div>
-          <h3 className="font-semibold text-slate-900 text-sm">Upcoming</h3>
         </div>
-        <p className="text-sm text-slate-400 text-center py-4">No upcoming due dates</p>
+        <div className="p-3">
+          <p className="text-xs text-slate-400 text-center py-3">No upcoming due dates</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-      <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-rose-50 to-pink-50">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-rose-500 shadow-md shadow-rose-200">
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden h-full">
+      <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-rose-50/80 to-pink-50/80">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-rose-500 shadow-md shadow-rose-200">
             <CalendarIcon className="w-4 h-4 text-white" />
           </div>
           <div>
@@ -61,7 +71,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
         </div>
       </div>
 
-      <div className="p-3 space-y-1.5 max-h-[280px] overflow-y-auto">
+      <div className="p-3 space-y-1.5 max-h-[240px] overflow-y-auto">
         {overdueItems.length > 0 && (
           <div className="flex items-center gap-2 px-2 py-1">
             <AlertCircle className="w-3 h-3 text-red-500" />
@@ -78,7 +88,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="flex items-center gap-3 p-2.5 rounded-xl bg-red-50 border border-red-100 hover:bg-red-100 cursor-pointer transition-colors"
+              className="flex items-center gap-2.5 p-2 rounded-lg bg-red-50 border border-red-100 hover:bg-red-100 cursor-pointer transition-colors"
             >
               {item.type === 'task' ? (
                 <ListTodo className="w-4 h-4 text-red-500 shrink-0" />
@@ -109,7 +119,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: (overdueItems.length + idx) * 0.03 }}
                 className={cn(
-                  "flex items-center gap-3 p-2.5 rounded-xl transition-colors cursor-pointer",
+                  "flex items-center gap-2.5 p-2 rounded-lg transition-colors cursor-pointer",
                   isUrgent ? "bg-amber-50 border border-amber-100 hover:bg-amber-100" : "bg-slate-50 hover:bg-slate-100"
                 )}
               >

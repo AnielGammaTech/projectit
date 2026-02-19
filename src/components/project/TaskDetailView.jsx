@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Edit2, Trash2, User, Calendar, UserPlus, Send, MessageCircle } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -267,7 +268,7 @@ export default function TaskDetailView({
               Due Date
             </span>
             {task.due_date ? (
-              <p className="font-medium text-slate-900">{format(new Date(task.due_date), 'MMM d, yyyy')}</p>
+              <p className="font-medium text-slate-900">{format(parseLocalDate(task.due_date), 'MMM d, yyyy')}</p>
             ) : (
               <p className="text-sm text-slate-400">No due date</p>
             )}

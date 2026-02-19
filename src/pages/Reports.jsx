@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { format, subDays } from 'date-fns';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, AreaChart, Area } from 'recharts';
 import { cn } from '@/lib/utils';
 
@@ -67,7 +68,7 @@ export default function Reports() {
   const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'archived' && p.status !== 'deleted');
   const completedTasks = tasks.filter(t => t.status === 'completed');
   const activeTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived');
-  const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed');
+  const overdueTasks = tasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && t.status !== 'completed'; });
   const totalHours = (timeEntries.reduce((sum, e) => sum + (e.duration_minutes || 0), 0) / 60);
 
   // Financial
@@ -288,7 +289,7 @@ export default function Reports() {
                         <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
                         <span className="text-sm text-slate-700 truncate flex-1">{task.title}</span>
                         <span className="text-[10px] text-red-500 font-medium">
-                          {task.due_date && format(new Date(task.due_date), 'MMM d')}
+                          {task.due_date && format(parseLocalDate(task.due_date) || new Date(), 'MMM d')}
                         </span>
                       </Link>
                     ))}

@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Plus, Trash2, Send, UserPlus, Calendar as CalendarIcon, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { format } from 'date-fns';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 
 const avatarColors = [
@@ -117,7 +118,7 @@ ${formatList(formData.challenges)}
 ${formData.nextSteps.filter(a => a.title.trim()).map(a => {
   let item = `• ${a.title}`;
   if (a.assigned_name) item += ` → @${a.assigned_name}`;
-  if (a.due_date) item += ` (Due: ${format(new Date(a.due_date), 'MMM d')})`;
+  if (a.due_date) item += ` (Due: ${format(parseLocalDate(a.due_date), 'MMM d')})`;
   return item;
 }).join('\n') || '• None'}
 
