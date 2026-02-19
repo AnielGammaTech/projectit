@@ -9,10 +9,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { format, formatDistanceToNow } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Send, Calendar as CalendarIcon, Edit2, Trash2, Paperclip, X, 
-  FileText, Image, Loader2, Check, MoreHorizontal, Bell, 
-  User, Clock, Flag, MessageSquare, ChevronDown
+import {
+  Send, Calendar as CalendarIcon, Edit2, Trash2, Paperclip, X,
+  FileText, Image, Loader2, Check, MoreHorizontal, Bell,
+  User, Clock, Flag, MessageSquare, ChevronDown, ListChecks, Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/UserAvatar';
@@ -36,6 +36,8 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   const [commentAttachments, setCommentAttachments] = useState([]);
   const [uploadingCommentFile, setUploadingCommentFile] = useState(false);
   const [uploadingTaskFile, setUploadingTaskFile] = useState(false);
+  const [checklistItems, setChecklistItems] = useState([]);
+  const [newChecklistItem, setNewChecklistItem] = useState('');
   const textareaRef = useRef(null);
   const commentFileInputRef = useRef(null);
   const taskFileInputRef = useRef(null);
@@ -45,6 +47,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     if (task) {
       setNotes(task.notes || '');
       setNotifyOnComplete(task.notify_on_complete || []);
+      setChecklistItems(task.checklist_items || []);
     }
   }, [task?.id]);
 
@@ -279,6 +282,57 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     await handleUpdateTask({ attachments: newAttachments });
   };
 
+  const handleAddChecklistItem = async () => {
+    if (!newChecklistItem.trim()) return;
+    const newItem = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      title: newChecklistItem.trim(),
+      completed: false,
+      due_date: null,
+      assigned_to: null,
+      assigned_name: null,
+    };
+    const updated = [...checklistItems, newItem];
+    setChecklistItems(updated);
+    setNewChecklistItem('');
+    await handleUpdateTask({ checklist_items: updated });
+  };
+
+  const handleToggleChecklistItem = async (itemId) => {
+    const updated = checklistItems.map(item =>
+      item.id === itemId
+        ? { ...item, completed: !item.completed, completed_date: !item.completed ? new Date().toISOString() : null }
+        : item
+    );
+    setChecklistItems(updated);
+    await handleUpdateTask({ checklist_items: updated });
+  };
+
+  const handleRemoveChecklistItem = async (itemId) => {
+    const updated = checklistItems.filter(item => item.id !== itemId);
+    setChecklistItems(updated);
+    await handleUpdateTask({ checklist_items: updated });
+  };
+
+  const handleChecklistItemDueDate = async (itemId, date) => {
+    const updated = checklistItems.map(item =>
+      item.id === itemId ? { ...item, due_date: date ? format(date, 'yyyy-MM-dd') : null } : item
+    );
+    setChecklistItems(updated);
+    await handleUpdateTask({ checklist_items: updated });
+  };
+
+  const handleChecklistItemAssign = async (itemId, email) => {
+    const member = teamMembers.find(m => m.email === email);
+    const updated = checklistItems.map(item =>
+      item.id === itemId
+        ? { ...item, assigned_to: email || null, assigned_name: email ? (member?.name || email) : null }
+        : item
+    );
+    setChecklistItems(updated);
+    await handleUpdateTask({ checklist_items: updated });
+  };
+
   const filteredMembers = teamMembers.filter(m => m.name.toLowerCase().includes(mentionSearch));
 
   if (!task) return null;
@@ -508,6 +562,153 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 })}
               </div>
             )}
+          </div>
+
+          {/* Checklist Section */}
+          <div className="p-6 border-b border-slate-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <ListChecks className="w-4 h-4 text-slate-500" />
+                <label className="text-sm font-medium text-slate-700">Checklist</label>
+                {checklistItems.length > 0 && (
+                  <span className="text-xs text-slate-400">
+                    {checklistItems.filter(i => i.completed).length}/{checklistItems.length}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {checklistItems.length > 0 && (
+              <div className="w-full bg-slate-100 rounded-full h-1.5 mb-3">
+                <div
+                  className="bg-emerald-500 h-1.5 rounded-full transition-all duration-300"
+                  style={{ width: `${(checklistItems.filter(i => i.completed).length / checklistItems.length) * 100}%` }}
+                />
+              </div>
+            )}
+
+            <div className="space-y-0.5">
+              {checklistItems.map((item) => (
+                <div key={item.id} className="flex items-center gap-2 group py-1.5 px-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors">
+                  <button
+                    onClick={() => handleToggleChecklistItem(item.id)}
+                    className={cn(
+                      "w-5 h-5 rounded border-2 flex items-center justify-center transition-all flex-shrink-0",
+                      item.completed
+                        ? "bg-emerald-500 border-emerald-500 text-white"
+                        : "border-slate-300 hover:border-emerald-400"
+                    )}
+                  >
+                    {item.completed && <Check className="w-3 h-3" />}
+                  </button>
+
+                  <span className={cn(
+                    "flex-1 text-sm min-w-0 truncate",
+                    item.completed && "line-through text-slate-400"
+                  )}>
+                    {item.title}
+                  </span>
+
+                  {/* Due date chip */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className={cn(
+                        "text-xs px-2 py-0.5 rounded-full transition-all flex-shrink-0",
+                        item.due_date
+                          ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          : "text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-slate-100"
+                      )}>
+                        {item.due_date ? format(new Date(item.due_date + 'T12:00:00'), 'MMM d') : <CalendarIcon className="w-3 h-3" />}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 z-[100]" align="end">
+                      <Calendar
+                        mode="single"
+                        selected={item.due_date ? new Date(item.due_date + 'T12:00:00') : undefined}
+                        onSelect={(date) => handleChecklistItemDueDate(item.id, date)}
+                      />
+                      {item.due_date && (
+                        <div className="p-2 border-t">
+                          <button onClick={() => handleChecklistItemDueDate(item.id, null)} className="w-full text-center text-xs text-red-600 hover:bg-red-50 py-1 rounded">
+                            Clear date
+                          </button>
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Assignee */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className={cn(
+                        "transition-all flex-shrink-0",
+                        item.assigned_to
+                          ? ""
+                          : "opacity-0 group-hover:opacity-100"
+                      )}>
+                        {item.assigned_to ? (
+                          <UserAvatar
+                            email={item.assigned_to}
+                            name={item.assigned_name}
+                            avatarUrl={teamMembers.find(m => m.email === item.assigned_to)?.avatar_url}
+                            size="xs"
+                          />
+                        ) : (
+                          <User className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                        )}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {item.assigned_to && (
+                        <>
+                          <DropdownMenuItem onClick={() => handleChecklistItemAssign(item.id, '')}>
+                            <User className="w-4 h-4 mr-2 text-slate-400" />
+                            Unassign
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                        </>
+                      )}
+                      {teamMembers.map(m => (
+                        <DropdownMenuItem key={m.id} onClick={() => handleChecklistItemAssign(item.id, m.email)}>
+                          <UserAvatar email={m.email} name={m.name} avatarUrl={m.avatar_url} size="xs" className="mr-2" />
+                          {m.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Delete */}
+                  <button
+                    onClick={() => handleRemoveChecklistItem(item.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 rounded transition-all flex-shrink-0"
+                  >
+                    <X className="w-3 h-3 text-slate-400 hover:text-red-500" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Add new item */}
+            <div className="flex items-center gap-2 mt-2 px-2 -mx-2">
+              <Plus className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <input
+                value={newChecklistItem}
+                onChange={(e) => setNewChecklistItem(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newChecklistItem.trim()) {
+                    e.preventDefault();
+                    handleAddChecklistItem();
+                  }
+                }}
+                placeholder="Add an item..."
+                className="flex-1 text-sm bg-transparent outline-none placeholder-slate-400 py-1.5"
+              />
+              {newChecklistItem.trim() && (
+                <button onClick={handleAddChecklistItem} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium px-2 py-1 rounded hover:bg-indigo-50">
+                  Add
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Comments */}

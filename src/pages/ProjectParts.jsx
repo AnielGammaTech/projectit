@@ -819,8 +819,8 @@ export default function ProjectParts() {
         part={selectedPartDetail}
         teamMembers={teamMembers}
         currentUser={currentUser}
-        onEdit={(part) => { setSelectedPartDetail(null); setEditingPart(part); setShowPartModal(true); }}
         onStatusChange={(part, status) => { handleStatusChange(part, status); setSelectedPartDetail({ ...part, status }); }}
+        onDelete={(part) => { setSelectedPartDetail(null); setDeleteConfirm({ open: true, part }); }}
       />
 
       <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, part: null })}>
