@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -148,6 +148,12 @@ export default function ProjectTasks() {
     queryKey: ['teamMembers'],
     queryFn: () => base44.entities.TeamMember.list()
   });
+
+  // Filter to only project members for assignment dropdowns
+  const projectMembers = useMemo(() => {
+    if (!project?.team_members?.length) return [];
+    return teamMembers.filter(tm => project.team_members.includes(tm.email));
+  }, [teamMembers, project]);
 
   const { data: allComments = [] } = useQuery({
     queryKey: ['allTaskComments', projectId],
@@ -528,7 +534,7 @@ export default function ProjectTasks() {
                 <SelectValue placeholder="Assignee..." />
               </SelectTrigger>
               <SelectContent>
-                {teamMembers.map((m) => (
+                {projectMembers.map((m) => (
                   <SelectItem key={m.id} value={m.email}>{m.name}</SelectItem>
                 ))}
               </SelectContent>
@@ -755,7 +761,7 @@ export default function ProjectTasks() {
                   Unassign
                 </DropdownMenuItem>
               )}
-              {teamMembers.map((member) => (
+              {projectMembers.map((member) => (
                 <DropdownMenuItem key={member.id} onClick={() => handleTaskAssign(task, member.email)}>
                   <UserAvatar email={member.email} name={member.name} size="xs" className="mr-2" />
                   {member.name}
@@ -955,7 +961,7 @@ export default function ProjectTasks() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  {teamMembers.map((member) => (
+                  {projectMembers.map((member) => (
                     <DropdownMenuItem key={member.id} onClick={() => handleBulkAssign(member.email)}>
                       <UserAvatar email={member.email} name={member.name} size="xs" className="mr-2" />
                       {member.name}
@@ -1271,7 +1277,7 @@ export default function ProjectTasks() {
         onClose={() => { setShowTaskModal(false); setEditingTask(null); }}
         task={editingTask}
         projectId={projectId}
-        teamMembers={teamMembers}
+        teamMembers={projectMembers}
         groups={taskGroups}
         onSave={handleSaveTask}
         onBulkCreate={handleBulkCreateTasks}
@@ -1289,7 +1295,7 @@ export default function ProjectTasks() {
         open={!!selectedTask}
         onClose={() => setSelectedTask(null)}
         task={selectedTask}
-        teamMembers={teamMembers}
+        teamMembers={projectMembers}
         currentUser={currentUser}
         onEdit={(task) => { setSelectedTask(null); setEditingTask(task); setShowTaskModal(true); }}
       />
