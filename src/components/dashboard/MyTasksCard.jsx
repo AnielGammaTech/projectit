@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
-import { ListTodo, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, Package } from 'lucide-react';
+import { ListTodo, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, Package, FolderKanban } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { format, isPast, isToday, isTomorrow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
 
@@ -14,9 +14,43 @@ const statusConfig = {
   completed: { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-100' }
 };
 
+function getDueStatus(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  if (isPast(d) && !isToday(d)) return 'overdue';
+  if (isToday(d) || isTomorrow(d)) return 'soon';
+  return null;
+}
+
+function getRowBg(dueStatus) {
+  if (dueStatus === 'overdue') return 'bg-red-50 hover:bg-red-100/70';
+  if (dueStatus === 'soon') return 'bg-amber-50 hover:bg-amber-100/60';
+  return 'hover:bg-slate-50';
+}
+
+function getDueBadge(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  const dueStatus = getDueStatus(dateStr);
+  const label = format(d, 'MMM d');
+  if (dueStatus === 'overdue') return { label: `Overdue · ${label}`, className: 'bg-red-100 text-red-700 border-red-200' };
+  if (dueStatus === 'soon') {
+    const dayLabel = isToday(d) ? 'Today' : 'Tomorrow';
+    return { label: dayLabel, className: 'bg-amber-100 text-amber-700 border-amber-200' };
+  }
+  return { label, className: 'bg-slate-50 text-slate-500 border-slate-200' };
+}
+
 export default function MyTasksCard({ tasks = [], parts = [], projects = [], currentUserEmail, onTaskComplete }) {
   const getProjectName = (projectId) => {
     return projects.find(p => p.id === projectId)?.name || 'Unknown';
+  };
+
+  const getProjectNumber = (projectId) => {
+    const project = projects.find(p => p.id === projectId);
+    return project?.project_number || projectId?.slice(0, 8) || '';
   };
 
   // Only show tasks and parts from active projects
@@ -24,11 +58,33 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
 
   const myTasks = tasks
     .filter(t => t.assigned_to === currentUserEmail && t.status !== 'completed' && t.status !== 'archived' && activeProjectIds.includes(t.project_id))
-    .slice(0, 5);
+    .sort((a, b) => {
+      // Overdue first, then due soon, then by date, then no date last
+      const aStatus = getDueStatus(a.due_date);
+      const bStatus = getDueStatus(b.due_date);
+      const order = { overdue: 0, soon: 1 };
+      const aOrder = aStatus ? order[aStatus] ?? 2 : 3;
+      const bOrder = bStatus ? order[bStatus] ?? 2 : 3;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      if (a.due_date && b.due_date) return new Date(a.due_date) - new Date(b.due_date);
+      if (a.due_date) return -1;
+      if (b.due_date) return 1;
+      return 0;
+    })
+    .slice(0, 8);
 
   const myParts = parts
-    .filter(p => p.assigned_to === currentUserEmail && p.status !== 'installed' && activeProjectIds.includes(p.project_id))
-    .slice(0, 3);
+    .filter(p => p.assigned_to === currentUserEmail && p.status !== 'installed' && activeProjectIds.includes(p.project_id) && p.due_date)
+    .sort((a, b) => {
+      const aStatus = getDueStatus(a.due_date);
+      const bStatus = getDueStatus(b.due_date);
+      const order = { overdue: 0, soon: 1 };
+      const aOrder = aStatus ? order[aStatus] ?? 2 : 3;
+      const bOrder = bStatus ? order[bStatus] ?? 2 : 3;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return new Date(a.due_date) - new Date(b.due_date);
+    })
+    .slice(0, 5);
 
   const totalItems = myTasks.length + myParts.length;
 
@@ -52,10 +108,12 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
       {totalItems === 0 ? (
         <p className="text-slate-500 text-center py-6">No tasks assigned to you</p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1">
           {myTasks.map((task, idx) => {
             const status = statusConfig[task.status] || statusConfig.todo;
             const StatusIcon = status.icon;
+            const dueStatus = getDueStatus(task.due_date);
+            const dueBadge = getDueBadge(task.due_date);
             return (
               <motion.div
                 key={task.id}
@@ -63,57 +121,67 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.03 }}
               >
-                <div className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-all">
+                <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}>
                   <button
                     onClick={(e) => {
                       e.preventDefault();
                       onTaskComplete?.(task);
                     }}
-                    className={cn("p-1.5 rounded-lg hover:scale-110 transition-transform", status.bg)}
+                    className={cn("p-1 rounded-md hover:scale-110 transition-transform shrink-0", status.bg)}
                   >
-                    <StatusIcon className={cn("w-4 h-4", status.color)} />
+                    <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
                   </button>
-                  <Link to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`} className="flex-1 min-w-0">
+                  <Link to={createPageUrl('ProjectTasks') + `?id=${task.project_id}`} className="flex-1 min-w-0 flex items-center gap-2">
                     <p className="font-medium text-slate-900 text-sm truncate">{task.title}</p>
-                    <p className="text-xs text-slate-500 truncate">{getProjectName(task.project_id)}</p>
                   </Link>
-                  {task.due_date && (
-                    <div className="flex items-center gap-1 text-xs text-slate-400">
-                      <Calendar className="w-3 h-3" />
-                      {format(new Date(task.due_date), 'MMM d')}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
+                      {getProjectName(task.project_id)}
+                    </span>
+                    {dueBadge && (
+                      <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", dueBadge.className)}>
+                        <Calendar className="w-2.5 h-2.5 mr-0.5" />
+                        {dueBadge.label}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             );
           })}
 
-          {myParts.map((part, idx) => (
-            <motion.div
-              key={part.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: (myTasks.length + idx) * 0.03 }}
-            >
-              <Link to={createPageUrl('ProjectDetail') + `?id=${part.project_id}`}>
-                <div className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-amber-50/50 transition-all">
-                  <div className="p-1.5 rounded-lg bg-amber-100">
-                    <Package className="w-4 h-4 text-amber-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-900 text-sm truncate">{part.name}</p>
-                    <p className="text-xs text-slate-500 truncate">{getProjectName(part.project_id)}</p>
-                  </div>
-                  {part.due_date && (
-                    <div className="flex items-center gap-1 text-xs text-slate-400">
-                      <Calendar className="w-3 h-3" />
-                      {format(new Date(part.due_date), 'MMM d')}
+          {myParts.map((part, idx) => {
+            const dueStatus = getDueStatus(part.due_date);
+            const dueBadge = getDueBadge(part.due_date);
+            return (
+              <motion.div
+                key={part.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: (myTasks.length + idx) * 0.03 }}
+              >
+                <Link to={createPageUrl('ProjectParts') + `?id=${part.project_id}`}>
+                  <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}>
+                    <div className="p-1 rounded-md bg-amber-100 shrink-0">
+                      <Package className="w-3.5 h-3.5 text-amber-600" />
                     </div>
-                  )}
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                    <p className="font-medium text-slate-900 text-sm truncate flex-1 min-w-0">{part.name}</p>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
+                        {getProjectName(part.project_id)}
+                      </span>
+                      {dueBadge && (
+                        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", dueBadge.className)}>
+                          <Calendar className="w-2.5 h-2.5 mr-0.5" />
+                          {dueBadge.label}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </div>

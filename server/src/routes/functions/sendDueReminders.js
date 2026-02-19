@@ -1,5 +1,4 @@
 import entityService from '../../services/entityService.js';
-import emailService from '../../services/emailService.js';
 import sendNotificationEmail from './sendNotificationEmail.js';
 
 export default async function handler(req, res) {
