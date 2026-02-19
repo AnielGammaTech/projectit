@@ -5,12 +5,13 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { 
-  ArrowLeft, Plus, Search, ChevronDown, ChevronRight, 
-  CheckCircle2, Circle, Clock, ArrowUpCircle, 
+import {
+  ArrowLeft, Plus, Search, ChevronDown, ChevronRight,
+  CheckCircle2, Circle, Clock, ArrowUpCircle,
   MoreHorizontal, Edit2, Trash2, Calendar as CalendarIcon,
   UserPlus, User, AlertTriangle, MessageCircle, Paperclip,
-  FolderPlus, Archive, CheckSquare, Square, X, GripVertical
+  FolderPlus, Archive, CheckSquare, Square, X, GripVertical,
+  Check, Flag, ListChecks, TrendingUp, ListTodo
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,14 +38,17 @@ import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import GroupModal from '@/components/modals/GroupModal';
 import TaskGroupCard from '@/components/project/TaskGroupCard';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
+import UserAvatar from '@/components/UserAvatar';
 import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
 
-const statusConfig = {
-  todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
-  in_progress: { icon: ArrowUpCircle, color: 'text-blue-500', bg: 'bg-blue-100', label: 'In Progress' },
-  review: { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-100', label: 'Review' },
-  completed: { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-100', label: 'Completed' },
-  archived: { icon: Archive, color: 'text-slate-400', bg: 'bg-slate-100', label: 'Archived' }
+// --- Design constants ---
+
+const statusPillConfig = {
+  todo:        { label: 'To Do',       bg: 'bg-slate-100',   text: 'text-slate-600',   dot: 'bg-slate-400' },
+  in_progress: { label: 'In Progress', bg: 'bg-blue-100',    text: 'text-blue-700',    dot: 'bg-blue-500' },
+  review:      { label: 'Review',      bg: 'bg-amber-100',   text: 'text-amber-700',   dot: 'bg-amber-500' },
+  completed:   { label: 'Completed',   bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  archived:    { label: 'Archived',    bg: 'bg-slate-100',   text: 'text-slate-500',   dot: 'bg-slate-400' }
 };
 
 const groupColors = {
@@ -52,37 +56,31 @@ const groupColors = {
   emerald: 'bg-emerald-500', blue: 'bg-blue-500', violet: 'bg-violet-500', pink: 'bg-pink-500'
 };
 
-const avatarColors = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
-  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
-  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
-];
-
-const getColorForEmail = (email) => {
-  if (!email) return avatarColors[0];
-  let hash = 0;
-  for (let i = 0; i < email.length; i++) {
-    hash = email.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return avatarColors[Math.abs(hash) % avatarColors.length];
+const groupAccentColors = {
+  slate: 'border-l-slate-400', red: 'border-l-red-500', amber: 'border-l-amber-500',
+  emerald: 'border-l-emerald-500', blue: 'border-l-blue-500', violet: 'border-l-violet-500', pink: 'border-l-pink-500'
 };
 
-const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
+const groupProgressGradients = {
+  slate: 'bg-slate-400', red: 'bg-gradient-to-r from-red-500 to-rose-400',
+  amber: 'bg-gradient-to-r from-amber-500 to-orange-400', emerald: 'bg-gradient-to-r from-emerald-500 to-teal-400',
+  blue: 'bg-gradient-to-r from-blue-500 to-indigo-400', violet: 'bg-gradient-to-r from-violet-500 to-purple-400',
+  pink: 'bg-gradient-to-r from-pink-500 to-rose-400'
+};
+
+const groupDotColors = {
+  slate: 'bg-slate-500', red: 'bg-red-500', amber: 'bg-amber-500',
+  emerald: 'bg-emerald-500', blue: 'bg-blue-500', violet: 'bg-violet-500', pink: 'bg-pink-500'
 };
 
 const getDueDateInfo = (dueDate, status) => {
   if (!dueDate || status === 'completed') return null;
-  // Parse as local date to avoid timezone issues
   const dateStr = dueDate.split('T')[0];
   const [year, month, day] = dateStr.split('-').map(Number);
   const date = new Date(year, month - 1, day);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   if (isPast(date) && !isToday(date)) return { label: 'Overdue', color: 'bg-red-500 text-white', urgent: true };
   if (isToday(date)) return { label: 'Today', color: 'bg-orange-500 text-white', urgent: true };
   if (isTomorrow(date)) return { label: 'Tomorrow', color: 'bg-amber-500 text-white', urgent: true };
@@ -99,12 +97,13 @@ export default function ProjectTasks() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewFilter, setViewFilter] = useState('all');
   const [collapsedGroups, setCollapsedGroups] = useState(new Set());
-  
+
   // Inline task creation state
   const [inlineTaskGroupId, setInlineTaskGroupId] = useState(null);
   const [inlineTaskData, setInlineTaskData] = useState({ title: '', assigned_to: '', due_date: null, description: '' });
   const [inlineDatePickerOpen, setInlineDatePickerOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [inlineExpanded, setInlineExpanded] = useState(false);
 
   // Modals
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -118,7 +117,7 @@ export default function ProjectTasks() {
   const [selectedTasks, setSelectedTasks] = useState(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [bulkDatePickerOpen, setBulkDatePickerOpen] = useState(false);
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'cards'
+  const [viewMode, setViewMode] = useState('list');
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});
@@ -176,9 +175,8 @@ export default function ProjectTasks() {
   };
 
   const filteredTasks = tasks.filter(task => {
-    // Hide archived unless viewing archived
     if (task.status === 'archived' && viewFilter !== 'archived') return false;
-    
+
     const matchesSearch = task.title?.toLowerCase().includes(searchQuery.toLowerCase());
     if (viewFilter === 'my_tasks') return matchesSearch && task.assigned_to === currentUser?.email;
     if (viewFilter === 'overdue') {
@@ -188,6 +186,20 @@ export default function ProjectTasks() {
     if (viewFilter === 'archived') return matchesSearch && task.status === 'archived';
     return matchesSearch;
   });
+
+  // Computed stats
+  const totalTasks = tasks.filter(t => t.status !== 'archived').length;
+  const completedTasks = tasks.filter(t => t.status === 'completed').length;
+  const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
+  const overdueTasks = tasks.filter(t => {
+    const info = getDueDateInfo(t.due_date, t.status);
+    return info?.label === 'Overdue';
+  }).length;
+  const todayTasks = tasks.filter(t => {
+    const info = getDueDateInfo(t.due_date, t.status);
+    return info?.label === 'Today';
+  }).length;
+  const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   // Multi-select handlers
   const toggleTaskSelection = (taskId) => {
@@ -281,15 +293,12 @@ export default function ProjectTasks() {
   const handleDragEnd = async (result) => {
     const { draggableId, destination, source } = result;
     if (!destination) return;
-    
-    // Get the destination group ID (or empty string for ungrouped)
+
     const destGroupId = destination.droppableId === 'ungrouped' ? '' : destination.droppableId;
     const sourceGroupId = source.droppableId === 'ungrouped' ? '' : source.droppableId;
-    
-    // If dropped in same group, no update needed
+
     if (destGroupId === sourceGroupId) return;
-    
-    // Update the task's group
+
     await base44.entities.Task.update(draggableId, { group_id: destGroupId });
     refetchTasks();
   };
@@ -336,6 +345,7 @@ export default function ProjectTasks() {
 
     setInlineTaskData({ title: '', assigned_to: '', due_date: null, description: '' });
     setInlineTaskGroupId(null);
+    setInlineExpanded(false);
     setIsCreating(false);
     refetchTasks();
   };
@@ -343,6 +353,7 @@ export default function ProjectTasks() {
   const cancelInlineCreate = () => {
     setInlineTaskGroupId(null);
     setInlineTaskData({ title: '', assigned_to: '', due_date: null, description: '' });
+    setInlineExpanded(false);
   };
 
   const handleStatusChange = async (task, status) => {
@@ -428,8 +439,6 @@ export default function ProjectTasks() {
     setDeleteConfirm({ open: false, type: null, item: null });
   };
 
-  const completedTasks = tasks.filter(t => t.status === 'completed').length;
-
   const handleTaskAssign = async (task, email) => {
     const member = teamMembers.find(m => m.email === email);
     await base44.entities.Task.update(task.id, {
@@ -465,29 +474,117 @@ export default function ProjectTasks() {
     refetchTasks();
   };
 
+  // ---- Inline Task Creator (DRY) ----
+  const InlineTaskCreator = ({ groupId }) => {
+    const actualGroupId = groupId === 'ungrouped' ? '' : groupId;
+    const isActive = inlineTaskGroupId === groupId;
+
+    if (!isActive) {
+      return (
+        <button
+          onClick={() => { setInlineTaskGroupId(groupId); setInlineExpanded(false); }}
+          className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Add a task
+        </button>
+      );
+    }
+
+    return (
+      <div className="rounded-xl border-2 border-[#0069AF]/30 bg-blue-50/30 p-3 space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="p-1 text-[#0069AF]">
+            <Plus className="w-4 h-4" />
+          </div>
+          <Input
+            value={inlineTaskData.title}
+            onChange={(e) => setInlineTaskData(p => ({ ...p, title: e.target.value }))}
+            placeholder="Task name..."
+            className="flex-1 h-9 border-0 bg-transparent shadow-none focus-visible:ring-0 placeholder:text-slate-400 text-sm font-medium"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleInlineCreate(actualGroupId); }
+              if (e.key === 'Escape') cancelInlineCreate();
+            }}
+          />
+          <span className="text-xs text-slate-400 hidden sm:inline">Press Enter</span>
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-slate-500" onClick={() => setInlineExpanded(!inlineExpanded)}>
+            {inlineExpanded ? 'Less' : 'More'}
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={cancelInlineCreate}>
+            <X className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+        {inlineExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center gap-3 pl-7"
+          >
+            <Select value={inlineTaskData.assigned_to} onValueChange={(v) => setInlineTaskData(p => ({ ...p, assigned_to: v }))}>
+              <SelectTrigger className="h-8 text-xs w-40">
+                <SelectValue placeholder="Assignee..." />
+              </SelectTrigger>
+              <SelectContent>
+                {teamMembers.map((m) => (
+                  <SelectItem key={m.id} value={m.email}>{m.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Popover open={inlineDatePickerOpen} onOpenChange={setInlineDatePickerOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs font-normal">
+                  <CalendarIcon className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                  {inlineTaskData.due_date ? format(inlineTaskData.due_date, 'MMM d') : 'Due date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={inlineTaskData.due_date}
+                  onSelect={(date) => { setInlineTaskData(p => ({ ...p, due_date: date })); setInlineDatePickerOpen(false); }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
+  // ---- TaskRow (Redesigned: Asana + Monday.com) ----
   const TaskRow = ({ task, dragHandleProps, isDragging }) => {
     const [dateOpen, setDateOpen] = useState(false);
-    const status = statusConfig[task.status] || statusConfig.todo;
-    const StatusIcon = status.icon;
+    const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+    const pill = statusPillConfig[task.status] || statusPillConfig.todo;
     const dueDateInfo = getDueDateInfo(task.due_date, task.status);
     const commentCount = getCommentCount(task.id);
     const isSelected = selectedTasks.has(task.id);
+    const isCompleted = task.status === 'completed';
+    const checklistItems = task.checklist_items;
+    const checklistTotal = Array.isArray(checklistItems) ? checklistItems.length : 0;
+    const checklistDone = Array.isArray(checklistItems) ? checklistItems.filter(i => i.completed || i.done).length : 0;
 
     return (
       <div
         className={cn(
-          "group flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white rounded-xl border hover:shadow-md transition-all cursor-pointer",
-          task.status === 'completed' || task.status === 'archived' ? "opacity-60 border-slate-100" :
-          dueDateInfo?.urgent ? "border-red-200 bg-red-50/30" : "border-slate-200",
-          isSelected && "ring-2 ring-indigo-500 bg-indigo-50/50",
-          isDragging && "shadow-lg ring-2 ring-indigo-400"
+          "group flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white rounded-xl border transition-all cursor-pointer",
+          isCompleted || task.status === 'archived'
+            ? "opacity-50 bg-slate-50/30 border-slate-100"
+            : "border-slate-200 hover:shadow-sm hover:border-slate-300",
+          isSelected && "ring-2 ring-[#0069AF] bg-blue-50/50",
+          isDragging && "shadow-lg ring-2 ring-[#0069AF]"
         )}
         onClick={() => selectionMode ? toggleTaskSelection(task.id) : setSelectedTask(task)}
       >
-        {/* Drag handle - always visible on touch devices */}
+        {/* Drag handle */}
         <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing p-1 -ml-1 opacity-40 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity touch-manipulation">
           <GripVertical className="w-4 h-4 text-slate-400" />
         </div>
+
         {/* Selection checkbox */}
         {selectionMode && (
           <button
@@ -495,35 +592,54 @@ export default function ProjectTasks() {
             className="p-1.5 touch-manipulation"
           >
             {isSelected ? (
-              <CheckSquare className="w-5 h-5 text-indigo-600" />
+              <CheckSquare className="w-5 h-5 text-[#0069AF]" />
             ) : (
               <Square className="w-5 h-5 text-slate-300" />
             )}
           </button>
         )}
 
-        {/* Status */}
+        {/* Asana-style round checkbox */}
         <button
           onClick={(e) => {
             e.stopPropagation();
-            if (!selectionMode) handleStatusChange(task, task.status === 'completed' ? 'todo' : 'completed');
+            if (!selectionMode) handleStatusChange(task, isCompleted ? 'todo' : 'completed');
           }}
-          className={cn("p-2 sm:p-1.5 rounded-lg transition-all hover:scale-110 active:scale-90 touch-manipulation shrink-0", status.bg, "hover:bg-emerald-100")}
+          className="shrink-0 touch-manipulation"
         >
-          <StatusIcon className={cn("w-5 h-5 sm:w-4 sm:h-4", status.color)} />
+          {isCompleted ? (
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+              className="w-5 h-5 sm:w-[18px] sm:h-[18px] rounded-full bg-emerald-500 flex items-center justify-center"
+            >
+              <Check className="w-3 h-3 text-white" strokeWidth={3} />
+            </motion.div>
+          ) : (
+            <div className="w-5 h-5 sm:w-[18px] sm:h-[18px] rounded-full border-2 border-slate-300 hover:border-emerald-400 transition-colors" />
+          )}
         </button>
 
         {/* Title */}
         <span className={cn(
-          "flex-1 font-medium text-sm sm:text-base truncate min-w-0",
-          task.status === 'completed' && "line-through text-slate-500"
+          "flex-1 font-medium text-sm truncate min-w-0",
+          isCompleted && "line-through text-slate-400"
         )}>
           {task.title}
         </span>
 
-        {/* Indicators - hide some on mobile */}
+        {/* Indicators row */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Comment count - hidden on mobile */}
+          {/* Checklist progress mini-indicator */}
+          {checklistTotal > 0 && (
+            <div className="hidden sm:flex items-center gap-1 text-slate-400">
+              <ListChecks className="w-3.5 h-3.5" />
+              <span className="text-xs">{checklistDone}/{checklistTotal}</span>
+            </div>
+          )}
+
+          {/* Comment count */}
           {commentCount > 0 && (
             <div className="hidden sm:flex items-center gap-1 text-slate-400">
               <MessageCircle className="w-3.5 h-3.5" />
@@ -531,7 +647,7 @@ export default function ProjectTasks() {
             </div>
           )}
 
-          {/* Attachments indicator - hidden on mobile */}
+          {/* Attachments indicator */}
           {task.attachments?.length > 0 && (
             <div className="hidden sm:flex items-center gap-1 text-slate-400">
               <Paperclip className="w-3.5 h-3.5" />
@@ -539,11 +655,44 @@ export default function ProjectTasks() {
             </div>
           )}
 
+          {/* Monday.com status pill with dropdown */}
+          <DropdownMenu open={statusDropdownOpen} onOpenChange={setStatusDropdownOpen}>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => { e.stopPropagation(); setStatusDropdownOpen(true); }}
+                className={cn(
+                  "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all hover:opacity-80",
+                  pill.bg, pill.text
+                )}
+              >
+                <div className={cn("w-1.5 h-1.5 rounded-full", pill.dot)} />
+                {pill.label}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              {Object.entries(statusPillConfig).map(([key, config]) => (
+                <DropdownMenuItem
+                  key={key}
+                  onClick={() => handleStatusChange(task, key)}
+                  className="gap-2"
+                >
+                  <div className={cn("w-2 h-2 rounded-full", config.dot)} />
+                  {config.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Priority flag */}
+          {task.priority === 'high' && (
+            <Flag className="w-3.5 h-3.5 text-red-500 fill-red-500 shrink-0" />
+          )}
+
           {/* Due date picker */}
           <Popover open={dateOpen} onOpenChange={setDateOpen}>
             <PopoverTrigger asChild>
               {dueDateInfo ? (
-                <Badge 
+                <Badge
                   onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
                   className={cn("text-[10px] px-1.5 py-0 cursor-pointer hover:opacity-80", dueDateInfo.color)}
                 >
@@ -551,7 +700,7 @@ export default function ProjectTasks() {
                   {dueDateInfo.label}
                 </Badge>
               ) : (
-                <button 
+                <button
                   onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
                   className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all"
                 >
@@ -579,23 +728,23 @@ export default function ProjectTasks() {
             </PopoverContent>
           </Popover>
 
-          {/* Assignee */}
+          {/* Assignee avatar */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               {task.assigned_name ? (
                 <button
                   onClick={(e) => e.stopPropagation()}
-                  className={cn("w-8 h-8 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-white text-[10px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 touch-manipulation shrink-0", getColorForEmail(task.assigned_to))}
+                  className="hover:ring-2 hover:ring-offset-1 hover:ring-[#0069AF]/30 rounded-full touch-manipulation shrink-0"
                   title={task.assigned_name}
                 >
-                  {getInitials(task.assigned_name)}
+                  <UserAvatar email={task.assigned_to} name={task.assigned_name} size="sm" />
                 </button>
               ) : (
                 <button
                   onClick={(e) => e.stopPropagation()}
-                  className="w-8 h-8 sm:w-7 sm:h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-indigo-300 touch-manipulation shrink-0"
+                  className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-[#0069AF]/40 touch-manipulation shrink-0"
                 >
-                  <UserPlus className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-slate-400" />
+                  <UserPlus className="w-3 h-3 text-slate-400" />
                 </button>
               )}
             </DropdownMenuTrigger>
@@ -608,30 +757,17 @@ export default function ProjectTasks() {
               )}
               {teamMembers.map((member) => (
                 <DropdownMenuItem key={member.id} onClick={() => handleTaskAssign(task, member.email)}>
-                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
-                    {getInitials(member.name)}
-                  </div>
+                  <UserAvatar email={member.email} name={member.name} size="xs" className="mr-2" />
                   {member.name}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Archive button - hidden on mobile (available in more menu) */}
-          {task.status !== 'archived' && (
-            <button
-              onClick={(e) => { e.stopPropagation(); handleStatusChange(task, 'archived'); }}
-              className="hidden sm:block p-1.5 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all"
-              title="Archive"
-            >
-              <Archive className="w-4 h-4 text-slate-400" />
-            </button>
-          )}
-
           {/* More menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-7 sm:w-7 sm:opacity-0 sm:group-hover:opacity-100 touch-manipulation" onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 sm:opacity-0 sm:group-hover:opacity-100 touch-manipulation" onClick={(e) => e.stopPropagation()}>
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -658,35 +794,129 @@ export default function ProjectTasks() {
     );
   };
 
+  // ---- Group Progress Footer ----
+  const GroupProgressFooter = ({ groupTasks, color }) => {
+    const completed = groupTasks.filter(t => t.status === 'completed').length;
+    const total = groupTasks.length;
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const overdueCount = groupTasks.filter(t => {
+      const info = getDueDateInfo(t.due_date, t.status);
+      return info?.label === 'Overdue';
+    }).length;
+    const gradient = groupProgressGradients[color] || groupProgressGradients.slate;
+
+    if (total === 0) return null;
+
+    return (
+      <div className="px-4 pb-3 pt-1">
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              className={cn("h-full rounded-full transition-all duration-500", gradient)}
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <span className="text-xs text-slate-500 font-medium whitespace-nowrap">{percent}%</span>
+          {overdueCount > 0 && (
+            <span className="text-xs text-red-500 font-medium whitespace-nowrap">{overdueCount} overdue</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
       <ProjectNavHeader project={project} currentPage="ProjectTasks" />
-      
+
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Tasks</h1>
-            <p className="text-xs sm:text-sm text-slate-500">{completedTasks}/{tasks.length} completed</p>
+        {/* Phase 1: Rich Stats Header Card */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+          {/* Gradient accent bar */}
+          <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+                  <ListTodo className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Tasks</h1>
+                  <p className="text-xs sm:text-sm text-slate-500">{completedTasks}/{totalTasks} completed</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
+                  size="sm"
+                  className="bg-[#0069AF] hover:bg-[#005a96] text-white h-9 sm:h-10"
+                >
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  Add Task
+                </Button>
+                <Button
+                  onClick={() => setShowGroupModal(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-[#0069AF]/30 text-[#0069AF] hover:bg-[#0069AF]/5 h-9 sm:h-10"
+                >
+                  <FolderPlus className="w-4 h-4 mr-1.5" />
+                  <span className="hidden sm:inline">New Group</span>
+                  <span className="sm:hidden">Group</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="mt-4">
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPercent}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                />
+              </div>
+            </div>
+
+            {/* Stat chips */}
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg">
+                <span className="text-xs text-slate-500">Total</span>
+                <span className="text-sm font-semibold text-slate-700">{totalTasks}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-lg">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                <span className="text-xs text-blue-600">In Progress</span>
+                <span className="text-sm font-semibold text-blue-700">{inProgressTasks}</span>
+              </div>
+              {overdueTasks > 0 && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 rounded-lg">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  <span className="text-xs text-red-600">Overdue</span>
+                  <span className="text-sm font-semibold text-red-700">{overdueTasks}</span>
+                </div>
+              )}
+              {todayTasks > 0 && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-lg">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  <span className="text-xs text-amber-600">Due Today</span>
+                  <span className="text-sm font-semibold text-amber-700">{todayTasks}</span>
+                </div>
+              )}
+            </div>
           </div>
-          <Button onClick={() => setShowGroupModal(true)} size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 sm:h-10">
-            <Plus className="w-4 h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">New Group</span>
-            <span className="sm:hidden">Group</span>
-          </Button>
         </div>
 
-
-
-        {/* Bulk Action Bar */}
+        {/* Phase 6: Bulk Action Bar */}
         {selectionMode && selectedTasks.size > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-indigo-600 text-white rounded-xl p-3 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-lg"
+            className="bg-gradient-to-r from-[#0F2F44] to-[#133F5C] text-white rounded-xl p-3 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-lg"
           >
             <div className="flex items-center gap-3">
-              <button onClick={clearSelection} className="p-1.5 hover:bg-indigo-500 rounded touch-manipulation">
+              <button onClick={clearSelection} className="p-1.5 hover:bg-white/10 rounded touch-manipulation">
                 <X className="w-4 h-4" />
               </button>
               <span className="font-medium text-sm">{selectedTasks.size} selected</span>
@@ -727,9 +957,7 @@ export default function ProjectTasks() {
                 <DropdownMenuContent>
                   {teamMembers.map((member) => (
                     <DropdownMenuItem key={member.id} onClick={() => handleBulkAssign(member.email)}>
-                      <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
-                        {getInitials(member.name)}
-                      </div>
+                      <UserAvatar email={member.email} name={member.name} size="xs" className="mr-2" />
                       {member.name}
                     </DropdownMenuItem>
                   ))}
@@ -768,7 +996,7 @@ export default function ProjectTasks() {
           </motion.div>
         )}
 
-        {/* Filters */}
+        {/* Phase 2: Filter/Toolbar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 mb-4">
           <div className="relative flex-1 sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -776,31 +1004,34 @@ export default function ProjectTasks() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tasks..."
-              className="pl-9 h-10 sm:h-9"
+              className="pl-9 h-10 sm:h-9 rounded-xl focus-visible:ring-[#0069AF]"
             />
           </div>
           <div className="flex items-center gap-2 overflow-x-auto">
-            <div className="flex gap-1 p-1 bg-slate-100 rounded-lg shrink-0">
+            <div className="flex gap-1 p-1 bg-slate-100/80 rounded-xl shrink-0">
               {[['all', 'All'], ['my_tasks', 'Mine'], ['overdue', 'Overdue'], ['archived', 'Archived']].map(([key, label]) => (
                 <button
                   key={key}
                   onClick={() => setViewFilter(key)}
                   className={cn(
-                    "text-xs font-medium py-2 px-3 rounded-md transition-all whitespace-nowrap touch-manipulation",
-                    viewFilter === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                    "text-xs font-medium py-2 px-3 rounded-lg transition-all whitespace-nowrap touch-manipulation relative",
+                    viewFilter === key ? "bg-white text-[#0069AF] shadow-sm" : "text-slate-600 hover:text-slate-900"
                   )}
                 >
                   {label}
+                  {key === 'overdue' && overdueTasks > 0 && viewFilter !== 'overdue' && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
                 </button>
               ))}
             </div>
             {/* View Mode Toggle */}
-            <div className="flex gap-1 p-1 bg-slate-100 rounded-lg shrink-0">
+            <div className="flex gap-1 p-1 bg-slate-100/80 rounded-xl shrink-0">
               <button
                 onClick={() => setViewMode('list')}
                 className={cn(
-                  "text-xs font-medium py-2 px-3 rounded-md transition-all touch-manipulation",
-                  viewMode === 'list' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  "text-xs font-medium py-2 px-3 rounded-lg transition-all touch-manipulation",
+                  viewMode === 'list' ? "bg-white text-[#0069AF] shadow-sm" : "text-slate-600 hover:text-slate-900"
                 )}
               >
                 List
@@ -808,8 +1039,8 @@ export default function ProjectTasks() {
               <button
                 onClick={() => setViewMode('cards')}
                 className={cn(
-                  "text-xs font-medium py-2 px-3 rounded-md transition-all touch-manipulation",
-                  viewMode === 'cards' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  "text-xs font-medium py-2 px-3 rounded-lg transition-all touch-manipulation",
+                  viewMode === 'cards' ? "bg-white text-[#0069AF] shadow-sm" : "text-slate-600 hover:text-slate-900"
                 )}
               >
                 Cards
@@ -819,7 +1050,7 @@ export default function ProjectTasks() {
               variant={selectionMode ? "default" : "outline"}
               size="sm"
               onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
-              className={cn("h-9 shrink-0 touch-manipulation", selectionMode && "bg-indigo-600")}
+              className={cn("h-9 shrink-0 touch-manipulation", selectionMode && "bg-[#0069AF] hover:bg-[#005a96]")}
             >
               <CheckSquare className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">{selectionMode ? 'Done' : 'Select'}</span>
@@ -865,17 +1096,27 @@ export default function ProjectTasks() {
             const groupTasks = getTasksForGroup(group.id);
             const completedCount = groupTasks.filter(t => t.status === 'completed').length;
             const isExpanded = !collapsedGroups.has(group.id);
+            const accentColor = groupAccentColors[group.color] || groupAccentColors.slate;
 
             return (
-              <div key={group.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              <div key={group.id} className={cn("bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm border-l-4", accentColor)}>
+                {/* Phase 4: Monday.com Group Header */}
                 <div
-                  className="flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
+                  className="group/header flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
                   onClick={() => toggleGroup(group.id)}
                 >
                   {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                  <div className={cn("w-3 h-3 rounded-full", groupColors[group.color] || groupColors.slate)} />
-                  <span className="font-semibold text-slate-900 flex-1">{group.name}</span>
-                  <span className="text-sm text-slate-500">{completedCount}/{groupTasks.length}</span>
+                  <span className="font-bold text-base text-slate-900 flex-1">{group.name}</span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-sm text-slate-600 font-medium">
+                    {completedCount}/{groupTasks.length}
+                  </span>
+                  {/* Inline +Add on hover */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setInlineTaskGroupId(group.id); }}
+                    className="opacity-0 group-hover/header:opacity-100 transition-opacity text-xs text-[#0069AF] hover:text-[#005a96] font-medium flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add
+                  </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -899,8 +1140,8 @@ export default function ProjectTasks() {
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         className={cn(
-                          "px-4 pb-4 space-y-2 min-h-[60px] transition-colors",
-                          snapshot.isDraggingOver && "bg-indigo-50/50"
+                          "px-4 pb-2 space-y-2 min-h-[60px] transition-colors",
+                          snapshot.isDraggingOver && "bg-blue-50/50"
                         )}
                       >
                         {groupTasks.map((task, index) => (
@@ -910,8 +1151,8 @@ export default function ProjectTasks() {
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                               >
-                                <TaskRow 
-                                  task={task} 
+                                <TaskRow
+                                  task={task}
                                   dragHandleProps={provided.dragHandleProps}
                                   isDragging={snapshot.isDragging}
                                 />
@@ -920,93 +1161,36 @@ export default function ProjectTasks() {
                           </Draggable>
                         ))}
                         {provided.placeholder}
-                        
-                        {/* Inline Task Creation Form */}
-                        {inlineTaskGroupId === group.id ? (
-                          <div className="bg-white rounded-xl border-2 border-emerald-200 p-4 space-y-3 shadow-sm">
-                            <Input
-                              value={inlineTaskData.title}
-                              onChange={(e) => setInlineTaskData(p => ({ ...p, title: e.target.value }))}
-                              placeholder="Task name"
-                              className="h-10 border-slate-200"
-                              autoFocus
-                              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleInlineCreate(group.id); } }}
-                            />
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <div>
-                                <label className="text-xs text-slate-500 mb-1 block">Assigned to</label>
-                                <Select value={inlineTaskData.assigned_to} onValueChange={(v) => setInlineTaskData(p => ({ ...p, assigned_to: v }))}>
-                                  <SelectTrigger className="h-9 text-sm">
-                                    <SelectValue placeholder="Assign..." />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {teamMembers.map((m) => (
-                                      <SelectItem key={m.id} value={m.email}>{m.name}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <label className="text-xs text-slate-500 mb-1 block">Due on</label>
-                                <Popover open={inlineDatePickerOpen} onOpenChange={setInlineDatePickerOpen}>
-                                  <PopoverTrigger asChild>
-                                    <Button variant="outline" size="sm" className="w-full h-9 justify-start text-sm font-normal">
-                                      <CalendarIcon className="w-4 h-4 mr-2 text-slate-400" />
-                                      {inlineTaskData.due_date ? format(inlineTaskData.due_date, 'MMM d') : 'Select date'}
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                      mode="single"
-                                      selected={inlineTaskData.due_date}
-                                      onSelect={(date) => { setInlineTaskData(p => ({ ...p, due_date: date })); setInlineDatePickerOpen(false); }}
-                                      initialFocus
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                              </div>
-                            </div>
-                            <Textarea
-                              value={inlineTaskData.description}
-                              onChange={(e) => setInlineTaskData(p => ({ ...p, description: e.target.value }))}
-                              placeholder="Add notes..."
-                              className="min-h-[60px] text-sm"
-                            />
-                            <div className="flex justify-end gap-2">
-                              <Button variant="ghost" size="sm" onClick={cancelInlineCreate}>Cancel</Button>
-                              <Button size="sm" onClick={() => handleInlineCreate(group.id)} disabled={!inlineTaskData.title.trim() || isCreating} className="bg-emerald-600 hover:bg-emerald-700">
-                                Add Task
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setInlineTaskGroupId(group.id)}
-                            className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
-                          >
-                            <Plus className="w-4 h-4" />
-                            Add a task
-                          </button>
-                        )}
+
+                        {/* Phase 5: Inline Task Creator */}
+                        <InlineTaskCreator groupId={group.id} />
                       </div>
                     )}
                   </Droppable>
                 )}
+                {/* Phase 4: Group Progress Footer */}
+                {isExpanded && <GroupProgressFooter groupTasks={groupTasks} color={group.color} />}
               </div>
             );
           })}
 
           {/* Ungrouped */}
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className={cn("bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm border-l-4", groupAccentColors.slate)}>
             <div
-              className="flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
+              className="group/header flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
               onClick={() => toggleGroup('ungrouped')}
             >
               {!collapsedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-              <span className="font-semibold text-slate-500 flex-1">Ungrouped</span>
-              <span className="text-sm text-slate-500">
+              <span className="font-bold text-base text-slate-500 flex-1">Ungrouped</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-sm text-slate-600 font-medium">
                 {ungroupedTasks.filter(t => t.status === 'completed').length}/{ungroupedTasks.length}
               </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setInlineTaskGroupId('ungrouped'); }}
+                className="opacity-0 group-hover/header:opacity-100 transition-opacity text-xs text-[#0069AF] hover:text-[#005a96] font-medium flex items-center gap-1"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add
+              </button>
             </div>
             {!collapsedGroups.has('ungrouped') && (
               <Droppable droppableId="ungrouped">
@@ -1015,8 +1199,8 @@ export default function ProjectTasks() {
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className={cn(
-                      "px-4 pb-4 space-y-2 min-h-[60px] transition-colors",
-                      snapshot.isDraggingOver && "bg-indigo-50/50"
+                      "px-4 pb-2 space-y-2 min-h-[60px] transition-colors",
+                      snapshot.isDraggingOver && "bg-blue-50/50"
                     )}
                   >
                     {ungroupedTasks.map((task, index) => (
@@ -1026,8 +1210,8 @@ export default function ProjectTasks() {
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                           >
-                            <TaskRow 
-                              task={task} 
+                            <TaskRow
+                              task={task}
                               dragHandleProps={provided.dragHandleProps}
                               isDragging={snapshot.isDragging}
                             />
@@ -1036,85 +1220,44 @@ export default function ProjectTasks() {
                       </Draggable>
                     ))}
                     {provided.placeholder}
-                    
-                    {/* Inline Task Creation Form for Ungrouped */}
-                    {inlineTaskGroupId === 'ungrouped' ? (
-                      <div className="bg-white rounded-xl border-2 border-emerald-200 p-4 space-y-3 shadow-sm">
-                        <Input
-                          value={inlineTaskData.title}
-                          onChange={(e) => setInlineTaskData(p => ({ ...p, title: e.target.value }))}
-                          placeholder="Task name"
-                          className="h-10 border-slate-200"
-                          autoFocus
-                          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleInlineCreate(''); } }}
-                        />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-xs text-slate-500 mb-1 block">Assigned to</label>
-                            <Select value={inlineTaskData.assigned_to} onValueChange={(v) => setInlineTaskData(p => ({ ...p, assigned_to: v }))}>
-                              <SelectTrigger className="h-9 text-sm">
-                                <SelectValue placeholder="Assign..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {teamMembers.map((m) => (
-                                  <SelectItem key={m.id} value={m.email}>{m.name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <label className="text-xs text-slate-500 mb-1 block">Due on</label>
-                            <Popover open={inlineDatePickerOpen} onOpenChange={setInlineDatePickerOpen}>
-                              <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="w-full h-9 justify-start text-sm font-normal">
-                                  <CalendarIcon className="w-4 h-4 mr-2 text-slate-400" />
-                                  {inlineTaskData.due_date ? format(inlineTaskData.due_date, 'MMM d') : 'Select date'}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                  mode="single"
-                                  selected={inlineTaskData.due_date}
-                                  onSelect={(date) => { setInlineTaskData(p => ({ ...p, due_date: date })); setInlineDatePickerOpen(false); }}
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                        </div>
-                        <Textarea
-                          value={inlineTaskData.description}
-                          onChange={(e) => setInlineTaskData(p => ({ ...p, description: e.target.value }))}
-                          placeholder="Add notes..."
-                          className="min-h-[60px] text-sm"
-                        />
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={cancelInlineCreate}>Cancel</Button>
-                          <Button size="sm" onClick={() => handleInlineCreate('')} disabled={!inlineTaskData.title.trim() || isCreating} className="bg-emerald-600 hover:bg-emerald-700">
-                            Add Task
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setInlineTaskGroupId('ungrouped')}
-                        className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add a task
-                      </button>
-                    )}
+
+                    <InlineTaskCreator groupId="ungrouped" />
                   </div>
                 )}
               </Droppable>
             )}
+            {!collapsedGroups.has('ungrouped') && (
+              <GroupProgressFooter groupTasks={ungroupedTasks} color="slate" />
+            )}
           </div>
 
+          {/* Phase 6: Empty State */}
           {filteredTasks.length === 0 && taskGroups.length === 0 && (
-            <div className="text-center py-12 text-slate-500">
-              <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-              <p className="font-medium">No tasks yet</p>
-              <p className="text-sm">Add your first task above</p>
+            <div className="text-center py-16">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <ListTodo className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-1">No tasks yet</h3>
+              <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+                Get started by creating a task group to organize your work, or add your first task directly.
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <Button
+                  onClick={() => setShowGroupModal(true)}
+                  variant="outline"
+                  className="border-[#0069AF]/30 text-[#0069AF] hover:bg-[#0069AF]/5"
+                >
+                  <FolderPlus className="w-4 h-4 mr-2" />
+                  Create Group
+                </Button>
+                <Button
+                  onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
+                  className="bg-[#0069AF] hover:bg-[#005a96] text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Task
+                </Button>
+              </div>
             </div>
           )}
         </div>
