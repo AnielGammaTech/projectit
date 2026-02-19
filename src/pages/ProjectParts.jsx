@@ -351,14 +351,14 @@ export default function ProjectParts() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
         <div className="animate-pulse text-slate-400">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <ProjectNavHeader project={project} currentPage="ProjectParts" />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -397,8 +397,8 @@ export default function ProjectParts() {
               <Package className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Parts & Materials</h1>
-              <p className="text-slate-500">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Parts & Materials</h1>
+              <p className="text-slate-500 dark:text-slate-400">
                 {parts.length} items · Total: ${totalCost.toLocaleString()}
                 {unassignedParts.length > 0 && (
                   <span className="text-amber-600 ml-2">· {unassignedParts.length} unassigned</span>
@@ -484,7 +484,7 @@ export default function ProjectParts() {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-4 mb-6">
+        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6">
           <div className="flex flex-wrap gap-4">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -530,7 +530,7 @@ export default function ProjectParts() {
               <div className="p-2 rounded-lg bg-purple-100">
                 <Wrench className="w-5 h-5 text-purple-600" />
               </div>
-              <h2 className="text-lg font-semibold text-slate-900">Ready to Install ({readyToInstallParts.length})</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Ready to Install ({readyToInstallParts.length})</h2>
             </div>
             <div className="space-y-2">
               {readyToInstallParts.map((part) => (
@@ -587,7 +587,7 @@ export default function ProjectParts() {
                   transition={{ delay: idx * 0.02 }}
                   onClick={() => selectionMode ? togglePartSelection(part.id) : setSelectedPartDetail(part)}
                   className={cn(
-                    "bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md transition-all group cursor-pointer",
+                    "bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-4 hover:shadow-md transition-all group cursor-pointer",
                     isSelected && "ring-2 ring-amber-500 bg-amber-50/50"
                   )}
                 >
@@ -611,9 +611,9 @@ export default function ProjectParts() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h4 className="font-medium text-slate-900">{part.name}</h4>
+                        <h4 className="font-medium text-slate-900 dark:text-slate-100">{part.name}</h4>
                         {part.part_number && (
-                          <p className="text-sm text-slate-500">#{part.part_number}</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">#{part.part_number}</p>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
@@ -795,11 +795,11 @@ export default function ProjectParts() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white rounded-2xl border border-slate-100 p-12 text-center"
+                className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-12 text-center"
               >
                 <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No parts found</h3>
-                <p className="text-slate-500 mb-6">Add parts to track materials for this project</p>
+                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No parts found</h3>
+                <p className="text-slate-500 dark:text-slate-400 mb-6">Add parts to track materials for this project</p>
                 <Button onClick={() => setShowPartModal(true)} className="bg-amber-500 hover:bg-amber-600">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Part

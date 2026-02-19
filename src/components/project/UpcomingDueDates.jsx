@@ -38,7 +38,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
 
   if (allItems.length === 0) {
     return (
-      <div className="relative rounded-2xl overflow-hidden h-full flex flex-col border border-rose-100/60 bg-gradient-to-br from-white via-rose-50/30 to-pink-50/40">
+      <div className="relative rounded-2xl overflow-hidden h-full flex flex-col border border-rose-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-rose-50/30 to-pink-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a]">
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400" />
         <div className="p-3.5 pb-2">
           <div className="flex items-center gap-2.5">
@@ -46,8 +46,8 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
               <CalendarIcon className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-sm leading-none">Upcoming</h3>
-              <p className="text-[11px] text-slate-500 font-medium">Due dates & deadlines</p>
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Upcoming</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Due dates & deadlines</p>
             </div>
           </div>
         </div>
@@ -62,7 +62,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
   }
 
   return (
-    <div className="relative rounded-2xl overflow-hidden h-full flex flex-col border border-rose-100/60 bg-gradient-to-br from-white via-rose-50/30 to-pink-50/40">
+    <div className="relative rounded-2xl overflow-hidden h-full flex flex-col border border-rose-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-rose-50/30 to-pink-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a]">
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400" />
       <div className="p-3.5 pb-2">
         <div className="flex items-center justify-between">
@@ -71,8 +71,8 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
               <CalendarIcon className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-sm leading-none">Due Dates</h3>
-              <p className="text-[11px] text-slate-500 font-medium">{allItems.length} upcoming</p>
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Due Dates</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{allItems.length} upcoming</p>
             </div>
           </div>
           {overdueItems.length > 0 && (
@@ -109,7 +109,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
                   <Package className="w-3 h-3 text-red-600" />
                 )}
               </div>
-              <span className="text-xs text-slate-700 flex-1 truncate font-medium">{item.title || item.name}</span>
+              <span className="text-xs text-slate-700 dark:text-slate-300 flex-1 truncate font-medium">{item.title || item.name}</span>
               <span className="text-[10px] text-red-600 font-bold whitespace-nowrap bg-red-100/80 px-1.5 py-0.5 rounded-md">{getDateLabel(item.date)}</span>
             </motion.div>
           </Link>
@@ -135,8 +135,8 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
                 className={cn(
                   "flex items-center gap-2 p-2 rounded-xl transition-all cursor-pointer",
                   isUrgent
-                    ? "bg-gradient-to-r from-amber-50 to-amber-50/50 border border-amber-200/50 hover:border-amber-300 hover:shadow-sm"
-                    : "bg-white/60 border border-slate-100 hover:border-slate-200 hover:bg-white hover:shadow-sm"
+                    ? "bg-gradient-to-r from-amber-50 to-amber-50/50 dark:from-amber-900/20 dark:to-amber-900/10 border border-amber-200/50 dark:border-amber-700/30 hover:border-amber-300 hover:shadow-sm"
+                    : "bg-white/60 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700/50 hover:border-slate-200 hover:bg-white dark:hover:bg-slate-700/50 hover:shadow-sm"
                 )}
               >
                 <div className={cn("p-1 rounded-lg", isUrgent ? "bg-amber-100" : "bg-slate-50")}>
@@ -146,7 +146,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
                     <Package className={cn("w-3 h-3", isUrgent ? "text-amber-600" : "text-emerald-500")} />
                   )}
                 </div>
-                <span className="text-xs text-slate-600 flex-1 truncate">{item.title || item.name}</span>
+                <span className="text-xs text-slate-600 dark:text-slate-300 flex-1 truncate">{item.title || item.name}</span>
                 <span className={cn(
                   "text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-md",
                   isUrgent ? "text-amber-700 bg-amber-100/80" : "text-slate-500 bg-slate-100/80"

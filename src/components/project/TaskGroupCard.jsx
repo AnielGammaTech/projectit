@@ -33,7 +33,7 @@ export default function TaskGroupCard({ group, tasks = [], onEditGroup, onDelete
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200/80 min-w-[300px] max-w-[340px] flex-shrink-0 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+      className="bg-white dark:bg-[#1e2a3a] rounded-2xl overflow-hidden shadow-sm border border-slate-200/80 dark:border-slate-700/50 min-w-[300px] max-w-[340px] flex-shrink-0 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
     >
       {/* Gradient accent bar */}
       <div className={cn("h-1.5 bg-gradient-to-r", colorConfig.accent)} />
@@ -42,8 +42,8 @@ export default function TaskGroupCard({ group, tasks = [], onEditGroup, onDelete
       <div className="p-3.5 pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <h3 className="font-bold text-slate-800 text-sm truncate">{group?.name || 'Ungrouped'}</h3>
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
+            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">{group?.name || 'Ungrouped'}</h3>
+            <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full font-medium">
               {completedCount}/{totalCount}
             </span>
           </div>
@@ -79,7 +79,7 @@ export default function TaskGroupCard({ group, tasks = [], onEditGroup, onDelete
               onClick={() => onTaskClick?.(task)}
               className={cn(
                 "flex items-start gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all group mb-0.5",
-                isCompleted ? "opacity-50" : "hover:bg-slate-50"
+                isCompleted ? "opacity-50" : "hover:bg-slate-50 dark:hover:bg-slate-700/50"
               )}
             >
               {/* Round checkbox */}
@@ -112,8 +112,8 @@ export default function TaskGroupCard({ group, tasks = [], onEditGroup, onDelete
 
               <div className="flex-1 min-w-0">
                 <p className={cn(
-                  "text-sm text-slate-800 leading-tight",
-                  isCompleted && "line-through text-slate-400"
+                  "text-sm text-slate-800 dark:text-slate-200 leading-tight",
+                  isCompleted && "line-through text-slate-400 dark:text-slate-500"
                 )}>
                   {task.title}
                 </p>
@@ -155,9 +155,9 @@ export default function TaskGroupCard({ group, tasks = [], onEditGroup, onDelete
 
       {/* Progress Footer */}
       {totalCount > 0 && (
-        <div className="px-3.5 pb-3 pt-2 mt-1 border-t border-slate-100">
+        <div className="px-3.5 pb-3 pt-2 mt-1 border-t border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2">
-            <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+            <div className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
               <motion.div
                 className={cn("h-1.5 rounded-full", colorConfig.progress)}
                 initial={{ width: 0 }}

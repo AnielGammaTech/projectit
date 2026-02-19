@@ -149,7 +149,7 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
                       "flex items-center gap-2 h-9 px-3 rounded-lg border transition-all text-sm",
                       selectedTemplate
                         ? "border-[#0069AF] bg-[#0069AF]/5 text-[#0069AF]"
-                        : "border-slate-200 hover:border-slate-300 bg-white text-slate-600"
+                        : "border-slate-200 dark:border-slate-600 hover:border-slate-300 bg-white dark:bg-[#151d2b] text-slate-600 dark:text-slate-300"
                     )}
                   >
                     <FileStack className="w-4 h-4" />
@@ -346,7 +346,7 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
                       className="text-sm"
                     />
                     {notifySearch && filteredNotifyMembers.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-[#1e2a3a] border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
                         {filteredNotifyMembers.slice(0, 5).map(member => (
                           <button
                             key={member.id}

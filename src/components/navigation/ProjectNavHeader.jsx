@@ -18,14 +18,14 @@ export default function ProjectNavHeader({ project, currentPage }) {
   if (!project) return null;
 
   return (
-    <div className="bg-white border-b border-slate-200 sticky top-14 z-30">
+    <div className="bg-white dark:bg-[#1e2a3a] border-b border-slate-200 dark:border-slate-700 sticky top-14 z-30">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top row - Breadcrumbs & Switcher */}
         <div className="flex items-center justify-between py-3">
           <div className="flex items-center gap-4">
             <Link 
               to={createPageUrl('Dashboard')} 
-              className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-500 hover:text-slate-900"
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
@@ -46,8 +46,8 @@ export default function ProjectNavHeader({ project, currentPage }) {
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                   isActive 
-                    ? "border-[#0069AF] text-[#0069AF]" 
-                    : "border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300"
+                    ? "border-[#0069AF] text-[#0069AF] dark:text-blue-400 dark:border-blue-400"
+                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600"
                 )}
               >
                 <Icon className="w-4 h-4" />

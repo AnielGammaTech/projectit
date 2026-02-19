@@ -174,14 +174,14 @@ export default function ProjectFiles() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
         <div className="animate-pulse text-slate-400">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <ProjectNavHeader project={project} currentPage="ProjectFiles" />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -192,8 +192,8 @@ export default function ProjectFiles() {
               <FileText className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Documents & Files</h1>
-              <p className="text-slate-500">{files.length} files</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Documents & Files</h1>
+              <p className="text-slate-500 dark:text-slate-400">{files.length} files</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -214,7 +214,7 @@ export default function ProjectFiles() {
         </div>
 
         {/* Search & Breadcrumb */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-4 mb-6">
+        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6">
           <div className="flex flex-wrap items-center gap-4">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -239,7 +239,7 @@ export default function ProjectFiles() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl border border-slate-200 p-4 mb-6"
+            className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 p-4 mb-6"
           >
             <div className="flex items-center gap-3">
               <Input
@@ -281,7 +281,7 @@ export default function ProjectFiles() {
                     key={folder.id}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="group bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all cursor-pointer"
+                    className="group bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-4 hover:shadow-md transition-all cursor-pointer"
                     onClick={() => setCurrentFolderId(folder.id)}
                   >
                     <div className="flex items-center justify-between">
@@ -297,8 +297,8 @@ export default function ProjectFiles() {
                         <Trash2 className="w-3.5 h-3.5 text-red-500" />
                       </Button>
                     </div>
-                    <h4 className="font-medium text-slate-900 mt-2 truncate">{folder.name}</h4>
-                    <p className="text-xs text-slate-500">{folderFileCount} files</p>
+                    <h4 className="font-medium text-slate-900 dark:text-slate-100 mt-2 truncate">{folder.name}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{folderFileCount} files</p>
                   </motion.div>
                 );
               })}
@@ -329,14 +329,14 @@ export default function ProjectFiles() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     transition={{ delay: idx * 0.02 }}
-                    className="group bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md transition-all"
+                    className="group bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-4 hover:shadow-md transition-all"
                   >
                     <div className="flex items-center gap-4">
                       <div className="p-2 rounded-lg bg-slate-100">
                         <FileIcon className="w-5 h-5 text-slate-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-slate-900 truncate">{file.name}</h4>
+                        <h4 className="font-medium text-slate-900 dark:text-slate-100 truncate">{file.name}</h4>
                         <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
                           <span>{formatFileSize(file.size)}</span>
                           <span>•</span>
@@ -368,11 +368,11 @@ export default function ProjectFiles() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white rounded-2xl border border-slate-100 p-12 text-center"
+                className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-12 text-center"
               >
                 <FileText className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No files yet</h3>
-                <p className="text-slate-500 mb-6">Upload files to organize project documents</p>
+                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No files yet</h3>
+                <p className="text-slate-500 dark:text-slate-400 mb-6">Upload files to organize project documents</p>
                 <label className="cursor-pointer">
                   <Button className="bg-teal-600 hover:bg-teal-700" asChild>
                     <span>

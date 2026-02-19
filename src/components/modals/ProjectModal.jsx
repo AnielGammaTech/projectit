@@ -325,7 +325,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             value={formData.name}
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
             placeholder="What's the project called?"
-            className="text-lg font-semibold h-12 bg-white/80 backdrop-blur-sm border-white/50 shadow-sm placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-2"
+            className="text-lg font-semibold h-12 bg-white/80 dark:bg-[#151d2b]/80 backdrop-blur-sm border-white/50 dark:border-slate-600 shadow-sm placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-2 dark:text-slate-100"
             style={{ '--tw-ring-color': selectedColor + '40' }}
             required
           />
@@ -344,8 +344,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                 </Label>
                 <div
                   className={cn(
-                    "flex items-center gap-3 w-full h-11 px-3 rounded-xl border-2 bg-white cursor-pointer transition-all",
-                    showCustomerDropdown ? "border-blue-400 shadow-sm" : "border-slate-200 hover:border-slate-300",
+                    "flex items-center gap-3 w-full h-11 px-3 rounded-xl border-2 bg-white dark:bg-[#151d2b] cursor-pointer transition-all",
+                    showCustomerDropdown ? "border-blue-400 shadow-sm" : "border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500",
                   )}
                   style={showCustomerDropdown ? { borderColor: selectedColor + '80' } : undefined}
                   onClick={() => setShowCustomerDropdown(!showCustomerDropdown)}
@@ -355,7 +355,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: selectedColor + '15' }}>
                         <Building2 className="w-3.5 h-3.5" style={{ color: selectedColor }} />
                       </div>
-                      <span className="flex-1 text-sm font-medium text-slate-900 truncate">{formData.client}</span>
+                      <span className="flex-1 text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{formData.client}</span>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -378,8 +378,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                 {showCustomerDropdown && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowCustomerDropdown(false)} />
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white rounded-xl border border-slate-200 shadow-xl max-h-64 overflow-hidden">
-                      <div className="p-2.5 border-b border-slate-100">
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-600 shadow-xl max-h-64 overflow-hidden">
+                      <div className="p-2.5 border-b border-slate-100 dark:border-slate-700">
                         <div className="relative">
                           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                           <Input
@@ -459,7 +459,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Brief summary of what this project is about..."
                   required
-                  className="h-20 resize-none rounded-xl border-2 border-slate-200 focus-visible:border-blue-400 text-sm"
+                  className="h-20 resize-none rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-[#151d2b] dark:text-slate-100 focus-visible:border-blue-400 text-sm"
                 />
               </div>
             </div>
@@ -654,8 +654,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                       className={cn(
                         "w-full flex items-center gap-2 h-10 px-3 rounded-xl border-2 text-sm text-left transition-all",
                         formData.start_date
-                          ? "border-slate-200 bg-white text-slate-800"
-                          : "border-dashed border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300"
+                          ? "border-slate-200 dark:border-slate-600 bg-white dark:bg-[#151d2b] text-slate-800 dark:text-slate-100"
+                          : "border-dashed border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-[#151d2b] text-slate-400 hover:border-slate-300"
                       )}
                     >
                       <CalendarIcon className="w-4 h-4 flex-shrink-0 text-slate-400" />
@@ -700,8 +700,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                       className={cn(
                         "w-full flex items-center gap-2 h-10 px-3 rounded-xl border-2 text-sm text-left transition-all",
                         formData.due_date
-                          ? "border-slate-200 bg-white text-slate-800"
-                          : "border-dashed border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300"
+                          ? "border-slate-200 dark:border-slate-600 bg-white dark:bg-[#151d2b] text-slate-800 dark:text-slate-100"
+                          : "border-dashed border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-[#151d2b] text-slate-400 hover:border-slate-300"
                       )}
                     >
                       <CalendarIcon className="w-4 h-4 flex-shrink-0 text-slate-400" />
@@ -747,7 +747,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                     value={formData.time_budget_hours || ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, time_budget_hours: e.target.value ? Number(e.target.value) : 0 }))}
                     placeholder="Hours"
-                    className="pl-9 h-10 text-sm rounded-xl border-2 border-slate-200"
+                    className="pl-9 h-10 text-sm rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-[#151d2b] dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -765,8 +765,8 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                         className={cn(
                           "w-full flex items-center gap-2 h-10 px-3 rounded-xl border-2 text-sm text-left transition-all",
                           selectedTemplate && selectedTemplate !== 'none'
-                            ? "border-slate-200 bg-white text-slate-800"
-                            : "border-dashed border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300"
+                            ? "border-slate-200 dark:border-slate-600 bg-white dark:bg-[#151d2b] text-slate-800 dark:text-slate-100"
+                            : "border-dashed border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-[#151d2b] text-slate-400 hover:border-slate-300"
                         )}
                         style={selectedTemplate && selectedTemplate !== 'none' ? { borderColor: selectedColor + '60' } : undefined}
                       >

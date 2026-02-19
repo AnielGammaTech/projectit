@@ -577,10 +577,10 @@ export default function ProjectTasks() {
     return (
       <div
         className={cn(
-          "group flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white rounded-xl border transition-all cursor-pointer",
+          "group flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white dark:bg-[#1e2a3a] rounded-xl border transition-all cursor-pointer",
           isCompleted || task.status === 'archived'
-            ? "opacity-50 bg-slate-50/30 border-slate-100"
-            : "border-slate-200 hover:shadow-sm hover:border-slate-300",
+            ? "opacity-50 bg-slate-50/30 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700/50"
+            : "border-slate-200 dark:border-slate-700/50 hover:shadow-sm hover:border-slate-300 dark:hover:border-slate-600",
           isSelected && "ring-2 ring-[#0069AF] bg-blue-50/50",
           isDragging && "shadow-lg ring-2 ring-[#0069AF]"
         )}
@@ -832,12 +832,12 @@ export default function ProjectTasks() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <ProjectNavHeader project={project} currentPage="ProjectTasks" />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Phase 1: Rich Stats Header Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden mb-6">
           {/* Gradient accent bar */}
           <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
           <div className="p-4 sm:p-6">
@@ -847,8 +847,8 @@ export default function ProjectTasks() {
                   <ListTodo className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Tasks</h1>
-                  <p className="text-xs sm:text-sm text-slate-500">{completedTasks}/{totalTasks} completed</p>
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Tasks</h1>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{completedTasks}/{totalTasks} completed</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -875,7 +875,7 @@ export default function ProjectTasks() {
 
             {/* Progress bar */}
             <div className="mt-4">
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
                   initial={{ width: 0 }}
@@ -1014,14 +1014,14 @@ export default function ProjectTasks() {
             />
           </div>
           <div className="flex items-center gap-2 overflow-x-auto">
-            <div className="flex gap-1 p-1 bg-slate-100/80 rounded-xl shrink-0">
+            <div className="flex gap-1 p-1 bg-slate-100/80 dark:bg-slate-700/50 rounded-xl shrink-0">
               {[['all', 'All'], ['my_tasks', 'Mine'], ['overdue', 'Overdue'], ['archived', 'Archived']].map(([key, label]) => (
                 <button
                   key={key}
                   onClick={() => setViewFilter(key)}
                   className={cn(
                     "text-xs font-medium py-2 px-3 rounded-lg transition-all whitespace-nowrap touch-manipulation relative",
-                    viewFilter === key ? "bg-white text-[#0069AF] shadow-sm" : "text-slate-600 hover:text-slate-900"
+                    viewFilter === key ? "bg-white dark:bg-slate-600 text-[#0069AF] dark:text-blue-400 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   )}
                 >
                   {label}
@@ -1032,12 +1032,12 @@ export default function ProjectTasks() {
               ))}
             </div>
             {/* View Mode Toggle */}
-            <div className="flex gap-1 p-1 bg-slate-100/80 rounded-xl shrink-0">
+            <div className="flex gap-1 p-1 bg-slate-100/80 dark:bg-slate-700/50 rounded-xl shrink-0">
               <button
                 onClick={() => setViewMode('list')}
                 className={cn(
                   "text-xs font-medium py-2 px-3 rounded-lg transition-all touch-manipulation",
-                  viewMode === 'list' ? "bg-white text-[#0069AF] shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  viewMode === 'list' ? "bg-white dark:bg-slate-600 text-[#0069AF] dark:text-blue-400 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                 )}
               >
                 List
@@ -1046,7 +1046,7 @@ export default function ProjectTasks() {
                 onClick={() => setViewMode('cards')}
                 className={cn(
                   "text-xs font-medium py-2 px-3 rounded-lg transition-all touch-manipulation",
-                  viewMode === 'cards' ? "bg-white text-[#0069AF] shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  viewMode === 'cards' ? "bg-white dark:bg-slate-600 text-[#0069AF] dark:text-blue-400 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                 )}
               >
                 Cards
@@ -1105,14 +1105,14 @@ export default function ProjectTasks() {
             const accentColor = groupAccentColors[group.color] || groupAccentColors.slate;
 
             return (
-              <div key={group.id} className={cn("bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm border-l-4", accentColor)}>
+              <div key={group.id} className={cn("bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-sm border-l-4", accentColor)}>
                 {/* Phase 4: Monday.com Group Header */}
                 <div
-                  className="group/header flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
+                  className="group/header flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                   onClick={() => toggleGroup(group.id)}
                 >
                   {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                  <span className="font-bold text-base text-slate-900 flex-1">{group.name}</span>
+                  <span className="font-bold text-base text-slate-900 dark:text-slate-100 flex-1">{group.name}</span>
                   <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-sm text-slate-600 font-medium">
                     {completedCount}/{groupTasks.length}
                   </span>
@@ -1181,13 +1181,13 @@ export default function ProjectTasks() {
           })}
 
           {/* Ungrouped */}
-          <div className={cn("bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm border-l-4", groupAccentColors.slate)}>
+          <div className={cn("bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-sm border-l-4", groupAccentColors.slate)}>
             <div
-              className="group/header flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
+              className="group/header flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               onClick={() => toggleGroup('ungrouped')}
             >
               {!collapsedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-              <span className="font-bold text-base text-slate-500 flex-1">Ungrouped</span>
+              <span className="font-bold text-base text-slate-500 dark:text-slate-400 flex-1">Ungrouped</span>
               <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-sm text-slate-600 font-medium">
                 {ungroupedTasks.filter(t => t.status === 'completed').length}/{ungroupedTasks.length}
               </span>
@@ -1243,8 +1243,8 @@ export default function ProjectTasks() {
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <ListTodo className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-1">No tasks yet</h3>
-              <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-1">No tasks yet</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto">
                 Get started by creating a task group to organize your work, or add your first task directly.
               </p>
               <div className="flex items-center justify-center gap-3">

@@ -114,14 +114,14 @@ export default function ProjectNotes() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
         <div className="animate-pulse text-slate-400">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <ProjectNavHeader project={project} currentPage="ProjectNotes" />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -132,8 +132,8 @@ export default function ProjectNotes() {
               <MessageSquare className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Notes & Messages</h1>
-              <p className="text-slate-500">{notes.length} entries</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Notes & Messages</h1>
+              <p className="text-slate-500 dark:text-slate-400">{notes.length} entries</p>
             </div>
           </div>
           <Button onClick={() => setShowMeetingModal(true)} className="bg-indigo-600 hover:bg-indigo-700">
@@ -143,7 +143,7 @@ export default function ProjectNotes() {
         </div>
 
         {/* Add New */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 mb-6">
+        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-5 mb-6">
           <div className="flex gap-2 mb-3 flex-wrap">
             {Object.entries(typeConfig).map(([key, config]) => {
               const Icon = config.icon;
@@ -220,10 +220,10 @@ export default function ProjectNotes() {
           {isLoading ? (
             <div className="text-center py-12 text-slate-400">Loading...</div>
           ) : filteredNotes.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-12 text-center">
               <MessageSquare className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">No notes found</h3>
-              <p className="text-slate-500">Start adding notes and messages to this project</p>
+              <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No notes found</h3>
+              <p className="text-slate-500 dark:text-slate-400">Start adding notes and messages to this project</p>
             </div>
           ) : (
             <AnimatePresence>
@@ -241,7 +241,7 @@ export default function ProjectNotes() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     transition={{ delay: idx * 0.02 }}
-                    className="group bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+                    className="group bg-white dark:bg-[#1e2a3a] border border-slate-200 dark:border-slate-700/50 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
                   >
                     {/* Header */}
                     <div 
@@ -264,10 +264,10 @@ export default function ProjectNotes() {
                               ) : (
                                 <ChevronRight className="w-4 h-4 text-slate-400" />
                               )}
-                              <span className="font-semibold text-slate-900">{note.title}</span>
+                              <span className="font-semibold text-slate-900 dark:text-slate-100">{note.title}</span>
                             </>
                           ) : (
-                            <span className="text-slate-700">{note.content}</span>
+                            <span className="text-slate-700 dark:text-slate-300">{note.content}</span>
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
@@ -304,7 +304,7 @@ export default function ProjectNotes() {
                             className="border-t border-slate-100"
                           >
                             <div className="px-4 py-4">
-                              <p className="text-slate-600 whitespace-pre-wrap text-sm leading-relaxed">
+                              <p className="text-slate-600 dark:text-slate-300 whitespace-pre-wrap text-sm leading-relaxed">
                                 {note.content}
                               </p>
                             </div>

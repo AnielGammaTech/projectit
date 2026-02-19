@@ -108,7 +108,7 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
       <>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-slate-600">
+            <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
               <Clock className="w-4 h-4 text-cyan-600" />
               <span className="font-semibold text-sm">{formatHours(totalMinutes)}</span>
             </div>
@@ -162,9 +162,9 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
               <DialogTitle>What did you work on?</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4">
-              <div className="text-center p-4 bg-slate-50 rounded-lg">
-                <p className="text-sm text-slate-500 mb-1">Time logged</p>
-                <p className="text-2xl font-mono font-bold text-slate-900">{formatTime(elapsedSeconds)}</p>
+              <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Time logged</p>
+                <p className="text-2xl font-mono font-bold text-slate-900 dark:text-slate-100">{formatTime(elapsedSeconds)}</p>
               </div>
               <Textarea
                 value={stopDescription}
@@ -179,7 +179,7 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
                 </Button>
                 <Button 
                   onClick={handleConfirmStop}
-                  className="bg-[#0069AF] hover:bg-[#133F5C]"
+                  className="bg-[#0069AF] hover:bg-[#133F5C] dark:bg-blue-600 dark:hover:bg-blue-700"
                   disabled={stopMutation.isPending}
                 >
                   Save & Stop
@@ -200,8 +200,8 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
           {/* Time Summary */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-2xl font-bold text-slate-900">{formatHours(totalMinutes)}</p>
-              <p className="text-xs text-slate-500">Total logged</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{formatHours(totalMinutes)}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Total logged</p>
             </div>
             {timeBudgetHours > 0 && (
               <div className="text-right">
@@ -211,14 +211,14 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
                 )}>
                   {Math.round(budgetPercent)}%
                 </p>
-                <p className="text-xs text-slate-500">of {timeBudgetHours}h budget</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">of {timeBudgetHours}h budget</p>
               </div>
             )}
           </div>
 
           {/* Budget Progress Bar */}
           {timeBudgetHours > 0 && (
-            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
               <div 
                 className={cn(
                   "h-full rounded-full transition-all",
@@ -230,7 +230,7 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
           )}
 
           {/* Timer Controls */}
-          <div className="pt-2 border-t border-slate-100">
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
             {!activeEntry ? (
               <Button 
                 onClick={() => startMutation.mutate()}
@@ -269,9 +269,9 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
               <DialogTitle>What did you work on?</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4">
-              <div className="text-center p-4 bg-slate-50 rounded-lg">
-                <p className="text-sm text-slate-500 mb-1">Time logged</p>
-                <p className="text-2xl font-mono font-bold text-slate-900">{formatTime(elapsedSeconds)}</p>
+              <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Time logged</p>
+                <p className="text-2xl font-mono font-bold text-slate-900 dark:text-slate-100">{formatTime(elapsedSeconds)}</p>
               </div>
               <Textarea
                 value={stopDescription}
@@ -286,7 +286,7 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
                 </Button>
                 <Button 
                   onClick={handleConfirmStop}
-                  className="bg-[#0069AF] hover:bg-[#133F5C]"
+                  className="bg-[#0069AF] hover:bg-[#133F5C] dark:bg-blue-600 dark:hover:bg-blue-700"
                   disabled={stopMutation.isPending}
                 >
                   Save & Stop
@@ -307,7 +307,7 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
           <Button 
             onClick={() => startMutation.mutate()}
             size="sm"
-            className="bg-[#0069AF] hover:bg-[#133F5C] h-8 px-3"
+            className="bg-[#0069AF] hover:bg-[#133F5C] dark:bg-blue-600 dark:hover:bg-blue-700 h-8 px-3"
             disabled={startMutation.isPending}
           >
             <Play className="w-3 h-3 mr-1.5" />
