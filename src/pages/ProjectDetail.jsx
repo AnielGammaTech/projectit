@@ -885,18 +885,18 @@ export default function ProjectDetail() {
           {/* Main Cards — 3-col grid with Due Dates spanning right column */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min">
 
-            {/* Upcoming Due Dates — spans 2 rows on desktop, placed first for grid ordering */}
+            {/* Upcoming Due Dates — spans all rows on desktop right column */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="sm:col-start-2 sm:row-span-2 lg:col-start-3 lg:row-start-1 lg:row-span-2"
+              className="sm:col-start-2 sm:row-span-3 lg:col-start-3 lg:row-start-1 lg:row-span-3"
             >
               <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
             </motion.div>
 
-            {/* Tasks Card — compact single-row */}
-            <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-1">
+            {/* Tasks Card — with task groups preview */}
+            <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-1 lg:col-span-1">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -908,32 +908,78 @@ export default function ProjectDetail() {
                     <div className="p-1.5 rounded-lg bg-[#0069AF] shadow-md shadow-[#0069AF]/20">
                       <ListTodo className="w-4 h-4 text-white" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 text-sm">Tasks</h3>
-                    </div>
+                    <h3 className="font-semibold text-slate-900 text-sm">Tasks</h3>
+                    <span className="text-[10px] text-slate-400">{completedTasks}/{tasks.length}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1 text-emerald-600">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span className="font-medium">{completedTasks}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-slate-500">
-                      <CircleDot className="w-3 h-3" />
-                      <span className="font-medium">{tasks.length - completedTasks}</span>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingTask(null); setShowTaskModal(true); }}
-                      className="bg-[#0069AF] hover:bg-[#0F2F44] shadow-sm h-7 w-7 p-0"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
+                  <Button
+                    size="sm"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingTask(null); setShowTaskModal(true); }}
+                    className="bg-[#0069AF] hover:bg-[#0F2F44] shadow-sm h-7 w-7 p-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+                {/* Task groups preview */}
+                <div className="p-2 space-y-1.5 max-h-[180px] overflow-y-auto">
+                  {(() => {
+                    const activeTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived');
+                    const ungrouped = activeTasks.filter(t => !t.group_id);
+                    const grouped = {};
+                    activeTasks.filter(t => t.group_id).forEach(t => {
+                      if (!grouped[t.group_id]) grouped[t.group_id] = [];
+                      grouped[t.group_id].push(t);
+                    });
+                    return (
+                      <>
+                        {Object.entries(grouped).map(([gid, gTasks]) => {
+                          const group = taskGroups.find(g => g.id === parseInt(gid));
+                          return (
+                            <div key={gid}>
+                              <div className="flex items-center gap-1.5 px-1.5 mb-0.5">
+                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: group?.color || '#94a3b8' }} />
+                                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{group?.name || 'Group'}</span>
+                                <span className="text-[10px] text-slate-300">{gTasks.length}</span>
+                              </div>
+                              {gTasks.slice(0, 3).map(t => (
+                                <div key={t.id} className="flex items-center gap-1.5 px-1.5 py-0.5">
+                                  <div className={cn("w-3 h-3 rounded-full border flex items-center justify-center shrink-0", t.status === 'in_progress' ? "border-blue-400 bg-blue-50" : "border-slate-200")}>
+                                    {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
+                                  </div>
+                                  <span className="text-xs text-slate-700 truncate">{t.title}</span>
+                                </div>
+                              ))}
+                              {gTasks.length > 3 && <p className="text-[10px] text-slate-400 px-1.5">+{gTasks.length - 3} more</p>}
+                            </div>
+                          );
+                        })}
+                        {ungrouped.length > 0 && (
+                          <div>
+                            {Object.keys(grouped).length > 0 && (
+                              <div className="flex items-center gap-1.5 px-1.5 mb-0.5">
+                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Ungrouped</span>
+                                <span className="text-[10px] text-slate-300">{ungrouped.length}</span>
+                              </div>
+                            )}
+                            {ungrouped.slice(0, 4).map(t => (
+                              <div key={t.id} className="flex items-center gap-1.5 px-1.5 py-0.5">
+                                <div className={cn("w-3 h-3 rounded-full border flex items-center justify-center shrink-0", t.status === 'in_progress' ? "border-blue-400 bg-blue-50" : "border-slate-200")}>
+                                  {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
+                                </div>
+                                <span className="text-xs text-slate-700 truncate">{t.title}</span>
+                              </div>
+                            ))}
+                            {ungrouped.length > 4 && <p className="text-[10px] text-slate-400 px-1.5">+{ungrouped.length - 4} more</p>}
+                          </div>
+                        )}
+                        {activeTasks.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No active tasks</p>}
+                      </>
+                    );
+                  })()}
                 </div>
               </motion.div>
             </Link>
 
-            {/* Messages & Meetings Card — compact single-row */}
+            {/* Messages Card — with recent messages preview */}
             <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-2 lg:col-start-2 lg:row-start-1">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -946,25 +992,34 @@ export default function ProjectDetail() {
                     <div className="p-1.5 rounded-lg bg-[#0069AF] shadow-md shadow-[#0069AF]/20">
                       <MessageSquare className="w-4 h-4 text-white" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 text-sm">Messages</h3>
-                    </div>
+                    <h3 className="font-semibold text-slate-900 text-sm">Messages</h3>
+                    <span className="text-[10px] text-slate-400">{projectNotes.length}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1 text-[#0069AF]">
-                      <MessageSquare className="w-3 h-3" />
-                      <span className="font-medium">{projectNotes.filter(n => n.type === 'message' || n.type === 'note').length}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-emerald-600">
-                      <Users className="w-3 h-3" />
-                      <span className="font-medium">{projectNotes.filter(n => n.type === 'update').length}</span>
-                    </div>
-                  </div>
+                </div>
+                {/* Recent messages preview */}
+                <div className="p-2 space-y-1 max-h-[180px] overflow-y-auto">
+                  {projectNotes.length > 0 ? (
+                    [...projectNotes].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 5).map(note => (
+                      <div key={note.id} className="flex items-start gap-2 px-1.5 py-1 rounded-lg hover:bg-slate-50">
+                        <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[8px] font-medium shrink-0 mt-0.5",
+                          note.type === 'update' ? "bg-emerald-500" : "bg-[#0069AF]"
+                        )}>
+                          {note.type === 'update' ? <Users className="w-3 h-3" /> : <MessageSquare className="w-3 h-3" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-slate-700 truncate">{note.content?.replace(/[#*_]/g, '').slice(0, 60)}</p>
+                          <p className="text-[10px] text-slate-400">{note.created_by_name?.split(' ')[0] || 'Unknown'}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-400 text-center py-2">No messages yet</p>
+                  )}
                 </div>
               </motion.div>
             </Link>
 
-            {/* Parts Card — compact single-row */}
+            {/* Parts Card — compact with status breakdown */}
             <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`} className="lg:col-start-1 lg:row-start-2">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -977,23 +1032,13 @@ export default function ProjectDetail() {
                     <div className="p-1.5 rounded-lg bg-[#0F2F44] shadow-md shadow-[#0F2F44]/20">
                       <Package className="w-4 h-4 text-white" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 text-sm">Parts</h3>
-                    </div>
+                    <h3 className="font-semibold text-slate-900 text-sm">Parts</h3>
+                    <span className="text-[10px] text-slate-400">{parts.length}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1 text-blue-600">
-                      <span className="font-medium">{parts.filter(p => p.status === 'ordered').length}</span>
-                      <span className="text-slate-400">ord</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-amber-600">
-                      <span className="font-medium">{parts.filter(p => p.status === 'received' || p.status === 'ready_to_install').length}</span>
-                      <span className="text-slate-400">rec</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-emerald-600">
-                      <span className="font-medium">{parts.filter(p => p.status === 'installed').length}</span>
-                      <span className="text-slate-400">inst</span>
-                    </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-red-500 font-medium">{parts.filter(p => p.status === 'needed').length} need</span>
+                    <span className="text-blue-500 font-medium">{parts.filter(p => p.status === 'ordered').length} ord</span>
+                    <span className="text-emerald-500 font-medium">{parts.filter(p => p.status === 'installed').length} inst</span>
                     <Button
                       size="sm"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingPart(null); setShowPartModal(true); }}
@@ -1006,7 +1051,7 @@ export default function ProjectDetail() {
               </motion.div>
             </Link>
 
-            {/* Files Card — compact single-row */}
+            {/* Files Card — compact */}
             <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`} className="lg:col-start-2 lg:row-start-2">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -1019,21 +1064,13 @@ export default function ProjectDetail() {
                     <div className="p-1.5 rounded-lg bg-[#133F5C] shadow-md shadow-[#133F5C]/20">
                       <FileText className="w-4 h-4 text-white" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 text-sm">Files</h3>
-                    </div>
+                    <h3 className="font-semibold text-slate-900 text-sm">Files</h3>
                   </div>
-                  <div className="flex items-center gap-3 text-xs">
+                  <div className="flex items-center gap-2 text-xs">
                     {fileFolders.length > 0 && (
-                      <div className="flex items-center gap-1 text-[#133F5C]">
-                        <Folder className="w-3 h-3" />
-                        <span className="font-medium">{fileFolders.length}</span>
-                      </div>
+                      <span className="text-[#133F5C] font-medium"><Folder className="w-3 h-3 inline mr-0.5" />{fileFolders.length}</span>
                     )}
-                    <div className="flex items-center gap-1 text-slate-600">
-                      <File className="w-3 h-3" />
-                      <span className="font-medium">{projectFiles.length}</span>
-                    </div>
+                    <span className="text-slate-500 font-medium"><File className="w-3 h-3 inline mr-0.5" />{projectFiles.length}</span>
                   </div>
                 </div>
               </motion.div>
