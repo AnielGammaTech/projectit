@@ -61,130 +61,136 @@ function TaskRow({ task, teamMembers, currentUser, statusConfig, priorityColors,
   return (
     <div
       onClick={() => onNavigate(task)}
-      className="flex items-center gap-2 px-3 sm:px-4 py-1.5 hover:bg-slate-50 transition-colors cursor-pointer group active:bg-slate-100"
+      className="bg-white rounded-lg border border-slate-100 p-3 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group"
     >
-      {/* Checkmark */}
-      <button
-        onClick={(e) => onComplete(e, task.id)}
-        className={cn(
-          "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all active:scale-90",
-          task.status === 'completed'
-            ? "bg-emerald-500 border-emerald-500 text-white"
-            : "border-slate-300 hover:border-[#0069AF] hover:bg-[#0069AF]/5"
-        )}
-        title="Mark as completed"
-      >
-        {task.status === 'completed' ? (
-          <CheckCircle2 className="w-3 h-3" />
-        ) : (
-          <CheckCircle2 className="w-3 h-3 opacity-0 group-hover:opacity-30" />
-        )}
-      </button>
+      <div className="flex items-start gap-2">
+        {/* Checkmark */}
+        <button
+          onClick={(e) => onComplete(e, task.id)}
+          className={cn(
+            "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all active:scale-90 mt-0.5",
+            task.status === 'completed'
+              ? "bg-emerald-500 border-emerald-500 text-white"
+              : "border-slate-300 hover:border-[#0069AF] hover:bg-[#0069AF]/5"
+          )}
+          title="Mark as completed"
+        >
+          {task.status === 'completed' ? (
+            <CheckCircle2 className="w-3 h-3" />
+          ) : (
+            <CheckCircle2 className="w-3 h-3 opacity-0 group-hover:opacity-30" />
+          )}
+        </button>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
+        <div className="flex-1 min-w-0">
           <h4 className="text-sm font-medium text-slate-900 truncate">{task.title}</h4>
           {groupName && (
-            <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0 hidden sm:inline">{groupName}</span>
+            <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mt-0.5 inline-block">{groupName}</span>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 shrink-0">
-        {task.priority && (
-          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 hidden sm:flex", priorityColors[task.priority])}>
-            {task.priority}
-          </Badge>
-        )}
+      {/* Bottom row: priority + assignee + date */}
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
+        <div className="flex items-center gap-1.5">
+          {task.priority && (
+            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", priorityColors[task.priority])}>
+              {task.priority}
+            </Badge>
+          )}
+        </div>
 
-        {/* Inline assignee dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            {task.assigned_name ? (
-              <button
-                onClick={(e) => e.stopPropagation()}
-                className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 shrink-0", getColorForEmail(task.assigned_to))}
-                title={task.assigned_name}
-              >
-                {getInitials(task.assigned_name)}
-              </button>
-            ) : (
-              <button
-                onClick={(e) => e.stopPropagation()}
-                className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 hover:border-[#0069AF]"
-                title="Assign"
-              >
-                <UserPlus className="w-3 h-3 text-slate-400" />
-              </button>
-            )}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-            {task.assigned_to && (
-              <DropdownMenuItem onClick={() => onUnassign(task)}>
-                <User className="w-4 h-4 mr-2" />
-                Unassign
-              </DropdownMenuItem>
-            )}
-            {teamMembers.map((member) => (
-              <DropdownMenuItem key={member.id} onClick={() => onAssign(task, member.email)}>
-                <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
-                  {getInitials(member.name)}
+        <div className="flex items-center gap-1.5">
+          {/* Inline assignee dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              {task.assigned_name ? (
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 shrink-0", getColorForEmail(task.assigned_to))}
+                  title={task.assigned_name}
+                >
+                  {getInitials(task.assigned_name)}
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 hover:border-[#0069AF]"
+                  title="Assign"
+                >
+                  <UserPlus className="w-3 h-3 text-slate-400" />
+                </button>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+              {task.assigned_to && (
+                <DropdownMenuItem onClick={() => onUnassign(task)}>
+                  <User className="w-4 h-4 mr-2" />
+                  Unassign
+                </DropdownMenuItem>
+              )}
+              {teamMembers.map((member) => (
+                <DropdownMenuItem key={member.id} onClick={() => onAssign(task, member.email)}>
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                    {getInitials(member.name)}
+                  </div>
+                  {member.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Inline due date picker */}
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
+            <PopoverTrigger asChild>
+              {dueInfo ? (
+                <Badge
+                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                  variant="outline"
+                  className={cn("text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80", dueInfo.color)}
+                >
+                  {dueInfo.label}
+                </Badge>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                  className="p-0.5 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  title="Set due date"
+                >
+                  <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+              )}
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
+              <Calendar
+                mode="single"
+                selected={task.due_date ? (() => {
+                  const dateStr = task.due_date.split('T')[0];
+                  const [year, month, day] = dateStr.split('-').map(Number);
+                  return new Date(year, month - 1, day);
+                })() : undefined}
+                onSelect={(date) => { onDueDateChange(task, date); setDateOpen(false); }}
+              />
+              {task.due_date && (
+                <div className="p-2 border-t">
+                  <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => { onDueDateChange(task, null); setDateOpen(false); }}>
+                    Clear date
+                  </Button>
                 </div>
-                {member.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Inline due date picker */}
-        <Popover open={dateOpen} onOpenChange={setDateOpen}>
-          <PopoverTrigger asChild>
-            {dueInfo ? (
-              <Badge
-                onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                variant="outline"
-                className={cn("text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80", dueInfo.color)}
-              >
-                {dueInfo.label}
-              </Badge>
-            ) : (
-              <button
-                onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                className="p-0.5 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                title="Set due date"
-              >
-                <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
-              </button>
-            )}
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
-            <Calendar
-              mode="single"
-              selected={task.due_date ? (() => {
-                const dateStr = task.due_date.split('T')[0];
-                const [year, month, day] = dateStr.split('-').map(Number);
-                return new Date(year, month - 1, day);
-              })() : undefined}
-              onSelect={(date) => { onDueDateChange(task, date); setDateOpen(false); }}
-            />
-            {task.due_date && (
-              <div className="p-2 border-t">
-                <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => { onDueDateChange(task, null); setDateOpen(false); }}>
-                  Clear date
-                </Button>
-              </div>
-            )}
-          </PopoverContent>
-        </Popover>
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
     </div>
   );
 }
 
 // Part row component with its own state for date picker
-function PartRow({ part, teamMembers, getDueDateLabel, onAssign, onUnassign, onDueDateChange, onNavigate }) {
+function PartRow({ part, teamMembers, getDueDateLabel, onAssign, onUnassign, onDueDateChange, onStatusChange, onETAChange, onNavigate }) {
   const [dateOpen, setDateOpen] = useState(false);
+  const [etaOpen, setEtaOpen] = useState(false);
   const dueInfo = part.due_date && parseLocalDate(part.due_date) ? getDueDateLabel(part.due_date) : null;
   const deliveryInfo = part.est_delivery_date && parseLocalDate(part.est_delivery_date) ? getDueDateLabel(part.est_delivery_date) : null;
   const statusColors = {
@@ -197,112 +203,169 @@ function PartRow({ part, teamMembers, getDueDateLabel, onAssign, onUnassign, onD
   return (
     <div
       onClick={() => onNavigate(part)}
-      className="flex items-center gap-2 px-3 sm:px-4 py-1.5 hover:bg-slate-50 transition-colors cursor-pointer group active:bg-slate-100"
+      className="bg-white rounded-lg border border-slate-100 p-3 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group"
     >
-      <Package className="w-4 h-4 text-amber-500 shrink-0" />
-
-      <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-medium text-slate-900 truncate">{part.name}</h4>
+      <div className="flex items-start gap-2">
+        <Package className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-medium text-slate-900 truncate">{part.name}</h4>
+          {part.part_number && (
+            <span className="text-[10px] text-slate-400 font-mono">#{part.part_number}</span>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-1.5 shrink-0">
-        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", statusColors[part.status] || 'bg-slate-100 text-slate-600')}>
-          {part.status?.replace('_', ' ')}
-        </Badge>
-        {part.part_number && (
-          <span className="text-[10px] text-slate-400 hidden sm:inline font-mono">#{part.part_number}</span>
-        )}
-
-        {/* Inline assignee dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            {part.assigned_name ? (
-              <button
-                onClick={(e) => e.stopPropagation()}
-                className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 shrink-0", getColorForEmail(part.assigned_to))}
-                title={part.assigned_name}
-              >
-                {getInitials(part.assigned_name)}
-              </button>
-            ) : (
-              <button
-                onClick={(e) => e.stopPropagation()}
-                className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 hover:border-[#0069AF]"
-                title="Assign"
-              >
-                <UserPlus className="w-3 h-3 text-slate-400" />
-              </button>
-            )}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-            {part.assigned_to && (
-              <DropdownMenuItem onClick={() => onUnassign(part)}>
-                <User className="w-4 h-4 mr-2" />
-                Unassign
-              </DropdownMenuItem>
-            )}
-            {teamMembers.map((member) => (
-              <DropdownMenuItem key={member.id} onClick={() => onAssign(part, member.email)}>
-                <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
-                  {getInitials(member.name)}
-                </div>
-                {member.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {deliveryInfo && (
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-cyan-50 text-cyan-700 border-cyan-200 hidden sm:flex">
-            ETA: {deliveryInfo.label}
-          </Badge>
-        )}
-
-        {/* Inline due date picker */}
-        <Popover open={dateOpen} onOpenChange={setDateOpen}>
-          <PopoverTrigger asChild>
-            {dueInfo ? (
+      {/* Bottom row: status + assignee + dates */}
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
+        <div className="flex items-center gap-1.5">
+          {/* Inline status dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Badge
-                onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                onClick={(e) => e.stopPropagation()}
                 variant="outline"
-                className={cn("text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80", dueInfo.color)}
+                className={cn("text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80", statusColors[part.status] || 'bg-slate-100 text-slate-600')}
               >
-                {dueInfo.label}
+                {part.status?.replace('_', ' ')}
               </Badge>
-            ) : (
-              <button
-                onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                className="p-0.5 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                title="Set due date"
-              >
-                <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
-              </button>
-            )}
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
-            <Calendar
-              mode="single"
-              selected={part.due_date ? (() => {
-                const dateStr = part.due_date.split('T')[0];
-                const [year, month, day] = dateStr.split('-').map(Number);
-                return new Date(year, month - 1, day);
-              })() : undefined}
-              onSelect={(date) => { onDueDateChange(part, date); setDateOpen(false); }}
-            />
-            {part.due_date && (
-              <div className="p-2 border-t">
-                <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => { onDueDateChange(part, null); setDateOpen(false); }}>
-                  Clear date
-                </Button>
-              </div>
-            )}
-          </PopoverContent>
-        </Popover>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+              {Object.entries(statusColors).map(([key, color]) => (
+                <DropdownMenuItem key={key} onClick={() => onStatusChange?.(part, key)}>
+                  <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 mr-2", color)}>
+                    {key.replace('_', ' ')}
+                  </Badge>
+                  {key.replace('_', ' ')}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
-        {part.quantity > 1 && (
-          <span className="text-[10px] text-slate-400 hidden sm:inline">x{part.quantity}</span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {/* Inline assignee dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              {part.assigned_name ? (
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-medium hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 shrink-0", getColorForEmail(part.assigned_to))}
+                  title={part.assigned_name}
+                >
+                  {getInitials(part.assigned_name)}
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 hover:border-[#0069AF]"
+                  title="Assign"
+                >
+                  <UserPlus className="w-3 h-3 text-slate-400" />
+                </button>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+              {part.assigned_to && (
+                <DropdownMenuItem onClick={() => onUnassign(part)}>
+                  <User className="w-4 h-4 mr-2" />
+                  Unassign
+                </DropdownMenuItem>
+              )}
+              {teamMembers.map((member) => (
+                <DropdownMenuItem key={member.id} onClick={() => onAssign(part, member.email)}>
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                    {getInitials(member.name)}
+                  </div>
+                  {member.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* ETA date picker */}
+          <Popover open={etaOpen} onOpenChange={setEtaOpen}>
+            <PopoverTrigger asChild>
+              {deliveryInfo ? (
+                <Badge
+                  onClick={(e) => { e.stopPropagation(); setEtaOpen(true); }}
+                  variant="outline"
+                  className="text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80 bg-cyan-50 text-cyan-700 border-cyan-200"
+                >
+                  ETA: {deliveryInfo.label}
+                </Badge>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEtaOpen(true); }}
+                  className="text-[10px] text-slate-400 hover:text-[#0069AF] opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Set ETA"
+                >
+                  <Truck className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
+              <Calendar
+                mode="single"
+                selected={part.est_delivery_date ? (() => {
+                  const dateStr = part.est_delivery_date.split('T')[0];
+                  const [year, month, day] = dateStr.split('-').map(Number);
+                  return new Date(year, month - 1, day);
+                })() : undefined}
+                onSelect={(date) => { onETAChange?.(part, date); setEtaOpen(false); }}
+              />
+              {part.est_delivery_date && (
+                <div className="p-2 border-t">
+                  <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => { onETAChange?.(part, null); setEtaOpen(false); }}>
+                    Clear ETA
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+
+          {/* Due date picker */}
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
+            <PopoverTrigger asChild>
+              {dueInfo ? (
+                <Badge
+                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                  variant="outline"
+                  className={cn("text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80", dueInfo.color)}
+                >
+                  {dueInfo.label}
+                </Badge>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                  className="p-0.5 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  title="Set due date"
+                >
+                  <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
+                </button>
+              )}
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
+              <Calendar
+                mode="single"
+                selected={part.due_date ? (() => {
+                  const dateStr = part.due_date.split('T')[0];
+                  const [year, month, day] = dateStr.split('-').map(Number);
+                  return new Date(year, month - 1, day);
+                })() : undefined}
+                onSelect={(date) => { onDueDateChange(part, date); setDateOpen(false); }}
+              />
+              {part.due_date && (
+                <div className="p-2 border-t">
+                  <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => { onDueDateChange(part, null); setDateOpen(false); }}>
+                    Clear date
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
     </div>
   );
@@ -502,6 +565,18 @@ export default function AllTasks() {
   const handlePartDueDateChange = async (part, date) => {
     await base44.entities.Part.update(part.id, {
       due_date: date ? format(date, 'yyyy-MM-dd') : ''
+    });
+    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+  };
+
+  const handlePartStatusChange = async (part, newStatus) => {
+    await base44.entities.Part.update(part.id, { status: newStatus });
+    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+  };
+
+  const handlePartETAChange = async (part, date) => {
+    await base44.entities.Part.update(part.id, {
+      est_delivery_date: date ? format(date, 'yyyy-MM-dd') : ''
     });
     queryClient.invalidateQueries({ queryKey: ['allParts'] });
   };
@@ -747,8 +822,8 @@ export default function AllTasks() {
                       </div>
                     </Link>
 
-                    {/* Task rows */}
-                    <div className="divide-y divide-slate-50">
+                    {/* Task cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                       {projectTasks.map((task) => (
                         <TaskRow
                           key={task.id}
@@ -941,8 +1016,8 @@ export default function AllTasks() {
                       </div>
                     </Link>
 
-                    {/* Part rows */}
-                    <div className="divide-y divide-slate-50">
+                    {/* Part cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                       {projectParts.map((part) => (
                         <PartRow
                           key={part.id}
@@ -952,6 +1027,8 @@ export default function AllTasks() {
                           onAssign={handlePartAssign}
                           onUnassign={handlePartUnassign}
                           onDueDateChange={handlePartDueDateChange}
+                          onStatusChange={handlePartStatusChange}
+                          onETAChange={handlePartETAChange}
                           onNavigate={(p) => navigate(createPageUrl('ProjectParts') + `?id=${p.project_id}`)}
                         />
                       ))}

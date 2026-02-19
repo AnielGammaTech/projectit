@@ -82,7 +82,7 @@ const getDueDateInfo = (dueDate, status) => {
   return { label: format(date, 'MMM d'), color: 'bg-slate-100 text-slate-600', urgent: false };
 };
 
-const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, onTaskClick, onTaskUpdate, currentUser, projectName }) => {
+const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, onTaskClick, onTaskUpdate, currentUser, projectName, onDragStart, onDragEnd, isDragging }) => {
   const [dateOpen, setDateOpen] = useState(false);
   const status = statusConfig[task.status] || statusConfig.todo;
   const StatusIcon = status.icon;
@@ -128,12 +128,19 @@ const TaskItem = ({ task, teamMembers = [], onStatusChange, onEdit, onDelete, on
   return (
     <motion.div
       initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
+      animate={{ opacity: isDragging ? 0.5 : 1, y: 0, scale: isDragging ? 0.95 : 1 }}
       exit={{ opacity: 0, x: -10 }}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        onDragStart?.(task);
+      }}
+      onDragEnd={() => onDragEnd?.()}
       className={cn(
-        "group bg-white rounded-lg border p-2.5 hover:shadow-sm transition-all cursor-pointer",
-        task.status === 'completed' ? "opacity-60 border-slate-100" : 
-        dueDateInfo?.urgent ? "border-red-200 bg-red-50/30" : "border-slate-100"
+        "group bg-white rounded-lg border p-2.5 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing",
+        task.status === 'completed' ? "opacity-60 border-slate-100" :
+        dueDateInfo?.urgent ? "border-red-200 bg-red-50/30" : "border-slate-100",
+        isDragging && "ring-2 ring-[#0069AF] shadow-lg"
       )}
       onClick={() => onTaskClick?.(task)}
     >
@@ -284,6 +291,8 @@ export default function GroupedTaskList({
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupColor, setNewGroupColor] = useState('slate');
   const [viewFilter, setViewFilter] = useState('all');
+  const [draggedTask, setDraggedTask] = useState(null);
+  const [dragOverGroup, setDragOverGroup] = useState(null);
 
   const toggleGroup = (groupId) => {
     const newExpanded = new Set(expandedGroups);
@@ -308,6 +317,29 @@ export default function GroupedTaskList({
     if (!newGroupName.trim()) return;
     onCreateGroup({ name: newGroupName, color: newGroupColor });
     setNewGroupName('');
+  };
+
+  const handleDragStart = (task) => {
+    setDraggedTask(task);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTask(null);
+    setDragOverGroup(null);
+  };
+
+  const handleDropOnGroup = async (groupId) => {
+    if (!draggedTask) return;
+    const targetGroupId = groupId === 'ungrouped' ? '' : groupId;
+    if (draggedTask.group_id === targetGroupId || (!draggedTask.group_id && groupId === 'ungrouped')) {
+      setDraggedTask(null);
+      setDragOverGroup(null);
+      return;
+    }
+    await base44.entities.Task.update(draggedTask.id, { group_id: targetGroupId });
+    onTaskUpdate?.();
+    setDraggedTask(null);
+    setDragOverGroup(null);
   };
 
   return (
@@ -339,8 +371,14 @@ export default function GroupedTaskList({
         return (
           <div key={group.id} className="rounded-xl overflow-hidden">
             <div
-              className="flex items-center gap-3 p-3 cursor-pointer hover:bg-slate-50 transition-colors"
+              className={cn(
+                "flex items-center gap-3 p-3 cursor-pointer transition-all rounded-t-xl",
+                dragOverGroup === group.id ? "bg-[#0069AF]/10 ring-2 ring-[#0069AF] ring-inset" : "hover:bg-slate-50"
+              )}
               onClick={() => toggleGroup(group.id)}
+              onDragOver={(e) => { e.preventDefault(); setDragOverGroup(group.id); }}
+              onDragLeave={() => setDragOverGroup(null)}
+              onDrop={(e) => { e.preventDefault(); handleDropOnGroup(group.id); }}
             >
               <div className={cn("w-4 h-4 rounded-full", groupColors[group.color] || groupColors.slate)} />
               <span className="font-medium text-slate-900">{group.name}</span>
@@ -369,6 +407,8 @@ export default function GroupedTaskList({
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   className="space-y-1.5 pl-4"
+                  onDragOver={(e) => { e.preventDefault(); setDragOverGroup(group.id); }}
+                  onDrop={(e) => { e.preventDefault(); handleDropOnGroup(group.id); }}
                 >
                   {groupTasks.map(task => (
                     <TaskItem
@@ -382,6 +422,9 @@ export default function GroupedTaskList({
                       onTaskUpdate={onTaskUpdate}
                       currentUser={currentUser}
                       projectName={projectName}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      isDragging={draggedTask?.id === task.id}
                     />
                   ))}
                   {/* Add task button inside group */}
@@ -403,8 +446,14 @@ export default function GroupedTaskList({
       {ungroupedTasks.length > 0 && (
         <div className="rounded-xl overflow-hidden">
           <div
-            className="flex items-center gap-3 p-3 cursor-pointer hover:bg-slate-50 transition-colors"
+            className={cn(
+              "flex items-center gap-3 p-3 cursor-pointer transition-all rounded-t-xl",
+              dragOverGroup === 'ungrouped' ? "bg-[#0069AF]/10 ring-2 ring-[#0069AF] ring-inset" : "hover:bg-slate-50"
+            )}
             onClick={() => toggleGroup('ungrouped')}
+            onDragOver={(e) => { e.preventDefault(); setDragOverGroup('ungrouped'); }}
+            onDragLeave={() => setDragOverGroup(null)}
+            onDrop={(e) => { e.preventDefault(); handleDropOnGroup('ungrouped'); }}
           >
             <div className="w-4 h-4 rounded-full bg-slate-300" />
             <span className="font-medium text-slate-500">Ungrouped</span>
@@ -417,6 +466,8 @@ export default function GroupedTaskList({
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 className="space-y-1.5 pl-4"
+                onDragOver={(e) => { e.preventDefault(); setDragOverGroup('ungrouped'); }}
+                onDrop={(e) => { e.preventDefault(); handleDropOnGroup('ungrouped'); }}
               >
                 {ungroupedTasks.map(task => (
                   <TaskItem
@@ -430,6 +481,9 @@ export default function GroupedTaskList({
                     onTaskUpdate={onTaskUpdate}
                     currentUser={currentUser}
                     projectName={projectName}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    isDragging={draggedTask?.id === task.id}
                   />
                 ))}
                 {/* Add task button */}

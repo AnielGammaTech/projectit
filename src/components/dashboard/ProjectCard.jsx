@@ -1,5 +1,5 @@
 import { useState, memo, useMemo } from 'react';
-import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Sparkles, Users, AlertTriangle, Clock, MessageCircle, CheckSquare, Square, Crown } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Users, Clock, MessageCircle, CheckSquare, Square, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 
 // Fallback status colors for built-in statuses
 const fallbackStatusColors = {
+  in_progress: 'bg-blue-50 text-blue-700 border-blue-200',
   planning: 'bg-amber-50 text-amber-700 border-amber-200',
   on_hold: 'bg-slate-50 text-slate-700 border-slate-200',
   completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -89,6 +90,7 @@ const colorOptions = [
 
 // Fallback status options if no custom statuses exist
 const fallbackStatusOptions = [
+  { value: 'in_progress', label: 'In Progress', color: 'blue' },
   { value: 'planning', label: 'Planning', color: 'amber' },
   { value: 'on_hold', label: 'On Hold', color: 'slate' },
   { value: 'completed', label: 'Completed', color: 'emerald' }
@@ -450,41 +452,8 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
             )}
           </div>
           
-          {/* Right side - Team & Health */}
+          {/* Right side - Team */}
           <div className="flex items-center gap-2">
-            {/* AI Health Score */}
-            {totalActive > 0 && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className={cn("flex items-center gap-1 px-1.5 py-0.5 rounded cursor-help", getHealthScoreColor().bg)} onClick={(e) => e.stopPropagation()}>
-                      <Sparkles className={cn("w-3 h-3", getHealthScoreColor().icon)} />
-                      <span className={cn("text-[10px] font-bold", getHealthScoreColor().text)}>{healthScore}%</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs p-3">
-                    <div className="space-y-2">
-                      <p className="font-semibold text-sm">AI Health Score</p>
-                      <div className="space-y-1">
-                        {getHealthReasons().map((reason, i) => (
-                          <div key={i} className="flex items-center gap-2 text-xs">
-                            {reason.includes('overdue') ? (
-                              <AlertTriangle className="w-3 h-3 text-red-500" />
-                            ) : reason.includes('unassigned') ? (
-                              <Users className="w-3 h-3 text-amber-500" />
-                            ) : (
-                              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                            )}
-                            <span>{reason}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            
             {/* Team */}
             {projectTeam.length > 0 && (
               <TooltipProvider>
