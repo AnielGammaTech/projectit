@@ -29,11 +29,13 @@ export default function AcceptInvite() {
 
       if (token && email) {
         // Verify the OTP token directly — bypasses Supabase redirect entirely
-        // Note: 'magiclink' type is deprecated in Supabase JS v2+, use 'email' instead
+        // Use the type from the URL (recovery, magiclink, etc.) to match what was generated
+        const verifyType = type === 'recovery' ? 'recovery' : type === 'magiclink' ? 'magiclink' : 'recovery';
+        console.log('Verifying invite token:', { token: token.substring(0, 10) + '...', type: verifyType, email });
         try {
           const { data, error: verifyError } = await supabase.auth.verifyOtp({
             token_hash: token,
-            type: 'email',
+            type: verifyType,
           });
 
           if (verifyError) {

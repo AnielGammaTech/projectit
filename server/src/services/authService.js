@@ -67,31 +67,38 @@ const authService = {
       throw Object.assign(new Error(authError.message), { status: 400 });
     }
 
-    // Generate a magic link token so the user can set their own password.
-    // We extract the token from generateLink() and build our own URL
-    // that points directly to our frontend (bypassing Supabase redirect).
+    // Generate a recovery (password reset) link so the user can set their own password.
+    // We use 'recovery' type because it's designed for password-setting flows.
+    // We extract the hashed_token and build a direct URL to our frontend.
     const frontendUrl = process.env.FRONTEND_URL || 'https://projectit.gtools.io';
     let inviteUrl = `${frontendUrl}/accept-invite`; // fallback with no token
     try {
       const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-        type: 'magiclink',
+        type: 'recovery',
         email: lowerEmail,
       });
+      if (linkError) {
+        console.warn('generateLink error:', linkError.message);
+      } else {
+        console.log('generateLink response keys:', JSON.stringify({
+          hasHashedToken: !!linkData?.properties?.hashed_token,
+          hasActionLink: !!linkData?.properties?.action_link,
+          properties: linkData?.properties ? Object.keys(linkData.properties) : 'none',
+        }));
+      }
       if (!linkError && linkData?.properties?.hashed_token) {
-        // Build direct URL to our frontend with the token
-        // The AcceptInvite page will call supabase.auth.verifyOtp() with this token
-        inviteUrl = `${frontendUrl}/accept-invite?token=${linkData.properties.hashed_token}&type=magiclink&email=${encodeURIComponent(lowerEmail)}`;
+        inviteUrl = `${frontendUrl}/accept-invite?token=${linkData.properties.hashed_token}&type=recovery&email=${encodeURIComponent(lowerEmail)}`;
       } else if (!linkError && linkData?.properties?.action_link) {
         // Fallback: parse token from the action_link URL
         const actionUrl = new URL(linkData.properties.action_link);
         const token = actionUrl.searchParams.get('token');
         if (token) {
-          inviteUrl = `${frontendUrl}/accept-invite?token=${token}&type=magiclink&email=${encodeURIComponent(lowerEmail)}`;
+          inviteUrl = `${frontendUrl}/accept-invite?token=${token}&type=recovery&email=${encodeURIComponent(lowerEmail)}`;
         }
       }
       console.log('Generated invite URL for', lowerEmail, ':', inviteUrl);
     } catch (e) {
-      console.warn('Could not generate magic link:', e.message);
+      console.warn('Could not generate recovery link:', e.message);
     }
 
     const userRole = role === 'Admin' ? 'admin' : 'member';
