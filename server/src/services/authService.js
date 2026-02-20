@@ -1,6 +1,7 @@
 import pool from '../config/database.js';
 import supabase from '../config/supabase.js';
 import entityService from './entityService.js';
+import emailService from './emailService.js';
 
 const authService = {
   /**
@@ -63,7 +64,85 @@ const authService = {
       user_id: user.id,
     }, invitedBy);
 
+    // Send welcome email (non-blocking — don't fail the invite if email fails)
+    try {
+      await this.sendWelcomeEmail(lowerEmail, fullName, invitedBy);
+    } catch (emailErr) {
+      console.error('Failed to send welcome email:', emailErr.message);
+    }
+
     return { user, inviteToken: 'sent-via-supabase-email' };
+  },
+
+  /**
+   * Send a branded welcome email to a newly invited user.
+   */
+  async sendWelcomeEmail(email, fullName, invitedByEmail) {
+    const frontendUrl = process.env.FRONTEND_URL || 'https://projectit.gtools.io';
+    const firstName = fullName.split(' ')[0];
+
+    const html = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #0F2F44 0%, #133F5C 50%, #0069AF 100%); padding: 40px 32px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Welcome to ProjectIT</h1>
+          <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 15px;">Your project management workspace is ready</p>
+        </div>
+
+        <!-- Body -->
+        <div style="background: #ffffff; padding: 40px 32px; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
+          <p style="color: #0F2F44; font-size: 18px; font-weight: 600; margin: 0 0 16px;">Hi ${firstName}! 👋</p>
+          <p style="color: #475569; font-size: 15px; line-height: 1.7; margin: 0 0 24px;">
+            You've been invited to join your team on <strong style="color: #0F2F44;">ProjectIT</strong>${invitedByEmail ? ` by <strong style="color: #0069AF;">${invitedByEmail}</strong>` : ''}.
+            ProjectIT helps your team manage projects, track tasks, and collaborate seamlessly.
+          </p>
+
+          <!-- What you can do -->
+          <div style="background: #f0f7ff; border-radius: 10px; padding: 24px; margin: 0 0 28px;">
+            <p style="color: #0F2F44; font-weight: 600; font-size: 14px; margin: 0 0 16px;">Here's what you can do:</p>
+            <table style="width: 100%;" cellspacing="0" cellpadding="0">
+              <tr>
+                <td style="padding: 6px 0; color: #334155; font-size: 14px;">📋 View and manage your assigned tasks</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #334155; font-size: 14px;">💬 Collaborate with your team on projects</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #334155; font-size: 14px;">⏱️ Track time and log your work</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #334155; font-size: 14px;">📁 Share files and documents</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- CTA Button -->
+          <div style="text-align: center; margin: 0 0 28px;">
+            <a href="${frontendUrl}/accept-invite" style="display: inline-block; background: linear-gradient(135deg, #0069AF, #0080D4); color: white; padding: 14px 40px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(0,105,175,0.3);">
+              Get Started
+            </a>
+          </div>
+
+          <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
+            Check your email for a separate invitation link to set your password and activate your account.
+          </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #f1f5f9; padding: 24px 32px; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none; text-align: center;">
+          <p style="color: #64748b; font-size: 12px; margin: 0 0 4px;">Sent by <strong>ProjectIT</strong></p>
+          <p style="color: #94a3b8; font-size: 11px; margin: 0;">You received this email because an admin added you to the team.</p>
+        </div>
+      </div>
+    `;
+
+    return emailService.send({
+      to: email,
+      subject: `Welcome to ProjectIT — You've been invited!`,
+      body: html,
+      from_name: 'ProjectIT',
+      from_email: process.env.RESEND_FROM_EMAIL || 'noreply@gamma.tech',
+    });
   },
 
   /**
