@@ -175,6 +175,56 @@ const authService = {
   },
 
   /**
+   * Resend invite — generates a new recovery token and sends a fresh welcome email.
+   * Does NOT delete or recreate the user — just sends a new activation link.
+   */
+  async resendInvite(email, requestedBy) {
+    const lowerEmail = email.toLowerCase();
+
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
+    // Verify the user exists in our DB
+    const { rows: users } = await pool.query(
+      'SELECT id, full_name, supabase_uid FROM users WHERE email = $1',
+      [lowerEmail]
+    );
+    if (users.length === 0) {
+      throw Object.assign(new Error('User not found'), { status: 404 });
+    }
+
+    const user = users[0];
+
+    // Generate a new recovery link
+    const frontendUrl = process.env.FRONTEND_URL || 'https://projectit.gtools.io';
+    let inviteUrl = `${frontendUrl}/accept-invite`;
+    try {
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+        type: 'recovery',
+        email: lowerEmail,
+      });
+      if (!linkError && linkData?.properties?.hashed_token) {
+        inviteUrl = `${frontendUrl}/accept-invite?token=${linkData.properties.hashed_token}&type=recovery&email=${encodeURIComponent(lowerEmail)}`;
+      } else if (!linkError && linkData?.properties?.action_link) {
+        const actionUrl = new URL(linkData.properties.action_link);
+        const token = actionUrl.searchParams.get('token');
+        if (token) {
+          inviteUrl = `${frontendUrl}/accept-invite?token=${token}&type=recovery&email=${encodeURIComponent(lowerEmail)}`;
+        }
+      }
+      console.log('Re-invite URL for', lowerEmail, ':', inviteUrl);
+    } catch (e) {
+      console.warn('Could not generate recovery link for re-invite:', e.message);
+    }
+
+    // Send the welcome email again
+    await this.sendWelcomeEmail(lowerEmail, user.full_name, requestedBy, inviteUrl);
+
+    return { success: true, email: lowerEmail };
+  },
+
+  /**
    * Send a branded welcome email to a newly invited user.
    */
   async sendWelcomeEmail(email, fullName, invitedByEmail, inviteUrl) {

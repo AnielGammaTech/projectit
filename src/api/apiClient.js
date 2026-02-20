@@ -199,6 +199,12 @@ const users = {
       method: 'DELETE',
     });
   },
+  async resendInvite(email) {
+    return apiFetch('/api/auth/resend-invite', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
 };
 
 export const api = {

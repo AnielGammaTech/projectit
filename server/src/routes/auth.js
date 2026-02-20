@@ -23,6 +23,25 @@ router.post('/invite', authMiddleware, async (req, res, next) => {
   }
 });
 
+// Admin-only: resend invite email with a fresh activation link
+router.post('/resend-invite', authMiddleware, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can resend invites' });
+    }
+
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const result = await authService.resendInvite(email, req.user.email);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Accept invite — handle Supabase auth tokens from invite email redirect
 router.post('/accept-invite', async (req, res, next) => {
   try {

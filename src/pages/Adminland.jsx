@@ -11,7 +11,7 @@ import {
   Building2, Tags, GitMerge,
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
   FileText, Layers, MessageSquare, Database, Activity,
-  HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot
+  HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send
 } from 'lucide-react';
 import {
   Dialog,
@@ -310,6 +310,22 @@ function PeopleSection({ queryClient }) {
     setDeleteConfirm(null);
   };
 
+  const [resendingInvite, setResendingInvite] = useState(null); // email of user being re-invited
+
+  const handleResendInvite = async (member) => {
+    if (!member.email) return;
+    setResendingInvite(member.email);
+    try {
+      await api.users.resendInvite(member.email);
+      alert(`Invite re-sent to ${member.email}`);
+    } catch (err) {
+      console.error('Resend invite failed:', err);
+      alert(err?.message || 'Failed to resend invite');
+    } finally {
+      setResendingInvite(null);
+    }
+  };
+
   const toggleAdmin = async (member) => {
     const newRole = member.role === 'Admin' ? '' : 'Admin';
     await api.entities.TeamMember.update(member.id, { ...member, role: newRole });
@@ -390,6 +406,10 @@ function PeopleSection({ queryClient }) {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => { setEditing(member); setShowModal(true); }}>
                       <Edit2 className="w-4 h-4 mr-2" />Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleResendInvite(member)} disabled={resendingInvite === member.email}>
+                      <Send className="w-4 h-4 mr-2" />
+                      {resendingInvite === member.email ? 'Sending...' : 'Re-invite'}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'member', item: member })} className="text-red-600">
                       <Trash2 className="w-4 h-4 mr-2" />Delete
