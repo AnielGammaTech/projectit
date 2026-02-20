@@ -87,6 +87,20 @@ router.post('/change-password', authMiddleware, async (req, res, next) => {
   }
 });
 
+// Admin-only: fully delete a user (Supabase Auth + users table + TeamMember)
+router.delete('/users/:email', authMiddleware, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can delete users' });
+    }
+
+    const result = await authService.deleteUser(req.params.email);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Logout is client-side (Supabase handles session), but provide endpoint for consistency
 router.post('/logout', (req, res) => {
   res.json({ success: true });

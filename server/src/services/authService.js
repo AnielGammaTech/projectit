@@ -12,17 +12,39 @@ const authService = {
   async inviteUser(email, fullName, role, avatarColor, invitedBy) {
     const lowerEmail = email.toLowerCase();
 
-    // Check if user already exists in our users table
-    const { rows: existing } = await pool.query(
-      'SELECT id FROM users WHERE email = $1',
-      [lowerEmail]
-    );
-    if (existing.length > 0) {
-      throw Object.assign(new Error('User with this email already exists'), { status: 409 });
-    }
-
     if (!supabase) {
       throw new Error('Supabase is not configured');
+    }
+
+    // Check if user already exists in our users table
+    const { rows: existing } = await pool.query(
+      'SELECT id, supabase_uid FROM users WHERE email = $1',
+      [lowerEmail]
+    );
+
+    // If user exists in local DB but no TeamMember entity, they were previously deleted
+    // Clean them up first so they can be re-invited
+    if (existing.length > 0) {
+      const { rows: teamMembers } = await pool.query(
+        `SELECT id FROM "TeamMember" WHERE data->>'email' = $1`,
+        [lowerEmail]
+      );
+
+      if (teamMembers.length > 0) {
+        // User AND TeamMember both exist — genuinely duplicate
+        throw Object.assign(new Error('User with this email already exists'), { status: 409 });
+      }
+
+      // TeamMember was deleted but user record remains — clean up for re-invite
+      console.log(`Cleaning up orphaned user record for ${lowerEmail} (re-invite)`);
+      if (existing[0].supabase_uid) {
+        try {
+          await supabase.auth.admin.deleteUser(existing[0].supabase_uid);
+        } catch (e) {
+          console.warn('Could not delete old Supabase auth user:', e.message);
+        }
+      }
+      await pool.query('DELETE FROM users WHERE id = $1', [existing[0].id]);
     }
 
     // Create user in Supabase Auth via invite
@@ -72,6 +94,48 @@ const authService = {
     }
 
     return { user, inviteToken: 'sent-via-supabase-email' };
+  },
+
+  /**
+   * Fully delete a user — removes from Supabase Auth, users table, and TeamMember entity.
+   */
+  async deleteUser(email) {
+    const lowerEmail = email.toLowerCase();
+
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
+    // Find the local user record
+    const { rows: users } = await pool.query(
+      'SELECT id, supabase_uid FROM users WHERE email = $1',
+      [lowerEmail]
+    );
+
+    // Delete from Supabase Auth if we have a supabase_uid
+    if (users.length > 0 && users[0].supabase_uid) {
+      try {
+        await supabase.auth.admin.deleteUser(users[0].supabase_uid);
+      } catch (e) {
+        console.warn('Could not delete Supabase auth user:', e.message);
+      }
+    }
+
+    // Delete from local users table
+    if (users.length > 0) {
+      await pool.query('DELETE FROM users WHERE id = $1', [users[0].id]);
+    }
+
+    // Delete TeamMember entity
+    const { rows: teamMembers } = await pool.query(
+      `SELECT id FROM "TeamMember" WHERE data->>'email' = $1`,
+      [lowerEmail]
+    );
+    for (const tm of teamMembers) {
+      await pool.query('DELETE FROM "TeamMember" WHERE id = $1', [tm.id]);
+    }
+
+    return { success: true, deleted: lowerEmail };
   },
 
   /**

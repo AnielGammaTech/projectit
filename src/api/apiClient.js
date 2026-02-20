@@ -194,6 +194,11 @@ const users = {
       body: JSON.stringify({ email, full_name: fullName, role, avatar_color: avatarColor }),
     });
   },
+  async deleteUser(email) {
+    return apiFetch(`/api/auth/users/${encodeURIComponent(email)}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 export const api = {

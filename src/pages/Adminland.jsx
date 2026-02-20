@@ -289,12 +289,23 @@ function PeopleSection({ queryClient }) {
   };
 
   const handleDelete = async () => {
-    if (deleteConfirm.type === 'member') {
-      await api.entities.TeamMember.delete(deleteConfirm.item.id);
-      queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
-    } else {
-      await api.entities.UserGroup.delete(deleteConfirm.item.id);
-      queryClient.invalidateQueries({ queryKey: ['userGroups'] });
+    try {
+      if (deleteConfirm.type === 'member') {
+        // Full delete: removes Supabase Auth user, users table row, AND TeamMember entity
+        const memberEmail = deleteConfirm.item.email;
+        if (memberEmail) {
+          await api.users.deleteUser(memberEmail);
+        } else {
+          // Fallback: just delete TeamMember entity if no email
+          await api.entities.TeamMember.delete(deleteConfirm.item.id);
+        }
+        queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+      } else {
+        await api.entities.UserGroup.delete(deleteConfirm.item.id);
+        queryClient.invalidateQueries({ queryKey: ['userGroups'] });
+      }
+    } catch (err) {
+      console.error('Delete failed:', err);
     }
     setDeleteConfirm(null);
   };
