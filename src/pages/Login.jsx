@@ -24,24 +24,44 @@ export default function Login() {
         return;
       }
 
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Attempt login with retry on network failure
+      let lastError = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-      if (authError) {
+        if (!authError) {
+          // Supabase stores the session automatically
+          // Re-check auth state so AuthenticatedApp renders
+          await checkAppState();
+          const returnUrl = searchParams.get('returnUrl') || '/';
+          navigate(returnUrl, { replace: true });
+          return;
+        }
+
+        // If it's a network error (Failed to fetch), retry once
+        if (authError.message?.includes('fetch') && attempt === 0) {
+          lastError = authError;
+          await new Promise(r => setTimeout(r, 1500));
+          continue;
+        }
+
         setError(authError.message || 'Invalid credentials');
         setLoading(false);
         return;
       }
 
-      // Supabase stores the session automatically
-      // Re-check auth state so AuthenticatedApp renders
-      await checkAppState();
-      const returnUrl = searchParams.get('returnUrl') || '/';
-      navigate(returnUrl, { replace: true });
+      // If we get here, retries exhausted
+      setError(lastError?.message === 'Failed to fetch'
+        ? 'Unable to reach authentication server. Please check your internet connection and try again.'
+        : (lastError?.message || 'Could not connect to server'));
+      setLoading(false);
     } catch (err) {
-      setError('Could not connect to server');
+      setError(err.message?.includes('fetch')
+        ? 'Unable to reach authentication server. Please check your internet connection and try again.'
+        : 'Could not connect to server');
       setLoading(false);
     }
   };
