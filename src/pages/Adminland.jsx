@@ -252,20 +252,29 @@ function PeopleSection({ queryClient }) {
     queryFn: () => api.entities.UserGroup.list('name')
   });
 
-  const handleSaveMember = async (data) => {
-    if (editing) {
-      await api.entities.TeamMember.update(editing.id, data);
-    } else {
-      // Invite creates both a users row and a TeamMember entity
-      const result = await api.users.inviteUser(data.email, data.role, data.name, data.avatar_color);
+  const [savingMember, setSavingMember] = useState(false);
+  const [memberError, setMemberError] = useState('');
 
-      // Build invite URL for the admin to share
-      const inviteUrl = `${window.location.origin}/accept-invite?token=${result.inviteToken}`;
-      window.prompt('Share this invite link with the user:', inviteUrl);
+  const handleSaveMember = async (data) => {
+    setSavingMember(true);
+    setMemberError('');
+    try {
+      if (editing) {
+        await api.entities.TeamMember.update(editing.id, data);
+      } else {
+        // Invite creates both a users row and a TeamMember entity + sends welcome email
+        await api.users.inviteUser(data.email, data.role, data.name, data.avatar_color);
+      }
+      queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+      setShowModal(false);
+      setEditing(null);
+    } catch (err) {
+      console.error('Failed to save member:', err);
+      const msg = err?.message || err?.error || 'Failed to save team member';
+      setMemberError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    } finally {
+      setSavingMember(false);
     }
-    queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
-    setShowModal(false);
-    setEditing(null);
   };
 
   const handleSaveGroup = async (data) => {
@@ -483,7 +492,7 @@ function PeopleSection({ queryClient }) {
         </div>
       )}
 
-      <TeamMemberModal open={showModal} onClose={() => { setShowModal(false); setEditing(null); }} member={editing} onSave={handleSaveMember} />
+      <TeamMemberModal open={showModal} onClose={() => { setShowModal(false); setEditing(null); setMemberError(''); }} member={editing} onSave={handleSaveMember} saving={savingMember} error={memberError} />
       <UserGroupModal open={showGroupModal} onClose={() => { setShowGroupModal(false); setEditingGroup(null); }} group={editingGroup} members={members} onSave={handleSaveGroup} />
 
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
@@ -502,7 +511,7 @@ function PeopleSection({ queryClient }) {
   );
 }
 
-function TeamMemberModal({ open, onClose, member, onSave }) {
+function TeamMemberModal({ open, onClose, member, onSave, saving, error }) {
   const [formData, setFormData] = useState({ name: '', email: '', role: '', custom_role_id: '', phone: '', avatar_color: avatarColors[0] });
 
   const { data: customRoles = [] } = useQuery({
@@ -616,9 +625,16 @@ function TeamMemberModal({ open, onClose, member, onSave }) {
               ))}
             </div>
           </div>
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-3">
+              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+            </div>
+          )}
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]">{member ? 'Update' : 'Add'}</Button>
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]" disabled={saving}>
+              {saving ? (member ? 'Updating...' : 'Adding...') : (member ? 'Update' : 'Add')}
+            </Button>
           </div>
         </form>
       </DialogContent>
