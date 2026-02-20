@@ -47,22 +47,42 @@ const authService = {
       await pool.query('DELETE FROM users WHERE id = $1', [existing[0].id]);
     }
 
-    // Create user in Supabase Auth via invite
-    const { data: authData, error: authError } = await supabase.auth.admin.inviteUserByEmail(
-      lowerEmail,
-      {
-        data: {
-          full_name: fullName,
-          role: role || 'member',
-          avatar_color: avatarColor || 'bg-blue-500',
-        },
-        redirectTo: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/accept-invite`,
-      }
-    );
+    // Create user in Supabase Auth directly (no Supabase invite email)
+    // We use createUser with email_confirm:true so they can log in immediately
+    // after setting their password via our own magic link
+    const tempPassword = `TempInvite_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: lowerEmail,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName,
+        role: role || 'member',
+        avatar_color: avatarColor || 'bg-blue-500',
+      },
+    });
 
     if (authError) {
-      console.error('Supabase invite error:', authError);
+      console.error('Supabase create user error:', authError);
       throw Object.assign(new Error(authError.message), { status: 400 });
+    }
+
+    // Generate a magic link so the user can set their own password
+    // This sends NO email from Supabase — we handle email via Resend
+    let magicLink = null;
+    try {
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email: lowerEmail,
+        options: {
+          redirectTo: `${process.env.FRONTEND_URL || 'https://projectit.gtools.io'}/accept-invite`,
+        },
+      });
+      if (!linkError && linkData?.properties?.action_link) {
+        magicLink = linkData.properties.action_link;
+      }
+    } catch (e) {
+      console.warn('Could not generate magic link:', e.message);
     }
 
     const userRole = role === 'Admin' ? 'admin' : 'member';
@@ -86,14 +106,14 @@ const authService = {
       user_id: user.id,
     }, invitedBy);
 
-    // Send welcome email (non-blocking — don't fail the invite if email fails)
+    // Send welcome email via Resend (not Supabase — avoids quarantine)
     try {
-      await this.sendWelcomeEmail(lowerEmail, fullName, invitedBy);
+      await this.sendWelcomeEmail(lowerEmail, fullName, invitedBy, magicLink);
     } catch (emailErr) {
       console.error('Failed to send welcome email:', emailErr.message);
     }
 
-    return { user, inviteToken: 'sent-via-supabase-email' };
+    return { user, inviteToken: 'sent-via-resend' };
   },
 
   /**
@@ -141,9 +161,10 @@ const authService = {
   /**
    * Send a branded welcome email to a newly invited user.
    */
-  async sendWelcomeEmail(email, fullName, invitedByEmail) {
+  async sendWelcomeEmail(email, fullName, invitedByEmail, magicLink) {
     const frontendUrl = process.env.FRONTEND_URL || 'https://projectit.gtools.io';
     const firstName = fullName.split(' ')[0];
+    const activateUrl = magicLink || `${frontendUrl}/accept-invite`;
 
     const html = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
@@ -182,13 +203,14 @@ const authService = {
 
           <!-- CTA Button -->
           <div style="text-align: center; margin: 0 0 28px;">
-            <a href="${frontendUrl}/accept-invite" style="display: inline-block; background: linear-gradient(135deg, #0069AF, #0080D4); color: white; padding: 14px 40px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(0,105,175,0.3);">
-              Get Started
+            <a href="${activateUrl}" style="display: inline-block; background: linear-gradient(135deg, #0069AF, #0080D4); color: white; padding: 14px 40px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(0,105,175,0.3);">
+              Activate Your Account
             </a>
           </div>
 
           <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
-            Check your email for a separate invitation link to set your password and activate your account.
+            Click the button above to set your password and get started.<br/>
+            This link expires in 24 hours.
           </p>
         </div>
 
@@ -202,7 +224,7 @@ const authService = {
 
     return emailService.send({
       to: email,
-      subject: `Welcome to ProjectIT — You've been invited!`,
+      subject: `You're invited to ProjectIT — Activate your account`,
       body: html,
       from_name: 'ProjectIT',
       from_email: process.env.RESEND_FROM_EMAIL || 'noreply@gamma.tech',
