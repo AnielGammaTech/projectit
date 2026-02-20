@@ -205,6 +205,18 @@ const users = {
       body: JSON.stringify({ email }),
     });
   },
+  async sendOtp(email) {
+    return apiFetch('/api/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+  async verifyOtp(email, code) {
+    return apiFetch('/api/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+  },
 };
 
 export const api = {

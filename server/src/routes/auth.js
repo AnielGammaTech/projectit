@@ -42,6 +42,34 @@ router.post('/resend-invite', authMiddleware, async (req, res, next) => {
   }
 });
 
+// Send OTP verification code to invited user (via Resend, not Supabase email)
+router.post('/send-otp', async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    const result = await authService.sendOtpCode(email);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Verify OTP code and return auth token for session creation
+router.post('/verify-otp', async (req, res, next) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and code are required' });
+    }
+    const result = await authService.verifyOtpCode(email, code);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Accept invite — handle Supabase auth tokens from invite email redirect
 router.post('/accept-invite', async (req, res, next) => {
   try {

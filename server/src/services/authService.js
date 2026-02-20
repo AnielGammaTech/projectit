@@ -3,7 +3,126 @@ import supabase from '../config/supabase.js';
 import entityService from './entityService.js';
 import emailService from './emailService.js';
 
+// In-memory OTP store (codes expire after 10 minutes)
+const otpStore = new Map(); // email → { code, expiresAt }
+
 const authService = {
+  /**
+   * Generate and send a 6-digit OTP code via Resend (not Supabase).
+   * This avoids email scanners consuming one-time links.
+   */
+  async sendOtpCode(email) {
+    const lowerEmail = email.toLowerCase();
+
+    // Verify user exists
+    const { rows } = await pool.query(
+      'SELECT id, full_name FROM users WHERE email = $1',
+      [lowerEmail]
+    );
+    if (rows.length === 0) {
+      throw Object.assign(new Error('No account found with this email'), { status: 404 });
+    }
+
+    // Generate 6-digit code
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+    otpStore.set(lowerEmail, { code, expiresAt });
+
+    // Clean up expired codes periodically
+    for (const [key, val] of otpStore) {
+      if (val.expiresAt < Date.now()) otpStore.delete(key);
+    }
+
+    const firstName = rows[0].full_name?.split(' ')[0] || 'there';
+
+    // Send code via Resend
+    const html = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #0F2F44 0%, #133F5C 50%, #0069AF 100%); padding: 32px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">ProjectIT</h1>
+        </div>
+        <div style="background: #ffffff; padding: 32px; border: 1px solid #e2e8f0; border-top: none;">
+          <p style="color: #0F2F44; font-size: 16px; font-weight: 600; margin: 0 0 12px;">Hi ${firstName}!</p>
+          <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
+            Here's your verification code to activate your ProjectIT account:
+          </p>
+          <div style="background: #f8fafc; border: 2px dashed #0069AF; border-radius: 12px; padding: 24px; text-align: center; margin: 0 0 24px;">
+            <span style="font-family: 'Courier New', monospace; font-size: 36px; font-weight: 700; color: #0F2F44; letter-spacing: 8px;">${code}</span>
+          </div>
+          <p style="color: #94a3b8; font-size: 13px; margin: 0; text-align: center;">
+            This code expires in 10 minutes. If you didn't request this, ignore this email.
+          </p>
+        </div>
+        <div style="background: #f1f5f9; padding: 16px 32px; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none; text-align: center;">
+          <p style="color: #94a3b8; font-size: 11px; margin: 0;">Sent by ProjectIT</p>
+        </div>
+      </div>
+    `;
+
+    await emailService.send({
+      to: lowerEmail,
+      subject: `${code} — Your ProjectIT verification code`,
+      body: html,
+      from_name: 'ProjectIT',
+      from_email: process.env.RESEND_FROM_EMAIL || 'noreply@gamma.tech',
+    });
+
+    return { success: true, email: lowerEmail };
+  },
+
+  /**
+   * Verify OTP code and return Supabase session tokens.
+   * Signs in the user via Supabase admin API after code verification.
+   */
+  async verifyOtpCode(email, code) {
+    const lowerEmail = email.toLowerCase();
+
+    const stored = otpStore.get(lowerEmail);
+    if (!stored) {
+      throw Object.assign(new Error('No verification code found. Please request a new one.'), { status: 400 });
+    }
+
+    if (Date.now() > stored.expiresAt) {
+      otpStore.delete(lowerEmail);
+      throw Object.assign(new Error('Code has expired. Please request a new one.'), { status: 400 });
+    }
+
+    if (stored.code !== code.trim()) {
+      throw Object.assign(new Error('Invalid code. Please check and try again.'), { status: 400 });
+    }
+
+    // Code is valid — consume it
+    otpStore.delete(lowerEmail);
+
+    // Get the user's Supabase UID
+    const { rows } = await pool.query(
+      'SELECT supabase_uid FROM users WHERE email = $1',
+      [lowerEmail]
+    );
+    if (rows.length === 0 || !rows[0].supabase_uid) {
+      throw Object.assign(new Error('User not found'), { status: 404 });
+    }
+
+    // Generate a magic link for this user (server-side only, not emailed)
+    // Then immediately verify it to create a session
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: lowerEmail,
+    });
+
+    if (linkError) {
+      throw Object.assign(new Error('Could not create session'), { status: 500 });
+    }
+
+    // Use the hashed_token to verify OTP server-side, creating a session
+    // We return the token so the frontend can verify it client-side
+    const hashedToken = linkData?.properties?.hashed_token;
+    if (!hashedToken) {
+      throw Object.assign(new Error('Could not generate auth token'), { status: 500 });
+    }
+
+    return { success: true, token: hashedToken, email: lowerEmail };
+  },
   /**
    * Invite a user (admin-only).
    * Creates the user in Supabase Auth, our local users table, and TeamMember entity.
@@ -67,39 +186,11 @@ const authService = {
       throw Object.assign(new Error(authError.message), { status: 400 });
     }
 
-    // Generate a recovery (password reset) link so the user can set their own password.
-    // We use 'recovery' type because it's designed for password-setting flows.
-    // We extract the hashed_token and build a direct URL to our frontend.
+    // Build a simple link to the accept-invite page (no token in URL).
+    // Tokens in email links get consumed by security scanners (Inky, Mimecast, etc).
+    // Instead, the AcceptInvite page will request a fresh OTP code when the user arrives.
     const frontendUrl = process.env.FRONTEND_URL || 'https://projectit.gtools.io';
-    let inviteUrl = `${frontendUrl}/accept-invite`; // fallback with no token
-    try {
-      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-        type: 'recovery',
-        email: lowerEmail,
-      });
-      if (linkError) {
-        console.warn('generateLink error:', linkError.message);
-      } else {
-        console.log('generateLink response keys:', JSON.stringify({
-          hasHashedToken: !!linkData?.properties?.hashed_token,
-          hasActionLink: !!linkData?.properties?.action_link,
-          properties: linkData?.properties ? Object.keys(linkData.properties) : 'none',
-        }));
-      }
-      if (!linkError && linkData?.properties?.hashed_token) {
-        inviteUrl = `${frontendUrl}/accept-invite?token=${linkData.properties.hashed_token}&type=recovery&email=${encodeURIComponent(lowerEmail)}`;
-      } else if (!linkError && linkData?.properties?.action_link) {
-        // Fallback: parse token from the action_link URL
-        const actionUrl = new URL(linkData.properties.action_link);
-        const token = actionUrl.searchParams.get('token');
-        if (token) {
-          inviteUrl = `${frontendUrl}/accept-invite?token=${token}&type=recovery&email=${encodeURIComponent(lowerEmail)}`;
-        }
-      }
-      console.log('Generated invite URL for', lowerEmail, ':', inviteUrl);
-    } catch (e) {
-      console.warn('Could not generate recovery link:', e.message);
-    }
+    const inviteUrl = `${frontendUrl}/accept-invite?email=${encodeURIComponent(lowerEmail)}`;
 
     const userRole = role === 'Admin' ? 'admin' : 'member';
 
@@ -196,27 +287,9 @@ const authService = {
 
     const user = users[0];
 
-    // Generate a new recovery link
+    // Build simple link — no token (immune to email security scanners)
     const frontendUrl = process.env.FRONTEND_URL || 'https://projectit.gtools.io';
-    let inviteUrl = `${frontendUrl}/accept-invite`;
-    try {
-      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-        type: 'recovery',
-        email: lowerEmail,
-      });
-      if (!linkError && linkData?.properties?.hashed_token) {
-        inviteUrl = `${frontendUrl}/accept-invite?token=${linkData.properties.hashed_token}&type=recovery&email=${encodeURIComponent(lowerEmail)}`;
-      } else if (!linkError && linkData?.properties?.action_link) {
-        const actionUrl = new URL(linkData.properties.action_link);
-        const token = actionUrl.searchParams.get('token');
-        if (token) {
-          inviteUrl = `${frontendUrl}/accept-invite?token=${token}&type=recovery&email=${encodeURIComponent(lowerEmail)}`;
-        }
-      }
-      console.log('Re-invite URL for', lowerEmail, ':', inviteUrl);
-    } catch (e) {
-      console.warn('Could not generate recovery link for re-invite:', e.message);
-    }
+    const inviteUrl = `${frontendUrl}/accept-invite?email=${encodeURIComponent(lowerEmail)}`;
 
     // Send the welcome email again
     await this.sendWelcomeEmail(lowerEmail, user.full_name, requestedBy, inviteUrl);
