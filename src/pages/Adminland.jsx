@@ -2976,15 +2976,20 @@ function AIAgentsSection({ queryClient }) {
     }
   }, [formData.gammaai_enabled]);
 
+  const [agentError, setAgentError] = useState(null);
+
   const fetchAgents = async () => {
     setLoadingAgents(true);
+    setAgentError(null);
     try {
       const res = await api.functions.invoke('agentBridge', { action: 'listAgents' });
       if (res.data?.success) {
         setAgents(res.data.agents || []);
+      } else {
+        setAgentError(res.data?.message || 'Failed to load agents');
       }
     } catch (err) {
-      console.error('Failed to load agents:', err);
+      setAgentError(err.data?.error || err.message || 'Failed to connect to GammaAi');
     }
     setLoadingAgents(false);
   };
@@ -3224,7 +3229,7 @@ function AIAgentsSection({ queryClient }) {
               <div className="text-left">
                 <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">Available Agents</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {agents.length > 0 ? `${agents.length} agents available` : 'Loading agents...'}
+                  {loadingAgents ? 'Loading agents...' : agents.length > 0 ? `${agents.length} agents available` : agentError ? 'Connection error' : 'No agents found'}
                 </p>
               </div>
             </div>
@@ -3289,9 +3294,16 @@ function AIAgentsSection({ queryClient }) {
               ) : (
                 <div className="text-center py-8">
                   <Bot className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-                  <p className="text-sm text-slate-500">No agents found. Check your GammaAi connection.</p>
-                  <Button onClick={fetchAgents} variant="outline" size="sm" className="mt-3">
-                    <RefreshCw className="w-3 h-3 mr-2" />
+                  {agentError ? (
+                    <>
+                      <p className="text-sm text-red-600 font-medium">Failed to load agents</p>
+                      <p className="text-xs text-red-500 mt-1 max-w-md mx-auto">{agentError}</p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-slate-500">No agents found. Check your GammaAi connection.</p>
+                  )}
+                  <Button onClick={fetchAgents} variant="outline" size="sm" className="mt-3" disabled={loadingAgents}>
+                    {loadingAgents ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-2" />}
                     Retry
                   </Button>
                 </div>
