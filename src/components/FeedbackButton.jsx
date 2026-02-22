@@ -118,14 +118,21 @@ export default function FeedbackButton() {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Side Tab Trigger Button — vertically centered on the left edge */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 z-50 p-4 rounded-full bg-[#0069AF] text-white shadow-xl hover:bg-[#005a96] transition-colors"
-        whileHover={{ scale: 1.1 }}
+        aria-label="Open feedback form"
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-1.5 px-1.5 py-3 rounded-r-lg bg-[#0069AF] text-white shadow-lg hover:bg-[#005a96] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0069AF] focus-visible:ring-offset-2"
+        whileHover={{ x: 2 }}
         whileTap={{ scale: 0.95 }}
       >
-        <MessageSquarePlus className="w-6 h-6" />
+        <MessageSquarePlus className="w-4 h-4 flex-shrink-0" />
+        <span
+          className="text-[10px] font-semibold tracking-widest uppercase"
+          style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+        >
+          Feedback
+        </span>
       </motion.button>
 
       {/* Modal */}
@@ -140,10 +147,10 @@ export default function FeedbackButton() {
               onClick={() => setIsOpen(false)}
             />
             <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 50, scale: 0.95 }}
-              className="fixed bottom-24 left-6 z-50 w-[420px] max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+              initial={{ opacity: 0, x: -20, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -20, scale: 0.95 }}
+              className="fixed top-1/2 -translate-y-1/2 left-12 z-50 w-[420px] max-w-[calc(100vw-4rem)] max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
               onPaste={handlePaste}
             >
               {/* Header */}
@@ -152,7 +159,7 @@ export default function FeedbackButton() {
                   <h3 className="font-semibold text-lg">Send Feedback</h3>
                   <p className="text-sm text-white/70">Help us improve your experience</p>
                 </div>
-                <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
+                <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/20 rounded-lg transition-colors" aria-label="Close feedback form">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -281,6 +288,7 @@ export default function FeedbackButton() {
                                 <button
                                   onClick={() => removeScreenshot(idx)}
                                   className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                  aria-label={`Remove screenshot ${idx + 1}`}
                                 >
                                   <X className="w-3 h-3" />
                                 </button>
