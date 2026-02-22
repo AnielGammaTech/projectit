@@ -1,4 +1,5 @@
 import entityService from '../../services/entityService.js';
+import llmService from '../../services/llmService.js';
 
 const PRIORITY_MAP = { low: 1, medium: 2, high: 3, critical: 4 };
 
@@ -24,6 +25,148 @@ async function gammaAiFetch(config, path, options = {}) {
   }
 
   return response.json();
+}
+
+function buildFeedbackPrompt(feedback) {
+  return [
+    `Analyze this ${feedback.type || 'general'} feedback and provide actionable recommendations.`,
+    '',
+    `**Title:** ${feedback.title}`,
+    `**Type:** ${feedback.type || 'general'}`,
+    `**Priority:** ${feedback.priority || 'medium'}`,
+    `**Description:** ${feedback.description || 'No description provided'}`,
+    '',
+    feedback.submitter_name ? `**Submitted by:** ${feedback.submitter_name} (${feedback.submitter_email || 'no email'})` : '',
+    feedback.page_url ? `**Page URL:** ${feedback.page_url}` : '',
+    '',
+    'Provide:',
+    '1. Root cause analysis (if bug) or feasibility assessment (if feature request)',
+    '2. Recommended implementation approach',
+    '3. Estimated effort (low/medium/high)',
+    '4. Any risks or considerations',
+  ].filter(Boolean).join('\n');
+}
+
+/**
+ * Send a single feedback item to GammaAi for analysis.
+ * Used by both the direct action and auto-send.
+ */
+async function sendFeedbackToGammaAi(config, feedback, agentId, userEmail, userName) {
+  const description = buildFeedbackPrompt(feedback);
+
+  const taskPayload = {
+    title: `Analyze feedback: ${feedback.title}`.slice(0, 120),
+    description,
+    priority: PRIORITY_MAP[feedback.priority] || 0,
+    metadata: {
+      source: 'projectit',
+      feedback_id: feedback.id,
+      feedback_type: feedback.type,
+    },
+  };
+
+  const effectiveAgentId = agentId || config.gammaai_default_agent_id;
+  if (effectiveAgentId) {
+    taskPayload.agent_id = effectiveAgentId;
+  }
+
+  const result = await gammaAiFetch(config, '/api/v1/tasks', {
+    method: 'POST',
+    body: JSON.stringify(taskPayload),
+  });
+
+  const taskId = result.data?.id || result.id;
+
+  await entityService.update('Feedback', feedback.id, {
+    ai_task_id: taskId,
+    ai_status: 'pending',
+    ai_sent_at: new Date().toISOString(),
+    ai_provider: 'gammaai',
+  });
+
+  await entityService.create('AuditLog', {
+    action: 'feedback_sent_to_ai',
+    entity_type: 'Feedback',
+    entity_id: feedback.id,
+    details: `Feedback "${feedback.title}" sent to GammaAi agent for analysis (task ${taskId})`,
+    user_email: userEmail || 'system',
+    user_name: userName || 'System',
+  });
+
+  return taskId;
+}
+
+/**
+ * Analyze feedback locally using the built-in Claude LLM.
+ * Fallback when GammaAi is not configured.
+ */
+async function analyzeFeedbackLocally(feedback, userEmail, userName) {
+  const prompt = buildFeedbackPrompt(feedback);
+
+  await entityService.update('Feedback', feedback.id, {
+    ai_status: 'in_progress',
+    ai_sent_at: new Date().toISOString(),
+    ai_provider: 'local',
+  });
+
+  const schema = {
+    type: 'object',
+    properties: {
+      analysis: { type: 'string', description: 'Root cause analysis or feasibility assessment' },
+      recommendation: { type: 'string', description: 'Recommended implementation approach' },
+      effort: { type: 'string', enum: ['low', 'medium', 'high'], description: 'Estimated effort level' },
+      risks: { type: 'string', description: 'Risks or considerations' },
+      category: { type: 'string', description: 'Suggested category or label' },
+    },
+  };
+
+  const analysis = await llmService.invoke({
+    prompt,
+    response_json_schema: schema,
+    feature: 'feedback_analysis',
+  });
+
+  await entityService.update('Feedback', feedback.id, {
+    ai_status: 'completed',
+    ai_analysis: analysis,
+    ai_completed_at: new Date().toISOString(),
+    ai_provider: 'local',
+  });
+
+  await entityService.create('AuditLog', {
+    action: 'feedback_analyzed_locally',
+    entity_type: 'Feedback',
+    entity_id: feedback.id,
+    details: `Feedback "${feedback.title}" analyzed by local Claude AI`,
+    user_email: userEmail || 'system',
+    user_name: userName || 'System',
+  });
+
+  return analysis;
+}
+
+/**
+ * Auto-send hook: called after a new Feedback entity is created.
+ * Checks gammaai_auto_send setting and dispatches accordingly.
+ */
+export async function autoSendFeedback(feedbackData) {
+  try {
+    const config = await getGammaAiConfig();
+
+    // Try GammaAi first
+    if (config?.gammaai_enabled && config?.gammaai_auto_send) {
+      await sendFeedbackToGammaAi(config, feedbackData, null, 'system', 'Auto-send');
+      return;
+    }
+
+    // If auto-send is enabled at the local level, use Claude
+    if (config?.gammaai_auto_send && process.env.ANTHROPIC_API_KEY) {
+      await analyzeFeedbackLocally(feedbackData, 'system', 'Auto-send');
+    }
+  } catch (err) {
+    console.error('Auto-send feedback failed:', err);
+    // Non-blocking: don't let auto-send failure break feedback creation
+  }
 }
 
 export default async function agentBridge(req, res) {
@@ -56,76 +199,103 @@ export default async function agentBridge(req, res) {
       }
 
       case 'sendFeedback': {
-        const config = await getGammaAiConfig();
-        if (!config || !config.gammaai_enabled) {
-          return res.json({ data: { success: false, message: 'GammaAi integration is not enabled' } });
-        }
-
         const { feedback } = params;
         if (!feedback || !feedback.id) {
           return res.status(400).json({ error: 'Feedback data with id is required' });
         }
 
-        const description = [
-          `Analyze this ${feedback.type || 'general'} feedback and provide actionable recommendations.`,
-          '',
-          `**Title:** ${feedback.title}`,
-          `**Type:** ${feedback.type || 'general'}`,
-          `**Priority:** ${feedback.priority || 'medium'}`,
-          `**Description:** ${feedback.description || 'No description provided'}`,
-          '',
-          feedback.submitter_name ? `**Submitted by:** ${feedback.submitter_name} (${feedback.submitter_email || 'no email'})` : '',
-          feedback.page_url ? `**Page URL:** ${feedback.page_url}` : '',
-          '',
-          'Provide:',
-          '1. Root cause analysis (if bug) or feasibility assessment (if feature request)',
-          '2. Recommended implementation approach',
-          '3. Estimated effort (low/medium/high)',
-          '4. Any risks or considerations',
-        ].filter(Boolean).join('\n');
+        const config = await getGammaAiConfig();
 
-        const taskPayload = {
-          title: `Analyze feedback: ${feedback.title}`.slice(0, 120),
-          description,
-          priority: PRIORITY_MAP[feedback.priority] || 0,
-          metadata: {
-            source: 'projectit',
-            feedback_id: feedback.id,
-            feedback_type: feedback.type,
-          },
-        };
-
-        // Assign to specific agent if configured
-        const agentId = params.agent_id || config.gammaai_default_agent_id;
-        if (agentId) {
-          taskPayload.agent_id = agentId;
+        // If GammaAi is enabled, use it
+        if (config?.gammaai_enabled) {
+          const taskId = await sendFeedbackToGammaAi(
+            config, feedback, params.agent_id,
+            req.user?.email, req.user?.full_name
+          );
+          return res.json({ data: { success: true, task_id: taskId, provider: 'gammaai', message: 'Feedback sent to GammaAi agent for analysis' } });
         }
 
-        const result = await gammaAiFetch(config, '/api/v1/tasks', {
-          method: 'POST',
-          body: JSON.stringify(taskPayload),
+        // Fallback to local Claude AI
+        if (process.env.ANTHROPIC_API_KEY) {
+          const analysis = await analyzeFeedbackLocally(
+            feedback, req.user?.email, req.user?.full_name
+          );
+          return res.json({ data: { success: true, provider: 'local', analysis, message: 'Feedback analyzed by local AI' } });
+        }
+
+        return res.json({ data: { success: false, message: 'No AI provider configured. Enable GammaAi or set ANTHROPIC_API_KEY.' } });
+      }
+
+      case 'analyzeLocal': {
+        // Explicitly analyze with local Claude AI
+        const { feedback } = params;
+        if (!feedback || !feedback.id) {
+          return res.status(400).json({ error: 'Feedback data with id is required' });
+        }
+
+        if (!process.env.ANTHROPIC_API_KEY) {
+          return res.json({ data: { success: false, message: 'ANTHROPIC_API_KEY is not configured on the server' } });
+        }
+
+        const analysis = await analyzeFeedbackLocally(
+          feedback, req.user?.email, req.user?.full_name
+        );
+        return res.json({ data: { success: true, provider: 'local', analysis, message: 'Feedback analyzed by local AI' } });
+      }
+
+      case 'sendBatch': {
+        const { feedback_ids } = params;
+        if (!feedback_ids || !Array.isArray(feedback_ids) || feedback_ids.length === 0) {
+          return res.status(400).json({ error: 'feedback_ids array is required' });
+        }
+
+        const config = await getGammaAiConfig();
+        const hasGammaAi = config?.gammaai_enabled;
+        const hasLocalAI = !!process.env.ANTHROPIC_API_KEY;
+
+        if (!hasGammaAi && !hasLocalAI) {
+          return res.json({ data: { success: false, message: 'No AI provider configured' } });
+        }
+
+        const results = { sent: 0, failed: 0, skipped: 0, errors: [] };
+
+        for (const feedbackId of feedback_ids) {
+          try {
+            // Fetch full feedback data
+            const feedbackItems = await entityService.filter('Feedback', { id: feedbackId });
+            const fb = feedbackItems[0];
+            if (!fb) {
+              results.skipped++;
+              continue;
+            }
+
+            // Skip if already has an active AI task
+            if (fb.ai_status === 'pending' || fb.ai_status === 'in_progress') {
+              results.skipped++;
+              continue;
+            }
+
+            if (hasGammaAi) {
+              await sendFeedbackToGammaAi(config, fb, null, req.user?.email, req.user?.full_name);
+            } else {
+              await analyzeFeedbackLocally(fb, req.user?.email, req.user?.full_name);
+            }
+            results.sent++;
+          } catch (err) {
+            results.failed++;
+            results.errors.push({ id: feedbackId, error: err.message });
+          }
+        }
+
+        const provider = hasGammaAi ? 'gammaai' : 'local';
+        return res.json({
+          data: {
+            success: true,
+            provider,
+            message: `Batch complete: ${results.sent} sent, ${results.skipped} skipped, ${results.failed} failed`,
+            ...results,
+          },
         });
-
-        const taskId = result.data?.id || result.id;
-
-        // Update feedback with AI tracking fields
-        await entityService.update('Feedback', feedback.id, {
-          ai_task_id: taskId,
-          ai_status: 'pending',
-          ai_sent_at: new Date().toISOString(),
-        });
-
-        // Log to audit
-        await entityService.create('AuditLog', {
-          action: 'feedback_sent_to_ai',
-          entity_type: 'Feedback',
-          entity_id: feedback.id,
-          details: `Feedback "${feedback.title}" sent to GammaAi agent for analysis (task ${taskId})`,
-          user_email: req.user?.email || 'system',
-          user_name: req.user?.full_name || 'System',
-        });
-
-        return res.json({ data: { success: true, task_id: taskId, message: 'Feedback sent to AI agent for analysis' } });
       }
 
       case 'getTaskStatus': {
@@ -142,7 +312,6 @@ export default async function agentBridge(req, res) {
         const result = await gammaAiFetch(config, `/api/v1/tasks/${task_id}`);
         const task = result.data || result;
 
-        // If task has a result and linked feedback, update the feedback
         if (task.status === 'completed' && task.metadata?.feedback_id) {
           await entityService.update('Feedback', task.metadata.feedback_id, {
             ai_status: 'completed',
@@ -159,7 +328,7 @@ export default async function agentBridge(req, res) {
       }
 
       case 'receiveCallback': {
-        // Webhook endpoint for GammaAi to push results back
+        // Legacy callback handler — prefer using /api/webhooks/gammaai
         const webhookSecret = req.headers['x-gammaai-webhook-secret'];
         const config = await getGammaAiConfig();
 
@@ -190,7 +359,6 @@ export default async function agentBridge(req, res) {
           }
         }
 
-        // Log the webhook event
         await entityService.create('AuditLog', {
           action: 'gammaai_webhook',
           entity_type: 'GammaAi',
@@ -225,6 +393,18 @@ export default async function agentBridge(req, res) {
         }
 
         return res.json({ data: { success: true, message: 'GammaAi settings saved' } });
+      }
+
+      case 'getConfig': {
+        // Return current AI config status for the frontend
+        const config = await getGammaAiConfig();
+        return res.json({
+          data: {
+            gammaai_enabled: config?.gammaai_enabled || false,
+            gammaai_auto_send: config?.gammaai_auto_send || false,
+            has_local_ai: !!process.env.ANTHROPIC_API_KEY,
+          },
+        });
       }
 
       default:

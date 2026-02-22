@@ -2245,7 +2245,7 @@ function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
     setTesting(false);
   };
 
-  const webhookUrl = `${API_URL}/api/functions/agentBridge`;
+  const webhookUrl = `${API_URL}/api/webhooks/gammaai`;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
@@ -2310,7 +2310,7 @@ function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
                 <code className="text-xs bg-white px-2 py-1 rounded border break-all">{webhookUrl}</code>
               </div>
             </div>
-            <p className="text-[11px] text-slate-400 mt-2">GammaAi will POST task completion events to the webhook URL above. Make sure to pass <code className="bg-white px-1 rounded">{"{ action: 'receiveCallback', event: '...', data: {...} }"}</code> in the body.</p>
+            <p className="text-[11px] text-slate-400 mt-2">GammaAi will POST task completion events to the webhook URL above with <code className="bg-white px-1 rounded">{"{ event: '...', data: {...} }"}</code> in the body and <code className="bg-white px-1 rounded">x-gammaai-webhook-secret</code> header.</p>
           </div>
 
           {/* Connection fields */}
