@@ -193,9 +193,17 @@ export default async function agentBridge(req, res) {
         if (!config || !config.gammaai_enabled) {
           return res.json({ data: { success: false, message: 'GammaAi integration is not enabled' } });
         }
+        if (!config.gammaai_url || !config.gammaai_api_key) {
+          return res.json({ data: { success: false, message: 'GammaAi URL and API Key must be configured first' } });
+        }
 
-        const result = await gammaAiFetch(config, '/api/v1/agents');
-        return res.json({ data: { success: true, agents: result.data || result } });
+        try {
+          const result = await gammaAiFetch(config, '/api/v1/agents');
+          const agents = Array.isArray(result) ? result : (result.data || result.agents || []);
+          return res.json({ data: { success: true, agents } });
+        } catch (err) {
+          return res.json({ data: { success: false, agents: [], message: `Failed to load agents: ${err.message}` } });
+        }
       }
 
       case 'sendFeedback': {

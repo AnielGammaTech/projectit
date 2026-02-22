@@ -11,7 +11,7 @@ import {
   Building2, Tags, GitMerge,
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
   FileText, Layers, MessageSquare, Database, Activity,
-  HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send
+  HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send, Copy, Check, Globe, KeyRound
 } from 'lucide-react';
 import {
   Dialog,
@@ -2245,7 +2245,15 @@ function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
     setTesting(false);
   };
 
+  const appUrl = typeof window !== 'undefined' ? window.location.origin : API_URL;
   const webhookUrl = `${API_URL}/api/webhooks/gammaai`;
+
+  const [copiedField, setCopiedField] = useState(null);
+  const copyToClipboard = (value, field) => {
+    navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
@@ -2296,21 +2304,67 @@ function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
             </div>
           </div>
 
-          {/* GammaAi Setup Info */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <h4 className="text-sm font-semibold text-slate-700 mb-2">GammaAi API Key Setup</h4>
-            <p className="text-xs text-slate-600 mb-3">When creating an API key in GammaAi, use these values:</p>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-slate-500 w-24">App Name:</span>
-                <code className="text-xs bg-white px-2 py-1 rounded border">ProjectIT</code>
+          {/* GammaAi App Registration Info */}
+          <div className="p-4 bg-gradient-to-br from-slate-50 to-emerald-50/30 rounded-xl border border-slate-200">
+            <div className="flex items-center gap-2 mb-3">
+              <Globe className="w-4 h-4 text-teal-600" />
+              <h4 className="text-sm font-semibold text-slate-700">Register App in GammaAi</h4>
+            </div>
+            <p className="text-xs text-slate-600 mb-4">Copy these values into GammaAi when registering your app:</p>
+            <div className="space-y-3">
+              {/* App Name */}
+              <div>
+                <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">App Name</label>
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono text-slate-800">
+                    ProjectIT
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 shrink-0"
+                    onClick={() => copyToClipboard('ProjectIT', 'appName')}
+                  >
+                    {copiedField === 'appName' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-slate-500 w-24">Webhook URL:</span>
-                <code className="text-xs bg-white px-2 py-1 rounded border break-all">{webhookUrl}</code>
+              {/* URL */}
+              <div>
+                <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">URL</label>
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono text-slate-800 truncate">
+                    {appUrl}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 shrink-0"
+                    onClick={() => copyToClipboard(appUrl, 'appUrl')}
+                  >
+                    {copiedField === 'appUrl' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  </Button>
+                </div>
+              </div>
+              {/* Webhook URL */}
+              <div>
+                <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Webhook URL</label>
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono text-slate-800 truncate">
+                    {webhookUrl}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 shrink-0"
+                    onClick={() => copyToClipboard(webhookUrl, 'webhookUrl')}
+                  >
+                    {copiedField === 'webhookUrl' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  </Button>
+                </div>
               </div>
             </div>
-            <p className="text-[11px] text-slate-400 mt-2">GammaAi will POST task completion events to the webhook URL above with <code className="bg-white px-1 rounded">{"{ event: '...', data: {...} }"}</code> in the body and <code className="bg-white px-1 rounded">x-gammaai-webhook-secret</code> header.</p>
+            <p className="text-[11px] text-slate-400 mt-3">GammaAi will POST task completion events to the webhook URL with an <code className="bg-white px-1 rounded">x-gammaai-webhook-secret</code> header for validation.</p>
           </div>
 
           {/* Connection fields */}
@@ -2338,14 +2392,40 @@ function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
 
             <div>
               <Label className="text-xs">Webhook Secret</Label>
-              <Input
-                type="password"
-                value={formData.gammaai_webhook_secret}
-                onChange={e => setFormData(prev => ({ ...prev, gammaai_webhook_secret: e.target.value }))}
-                placeholder="Secret for validating incoming webhooks"
-                className="mt-1"
-              />
-              <p className="text-xs text-slate-400 mt-1">Optional. If set, GammaAi must send this in the <code className="bg-slate-100 px-1 rounded text-[10px]">x-gammaai-webhook-secret</code> header</p>
+              <div className="flex items-center gap-2 mt-1">
+                <Input
+                  type="password"
+                  value={formData.gammaai_webhook_secret}
+                  onChange={e => setFormData(prev => ({ ...prev, gammaai_webhook_secret: e.target.value }))}
+                  placeholder="Click Generate to create a secret"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-3 shrink-0 text-teal-600 border-teal-200 hover:bg-teal-50"
+                  onClick={() => {
+                    const secret = 'whsec_' + Array.from(crypto.getRandomValues(new Uint8Array(32)))
+                      .map(b => b.toString(16).padStart(2, '0')).join('');
+                    setFormData(prev => ({ ...prev, gammaai_webhook_secret: secret }));
+                    navigator.clipboard.writeText(secret);
+                    setCopiedField('webhookSecret');
+                    setTimeout(() => setCopiedField(null), 2000);
+                  }}
+                >
+                  {copiedField === 'webhookSecret' ? (
+                    <><Check className="w-3.5 h-3.5 mr-1.5 text-emerald-500" />Copied</>
+                  ) : (
+                    <><KeyRound className="w-3.5 h-3.5 mr-1.5" />Generate</>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                {copiedField === 'webhookSecret'
+                  ? 'Secret copied to clipboard — paste it into GammaAi\'s webhook secret field, then save here.'
+                  : 'Generate a secret, then paste it into GammaAi. GammaAi sends it in the x-gammaai-webhook-secret header.'}
+              </p>
             </div>
 
             {/* Toggles */}
@@ -2859,6 +2939,7 @@ function AIAgentsSection({ queryClient }) {
   const [agents, setAgents] = useState([]);
   const [loadingAgents, setLoadingAgents] = useState(false);
   const [expandedCard, setExpandedCard] = useState('connection');
+  const [copiedField, setCopiedField] = useState(null);
 
   const [formData, setFormData] = useState({
     gammaai_url: '',
@@ -2895,15 +2976,20 @@ function AIAgentsSection({ queryClient }) {
     }
   }, [formData.gammaai_enabled]);
 
+  const [agentError, setAgentError] = useState(null);
+
   const fetchAgents = async () => {
     setLoadingAgents(true);
+    setAgentError(null);
     try {
       const res = await api.functions.invoke('agentBridge', { action: 'listAgents' });
       if (res.data?.success) {
         setAgents(res.data.agents || []);
+      } else {
+        setAgentError(res.data?.message || 'Failed to load agents');
       }
     } catch (err) {
-      console.error('Failed to load agents:', err);
+      setAgentError(err.data?.error || err.message || 'Failed to connect to GammaAi');
     }
     setLoadingAgents(false);
   };
@@ -3050,14 +3136,40 @@ function AIAgentsSection({ queryClient }) {
 
               <div>
                 <Label className="text-xs">Webhook Secret</Label>
-                <Input
-                  type="password"
-                  value={formData.gammaai_webhook_secret}
-                  onChange={e => setFormData(prev => ({ ...prev, gammaai_webhook_secret: e.target.value }))}
-                  placeholder="Secret for validating incoming webhooks"
-                  className="mt-1"
-                />
-                <p className="text-xs text-slate-400 mt-1">Used to verify callbacks from GammaAi back to ProjectIT</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Input
+                    type="password"
+                    value={formData.gammaai_webhook_secret}
+                    onChange={e => setFormData(prev => ({ ...prev, gammaai_webhook_secret: e.target.value }))}
+                    placeholder="Click Generate to create a secret"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 shrink-0 text-teal-600 border-teal-200 hover:bg-teal-50"
+                    onClick={() => {
+                      const secret = 'whsec_' + Array.from(crypto.getRandomValues(new Uint8Array(32)))
+                        .map(b => b.toString(16).padStart(2, '0')).join('');
+                      setFormData(prev => ({ ...prev, gammaai_webhook_secret: secret }));
+                      navigator.clipboard.writeText(secret);
+                      setCopiedField('webhookSecret');
+                      setTimeout(() => setCopiedField(null), 2000);
+                    }}
+                  >
+                    {copiedField === 'webhookSecret' ? (
+                      <><Check className="w-3.5 h-3.5 mr-1.5 text-emerald-500" />Copied</>
+                    ) : (
+                      <><KeyRound className="w-3.5 h-3.5 mr-1.5" />Generate</>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  {copiedField === 'webhookSecret'
+                    ? 'Secret copied to clipboard — paste it into GammaAi\'s webhook secret field, then save here.'
+                    : 'Generate a secret, then paste it into GammaAi. Used to verify callbacks.'}
+                </p>
               </div>
 
               {/* Toggles */}
@@ -3117,7 +3229,7 @@ function AIAgentsSection({ queryClient }) {
               <div className="text-left">
                 <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">Available Agents</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {agents.length > 0 ? `${agents.length} agents available` : 'Loading agents...'}
+                  {loadingAgents ? 'Loading agents...' : agents.length > 0 ? `${agents.length} agents available` : agentError ? 'Connection error' : 'No agents found'}
                 </p>
               </div>
             </div>
@@ -3182,9 +3294,16 @@ function AIAgentsSection({ queryClient }) {
               ) : (
                 <div className="text-center py-8">
                   <Bot className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-                  <p className="text-sm text-slate-500">No agents found. Check your GammaAi connection.</p>
-                  <Button onClick={fetchAgents} variant="outline" size="sm" className="mt-3">
-                    <RefreshCw className="w-3 h-3 mr-2" />
+                  {agentError ? (
+                    <>
+                      <p className="text-sm text-red-600 font-medium">Failed to load agents</p>
+                      <p className="text-xs text-red-500 mt-1 max-w-md mx-auto">{agentError}</p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-slate-500">No agents found. Check your GammaAi connection.</p>
+                  )}
+                  <Button onClick={fetchAgents} variant="outline" size="sm" className="mt-3" disabled={loadingAgents}>
+                    {loadingAgents ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-2" />}
                     Retry
                   </Button>
                 </div>
