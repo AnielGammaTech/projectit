@@ -92,8 +92,8 @@ const llmService = {
     messages.push({ role: 'user', content });
 
     const requestParams = {
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
+      model: 'claude-opus-4-20250514',
+      max_tokens: 8192,
       messages,
     };
 

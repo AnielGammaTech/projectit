@@ -77,6 +77,7 @@ const adminMenuGroups = [
     items: [
       { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automation triggers', page: 'Workflows' },
       { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'HaloPSA & external services' },
+      { id: 'ai-agents', label: 'AI Agents', icon: Bot, description: 'GammaAi agent connection' },
     ]
   },
   {
@@ -147,6 +148,8 @@ export default function Adminland() {
         return <ProjectTagsSection queryClient={queryClient} />;
       case 'project-management':
         return <ProjectManagementSection queryClient={queryClient} />;
+      case 'ai-agents':
+        return <AIAgentsSection queryClient={queryClient} />;
       default:
         return null;
     }
@@ -2163,6 +2166,246 @@ function IntegrationsSection({ queryClient }) {
 
       {/* Claude AI Integration Card */}
       <ClaudeAIIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+
+      {/* GammaAi Integration Card */}
+      <GammaAiIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+    </div>
+  );
+}
+
+function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [result, setResult] = useState(null);
+  const [agents, setAgents] = useState([]);
+
+  const [formData, setFormData] = useState({
+    gammaai_url: '',
+    gammaai_api_key: '',
+    gammaai_webhook_secret: '',
+    gammaai_enabled: false,
+    gammaai_auto_send: false,
+    gammaai_default_agent_id: '',
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['gammaaiSettings'],
+    queryFn: () => api.entities.IntegrationSettings.filter({ provider: 'gammaai' })
+  });
+
+  useEffect(() => {
+    if (settings[0]) {
+      setFormData(prev => ({
+        ...prev,
+        gammaai_url: settings[0].gammaai_url || '',
+        gammaai_api_key: settings[0].gammaai_api_key || '',
+        gammaai_webhook_secret: settings[0].gammaai_webhook_secret || '',
+        gammaai_enabled: settings[0].gammaai_enabled || false,
+        gammaai_auto_send: settings[0].gammaai_auto_send || false,
+        gammaai_default_agent_id: settings[0].gammaai_default_agent_id || '',
+      }));
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api.functions.invoke('agentBridge', { action: 'saveSettings', ...formData });
+      refetch();
+      setResult({ success: true, message: 'GammaAi settings saved' });
+    } catch (err) {
+      setResult({ success: false, message: err.message || 'Failed to save' });
+    }
+    setSaving(false);
+  };
+
+  const handleTest = async () => {
+    if (!formData.gammaai_url || !formData.gammaai_api_key) {
+      setResult({ success: false, message: 'Please fill in the URL and API Key first' });
+      return;
+    }
+    setTesting(true);
+    setResult(null);
+    try {
+      await handleSave();
+      const response = await api.functions.invoke('agentBridge', { action: 'testConnection' });
+      const data = response.data || response;
+      if (data.success) {
+        setResult({ success: true, message: 'Connected to GammaAi!' });
+        // Fetch agents
+        const agentsRes = await api.functions.invoke('agentBridge', { action: 'listAgents' });
+        if (agentsRes.data?.agents) setAgents(agentsRes.data.agents);
+      } else {
+        setResult({ success: false, message: data.message || 'Connection failed' });
+      }
+    } catch (error) {
+      setResult({ success: false, message: error.data?.error || error.message || 'Connection failed' });
+    }
+    setTesting(false);
+  };
+
+  const webhookUrl = `${API_URL}/api/functions/agentBridge`;
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+      <button
+        onClick={() => toggleIntegration('gammaai')}
+        className="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+            <Bot className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-left">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-900">GammaAi</h3>
+              {formData.gammaai_enabled && (
+                <Badge className="bg-emerald-50 text-emerald-600 text-[10px]">Connected</Badge>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">AI agent orchestration — automated feedback analysis & fixes</p>
+          </div>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedIntegration === 'gammaai' ? 'rotate-180' : ''}`} />
+      </button>
+
+      {expandedIntegration === 'gammaai' && (
+        <div className="border-t p-6 space-y-5">
+          {/* How it works */}
+          <div className="p-4 bg-teal-50 rounded-xl border border-teal-100">
+            <div className="flex items-start gap-3">
+              <Bot className="w-5 h-5 text-teal-600 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-semibold text-teal-900">How it works</h4>
+                <ul className="text-xs text-teal-700 mt-2 space-y-1.5">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Send feedback to GammaAi agents for analysis
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Agents fix issues, create PRs, and redeploy
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Results sync back to the feedback item automatically
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* GammaAi Setup Info */}
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <h4 className="text-sm font-semibold text-slate-700 mb-2">GammaAi API Key Setup</h4>
+            <p className="text-xs text-slate-600 mb-3">When creating an API key in GammaAi, use these values:</p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-500 w-24">App Name:</span>
+                <code className="text-xs bg-white px-2 py-1 rounded border">ProjectIT</code>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-500 w-24">Webhook URL:</span>
+                <code className="text-xs bg-white px-2 py-1 rounded border break-all">{webhookUrl}</code>
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-2">GammaAi will POST task completion events to the webhook URL above. Make sure to pass <code className="bg-white px-1 rounded">{"{ action: 'receiveCallback', event: '...', data: {...} }"}</code> in the body.</p>
+          </div>
+
+          {/* Connection fields */}
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs">GammaAi URL</Label>
+              <Input
+                value={formData.gammaai_url}
+                onChange={e => setFormData(prev => ({ ...prev, gammaai_url: e.target.value }))}
+                placeholder="https://gammaai.example.com"
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs">API Key</Label>
+              <Input
+                type="password"
+                value={formData.gammaai_api_key}
+                onChange={e => setFormData(prev => ({ ...prev, gammaai_api_key: e.target.value }))}
+                placeholder="Paste your GammaAi API key"
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs">Webhook Secret</Label>
+              <Input
+                type="password"
+                value={formData.gammaai_webhook_secret}
+                onChange={e => setFormData(prev => ({ ...prev, gammaai_webhook_secret: e.target.value }))}
+                placeholder="Secret for validating incoming webhooks"
+                className="mt-1"
+              />
+              <p className="text-xs text-slate-400 mt-1">Optional. If set, GammaAi must send this in the <code className="bg-slate-100 px-1 rounded text-[10px]">x-gammaai-webhook-secret</code> header</p>
+            </div>
+
+            {/* Toggles */}
+            <div className="flex items-center gap-6 pt-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={formData.gammaai_enabled}
+                  onCheckedChange={checked => setFormData(prev => ({ ...prev, gammaai_enabled: !!checked }))}
+                />
+                <span className="text-sm text-slate-700">Enabled</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={formData.gammaai_auto_send}
+                  onCheckedChange={checked => setFormData(prev => ({ ...prev, gammaai_auto_send: !!checked }))}
+                />
+                <span className="text-sm text-slate-700">Auto-send new feedback</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Default agent */}
+          {agents.length > 0 && (
+            <div>
+              <Label className="text-xs">Default Agent</Label>
+              <select
+                value={formData.gammaai_default_agent_id}
+                onChange={e => setFormData(prev => ({ ...prev, gammaai_default_agent_id: e.target.value }))}
+                className="mt-1 w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm"
+              >
+                <option value="">Auto-assign</option>
+                {agents.map(a => (
+                  <option key={a.id} value={a.id}>{a.name} ({a.type})</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Result */}
+          {result && (
+            <div className={cn(
+              "p-3 rounded-lg text-sm flex items-center gap-2",
+              result.success ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+            )}>
+              {result.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+              {result.message}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-3 pt-4 border-t">
+            <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#0F2F44]">
+              {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Settings</>}
+            </Button>
+            <Button onClick={handleTest} disabled={testing} variant="outline">
+              {testing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : 'Test Connection'}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2601,6 +2844,351 @@ function ClaudeAIIntegrationCard({ expandedIntegration, toggleIntegration }) {
                   <span className="text-xs text-emerald-600">Instructions saved and applied to all AI features</span>
                 )}
               </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AIAgentsSection({ queryClient }) {
+  const [saving, setSaving] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [result, setResult] = useState(null);
+  const [agents, setAgents] = useState([]);
+  const [loadingAgents, setLoadingAgents] = useState(false);
+  const [expandedCard, setExpandedCard] = useState('connection');
+
+  const [formData, setFormData] = useState({
+    gammaai_url: '',
+    gammaai_api_key: '',
+    gammaai_webhook_secret: '',
+    gammaai_enabled: false,
+    gammaai_auto_send: false,
+    gammaai_default_agent_id: '',
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['gammaaiSettings'],
+    queryFn: () => api.entities.IntegrationSettings.filter({ provider: 'gammaai' })
+  });
+
+  useEffect(() => {
+    if (settings[0]) {
+      setFormData(prev => ({
+        ...prev,
+        gammaai_url: settings[0].gammaai_url || '',
+        gammaai_api_key: settings[0].gammaai_api_key || '',
+        gammaai_webhook_secret: settings[0].gammaai_webhook_secret || '',
+        gammaai_enabled: settings[0].gammaai_enabled || false,
+        gammaai_auto_send: settings[0].gammaai_auto_send || false,
+        gammaai_default_agent_id: settings[0].gammaai_default_agent_id || '',
+      }));
+    }
+  }, [settings]);
+
+  // Load agents when connected
+  useEffect(() => {
+    if (formData.gammaai_enabled && formData.gammaai_url && formData.gammaai_api_key) {
+      fetchAgents();
+    }
+  }, [formData.gammaai_enabled]);
+
+  const fetchAgents = async () => {
+    setLoadingAgents(true);
+    try {
+      const res = await api.functions.invoke('agentBridge', { action: 'listAgents' });
+      if (res.data?.success) {
+        setAgents(res.data.agents || []);
+      }
+    } catch (err) {
+      console.error('Failed to load agents:', err);
+    }
+    setLoadingAgents(false);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api.functions.invoke('agentBridge', { action: 'saveSettings', ...formData });
+      refetch();
+      setResult({ success: true, message: 'Settings saved' });
+    } catch (err) {
+      setResult({ success: false, message: err.message || 'Failed to save' });
+    }
+    setSaving(false);
+  };
+
+  const handleTestConnection = async () => {
+    if (!formData.gammaai_url || !formData.gammaai_api_key) {
+      setResult({ success: false, message: 'Please fill in the GammaAi URL and API Key fields first' });
+      return;
+    }
+    setTestingConnection(true);
+    setResult(null);
+    try {
+      await handleSave();
+      const response = await api.functions.invoke('agentBridge', { action: 'testConnection' });
+      const data = response.data || response;
+      if (data.success) {
+        setResult({ success: true, message: 'Connected to GammaAi successfully!' });
+        fetchAgents();
+      } else {
+        setResult({ success: false, message: data.message || 'Connection failed' });
+      }
+    } catch (error) {
+      setResult({ success: false, message: error.data?.error || error.message || 'Connection failed' });
+    }
+    setTestingConnection(false);
+  };
+
+  const typeColors = {
+    manager: 'bg-purple-100 text-purple-700',
+    developer: 'bg-blue-100 text-blue-700',
+    frontend: 'bg-cyan-100 text-cyan-700',
+    backend: 'bg-indigo-100 text-indigo-700',
+    reviewer: 'bg-amber-100 text-amber-700',
+    security: 'bg-red-100 text-red-700',
+    qa: 'bg-green-100 text-green-700',
+    devops: 'bg-orange-100 text-orange-700',
+    database: 'bg-teal-100 text-teal-700',
+    analyst: 'bg-violet-100 text-violet-700',
+  };
+
+  const statusColors = {
+    idle: 'bg-slate-400',
+    working: 'bg-emerald-500 animate-pulse',
+    paused: 'bg-amber-500',
+    error: 'bg-red-500',
+    offline: 'bg-slate-300',
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="mb-2">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">AI Agents</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Connect to GammaAi to send feedback for automated analysis and fixes</p>
+      </div>
+
+      {/* Connection Settings Card */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <button
+          onClick={() => setExpandedCard(expandedCard === 'connection' ? null : 'connection')}
+          className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
+              <Bot className="w-5 h-5 text-white" />
+            </div>
+            <div className="text-left">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">GammaAi Connection</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Agent orchestration platform for automated feedback processing</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {formData.gammaai_enabled ? (
+              <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Connected</Badge>
+            ) : (
+              <Badge variant="outline" className="text-slate-400 border-slate-200 text-xs">Not configured</Badge>
+            )}
+            <ChevronDown className={cn(
+              "w-5 h-5 text-slate-400 transition-transform duration-200",
+              expandedCard === 'connection' && "rotate-180"
+            )} />
+          </div>
+        </button>
+
+        {expandedCard === 'connection' && (
+          <div className="border-t border-slate-200 dark:border-slate-700 p-6 space-y-5">
+            {/* Info banner */}
+            <div className="p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800">
+              <div className="flex items-start gap-3">
+                <Bot className="w-5 h-5 text-teal-600 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-semibold text-teal-900 dark:text-teal-200">How it works</h4>
+                  <ul className="text-xs text-teal-700 dark:text-teal-300 mt-2 space-y-1.5">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Send feedback items to GammaAi agents for analysis
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Agents fix issues, create PRs, and redeploy automatically
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Results and notes are synced back to the feedback item
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Connection fields */}
+            <div className="space-y-4">
+              <div>
+                <Label className="text-xs">GammaAi URL</Label>
+                <Input
+                  value={formData.gammaai_url}
+                  onChange={e => setFormData(prev => ({ ...prev, gammaai_url: e.target.value }))}
+                  placeholder="https://gammaai.example.com"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">API Key</Label>
+                <Input
+                  type="password"
+                  value={formData.gammaai_api_key}
+                  onChange={e => setFormData(prev => ({ ...prev, gammaai_api_key: e.target.value }))}
+                  placeholder="Enter your GammaAi API key"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">Webhook Secret</Label>
+                <Input
+                  type="password"
+                  value={formData.gammaai_webhook_secret}
+                  onChange={e => setFormData(prev => ({ ...prev, gammaai_webhook_secret: e.target.value }))}
+                  placeholder="Secret for validating incoming webhooks"
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-400 mt-1">Used to verify callbacks from GammaAi back to ProjectIT</p>
+              </div>
+
+              {/* Toggles */}
+              <div className="flex items-center gap-6 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={formData.gammaai_enabled}
+                    onCheckedChange={checked => setFormData(prev => ({ ...prev, gammaai_enabled: !!checked }))}
+                  />
+                  <span className="text-sm text-slate-700 dark:text-slate-300">Enabled</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={formData.gammaai_auto_send}
+                    onCheckedChange={checked => setFormData(prev => ({ ...prev, gammaai_auto_send: !!checked }))}
+                  />
+                  <span className="text-sm text-slate-700 dark:text-slate-300">Auto-send new feedback</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Result message */}
+            {result && (
+              <div className={cn(
+                "p-3 rounded-lg text-sm flex items-center gap-2",
+                result.success ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+              )}>
+                {result.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+                {result.message}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 pt-4 border-t">
+              <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#0F2F44]">
+                {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Settings</>}
+              </Button>
+              <Button onClick={handleTestConnection} disabled={testingConnection} variant="outline">
+                {testingConnection ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : 'Test Connection'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Available Agents Card */}
+      {formData.gammaai_enabled && (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <button
+            onClick={() => setExpandedCard(expandedCard === 'agents' ? null : 'agents')}
+            className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">Available Agents</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {agents.length > 0 ? `${agents.length} agents available` : 'Loading agents...'}
+                </p>
+              </div>
+            </div>
+            <ChevronDown className={cn(
+              "w-5 h-5 text-slate-400 transition-transform duration-200",
+              expandedCard === 'agents' && "rotate-180"
+            )} />
+          </button>
+
+          {expandedCard === 'agents' && (
+            <div className="border-t border-slate-200 dark:border-slate-700 p-6 space-y-4">
+              {loadingAgents ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                  <span className="ml-2 text-sm text-slate-500">Loading agents...</span>
+                </div>
+              ) : agents.length > 0 ? (
+                <>
+                  {/* Default agent selector */}
+                  <div>
+                    <Label className="text-xs">Default Agent for Feedback</Label>
+                    <select
+                      value={formData.gammaai_default_agent_id}
+                      onChange={e => setFormData(prev => ({ ...prev, gammaai_default_agent_id: e.target.value }))}
+                      className="mt-1 w-full h-9 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm"
+                    >
+                      <option value="">Auto-assign (let GammaAi decide)</option>
+                      {agents.map(agent => (
+                        <option key={agent.id} value={agent.id}>{agent.name} ({agent.type})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Agent list */}
+                  <div className="space-y-2">
+                    {agents.map(agent => (
+                      <div key={agent.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30">
+                        <div className="flex items-center gap-3">
+                          <div className={cn("w-2 h-2 rounded-full", statusColors[agent.status] || 'bg-slate-400')} />
+                          <div>
+                            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{agent.name}</span>
+                            {agent.description && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{agent.description}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={cn("text-[10px]", typeColors[agent.type] || 'bg-slate-100 text-slate-700')}>
+                            {agent.type}
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px]">{agent.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button onClick={fetchAgents} variant="outline" size="sm">
+                    <RefreshCw className="w-3 h-3 mr-2" />
+                    Refresh Agents
+                  </Button>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <Bot className="w-8 h-8 mx-auto text-slate-300 mb-2" />
+                  <p className="text-sm text-slate-500">No agents found. Check your GammaAi connection.</p>
+                  <Button onClick={fetchAgents} variant="outline" size="sm" className="mt-3">
+                    <RefreshCw className="w-3 h-3 mr-2" />
+                    Retry
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

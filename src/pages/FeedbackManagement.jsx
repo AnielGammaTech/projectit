@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
-import { 
-  MessageSquare, 
-  Bug, 
-  Lightbulb, 
-  HelpCircle, 
+import {
+  MessageSquare,
+  Bug,
+  Lightbulb,
+  HelpCircle,
   MessageCircle,
   ExternalLink,
   Trash2,
@@ -15,7 +15,11 @@ import {
   Eye,
   X,
   Image,
-  ChevronLeft
+  ChevronLeft,
+  Bot,
+  Sparkles,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -74,6 +78,8 @@ export default function FeedbackManagement() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, feedback: null });
+  const [sendingAI, setSendingAI] = useState(null); // feedback id currently being sent
+  const [refreshingAI, setRefreshingAI] = useState(null); // feedback id currently refreshing
 
   const { data: feedbackList = [], isLoading } = useQuery({
     queryKey: ['feedback'],
@@ -105,6 +111,62 @@ export default function FeedbackManagement() {
       }
     }
     setDeleteConfirm({ open: false, feedback: null });
+  };
+
+  const handleSendToAI = async (e, feedback) => {
+    e.stopPropagation();
+    setSendingAI(feedback.id);
+    try {
+      const response = await api.functions.invoke('agentBridge', {
+        action: 'sendFeedback',
+        feedback: {
+          id: feedback.id,
+          title: feedback.title,
+          description: feedback.description,
+          type: feedback.type,
+          priority: feedback.priority,
+          submitter_name: feedback.submitter_name,
+          submitter_email: feedback.submitter_email,
+          page_url: feedback.page_url,
+        },
+      });
+      if (response.data?.success) {
+        queryClient.invalidateQueries({ queryKey: ['feedback'] });
+      }
+    } catch (err) {
+      console.error('Failed to send to AI:', err);
+    }
+    setSendingAI(null);
+  };
+
+  const handleRefreshAIStatus = async (e, feedback) => {
+    if (e) e.stopPropagation();
+    if (!feedback.ai_task_id) return;
+    setRefreshingAI(feedback.id);
+    try {
+      const response = await api.functions.invoke('agentBridge', {
+        action: 'getTaskStatus',
+        task_id: feedback.ai_task_id,
+      });
+      if (response.data?.success) {
+        queryClient.invalidateQueries({ queryKey: ['feedback'] });
+        if (selectedFeedback?.id === feedback.id) {
+          // Refresh the selected feedback data
+          const updated = await api.entities.Feedback.filter({ id: feedback.id });
+          if (updated[0]) setSelectedFeedback(updated[0]);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to refresh AI status:', err);
+    }
+    setRefreshingAI(null);
+  };
+
+  const aiStatusConfig = {
+    pending: { label: 'AI Pending', color: 'bg-violet-100 text-violet-700' },
+    in_progress: { label: 'AI Working', color: 'bg-purple-100 text-purple-700' },
+    completed: { label: 'AI Done', color: 'bg-emerald-100 text-emerald-700' },
+    failed: { label: 'AI Failed', color: 'bg-red-100 text-red-700' },
   };
 
   const stats = {
@@ -265,6 +327,35 @@ export default function FeedbackManagement() {
                               <SelectItem value="closed">Closed</SelectItem>
                             </SelectContent>
                           </Select>
+                          {feedback.ai_status && (
+                            <Badge className={cn("text-[10px]", aiStatusConfig[feedback.ai_status]?.color || 'bg-slate-100 text-slate-600')}>
+                              <Sparkles className="w-3 h-3 mr-1" />
+                              {aiStatusConfig[feedback.ai_status]?.label || feedback.ai_status}
+                            </Badge>
+                          )}
+                          {!feedback.ai_task_id ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-violet-500 hover:text-violet-600 hover:bg-violet-50 opacity-0 group-hover:opacity-100"
+                              onClick={(e) => handleSendToAI(e, feedback)}
+                              disabled={sendingAI === feedback.id}
+                              title="Send to AI Agent"
+                            >
+                              {sendingAI === feedback.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
+                            </Button>
+                          ) : (feedback.ai_status === 'pending' || feedback.ai_status === 'in_progress') && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-violet-500 hover:text-violet-600 hover:bg-violet-50 opacity-0 group-hover:opacity-100"
+                              onClick={(e) => handleRefreshAIStatus(e, feedback)}
+                              disabled={refreshingAI === feedback.id}
+                              title="Refresh AI Status"
+                            >
+                              {refreshingAI === feedback.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -360,6 +451,122 @@ export default function FeedbackManagement() {
                       </a>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* AI Analysis Section */}
+              {selectedFeedback.ai_task_id && (
+                <div className="pt-4 border-t">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-violet-600" />
+                      <label className="text-sm font-medium text-slate-700">AI Agent Analysis</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {selectedFeedback.ai_status && (
+                        <Badge className={cn("text-[10px]", aiStatusConfig[selectedFeedback.ai_status]?.color)}>
+                          {aiStatusConfig[selectedFeedback.ai_status]?.label || selectedFeedback.ai_status}
+                        </Badge>
+                      )}
+                      {(selectedFeedback.ai_status === 'pending' || selectedFeedback.ai_status === 'in_progress') && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs text-violet-600"
+                          onClick={(e) => handleRefreshAIStatus(e, selectedFeedback)}
+                          disabled={refreshingAI === selectedFeedback.id}
+                        >
+                          {refreshingAI === selectedFeedback.id ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+                          Refresh
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedFeedback.ai_status === 'pending' && (
+                    <div className="p-4 rounded-lg bg-violet-50 border border-violet-100 text-sm text-violet-700">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Task sent to AI agent. Waiting for analysis...
+                      </div>
+                      {selectedFeedback.ai_sent_at && (
+                        <p className="text-xs text-violet-500 mt-1">Sent {format(new Date(selectedFeedback.ai_sent_at), 'MMM d, yyyy h:mm a')}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {selectedFeedback.ai_status === 'in_progress' && (
+                    <div className="p-4 rounded-lg bg-purple-50 border border-purple-100 text-sm text-purple-700">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        AI agent is working on this feedback...
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedFeedback.ai_status === 'failed' && (
+                    <div className="p-4 rounded-lg bg-red-50 border border-red-100 text-sm text-red-700">
+                      AI analysis failed. You can try sending this feedback again.
+                    </div>
+                  )}
+
+                  {selectedFeedback.ai_status === 'completed' && selectedFeedback.ai_analysis && (
+                    <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 space-y-2">
+                      {typeof selectedFeedback.ai_analysis === 'string' ? (
+                        <p className="text-sm text-slate-700 whitespace-pre-wrap">{selectedFeedback.ai_analysis}</p>
+                      ) : (
+                        <div className="text-sm text-slate-700 space-y-2">
+                          {selectedFeedback.ai_analysis.analysis && (
+                            <div>
+                              <label className="text-xs font-medium text-slate-500">Analysis</label>
+                              <p className="whitespace-pre-wrap">{selectedFeedback.ai_analysis.analysis}</p>
+                            </div>
+                          )}
+                          {selectedFeedback.ai_analysis.recommendation && (
+                            <div>
+                              <label className="text-xs font-medium text-slate-500">Recommendation</label>
+                              <p className="whitespace-pre-wrap">{selectedFeedback.ai_analysis.recommendation}</p>
+                            </div>
+                          )}
+                          {selectedFeedback.ai_analysis.effort && (
+                            <div>
+                              <label className="text-xs font-medium text-slate-500">Estimated Effort</label>
+                              <p>{selectedFeedback.ai_analysis.effort}</p>
+                            </div>
+                          )}
+                          {/* Fallback: render all keys if no known structure */}
+                          {!selectedFeedback.ai_analysis.analysis && !selectedFeedback.ai_analysis.recommendation && (
+                            <pre className="text-xs bg-white p-3 rounded border overflow-auto max-h-60">
+                              {JSON.stringify(selectedFeedback.ai_analysis, null, 2)}
+                            </pre>
+                          )}
+                        </div>
+                      )}
+                      {selectedFeedback.ai_completed_at && (
+                        <p className="text-xs text-emerald-600 mt-2">
+                          Completed {format(new Date(selectedFeedback.ai_completed_at), 'MMM d, yyyy h:mm a')}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Send to AI button if not yet sent */}
+              {!selectedFeedback.ai_task_id && (
+                <div className="pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    className="text-violet-600 border-violet-200 hover:bg-violet-50"
+                    onClick={(e) => handleSendToAI(e, selectedFeedback)}
+                    disabled={sendingAI === selectedFeedback.id}
+                  >
+                    {sendingAI === selectedFeedback.id ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending to AI...</>
+                    ) : (
+                      <><Bot className="w-4 h-4 mr-2" />Send to AI Agent</>
+                    )}
+                  </Button>
                 </div>
               )}
 
