@@ -118,41 +118,75 @@ export default function FeedbackButton() {
 
   return (
     <>
-      {/* Floating Button */}
+      {/*
+        Side tab trigger button
+        — Desktop: vertically centered on the left edge, flush against viewport
+        — Mobile (< md): bottom-center floating button
+      */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 z-50 p-4 rounded-full bg-[#0069AF] text-white shadow-xl hover:bg-[#005a96] transition-colors"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
+        aria-label="Submit Feedback"
+        title="Submit Feedback"
+        className={cn(
+          // Base styles
+          'fixed z-40 flex items-center justify-center',
+          'bg-[#0069AF] hover:bg-[#005a96] text-white shadow-lg',
+          'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0069AF] focus-visible:ring-offset-2',
+          // Desktop: left-center side tab — flat left edge, rounded right
+          'left-0 top-1/2 -translate-y-1/2 rounded-r-xl w-10 h-12',
+          // Mobile override: bottom-center floating button
+          'max-md:left-1/2 max-md:-translate-x-1/2 max-md:translate-y-0 max-md:bottom-6 max-md:top-auto max-md:rounded-full max-md:w-12 max-md:h-12'
+        )}
+        whileHover={{ width: 48 }}
+        whileTap={{ scale: 0.93 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       >
-        <MessageSquarePlus className="w-6 h-6" />
+        <MessageSquarePlus className="w-5 h-5 flex-shrink-0" />
       </motion.button>
 
-      {/* Modal */}
+      {/* Feedback form panel + backdrop */}
       <AnimatePresence>
         {isOpen && (
           <>
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-black/50 z-40"
               onClick={() => setIsOpen(false)}
             />
+
+            {/*
+              Form panel
+              — Desktop: slides in from the left, vertically centered
+              — Mobile: slides up from the bottom
+            */}
             <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 50, scale: 0.95 }}
-              className="fixed bottom-24 left-6 z-50 w-[420px] max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -30 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className={cn(
+                'fixed z-50 bg-white shadow-2xl overflow-hidden flex flex-col',
+                // Desktop: anchored to left edge, vertically centered
+                'left-10 top-1/2 -translate-y-1/2 w-[420px] max-h-[80vh] rounded-2xl',
+                // Mobile: full-width panel from bottom
+                'max-md:left-0 max-md:right-0 max-md:bottom-0 max-md:top-auto max-md:translate-y-0 max-md:w-full max-md:max-h-[85vh] max-md:rounded-t-2xl max-md:rounded-b-none'
+              )}
               onPaste={handlePaste}
             >
               {/* Header */}
-              <div className="p-4 border-b bg-gradient-to-r from-[#0069AF] to-[#0F2F44] text-white flex items-center justify-between">
+              <div className="p-4 border-b bg-gradient-to-r from-[#0069AF] to-[#0F2F44] text-white flex items-center justify-between flex-shrink-0">
                 <div>
                   <h3 className="font-semibold text-lg">Send Feedback</h3>
                   <p className="text-sm text-white/70">Help us improve your experience</p>
                 </div>
-                <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
+                <button
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Close feedback form"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -184,10 +218,10 @@ export default function FeedbackButton() {
                               key={type.value}
                               onClick={() => setFormData(prev => ({ ...prev, type: type.value }))}
                               className={cn(
-                                "flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-sm font-medium",
+                                'flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-sm font-medium',
                                 formData.type === type.value
-                                  ? type.color + " border-current"
-                                  : "border-slate-200 text-slate-600 hover:border-slate-300"
+                                  ? type.color + ' border-current'
+                                  : 'border-slate-200 text-slate-600 hover:border-slate-300'
                               )}
                             >
                               <Icon className="w-4 h-4" />
@@ -223,16 +257,16 @@ export default function FeedbackButton() {
                     {/* Priority */}
                     <div>
                       <Label className="text-sm font-medium text-slate-700 mb-2 block">Priority</Label>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         {priorityOptions.map((priority) => (
                           <button
                             key={priority.value}
                             onClick={() => setFormData(prev => ({ ...prev, priority: priority.value }))}
                             className={cn(
-                              "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                              'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
                               formData.priority === priority.value
-                                ? priority.color + " ring-2 ring-offset-1 ring-current"
-                                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                ? priority.color + ' ring-2 ring-offset-1 ring-current'
+                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                             )}
                           >
                             {priority.label}
@@ -280,6 +314,7 @@ export default function FeedbackButton() {
                                 />
                                 <button
                                   onClick={() => removeScreenshot(idx)}
+                                  aria-label={`Remove screenshot ${idx + 1}`}
                                   className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   <X className="w-3 h-3" />
@@ -293,7 +328,7 @@ export default function FeedbackButton() {
                   </div>
 
                   {/* Footer */}
-                  <div className="p-4 border-t bg-slate-50">
+                  <div className="p-4 border-t bg-slate-50 flex-shrink-0">
                     <Button
                       onClick={handleSubmit}
                       disabled={!formData.title.trim() || !formData.description.trim() || submitting}
