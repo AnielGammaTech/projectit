@@ -27,6 +27,7 @@ import updateQuoteITStatus from './updateQuoteITStatus.js';
 import haloPSACustomerList from './haloPSACustomerList.js';
 import resendEmail from './resendEmail.js';
 import claudeAI from './claudeAI.js';
+import agentBridge from './agentBridge.js';
 
 const router = Router();
 
@@ -58,6 +59,7 @@ const handlers = {
   haloPSACustomerList,
   resendEmail,
   claudeAI,
+  agentBridge,
 };
 
 // POST /api/functions/:name

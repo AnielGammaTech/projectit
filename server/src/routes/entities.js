@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import entityService from '../services/entityService.js';
 import projectAccessMiddleware from '../middleware/projectAccess.js';
+import { autoSendFeedback } from './functions/agentBridge.js';
 
 const router = Router();
 
@@ -37,6 +38,11 @@ router.post('/:entityType/create', async (req, res, next) => {
     const { entityType } = req.params;
     const result = await entityService.create(entityType, req.body, req.user?.email);
     res.status(201).json(result);
+
+    // Auto-send new Feedback to AI if configured (fire-and-forget)
+    if (entityType === 'Feedback' && result?.id) {
+      autoSendFeedback({ ...req.body, id: result.id });
+    }
   } catch (err) {
     next(err);
   }
