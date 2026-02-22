@@ -11,7 +11,7 @@ import {
   Building2, Tags, GitMerge,
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
   FileText, Layers, MessageSquare, Database, Activity,
-  HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send, Copy, Check, Globe
+  HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send, Copy, Check, Globe, KeyRound
 } from 'lucide-react';
 import {
   Dialog,
@@ -2392,14 +2392,40 @@ function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
 
             <div>
               <Label className="text-xs">Webhook Secret</Label>
-              <Input
-                type="password"
-                value={formData.gammaai_webhook_secret}
-                onChange={e => setFormData(prev => ({ ...prev, gammaai_webhook_secret: e.target.value }))}
-                placeholder="Secret for validating incoming webhooks"
-                className="mt-1"
-              />
-              <p className="text-xs text-slate-400 mt-1">Optional. If set, GammaAi must send this in the <code className="bg-slate-100 px-1 rounded text-[10px]">x-gammaai-webhook-secret</code> header</p>
+              <div className="flex items-center gap-2 mt-1">
+                <Input
+                  type="password"
+                  value={formData.gammaai_webhook_secret}
+                  onChange={e => setFormData(prev => ({ ...prev, gammaai_webhook_secret: e.target.value }))}
+                  placeholder="Click Generate to create a secret"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-3 shrink-0 text-teal-600 border-teal-200 hover:bg-teal-50"
+                  onClick={() => {
+                    const secret = 'whsec_' + Array.from(crypto.getRandomValues(new Uint8Array(32)))
+                      .map(b => b.toString(16).padStart(2, '0')).join('');
+                    setFormData(prev => ({ ...prev, gammaai_webhook_secret: secret }));
+                    navigator.clipboard.writeText(secret);
+                    setCopiedField('webhookSecret');
+                    setTimeout(() => setCopiedField(null), 2000);
+                  }}
+                >
+                  {copiedField === 'webhookSecret' ? (
+                    <><Check className="w-3.5 h-3.5 mr-1.5 text-emerald-500" />Copied</>
+                  ) : (
+                    <><KeyRound className="w-3.5 h-3.5 mr-1.5" />Generate</>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                {copiedField === 'webhookSecret'
+                  ? 'Secret copied to clipboard — paste it into GammaAi\'s webhook secret field, then save here.'
+                  : 'Generate a secret, then paste it into GammaAi. GammaAi sends it in the x-gammaai-webhook-secret header.'}
+              </p>
             </div>
 
             {/* Toggles */}
@@ -2913,6 +2939,7 @@ function AIAgentsSection({ queryClient }) {
   const [agents, setAgents] = useState([]);
   const [loadingAgents, setLoadingAgents] = useState(false);
   const [expandedCard, setExpandedCard] = useState('connection');
+  const [copiedField, setCopiedField] = useState(null);
 
   const [formData, setFormData] = useState({
     gammaai_url: '',
@@ -3104,14 +3131,40 @@ function AIAgentsSection({ queryClient }) {
 
               <div>
                 <Label className="text-xs">Webhook Secret</Label>
-                <Input
-                  type="password"
-                  value={formData.gammaai_webhook_secret}
-                  onChange={e => setFormData(prev => ({ ...prev, gammaai_webhook_secret: e.target.value }))}
-                  placeholder="Secret for validating incoming webhooks"
-                  className="mt-1"
-                />
-                <p className="text-xs text-slate-400 mt-1">Used to verify callbacks from GammaAi back to ProjectIT</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Input
+                    type="password"
+                    value={formData.gammaai_webhook_secret}
+                    onChange={e => setFormData(prev => ({ ...prev, gammaai_webhook_secret: e.target.value }))}
+                    placeholder="Click Generate to create a secret"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 shrink-0 text-teal-600 border-teal-200 hover:bg-teal-50"
+                    onClick={() => {
+                      const secret = 'whsec_' + Array.from(crypto.getRandomValues(new Uint8Array(32)))
+                        .map(b => b.toString(16).padStart(2, '0')).join('');
+                      setFormData(prev => ({ ...prev, gammaai_webhook_secret: secret }));
+                      navigator.clipboard.writeText(secret);
+                      setCopiedField('webhookSecret');
+                      setTimeout(() => setCopiedField(null), 2000);
+                    }}
+                  >
+                    {copiedField === 'webhookSecret' ? (
+                      <><Check className="w-3.5 h-3.5 mr-1.5 text-emerald-500" />Copied</>
+                    ) : (
+                      <><KeyRound className="w-3.5 h-3.5 mr-1.5" />Generate</>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  {copiedField === 'webhookSecret'
+                    ? 'Secret copied to clipboard — paste it into GammaAi\'s webhook secret field, then save here.'
+                    : 'Generate a secret, then paste it into GammaAi. Used to verify callbacks.'}
+                </p>
               </div>
 
               {/* Toggles */}
