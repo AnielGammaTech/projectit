@@ -29,6 +29,7 @@ import resendEmail from './resendEmail.js';
 import claudeAI from './claudeAI.js';
 import agentBridge from './agentBridge.js';
 import giphy from './giphy.js';
+import sendMfaReminders from './sendMfaReminders.js';
 
 const router = Router();
 
@@ -62,6 +63,7 @@ const handlers = {
   claudeAI,
   agentBridge,
   giphy,
+  sendMfaReminders,
 };
 
 // POST /api/functions/:name

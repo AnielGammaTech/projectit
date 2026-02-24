@@ -64,6 +64,12 @@ router.post('/verify-otp', async (req, res, next) => {
       return res.status(400).json({ error: 'Email and code are required' });
     }
     const result = await authService.verifyOtpCode(email, code);
+
+    // Fire-and-forget: track device/IP and send alert if new
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    authService.recordLoginAndAlert(email, ip, userAgent).catch(() => {});
+
     res.json(result);
   } catch (err) {
     next(err);
@@ -93,6 +99,12 @@ router.post('/login', async (req, res, next) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
     const result = await authService.login(email, password);
+
+    // Fire-and-forget: track device/IP and send alert if new
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    authService.recordLoginAndAlert(email, ip, userAgent).catch(() => {});
+
     res.json(result);
   } catch (err) {
     next(err);
@@ -150,6 +162,25 @@ router.post('/admin-reset-password', authMiddleware, async (req, res, next) => {
     }
 
     const result = await authService.adminResetPassword(email, new_password);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Admin-only: reset a user's MFA (remove all TOTP factors)
+router.post('/admin-reset-mfa', authMiddleware, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can reset user MFA' });
+    }
+
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const result = await authService.adminResetMfa(email);
     res.json(result);
   } catch (err) {
     next(err);

@@ -211,6 +211,12 @@ const users = {
       body: JSON.stringify({ email, new_password: newPassword }),
     });
   },
+  async resetMfa(email) {
+    return apiFetch('/api/auth/admin-reset-mfa', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
   async sendOtp(email) {
     return apiFetch('/api/auth/send-otp', {
       method: 'POST',

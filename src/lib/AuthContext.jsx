@@ -72,7 +72,17 @@ export const AuthProvider = ({ children }) => {
           if (!mounted) return;
 
           if (refreshData?.session) {
-            await fetchAppUser();
+            // Check if the user has MFA enrolled but hasn't completed verification
+            const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+            if (aalData && aalData.currentLevel === 'aal1' && aalData.nextLevel === 'aal2') {
+              // User has MFA enrolled but session is only aal1 — force re-login for MFA
+              console.log('MFA required but session is aal1 — redirecting to login');
+              await supabase.auth.signOut();
+              setIsAuthenticated(false);
+              setUser(null);
+            } else {
+              await fetchAppUser();
+            }
           } else {
             // Refresh failed — session is invalid
             setIsAuthenticated(false);

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
-import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2, Sun, Moon, Monitor, Palette, Bell, CheckCircle2, AtSign, MessageCircle, LayoutGrid } from 'lucide-react';
+import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2, Sun, Moon, Monitor, Palette, Bell, CheckCircle2, AtSign, MessageCircle, LayoutGrid, Shield, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,7 @@ import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/lib/ThemeProvider';
 import { format } from 'date-fns';
+import { supabase } from '@/lib/supabase';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -58,6 +59,27 @@ export default function Profile() {
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
+
+  // MFA status
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [mfaDeadline, setMfaDeadline] = useState(null);
+
+  useEffect(() => {
+    if (!currentUser?.email) return;
+    const checkMfa = async () => {
+      try {
+        const { data: factorsData } = await supabase.auth.mfa.listFactors();
+        const hasVerified = factorsData?.totp?.some(f => f.status === 'verified');
+        setMfaEnabled(!!hasVerified);
+        if (currentUser.mfa_enforcement_deadline) {
+          setMfaDeadline(new Date(currentUser.mfa_enforcement_deadline));
+        }
+      } catch (err) {
+        console.error('MFA status check failed:', err);
+      }
+    };
+    checkMfa();
+  }, [currentUser?.email, currentUser?.mfa_enforcement_deadline]);
 
   // Fetch user notifications
   const { data: notifications = [], refetch: refetchNotifications } = useQuery({
@@ -336,6 +358,64 @@ export default function Profile() {
                   checked={formData.show_dashboard_widgets}
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, show_dashboard_widgets: checked }))}
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Account Security */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-[#0069AF]" />
+                Account Security
+              </CardTitle>
+              <CardDescription>Two-factor authentication status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "p-2 rounded-lg",
+                    mfaEnabled
+                      ? "bg-emerald-100 dark:bg-emerald-900/30"
+                      : "bg-amber-100 dark:bg-amber-900/30"
+                  )}>
+                    {mfaEnabled
+                      ? <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      : <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    }
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900 dark:text-slate-100">
+                      Two-Factor Authentication
+                    </p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {mfaEnabled ? 'Enabled via Authenticator App' : 'Not yet configured'}
+                    </p>
+                  </div>
+                </div>
+                <Badge className={cn(
+                  "border-0",
+                  mfaEnabled
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                    : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                )}>
+                  {mfaEnabled ? 'Enabled' : 'Disabled'}
+                </Badge>
+              </div>
+              {!mfaEnabled && mfaDeadline && (
+                <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-lg">
+                  <p className="text-sm text-amber-800 dark:text-amber-300">
+                    You must set up 2FA by <strong>{format(mfaDeadline, 'MMMM d, yyyy')}</strong>
+                  </p>
+                </div>
+              )}
+              <div className="mt-4">
+                <Link to={createPageUrl('SecuritySettings')}>
+                  <Button className="bg-[#0069AF] hover:bg-[#133F5C]">
+                    {mfaEnabled ? 'Manage 2FA' : 'Set Up 2FA'}
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>

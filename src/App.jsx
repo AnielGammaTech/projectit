@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { ThemeProvider, useTheme } from '@/lib/ThemeProvider';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import WhatsNewNotifier from '@/components/WhatsNewNotifier';
+import MfaEnforcementGuard from '@/components/MfaEnforcementGuard';
 import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import Login from '@/pages/Login';
 import AcceptInvite from '@/pages/AcceptInvite';
@@ -72,25 +73,27 @@ const AuthenticatedApp = () => {
     <>
     <ThemeSyncer />
     <WhatsNewNotifier />
-    <Routes>
-      <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
-      } />
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
-          }
-        />
-      ))}
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <MfaEnforcementGuard>
+      <Routes>
+        <Route path="/" element={
+          <LayoutWrapper currentPageName={mainPageKey}>
+            <MainPage />
+          </LayoutWrapper>
+        } />
+        {Object.entries(Pages).map(([path, Page]) => (
+          <Route
+            key={path}
+            path={`/${path}`}
+            element={
+              <LayoutWrapper currentPageName={path}>
+                <Page />
+              </LayoutWrapper>
+            }
+          />
+        ))}
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </MfaEnforcementGuard>
     </>
   );
 };

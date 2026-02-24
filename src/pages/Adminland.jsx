@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { toast } from 'sonner';
@@ -101,16 +102,8 @@ export default function Adminland() {
   const urlParams = new URLSearchParams(window.location.search);
   const initialSection = urlParams.get('section') || null;
   const [activeSection, setActiveSection] = useState(initialSection);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user: currentUser, isLoadingAuth: isLoading } = useAuth();
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    api.auth.me().then(user => {
-      setCurrentUser(user);
-      setIsLoading(false);
-    }).catch(() => setIsLoading(false));
-  }, []);
 
   // Block non-admin users
   if (isLoading) {
@@ -252,6 +245,7 @@ function PeopleSection({ queryClient }) {
   const [editingGroup, setEditingGroup] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [resetPasswordMember, setResetPasswordMember] = useState(null);
+  const [resetMfaMember, setResetMfaMember] = useState(null);
 
   const { data: members = [] } = useQuery({
     queryKey: ['teamMembers'],
@@ -348,6 +342,19 @@ function PeopleSection({ queryClient }) {
     }
   };
 
+  const handleResetMfa = async () => {
+    if (!resetMfaMember) return;
+    try {
+      await api.users.resetMfa(resetMfaMember.email);
+      toast.success('MFA has been reset successfully');
+      setResetMfaMember(null);
+    } catch (err) {
+      console.error('Reset MFA failed:', err);
+      toast.error(err?.message || 'Failed to reset MFA');
+      setResetMfaMember(null);
+    }
+  };
+
   const toggleAdmin = async (member) => {
     const newRole = member.role === 'Admin' ? '' : 'Admin';
     await api.entities.TeamMember.update(member.id, { ...member, role: newRole });
@@ -435,6 +442,9 @@ function PeopleSection({ queryClient }) {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setResetPasswordMember(member)}>
                       <KeyRound className="w-4 h-4 mr-2" />Reset Password
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setResetMfaMember(member)}>
+                      <Shield className="w-4 h-4 mr-2" />Reset MFA
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'member', item: member })} className="text-red-600">
                       <Trash2 className="w-4 h-4 mr-2" />Delete
@@ -570,6 +580,25 @@ function PeopleSection({ queryClient }) {
         member={resetPasswordMember}
         onSave={handleResetPassword}
       />
+
+      {/* Reset MFA Confirmation Dialog */}
+      <AlertDialog open={!!resetMfaMember} onOpenChange={() => setResetMfaMember(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset MFA for {resetMfaMember?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove two-factor authentication for <strong>{resetMfaMember?.email}</strong>.
+              They will need to set it up again. Their enforcement deadline will remain active.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetMfa} className="bg-amber-600 hover:bg-amber-700">
+              Reset MFA
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

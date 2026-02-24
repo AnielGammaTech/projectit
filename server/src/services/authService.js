@@ -2,6 +2,8 @@ import pool from '../config/database.js';
 import supabase from '../config/supabase.js';
 import entityService from './entityService.js';
 import emailService from './emailService.js';
+import crypto from 'crypto';
+import { UAParser } from 'ua-parser-js';
 
 // In-memory OTP store (codes expire after 10 minutes)
 const otpStore = new Map(); // email → { code, expiresAt }
@@ -213,6 +215,20 @@ const authService = {
       user_id: user.id,
     }, invitedBy);
 
+    // Set MFA enforcement deadline (7 days from now)
+    const mfaDeadline = new Date();
+    mfaDeadline.setDate(mfaDeadline.getDate() + 7);
+    try {
+      await entityService.create('UserSecuritySettings', {
+        user_email: lowerEmail,
+        two_factor_enabled: false,
+        two_factor_method: 'none',
+        mfa_enforcement_deadline: mfaDeadline.toISOString(),
+      }, invitedBy);
+    } catch (e) {
+      console.warn('Failed to create UserSecuritySettings for MFA enforcement:', e.message);
+    }
+
     // Send welcome email via Resend (not Supabase — avoids quarantine)
     try {
       await this.sendWelcomeEmail(lowerEmail, fullName, invitedBy, inviteUrl);
@@ -347,6 +363,14 @@ const authService = {
             </a>
           </div>
 
+          <!-- MFA Requirement Notice -->
+          <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 20px; margin: 0 0 28px; text-align: center;">
+            <p style="color: #92400e; font-size: 14px; font-weight: 600; margin: 0 0 8px;">🔐 Security Requirement</p>
+            <p style="color: #a16207; font-size: 13px; line-height: 1.6; margin: 0;">
+              You must set up two-factor authentication within <strong>7 days</strong> of account creation. After that, 2FA will be required to access ProjectIT.
+            </p>
+          </div>
+
           <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
             Click the button above to set your password and get started.<br/>
             This link expires in 24 hours.
@@ -449,7 +473,22 @@ const authService = {
     if (rows.length === 0) {
       throw Object.assign(new Error('User not found'), { status: 404 });
     }
-    return rows[0];
+
+    const user = rows[0];
+
+    // Attach MFA enforcement data from UserSecuritySettings
+    try {
+      const secSettings = await entityService.filter('UserSecuritySettings', { user_email: user.email });
+      if (secSettings.length > 0) {
+        user.mfa_enforcement_deadline = secSettings[0].mfa_enforcement_deadline || null;
+        user.two_factor_enabled = secSettings[0].two_factor_enabled || false;
+      }
+    } catch (e) {
+      // Non-critical — don't fail the /me request
+      console.warn('Failed to fetch MFA enforcement data:', e.message);
+    }
+
+    return user;
   },
 
   /**
@@ -574,6 +613,262 @@ const authService = {
     }
 
     return { success: true };
+  },
+
+  /**
+   * Admin-only: reset a user's MFA by removing all TOTP factors.
+   * Uses Supabase Admin API (service_role key) to delete factors server-side.
+   */
+  async adminResetMfa(email) {
+    const lowerEmail = email.toLowerCase();
+
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
+    // Find the user's Supabase UID
+    const { rows } = await pool.query(
+      'SELECT supabase_uid FROM users WHERE email = $1',
+      [lowerEmail]
+    );
+
+    if (rows.length === 0 || !rows[0].supabase_uid) {
+      throw Object.assign(new Error('User not found or has no Supabase account'), { status: 404 });
+    }
+
+    const supabaseUid = rows[0].supabase_uid;
+
+    // List the user's MFA factors via Admin API
+    const { data: factorsData, error: factorsError } = await supabase.auth.admin.mfa.listFactors({
+      userId: supabaseUid,
+    });
+
+    if (factorsError) {
+      throw Object.assign(new Error(factorsError.message), { status: 500 });
+    }
+
+    // Delete all TOTP factors
+    const totpFactors = factorsData?.totp || factorsData?.factors?.filter(f => f.factor_type === 'totp') || [];
+    for (const factor of totpFactors) {
+      const { error: deleteError } = await supabase.auth.admin.mfa.deleteFactor({
+        userId: supabaseUid,
+        factorId: factor.id,
+      });
+      if (deleteError) {
+        console.error(`Failed to delete MFA factor ${factor.id}:`, deleteError.message);
+      }
+    }
+
+    // Update our UserSecuritySettings entity
+    const existing = await entityService.filter('UserSecuritySettings', { user_email: lowerEmail });
+    if (existing.length > 0) {
+      await entityService.update('UserSecuritySettings', existing[0].id, {
+        two_factor_enabled: false,
+        two_factor_method: 'none',
+        factor_id: '',
+        backup_codes: [],
+      });
+    }
+
+    // Audit log
+    try {
+      await entityService.create('AuditLog', {
+        action: 'admin_mfa_reset',
+        user_email: lowerEmail,
+        details: `MFA reset by admin. ${totpFactors.length} factor(s) removed.`,
+      }, lowerEmail);
+    } catch (e) {
+      console.warn('AuditLog creation failed:', e.message);
+    }
+
+    return { success: true, factorsRemoved: totpFactors.length };
+  },
+
+  /**
+   * Record a login event and send an alert email if it's a new device/IP.
+   * This is fire-and-forget — errors here should never break the login flow.
+   */
+  async recordLoginAndAlert(email, ipAddress, userAgent) {
+    try {
+      const lowerEmail = email.toLowerCase();
+
+      // Parse User-Agent
+      const parser = new UAParser(userAgent);
+      const browser = parser.getBrowser();
+      const os = parser.getOS();
+      const device = parser.getDevice();
+
+      const browserName = browser.name || 'Unknown Browser';
+      const browserVersion = browser.version ? ` ${browser.major || browser.version}` : '';
+      const osName = os.name || 'Unknown OS';
+      const osVersion = os.version || '';
+      const deviceType = device.type || 'desktop';
+
+      // Create a fingerprint from User-Agent + IP
+      const fingerprint = crypto
+        .createHash('sha256')
+        .update(`${userAgent}::${ipAddress}`)
+        .digest('hex')
+        .slice(0, 16);
+
+      // Look up existing security settings for this user
+      const existing = await entityService.list('UserSecuritySettings', {
+        user_email: lowerEmail,
+      });
+
+      const now = new Date().toISOString();
+      const deviceInfo = {
+        fingerprint,
+        ip: ipAddress,
+        browser: `${browserName}${browserVersion}`,
+        os: `${osName} ${osVersion}`.trim(),
+        device_type: deviceType,
+        first_seen: now,
+        last_seen: now,
+      };
+
+      if (existing.length === 0) {
+        // First login ever — create the record and send alert
+        await entityService.create('UserSecuritySettings', {
+          user_email: lowerEmail,
+          known_devices: [deviceInfo],
+        }, lowerEmail);
+
+        // Get user full name for the email
+        const { rows } = await pool.query('SELECT full_name FROM users WHERE email = $1', [lowerEmail]);
+        const fullName = rows[0]?.full_name || lowerEmail;
+
+        await this.sendNewDeviceLoginAlert(lowerEmail, fullName, deviceInfo);
+
+        // Audit log
+        await entityService.create('AuditLog', {
+          action: 'login_new_device',
+          user_email: lowerEmail,
+          ip_address: ipAddress,
+          device: `${deviceInfo.browser} on ${deviceInfo.os}`,
+          device_type: deviceType,
+        }, lowerEmail);
+      } else {
+        const record = existing[0];
+        const knownDevices = record.known_devices || [];
+        const match = knownDevices.find(d => d.fingerprint === fingerprint);
+
+        if (match) {
+          // Known device — update last_seen
+          match.last_seen = now;
+          await entityService.update('UserSecuritySettings', record.id, {
+            known_devices: knownDevices,
+          });
+        } else {
+          // New device — append, send alert, audit log
+          knownDevices.push(deviceInfo);
+          await entityService.update('UserSecuritySettings', record.id, {
+            known_devices: knownDevices,
+          });
+
+          const { rows } = await pool.query('SELECT full_name FROM users WHERE email = $1', [lowerEmail]);
+          const fullName = rows[0]?.full_name || lowerEmail;
+
+          await this.sendNewDeviceLoginAlert(lowerEmail, fullName, deviceInfo);
+
+          await entityService.create('AuditLog', {
+            action: 'login_new_device',
+            user_email: lowerEmail,
+            ip_address: ipAddress,
+            device: `${deviceInfo.browser} on ${deviceInfo.os}`,
+            device_type: deviceType,
+          }, lowerEmail);
+        }
+      }
+    } catch (err) {
+      // Never let login tracking break the login flow
+      console.error('Login tracking error (non-fatal):', err.message);
+    }
+  },
+
+  /**
+   * Send a branded email alerting the user to a new device sign-in.
+   */
+  async sendNewDeviceLoginAlert(email, fullName, deviceInfo) {
+    const firstName = (fullName || '').split(' ')[0] || 'there';
+    const loginTime = new Date().toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short',
+    });
+
+    const html = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #0F2F44 0%, #133F5C 50%, #0069AF 100%); padding: 40px 32px; border-radius: 12px 12px 0 0; text-align: center;">
+          <div style="background: rgba(255,255,255,0.15); width: 56px; height: 56px; border-radius: 14px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 28px;">🔐</span>
+          </div>
+          <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">New Sign-In Detected</h1>
+          <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 14px;">Your ProjectIT account was accessed from a new device</p>
+        </div>
+
+        <!-- Body -->
+        <div style="background: #ffffff; padding: 40px 32px; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
+          <p style="color: #0F2F44; font-size: 16px; font-weight: 600; margin: 0 0 16px;">Hi ${firstName},</p>
+          <p style="color: #475569; font-size: 15px; line-height: 1.7; margin: 0 0 24px;">
+            We noticed a new sign-in to your <strong style="color: #0F2F44;">ProjectIT</strong> account. If this was you, no action is needed. If you don't recognize this activity, please change your password immediately.
+          </p>
+
+          <!-- Device Info Card -->
+          <div style="background: #f0f7ff; border: 1px solid #dbeafe; border-radius: 10px; padding: 24px; margin: 0 0 28px;">
+            <p style="color: #0F2F44; font-weight: 600; font-size: 14px; margin: 0 0 16px;">Sign-in details:</p>
+            <table style="width: 100%;" cellspacing="0" cellpadding="0">
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-size: 13px; width: 100px;">Browser</td>
+                <td style="padding: 8px 0; color: #0F2F44; font-size: 13px; font-weight: 500;">${deviceInfo.browser}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-size: 13px;">OS</td>
+                <td style="padding: 8px 0; color: #0F2F44; font-size: 13px; font-weight: 500;">${deviceInfo.os}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-size: 13px;">IP Address</td>
+                <td style="padding: 8px 0; color: #0F2F44; font-size: 13px; font-weight: 500; font-family: monospace;">${deviceInfo.ip}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Time</td>
+                <td style="padding: 8px 0; color: #0F2F44; font-size: 13px; font-weight: 500;">${loginTime}</td>
+              </tr>
+            </table>
+          </div>
+
+          <p style="color: #ef4444; font-size: 14px; font-weight: 500; line-height: 1.6; margin: 0 0 8px;">
+            ⚠️ Wasn't you?
+          </p>
+          <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0;">
+            If you didn't sign in, please change your password right away and contact your administrator.
+          </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #f1f5f9; padding: 24px 32px; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none; text-align: center;">
+          <p style="color: #64748b; font-size: 12px; margin: 0 0 4px;">Sent by <strong>ProjectIT</strong></p>
+          <p style="color: #94a3b8; font-size: 11px; margin: 0;">This is an automated security notification. You received this because someone signed into your account.</p>
+        </div>
+      </div>
+    `;
+
+    try {
+      await emailService.send({
+        to: email,
+        subject: 'New sign-in to your ProjectIT account',
+        body: html,
+        from_name: 'ProjectIT Security',
+        from_email: process.env.RESEND_FROM_EMAIL || 'noreply@gamma.tech',
+      });
+    } catch (err) {
+      console.error('Failed to send new device login alert:', err.message);
+    }
   },
 };
 
