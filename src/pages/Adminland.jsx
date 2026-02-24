@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import UserAvatar from '@/components/UserAvatar';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -362,16 +363,35 @@ function PeopleSection({ queryClient }) {
   };
 
   const admins = members.filter(m => m.role === 'Admin');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredMembers = useMemo(() => {
+    if (!searchQuery.trim()) return members;
+    const q = searchQuery.toLowerCase();
+    return members.filter(m =>
+      m.name?.toLowerCase().includes(q) ||
+      m.email?.toLowerCase().includes(q) ||
+      m.role?.toLowerCase().includes(q)
+    );
+  }, [members, searchQuery]);
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-6 border-b">
-        <h2 className="text-xl font-semibold text-slate-900">People & Teams</h2>
-        <p className="text-sm text-slate-500">Manage team members, groups, and admin access</p>
+    <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-lg dark:shadow-none dark:border dark:border-slate-700/50 overflow-hidden">
+      <div className="p-6 border-b dark:border-slate-700/50">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">People & Teams</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage team members, groups, and admin access</p>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <Users className="w-4 h-4" />
+            <span>{members.length} member{members.length !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
       </div>
-      
+
       {/* Tabs */}
-      <div className="flex border-b">
+      <div className="flex border-b dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#151d2b]/50">
         {[
           { id: 'members', label: 'Team Members', count: members.length },
           { id: 'groups', label: 'Groups', count: groups.length },
@@ -381,11 +401,21 @@ function PeopleSection({ queryClient }) {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
-              activeTab === tab.id ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+              "px-6 py-3.5 text-sm font-medium border-b-2 transition-all",
+              activeTab === tab.id
+                ? "border-[#0069AF] text-[#0069AF] dark:text-blue-400 dark:border-blue-400"
+                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             )}
           >
-            {tab.label} ({tab.count})
+            {tab.label}
+            <span className={cn(
+              "ml-2 px-2 py-0.5 text-xs rounded-full",
+              activeTab === tab.id
+                ? "bg-[#0069AF]/10 text-[#0069AF] dark:bg-blue-400/10 dark:text-blue-400"
+                : "bg-slate-200/70 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
+            )}>
+              {tab.count}
+            </span>
           </button>
         ))}
       </div>
@@ -393,44 +423,64 @@ function PeopleSection({ queryClient }) {
       {/* Team Members Tab */}
       {activeTab === 'members' && (
         <div>
-          <div className="p-4 border-b bg-slate-50 flex justify-end">
-            <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          <div className="p-4 border-b dark:border-slate-700/50 flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                placeholder="Search members..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 bg-slate-50 dark:bg-[#151d2b] border-slate-200 dark:border-slate-700/50"
+              />
+            </div>
+            <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C] h-9">
               <Plus className="w-4 h-4 mr-2" />
               Add Member
             </Button>
           </div>
-          <div className="divide-y">
-            {members.map((member) => (
-            <div key={member.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
-              <div className="flex items-center gap-4">
-                <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white font-medium", member.avatar_color || avatarColors[0])}>
-                  {member.name?.charAt(0)?.toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900">{member.name}</p>
-                  <div className="flex items-center gap-3 text-sm text-slate-500">
-                    <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{member.email}</span>
-                    {member.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{member.phone}</span>}
+          <div className="divide-y dark:divide-slate-700/50">
+            {filteredMembers.map((member) => (
+            <div key={member.id} className="px-5 py-4 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-700/20 transition-colors group">
+              <div className="flex items-center gap-4 min-w-0">
+                <UserAvatar
+                  email={member.email}
+                  name={member.name}
+                  avatarUrl={member.avatar_url}
+                  avatarColor={member.avatar_color}
+                  size="lg"
+                  className="ring-2 ring-white dark:ring-slate-800 shadow-sm"
+                />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5">
+                    <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">{member.name}</p>
+                    {member.role && (
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px] px-2 py-0 h-5 font-medium",
+                          member.role === 'Admin' && "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50",
+                          member.role === 'Manager' && "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/50",
+                          member.role === 'Technician' && "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50",
+                          member.role === 'Viewer' && "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-700/30 dark:text-slate-400 dark:border-slate-600/50"
+                        )}
+                      >
+                        {member.role}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center gap-1.5 truncate"><Mail className="w-3.5 h-3.5 flex-shrink-0" />{member.email}</span>
+                    {member.phone && <span className="flex items-center gap-1.5 hidden sm:flex"><Phone className="w-3.5 h-3.5 flex-shrink-0" />{member.phone}</span>}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {member.role && (
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      member.role === 'Admin' && "bg-red-50 text-red-700 border-red-200",
-                      member.role === 'Manager' && "bg-blue-50 text-blue-700 border-blue-200",
-                      member.role === 'Technician' && "bg-green-50 text-green-700 border-green-200",
-                      member.role === 'Viewer' && "bg-slate-50 text-slate-700 border-slate-200"
-                    )}
-                  >
-                    {member.role}
-                  </Badge>
-                )}
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(member); setShowModal(true); }}>
+                  <Edit2 className="w-3.5 h-3.5" />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => { setEditing(member); setShowModal(true); }}>
@@ -454,8 +504,18 @@ function PeopleSection({ queryClient }) {
               </div>
             </div>
             ))}
+            {filteredMembers.length === 0 && members.length > 0 && (
+              <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                <Search className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p>No members match "{searchQuery}"</p>
+              </div>
+            )}
             {members.length === 0 && (
-              <div className="p-8 text-center text-slate-500">No team members yet</div>
+              <div className="p-12 text-center">
+                <Users className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
+                <p className="text-slate-500 dark:text-slate-400 font-medium">No team members yet</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Invite someone to get started</p>
+              </div>
             )}
           </div>
         </div>
@@ -464,41 +524,50 @@ function PeopleSection({ queryClient }) {
       {/* Groups Tab */}
       {activeTab === 'groups' && (
         <div>
-          <div className="p-4 border-b bg-slate-50 flex justify-end">
-            <Button onClick={() => { setEditingGroup(null); setShowGroupModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          <div className="p-4 border-b dark:border-slate-700/50 flex justify-end">
+            <Button onClick={() => { setEditingGroup(null); setShowGroupModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C] h-9">
               <Plus className="w-4 h-4 mr-2" />
               Add Group
             </Button>
           </div>
-          <div className="divide-y">
+          <div className="divide-y dark:divide-slate-700/50">
             {groups.map((group) => (
-              <div key={group.id} className="p-4 flex items-center justify-between hover:bg-slate-50">
+              <div key={group.id} className="px-5 py-4 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-700/20 transition-colors group">
                 <div className="flex items-center gap-4">
-                  <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", groupColors[group.color] || 'bg-indigo-500')}>
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shadow-sm", groupColors[group.color] || 'bg-indigo-500')}>
                     <Users className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900">{group.name}</p>
-                    <p className="text-sm text-slate-500">{group.member_emails?.length || 0} members</p>
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">{group.name}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{group.member_emails?.length || 0} member{(group.member_emails?.length || 0) !== 1 ? 's' : ''}</p>
                   </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => { setEditingGroup(group); setShowGroupModal(true); }}>
-                      <Edit2 className="w-4 h-4 mr-2" />Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'group', item: group })} className="text-red-600">
-                      <Trash2 className="w-4 h-4 mr-2" />Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingGroup(group); setShowGroupModal(true); }}>
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => { setEditingGroup(group); setShowGroupModal(true); }}>
+                        <Edit2 className="w-4 h-4 mr-2" />Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'group', item: group })} className="text-red-600">
+                        <Trash2 className="w-4 h-4 mr-2" />Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             ))}
             {groups.length === 0 && (
-              <div className="p-8 text-center text-slate-500">No groups yet</div>
+              <div className="p-12 text-center">
+                <Users className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
+                <p className="text-slate-500 dark:text-slate-400 font-medium">No groups yet</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Create a group to organize your team</p>
+              </div>
             )}
           </div>
         </div>
@@ -506,23 +575,29 @@ function PeopleSection({ queryClient }) {
 
       {/* Admins Tab */}
       {activeTab === 'admins' && (
-        <div className="p-4 space-y-4">
+        <div className="p-5 space-y-5">
           {admins.length > 0 && (
-            <div className="p-4 bg-slate-50 rounded-xl">
-              <h3 className="text-sm font-medium text-slate-700 mb-3">Current Administrators</h3>
-              <div className="space-y-2">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+              <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b] border-b dark:border-slate-700/50">
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Current Administrators</h3>
+              </div>
+              <div className="divide-y dark:divide-slate-700/50">
                 {admins.map(member => (
-                  <div key={member.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                  <div key={member.id} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50/80 dark:hover:bg-slate-700/20 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-sm", member.avatar_color || avatarColors[0])}>
-                        {member.name?.charAt(0)?.toUpperCase()}
-                      </div>
+                      <UserAvatar
+                        email={member.email}
+                        name={member.name}
+                        avatarUrl={member.avatar_url}
+                        avatarColor={member.avatar_color}
+                        size="md"
+                      />
                       <div>
-                        <p className="font-medium text-slate-900">{member.name}</p>
-                        <p className="text-xs text-slate-500">{member.email}</p>
+                        <p className="font-medium text-slate-900 dark:text-slate-100">{member.name}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{member.email}</p>
                       </div>
                     </div>
-                    <Button size="sm" variant="outline" onClick={() => toggleAdmin(member)}>
+                    <Button size="sm" variant="outline" className="text-xs dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700" onClick={() => toggleAdmin(member)}>
                       Remove Admin
                     </Button>
                   </div>
@@ -531,27 +606,33 @@ function PeopleSection({ queryClient }) {
             </div>
           )}
 
-          <div className="p-4 bg-slate-50 rounded-xl">
-            <h3 className="text-sm font-medium text-slate-700 mb-3">Make Admin</h3>
-            <div className="space-y-2">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+            <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b] border-b dark:border-slate-700/50">
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Make Admin</h3>
+            </div>
+            <div className="divide-y dark:divide-slate-700/50">
               {members.filter(m => m.role !== 'Admin').map(member => (
-                <div key={member.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                <div key={member.id} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50/80 dark:hover:bg-slate-700/20 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-sm", member.avatar_color || avatarColors[0])}>
-                      {member.name?.charAt(0)?.toUpperCase()}
-                    </div>
+                    <UserAvatar
+                      email={member.email}
+                      name={member.name}
+                      avatarUrl={member.avatar_url}
+                      avatarColor={member.avatar_color}
+                      size="md"
+                    />
                     <div>
-                      <p className="font-medium text-slate-900">{member.name}</p>
-                      <p className="text-xs text-slate-500">{member.email}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{member.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{member.email}</p>
                     </div>
                   </div>
-                  <Button size="sm" className="bg-[#0069AF] hover:bg-[#133F5C]" onClick={() => toggleAdmin(member)}>
+                  <Button size="sm" className="bg-[#0069AF] hover:bg-[#133F5C] text-xs" onClick={() => toggleAdmin(member)}>
                     Make Admin
                   </Button>
                 </div>
               ))}
               {members.filter(m => m.role !== 'Admin').length === 0 && (
-                <p className="text-slate-500 text-center py-4">All team members are admins</p>
+                <p className="text-slate-500 dark:text-slate-400 text-center py-6 text-sm">All team members are administrators</p>
               )}
             </div>
           </div>

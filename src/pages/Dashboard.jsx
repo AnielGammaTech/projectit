@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square } from 'lucide-react';
+import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square, Bell, AtSign, MessageSquare, FolderOpen, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
-import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
-import { Link } from 'react-router-dom';
+import { format, isPast, isToday, isTomorrow, differenceInDays, formatDistanceToNow } from 'date-fns';
+import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { parseLocalDate } from '@/utils/dateUtils';
 
@@ -75,6 +75,23 @@ export default function Dashboard() {
   const [isSyncingQuotes, setIsSyncingQuotes] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingType, setProcessingType] = useState(null);
+  const [dismissedCatchUp, setDismissedCatchUp] = useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Notification type config for "While you were away" banner
+  const missedConfig = {
+    mention: { icon: AtSign, bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' },
+    task_assigned: { icon: CheckCircle2, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
+    task_due: { icon: Clock, bg: 'bg-amber-100 dark:bg-amber-900/30', color: 'text-amber-600 dark:text-amber-400' },
+    task_completed: { icon: CheckCircle2, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
+    task_overdue: { icon: AlertTriangle, bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400' },
+    part_status: { icon: Package, bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' },
+    project_update: { icon: FolderOpen, bg: 'bg-violet-100 dark:bg-violet-900/30', color: 'text-violet-600 dark:text-violet-400' },
+    project_assigned: { icon: FolderOpen, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
+    comment: { icon: MessageSquare, bg: 'bg-teal-100 dark:bg-teal-900/30', color: 'text-teal-600 dark:text-teal-400' },
+    progress_update: { icon: CheckCircle2, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
+  };
   const [permanentDeleteConfirm, setPermanentDeleteConfirm] = useState({ open: false, project: null });
   const [showProposalsModal, setShowProposalsModal] = useState(false);
 
@@ -133,6 +150,41 @@ export default function Dashboard() {
     }).catch(() => {});
     return () => { mounted = false; };
   }, []);
+
+  // Fetch unread notifications for "While you were away" banner
+  const { data: missedNotifications = [], refetch: refetchMissed } = useQuery({
+    queryKey: ['dashboardMissedNotifications', currentUser?.email],
+    queryFn: () => api.entities.UserNotification.filter(
+      { user_email: currentUser.email, is_read: false }, '-created_date', 20
+    ),
+    enabled: !!currentUser?.email,
+    staleTime: 30000,
+  });
+
+  const handleMarkNotificationRead = async (notification) => {
+    try {
+      await api.entities.UserNotification.update(notification.id, { is_read: true });
+      refetchMissed();
+      queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
+      if (notification.link) {
+        navigate(notification.link);
+      }
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
+    }
+  };
+
+  const handleMarkAllMissedRead = async () => {
+    try {
+      await Promise.all(
+        missedNotifications.map(n => api.entities.UserNotification.update(n.id, { is_read: true }))
+      );
+      refetchMissed();
+      queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+    }
+  };
 
   const { data: projects = [], isLoading: loadingProjects, refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
@@ -806,30 +858,97 @@ export default function Dashboard() {
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-[#133F5C] dark:text-slate-100">Howdy, Fellow Tech Enthusiast! 🤠</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-[#133F5C] dark:text-slate-100">
+                Howdy, {currentUser?.full_name?.split(' ')[0] || 'there'}! 👋
+              </h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </p>
             </div>
-            <div className="flex items-center sm:items-start gap-3 sm:gap-6 w-full sm:w-auto">
-              <div className="hidden sm:block text-right text-sm">
-                <p className="font-medium text-slate-700 dark:text-slate-300">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                <p className="text-slate-500 dark:text-slate-400">{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} • Naples, FL</p>
-              </div>
-              <div className="flex flex-col items-stretch sm:items-end gap-1 flex-1 sm:flex-initial">
-                <Button
-                  onClick={() => setShowProjectModal(true)}
-                  className="bg-[#0F2F44] hover:bg-[#1a4a6e] dark:bg-blue-600 dark:hover:bg-blue-700 shadow-lg text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3 h-10 sm:h-12 w-full sm:w-auto"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  New Project
-                </Button>
-                <Link to={createPageUrl('Templates')} className="text-xs sm:text-sm text-[#0069AF] hover:text-[#133F5C] dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors underline underline-offset-2 text-center sm:text-right">
-                  or use a template →
-                </Link>
-              </div>
+            <div className="flex flex-col items-stretch sm:items-end gap-1 flex-1 sm:flex-initial">
+              <Button
+                onClick={() => setShowProjectModal(true)}
+                className="bg-[#0F2F44] hover:bg-[#1a4a6e] dark:bg-blue-600 dark:hover:bg-blue-700 shadow-lg text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3 h-10 sm:h-12 w-full sm:w-auto"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                New Project
+              </Button>
+              <Link to={createPageUrl('Templates')} className="text-xs sm:text-sm text-[#0069AF] hover:text-[#133F5C] dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors underline underline-offset-2 text-center sm:text-right">
+                or use a template →
+              </Link>
             </div>
           </div>
         </div>
 
-
+        {/* While You Were Away Banner */}
+        {missedNotifications.length > 0 && !dismissedCatchUp && (
+          <div className="mb-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-700/50 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-transparent dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-transparent">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-[#0069AF]/10 dark:bg-blue-500/15">
+                  <Bell className="w-4 h-4 text-[#0069AF] dark:text-blue-400" />
+                </div>
+                <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
+                  While you were away
+                </h3>
+                <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-[#0069AF]/10 text-[#0069AF] dark:bg-blue-400/15 dark:text-blue-400">
+                  {missedNotifications.length} new
+                </span>
+              </div>
+              <button
+                onClick={() => setDismissedCatchUp(true)}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-700/50 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="divide-y divide-slate-100 dark:divide-slate-700/40">
+              {missedNotifications.slice(0, 5).map((notification) => {
+                const config = missedConfig[notification.type] || missedConfig.project_update;
+                const Icon = config.icon;
+                return (
+                  <button
+                    key={notification.id}
+                    onClick={() => handleMarkNotificationRead(notification)}
+                    className="w-full flex items-center gap-3.5 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors text-left group"
+                  >
+                    <div className={cn("p-1.5 rounded-lg flex-shrink-0", config.bg)}>
+                      <Icon className={cn("w-3.5 h-3.5", config.color)} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                        {notification.title}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        {notification.message}
+                      </p>
+                    </div>
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500 whitespace-nowrap flex-shrink-0">
+                      {notification.created_date
+                        ? formatDistanceToNow(new Date(notification.created_date), { addSuffix: true })
+                        : ''}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center justify-between px-5 py-2.5 border-t border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#151d2b]/50">
+              <button
+                onClick={handleMarkAllMissedRead}
+                className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#0069AF] dark:hover:text-blue-400 transition-colors flex items-center gap-1.5"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                Mark all as read
+              </button>
+              <Link
+                to={createPageUrl('MyNotifications')}
+                className="text-xs font-medium text-[#0069AF] dark:text-blue-400 hover:text-[#133F5C] dark:hover:text-blue-300 transition-colors"
+              >
+                View all notifications →
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Urgent Tasks Alert */}
         {!dismissedAlert && myUrgentTasks.length > 0 && (
