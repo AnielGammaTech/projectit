@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,8 @@ import {
   Building2, Tags, GitMerge,
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
   FileText, Layers, MessageSquare, Database, Activity,
-  HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send, Copy, Check, Globe, KeyRound
+  HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send, Copy, Check, Globe, KeyRound,
+  Image, Search
 } from 'lucide-react';
 import {
   Dialog,
@@ -244,6 +246,7 @@ function PeopleSection({ queryClient }) {
   const [editing, setEditing] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [resetPasswordMember, setResetPasswordMember] = useState(null);
 
   const { data: members = [] } = useQuery({
     queryKey: ['teamMembers'],
@@ -326,6 +329,17 @@ function PeopleSection({ queryClient }) {
       alert(err?.message || 'Failed to resend invite');
     } finally {
       setResendingInvite(null);
+    }
+  };
+
+  const handleResetPassword = async (email, newPassword) => {
+    try {
+      await api.users.resetPassword(email, newPassword);
+      toast.success('Password has been reset successfully');
+      setResetPasswordMember(null);
+    } catch (err) {
+      console.error('Reset password failed:', err);
+      throw err;
     }
   };
 
@@ -413,6 +427,9 @@ function PeopleSection({ queryClient }) {
                     <DropdownMenuItem onClick={() => handleResendInvite(member)} disabled={resendingInvite === member.email}>
                       <Send className="w-4 h-4 mr-2" />
                       {resendingInvite === member.email ? 'Sending...' : 'Re-invite'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setResetPasswordMember(member)}>
+                      <KeyRound className="w-4 h-4 mr-2" />Reset Password
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'member', item: member })} className="text-red-600">
                       <Trash2 className="w-4 h-4 mr-2" />Delete
@@ -541,7 +558,99 @@ function PeopleSection({ queryClient }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ResetPasswordModal
+        open={!!resetPasswordMember}
+        onClose={() => setResetPasswordMember(null)}
+        member={resetPasswordMember}
+        onSave={handleResetPassword}
+      />
     </div>
+  );
+}
+
+function ResetPasswordModal({ open, onClose, member, onSave }) {
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      setNewPassword('');
+      setConfirmPassword('');
+      setError('');
+    }
+  }, [open]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await onSave(member.email, newPassword);
+    } catch (err) {
+      setError(err?.message || 'Failed to reset password');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Reset Password</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          <p className="text-sm text-slate-500">
+            Set a new password for <span className="font-medium text-slate-700">{member?.name}</span> ({member?.email})
+          </p>
+          <div>
+            <Label>New Password</Label>
+            <Input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              className="mt-1"
+              placeholder="Minimum 8 characters"
+            />
+          </div>
+          <div>
+            <Label>Confirm Password</Label>
+            <Input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="mt-1"
+            />
+          </div>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]" disabled={saving}>
+              {saving ? 'Resetting...' : 'Reset Password'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2169,6 +2278,9 @@ function IntegrationsSection({ queryClient }) {
 
       {/* GammaAi Integration Card */}
       <GammaAiIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+
+      {/* Giphy Integration Card */}
+      <GiphyIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
     </div>
   );
 }
@@ -3310,6 +3422,285 @@ function AIAgentsSection({ queryClient }) {
               )}
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GiphyIntegrationCard({ expandedIntegration, toggleIntegration }) {
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [result, setResult] = useState(null);
+  const [hasEnvApiKey, setHasEnvApiKey] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [previewGifs, setPreviewGifs] = useState([]);
+
+  const [formData, setFormData] = useState({
+    giphy_enabled: false,
+    giphy_rating: 'g',
+    giphy_language: 'en',
+  });
+
+  // Check env var status
+  useEffect(() => {
+    api.functions.invoke('giphy', { action: 'checkEnvStatus' })
+      .then(r => setHasEnvApiKey(r.hasApiKey || false))
+      .catch(() => setHasEnvApiKey(false));
+  }, []);
+
+  // Load existing settings
+  const { data: giphySettings = [], refetch } = useQuery({
+    queryKey: ['giphySettings'],
+    queryFn: () => api.entities.IntegrationSettings.filter({ provider: 'giphy' })
+  });
+
+  useEffect(() => {
+    if (giphySettings[0]) {
+      setFormData(prev => ({
+        ...prev,
+        giphy_enabled: giphySettings[0].enabled || false,
+        giphy_rating: giphySettings[0].rating || 'g',
+        giphy_language: giphySettings[0].language || 'en',
+      }));
+    }
+  }, [giphySettings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setResult(null);
+    try {
+      await api.functions.invoke('giphy', {
+        action: 'saveSettings',
+        enabled: formData.giphy_enabled,
+        rating: formData.giphy_rating,
+        language: formData.giphy_language,
+      });
+      refetch();
+      setResult({ success: true, message: 'Giphy settings saved successfully' });
+    } catch (err) {
+      setResult({ success: false, message: err.data?.error || err.message || 'Failed to save' });
+    }
+    setSaving(false);
+  };
+
+  const handleTest = async () => {
+    if (!hasEnvApiKey) {
+      setResult({ success: false, message: 'GIPHY_API_KEY environment variable is not set on the server' });
+      return;
+    }
+    setTesting(true);
+    setResult(null);
+    try {
+      const response = await api.functions.invoke('giphy', { action: 'testConnection' });
+      const data = response.data || response;
+      setResult(data.success
+        ? { success: true, message: 'Connected to Giphy API successfully!' }
+        : { success: false, message: data.error || 'Connection failed' });
+    } catch (err) {
+      setResult({ success: false, message: err.data?.error || 'Connection test failed' });
+    }
+    setTesting(false);
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    try {
+      const response = await api.functions.invoke('giphy', { action: 'search', query: searchQuery, limit: 6 });
+      const data = response.data || response;
+      if (data.success) {
+        setPreviewGifs(data.gifs || []);
+      } else {
+        setResult({ success: false, message: data.error || 'Search failed' });
+      }
+    } catch (err) {
+      setResult({ success: false, message: 'Search failed' });
+    }
+    setSearching(false);
+  };
+
+  const RATING_OPTIONS = [
+    { value: 'g', label: 'G — General Audiences' },
+    { value: 'pg', label: 'PG — Parental Guidance' },
+    { value: 'pg-13', label: 'PG-13 — Some Material Inappropriate' },
+    { value: 'r', label: 'R — Restricted' },
+  ];
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <button
+        onClick={() => toggleIntegration('giphy')}
+        className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-yellow-400 flex items-center justify-center shadow-sm">
+            <Image className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-left">
+            <h3 className="text-base font-semibold text-slate-900">Giphy</h3>
+            <p className="text-xs text-slate-500 mt-0.5">GIF search & reactions for messages and comments</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {hasEnvApiKey && formData.giphy_enabled ? (
+            <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Connected</Badge>
+          ) : hasEnvApiKey ? (
+            <Badge variant="outline" className="text-amber-500 border-amber-200 text-xs">Key Set</Badge>
+          ) : (
+            <Badge variant="outline" className="text-slate-400 border-slate-200 text-xs">Not configured</Badge>
+          )}
+          <ChevronDown className={cn(
+            "w-5 h-5 text-slate-400 transition-transform duration-200",
+            expandedIntegration === 'giphy' && "rotate-180"
+          )} />
+        </div>
+      </button>
+
+      {expandedIntegration === 'giphy' && (
+        <div className="border-t p-6 space-y-5">
+          {/* How it works */}
+          <div className="p-4 bg-gradient-to-br from-purple-50/50 to-pink-50/30 rounded-xl border border-purple-100">
+            <h4 className="text-sm font-semibold text-slate-700 mb-2">What this does</h4>
+            <ul className="text-xs text-slate-600 space-y-1.5">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-purple-500" />
+                Add GIF reactions to project messages and comments
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-purple-500" />
+                Search Giphy's library directly from within ProjectIT
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-purple-500" />
+                Content rating filter to keep it workplace appropriate
+              </li>
+            </ul>
+          </div>
+
+          {/* API Key — env var only */}
+          <div>
+            <Label className="text-xs">Giphy API Key</Label>
+            {hasEnvApiKey ? (
+              <div className="mt-1 h-9 flex items-center gap-2 px-3 rounded-md border border-emerald-200 bg-emerald-50 text-xs text-emerald-700 font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Configured via GIPHY_API_KEY environment variable
+              </div>
+            ) : (
+              <div className="mt-1 h-9 flex items-center gap-2 px-3 rounded-md border border-red-200 bg-red-50 text-xs text-red-600 font-medium">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Set GIPHY_API_KEY in Railway env vars
+              </div>
+            )}
+            <p className="text-xs text-slate-400 mt-1">Get your SDK key from <a href="https://developers.giphy.com/dashboard/" target="_blank" rel="noopener noreferrer" className="text-purple-500 hover:underline">developers.giphy.com</a></p>
+          </div>
+
+          {/* Settings */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs">Content Rating</Label>
+              <select
+                value={formData.giphy_rating}
+                onChange={e => setFormData(prev => ({ ...prev, giphy_rating: e.target.value }))}
+                className="mt-1 w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm"
+              >
+                {RATING_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label className="text-xs">Language</Label>
+              <select
+                value={formData.giphy_language}
+                onChange={e => setFormData(prev => ({ ...prev, giphy_language: e.target.value }))}
+                className="mt-1 w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm"
+              >
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="pt">Portuguese</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="zh-CN">Chinese (Simplified)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Enable toggle */}
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={formData.giphy_enabled}
+                onCheckedChange={checked => setFormData(prev => ({ ...prev, giphy_enabled: !!checked }))}
+              />
+              <span className="text-sm text-slate-700">Enable Giphy integration</span>
+            </label>
+          </div>
+
+          {/* Test Search */}
+          {hasEnvApiKey && (
+            <div className="pt-4 border-t space-y-3">
+              <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                Test GIF Search
+              </h3>
+              <div className="flex gap-2">
+                <Input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                  placeholder="Search for GIFs... (e.g. thumbs up)"
+                  className="flex-1"
+                />
+                <Button onClick={handleSearch} disabled={searching} variant="outline" size="sm">
+                  {searching ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Search className="w-4 h-4 mr-1" />}
+                  Search
+                </Button>
+              </div>
+              {previewGifs.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {previewGifs.map(gif => (
+                    <div key={gif.id} className="relative rounded-lg overflow-hidden bg-slate-100 aspect-square group">
+                      <img
+                        src={gif.images.fixed_width?.url || gif.images.downsized?.url}
+                        alt={gif.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
+                        <p className="text-[9px] text-white font-medium truncate">{gif.title}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-[10px] text-slate-400">Powered by GIPHY</p>
+            </div>
+          )}
+
+          {/* Result message */}
+          {result && (
+            <div className={cn(
+              "p-3 rounded-lg text-sm flex items-center gap-2",
+              result.success ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+            )}>
+              {result.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+              {result.message}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-3 pt-4 border-t">
+            <Button onClick={handleSave} disabled={saving} className="bg-gradient-to-r from-purple-500 to-pink-500 hover:brightness-110 text-white">
+              {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Settings</>}
+            </Button>
+            <Button onClick={handleTest} disabled={testing || !hasEnvApiKey} variant="outline">
+              {testing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing...</> : 'Test Connection'}
+            </Button>
+          </div>
         </div>
       )}
     </div>

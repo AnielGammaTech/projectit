@@ -40,6 +40,19 @@ import TaskGroupCard from '@/components/project/TaskGroupCard';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import UserAvatar from '@/components/UserAvatar';
 import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
+import { fireTaskConfetti, fireCelebrationConfetti } from '@/utils/confetti';
+import { Sparkles, Loader2, Send } from 'lucide-react';
+import { toast } from 'sonner';
+
+const motivationalMessages = [
+  "Nice work! Keep it up! 💪",
+  "One down, you're crushing it! 🔥",
+  "Task complete! You're on a roll! ⚡",
+  "Great progress! Keep the momentum! 🚀",
+  "Done! Another step closer to the finish line! 🎯",
+  "Nailed it! Your team will thank you! 🙌",
+  "Completed! That's how it's done! ✨",
+];
 
 // --- Design constants ---
 
@@ -118,6 +131,8 @@ export default function ProjectTasks() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [bulkDatePickerOpen, setBulkDatePickerOpen] = useState(false);
   const [viewMode, setViewMode] = useState('list');
+  const [aiInput, setAiInput] = useState('');
+  const [aiProcessing, setAiProcessing] = useState(false);
 
   useEffect(() => {
     api.auth.me().then(setCurrentUser).catch(() => {});
@@ -366,12 +381,27 @@ export default function ProjectTasks() {
     await api.entities.Task.update(task.id, { status });
 
     if (status === 'completed') {
+      fireTaskConfetti();
+      const msg = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+      toast.success(msg);
+
       await sendTaskCompletionNotification({
         task,
         projectId,
         projectName: project?.name,
         currentUser,
       });
+
+      // Check if all tasks are now completed for a big celebration
+      const updatedTasks = tasks.map(t => t.id === task.id ? { ...t, status } : t);
+      const activeTasks = updatedTasks.filter(t => t.status !== 'archived');
+      const allDone = activeTasks.length > 0 && activeTasks.every(t => t.status === 'completed');
+      if (allDone) {
+        setTimeout(() => {
+          fireCelebrationConfetti();
+          toast.success("All tasks completed! Amazing work! 🎉🎊");
+        }, 500);
+      }
     }
 
     refetchTasks();
@@ -411,6 +441,76 @@ export default function ProjectTasks() {
     }
     await refetchTasks();
     setShowTaskModal(false);
+  };
+
+  const handleAiTaskCreate = async () => {
+    if (!aiInput.trim() || aiProcessing) return;
+    setAiProcessing(true);
+    try {
+      const memberNames = projectMembers.map(m => `${m.name} (${m.email})`).join(', ');
+      const groupNames = taskGroups.map(g => `${g.name} (id: ${g.id})`).join(', ');
+      const result = await api.integrations.Core.InvokeLLM({
+        prompt: `Parse this natural language task request and extract task details.
+
+User said: "${aiInput}"
+
+Available team members: ${memberNames || 'None'}
+Available groups: ${groupNames || 'None'}
+
+Extract the task title, priority (low/medium/high), assignee email (if mentioned), due date (in YYYY-MM-DD format if mentioned, use today's date ${format(new Date(), 'yyyy-MM-dd')} as reference), and group_id (if a group was mentioned).
+
+Respond with JSON only.`,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            priority: { type: 'string', enum: ['low', 'medium', 'high'] },
+            assigned_to: { type: 'string' },
+            assigned_name: { type: 'string' },
+            due_date: { type: 'string' },
+            group_id: { type: 'string' },
+          },
+          required: ['title', 'priority']
+        },
+        feature: 'task_suggestions'
+      });
+
+      await api.entities.Task.create({
+        title: result.title || aiInput.trim(),
+        project_id: projectId,
+        status: 'todo',
+        priority: result.priority || 'medium',
+        group_id: result.group_id || '',
+        due_date: result.due_date || '',
+        assigned_to: result.assigned_to || '',
+        assigned_name: result.assigned_name || '',
+      });
+
+      if (result.assigned_to) {
+        await sendTaskAssignmentNotification({
+          assigneeEmail: result.assigned_to,
+          taskTitle: result.title || aiInput.trim(),
+          projectId,
+          projectName: project?.name,
+          currentUser,
+        });
+      }
+
+      setAiInput('');
+      refetchTasks();
+    } catch (err) {
+      console.error('AI task creation failed:', err);
+      // Fallback: create task with just the title
+      await api.entities.Task.create({
+        title: aiInput.trim(),
+        project_id: projectId,
+        status: 'todo',
+        priority: 'medium',
+      });
+      setAiInput('');
+      refetchTasks();
+    }
+    setAiProcessing(false);
   };
 
   const handleSaveGroup = async (data, existingGroup) => {
@@ -577,18 +677,18 @@ export default function ProjectTasks() {
     return (
       <div
         className={cn(
-          "group flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white dark:bg-[#1e2a3a] rounded-xl border transition-all cursor-pointer",
+          "group flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg border transition-all cursor-pointer",
           isCompleted || task.status === 'archived'
             ? "opacity-50 bg-slate-50/30 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700/50"
-            : "border-slate-200 dark:border-slate-700/50 hover:shadow-sm hover:border-slate-300 dark:hover:border-slate-600",
+            : "border-slate-200/80 dark:border-slate-700/50 hover:shadow-sm hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50/50",
           isSelected && "ring-2 ring-[#0069AF] bg-blue-50/50",
           isDragging && "shadow-lg ring-2 ring-[#0069AF]"
         )}
         onClick={() => selectionMode ? toggleTaskSelection(task.id) : setSelectedTask(task)}
       >
         {/* Drag handle */}
-        <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing p-1 -ml-1 opacity-40 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity touch-manipulation">
-          <GripVertical className="w-4 h-4 text-slate-400" />
+        <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing p-0.5 -ml-1 opacity-40 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity touch-manipulation">
+          <GripVertical className="w-3.5 h-3.5 text-slate-400" />
         </div>
 
         {/* Selection checkbox */}
@@ -618,18 +718,18 @@ export default function ProjectTasks() {
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-              className="w-5 h-5 sm:w-[18px] sm:h-[18px] rounded-full bg-emerald-500 flex items-center justify-center"
+              className="w-[17px] h-[17px] rounded-full bg-emerald-500 flex items-center justify-center"
             >
-              <Check className="w-3 h-3 text-white" strokeWidth={3} />
+              <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
             </motion.div>
           ) : (
-            <div className="w-5 h-5 sm:w-[18px] sm:h-[18px] rounded-full border-2 border-slate-300 hover:border-emerald-400 transition-colors" />
+            <div className="w-[17px] h-[17px] rounded-full border-2 border-slate-300 hover:border-emerald-400 transition-colors" />
           )}
         </button>
 
         {/* Title */}
         <span className={cn(
-          "flex-1 font-medium text-sm truncate min-w-0",
+          "flex-1 font-medium text-[13px] truncate min-w-0",
           isCompleted && "line-through text-slate-400"
         )}>
           {task.title}
@@ -748,9 +848,9 @@ export default function ProjectTasks() {
               ) : (
                 <button
                   onClick={(e) => e.stopPropagation()}
-                  className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-[#0069AF]/40 touch-manipulation shrink-0"
+                  className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-[#0069AF]/40 touch-manipulation shrink-0"
                 >
-                  <UserPlus className="w-3 h-3 text-slate-400" />
+                  <UserPlus className="w-2.5 h-2.5 text-slate-400" />
                 </button>
               )}
             </DropdownMenuTrigger>
@@ -773,8 +873,8 @@ export default function ProjectTasks() {
           {/* More menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7 sm:opacity-0 sm:group-hover:opacity-100 touch-manipulation" onClick={(e) => e.stopPropagation()}>
-                <MoreHorizontal className="w-4 h-4" />
+              <Button variant="ghost" size="icon" className="h-6 w-6 sm:opacity-0 sm:group-hover:opacity-100 touch-manipulation" onClick={(e) => e.stopPropagation()}>
+                <MoreHorizontal className="w-3.5 h-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -910,6 +1010,41 @@ export default function ProjectTasks() {
                   <span className="text-sm font-semibold text-amber-700">{todayTasks}</span>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* AI Task Input */}
+        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm p-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-sm">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1 relative">
+              <Input
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleAiTaskCreate();
+                  }
+                }}
+                placeholder='Try: "Review design doc by Friday high priority assign to John"'
+                className="h-10 pr-10 bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-sm placeholder:text-slate-400"
+                disabled={aiProcessing}
+              />
+              <Button
+                onClick={handleAiTaskCreate}
+                disabled={!aiInput.trim() || aiProcessing}
+                className="absolute right-1 top-1 h-8 w-8 p-0 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 rounded-lg"
+              >
+                {aiProcessing ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+              </Button>
             </div>
           </div>
         </div>
@@ -1146,7 +1281,7 @@ export default function ProjectTasks() {
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         className={cn(
-                          "px-4 pb-2 space-y-2 min-h-[60px] transition-colors",
+                          "px-3 pb-2 space-y-1 min-h-[40px] transition-colors",
                           snapshot.isDraggingOver && "bg-blue-50/50"
                         )}
                       >
@@ -1205,7 +1340,7 @@ export default function ProjectTasks() {
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className={cn(
-                      "px-4 pb-2 space-y-2 min-h-[60px] transition-colors",
+                      "px-3 pb-2 space-y-1 min-h-[40px] transition-colors",
                       snapshot.isDraggingOver && "bg-blue-50/50"
                     )}
                   >

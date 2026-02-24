@@ -28,6 +28,7 @@ import haloPSACustomerList from './haloPSACustomerList.js';
 import resendEmail from './resendEmail.js';
 import claudeAI from './claudeAI.js';
 import agentBridge from './agentBridge.js';
+import giphy from './giphy.js';
 
 const router = Router();
 
@@ -60,6 +61,7 @@ const handlers = {
   resendEmail,
   claudeAI,
   agentBridge,
+  giphy,
 };
 
 // POST /api/functions/:name

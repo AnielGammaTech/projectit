@@ -43,6 +43,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import ProcessingOverlay from '@/components/ui/ProcessingOverlay';
+import { fireTaskConfetti, fireSubtleConfetti } from '@/utils/confetti';
 
 export default function Dashboard() {
     const [showProjectModal, setShowProjectModal] = useState(false);
@@ -534,6 +535,7 @@ export default function Dashboard() {
 
   const handleTaskComplete = async (task) => {
     await api.entities.Task.update(task.id, { ...task, status: 'completed' });
+    fireSubtleConfetti();
     refetchTasks();
   };
 
@@ -759,7 +761,7 @@ export default function Dashboard() {
         setShowProjectModal(false);
       };
 
-  if (loadingProjects) {
+  if (loadingProjects || !currentUser) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -1538,11 +1540,11 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Sidebar - My Tasks */}
-          <div className="space-y-6">
-            <MyTasksCard 
-              tasks={tasks} 
-              parts={parts} 
+          {/* Sidebar - My Tasks (with Focus tab) */}
+          <div className="space-y-4">
+            <MyTasksCard
+              tasks={tasks}
+              parts={parts}
               projects={projects}
               currentUserEmail={currentUser?.email}
               onTaskComplete={handleTaskComplete}

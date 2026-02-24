@@ -205,6 +205,12 @@ const users = {
       body: JSON.stringify({ email }),
     });
   },
+  async resetPassword(email, newPassword) {
+    return apiFetch('/api/auth/admin-reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, new_password: newPassword }),
+    });
+  },
   async sendOtp(email) {
     return apiFetch('/api/auth/send-otp', {
       method: 'POST',

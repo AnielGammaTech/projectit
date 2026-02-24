@@ -545,6 +545,36 @@ const authService = {
 
     return { success: true };
   },
+
+  /**
+   * Admin-only: reset another user's password by email.
+   */
+  async adminResetPassword(email, newPassword) {
+    const lowerEmail = email.toLowerCase();
+
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
+    const { rows } = await pool.query(
+      'SELECT supabase_uid FROM users WHERE email = $1',
+      [lowerEmail]
+    );
+
+    if (rows.length === 0 || !rows[0].supabase_uid) {
+      throw Object.assign(new Error('User not found or has no Supabase account'), { status: 404 });
+    }
+
+    const { error } = await supabase.auth.admin.updateUserById(rows[0].supabase_uid, {
+      password: newPassword,
+    });
+
+    if (error) {
+      throw Object.assign(new Error(error.message), { status: 400 });
+    }
+
+    return { success: true };
+  },
 };
 
 export default authService;

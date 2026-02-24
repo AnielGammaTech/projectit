@@ -134,6 +134,28 @@ router.post('/change-password', authMiddleware, async (req, res, next) => {
   }
 });
 
+// Admin-only: reset a team member's password
+router.post('/admin-reset-password', authMiddleware, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can reset user passwords' });
+    }
+
+    const { email, new_password } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    if (!new_password || new_password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const result = await authService.adminResetPassword(email, new_password);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Admin-only: fully delete a user (Supabase Auth + users table + TeamMember)
 router.delete('/users/:email', authMiddleware, async (req, res, next) => {
   try {

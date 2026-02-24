@@ -119,12 +119,10 @@ export default function FeedbackButton() {
   return (
     <>
       {/* Side Tab Trigger Button — vertically centered on the left edge */}
-      <motion.button
+      <button
         onClick={() => setIsOpen(true)}
         aria-label="Open feedback form"
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-1.5 px-1.5 py-3 rounded-r-lg bg-[#0069AF] text-white shadow-lg hover:bg-[#005a96] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0069AF] focus-visible:ring-offset-2"
-        whileHover={{ x: 2 }}
-        whileTap={{ scale: 0.95 }}
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-1.5 px-1.5 py-3 rounded-r-lg bg-gradient-to-b from-[#0F2F44] to-[#133F5C] text-white/90 shadow-lg hover:text-white hover:brightness-125 hover:shadow-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#74C7FF] focus-visible:ring-offset-2"
       >
         <MessageSquarePlus className="w-4 h-4 flex-shrink-0" />
         <span
@@ -133,7 +131,7 @@ export default function FeedbackButton() {
         >
           Feedback
         </span>
-      </motion.button>
+      </button>
 
       {/* Modal */}
       <AnimatePresence>
@@ -150,11 +148,11 @@ export default function FeedbackButton() {
               initial={{ opacity: 0, x: -20, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: -20, scale: 0.95 }}
-              className="fixed top-1/2 -translate-y-1/2 left-12 z-50 w-[420px] max-w-[calc(100vw-4rem)] max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+              className="fixed top-4 bottom-4 left-8 z-50 w-[380px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
               onPaste={handlePaste}
             >
               {/* Header */}
-              <div className="p-4 border-b bg-gradient-to-r from-[#0069AF] to-[#0F2F44] text-white flex items-center justify-between">
+              <div className="p-4 border-b bg-gradient-to-r from-[#0F2F44] to-[#133F5C] text-white flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold text-lg">Send Feedback</h3>
                   <p className="text-sm text-white/70">Help us improve your experience</p>
@@ -305,7 +303,7 @@ export default function FeedbackButton() {
                     <Button
                       onClick={handleSubmit}
                       disabled={!formData.title.trim() || !formData.description.trim() || submitting}
-                      className="w-full bg-[#0069AF] hover:bg-[#005a96]"
+                      className="w-full bg-gradient-to-r from-[#0F2F44] to-[#133F5C] hover:brightness-125"
                     >
                       {submitting ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />

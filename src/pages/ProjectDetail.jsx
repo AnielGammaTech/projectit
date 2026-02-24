@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { Link, useNavigate } from 'react-router-dom';
@@ -8,9 +8,9 @@ import { toast } from 'sonner';
 import ProcessingOverlay from '@/components/ui/ProcessingOverlay';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { 
-  ArrowLeft, 
-  Calendar, 
-  Edit2, 
+  ArrowLeft,
+  Calendar,
+  Edit2,
   CheckCircle2,
   ListTodo,
   Package,
@@ -33,7 +33,17 @@ import {
   Tag,
   Crown,
   Activity,
-  ChevronDown
+  ChevronDown,
+  ShoppingCart,
+  PackageCheck,
+  Wrench,
+  Check,
+  UserPlus,
+  ImagePlus,
+  Eye,
+  X,
+  ClipboardCheck,
+  MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -55,7 +65,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { format } from 'date-fns';
+import { format, isToday, isPast } from 'date-fns';
+import { parseLocalDate } from '@/utils/dateUtils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarPicker } from '@/components/ui/calendar';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 import ProgressNeedle from '@/components/project/ProgressNeedle';
 import TeamAvatars from '@/components/project/TeamAvatars';
@@ -92,6 +109,584 @@ const statusOptions = [
   { value: 'on_hold', label: 'On Hold' },
   { value: 'completed', label: 'Completed' }
 ];
+
+// Paginated Tasks Overview Card for Project Detail
+function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, projectId, onAddTask, teamMembers = [] }) {
+  const [taskPage, setTaskPage] = React.useState(0);
+  const TASKS_PER_PAGE = 5;
+  const activeTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived');
+  const totalPages = Math.max(1, Math.ceil(activeTasks.length / TASKS_PER_PAGE));
+  const pagedTasks = activeTasks.slice(taskPage * TASKS_PER_PAGE, (taskPage + 1) * TASKS_PER_PAGE);
+
+  const priorityColors = {
+    high: 'bg-red-100 text-red-600',
+    urgent: 'bg-red-100 text-red-600',
+    medium: 'bg-amber-100 text-amber-700',
+    low: 'bg-slate-100 text-slate-500',
+  };
+
+  const getDueDateLabel = (dueDate) => {
+    if (!dueDate) return null;
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diffDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { text: `${Math.abs(diffDays)}d overdue`, color: 'text-red-500' };
+    if (diffDays === 0) return { text: 'Today', color: 'text-orange-500' };
+    if (diffDays === 1) return { text: 'Tomorrow', color: 'text-amber-500' };
+    if (diffDays <= 7) return { text: `${diffDays}d`, color: 'text-blue-500' };
+    return { text: format(due, 'MMM d'), color: 'text-slate-400' };
+  };
+
+  return (
+    <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-1 lg:col-span-1 group">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full max-h-[320px] border border-blue-100/60 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-0.5"
+      >
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
+        <div className="p-3.5 pb-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/50">
+                <ListTodo className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Tasks</h3>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[11px] text-slate-500 font-medium">{completedTasks} of {tasks.length}</span>
+                  {tasks.length > 0 && (
+                    <div className="w-12 h-1.5 rounded-full bg-blue-100 overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all" style={{ width: `${taskProgress}%` }} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAddTask(); }}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-md shadow-blue-200/40 h-7 w-7 p-0 rounded-lg"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </div>
+        <div className="px-3 pb-2 space-y-0.5">
+          {pagedTasks.length > 0 ? pagedTasks.map(t => {
+            const group = t.group_id ? taskGroups.find(g => g.id === parseInt(t.group_id)) : null;
+            const assignee = t.assigned_to ? teamMembers.find(m => m.email === t.assigned_to) : null;
+            const assigneeName = assignee?.name || (t.assigned_to ? t.assigned_to.split('@')[0] : null);
+            const dueInfo = getDueDateLabel(t.due_date);
+            return (
+              <div key={t.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-blue-50/60 transition-colors">
+                <div className={cn("w-3 h-3 rounded border-2 flex items-center justify-center shrink-0",
+                  t.status === 'in_progress' ? "border-blue-400 bg-blue-50" : t.status === 'review' ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white")}>
+                  {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />}
+                  {t.status === 'review' && <div className="w-1.5 h-1.5 rounded-sm bg-amber-500" />}
+                </div>
+                <span className="text-xs text-slate-700 font-medium truncate flex-1 min-w-0">{t.title}</span>
+                {assigneeName && (
+                  <span className="text-[9px] text-slate-400 shrink-0">{assigneeName.split(' ')[0]}</span>
+                )}
+                {t.priority && t.priority !== 'none' && (
+                  <span className={cn("text-[8px] px-1 py-0 rounded font-semibold uppercase shrink-0 leading-tight", priorityColors[t.priority] || priorityColors.low)}>{t.priority}</span>
+                )}
+                {dueInfo && (
+                  <span className={cn("text-[9px] font-semibold shrink-0", dueInfo.color)}>{dueInfo.text}</span>
+                )}
+              </div>
+            );
+          }) : (
+            <p className="text-xs text-slate-400 text-center py-3">No active tasks</p>
+          )}
+        </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 px-3 pb-3" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTaskPage(p => Math.max(0, p - 1)); }}
+              disabled={taskPage === 0}
+              className="px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50 rounded disabled:opacity-30"
+            >
+              Prev
+            </button>
+            <span className="text-[10px] text-slate-400">{taskPage + 1}/{totalPages}</span>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTaskPage(p => Math.min(totalPages - 1, p + 1)); }}
+              disabled={taskPage >= totalPages - 1}
+              className="px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50 rounded disabled:opacity-30"
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </motion.div>
+    </Link>
+  );
+}
+
+const partStatusConfig = {
+  needed: { label: 'Needed', color: 'bg-slate-100 text-slate-700 border-slate-200' },
+  ordered: { label: 'Ordered', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  received: { label: 'Received', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+  ready_to_install: { label: 'Ready', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+  installed: { label: 'Installed', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' }
+};
+
+const avatarColors = [
+  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
+  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
+  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
+];
+const getColorForEmail = (email) => {
+  if (!email) return avatarColors[0];
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) hash = email.charCodeAt(i) + ((hash << 5) - hash);
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+};
+const getInitials = (name) => {
+  if (!name) return '?';
+  const parts = name.split(' ');
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
+// Paginated Parts Overview Card for Project Detail
+function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, onPartStatusChange, refetchParts }) {
+  const [partPage, setPartPage] = React.useState(0);
+  const PARTS_PER_PAGE = 5;
+  const activeParts = parts.filter(p => p.status !== 'installed');
+  const installedCount = parts.filter(p => p.status === 'installed').length;
+  const totalPages = Math.max(1, Math.ceil(activeParts.length / PARTS_PER_PAGE));
+  const pagedParts = activeParts.slice(partPage * PARTS_PER_PAGE, (partPage + 1) * PARTS_PER_PAGE);
+
+  // Order dialog state
+  const [orderDialog, setOrderDialog] = React.useState({ open: false, part: null, screenshot: null, eta: null, notes: '' });
+  const [orderScreenshotPreview, setOrderScreenshotPreview] = React.useState(null);
+  const [viewingProof, setViewingProof] = React.useState(null);
+  // Receive dialog state
+  const [receiveDialog, setReceiveDialog] = React.useState({ open: false, part: null, installer: '', location: '', createTask: false });
+
+  const openOrderDialog = (part) => {
+    setOrderDialog({ open: true, part, screenshot: null, eta: null, notes: '' });
+    setOrderScreenshotPreview(null);
+  };
+
+  const handleOrderScreenshot = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setOrderDialog(prev => ({ ...prev, screenshot: ev.target.result }));
+      setOrderScreenshotPreview(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleOrderPaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setOrderDialog(prev => ({ ...prev, screenshot: ev.target.result }));
+          setOrderScreenshotPreview(ev.target.result);
+        };
+        reader.readAsDataURL(file);
+        break;
+      }
+    }
+  };
+
+  const handleConfirmOrder = async () => {
+    const { part, screenshot, eta, notes } = orderDialog;
+    if (!part) return;
+    const updateData = {
+      status: 'ordered',
+      order_proof: screenshot || null,
+      order_date: format(new Date(), 'yyyy-MM-dd'),
+    };
+    if (eta) updateData.est_delivery_date = format(eta, 'yyyy-MM-dd');
+    if (notes) updateData.notes = part.notes ? `${part.notes}\n📦 Order notes: ${notes}` : `📦 Order notes: ${notes}`;
+    await api.entities.Part.update(part.id, updateData);
+    if (onPartStatusChange) onPartStatusChange(part, 'ordered');
+    else refetchParts?.();
+    setOrderDialog({ open: false, part: null, screenshot: null, eta: null, notes: '' });
+    setOrderScreenshotPreview(null);
+  };
+
+  const handleSetDeliveryDate = async (part, date) => {
+    await api.entities.Part.update(part.id, { est_delivery_date: format(date, 'yyyy-MM-dd') });
+    refetchParts?.();
+  };
+
+  const openReceiveDialog = (part, installerEmail) => {
+    setReceiveDialog({ open: true, part, installer: installerEmail, location: '', createTask: false });
+  };
+
+  const handleConfirmReceive = async () => {
+    const { part, installer, location, createTask } = receiveDialog;
+    if (!part || !installer) return;
+    const member = projectMembers.find(m => m.email === installer);
+    await api.entities.Part.update(part.id, {
+      status: 'ready_to_install',
+      installer_email: installer,
+      installer_name: member?.name || installer,
+      received_date: format(new Date(), 'yyyy-MM-dd'),
+      notes: location ? `${part.notes || ''}\n📍 Location: ${location}`.trim() : part.notes
+    });
+    if (createTask) {
+      await api.entities.Task.create({
+        title: `Install: ${part.name}`,
+        description: `Install part${part.part_number ? ` #${part.part_number}` : ''}${location ? `\n📍 Location: ${location}` : ''}`,
+        project_id: projectId,
+        assigned_to: installer,
+        assigned_name: member?.name || installer,
+        status: 'todo',
+        priority: 'medium'
+      });
+    }
+    refetchParts?.();
+    setReceiveDialog({ open: false, part: null, installer: '', location: '', createTask: false });
+  };
+
+  const handleMarkInstalled = async (part) => {
+    await api.entities.Part.update(part.id, { status: 'installed', installed_date: format(new Date(), 'yyyy-MM-dd') });
+    refetchParts?.();
+  };
+
+  const getDateLabel = (dateStr) => {
+    if (!dateStr) return null;
+    const date = parseLocalDate(dateStr);
+    if (!date) return null;
+    const now = new Date();
+    const diffDays = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { text: `${Math.abs(diffDays)}d late`, color: 'text-red-500' };
+    if (diffDays === 0) return { text: 'Today', color: 'text-orange-500' };
+    if (diffDays === 1) return { text: 'Tomorrow', color: 'text-amber-500' };
+    if (diffDays <= 7) return { text: `${diffDays}d`, color: 'text-blue-500' };
+    return { text: format(date, 'MMM d'), color: 'text-slate-400' };
+  };
+
+  const partsProgress = parts.length > 0 ? Math.round((installedCount / parts.length) * 100) : 0;
+
+  return (
+    <>
+      <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`} className="lg:col-start-1 lg:row-start-2 group">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full max-h-[320px] border border-emerald-100/60 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 hover:shadow-lg hover:shadow-emerald-100/50 hover:-translate-y-0.5"
+      >
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
+        <div className="p-3.5 pb-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200/50">
+                <Package className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Parts</h3>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[11px] text-slate-500 font-medium">{installedCount} of {parts.length}</span>
+                  {parts.length > 0 && (
+                    <div className="w-12 h-1.5 rounded-full bg-emerald-100 overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all" style={{ width: `${partsProgress}%` }} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAddPart(); }}
+              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-200/40 h-7 w-7 p-0 rounded-lg flex-shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </div>
+        <div className="px-3 pb-2 space-y-0.5">
+          {pagedParts.length > 0 ? pagedParts.map(p => {
+            const etaInfo = getDateLabel(p.est_delivery_date);
+            const dueInfo = !etaInfo ? getDateLabel(p.due_date) : null;
+            const dateInfo = etaInfo || dueInfo;
+            return (
+              <div key={p.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-emerald-50/60 transition-colors group/part">
+                {/* Status badge */}
+                <Badge variant="outline" className={cn("text-[8px] px-1 py-0 shrink-0 leading-tight", partStatusConfig[p.status]?.color)}>
+                  {partStatusConfig[p.status]?.label || p.status}
+                </Badge>
+                {/* Name */}
+                <span className="text-xs text-slate-700 font-medium truncate flex-1 min-w-0">{p.name}</span>
+                {/* Assignee */}
+                {p.assigned_name && (
+                  <div className="flex items-center gap-0.5 shrink-0" title={p.assigned_name}>
+                    <div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold", getColorForEmail(p.assigned_to))}>
+                      {getInitials(p.assigned_name)}
+                    </div>
+                  </div>
+                )}
+                {/* Order proof mini indicator */}
+                {p.order_proof && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setViewingProof(p); }}
+                    className="w-4 h-4 rounded border border-blue-200 overflow-hidden shrink-0"
+                    title="View order proof"
+                  >
+                    <img src={p.order_proof} alt="" className="w-full h-full object-cover" />
+                  </button>
+                )}
+                {/* ETA / Due date */}
+                {dateInfo && (
+                  <span className={cn("text-[9px] font-semibold shrink-0", dateInfo.color)}>
+                    {etaInfo && <Truck className="w-2 h-2 inline mr-0.5" />}
+                    {dateInfo.text}
+                  </span>
+                )}
+                {/* Hover actions */}
+                <div className="flex items-center gap-0.5 opacity-0 group-hover/part:opacity-100 transition-opacity shrink-0">
+                  {p.status === 'needed' && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openOrderDialog(p); }}
+                      className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                      title="Order"
+                    >
+                      <ShoppingCart className="w-2.5 h-2.5 inline mr-0.5" />Order
+                    </button>
+                  )}
+                  {p.status === 'ordered' && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                          title="Receive"
+                        >
+                          <PackageCheck className="w-2.5 h-2.5 inline mr-0.5" />Receive
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                        <div className="px-2 py-1 text-[10px] text-slate-500 font-medium">Assign installer:</div>
+                        {projectMembers.map(m => (
+                          <DropdownMenuItem key={m.id} onClick={() => openReceiveDialog(p, m.email)}>
+                            <div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] mr-1.5", getColorForEmail(m.email))}>{getInitials(m.name)}</div>
+                            {m.name}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  {p.status === 'ordered' && !p.est_delivery_date && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-1 py-0.5 text-[9px] rounded text-slate-500 hover:bg-slate-100 transition-colors"
+                          title="Set ETA"
+                        >
+                          <Truck className="w-2.5 h-2.5" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+                        <CalendarPicker mode="single" selected={undefined} onSelect={(date) => date && handleSetDeliveryDate(p, date)} />
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                  {p.status === 'received' && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors"
+                          title="Assign Install"
+                        >
+                          <Wrench className="w-2.5 h-2.5 inline mr-0.5" />Install
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                        <div className="px-2 py-1 text-[10px] text-slate-500 font-medium">Assign installer:</div>
+                        {projectMembers.map(m => (
+                          <DropdownMenuItem key={m.id} onClick={() => openReceiveDialog(p, m.email)}>
+                            <div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] mr-1.5", getColorForEmail(m.email))}>{getInitials(m.name)}</div>
+                            {m.name}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  {p.status === 'ready_to_install' && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleMarkInstalled(p); }}
+                      className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                      title="Mark Installed"
+                    >
+                      <Check className="w-2.5 h-2.5 inline mr-0.5" />Done
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          }) : (
+            <p className="text-xs text-slate-400 text-center py-3">No active parts</p>
+          )}
+        </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 px-3 pb-3" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPartPage(p => Math.max(0, p - 1)); }}
+              disabled={partPage === 0}
+              className="px-2 py-0.5 text-[10px] font-medium text-emerald-600 hover:bg-emerald-50 rounded disabled:opacity-30"
+            >
+              Prev
+            </button>
+            <span className="text-[10px] text-slate-400">{partPage + 1}/{totalPages}</span>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPartPage(p => Math.min(totalPages - 1, p + 1)); }}
+              disabled={partPage >= totalPages - 1}
+              className="px-2 py-0.5 text-[10px] font-medium text-emerald-600 hover:bg-emerald-50 rounded disabled:opacity-30"
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </motion.div>
+      </Link>
+
+      {/* Order Part Dialog */}
+      <AlertDialog open={orderDialog.open} onOpenChange={(open) => { if (!open) { setOrderDialog({ open: false, part: null, screenshot: null, eta: null, notes: '' }); setOrderScreenshotPreview(null); } }}>
+        <AlertDialogContent className="max-w-md" onPaste={handleOrderPaste}>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShoppingCart className="w-5 h-5 text-blue-600" />
+              Order Part
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                <span className="font-medium text-slate-900">{orderDialog.part?.name}</span>
+                {orderDialog.part?.part_number && <span className="text-slate-500"> (#{orderDialog.part?.part_number})</span>}
+                {orderDialog.part?.supplier && <span className="text-slate-500"> · {orderDialog.part?.supplier}</span>}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+                <ImagePlus className="w-4 h-4" />
+                Order Screenshot (optional)
+              </label>
+              {orderScreenshotPreview ? (
+                <div className="relative rounded-lg border border-blue-200 overflow-hidden bg-slate-50">
+                  <img src={orderScreenshotPreview} alt="Order proof" className="w-full max-h-48 object-contain" />
+                  <button onClick={() => { setOrderScreenshotPreview(null); setOrderDialog(prev => ({ ...prev, screenshot: null })); }} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50/50 hover:bg-blue-50 cursor-pointer transition-colors">
+                  <ImagePlus className="w-6 h-6 text-blue-400 mb-1.5" />
+                  <span className="text-xs text-blue-600 font-medium">Click to upload or paste</span>
+                  <span className="text-[10px] text-blue-400 mt-0.5">Ctrl+V to paste</span>
+                  <input type="file" accept="image/*" onChange={handleOrderScreenshot} className="hidden" />
+                </label>
+              )}
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+                <Truck className="w-4 h-4" />
+                Estimated Delivery (optional)
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left font-normal h-10">
+                    <Calendar className="w-4 h-4 mr-2 text-slate-400" />
+                    {orderDialog.eta ? format(orderDialog.eta, 'MMMM d, yyyy') : <span className="text-slate-400">Pick a date...</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <CalendarPicker mode="single" selected={orderDialog.eta} onSelect={(date) => setOrderDialog(prev => ({ ...prev, eta: date }))} />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-2 block">Order Notes (optional)</label>
+              <Textarea value={orderDialog.notes} onChange={(e) => setOrderDialog(prev => ({ ...prev, notes: e.target.value }))} placeholder="Order #, tracking info..." className="h-16" />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmOrder} className="bg-blue-600 hover:bg-blue-700">
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Mark as Ordered
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Receive Part Dialog */}
+      <AlertDialog open={receiveDialog.open} onOpenChange={(open) => !open && setReceiveDialog({ open: false, part: null, installer: '', location: '', createTask: false })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <PackageCheck className="w-5 h-5 text-amber-600" />
+              Receive Part
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium text-slate-900">{receiveDialog.part?.name}</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2"><MapPin className="w-4 h-4" />Where stored? (optional)</label>
+              <Textarea value={receiveDialog.location} onChange={(e) => setReceiveDialog(prev => ({ ...prev, location: e.target.value }))} placeholder="e.g., Warehouse shelf B3..." className="h-20" />
+            </div>
+            <div className="flex items-center space-x-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+              <Checkbox id="createTaskPD" checked={receiveDialog.createTask} onCheckedChange={(checked) => setReceiveDialog(prev => ({ ...prev, createTask: checked }))} />
+              <Label htmlFor="createTaskPD" className="text-sm font-medium text-indigo-900 cursor-pointer">Create installation task</Label>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmReceive} className="bg-amber-600 hover:bg-amber-700">
+              <PackageCheck className="w-4 h-4 mr-2" />
+              Confirm Received
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Order Proof Viewer */}
+      <AlertDialog open={!!viewingProof} onOpenChange={(open) => !open && setViewingProof(null)}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ClipboardCheck className="w-5 h-5 text-blue-600" />
+              Order Proof
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                <span className="font-medium text-slate-900">{viewingProof?.name}</span>
+                {viewingProof?.order_date && <span className="text-slate-500"> · Ordered {format(parseLocalDate(viewingProof.order_date) || new Date(), 'MMM d, yyyy')}</span>}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {viewingProof?.order_proof && (
+            <div className="rounded-lg border overflow-hidden bg-slate-50">
+              <img src={viewingProof.order_proof} alt="Order proof" className="w-full max-h-96 object-contain" />
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
 
 export default function ProjectDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -968,109 +1563,19 @@ export default function ProjectDetail() {
               transition={{ delay: 0.15 }}
               className="sm:col-start-2 sm:row-span-3 lg:col-start-3 lg:row-start-1 lg:row-span-3"
             >
-              <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} />
+              <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} teamMembers={teamMembers} />
             </motion.div>
 
-            {/* ─── Tasks Card ─── */}
-            <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-1 lg:col-span-1 group">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full border border-blue-100/60 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-0.5"
-              >
-                {/* Decorative accent */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
-                <div className="p-3.5 pb-2">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/50">
-                        <ListTodo className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Tasks</h3>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[11px] text-slate-500 font-medium">{completedTasks} of {tasks.length}</span>
-                          {tasks.length > 0 && (
-                            <div className="w-12 h-1.5 rounded-full bg-blue-100 overflow-hidden">
-                              <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all" style={{ width: `${taskProgress}%` }} />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingTask(null); setShowTaskModal(true); }}
-                      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-md shadow-blue-200/40 h-7 w-7 p-0 rounded-lg"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </div>
-                {/* Task groups preview */}
-                <div className="px-3 pb-3 space-y-1 max-h-[160px] overflow-y-auto">
-                  {(() => {
-                    const activeTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived');
-                    const ungrouped = activeTasks.filter(t => !t.group_id);
-                    const grouped = {};
-                    activeTasks.filter(t => t.group_id).forEach(t => {
-                      if (!grouped[t.group_id]) grouped[t.group_id] = [];
-                      grouped[t.group_id].push(t);
-                    });
-                    return (
-                      <>
-                        {Object.entries(grouped).map(([gid, gTasks]) => {
-                          const group = taskGroups.find(g => g.id === parseInt(gid));
-                          return (
-                            <div key={gid} className="mb-1">
-                              <div className="flex items-center gap-1.5 px-1 mb-0.5">
-                                <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: group?.color || '#94a3b8' }} />
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{group?.name || 'Group'}</span>
-                                <span className="text-[10px] text-slate-300 font-medium">{gTasks.length}</span>
-                              </div>
-                              {gTasks.slice(0, 3).map(t => (
-                                <div key={t.id} className="flex items-center gap-1.5 px-1 py-[3px] rounded-md hover:bg-blue-50/60 transition-colors">
-                                  <div className={cn("w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0",
-                                    t.status === 'in_progress' ? "border-blue-400 bg-blue-50" : t.status === 'review' ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white")}>
-                                    {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />}
-                                    {t.status === 'review' && <div className="w-1.5 h-1.5 rounded-sm bg-amber-500" />}
-                                  </div>
-                                  <span className="text-xs text-slate-600 truncate leading-tight">{t.title}</span>
-                                </div>
-                              ))}
-                              {gTasks.length > 3 && <p className="text-[10px] text-blue-400 font-medium px-1">+{gTasks.length - 3} more</p>}
-                            </div>
-                          );
-                        })}
-                        {ungrouped.length > 0 && (
-                          <div className="mb-1">
-                            {Object.keys(grouped).length > 0 && (
-                              <div className="flex items-center gap-1.5 px-1 mb-0.5">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ungrouped</span>
-                                <span className="text-[10px] text-slate-300 font-medium">{ungrouped.length}</span>
-                              </div>
-                            )}
-                            {ungrouped.slice(0, 4).map(t => (
-                              <div key={t.id} className="flex items-center gap-1.5 px-1 py-[3px] rounded-md hover:bg-blue-50/60 transition-colors">
-                                <div className={cn("w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0",
-                                  t.status === 'in_progress' ? "border-blue-400 bg-blue-50" : t.status === 'review' ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white")}>
-                                  {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />}
-                                  {t.status === 'review' && <div className="w-1.5 h-1.5 rounded-sm bg-amber-500" />}
-                                </div>
-                                <span className="text-xs text-slate-600 truncate leading-tight">{t.title}</span>
-                              </div>
-                            ))}
-                            {ungrouped.length > 4 && <p className="text-[10px] text-blue-400 font-medium px-1">+{ungrouped.length - 4} more</p>}
-                          </div>
-                        )}
-                        {activeTasks.length === 0 && <p className="text-xs text-slate-400 text-center py-3">No active tasks</p>}
-                      </>
-                    );
-                  })()}
-                </div>
-              </motion.div>
-            </Link>
+            {/* ─── Tasks Card (with pagination) ─── */}
+            <TasksOverviewCard
+              tasks={tasks}
+              taskGroups={taskGroups}
+              taskProgress={taskProgress}
+              completedTasks={completedTasks}
+              projectId={projectId}
+              teamMembers={teamMembers}
+              onAddTask={() => { setEditingTask(null); setShowTaskModal(true); }}
+            />
 
             {/* ─── Messages Card ─── */}
             <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-2 lg:col-start-2 lg:row-start-1 group">
@@ -1078,7 +1583,7 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full border border-violet-100/60 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 hover:shadow-lg hover:shadow-violet-100/50 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full max-h-[320px] border border-violet-100/60 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 hover:shadow-lg hover:shadow-violet-100/50 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-400" />
                 <div className="p-3.5 pb-2">
@@ -1094,22 +1599,21 @@ export default function ProjectDetail() {
                     </div>
                   </div>
                 </div>
-                {/* Recent messages preview */}
+                {/* Recent messages preview — compact with type + author */}
                 <div className="px-3 pb-3 space-y-0.5 max-h-[160px] overflow-y-auto">
                   {projectNotes.length > 0 ? (
-                    [...projectNotes].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 5).map(note => (
-                      <div key={note.id} className="flex items-start gap-2 px-1.5 py-1.5 rounded-lg hover:bg-violet-50/60 transition-colors">
-                        <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center text-white shrink-0 mt-0.5",
-                          note.type === 'update' ? "bg-gradient-to-br from-emerald-400 to-teal-500" : "bg-gradient-to-br from-violet-400 to-purple-500"
-                        )}>
-                          {note.type === 'update' ? <Users className="w-3 h-3" /> : <MessageSquare className="w-3 h-3" />}
+                    [...projectNotes].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 5).map(note => {
+                      const authorName = note.created_by_name || (note.author_email ? note.author_email.split('@')[0] : 'System');
+                      const typeLabel = note.type === 'update' ? 'Update' : note.type === 'message' ? 'Message' : 'Note';
+                      const typeBg = note.type === 'update' ? 'bg-amber-100 text-amber-700' : note.type === 'message' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600';
+                      return (
+                        <div key={note.id} className="flex items-center gap-2 px-1.5 py-1.5 rounded-lg hover:bg-violet-50/60 transition-colors">
+                          <span className={cn("text-[9px] font-semibold px-1.5 py-0.5 rounded shrink-0", typeBg)}>{typeLabel}</span>
+                          <p className="text-xs text-slate-600 truncate flex-1 min-w-0 leading-tight">{(note.title?.trim() || note.content)?.replace(/[#*_]/g, '').slice(0, 50)}</p>
+                          <span className="text-[10px] text-violet-500 font-medium shrink-0">{authorName.split(' ')[0]}</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-slate-600 truncate leading-tight">{note.content?.replace(/[#*_]/g, '').slice(0, 60)}</p>
-                          <p className="text-[10px] text-violet-400 font-medium">{note.created_by_name?.split(' ')[0] || 'Unknown'}</p>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <p className="text-xs text-slate-400 text-center py-3">No messages yet</p>
                   )}
@@ -1118,49 +1622,14 @@ export default function ProjectDetail() {
             </Link>
 
             {/* ─── Parts Card ─── */}
-            <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`} className="lg:col-start-1 lg:row-start-2 group">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full border border-emerald-100/60 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 hover:shadow-lg hover:shadow-emerald-100/50 hover:-translate-y-0.5"
-              >
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
-                <div className="p-3.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200/50">
-                        <Package className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Parts</h3>
-                        <span className="text-[11px] text-slate-500 font-medium">{parts.length} total</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex items-center gap-1 text-[11px]">
-                        <span className="px-1.5 py-0.5 rounded-md bg-red-50 text-red-600 font-semibold border border-red-100">{parts.filter(p => p.status === 'needed').length}</span>
-                        <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 font-semibold border border-blue-100">{parts.filter(p => p.status === 'ordered').length}</span>
-                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-600 font-semibold border border-emerald-100">{parts.filter(p => p.status === 'installed').length}</span>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingPart(null); setShowPartModal(true); }}
-                        className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-200/40 h-7 w-7 p-0 rounded-lg flex-shrink-0"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                  {/* Mini legend */}
-                  <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-400">
-                    <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400" />Needed</span>
-                    <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-400" />Ordered</span>
-                    <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />Installed</span>
-                  </div>
-                </div>
-              </motion.div>
-            </Link>
+            <PartsOverviewCard
+              parts={parts}
+              projectId={projectId}
+              projectMembers={projectMembers}
+              onAddPart={() => { setEditingPart(null); setShowPartModal(true); }}
+              onPartStatusChange={handlePartStatusChange}
+              refetchParts={refetchParts}
+            />
 
             {/* ─── Files Card ─── */}
             <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`} className="lg:col-start-2 lg:row-start-2 group">
@@ -1168,7 +1637,7 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full border border-amber-100/60 bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 hover:shadow-lg hover:shadow-amber-100/50 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full max-h-[320px] border border-amber-100/60 bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 hover:shadow-lg hover:shadow-amber-100/50 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-400" />
                 <div className="p-3.5">
@@ -1239,7 +1708,7 @@ export default function ProjectDetail() {
             transition={{ delay: 0.2 }}
             className="hidden lg:block"
           >
-            <ProjectSidebar projectId={projectId} tasks={tasks} parts={parts} />
+            <ProjectSidebar projectId={projectId} tasks={tasks} parts={parts} projectMembers={projectMembers} project={project} progressUpdates={progressUpdates} />
           </motion.div>
         </div>
 

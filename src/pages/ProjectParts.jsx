@@ -4,10 +4,10 @@ import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Package, 
-  Plus, 
+import {
+  ArrowLeft,
+  Package,
+  Plus,
   Search,
   Edit2,
   Trash2,
@@ -24,7 +24,11 @@ import {
   Wrench,
   Check,
   Truck,
-  MapPin
+  MapPin,
+  ShoppingCart,
+  ImagePlus,
+  Eye,
+  ClipboardCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,6 +111,13 @@ export default function ProjectParts() {
   
   // Receive dialog state
   const [receiveDialog, setReceiveDialog] = useState({ open: false, part: null, installer: '', location: '', createTask: false });
+
+  // Order dialog state
+  const [orderDialog, setOrderDialog] = useState({ open: false, part: null, screenshot: null, eta: null, notes: '' });
+  const [orderScreenshotPreview, setOrderScreenshotPreview] = useState(null);
+
+  // Order proof viewer
+  const [viewingProof, setViewingProof] = useState(null);
 
   useEffect(() => {
     api.auth.me().then(setCurrentUser).catch(() => {});
@@ -345,6 +356,61 @@ export default function ProjectParts() {
     refetchParts();
   };
 
+  const openOrderDialog = (part) => {
+    setOrderDialog({ open: true, part, screenshot: null, eta: null, notes: '' });
+    setOrderScreenshotPreview(null);
+  };
+
+  const handleOrderScreenshot = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setOrderDialog(prev => ({ ...prev, screenshot: ev.target.result }));
+      setOrderScreenshotPreview(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleOrderPaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setOrderDialog(prev => ({ ...prev, screenshot: ev.target.result }));
+          setOrderScreenshotPreview(ev.target.result);
+        };
+        reader.readAsDataURL(file);
+        break;
+      }
+    }
+  };
+
+  const handleConfirmOrder = async () => {
+    const { part, screenshot, eta, notes } = orderDialog;
+    if (!part) return;
+
+    const updateData = {
+      status: 'ordered',
+      order_proof: screenshot || null,
+      order_date: format(new Date(), 'yyyy-MM-dd'),
+    };
+    if (eta) {
+      updateData.est_delivery_date = format(eta, 'yyyy-MM-dd');
+    }
+    if (notes) {
+      updateData.notes = part.notes ? `${part.notes}\n📦 Order notes: ${notes}` : `📦 Order notes: ${notes}`;
+    }
+
+    await api.entities.Part.update(part.id, updateData);
+    refetchParts();
+    setOrderDialog({ open: false, part: null, screenshot: null, eta: null, notes: '' });
+    setOrderScreenshotPreview(null);
+  };
+
   // Group parts by status for sections
   const readyToInstallParts = parts.filter(p => p.status === 'ready_to_install');
   const otherParts = filteredParts.filter(p => p.status !== 'ready_to_install');
@@ -570,7 +636,7 @@ export default function ProjectParts() {
         )}
 
         {/* Parts List */}
-        <div className="space-y-3">
+        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 overflow-hidden">
           <AnimatePresence>
             {otherParts.length > 0 ? (
               filteredParts.map((part, idx) => {
@@ -578,163 +644,178 @@ export default function ProjectParts() {
                 const estDeliveryDate = parseLocalDate(part.est_delivery_date);
                 const estDeliveryDateValid = !!estDeliveryDate;
                 const isDeliveryDue = estDeliveryDateValid && (isToday(estDeliveryDate) || isPast(estDeliveryDate));
+                const dueDateParsed = parseLocalDate(part.due_date);
+                const hasDueDate = !!dueDateParsed;
+                const isDuePast = hasDueDate && isPast(dueDateParsed) && !isToday(dueDateParsed);
                 return (
                 <motion.div
                   key={part.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -10 }}
-                  transition={{ delay: idx * 0.02 }}
+                  transition={{ delay: idx * 0.015 }}
                   onClick={() => selectionMode ? togglePartSelection(part.id) : setSelectedPartDetail(part)}
                   className={cn(
-                    "bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-4 hover:shadow-md transition-all group cursor-pointer",
-                    isSelected && "ring-2 ring-amber-500 bg-amber-50/50"
+                    "px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-all group cursor-pointer border-b border-slate-100 dark:border-slate-700/30 last:border-b-0",
+                    isSelected && "bg-amber-50/60 dark:bg-amber-900/10"
                   )}
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-center gap-3">
                     {/* Selection checkbox */}
                     {selectionMode && (
-                      <button 
+                      <button
                         onClick={(e) => { e.stopPropagation(); togglePartSelection(part.id); }}
-                        className="p-1 mt-1"
+                        className="shrink-0"
                       >
                         {isSelected ? (
-                          <CheckSquare className="w-5 h-5 text-amber-600" />
+                          <CheckSquare className="w-4.5 h-4.5 text-amber-600" />
                         ) : (
-                          <Square className="w-5 h-5 text-slate-300" />
+                          <Square className="w-4.5 h-4.5 text-slate-300" />
                         )}
                       </button>
                     )}
-                    <div className="p-2 rounded-lg bg-amber-100">
-                      <Package className="w-5 h-5 text-amber-600" />
-                    </div>
+
+                    {/* Status badge - clickable */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80 shrink-0 text-[10px] px-1.5 py-0.5", statusConfig[part.status]?.color)}>
+                          {statusConfig[part.status]?.label || part.status}
+                        </Badge>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                        {Object.entries(statusConfig).map(([key, config]) => (
+                          <DropdownMenuItem key={key} onClick={(e) => { e.stopPropagation(); handleStatusChange(part, key); }}>
+                            <Badge className={cn("mr-2", config.color)}>{config.label}</Badge>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Name + part number */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="font-medium text-slate-900 dark:text-slate-100">{part.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{part.name}</span>
                         {part.part_number && (
-                          <p className="text-sm text-slate-500 dark:text-slate-400">#{part.part_number}</p>
+                          <span className="text-xs text-slate-400 shrink-0">#{part.part_number}</span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
+                      {/* Second row: metadata */}
+                      <div className="flex items-center gap-2.5 mt-0.5">
+                        {part.supplier && (
+                          <span className="text-[11px] text-slate-400">{part.supplier}</span>
+                        )}
+                        {part.quantity > 1 && (
+                          <span className="text-[11px] text-slate-400">Qty: {part.quantity}</span>
+                        )}
+                        {part.unit_cost > 0 && (
+                          <span className="text-[11px] text-slate-500 font-medium">${(part.unit_cost * (part.quantity || 1)).toLocaleString()}</span>
+                        )}
+                        {/* Order proof thumbnail inline */}
+                        {part.order_proof && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setViewingProof(part); }}
+                            className="flex items-center gap-1 px-1 py-0 rounded bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors"
+                          >
+                            <img src={part.order_proof} alt="" className="w-3.5 h-3.5 rounded object-cover" />
+                            <span className="text-[9px] font-medium text-blue-600">proof</span>
+                          </button>
+                        )}
+                        {part.order_date && (
+                          <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
+                            <ShoppingCart className="w-2.5 h-2.5" />
+                            {format(parseLocalDate(part.order_date) || new Date(), 'MMM d')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right side: key info + actions */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {/* Assignee */}
+                      {part.assigned_name ? (
+                        <div className="flex items-center gap-1" title={part.assigned_name}>
+                          <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold", getColorForEmail(part.assigned_to))}>
+                            {getInitials(part.assigned_name)}
+                          </div>
+                          <span className="text-[11px] text-slate-500 max-w-[60px] truncate hidden sm:inline">{part.assigned_name.split(' ')[0]}</span>
+                        </div>
+                      ) : (
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80", statusConfig[part.status]?.color)}>
-                              {statusConfig[part.status]?.label || part.status}
-                            </Badge>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-dashed border-amber-300 bg-amber-50 hover:bg-amber-100 transition-colors"
+                              title="Assign"
+                            >
+                              <UserPlus className="w-3 h-3 text-amber-600" />
+                              <span className="text-[10px] font-medium text-amber-700 hidden sm:inline">Assign</span>
+                            </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-                            {Object.entries(statusConfig).map(([key, config]) => (
-                              <DropdownMenuItem key={key} onClick={(e) => { e.stopPropagation(); handleStatusChange(part, key); }}>
-                                <Badge className={cn("mr-2", config.color)}>{config.label}</Badge>
+                            {projectMembers.map((member) => (
+                              <DropdownMenuItem key={member.id} onClick={() => handleQuickAssign(part, member.email)}>
+                                <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
+                                  {getInitials(member.name)}
+                                </div>
+                                {member.name}
                               </DropdownMenuItem>
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-4 mt-3">
-                        {part.quantity > 1 && (
-                          <Badge variant="outline">Qty: {part.quantity}</Badge>
-                        )}
-                        {part.unit_cost > 0 && (
-                          <span className="text-sm text-slate-600">${(part.unit_cost * (part.quantity || 1)).toLocaleString()}</span>
-                        )}
-                        {part.supplier && (
-                          <span className="text-sm text-slate-500">{part.supplier}</span>
-                        )}
-                        {part.assigned_name ? (
-                          <div className="flex items-center gap-1.5">
-                            <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(part.assigned_to))}>
-                              {getInitials(part.assigned_name)}
-                            </div>
-                            <span className="text-sm text-slate-600">{part.assigned_name}</span>
-                          </div>
-                        ) : (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button 
-                                onClick={(e) => e.stopPropagation()}
-                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg border-2 border-dashed border-amber-300 bg-amber-50 hover:bg-amber-100 transition-colors"
-                              >
-                                <UserPlus className="w-3.5 h-3.5 text-amber-600" />
-                                <span className="text-xs font-medium text-amber-700">Unassigned</span>
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-                              {projectMembers.map((member) => (
-                                <DropdownMenuItem key={member.id} onClick={() => handleQuickAssign(part, member.email)}>
-                                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(member.email))}>
-                                    {getInitials(member.name)}
-                                  </div>
-                                  {member.name}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                        {estDeliveryDateValid && (
-                          <Badge 
-                            variant="outline" 
-                            className={cn(
-                              "flex items-center gap-1",
-                              isDeliveryDue ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-cyan-50 text-cyan-700 border-cyan-200"
-                            )}
-                          >
-                            <Truck className="w-3 h-3" />
-                            ETA: {format(parseLocalDate(part.est_delivery_date), 'MMM d')}
-                            {isDeliveryDue && " ⚠️"}
-                          </Badge>
-                        )}
-                        {part.due_date && parseLocalDate(part.due_date) && (
-                          <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <span>{format(parseLocalDate(part.due_date), 'MMM d')}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex gap-1 items-center">
-                      {/* Quick set ETA button */}
-                      {!part.est_delivery_date && (part.status === 'ordered' || part.status === 'needed') && (
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Truck className="w-3.5 h-3.5 mr-1" />
-                              Set ETA
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
-                            <CalendarPicker
-                              mode="single"
-                              selected={undefined}
-                              onSelect={(date) => date && handleSetDeliveryDate(part, date)}
-                            />
-                          </PopoverContent>
-                        </Popover>
                       )}
-                      
-                      {/* Receive Button - shows for ordered parts */}
+
+                      {/* ETA / Due date */}
+                      {estDeliveryDateValid && (
+                        <span className={cn(
+                          "text-[10px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-0.5",
+                          isDeliveryDue ? "bg-orange-100 text-orange-700" : "bg-cyan-50 text-cyan-700"
+                        )}>
+                          <Truck className="w-2.5 h-2.5" />
+                          {format(estDeliveryDate, 'MMM d')}
+                          {isDeliveryDue && " ⚠️"}
+                        </span>
+                      )}
+                      {hasDueDate && !estDeliveryDateValid && (
+                        <span className={cn(
+                          "text-[10px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-0.5",
+                          isDuePast ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600"
+                        )}>
+                          <Calendar className="w-2.5 h-2.5" />
+                          {format(dueDateParsed, 'MMM d')}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex gap-1.5 items-center shrink-0">
+                      {/* ORDER button - for needed parts */}
+                      {part.status === 'needed' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 border-blue-400 text-blue-700 bg-blue-50 hover:bg-blue-100 opacity-0 group-hover:opacity-100 transition-opacity font-semibold"
+                          onClick={(e) => { e.stopPropagation(); openOrderDialog(part); }}
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
+                          Order
+                        </Button>
+                      )}
+
+                      {/* RECEIVE button - for ordered parts */}
                       {part.status === 'ordered' && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className={cn(
-                                "h-8",
-                                isDeliveryDue 
-                                  ? "border-orange-400 text-orange-700 bg-orange-50 hover:bg-orange-100 animate-pulse" 
-                                  : "border-amber-300 text-amber-700 hover:bg-amber-50"
+                                "h-8 opacity-0 group-hover:opacity-100 transition-opacity font-semibold",
+                                isDeliveryDue
+                                  ? "border-orange-400 text-orange-700 bg-orange-50 hover:bg-orange-100 !opacity-100 animate-pulse"
+                                  : "border-emerald-400 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
                               )}
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <PackageCheck className="w-4 h-4 mr-1.5" />
+                              <PackageCheck className="w-3.5 h-3.5 mr-1.5" />
                               {isDeliveryDue ? "Check Delivery" : "Receive"}
                             </Button>
                           </DropdownMenuTrigger>
@@ -752,17 +833,54 @@ export default function ProjectParts() {
                         </DropdownMenu>
                       )}
 
-                      {/* Quick mark as received for non-ordered */}
+                      {/* View order proof - for ordered parts with proof */}
+                      {part.status === 'ordered' && part.order_proof && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => { e.stopPropagation(); setViewingProof(part); }}
+                        >
+                          <Eye className="w-3.5 h-3.5 mr-1" />
+                          Proof
+                        </Button>
+                      )}
+
+                      {/* Quick set ETA - for ordered parts without ETA */}
+                      {part.status === 'ordered' && !part.est_delivery_date && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Truck className="w-3.5 h-3.5 mr-1" />
+                              Set ETA
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+                            <CalendarPicker
+                              mode="single"
+                              selected={undefined}
+                              onSelect={(date) => date && handleSetDeliveryDate(part, date)}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      )}
+
+                      {/* ASSIGN INSTALL - for received parts */}
                       {part.status === 'received' && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-8 border-purple-300 text-purple-700 hover:bg-purple-50"
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 border-purple-300 text-purple-700 hover:bg-purple-50 opacity-0 group-hover:opacity-100 transition-opacity font-semibold"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <Wrench className="w-4 h-4 mr-1.5" />
+                              <Wrench className="w-3.5 h-3.5 mr-1.5" />
                               Assign Install
                             </Button>
                           </DropdownMenuTrigger>
@@ -779,34 +897,46 @@ export default function ProjectParts() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       )}
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditingPart(part); setShowPartModal(true); }}>
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ open: true, part }); }}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+
+                      {/* MARK INSTALLED - for ready_to_install */}
+                      {part.status === 'ready_to_install' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 border-emerald-400 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 opacity-0 group-hover:opacity-100 transition-opacity font-semibold"
+                          onClick={(e) => { e.stopPropagation(); handleMarkInstalled(part); }}
+                        >
+                          <Check className="w-3.5 h-3.5 mr-1.5" />
+                          Mark Installed
+                        </Button>
+                      )}
+
+                      {/* Edit & Delete - always shown on hover */}
+                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setEditingPart(part); setShowPartModal(true); }}>
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ open: true, part }); }}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
               );})
-            ) : filteredParts.length === 0 && readyToInstallParts.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-12 text-center"
-              >
-                <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No parts found</h3>
-                <p className="text-slate-500 dark:text-slate-400 mb-6">Add parts to track materials for this project</p>
-                <Button onClick={() => setShowPartModal(true)} className="bg-amber-500 hover:bg-amber-600">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Part
-                </Button>
-              </motion.div>
             ) : null}
           </AnimatePresence>
+          {filteredParts.length === 0 && readyToInstallParts.length === 0 && (
+            <div className="p-12 text-center">
+              <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+              <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No parts found</h3>
+              <p className="text-slate-500 dark:text-slate-400 mb-6">Add parts to track materials for this project</p>
+              <Button onClick={() => setShowPartModal(true)} className="bg-amber-500 hover:bg-amber-600">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Part
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -885,6 +1015,122 @@ export default function ProjectParts() {
               <PackageCheck className="w-4 h-4 mr-2" />
               Confirm Received
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Order Part Dialog */}
+      <AlertDialog open={orderDialog.open} onOpenChange={(open) => { if (!open) { setOrderDialog({ open: false, part: null, screenshot: null, eta: null, notes: '' }); setOrderScreenshotPreview(null); } }}>
+        <AlertDialogContent className="max-w-md" onPaste={handleOrderPaste}>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShoppingCart className="w-5 h-5 text-blue-600" />
+              Order Part
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                <span className="font-medium text-slate-900">{orderDialog.part?.name}</span>
+                {orderDialog.part?.part_number && <span className="text-slate-500"> (#{orderDialog.part?.part_number})</span>}
+                {orderDialog.part?.quantity > 1 && <span className="text-slate-500"> · Qty: {orderDialog.part?.quantity}</span>}
+                {orderDialog.part?.supplier && <span className="text-slate-500"> · {orderDialog.part?.supplier}</span>}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 space-y-4">
+            {/* Screenshot upload */}
+            <div>
+              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+                <ImagePlus className="w-4 h-4" />
+                Order Confirmation Screenshot (optional)
+              </label>
+              {orderScreenshotPreview ? (
+                <div className="relative rounded-lg border border-blue-200 overflow-hidden bg-slate-50">
+                  <img src={orderScreenshotPreview} alt="Order proof" className="w-full max-h-48 object-contain" />
+                  <button
+                    onClick={() => { setOrderScreenshotPreview(null); setOrderDialog(prev => ({ ...prev, screenshot: null })); }}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50/50 hover:bg-blue-50 cursor-pointer transition-colors">
+                  <ImagePlus className="w-6 h-6 text-blue-400 mb-1.5" />
+                  <span className="text-xs text-blue-600 font-medium">Click to upload or paste screenshot</span>
+                  <span className="text-[10px] text-blue-400 mt-0.5">Ctrl+V to paste from clipboard</span>
+                  <input type="file" accept="image/*" onChange={handleOrderScreenshot} className="hidden" />
+                </label>
+              )}
+            </div>
+
+            {/* ETA Date Picker */}
+            <div>
+              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+                <Truck className="w-4 h-4" />
+                Estimated Delivery Date (optional)
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left font-normal h-10">
+                    <Calendar className="w-4 h-4 mr-2 text-slate-400" />
+                    {orderDialog.eta ? format(orderDialog.eta, 'MMMM d, yyyy') : <span className="text-slate-400">Pick a date...</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <CalendarPicker
+                    mode="single"
+                    selected={orderDialog.eta}
+                    onSelect={(date) => setOrderDialog(prev => ({ ...prev, eta: date }))}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Order notes */}
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-2 block">Order Notes (optional)</label>
+              <Textarea
+                value={orderDialog.notes}
+                onChange={(e) => setOrderDialog(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="Order #, tracking info, vendor details..."
+                className="h-16"
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmOrder} className="bg-blue-600 hover:bg-blue-700">
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Mark as Ordered
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Order Proof Viewer */}
+      <AlertDialog open={!!viewingProof} onOpenChange={(open) => !open && setViewingProof(null)}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ClipboardCheck className="w-5 h-5 text-blue-600" />
+              Order Proof
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                <span className="font-medium text-slate-900">{viewingProof?.name}</span>
+                {viewingProof?.order_date && (
+                  <span className="text-slate-500"> · Ordered {format(parseLocalDate(viewingProof.order_date) || new Date(), 'MMM d, yyyy')}</span>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {viewingProof?.order_proof && (
+            <div className="rounded-lg border overflow-hidden bg-slate-50">
+              <img src={viewingProof.order_proof} alt="Order proof" className="w-full max-h-96 object-contain" />
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -110,7 +110,13 @@ html {
 /* Fix scrollbar disappearing when Radix dialogs/popovers open */
 body[data-scroll-locked] {
   overflow: scroll !important;
-  padding-right: 0 !important;
+  padding-right: 0px !important;
+  margin-right: 0px !important;
+}
+
+/* Also prevent the fixed overlay from inheriting shift */
+[data-radix-popper-content-wrapper] {
+  margin-right: 0px !important;
 }
 
 [data-radix-scroll-area-viewport] {
@@ -135,6 +141,25 @@ body[data-scroll-locked] {
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--foreground) / 0.4);
+}
+
+/* Subtle scrollbar for embedded widgets */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--ring) / 0.2);
+  border-radius: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--ring) / 0.4);
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--ring) / 0.2) transparent;
 }
 
 /* ── Utility tokens ── */

@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion';
-import { Calendar as CalendarIcon, ListTodo, Package, AlertCircle, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon, ListTodo, Package, AlertCircle, Clock, User } from 'lucide-react';
 import { format, isBefore, startOfDay, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { parseLocalDate } from '@/utils/dateUtils';
 
-export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) {
+export default function UpcomingDueDates({ tasks = [], parts = [], projectId, teamMembers = [] }) {
   const today = startOfDay(new Date());
 
   // Get items with due dates, sorted by date
@@ -21,11 +21,13 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
     .filter(p => p.date);
 
   const allItems = [...tasksWithDue, ...partsWithDue]
-    .sort((a, b) => a.date - b.date)
-    .slice(0, 12); // Show max 12 items
+    .sort((a, b) => a.date - b.date);
 
   const overdueItems = allItems.filter(item => isBefore(item.date, today));
   const upcomingItems = allItems.filter(item => !isBefore(item.date, today));
+
+  // Combine into single ordered list: overdue first, then upcoming
+  const orderedItems = [...overdueItems, ...upcomingItems];
 
   const getDateLabel = (date) => {
     const days = differenceInDays(date, today);
@@ -34,6 +36,14 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
     if (days === 1) return 'Tomorrow';
     if (days <= 7) return `${days}d`;
     return format(date, 'MMM d');
+  };
+
+  const getAssigneeName = (item) => {
+    const assignedTo = item.assigned_to;
+    if (!assignedTo) return null;
+    const member = teamMembers.find(m => m.id === assignedTo);
+    if (!member) return null;
+    return member.full_name || member.email?.split('@')[0] || null;
   };
 
   if (allItems.length === 0) {
@@ -61,6 +71,9 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
     );
   }
 
+  const hasOverdue = overdueItems.length > 0;
+  const firstUpcomingIdx = orderedItems.findIndex(item => !isBefore(item.date, today));
+
   return (
     <div className="relative rounded-2xl overflow-hidden h-full flex flex-col border border-rose-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-rose-50/30 to-pink-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a]">
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400" />
@@ -83,78 +96,68 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId }) 
         </div>
       </div>
 
-      <div className="px-3 pb-3 space-y-1 overflow-y-auto flex-1">
-        {overdueItems.length > 0 && (
-          <div className="flex items-center gap-1.5 px-1 py-1">
+      <div className="px-3 pb-3 space-y-1 flex-1 overflow-y-auto custom-scrollbar">
+        {hasOverdue && (
+          <div className="flex items-center gap-1.5 px-1 py-0.5 sticky top-0 bg-gradient-to-br from-white via-rose-50/30 to-pink-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] z-10">
             <AlertCircle className="w-3 h-3 text-red-500" />
             <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Overdue</span>
           </div>
         )}
 
-        {overdueItems.map((item, idx) => (
-          <Link
-            key={item.id}
-            to={createPageUrl(item.type === 'task' ? 'ProjectTasks' : 'ProjectParts') + `?id=${projectId}`}
-          >
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.03 }}
-              className="flex items-center gap-2 p-2 rounded-xl bg-gradient-to-r from-red-50 to-red-50/50 border border-red-200/50 hover:border-red-300 hover:shadow-sm cursor-pointer transition-all"
-            >
-              <div className="p-1 rounded-lg bg-red-100">
-                {item.type === 'task' ? (
-                  <ListTodo className="w-3 h-3 text-red-600" />
-                ) : (
-                  <Package className="w-3 h-3 text-red-600" />
-                )}
-              </div>
-              <span className="text-xs text-slate-700 dark:text-slate-300 flex-1 truncate font-medium">{item.title || item.name}</span>
-              <span className="text-[10px] text-red-600 font-bold whitespace-nowrap bg-red-100/80 px-1.5 py-0.5 rounded-md">{getDateLabel(item.date)}</span>
-            </motion.div>
-          </Link>
-        ))}
-
-        {upcomingItems.length > 0 && overdueItems.length > 0 && (
-          <div className="border-t border-rose-100 my-1.5" />
-        )}
-
-        {upcomingItems.map((item, idx) => {
+        {orderedItems.map((item, idx) => {
+          const isOverdue = isBefore(item.date, today);
           const days = differenceInDays(item.date, today);
-          const isUrgent = days <= 2;
+          const isUrgent = !isOverdue && days <= 2;
+          const assignee = getAssigneeName(item);
+
+          // Show divider before first upcoming item
+          const showDivider = hasOverdue && firstUpcomingIdx > 0 && idx === firstUpcomingIdx;
 
           return (
-            <Link
-              key={item.id}
-              to={createPageUrl(item.type === 'task' ? 'ProjectTasks' : 'ProjectParts') + `?id=${projectId}`}
-            >
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: (overdueItems.length + idx) * 0.03 }}
-                className={cn(
-                  "flex items-center gap-2 p-2 rounded-xl transition-all cursor-pointer",
-                  isUrgent
-                    ? "bg-gradient-to-r from-amber-50 to-amber-50/50 dark:from-amber-900/20 dark:to-amber-900/10 border border-amber-200/50 dark:border-amber-700/30 hover:border-amber-300 hover:shadow-sm"
-                    : "bg-white/60 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700/50 hover:border-slate-200 hover:bg-white dark:hover:bg-slate-700/50 hover:shadow-sm"
-                )}
+            <div key={item.id}>
+              {showDivider && (
+                <div className="border-t border-rose-100 my-1" />
+              )}
+              <Link
+                to={createPageUrl(item.type === 'task' ? 'ProjectTasks' : 'ProjectParts') + `?id=${projectId}`}
               >
-                <div className={cn("p-1 rounded-lg", isUrgent ? "bg-amber-100" : "bg-slate-50")}>
-                  {item.type === 'task' ? (
-                    <ListTodo className={cn("w-3 h-3", isUrgent ? "text-amber-600" : "text-indigo-500")} />
-                  ) : (
-                    <Package className={cn("w-3 h-3", isUrgent ? "text-amber-600" : "text-emerald-500")} />
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.03 }}
+                  className={cn(
+                    "flex items-center gap-2 p-2 rounded-xl transition-all cursor-pointer",
+                    isOverdue
+                      ? "bg-gradient-to-r from-red-50 to-red-50/50 border border-red-200/50 hover:border-red-300 hover:shadow-sm"
+                      : isUrgent
+                        ? "bg-gradient-to-r from-amber-50 to-amber-50/50 dark:from-amber-900/20 dark:to-amber-900/10 border border-amber-200/50 hover:border-amber-300 hover:shadow-sm"
+                        : "bg-white/60 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700/50 hover:border-slate-200 hover:bg-white hover:shadow-sm"
                   )}
-                </div>
-                <span className="text-xs text-slate-600 dark:text-slate-300 flex-1 truncate">{item.title || item.name}</span>
-                <span className={cn(
-                  "text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-md",
-                  isUrgent ? "text-amber-700 bg-amber-100/80" : "text-slate-500 bg-slate-100/80"
-                )}>
-                  {getDateLabel(item.date)}
-                </span>
-              </motion.div>
-            </Link>
+                >
+                  <div className={cn("p-1 rounded-lg", isOverdue ? "bg-red-100" : isUrgent ? "bg-amber-100" : "bg-slate-50")}>
+                    {item.type === 'task' ? (
+                      <ListTodo className={cn("w-3 h-3", isOverdue ? "text-red-600" : isUrgent ? "text-amber-600" : "text-indigo-500")} />
+                    ) : (
+                      <Package className={cn("w-3 h-3", isOverdue ? "text-red-600" : isUrgent ? "text-amber-600" : "text-emerald-500")} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className={cn("text-xs truncate font-medium block", isOverdue ? "text-slate-700" : "text-slate-600")}>{item.title || item.name}</span>
+                    {assignee && (
+                      <span className={cn("text-[9px] flex items-center gap-0.5 mt-0.5", isOverdue ? "text-red-400" : isUrgent ? "text-amber-500" : "text-slate-400")}>
+                        <User className="w-2.5 h-2.5" />{assignee.split(' ')[0]}
+                      </span>
+                    )}
+                  </div>
+                  <span className={cn(
+                    "text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-md",
+                    isOverdue ? "text-red-600 bg-red-100/80" : isUrgent ? "text-amber-700 bg-amber-100/80" : "text-slate-500 bg-slate-100/80"
+                  )}>
+                    {getDateLabel(item.date)}
+                  </span>
+                </motion.div>
+              </Link>
+            </div>
           );
         })}
       </div>
