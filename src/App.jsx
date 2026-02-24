@@ -9,6 +9,8 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { ThemeProvider, useTheme } from '@/lib/ThemeProvider';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import WhatsNewNotifier from '@/components/WhatsNewNotifier';
+import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import Login from '@/pages/Login';
 import AcceptInvite from '@/pages/AcceptInvite';
 
@@ -69,6 +71,7 @@ const AuthenticatedApp = () => {
   return (
     <>
     <ThemeSyncer />
+    <WhatsNewNotifier />
     <Routes>
       <Route path="/" element={
         <LayoutWrapper currentPageName={mainPageKey}>
@@ -107,6 +110,7 @@ function App() {
             </Routes>
           </Router>
           <Toaster />
+          <SonnerToaster />
         </QueryClientProvider>
       </AuthProvider>
     </ThemeProvider>

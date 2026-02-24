@@ -13,8 +13,10 @@ import {
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
   FileText, Layers, MessageSquare, Database, Activity,
   HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send, Copy, Check, Globe, KeyRound,
-  Image, Search
+  Image, Search, Info, Rocket, Bug, Star, Wrench
 } from 'lucide-react';
+import { APP_VERSION, BUILD_HASH, BUILD_TIMESTAMP, BUILD_ENV } from '@/version';
+import { changelog } from '@/changelog';
 import {
   Dialog,
   DialogContent,
@@ -87,6 +89,7 @@ const adminMenuGroups = [
     items: [
       { id: 'company', label: 'App Settings', icon: Building2, description: 'Branding' },
       { id: 'database-health', label: 'Database Health', icon: Database, description: 'Integrity checks & size' },
+      { id: 'about', label: 'About & System', icon: Info, description: 'Version, build, environment' },
       { id: 'feedback', label: 'Feedback', icon: MessageSquare, description: 'Bug reports', page: 'FeedbackManagement' },
       { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Activity tracking', page: 'AuditLogs' },
     ]
@@ -152,6 +155,8 @@ export default function Adminland() {
         return <ProjectManagementSection queryClient={queryClient} />;
       case 'ai-agents':
         return <AIAgentsSection queryClient={queryClient} />;
+      case 'about':
+        return <AboutSection />;
       default:
         return null;
     }
@@ -3703,6 +3708,117 @@ function GiphyIntegrationCard({ expandedIntegration, toggleIntegration }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── About & System Section ──────────────────────────────────────────────────
+const changeTypeConfig = {
+  feature: { icon: Rocket, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', label: 'New' },
+  fix: { icon: Bug, color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', label: 'Fix' },
+  improvement: { icon: Star, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300', label: 'Improved' },
+  breaking: { icon: Wrench, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300', label: 'Breaking' },
+};
+
+function AboutSection() {
+  const [copied, setCopied] = useState(false);
+
+  const infoRows = [
+    { label: 'App Version', value: `v${APP_VERSION}`, badge: true },
+    { label: 'Build Hash', value: BUILD_HASH, mono: true },
+    { label: 'Build Date', value: new Date(BUILD_TIMESTAMP).toLocaleString() },
+    { label: 'Environment', value: BUILD_ENV, badge: true },
+    { label: 'API URL', value: import.meta.env.VITE_API_URL || 'http://localhost:3001', mono: true },
+    { label: 'Supabase Project', value: (import.meta.env.VITE_SUPABASE_URL || '').replace('https://', '').replace('.supabase.co', '') || 'Not configured', mono: true },
+    { label: 'Hosting', value: 'Railway', badge: true },
+    { label: 'Frontend', value: 'React 18 + Vite 6' },
+  ];
+
+  const handleCopyDebug = () => {
+    const debugInfo = infoRows.map(r => `${r.label}: ${r.value}`).join('\n');
+    navigator.clipboard.writeText(debugInfo);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast.success('Debug info copied to clipboard');
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* System Info Card */}
+      <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6 border-b dark:border-slate-700/50 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Info className="w-5 h-5 text-[#0069AF]" />
+              About & System Info
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Build information and environment details
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleCopyDebug} className="gap-2">
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? 'Copied' : 'Copy Info'}
+          </Button>
+        </div>
+
+        <div className="divide-y dark:divide-slate-700/50">
+          {infoRows.map((row) => (
+            <div key={row.label} className="px-6 py-3 flex items-center justify-between">
+              <span className="text-sm text-slate-500 dark:text-slate-400">{row.label}</span>
+              {row.badge ? (
+                <Badge variant="secondary" className="font-mono text-xs">
+                  {row.value}
+                </Badge>
+              ) : (
+                <span className={cn(
+                  "text-sm text-slate-900 dark:text-slate-100",
+                  row.mono && "font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded"
+                )}>
+                  {row.value}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Release History Card */}
+      <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6 border-b dark:border-slate-700/50">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-amber-500" />
+            Release History
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Recent changes and updates
+          </p>
+        </div>
+        <div className="p-6 space-y-4">
+          {changelog.slice(0, 5).map((release) => (
+            <div key={release.version} className="border dark:border-slate-700/50 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="font-mono text-xs">v{release.version}</Badge>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{release.date}</span>
+              </div>
+              <h3 className="font-medium text-sm text-slate-900 dark:text-slate-100 mb-2">{release.title}</h3>
+              <ul className="space-y-1.5">
+                {release.changes.map((change, i) => {
+                  const config = changeTypeConfig[change.type] || changeTypeConfig.feature;
+                  return (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <Badge className={`${config.color} text-[10px] px-1.5 py-0 flex-shrink-0 mt-0.5 border-0`}>
+                        {config.label}
+                      </Badge>
+                      <span className="text-slate-600 dark:text-slate-300">{change.text}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
