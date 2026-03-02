@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { formatDistanceToNow, format } from 'date-fns';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
@@ -61,11 +61,9 @@ export default function FilePreviewPanel({
     });
   };
 
-  if (!file) return null;
-
-  const isImage = file.file_type?.includes('image');
-  const isPdf = file.file_type?.includes('pdf');
-  const FileIcon = getFileIcon(file.file_type);
+  const isImage = file?.file_type?.includes('image');
+  const isPdf = file?.file_type?.includes('pdf');
+  const FileIcon = file ? getFileIcon(file.file_type) : File;
 
   return (
     <Sheet open={!!file} onOpenChange={(open) => !open && onClose()}>
@@ -73,6 +71,9 @@ export default function FilePreviewPanel({
         side="right"
         className="w-full sm:max-w-2xl p-0 flex flex-col overflow-hidden"
       >
+        <SheetTitle className="sr-only">{file?.name || 'File Preview'}</SheetTitle>
+        <SheetDescription className="sr-only">Preview and comment on this file</SheetDescription>
+        {!file ? null : <>
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-700/50 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -236,6 +237,7 @@ export default function FilePreviewPanel({
             </div>
           </div>
         </div>
+        </>}
       </SheetContent>
     </Sheet>
   );
