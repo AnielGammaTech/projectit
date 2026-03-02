@@ -315,19 +315,39 @@ export default function ProjectTasks() {
     const destGroupId = destination.droppableId === 'ungrouped' ? '' : destination.droppableId;
     const sourceGroupId = source.droppableId === 'ungrouped' ? '' : source.droppableId;
 
-    if (destGroupId === sourceGroupId) return;
+    // Same position — nothing to do
+    if (destGroupId === sourceGroupId && destination.index === source.index) return;
 
-    // Optimistic update — move task in cache immediately
+    // Build the ordered list for the destination group
+    const allTasks = queryClient.getQueryData(['tasks', projectId]) || [];
+    const destTasks = sortTasks(
+      allTasks.filter((t) => (t.group_id || '') === destGroupId && t.id !== draggableId)
+    );
+    const draggedTask = allTasks.find((t) => t.id === draggableId);
+    if (!draggedTask) return;
+
+    // Insert at new position
+    destTasks.splice(destination.index, 0, { ...draggedTask, group_id: destGroupId });
+
+    // Assign sort_order to every task in the destination group
+    const updates = destTasks.map((t, i) => ({ id: t.id, sort_order: i, group_id: destGroupId }));
+
+    // Optimistic cache update
     queryClient.setQueryData(['tasks', projectId], (old) =>
-      (old || []).map((t) =>
-        t.id === draggableId ? { ...t, group_id: destGroupId } : t
-      )
+      (old || []).map((t) => {
+        const upd = updates.find((u) => u.id === t.id);
+        return upd ? { ...t, sort_order: upd.sort_order, group_id: upd.group_id } : t;
+      })
     );
 
     try {
-      await api.entities.Task.update(draggableId, { group_id: destGroupId });
+      await Promise.all(
+        updates.map((u) =>
+          api.entities.Task.update(u.id, { sort_order: u.sort_order, group_id: u.group_id })
+        )
+      );
     } catch (err) {
-      console.error('Failed to move task:', err);
+      console.error('Failed to reorder tasks:', err);
     }
     await refetchTasks();
   };
@@ -336,6 +356,9 @@ export default function ProjectTasks() {
     return [...taskList].sort((a, b) => {
       if (a.status === 'completed' && b.status !== 'completed') return 1;
       if (a.status !== 'completed' && b.status === 'completed') return -1;
+      if ((a.sort_order ?? Infinity) !== (b.sort_order ?? Infinity)) {
+        return (a.sort_order ?? Infinity) - (b.sort_order ?? Infinity);
+      }
       return 0;
     });
   };
