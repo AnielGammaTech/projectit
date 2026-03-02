@@ -1,12 +1,19 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Package, Edit2, Trash2, Filter, X, ChevronDown } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Search, Package, Edit2, Trash2, Filter, X, ChevronDown, Minus, RotateCcw, History, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import ProductModal from './ProductModal';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,10 +37,22 @@ export default function ProductsTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [viewingProduct, setViewingProduct] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [stockFilter, setStockFilter] = useState('all'); // 'all', 'in_stock', 'out_of_stock', 'low_stock'
+  const [stockFilter, setStockFilter] = useState('all');
   const [selectedManufacturers, setSelectedManufacturers] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
+  const queryClient = useQueryClient();
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => api.entities.Project.filter({ status: { $ne: 'archived' } })
+  });
+
+  const [currentUser, setCurrentUser] = useState(null);
+  useEffect(() => {
+    api.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   const { data: products = [], refetch } = useQuery({
     queryKey: ['products'],
@@ -78,8 +97,7 @@ export default function ProductsTab() {
   };
 
   const handleProductClick = (product) => {
-    setEditingProduct(product);
-    setShowModal(true);
+    setViewingProduct(product);
   };
 
   const handleSave = async (data) => {
@@ -292,6 +310,18 @@ export default function ProductsTab() {
         </div>
       )}
 
+      {/* View Modal */}
+      <ProductViewModal
+        open={!!viewingProduct}
+        onClose={() => setViewingProduct(null)}
+        product={viewingProduct}
+        projects={projects}
+        currentUser={currentUser}
+        queryClient={queryClient}
+        onEdit={(p) => { setViewingProduct(null); setEditingProduct(p); setShowModal(true); }}
+        onRefetch={refetch}
+      />
+
       <ProductModal
         open={showModal}
         onClose={() => { setShowModal(false); setEditingProduct(null); }}
@@ -314,5 +344,178 @@ export default function ProductsTab() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+function ProductViewModal({ open, onClose, product, projects, currentUser, queryClient, onEdit, onRefetch }) {
+  const [activeAction, setActiveAction] = useState(null);
+  const [actionData, setActionData] = useState({ quantity: 1, project_id: '', notes: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['productTransactions', product?.id],
+    queryFn: () => api.entities.ProductTransaction.filter({ product_id: product.id }, '-created_date'),
+    enabled: !!product?.id
+  });
+
+  useEffect(() => {
+    setActiveAction(null);
+    setActionData({ quantity: 1, project_id: '', notes: '' });
+    setShowHistory(false);
+  }, [product, open]);
+
+  if (!product) return null;
+
+  const handleAction = async () => {
+    if (!activeAction || submitting) return;
+    setSubmitting(true);
+    try {
+      const qty = Number(actionData.quantity) || 1;
+      await api.entities.ProductTransaction.create({
+        product_id: product.id,
+        type: activeAction,
+        quantity: qty,
+        project_id: actionData.project_id || null,
+        user_email: currentUser?.email || '',
+        user_name: currentUser?.name || currentUser?.email || '',
+        notes: actionData.notes || ''
+      });
+
+      const isAdd = activeAction === 'restock';
+      const newQty = isAdd ? (product.quantity_on_hand || 0) + qty : (product.quantity_on_hand || 0) - qty;
+      await api.entities.Product.update(product.id, { quantity_on_hand: Math.max(0, newQty) });
+
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['productTransactions', product.id] });
+      onRefetch();
+      setActiveAction(null);
+      setActionData({ quantity: 1, project_id: '', notes: '' });
+    } catch (err) {
+      console.error('Action failed:', err);
+    }
+    setSubmitting(false);
+  };
+
+  const txConfig = {
+    take: { label: 'Taken', color: 'bg-blue-100 text-blue-700', sign: '-' },
+    restock: { label: 'Restocked', color: 'bg-emerald-100 text-emerald-700', sign: '+' },
+  };
+  const displayedTx = showHistory ? transactions : transactions.slice(0, 5);
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            {product.image_url ? (
+              <img src={product.image_url} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
+            ) : (
+              <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                <Package className="w-6 h-6 text-slate-400" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-lg font-semibold truncate">{product.name}</p>
+              {product.manufacturer && <p className="text-sm font-normal text-slate-500">{product.manufacturer}</p>}
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-3 mt-1">
+          <div className="grid grid-cols-2 gap-3">
+            {product.sku && <div><p className="text-xs text-slate-500">SKU</p><p className="text-sm font-medium">{product.sku}</p></div>}
+            {product.tags?.length > 0 && (
+              <div className="col-span-2"><p className="text-xs text-slate-500 mb-1">Tags</p>
+                <div className="flex flex-wrap gap-1">{product.tags.map((t, i) => <Badge key={i} variant="secondary" className="text-[10px]">{t}</Badge>)}</div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-lg">
+            <div className="text-center"><p className="text-xs text-slate-500">In Stock</p><p className={cn("text-lg font-bold", (product.quantity_on_hand || 0) === 0 ? "text-red-600" : "text-slate-900")}>{product.quantity_on_hand || 0}</p></div>
+            <div className="text-center"><p className="text-xs text-slate-500">Cost</p><p className="text-sm font-medium text-slate-900">${product.cost?.toFixed(2) || '0.00'}</p></div>
+            <div className="text-center"><p className="text-xs text-slate-500">Sell Price</p><p className="text-sm font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</p></div>
+          </div>
+
+          {product.description && <div><p className="text-xs text-slate-500 mb-1">Description</p><p className="text-sm text-slate-700 line-clamp-3">{product.description}</p></div>}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-2 border-t">
+            <Button size="sm" variant={activeAction === 'take' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'take' ? null : 'take')} disabled={(product.quantity_on_hand || 0) === 0} className={activeAction === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : ''}>
+              <Minus className="w-3.5 h-3.5 mr-1.5" />Take
+            </Button>
+            <Button size="sm" variant={activeAction === 'restock' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'restock' ? null : 'restock')} className={activeAction === 'restock' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}>
+              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />Restock
+            </Button>
+            <div className="flex-1" />
+            <Button size="sm" variant="outline" onClick={() => onEdit(product)}>
+              <Edit2 className="w-3.5 h-3.5 mr-1.5" />Edit
+            </Button>
+          </div>
+
+          {/* Inline Action Panel */}
+          {activeAction && (
+            <div className="p-3 bg-slate-50 rounded-lg border space-y-3">
+              <p className="text-sm font-semibold text-slate-700">{activeAction === 'take' ? 'Take from Stock' : 'Restock'}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Quantity</Label>
+                  <Input type="number" min={1} max={activeAction === 'take' ? (product.quantity_on_hand || 0) : 9999} value={actionData.quantity} onChange={(e) => setActionData(p => ({ ...p, quantity: e.target.value }))} className="mt-1 h-8" />
+                </div>
+                <div>
+                  <Label className="text-xs">Project (optional)</Label>
+                  <Select value={actionData.project_id} onValueChange={(v) => setActionData(p => ({ ...p, project_id: v }))}>
+                    <SelectTrigger className="mt-1 h-8"><SelectValue placeholder="None" /></SelectTrigger>
+                    <SelectContent>{projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Notes</Label>
+                <Textarea value={actionData.notes} onChange={(e) => setActionData(p => ({ ...p, notes: e.target.value }))} className="mt-1 h-16 text-sm" placeholder={activeAction === 'restock' ? 'e.g., PO #12345' : 'Optional notes...'} />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button size="sm" variant="outline" onClick={() => setActiveAction(null)}>Cancel</Button>
+                <Button size="sm" onClick={handleAction} disabled={submitting || !actionData.quantity} className={activeAction === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : 'bg-emerald-600 hover:bg-emerald-700'}>
+                  {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
+                  Confirm {activeAction === 'take' ? 'Take' : 'Restock'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Transaction History */}
+          <div className="border-t pt-3">
+            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 w-full">
+              <History className="w-4 h-4" />History ({transactions.length})
+              {showHistory ? <X className="w-3.5 h-3.5 ml-auto" /> : <ChevronDown className="w-3.5 h-3.5 ml-auto" />}
+            </button>
+            {(showHistory || transactions.length > 0) && (
+              <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
+                {displayedTx.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-2 text-center">No transactions yet</p>
+                ) : displayedTx.map((tx) => {
+                  const cfg = txConfig[tx.type] || txConfig.take;
+                  const proj = projects.find(p => p.id === tx.project_id);
+                  return (
+                    <div key={tx.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded hover:bg-slate-50">
+                      <Badge className={cn("text-[10px] px-1.5 py-0", cfg.color)}>{cfg.label}</Badge>
+                      <span className="font-semibold text-slate-700">{cfg.sign}{tx.quantity}</span>
+                      {proj && <span className="text-slate-500 truncate">→ {proj.name}</span>}
+                      <span className="text-slate-400 ml-auto shrink-0">{tx.user_name?.split(' ')[0]}</span>
+                      <span className="text-slate-400 shrink-0">{tx.created_date ? format(new Date(tx.created_date), 'MMM d') : ''}</span>
+                    </div>
+                  );
+                })}
+                {!showHistory && transactions.length > 5 && (
+                  <button onClick={() => setShowHistory(true)} className="text-xs text-[#0069AF] hover:underline w-full text-center py-1">Show all {transactions.length}</button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

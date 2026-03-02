@@ -7,7 +7,7 @@ import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
 import FeedbackManagement from './pages/FeedbackManagement';
 import Home from './pages/Home';
-import Inventory from './pages/Inventory';
+
 import ManagerDashboard from './pages/ManagerDashboard';
 import MyAssignments from './pages/MyAssignments';
 import MyNotifications from './pages/MyNotifications';
@@ -49,7 +49,7 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "FeedbackManagement": FeedbackManagement,
     "Home": Home,
-    "Inventory": Inventory,
+
     "ManagerDashboard": ManagerDashboard,
     "MyAssignments": MyAssignments,
     "MyNotifications": MyNotifications,

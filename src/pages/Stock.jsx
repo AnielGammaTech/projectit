@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, Wrench, Layers, Truck } from 'lucide-react';
+import { Package, Wrench, Layers, Truck, HardDrive } from 'lucide-react';
 import ProductsTab from '@/components/stock/ProductsTab';
 import ServicesTab from '@/components/stock/ServicesTab';
 import BundlesTab from '@/components/stock/BundlesTab';
 import PartsTrackerTab from '@/components/stock/PartsTrackerTab';
+import ToolsTab from '@/components/stock/ToolsTab';
 
 export default function Stock() {
   const [activeTab, setActiveTab] = useState('products');
@@ -15,7 +16,7 @@ export default function Stock() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#0F2F44] dark:text-slate-100">Stock</h1>
-          <p className="text-[#0F2F44]/60 dark:text-slate-400">Manage your products, services, and bundles</p>
+          <p className="text-[#0F2F44]/60 dark:text-slate-400">Manage your products, services, tools, and bundles</p>
         </div>
 
         {/* Tabs */}
@@ -24,6 +25,10 @@ export default function Stock() {
             <TabsTrigger value="products" className="gap-2 data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Package className="w-4 h-4" />
               Products
+            </TabsTrigger>
+            <TabsTrigger value="tools" className="gap-2 data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              <HardDrive className="w-4 h-4" />
+              Tools
             </TabsTrigger>
             <TabsTrigger value="services" className="gap-2 data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Wrench className="w-4 h-4" />
@@ -41,6 +46,10 @@ export default function Stock() {
 
           <TabsContent value="products">
             <ProductsTab />
+          </TabsContent>
+
+          <TabsContent value="tools">
+            <ToolsTab />
           </TabsContent>
 
           <TabsContent value="services">

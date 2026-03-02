@@ -317,8 +317,19 @@ export default function ProjectTasks() {
 
     if (destGroupId === sourceGroupId) return;
 
-    await api.entities.Task.update(draggableId, { group_id: destGroupId });
-    refetchTasks();
+    // Optimistic update — move task in cache immediately
+    queryClient.setQueryData(['tasks', projectId], (old) =>
+      (old || []).map((t) =>
+        t.id === draggableId ? { ...t, group_id: destGroupId } : t
+      )
+    );
+
+    try {
+      await api.entities.Task.update(draggableId, { group_id: destGroupId });
+    } catch (err) {
+      console.error('Failed to move task:', err);
+    }
+    await refetchTasks();
   };
 
   const sortTasks = (taskList) => {
