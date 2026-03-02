@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -55,6 +55,7 @@ export default function ProjectStatuses() {
   const [showModal, setShowModal] = useState(false);
   const [editingStatus, setEditingStatus] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const queryClient = useQueryClient();
 
   const { data: statuses = [], isLoading: loadingStatuses, refetch } = useQuery({
     queryKey: ['projectStatuses'],
@@ -91,17 +92,25 @@ export default function ProjectStatuses() {
   };
 
   const handleDragEnd = async (result) => {
-    if (!result.destination) return;
-    
+    if (!result.destination || result.source.index === result.destination.index) return;
+
     const items = Array.from(statuses);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    // Update order in database
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].order !== i) {
-        await api.entities.ProjectStatus.update(items[i].id, { order: i });
+    // Optimistically update the cache so UI doesn't revert
+    const reordered = items.map((item, i) => ({ ...item, order: i }));
+    queryClient.setQueryData(['projectStatuses'], reordered);
+
+    // Persist new order to database
+    try {
+      for (let i = 0; i < reordered.length; i++) {
+        if (statuses.find(s => s.id === reordered[i].id)?.order !== i) {
+          await api.entities.ProjectStatus.update(reordered[i].id, { order: i });
+        }
       }
+    } catch (err) {
+      console.error('Failed to save order:', err);
     }
     refetch();
   };
@@ -268,7 +277,7 @@ function StatusModal({ open, onClose, status, onSave }) {
     is_completed: false
   });
 
-  useState(() => {
+  useEffect(() => {
     if (status) {
       setFormData({
         name: status.name || '',

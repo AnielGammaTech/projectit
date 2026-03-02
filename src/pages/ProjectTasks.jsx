@@ -41,7 +41,6 @@ import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import UserAvatar from '@/components/UserAvatar';
 import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
 import { fireTaskConfetti, fireCelebrationConfetti } from '@/utils/confetti';
-import { Sparkles, Loader2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 const motivationalMessages = [
@@ -131,8 +130,6 @@ export default function ProjectTasks() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [bulkDatePickerOpen, setBulkDatePickerOpen] = useState(false);
   const [viewMode, setViewMode] = useState('list');
-  const [aiInput, setAiInput] = useState('');
-  const [aiProcessing, setAiProcessing] = useState(false);
 
   useEffect(() => {
     api.auth.me().then(setCurrentUser).catch(() => {});
@@ -443,75 +440,6 @@ export default function ProjectTasks() {
     setShowTaskModal(false);
   };
 
-  const handleAiTaskCreate = async () => {
-    if (!aiInput.trim() || aiProcessing) return;
-    setAiProcessing(true);
-    try {
-      const memberNames = projectMembers.map(m => `${m.name} (${m.email})`).join(', ');
-      const groupNames = taskGroups.map(g => `${g.name} (id: ${g.id})`).join(', ');
-      const result = await api.integrations.Core.InvokeLLM({
-        prompt: `Parse this natural language task request and extract task details.
-
-User said: "${aiInput}"
-
-Available team members: ${memberNames || 'None'}
-Available groups: ${groupNames || 'None'}
-
-Extract the task title, priority (low/medium/high), assignee email (if mentioned), due date (in YYYY-MM-DD format if mentioned, use today's date ${format(new Date(), 'yyyy-MM-dd')} as reference), and group_id (if a group was mentioned).
-
-Respond with JSON only.`,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            title: { type: 'string' },
-            priority: { type: 'string', enum: ['low', 'medium', 'high'] },
-            assigned_to: { type: 'string' },
-            assigned_name: { type: 'string' },
-            due_date: { type: 'string' },
-            group_id: { type: 'string' },
-          },
-          required: ['title', 'priority']
-        },
-        feature: 'task_suggestions'
-      });
-
-      await api.entities.Task.create({
-        title: result.title || aiInput.trim(),
-        project_id: projectId,
-        status: 'todo',
-        priority: result.priority || 'medium',
-        group_id: result.group_id || '',
-        due_date: result.due_date || '',
-        assigned_to: result.assigned_to || '',
-        assigned_name: result.assigned_name || '',
-      });
-
-      if (result.assigned_to) {
-        await sendTaskAssignmentNotification({
-          assigneeEmail: result.assigned_to,
-          taskTitle: result.title || aiInput.trim(),
-          projectId,
-          projectName: project?.name,
-          currentUser,
-        });
-      }
-
-      setAiInput('');
-      refetchTasks();
-    } catch (err) {
-      console.error('AI task creation failed:', err);
-      // Fallback: create task with just the title
-      await api.entities.Task.create({
-        title: aiInput.trim(),
-        project_id: projectId,
-        status: 'todo',
-        priority: 'medium',
-      });
-      setAiInput('');
-      refetchTasks();
-    }
-    setAiProcessing(false);
-  };
 
   const handleSaveGroup = async (data, existingGroup) => {
     if (existingGroup) {
@@ -890,7 +818,7 @@ Respond with JSON only.`,
                   <Archive className="w-4 h-4 mr-2" />Archive
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => setDeleteConfirm({ open: true, type: 'task', item: task })} className="text-red-600">
+              <DropdownMenuItem onClick={() => { setSelectedTask(null); setDeleteConfirm({ open: true, type: 'task', item: task }); }} className="text-red-600">
                 <Trash2 className="w-4 h-4 mr-2" />Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -1014,42 +942,7 @@ Respond with JSON only.`,
           </div>
         </div>
 
-        {/* AI Task Input */}
-        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm p-4 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-sm">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex-1 relative">
-              <Input
-                value={aiInput}
-                onChange={(e) => setAiInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleAiTaskCreate();
-                  }
-                }}
-                placeholder='Try: "Review design doc by Friday high priority assign to John"'
-                className="h-10 pr-10 bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-sm placeholder:text-slate-400"
-                disabled={aiProcessing}
-              />
-              <Button
-                onClick={handleAiTaskCreate}
-                disabled={!aiInput.trim() || aiProcessing}
-                className="absolute right-1 top-1 h-8 w-8 p-0 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 rounded-lg"
-              >
-                {aiProcessing ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Send className="w-3.5 h-3.5" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Phase 6: Bulk Action Bar */}
+        {/* Bulk Action Bar */}
         {selectionMode && selectedTasks.size > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -1427,7 +1320,7 @@ Respond with JSON only.`,
       />
 
       <TaskDetailModal
-        open={!!selectedTask}
+        open={!!selectedTask && !deleteConfirm.open}
         onClose={() => setSelectedTask(null)}
         task={selectedTask}
         teamMembers={projectMembers}
@@ -1435,7 +1328,7 @@ Respond with JSON only.`,
         onEdit={(task) => { setSelectedTask(null); setEditingTask(task); setShowTaskModal(true); }}
       />
 
-      <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, type: null, item: null })}>
+      <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => { if (!open) { setDeleteConfirm({ open: false, type: null, item: null }); setSelectedTask(null); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {deleteConfirm.type}?</AlertDialogTitle>
