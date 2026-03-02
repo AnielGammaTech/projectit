@@ -18,6 +18,7 @@ const migrations = [
   '002_create_entity_tables.sql',
   '003_add_invite_columns.sql',
   '004_add_supabase_uid.sql',
+  '005_create_file_comment_table.sql',
 ];
 
 async function migrate() {

@@ -3,7 +3,7 @@ import pool from '../config/database.js';
 // Whitelist of valid entity table names
 const VALID_ENTITIES = new Set([
   'AppSettings', 'AuditLog', 'ChangeOrder', 'CommunicationLog', 'CustomRole',
-  'Customer', 'DashboardView', 'EmailTemplate', 'Feedback', 'FileFolder',
+  'Customer', 'DashboardView', 'EmailTemplate', 'Feedback', 'FileComment', 'FileFolder',
   'IncomingQuote', 'IntegrationSettings', 'InventoryItem', 'InventoryTransaction',
   'NotificationSettings', 'Part', 'Product', 'ProgressUpdate', 'Project',
   'ProjectActivity', 'ProjectFile', 'ProjectNote', 'ProjectStack', 'ProjectStatus',
@@ -221,6 +221,9 @@ const CASCADE_MAP = {
     { entity: 'ProjectActivity', foreignKey: 'project_id' },
     { entity: 'Proposal', foreignKey: 'project_id' },
     { entity: 'ChangeOrder', foreignKey: 'project_id' },
+  ],
+  ProjectFile: [
+    { entity: 'FileComment', foreignKey: 'file_id' },
   ],
   Task: [
     { entity: 'TaskComment', foreignKey: 'task_id' },

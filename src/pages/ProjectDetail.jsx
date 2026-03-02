@@ -91,6 +91,7 @@ import TimeTracker from '@/components/project/TimeTracker';
 import HaloPSATicketLink from '@/components/project/HaloPSATicketLink';
 import ProjectSidebar from '@/components/project/ProjectSidebar';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
+import { getFolderColor } from '@/lib/fileConstants';
 import { logActivity, ActivityActions } from '@/components/project/ActivityLogger';
 import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
 import ArchiveProjectModal from '@/components/modals/ArchiveProjectModal';
@@ -143,7 +144,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[260px] max-h-[260px] border border-blue-100/60 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-blue-100/60 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
         <div className="p-3.5 pb-2">
@@ -380,7 +381,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[260px] max-h-[260px] border border-emerald-100/60 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 hover:shadow-lg hover:shadow-emerald-100/50 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-emerald-100/60 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 hover:shadow-lg hover:shadow-emerald-100/50 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
         <div className="p-3.5 pb-2">
@@ -1583,7 +1584,7 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[260px] max-h-[260px] border border-violet-100/60 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 hover:shadow-lg hover:shadow-violet-100/50 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-violet-100/60 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 hover:shadow-lg hover:shadow-violet-100/50 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-400" />
                 <div className="p-3.5 pb-2">
@@ -1637,31 +1638,49 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[260px] max-h-[260px] border border-amber-100/60 bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 hover:shadow-lg hover:shadow-amber-100/50 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-amber-100/60 bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 hover:shadow-lg hover:shadow-amber-100/50 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-400" />
                 <div className="p-3.5">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2.5">
                       <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-200/50">
                         <FileText className="w-4 h-4 text-white" />
                       </div>
                       <div>
                         <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Files</h3>
-                        <span className="text-[11px] text-slate-500 font-medium">{projectFiles.length} files</span>
+                        <span className="text-[11px] text-slate-500 font-medium">{projectFiles.length} file{projectFiles.length !== 1 ? 's' : ''}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[11px]">
-                      {fileFolders.length > 0 && (
-                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 font-semibold border border-amber-100">
-                          <Folder className="w-3 h-3" />{fileFolders.length}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-600 font-semibold border border-orange-100">
-                        <File className="w-3 h-3" />{projectFiles.length}
-                      </span>
-                    </div>
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-600 font-semibold border border-orange-100 text-[11px]">
+                      <File className="w-3 h-3" />{projectFiles.length}
+                    </span>
                   </div>
+                  {fileFolders.length > 0 ? (
+                    <div className="space-y-1">
+                      {fileFolders.slice(0, 4).map(folder => {
+                        const fc = getFolderColor(folder.color);
+                        const count = projectFiles.filter(f => f.folder_id === folder.id).length;
+                        return (
+                          <div key={folder.id} className="flex items-center justify-between px-2 py-1 rounded-lg bg-white/60 dark:bg-slate-800/40 border border-slate-100/60 dark:border-slate-700/30">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Folder className={cn("w-3 h-3 flex-shrink-0", fc.text)} />
+                              <span className="text-[11px] font-medium text-slate-700 dark:text-slate-200 truncate">{folder.name}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 flex-shrink-0 ml-2">{count}</span>
+                          </div>
+                        );
+                      })}
+                      {fileFolders.length > 4 && (
+                        <span className="text-[10px] text-slate-400 pl-1">+{fileFolders.length - 4} more</span>
+                      )}
+                    </div>
+                  ) : projectFiles.length > 0 ? (
+                    <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/40 border border-slate-100/60 dark:border-slate-700/30">
+                      <File className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-[11px] text-slate-500">{projectFiles.length} files (no folders)</span>
+                    </div>
+                  ) : null}
                 </div>
               </motion.div>
             </Link>
