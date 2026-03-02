@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Package, Edit2, Trash2, Filter, X, ChevronDown, Minus, RotateCcw, History, Loader2 } from 'lucide-react';
+import { Plus, Search, Package, Edit2, Trash2, Filter, X, ChevronDown, Minus, RotateCcw, History, Loader2, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import ProductModal from './ProductModal';
@@ -96,8 +96,57 @@ export default function ProductsTab() {
     setSelectedTags([]);
   };
 
+  // Quick-take state (hover action on card)
+  const [quickAction, setQuickAction] = useState(null); // { productId, type }
+  const [quickData, setQuickData] = useState({ quantity: 1, project_id: '', notes: '' });
+  const [quickSubmitting, setQuickSubmitting] = useState(false);
+
   const handleProductClick = (product) => {
+    if (quickAction?.productId === product.id) return; // don't open view while quick-action is open
     setViewingProduct(product);
+  };
+
+  const openQuickAction = (e, product, type) => {
+    e.stopPropagation();
+    setQuickAction({ productId: product.id, type });
+    setQuickData({ quantity: 1, project_id: '', notes: '' });
+  };
+
+  const cancelQuickAction = (e) => {
+    if (e) e.stopPropagation();
+    setQuickAction(null);
+    setQuickData({ quantity: 1, project_id: '', notes: '' });
+  };
+
+  const submitQuickAction = async (e) => {
+    if (e) e.stopPropagation();
+    if (!quickAction || quickSubmitting) return;
+    if (!quickData.notes.trim()) return; // notes mandatory
+    setQuickSubmitting(true);
+    try {
+      const product = products.find(p => p.id === quickAction.productId);
+      const qty = Number(quickData.quantity) || 1;
+      await api.entities.ProductTransaction.create({
+        product_id: quickAction.productId,
+        type: quickAction.type,
+        quantity: qty,
+        project_id: quickData.project_id || null,
+        user_email: currentUser?.email || '',
+        user_name: currentUser?.name || currentUser?.email || '',
+        notes: quickData.notes.trim()
+      });
+      const isAdd = quickAction.type === 'restock';
+      const newQty = isAdd ? (product.quantity_on_hand || 0) + qty : (product.quantity_on_hand || 0) - qty;
+      await api.entities.Product.update(quickAction.productId, { quantity_on_hand: Math.max(0, newQty) });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['productTransactions', quickAction.productId] });
+      refetch();
+      setQuickAction(null);
+      setQuickData({ quantity: 1, project_id: '', notes: '' });
+    } catch (err) {
+      console.error('Quick action failed:', err);
+    }
+    setQuickSubmitting(false);
   };
 
   const handleSave = async (data) => {
@@ -258,55 +307,144 @@ export default function ProductsTab() {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              onClick={() => handleProductClick(product)}
-              className="bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-md hover:border-[#0069AF]/30 transition-all cursor-pointer group"
-            >
-              {/* Image - Square thumbnail */}
-              <div className="aspect-square bg-slate-50 relative">
-                {product.image_url ? (
-                  <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-2" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Package className="w-10 h-10 text-slate-200" />
+          {filteredProducts.map((product) => {
+            const isQuickOpen = quickAction?.productId === product.id;
+            return (
+              <div
+                key={product.id}
+                onClick={() => handleProductClick(product)}
+                className={cn(
+                  "bg-white rounded-lg border overflow-hidden transition-all cursor-pointer group relative",
+                  isQuickOpen ? "border-[#0069AF] shadow-md ring-1 ring-[#0069AF]/20" : "border-slate-200 hover:shadow-md hover:border-[#0069AF]/30"
+                )}
+              >
+                {/* Image - Square thumbnail */}
+                <div className="aspect-square bg-slate-50 relative">
+                  {product.image_url ? (
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-2" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="w-10 h-10 text-slate-200" />
+                    </div>
+                  )}
+                  {/* Stock badge overlay */}
+                  <div className="absolute top-1.5 right-1.5">
+                    <Badge
+                      variant={product.quantity_on_hand > 0 ? "default" : "destructive"}
+                      className={cn(
+                        "text-[10px] px-1.5 py-0",
+                        product.quantity_on_hand > 0 ? "bg-emerald-500 text-white" : ""
+                      )}
+                    >
+                      {product.quantity_on_hand || 0}
+                    </Badge>
+                  </div>
+                  {/* Delete button overlay */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDeleteConfirm(product); }}
+                    className="absolute top-1.5 left-1.5 p-1 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Hover action buttons */}
+                  {!isQuickOpen && (
+                    <div className="absolute bottom-0 inset-x-0 flex gap-1 p-1.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => openQuickAction(e, product, 'take')}
+                        disabled={(product.quantity_on_hand || 0) === 0}
+                        className="flex-1 flex items-center justify-center gap-1 text-[11px] font-medium text-white bg-[#0069AF]/90 hover:bg-[#0069AF] rounded py-1 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Minus className="w-3 h-3" />Take
+                      </button>
+                      <button
+                        onClick={(e) => openQuickAction(e, product, 'restock')}
+                        className="flex-1 flex items-center justify-center gap-1 text-[11px] font-medium text-white bg-emerald-600/90 hover:bg-emerald-600 rounded py-1 transition-colors"
+                      >
+                        <RotateCcw className="w-3 h-3" />Restock
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Details - Compact */}
+                <div className="p-2">
+                  <h3 className="font-medium text-slate-900 text-sm truncate" title={product.name}>{product.name}</h3>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs text-slate-500">${product.cost?.toFixed(2) || '0.00'}</span>
+                    <span className="text-xs font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  {product.manufacturer && (
+                    <p className="text-[10px] text-slate-400 truncate mt-0.5">{product.manufacturer}</p>
+                  )}
+                </div>
+
+                {/* Quick action inline panel */}
+                {isQuickOpen && (
+                  <div
+                    className="border-t bg-slate-50 p-2.5 space-y-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <p className="text-xs font-semibold text-slate-700">
+                      {quickAction.type === 'take' ? '📦 Take from Stock' : '📦 Restock'}
+                    </p>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="text-[10px] text-slate-500 font-medium">Qty</label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={quickAction.type === 'take' ? (product.quantity_on_hand || 0) : 9999}
+                          value={quickData.quantity}
+                          onChange={(e) => setQuickData(p => ({ ...p, quantity: e.target.value }))}
+                          className="h-7 text-xs mt-0.5"
+                        />
+                      </div>
+                      <div className="flex-[2]">
+                        <label className="text-[10px] text-slate-500 font-medium">Project</label>
+                        <Select value={quickData.project_id} onValueChange={(v) => setQuickData(p => ({ ...p, project_id: v }))}>
+                          <SelectTrigger className="h-7 text-xs mt-0.5"><SelectValue placeholder="None" /></SelectTrigger>
+                          <SelectContent>{projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" />
+                        Comment <span className="text-red-500">*</span>
+                      </label>
+                      <Textarea
+                        value={quickData.notes}
+                        onChange={(e) => setQuickData(p => ({ ...p, notes: e.target.value }))}
+                        className="mt-0.5 h-14 text-xs resize-none"
+                        placeholder="Required — why are you taking/restocking?"
+                      />
+                    </div>
+                    <div className="flex gap-1.5">
+                      <Button size="sm" variant="ghost" onClick={cancelQuickAction} className="flex-1 h-7 text-xs">
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={submitQuickAction}
+                        disabled={quickSubmitting || !quickData.notes.trim() || !quickData.quantity}
+                        className={cn(
+                          "flex-1 h-7 text-xs",
+                          quickAction.type === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : 'bg-emerald-600 hover:bg-emerald-700'
+                        )}
+                      >
+                        {quickSubmitting && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
+                        Confirm
+                      </Button>
+                    </div>
+                    {!quickData.notes.trim() && (
+                      <p className="text-[10px] text-red-500 text-center">A comment is required</p>
+                    )}
                   </div>
                 )}
-                {/* Stock badge overlay */}
-                <div className="absolute top-1.5 right-1.5">
-                  <Badge 
-                    variant={product.quantity_on_hand > 0 ? "default" : "destructive"} 
-                    className={cn(
-                      "text-[10px] px-1.5 py-0",
-                      product.quantity_on_hand > 0 ? "bg-emerald-500 text-white" : ""
-                    )}
-                  >
-                    {product.quantity_on_hand || 0}
-                  </Badge>
-                </div>
-                {/* Delete button overlay */}
-                <button
-                  onClick={(e) => { e.stopPropagation(); setDeleteConfirm(product); }}
-                  className="absolute top-1.5 left-1.5 p-1 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
               </div>
-
-              {/* Details - Compact */}
-              <div className="p-2">
-                <h3 className="font-medium text-slate-900 text-sm truncate" title={product.name}>{product.name}</h3>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs text-slate-500">${product.cost?.toFixed(2) || '0.00'}</span>
-                  <span className="text-xs font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</span>
-                </div>
-                {product.manufacturer && (
-                  <p className="text-[10px] text-slate-400 truncate mt-0.5">{product.manufacturer}</p>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -368,7 +506,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
   if (!product) return null;
 
   const handleAction = async () => {
-    if (!activeAction || submitting) return;
+    if (!activeAction || submitting || !actionData.notes.trim()) return;
     setSubmitting(true);
     try {
       const qty = Number(actionData.quantity) || 1;
@@ -472,12 +610,16 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
                 </div>
               </div>
               <div>
-                <Label className="text-xs">Notes</Label>
-                <Textarea value={actionData.notes} onChange={(e) => setActionData(p => ({ ...p, notes: e.target.value }))} className="mt-1 h-16 text-sm" placeholder={activeAction === 'restock' ? 'e.g., PO #12345' : 'Optional notes...'} />
+                <Label className="text-xs flex items-center gap-1">
+                  <MessageSquare className="w-3 h-3" />
+                  Comment <span className="text-red-500">*</span>
+                </Label>
+                <Textarea value={actionData.notes} onChange={(e) => setActionData(p => ({ ...p, notes: e.target.value }))} className="mt-1 h-16 text-sm" placeholder="Required — why are you taking/restocking?" />
+                {!actionData.notes.trim() && <p className="text-[10px] text-red-500 mt-1">A comment is required</p>}
               </div>
               <div className="flex justify-end gap-2">
                 <Button size="sm" variant="outline" onClick={() => setActiveAction(null)}>Cancel</Button>
-                <Button size="sm" onClick={handleAction} disabled={submitting || !actionData.quantity} className={activeAction === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : 'bg-emerald-600 hover:bg-emerald-700'}>
+                <Button size="sm" onClick={handleAction} disabled={submitting || !actionData.quantity || !actionData.notes.trim()} className={activeAction === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : 'bg-emerald-600 hover:bg-emerald-700'}>
                   {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
                   Confirm {activeAction === 'take' ? 'Take' : 'Restock'}
                 </Button>
