@@ -19,6 +19,7 @@ const migrations = [
   '003_add_invite_columns.sql',
   '004_add_supabase_uid.sql',
   '005_create_file_comment_table.sql',
+  '006_create_stock_tables.sql',
 ];
 
 async function migrate() {

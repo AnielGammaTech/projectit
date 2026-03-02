@@ -5,11 +5,12 @@ const VALID_ENTITIES = new Set([
   'AppSettings', 'AuditLog', 'ChangeOrder', 'CommunicationLog', 'CustomRole',
   'Customer', 'DashboardView', 'EmailTemplate', 'Feedback', 'FileComment', 'FileFolder',
   'IncomingQuote', 'IntegrationSettings', 'InventoryItem', 'InventoryTransaction',
-  'NotificationSettings', 'Part', 'Product', 'ProgressUpdate', 'Project',
+  'NotificationSettings', 'Part', 'Product', 'ProductTransaction', 'ProgressUpdate', 'Project',
   'ProjectActivity', 'ProjectFile', 'ProjectNote', 'ProjectStack', 'ProjectStatus',
   'ProjectTag', 'ProjectTemplate', 'Proposal', 'ProposalSettings', 'QuoteRequest',
   'SavedReport', 'Service', 'ServiceBundle', 'Site', 'Task', 'TaskComment', 'Ticket',
-  'TaskGroup', 'TeamMember', 'TimeEntry', 'UserGroup', 'UserNotification',
+  'TaskGroup', 'TeamMember', 'TimeEntry', 'Tool', 'ToolTransaction',
+  'UserGroup', 'UserNotification',
   'UserSecuritySettings', 'Workflow', 'WorkflowLog',
 ]);
 
@@ -240,6 +241,12 @@ const CASCADE_MAP = {
   ],
   Workflow: [
     { entity: 'WorkflowLog', foreignKey: 'workflow_id' },
+  ],
+  Product: [
+    { entity: 'ProductTransaction', foreignKey: 'product_id' },
+  ],
+  Tool: [
+    { entity: 'ToolTransaction', foreignKey: 'tool_id' },
   ],
 };
 
