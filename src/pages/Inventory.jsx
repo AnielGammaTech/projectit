@@ -49,6 +49,7 @@ export default function Inventory() {
   const [showBundleModal, setShowBundleModal] = useState(false);
   const [editingBundle, setEditingBundle] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
+  const [viewingItem, setViewingItem] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -324,11 +325,8 @@ export default function Inventory() {
               return (
                 <div 
                   key={item.id} 
-                  onClick={() => { if (canEdit) { setEditingItem(item); setShowItemModal(true); }}}
-                  className={cn(
-                    "grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors",
-                    canEdit && "cursor-pointer"
-                  )}
+                  onClick={() => setViewingItem(item)}
+                  className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
                 >
                   <div className="col-span-4 flex items-center gap-3">
                     {item.image_url ? (
@@ -510,6 +508,15 @@ export default function Inventory() {
         defaultType={activeTab === 'services' ? 'service' : 'product'}
       />
 
+      {/* Item View Modal */}
+      <ItemViewModal
+        open={!!viewingItem}
+        onClose={() => setViewingItem(null)}
+        item={viewingItem}
+        onEdit={(item) => { setViewingItem(null); setEditingItem(item); setShowItemModal(true); }}
+        canEdit={canEdit}
+      />
+
       {/* Checkout Modal */}
       <CheckoutModal
         open={showCheckoutModal}
@@ -528,7 +535,7 @@ export default function Inventory() {
         open={showScanModal}
         onClose={() => setShowScanModal(false)}
         items={items}
-        onItemFound={(item) => { setShowScanModal(false); setEditingItem(item); setShowItemModal(true); }}
+        onItemFound={(item) => { setShowScanModal(false); setViewingItem(item); }}
       />
 
       {/* AI Search Modal */}
@@ -565,6 +572,103 @@ export default function Inventory() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+function ItemViewModal({ open, onClose, item, onEdit, canEdit }) {
+  if (!item) return null;
+  const isService = item.item_type === 'service';
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            {item.image_url ? (
+              <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
+            ) : (
+              <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                <Package className="w-6 h-6 text-slate-400" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate">{item.name}</p>
+              {item.category && <p className="text-sm font-normal text-slate-500">{item.category}</p>}
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 mt-2">
+          <div className="grid grid-cols-2 gap-3">
+            {item.sku && (
+              <div>
+                <p className="text-xs text-slate-500 mb-0.5">SKU</p>
+                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.sku}</p>
+              </div>
+            )}
+            {item.barcode && (
+              <div>
+                <p className="text-xs text-slate-500 mb-0.5">Barcode</p>
+                <p className="text-sm font-medium font-mono text-slate-900 dark:text-slate-100">{item.barcode}</p>
+              </div>
+            )}
+          </div>
+
+          {!isService && (
+            <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+              <div className="text-center">
+                <p className="text-xs text-slate-500 mb-0.5">In Stock</p>
+                <p className={cn("text-lg font-bold", item.quantity_in_stock === 0 ? "text-red-600" : item.quantity_in_stock <= item.minimum_stock ? "text-amber-600" : "text-slate-900 dark:text-slate-100")}>
+                  {item.quantity_in_stock}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-slate-500 mb-0.5">Min Stock</p>
+                <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{item.minimum_stock || 0}</p>
+              </div>
+              {item.location && (
+                <div className="text-center">
+                  <p className="text-xs text-slate-500 mb-0.5">Location</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.location}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            {item.unit_cost && (
+              <div>
+                <p className="text-xs text-slate-500 mb-0.5">Cost</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">${item.unit_cost}</p>
+              </div>
+            )}
+            {item.sell_price && (
+              <div>
+                <p className="text-xs text-slate-500 mb-0.5">Selling Price</p>
+                <p className="text-sm font-semibold text-emerald-700">${item.sell_price}</p>
+              </div>
+            )}
+          </div>
+
+          {item.description && (
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Description</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{item.description}</p>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2 border-t">
+            <Button variant="outline" onClick={onClose}>Close</Button>
+            {canEdit && (
+              <Button onClick={() => onEdit(item)} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                <Edit2 className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
