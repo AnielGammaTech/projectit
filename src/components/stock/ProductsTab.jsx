@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Package, Edit2, Trash2, Filter, X, ChevronDown, Minus, RotateCcw, History, Loader2, MessageSquare } from 'lucide-react';
+import { Plus, Search, Package, Edit2, Trash2, Filter, X, ChevronDown, Minus, RotateCcw, History, Loader2, MessageSquare, ExternalLink, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import ProductModal from './ProductModal';
@@ -577,6 +577,30 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
           </div>
 
           {product.description && <div><p className="text-xs text-slate-500 mb-1">Description</p><p className="text-sm text-slate-700 line-clamp-3">{product.description}</p></div>}
+
+          {/* Supplier / Where to Buy */}
+          {(product.supplier_name || product.supplier_url) && (
+            <div className="flex items-center gap-2 p-2.5 bg-blue-50 rounded-lg border border-blue-100">
+              <ShoppingCart className="w-4 h-4 text-blue-600 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-blue-600 font-medium">Where to Buy</p>
+                {product.supplier_url ? (
+                  <a
+                    href={product.supplier_url.startsWith('http') ? product.supplier_url : `https://${product.supplier_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-semibold text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1 truncate"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {product.supplier_name || new URL(product.supplier_url.startsWith('http') ? product.supplier_url : `https://${product.supplier_url}`).hostname.replace('www.', '')}
+                    <ExternalLink className="w-3 h-3 shrink-0" />
+                  </a>
+                ) : (
+                  <p className="text-sm font-semibold text-slate-700">{product.supplier_name}</p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-2 pt-2 border-t">

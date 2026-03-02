@@ -5,11 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ImagePlus, X, Plus } from 'lucide-react';
+import { ImagePlus, X, Plus, ExternalLink } from 'lucide-react';
 import { api } from '@/api/apiClient';
 
 export default function ProductModal({ open, onClose, product, onSave }) {
-  const [formData, setFormData] = useState({
+  const emptyForm = {
     name: '',
     sku: '',
     description: '',
@@ -18,8 +18,11 @@ export default function ProductModal({ open, onClose, product, onSave }) {
     selling_price: '',
     quantity_on_hand: 0,
     manufacturer: '',
+    supplier_name: '',
+    supplier_url: '',
     tags: []
-  });
+  };
+  const [formData, setFormData] = useState(emptyForm);
   const [newTag, setNewTag] = useState('');
   const [uploading, setUploading] = useState(false);
 
@@ -34,20 +37,12 @@ export default function ProductModal({ open, onClose, product, onSave }) {
         selling_price: product.selling_price || '',
         quantity_on_hand: product.quantity_on_hand || 0,
         manufacturer: product.manufacturer || '',
+        supplier_name: product.supplier_name || '',
+        supplier_url: product.supplier_url || '',
         tags: product.tags || []
       });
     } else {
-      setFormData({
-        name: '',
-        sku: '',
-        description: '',
-        image_url: '',
-        cost: '',
-        selling_price: '',
-        quantity_on_hand: 0,
-        manufacturer: '',
-        tags: []
-      });
+      setFormData(emptyForm);
     }
   }, [product, open]);
 
@@ -174,6 +169,28 @@ export default function ProductModal({ open, onClose, product, onSave }) {
               <Input
                 value={formData.manufacturer}
                 onChange={(e) => setFormData(prev => ({ ...prev, manufacturer: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <Label>Supplier / Where to Buy</Label>
+              <Input
+                value={formData.supplier_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, supplier_name: e.target.value }))}
+                placeholder="e.g. Amazon, Home Depot, Grainger"
+              />
+            </div>
+
+            <div className="col-span-2">
+              <Label className="flex items-center gap-1.5">
+                Purchase Link
+                <ExternalLink className="w-3 h-3 text-slate-400" />
+              </Label>
+              <Input
+                type="url"
+                value={formData.supplier_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, supplier_url: e.target.value }))}
+                placeholder="https://www.amazon.com/dp/..."
               />
             </div>
 
