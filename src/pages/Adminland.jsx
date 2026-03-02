@@ -995,9 +995,13 @@ function InventorySettingsSection({ queryClient }) {
   const [initialized, setInitialized] = useState(false);
 
   const [formData, setFormData] = useState({
+    inventory_view_groups: [],
+    inventory_edit_groups: [],
+    inventory_checkout_groups: [],
     inventory_locations: [],
     inventory_notify_low_stock: false,
     inventory_notify_out_of_stock: false,
+    inventory_alert_groups: [],
     inventory_alert_frequency: 'instant',
     inventory_tool_require_project: false,
     inventory_tool_overdue_alert: false,
@@ -1015,13 +1019,22 @@ function InventorySettingsSection({ queryClient }) {
     queryFn: () => api.entities.UserGroup.list('name')
   });
 
+  const { data: members = [] } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: () => api.entities.TeamMember.list('name')
+  });
+
   useEffect(() => {
     if (settings[0] && !initialized) {
       const s = settings[0];
       setFormData({
+        inventory_view_groups: s.inventory_view_groups || [],
+        inventory_edit_groups: s.inventory_edit_groups || [],
+        inventory_checkout_groups: s.inventory_checkout_groups || [],
         inventory_locations: s.inventory_locations || [],
         inventory_notify_low_stock: s.inventory_notify_low_stock || false,
         inventory_notify_out_of_stock: s.inventory_notify_out_of_stock || false,
+        inventory_alert_groups: s.inventory_alert_groups || [],
         inventory_alert_frequency: s.inventory_alert_frequency || 'instant',
         inventory_tool_require_project: s.inventory_tool_require_project || false,
         inventory_tool_overdue_alert: s.inventory_tool_overdue_alert || false,
@@ -1062,9 +1075,54 @@ function InventorySettingsSection({ queryClient }) {
     }));
   };
 
+  const toggleGroupInField = (field, groupId) => {
+    setFormData(prev => {
+      const current = prev[field] || [];
+      return {
+        ...prev,
+        [field]: current.includes(groupId)
+          ? current.filter(id => id !== groupId)
+          : [...current, groupId]
+      };
+    });
+  };
+
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
+
+  const GroupPicker = ({ field, label, description }) => (
+    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+      <Label className="text-sm font-medium">{label}</Label>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{description}</p>
+      {groups.length === 0 ? (
+        <p className="text-xs text-slate-400 italic">No user groups found. Create groups in People & Teams first.</p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {groups.map((g) => {
+            const selected = (formData[field] || []).includes(g.id);
+            return (
+              <button
+                key={g.id}
+                onClick={() => toggleGroupInField(field, g.id)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+                  selected
+                    ? "bg-[#0069AF] text-white border-[#0069AF]"
+                    : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-[#0069AF]"
+                )}
+              >
+                {g.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {(formData[field] || []).length === 0 && groups.length > 0 && (
+        <p className="text-xs text-amber-600 mt-2">No groups selected — all users will have access</p>
+      )}
+    </div>
+  );
 
   return (
     <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-lg overflow-hidden">
@@ -1074,7 +1132,7 @@ function InventorySettingsSection({ queryClient }) {
             <Package className="w-5 h-5 text-[#0069AF]" />
             Inventory Settings
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Manage stock locations, notifications & tool policies</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Manage access, stock locations, notifications & tool policies</p>
         </div>
         <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
           {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
@@ -1082,6 +1140,32 @@ function InventorySettingsSection({ queryClient }) {
       </div>
 
       <div className="divide-y dark:divide-slate-700/50">
+        {/* Access Control */}
+        <div>
+          <button
+            onClick={() => toggleSection('access')}
+            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/40">
+                <Shield className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100">Access Control</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Who can view, edit, and checkout inventory</p>
+              </div>
+            </div>
+            {expandedSections.access ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </button>
+          {expandedSections.access && (
+            <div className="px-4 pb-4 space-y-4">
+              <GroupPicker field="inventory_view_groups" label="Who can view inventory" description="Select groups allowed to see inventory items" />
+              <GroupPicker field="inventory_edit_groups" label="Who can edit inventory" description="Select groups allowed to add, edit, and delete items" />
+              <GroupPicker field="inventory_checkout_groups" label="Who can take / checkout" description="Select groups allowed to take stock and checkout tools" />
+            </div>
+          )}
+        </div>
+
         {/* Stock Locations */}
         <div>
           <button
@@ -1171,6 +1255,7 @@ function InventorySettingsSection({ queryClient }) {
                   onCheckedChange={(checked) => setFormData(p => ({ ...p, inventory_notify_out_of_stock: checked }))}
                 />
               </div>
+              <GroupPicker field="inventory_alert_groups" label="Alert recipients" description="Select which groups receive stock notifications (leave empty = admins only)" />
               <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                 <Label className="text-sm font-medium">Alert frequency</Label>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">How often to send notification digests</p>

@@ -102,17 +102,18 @@ export default function ProjectStatuses() {
     const reordered = items.map((item, i) => ({ ...item, order: i }));
     queryClient.setQueryData(['projectStatuses'], reordered);
 
-    // Persist new order to database
+    // Persist ALL items with their new order (don't skip any)
     try {
-      for (let i = 0; i < reordered.length; i++) {
-        if (statuses.find(s => s.id === reordered[i].id)?.order !== i) {
-          await api.entities.ProjectStatus.update(reordered[i].id, { order: i });
-        }
-      }
+      await Promise.all(
+        reordered.map((item, i) =>
+          api.entities.ProjectStatus.update(item.id, { order: i })
+        )
+      );
     } catch (err) {
       console.error('Failed to save order:', err);
     }
-    refetch();
+    // Wait for refetch to complete so cache stays in sync
+    await refetch();
   };
 
   const getColorConfig = (colorName) => {
@@ -164,12 +165,9 @@ export default function ProjectStatuses() {
                     return (
                       <Draggable key={status.id} draggableId={status.id} index={idx}>
                         {(provided, snapshot) => (
-                          <motion.div
+                          <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.05 }}
                             className={cn(
                               "bg-white rounded-xl border p-4 hover:shadow-md transition-all",
                               snapshot.isDragging && "shadow-lg ring-2 ring-[#0069AF]"
@@ -229,7 +227,7 @@ export default function ProjectStatuses() {
                                 </Button>
                               </div>
                             </div>
-                          </motion.div>
+                          </div>
                         )}
                       </Draggable>
                     );
