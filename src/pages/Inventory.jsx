@@ -5,11 +5,13 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Package, Plus, Search, AlertTriangle, CheckCircle2, 
+import {
+  Package, Plus, Search, AlertTriangle, CheckCircle2,
   ArrowDownCircle, Edit2, Trash2, MoreHorizontal, Image,
-  Printer, QrCode, ShoppingCart, Scan, X, Loader2, Sparkles, Wand2, Layers
+  Printer, QrCode, ShoppingCart, Scan, X, Loader2, Sparkles, Wand2, Layers,
+  Wrench, Minus, RotateCcw, History, ChevronDown, ChevronUp
 } from 'lucide-react';
+import { format } from 'date-fns';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,9 +101,10 @@ export default function Inventory() {
   const canCheckout = isAdmin || !appSettings.inventory_checkout_groups?.length || 
     appSettings.inventory_checkout_groups.some(g => userGroupIds.includes(g));
 
-  const products = items.filter(item => item.item_type !== 'service');
+  const products = items.filter(item => !item.item_type || item.item_type === 'product');
   const services = items.filter(item => item.item_type === 'service');
-  const currentItems = activeTab === 'products' ? products : services;
+  const tools = items.filter(item => item.item_type === 'tool');
+  const currentItems = activeTab === 'products' ? products : activeTab === 'tools' ? tools : services;
 
   const filteredItems = currentItems.filter(item =>
     item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -110,8 +113,9 @@ export default function Inventory() {
     item.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const lowStockItems = products.filter(i => i.quantity_in_stock <= i.minimum_stock && i.quantity_in_stock > 0);
-  const outOfStockItems = products.filter(i => i.quantity_in_stock === 0);
+  const stockItems = [...products, ...tools];
+  const lowStockItems = stockItems.filter(i => i.quantity_in_stock <= i.minimum_stock && i.quantity_in_stock > 0);
+  const outOfStockItems = stockItems.filter(i => i.quantity_in_stock === 0);
 
   const handleDelete = async () => {
     if (deleteConfirm) {
@@ -174,10 +178,10 @@ export default function Inventory() {
         >
           <div>
             <h1 className="text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Catalog</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Manage products and services</p>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">Manage products, tools, and services</p>
           </div>
           <div className="flex gap-2">
-            {activeTab === 'products' && (
+            {(activeTab === 'products' || activeTab === 'tools') && (
               <Button variant="outline" onClick={() => setShowScanModal(true)}>
                 <Scan className="w-4 h-4 mr-2" />
                 Scan
@@ -209,7 +213,7 @@ export default function Inventory() {
                     className="bg-[#0069AF] hover:bg-[#133F5C]"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add {activeTab === 'products' ? 'Product' : 'Service'}
+                    Add {activeTab === 'products' ? 'Product' : activeTab === 'tools' ? 'Tool' : 'Service'}
                   </Button>
                 )}
               </>
@@ -227,14 +231,22 @@ export default function Inventory() {
             <Package className="w-4 h-4 mr-2" />
             Products ({products.length})
           </Button>
-          <Button 
+          <Button
+            variant={activeTab === 'tools' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('tools')}
+            className={activeTab === 'tools' ? 'bg-[#0069AF]' : ''}
+          >
+            <Wrench className="w-4 h-4 mr-2" />
+            Tools ({tools.length})
+          </Button>
+          <Button
             variant={activeTab === 'services' ? 'default' : 'outline'}
             onClick={() => setActiveTab('services')}
             className={activeTab === 'services' ? 'bg-[#0069AF]' : ''}
           >
             Services ({services.length})
           </Button>
-          <Button 
+          <Button
             variant={activeTab === 'bundles' ? 'default' : 'outline'}
             onClick={() => setActiveTab('bundles')}
             className={activeTab === 'bundles' ? 'bg-[#0069AF]' : ''}
@@ -245,7 +257,7 @@ export default function Inventory() {
         </div>
 
         {/* Stats - Only show for products */}
-        {activeTab === 'products' && (
+        {(activeTab === 'products' || activeTab === 'tools') && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border dark:border-slate-700/50 p-4">
               <div className="flex items-center gap-3">
@@ -362,14 +374,14 @@ export default function Inventory() {
                     {item.sell_price ? `$${item.sell_price}` : item.unit_cost ? `$${item.unit_cost}` : '-'}
                   </div>
                   <div className="col-span-2 flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                    {canCheckout && item.quantity_in_stock > 0 && (
-                      <Button 
-                        size="sm" 
+                    {canCheckout && item.quantity_in_stock > 0 && item.item_type !== 'service' && (
+                      <Button
+                        size="sm"
                         variant="outline"
-                        onClick={() => { setSelectedItem(item); setShowCheckoutModal(true); }}
+                        onClick={() => setViewingItem(item)}
                       >
-                        <ShoppingCart className="w-3 h-3 mr-1" />
-                        Checkout
+                        {item.item_type === 'tool' ? <Wrench className="w-3 h-3 mr-1" /> : <Minus className="w-3 h-3 mr-1" />}
+                        {item.item_type === 'tool' ? 'Checkout' : 'Take'}
                       </Button>
                     )}
                     <DropdownMenu>
@@ -505,7 +517,7 @@ export default function Inventory() {
         onClose={() => { setShowItemModal(false); setEditingItem(null); }}
         item={editingItem}
         onSaved={() => queryClient.invalidateQueries({ queryKey: ['inventoryItems'] })}
-        defaultType={activeTab === 'services' ? 'service' : 'product'}
+        defaultType={activeTab === 'services' ? 'service' : activeTab === 'tools' ? 'tool' : 'product'}
       />
 
       {/* Item View Modal */}
@@ -515,6 +527,11 @@ export default function Inventory() {
         item={viewingItem}
         onEdit={(item) => { setViewingItem(null); setEditingItem(item); setShowItemModal(true); }}
         canEdit={canEdit}
+        canCheckout={canCheckout}
+        isAdmin={isAdmin}
+        projects={projects}
+        currentUser={currentUser}
+        queryClient={queryClient}
       />
 
       {/* Checkout Modal */}
@@ -575,30 +592,102 @@ export default function Inventory() {
   );
 }
 
-function ItemViewModal({ open, onClose, item, onEdit, canEdit }) {
+function ItemViewModal({ open, onClose, item, onEdit, canEdit, canCheckout, isAdmin, projects, currentUser, queryClient }) {
+  const [activeAction, setActiveAction] = useState(null);
+  const [actionData, setActionData] = useState({ quantity: 1, project_id: '', notes: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['itemTransactions', item?.id],
+    queryFn: () => api.entities.InventoryTransaction.filter({ inventory_item_id: item.id }, '-created_date'),
+    enabled: !!item?.id
+  });
+
+  const { data: allProjects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => api.entities.Project.filter({ status: { $ne: 'archived' } }),
+    enabled: !!open
+  });
+
+  useEffect(() => {
+    setActiveAction(null);
+    setActionData({ quantity: 1, project_id: '', notes: '' });
+    setShowHistory(false);
+  }, [item, open]);
+
   if (!item) return null;
   const isService = item.item_type === 'service';
+  const isTool = item.item_type === 'tool';
+
+  const handleAction = async () => {
+    if (!activeAction || submitting) return;
+    setSubmitting(true);
+    try {
+      const isAdd = activeAction === 'restock' || activeAction === 'return';
+      const qty = Number(actionData.quantity) || 1;
+
+      await api.entities.InventoryTransaction.create({
+        inventory_item_id: item.id,
+        type: activeAction,
+        quantity: qty,
+        project_id: actionData.project_id || null,
+        user_email: currentUser?.email || '',
+        user_name: currentUser?.name || currentUser?.email || '',
+        notes: actionData.notes || ''
+      });
+
+      const newQty = isAdd
+        ? item.quantity_in_stock + qty
+        : item.quantity_in_stock - qty;
+      await api.entities.InventoryItem.update(item.id, {
+        quantity_in_stock: Math.max(0, newQty)
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['inventoryItems'] });
+      queryClient.invalidateQueries({ queryKey: ['itemTransactions', item.id] });
+      setActiveAction(null);
+      setActionData({ quantity: 1, project_id: '', notes: '' });
+    } catch (err) {
+      console.error('Action failed:', err);
+    }
+    setSubmitting(false);
+  };
+
+  const txTypeConfig = {
+    take: { label: 'Taken', color: 'bg-blue-100 text-blue-700', sign: '-' },
+    restock: { label: 'Restocked', color: 'bg-emerald-100 text-emerald-700', sign: '+' },
+    checkout: { label: 'Checked out', color: 'bg-orange-100 text-orange-700', sign: '-' },
+    return: { label: 'Returned', color: 'bg-purple-100 text-purple-700', sign: '+' },
+  };
+
+  const projectsToUse = projects?.length ? projects : allProjects;
+  const displayedTx = showHistory ? transactions : transactions.slice(0, 5);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             {item.image_url ? (
               <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
             ) : (
-              <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                <Package className="w-6 h-6 text-slate-400" />
+              <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                {isTool ? <Wrench className="w-6 h-6 text-slate-400" /> : <Package className="w-6 h-6 text-slate-400" />}
               </div>
             )}
             <div className="min-w-0">
               <p className="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate">{item.name}</p>
-              {item.category && <p className="text-sm font-normal text-slate-500">{item.category}</p>}
+              <div className="flex items-center gap-2">
+                {item.category && <span className="text-sm font-normal text-slate-500">{item.category}</span>}
+                <Badge variant="outline" className="text-[10px]">{isTool ? 'Tool' : isService ? 'Service' : 'Product'}</Badge>
+              </div>
             </div>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 mt-2">
+        <div className="space-y-3 mt-1">
+          {/* Details */}
           <div className="grid grid-cols-2 gap-3">
             {item.sku && (
               <div>
@@ -614,6 +703,7 @@ function ItemViewModal({ open, onClose, item, onEdit, canEdit }) {
             )}
           </div>
 
+          {/* Stock info */}
           {!isService && (
             <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
               <div className="text-center">
@@ -629,43 +719,182 @@ function ItemViewModal({ open, onClose, item, onEdit, canEdit }) {
               {item.location && (
                 <div className="text-center">
                   <p className="text-xs text-slate-500 mb-0.5">Location</p>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.location}</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{item.location}</p>
                 </div>
               )}
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
-            {item.unit_cost && (
-              <div>
-                <p className="text-xs text-slate-500 mb-0.5">Cost</p>
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">${item.unit_cost}</p>
-              </div>
-            )}
-            {item.sell_price && (
-              <div>
-                <p className="text-xs text-slate-500 mb-0.5">Selling Price</p>
-                <p className="text-sm font-semibold text-emerald-700">${item.sell_price}</p>
-              </div>
-            )}
-          </div>
+          {/* Pricing */}
+          {(item.unit_cost || item.sell_price) && (
+            <div className="grid grid-cols-2 gap-3">
+              {item.unit_cost && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-0.5">Cost</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">${item.unit_cost}</p>
+                </div>
+              )}
+              {item.sell_price && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-0.5">Selling Price</p>
+                  <p className="text-sm font-semibold text-emerald-700">${item.sell_price}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {item.description && (
             <div>
               <p className="text-xs text-slate-500 mb-1">Description</p>
-              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{item.description}</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-3">{item.description}</p>
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-2 border-t">
-            <Button variant="outline" onClick={onClose}>Close</Button>
-            {canEdit && (
-              <Button onClick={() => onEdit(item)} className="bg-[#0069AF] hover:bg-[#133F5C]">
-                <Edit2 className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
-            )}
-          </div>
+          {/* Action Buttons */}
+          {!isService && (
+            <div className="flex gap-2 pt-2 border-t">
+              {isTool ? (
+                <>
+                  <Button size="sm" variant={activeAction === 'checkout' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'checkout' ? null : 'checkout')} disabled={item.quantity_in_stock === 0} className={activeAction === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : ''}>
+                    <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />Checkout
+                  </Button>
+                  <Button size="sm" variant={activeAction === 'return' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'return' ? null : 'return')} className={activeAction === 'return' ? 'bg-purple-600 hover:bg-purple-700' : ''}>
+                    <RotateCcw className="w-3.5 h-3.5 mr-1.5" />Return
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button size="sm" variant={activeAction === 'take' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'take' ? null : 'take')} disabled={item.quantity_in_stock === 0} className={activeAction === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : ''}>
+                    <Minus className="w-3.5 h-3.5 mr-1.5" />Take
+                  </Button>
+                  {(isAdmin || canEdit) && (
+                    <Button size="sm" variant={activeAction === 'restock' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'restock' ? null : 'restock')} className={activeAction === 'restock' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}>
+                      <Plus className="w-3.5 h-3.5 mr-1.5" />Restock
+                    </Button>
+                  )}
+                </>
+              )}
+              <div className="flex-1" />
+              {canEdit && (
+                <Button size="sm" variant="outline" onClick={() => onEdit(item)}>
+                  <Edit2 className="w-3.5 h-3.5 mr-1.5" />Edit
+                </Button>
+              )}
+            </div>
+          )}
+
+          {isService && (
+            <div className="flex justify-end gap-3 pt-2 border-t">
+              <Button variant="outline" onClick={onClose}>Close</Button>
+              {canEdit && (
+                <Button onClick={() => onEdit(item)} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                  <Edit2 className="w-4 h-4 mr-2" />Edit
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Inline Action Panel */}
+          {activeAction && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border space-y-3">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                {activeAction === 'take' && 'Take from Stock'}
+                {activeAction === 'restock' && 'Restock'}
+                {activeAction === 'checkout' && 'Checkout Tool'}
+                {activeAction === 'return' && 'Return Tool'}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Quantity</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={activeAction === 'take' || activeAction === 'checkout' ? item.quantity_in_stock : 9999}
+                    value={actionData.quantity}
+                    onChange={(e) => setActionData(p => ({ ...p, quantity: e.target.value }))}
+                    className="mt-1 h-8"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Project (optional)</Label>
+                  <Select value={actionData.project_id} onValueChange={(v) => setActionData(p => ({ ...p, project_id: v }))}>
+                    <SelectTrigger className="mt-1 h-8"><SelectValue placeholder="None" /></SelectTrigger>
+                    <SelectContent>
+                      {projectsToUse.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Notes</Label>
+                <Textarea
+                  value={actionData.notes}
+                  onChange={(e) => setActionData(p => ({ ...p, notes: e.target.value }))}
+                  className="mt-1 h-16 text-sm"
+                  placeholder={activeAction === 'restock' ? 'e.g., PO #12345' : 'Optional notes...'}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button size="sm" variant="outline" onClick={() => setActiveAction(null)}>Cancel</Button>
+                <Button
+                  size="sm"
+                  onClick={handleAction}
+                  disabled={submitting || !actionData.quantity || Number(actionData.quantity) < 1}
+                  className={cn(
+                    activeAction === 'take' && 'bg-[#0069AF] hover:bg-[#133F5C]',
+                    activeAction === 'restock' && 'bg-emerald-600 hover:bg-emerald-700',
+                    activeAction === 'checkout' && 'bg-orange-600 hover:bg-orange-700',
+                    activeAction === 'return' && 'bg-purple-600 hover:bg-purple-700',
+                  )}
+                >
+                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
+                  Confirm {activeAction === 'take' ? 'Take' : activeAction === 'restock' ? 'Restock' : activeAction === 'checkout' ? 'Checkout' : 'Return'}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Transaction History */}
+          {!isService && (
+            <div className="border-t pt-3">
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 w-full"
+              >
+                <History className="w-4 h-4" />
+                History ({transactions.length})
+                {showHistory ? <ChevronUp className="w-3.5 h-3.5 ml-auto" /> : <ChevronDown className="w-3.5 h-3.5 ml-auto" />}
+              </button>
+              {(showHistory || transactions.length > 0) && (
+                <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
+                  {displayedTx.length === 0 ? (
+                    <p className="text-xs text-slate-400 py-2 text-center">No transactions yet</p>
+                  ) : (
+                    displayedTx.map((tx) => {
+                      const config = txTypeConfig[tx.type] || txTypeConfig.take;
+                      const project = projectsToUse.find(p => p.id === tx.project_id);
+                      return (
+                        <div key={tx.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <Badge className={cn("text-[10px] px-1.5 py-0", config.color)}>{config.label}</Badge>
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">{config.sign}{tx.quantity}</span>
+                          {project && <span className="text-slate-500 truncate">→ {project.name}</span>}
+                          <span className="text-slate-400 ml-auto shrink-0">{tx.user_name?.split(' ')[0]}</span>
+                          <span className="text-slate-400 shrink-0">{tx.created_date ? format(new Date(tx.created_date), 'MMM d') : ''}</span>
+                        </div>
+                      );
+                    })
+                  )}
+                  {!showHistory && transactions.length > 5 && (
+                    <button onClick={() => setShowHistory(true)} className="text-xs text-[#0069AF] hover:underline w-full text-center py-1">
+                      Show all {transactions.length} transactions
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -743,7 +972,7 @@ function ItemModal({ open, onClose, item, onSaved, defaultType = 'product' }) {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{item ? `Edit ${isService ? 'Service' : 'Product'}` : `Add ${isService ? 'Service' : 'Product'}`}</DialogTitle>
+          <DialogTitle>{item ? 'Edit' : 'Add'} {isService ? 'Service' : formData.item_type === 'tool' ? 'Tool' : 'Product'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Image Upload */}
@@ -782,6 +1011,7 @@ function ItemModal({ open, onClose, item, onSaved, defaultType = 'product' }) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="product">Product</SelectItem>
+                <SelectItem value="tool">Tool</SelectItem>
                 <SelectItem value="service">Service</SelectItem>
               </SelectContent>
             </Select>
@@ -854,7 +1084,7 @@ function ItemModal({ open, onClose, item, onSaved, defaultType = 'product' }) {
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]">
-              {item ? 'Update' : `Add ${isService ? 'Service' : 'Product'}`}
+              {item ? 'Update' : `Add ${isService ? 'Service' : formData.item_type === 'tool' ? 'Tool' : 'Product'}`}
             </Button>
           </div>
         </form>
