@@ -371,6 +371,8 @@ export default function AllTasks() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({});
+  const TASKS_PER_GROUP = 5;
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -452,9 +454,12 @@ export default function AllTasks() {
 
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
   }).sort((a, b) => {
-    if (viewMode === 'mine_due') {
-      return (parseLocalDate(a.due_date) || 0) - (parseLocalDate(b.due_date) || 0);
-    }
+    // Always sort by due date: tasks with due dates first (ascending), then tasks without due dates
+    const dateA = a.due_date ? parseLocalDate(a.due_date) : null;
+    const dateB = b.due_date ? parseLocalDate(b.due_date) : null;
+    if (dateA && dateB) return dateA - dateB;
+    if (dateA && !dateB) return -1;
+    if (!dateA && dateB) return 1;
     return 0;
   });
 
@@ -794,48 +799,74 @@ export default function AllTasks() {
 
                 return (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                    {entries.map(([projectId, projectTasks]) => (
-                      <motion.div
-                        key={projectId}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
-                      >
-                        {/* Project header */}
-                        <Link
-                          to={createPageUrl('ProjectDetail') + `?id=${projectId}`}
-                          className="flex items-center justify-between px-3 py-1.5 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <FolderKanban className="w-3.5 h-3.5 text-[#0069AF] dark:text-blue-400 shrink-0" />
-                            <span className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{getProjectName(projectId)}</span>
-                            {getProjectNumber(projectId) && <span className="px-1.5 py-0.5 bg-slate-800 text-white rounded text-[10px] font-mono font-semibold shrink-0">#{getProjectNumber(projectId)}</span>}
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">{projectTasks.length}</Badge>
-                          </div>
-                        </Link>
+                    {entries.map(([projectId, projectTasks]) => {
+                      const isExpanded = expandedGroups[projectId];
+                      const visibleTasks = isExpanded ? projectTasks : projectTasks.slice(0, TASKS_PER_GROUP);
+                      const hiddenCount = projectTasks.length - TASKS_PER_GROUP;
 
-                        {/* Task cards stacked inside project card */}
-                        <div className="p-2 space-y-1.5">
-                          {projectTasks.map((task) => (
-                            <TaskRow
-                              key={task.id}
-                              task={task}
-                              teamMembers={teamMembers}
-                              currentUser={currentUser}
-                              statusConfig={statusConfig}
-                              priorityColors={priorityColors}
-                              getDueDateLabel={getDueDateLabel}
-                              groupName={getGroupName(task.group_id)}
-                              onComplete={handleQuickComplete}
-                              onAssign={handleTaskAssign}
-                              onUnassign={handleTaskUnassign}
-                              onDueDateChange={handleTaskDueDateChange}
-                              onNavigate={(t) => navigate(createPageUrl('ProjectTasks') + `?id=${t.project_id}`)}
-                            />
-                          ))}
-                        </div>
-                      </motion.div>
-                    ))}
+                      return (
+                        <motion.div
+                          key={projectId}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
+                        >
+                          {/* Project header */}
+                          <Link
+                            to={createPageUrl('ProjectDetail') + `?id=${projectId}`}
+                            className="flex items-center justify-between px-3 py-1.5 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <FolderKanban className="w-3.5 h-3.5 text-[#0069AF] dark:text-blue-400 shrink-0" />
+                              <span className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{getProjectName(projectId)}</span>
+                              {getProjectNumber(projectId) && <span className="px-1.5 py-0.5 bg-slate-800 text-white rounded text-[10px] font-mono font-semibold shrink-0">#{getProjectNumber(projectId)}</span>}
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">{projectTasks.length}</Badge>
+                            </div>
+                          </Link>
+
+                          {/* Task cards stacked inside project card */}
+                          <div className="p-2 space-y-1.5">
+                            {visibleTasks.map((task) => (
+                              <TaskRow
+                                key={task.id}
+                                task={task}
+                                teamMembers={teamMembers}
+                                currentUser={currentUser}
+                                statusConfig={statusConfig}
+                                priorityColors={priorityColors}
+                                getDueDateLabel={getDueDateLabel}
+                                groupName={getGroupName(task.group_id)}
+                                onComplete={handleQuickComplete}
+                                onAssign={handleTaskAssign}
+                                onUnassign={handleTaskUnassign}
+                                onDueDateChange={handleTaskDueDateChange}
+                                onNavigate={(t) => navigate(createPageUrl('ProjectTasks') + `?id=${t.project_id}`)}
+                              />
+                            ))}
+
+                            {/* Show more / Show less button */}
+                            {hiddenCount > 0 && (
+                              <button
+                                onClick={() => setExpandedGroups(prev => ({ ...prev, [projectId]: !prev[projectId] }))}
+                                className="w-full py-1.5 text-xs font-medium text-[#0069AF] hover:text-[#005a99] hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded-md transition-colors flex items-center justify-center gap-1"
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    <ChevronDown className="w-3.5 h-3.5 rotate-180" />
+                                    Show less
+                                  </>
+                                ) : (
+                                  <>
+                                    <ChevronDown className="w-3.5 h-3.5" />
+                                    Show {hiddenCount} more task{hiddenCount !== 1 ? 's' : ''}
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 );
               })()

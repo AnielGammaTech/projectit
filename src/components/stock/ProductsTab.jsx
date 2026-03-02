@@ -100,6 +100,7 @@ export default function ProductsTab() {
   const [quickAction, setQuickAction] = useState(null); // { productId, type }
   const [quickData, setQuickData] = useState({ quantity: 1, project_id: '', notes: '' });
   const [quickSubmitting, setQuickSubmitting] = useState(false);
+  const [quickError, setQuickError] = useState(null);
 
   const handleProductClick = (product) => {
     if (quickAction?.productId === product.id) return; // don't open view while quick-action is open
@@ -110,12 +111,14 @@ export default function ProductsTab() {
     e.stopPropagation();
     setQuickAction({ productId: product.id, type });
     setQuickData({ quantity: 1, project_id: '', notes: '' });
+    setQuickError(null);
   };
 
   const cancelQuickAction = (e) => {
     if (e) e.stopPropagation();
     setQuickAction(null);
     setQuickData({ quantity: 1, project_id: '', notes: '' });
+    setQuickError(null);
   };
 
   const submitQuickAction = async (e) => {
@@ -123,9 +126,13 @@ export default function ProductsTab() {
     if (!quickAction || quickSubmitting) return;
     if (!quickData.notes.trim()) return; // notes mandatory
     setQuickSubmitting(true);
+    setQuickError(null);
     try {
       const product = products.find(p => p.id === quickAction.productId);
       const qty = Number(quickData.quantity) || 1;
+      const isRestock = quickAction.type === 'restock';
+
+      // Record the transaction
       await api.entities.ProductTransaction.create({
         product_id: quickAction.productId,
         type: quickAction.type,
@@ -135,9 +142,12 @@ export default function ProductsTab() {
         user_name: currentUser?.name || currentUser?.email || '',
         notes: quickData.notes.trim()
       });
-      const isAdd = quickAction.type === 'restock';
-      const newQty = isAdd ? (product.quantity_on_hand || 0) + qty : (product.quantity_on_hand || 0) - qty;
+
+      // Update product quantity: restock adds, take subtracts
+      const currentQty = product.quantity_on_hand || 0;
+      const newQty = isRestock ? currentQty + qty : currentQty - qty;
       await api.entities.Product.update(quickAction.productId, { quantity_on_hand: Math.max(0, newQty) });
+
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['productTransactions', quickAction.productId] });
       refetch();
@@ -145,6 +155,7 @@ export default function ProductsTab() {
       setQuickData({ quantity: 1, project_id: '', notes: '' });
     } catch (err) {
       console.error('Quick action failed:', err);
+      setQuickError(err.message || 'Action failed. Please try again.');
     }
     setQuickSubmitting(false);
   };
@@ -440,6 +451,9 @@ export default function ProductsTab() {
                     {!quickData.notes.trim() && (
                       <p className="text-[10px] text-red-500 text-center">A comment is required</p>
                     )}
+                    {quickError && (
+                      <p className="text-[10px] text-red-600 bg-red-50 rounded p-1.5 text-center">{quickError}</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -489,6 +503,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
   const [activeAction, setActiveAction] = useState(null);
   const [actionData, setActionData] = useState({ quantity: 1, project_id: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [actionError, setActionError] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
 
   const { data: transactions = [] } = useQuery({
@@ -500,6 +515,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
   useEffect(() => {
     setActiveAction(null);
     setActionData({ quantity: 1, project_id: '', notes: '' });
+    setActionError(null);
     setShowHistory(false);
   }, [product, open]);
 
@@ -508,8 +524,12 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
   const handleAction = async () => {
     if (!activeAction || submitting || !actionData.notes.trim()) return;
     setSubmitting(true);
+    setActionError(null);
     try {
       const qty = Number(actionData.quantity) || 1;
+      const isRestock = activeAction === 'restock';
+
+      // Record the transaction
       await api.entities.ProductTransaction.create({
         product_id: product.id,
         type: activeAction,
@@ -517,11 +537,12 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
         project_id: actionData.project_id || null,
         user_email: currentUser?.email || '',
         user_name: currentUser?.name || currentUser?.email || '',
-        notes: actionData.notes || ''
+        notes: actionData.notes.trim()
       });
 
-      const isAdd = activeAction === 'restock';
-      const newQty = isAdd ? (product.quantity_on_hand || 0) + qty : (product.quantity_on_hand || 0) - qty;
+      // Update product quantity: restock adds, take subtracts
+      const currentQty = product.quantity_on_hand || 0;
+      const newQty = isRestock ? currentQty + qty : currentQty - qty;
       await api.entities.Product.update(product.id, { quantity_on_hand: Math.max(0, newQty) });
 
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -531,6 +552,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
       setActionData({ quantity: 1, project_id: '', notes: '' });
     } catch (err) {
       console.error('Action failed:', err);
+      setActionError(err.message || 'Action failed. Please try again.');
     }
     setSubmitting(false);
   };
@@ -641,8 +663,11 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
                 <Textarea value={actionData.notes} onChange={(e) => setActionData(p => ({ ...p, notes: e.target.value }))} className="mt-1 h-16 text-sm" placeholder="Required — why are you taking/restocking?" />
                 {!actionData.notes.trim() && <p className="text-[10px] text-red-500 mt-1">A comment is required</p>}
               </div>
+              {actionError && (
+                <p className="text-xs text-red-600 bg-red-50 rounded p-2">{actionError}</p>
+              )}
               <div className="flex justify-end gap-2">
-                <Button size="sm" variant="outline" onClick={() => setActiveAction(null)}>Cancel</Button>
+                <Button size="sm" variant="outline" onClick={() => { setActiveAction(null); setActionError(null); }}>Cancel</Button>
                 <Button size="sm" onClick={handleAction} disabled={submitting || !actionData.quantity || !actionData.notes.trim()} className={activeAction === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : 'bg-emerald-600 hover:bg-emerald-700'}>
                   {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
                   Confirm {activeAction === 'take' ? 'Take' : 'Restock'}
