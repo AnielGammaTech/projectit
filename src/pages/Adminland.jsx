@@ -15,8 +15,16 @@ import {
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
   FileText, Layers, MessageSquare, Database, Activity,
   HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send, Copy, Check, Globe, KeyRound,
-  Image, Search, Info, Rocket, Bug, Star, Wrench
+  Image, Search, Info, Rocket, Bug, Star, Wrench, Package, MapPin, Bell, Clock
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { APP_VERSION, BUILD_HASH, BUILD_TIMESTAMP, BUILD_ENV } from '@/version';
 import { changelog } from '@/changelog';
 import {
@@ -76,6 +84,12 @@ const adminMenuGroups = [
       { id: 'tags', label: 'Tags', icon: Tags, description: 'Project tags' },
       { id: 'statuses', label: 'Statuses', icon: Layers, description: 'Project statuses', page: 'ProjectStatuses' },
       { id: 'templates', label: 'Templates', icon: FileText, description: 'Project & task templates', page: 'Templates' },
+    ]
+  },
+  {
+    title: 'Inventory',
+    items: [
+      { id: 'inventory-settings', label: 'Inventory Settings', icon: Package, description: 'Stock locations, permissions & tools' },
     ]
   },
   {
@@ -149,6 +163,8 @@ export default function Adminland() {
         return <ProjectManagementSection queryClient={queryClient} />;
       case 'ai-agents':
         return <AIAgentsSection queryClient={queryClient} />;
+      case 'inventory-settings':
+        return <InventorySettingsSection queryClient={queryClient} />;
       case 'about':
         return <AboutSection />;
       default:
@@ -970,6 +986,272 @@ function UserGroupModal({ open, onClose, group, members, onSave }) {
 }
 
 
+
+// Inventory Settings Section
+function InventorySettingsSection({ queryClient }) {
+  const [saving, setSaving] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({ access: true });
+  const [newLocation, setNewLocation] = useState('');
+  const [initialized, setInitialized] = useState(false);
+
+  const [formData, setFormData] = useState({
+    inventory_locations: [],
+    inventory_notify_low_stock: false,
+    inventory_notify_out_of_stock: false,
+    inventory_alert_frequency: 'instant',
+    inventory_tool_require_project: false,
+    inventory_tool_overdue_alert: false,
+    inventory_tool_overdue_days: 7,
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['appSettingsMain'],
+    queryFn: () => api.entities.AppSettings.filter({ setting_key: 'main' }),
+    refetchOnWindowFocus: false
+  });
+
+  const { data: groups = [] } = useQuery({
+    queryKey: ['userGroups'],
+    queryFn: () => api.entities.UserGroup.list('name')
+  });
+
+  useEffect(() => {
+    if (settings[0] && !initialized) {
+      const s = settings[0];
+      setFormData({
+        inventory_locations: s.inventory_locations || [],
+        inventory_notify_low_stock: s.inventory_notify_low_stock || false,
+        inventory_notify_out_of_stock: s.inventory_notify_out_of_stock || false,
+        inventory_alert_frequency: s.inventory_alert_frequency || 'instant',
+        inventory_tool_require_project: s.inventory_tool_require_project || false,
+        inventory_tool_overdue_alert: s.inventory_tool_overdue_alert || false,
+        inventory_tool_overdue_days: s.inventory_tool_overdue_days || 7,
+      });
+      setInitialized(true);
+    }
+  }, [settings, initialized]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (settings[0]?.id) {
+        await api.entities.AppSettings.update(settings[0].id, { ...formData, setting_key: 'main' });
+      } else {
+        await api.entities.AppSettings.create({ ...formData, setting_key: 'main' });
+      }
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['appSettings'] });
+      toast.success('Inventory settings saved');
+    } catch (err) {
+      toast.error('Failed to save settings');
+    }
+    setSaving(false);
+  };
+
+  const addLocation = () => {
+    const loc = newLocation.trim();
+    if (!loc || formData.inventory_locations.includes(loc)) return;
+    setFormData(prev => ({ ...prev, inventory_locations: [...prev.inventory_locations, loc] }));
+    setNewLocation('');
+  };
+
+  const removeLocation = (loc) => {
+    setFormData(prev => ({
+      ...prev,
+      inventory_locations: prev.inventory_locations.filter(l => l !== loc)
+    }));
+  };
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  return (
+    <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b dark:border-slate-700/50 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Package className="w-5 h-5 text-[#0069AF]" />
+            Inventory Settings
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Manage stock locations, notifications & tool policies</p>
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
+        </Button>
+      </div>
+
+      <div className="divide-y dark:divide-slate-700/50">
+        {/* Stock Locations */}
+        <div>
+          <button
+            onClick={() => toggleSection('locations')}
+            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40">
+                <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100">Stock Locations</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Predefined storage locations for inventory items</p>
+              </div>
+            </div>
+            {expandedSections.locations ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </button>
+          {expandedSections.locations && (
+            <div className="px-4 pb-4 space-y-3">
+              <div className="flex gap-2">
+                <Input
+                  value={newLocation}
+                  onChange={(e) => setNewLocation(e.target.value)}
+                  placeholder="e.g., Warehouse A, Van #1, Shelf B3"
+                  className="flex-1"
+                  onKeyDown={(e) => e.key === 'Enter' && addLocation()}
+                />
+                <Button onClick={addLocation} size="sm" className="bg-[#0069AF] hover:bg-[#133F5C]">
+                  <Plus className="w-4 h-4 mr-1" /> Add
+                </Button>
+              </div>
+              {formData.inventory_locations.length === 0 ? (
+                <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-4">No locations added yet. Add locations where inventory items are stored.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {formData.inventory_locations.map((loc) => (
+                    <Badge key={loc} variant="secondary" className="px-3 py-1.5 text-sm flex items-center gap-2">
+                      <MapPin className="w-3 h-3" />
+                      {loc}
+                      <button onClick={() => removeLocation(loc)} className="ml-1 hover:text-red-500 transition-colors">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Low Stock Notifications */}
+        <div>
+          <button
+            onClick={() => toggleSection('notifications')}
+            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/40">
+                <Bell className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100">Low Stock Notifications</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Get alerted when items run low or out of stock</p>
+              </div>
+            </div>
+            {expandedSections.notifications ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </button>
+          {expandedSections.notifications && (
+            <div className="px-4 pb-4 space-y-4">
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                <div>
+                  <Label className="text-sm font-medium">Low stock alerts</Label>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Notify when items fall below minimum quantity</p>
+                </div>
+                <Switch
+                  checked={formData.inventory_notify_low_stock}
+                  onCheckedChange={(checked) => setFormData(p => ({ ...p, inventory_notify_low_stock: checked }))}
+                />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                <div>
+                  <Label className="text-sm font-medium">Out of stock alerts</Label>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Notify when items reach zero quantity</p>
+                </div>
+                <Switch
+                  checked={formData.inventory_notify_out_of_stock}
+                  onCheckedChange={(checked) => setFormData(p => ({ ...p, inventory_notify_out_of_stock: checked }))}
+                />
+              </div>
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                <Label className="text-sm font-medium">Alert frequency</Label>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">How often to send notification digests</p>
+                <Select
+                  value={formData.inventory_alert_frequency}
+                  onValueChange={(val) => setFormData(p => ({ ...p, inventory_alert_frequency: val }))}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="instant">Instant</SelectItem>
+                    <SelectItem value="daily">Daily digest</SelectItem>
+                    <SelectItem value="weekly">Weekly digest</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tool Management */}
+        <div>
+          <button
+            onClick={() => toggleSection('tools')}
+            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/40">
+                <Wrench className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100">Tool Management</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Checkout policies and overdue tracking</p>
+              </div>
+            </div>
+            {expandedSections.tools ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+          </button>
+          {expandedSections.tools && (
+            <div className="px-4 pb-4 space-y-4">
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                <div>
+                  <Label className="text-sm font-medium">Require project for checkout</Label>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Users must assign a project when checking out tools</p>
+                </div>
+                <Switch
+                  checked={formData.inventory_tool_require_project}
+                  onCheckedChange={(checked) => setFormData(p => ({ ...p, inventory_tool_require_project: checked }))}
+                />
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                <div>
+                  <Label className="text-sm font-medium">Overdue tool alerts</Label>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Alert when checked-out tools exceed the return window</p>
+                </div>
+                <Switch
+                  checked={formData.inventory_tool_overdue_alert}
+                  onCheckedChange={(checked) => setFormData(p => ({ ...p, inventory_tool_overdue_alert: checked }))}
+                />
+              </div>
+              {formData.inventory_tool_overdue_alert && (
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                  <Label className="text-sm font-medium">Overdue after (days)</Label>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Number of days before a tool is considered overdue</p>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="365"
+                    value={formData.inventory_tool_overdue_days}
+                    onChange={(e) => setFormData(p => ({ ...p, inventory_tool_overdue_days: parseInt(e.target.value) || 7 }))}
+                    className="w-24"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Consolidated Company Settings Section (App Settings)
 function CompanySettingsSection({ queryClient }) {

@@ -5,6 +5,33 @@
  */
 export const changelog = [
   {
+    version: '1.2.0',
+    date: '2026-03-02',
+    title: 'Inventory & Tool Management',
+    highlights: [
+      'Take, Restock & Checkout actions for inventory items',
+      'Tools tab with checkout/return tracking',
+      'Inventory settings in Adminland with stock locations & notifications',
+      'Skeleton loading states across all pages',
+    ],
+    changes: [
+      { type: 'feature', text: 'Take/Restock buttons for products with quantity, project & notes' },
+      { type: 'feature', text: 'Checkout/Return actions for tools with transaction history' },
+      { type: 'feature', text: 'New Tools tab in Inventory with dedicated tool management' },
+      { type: 'feature', text: 'View-only item detail modal with Edit button' },
+      { type: 'feature', text: 'Transaction history per inventory item' },
+      { type: 'feature', text: 'Inventory Settings section in Adminland' },
+      { type: 'feature', text: 'Configurable stock locations for inventory items' },
+      { type: 'feature', text: 'Low stock & out of stock notification settings' },
+      { type: 'feature', text: 'Tool checkout policies (require project, overdue alerts)' },
+      { type: 'feature', text: 'Skeleton loading states on all 24 data-fetching pages' },
+      { type: 'fix', text: 'Drag-and-drop reordering in Project Statuses now persists correctly' },
+      { type: 'fix', text: 'Status modal add button now works reliably' },
+      { type: 'fix', text: 'Delete task no longer opens detail modal on top of confirmation' },
+      { type: 'improvement', text: 'Removed AI task suggestion bar from tasks view' },
+    ],
+  },
+  {
     version: '1.1.0',
     date: '2026-02-24',
     title: 'Multi-Factor Authentication & Security',
