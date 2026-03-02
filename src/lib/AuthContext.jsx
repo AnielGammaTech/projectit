@@ -114,6 +114,12 @@ export const AuthProvider = ({ children }) => {
         if (!initializedRef.current) return; // Skip during init
 
         if (event === 'SIGNED_IN' && session) {
+          // Check if user has MFA enrolled but hasn't verified yet (aal1 → aal2)
+          // If so, don't set authenticated — let Login.jsx handle the MFA screen
+          const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+          if (aalData && aalData.currentLevel === 'aal1' && aalData.nextLevel === 'aal2') {
+            return; // MFA verification still needed — don't authenticate yet
+          }
           await fetchAppUser();
           setIsLoadingAuth(false);
         } else if (event === 'SIGNED_OUT') {
