@@ -182,10 +182,10 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
             const dueInfo = getDueDateLabel(t.due_date);
             return (
               <div key={t.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-blue-50/60 transition-colors">
-                <div className={cn("w-3 h-3 rounded border-2 flex items-center justify-center shrink-0",
-                  t.status === 'in_progress' ? "border-blue-400 bg-blue-50" : t.status === 'review' ? "border-amber-400 bg-amber-50" : "border-slate-200 bg-white")}>
-                  {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />}
-                  {t.status === 'review' && <div className="w-1.5 h-1.5 rounded-sm bg-amber-500" />}
+                <div className={cn("w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0",
+                  t.status === 'in_progress' ? "border-blue-400" : t.status === 'review' ? "border-amber-400" : "border-slate-300")}>
+                  {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
+                  {t.status === 'review' && <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
                 </div>
                 <span className="text-xs text-slate-700 font-medium truncate flex-1 min-w-0">{t.title}</span>
                 {assigneeName && (
