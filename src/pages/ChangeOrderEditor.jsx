@@ -20,6 +20,7 @@ import {
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
+import { FormPageSkeleton } from '@/components/ui/PageSkeletons';
 
 const statusConfig = {
   draft: { label: 'Draft', color: 'bg-slate-100 text-slate-600 border-slate-200' },
@@ -144,13 +145,7 @@ export default function ChangeOrderEditor() {
     setSaving(false);
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading...</div>
-      </div>
-    );
-  }
+  if (isLoading) return <FormPageSkeleton />;
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">

@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
 import { parseLocalDate } from '@/utils/dateUtils';
 import UserAvatar from '@/components/UserAvatar';
+import { TablePageSkeleton } from '@/components/ui/PageSkeletons';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -621,6 +622,8 @@ export default function AllTasks() {
       </div>
     );
   }
+
+  if (loadingTasks) return <TablePageSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">

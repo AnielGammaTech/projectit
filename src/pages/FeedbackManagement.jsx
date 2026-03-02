@@ -54,6 +54,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 const typeConfig = {
   bug: { label: 'Bug', icon: Bug, color: 'bg-red-100 text-red-700 border-red-200' },
@@ -262,6 +263,8 @@ export default function FeedbackManagement() {
     resolved: feedbackList.filter(f => f.status === 'resolved' || f.status === 'closed').length,
     bugs: feedbackList.filter(f => f.type === 'bug').length,
   };
+
+  if (isLoading) return <CardGridSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">

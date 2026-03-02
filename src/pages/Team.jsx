@@ -23,13 +23,14 @@ import {
 
 import TeamMemberModal from '@/components/modals/TeamMemberModal';
 import UserAvatar from '@/components/UserAvatar';
+import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function Team() {
   const [showModal, setShowModal] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, member: null });
 
-  const { data: teamMembers = [], refetch } = useQuery({
+  const { data: teamMembers = [], isLoading: loadingTeam, refetch } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: () => api.entities.TeamMember.list()
   });
@@ -70,6 +71,8 @@ export default function Team() {
   };
 
   const getAssignedTasks = (email) => activeProjectTasks.filter(t => t.assigned_to === email);
+
+  if (loadingTeam) return <CardGridSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">

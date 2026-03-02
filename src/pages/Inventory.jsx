@@ -37,6 +37,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { TablePageSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,7 +66,7 @@ export default function Inventory() {
     loadUser().catch(() => {});
   }, []);
 
-  const { data: items = [] } = useQuery({
+  const { data: items = [], isLoading: loadingItems } = useQuery({
     queryKey: ['inventoryItems'],
     queryFn: () => api.entities.InventoryItem.list('name')
   });
@@ -159,6 +160,8 @@ export default function Inventory() {
       </div>
     );
   }
+
+  if (loadingItems) return <TablePageSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">

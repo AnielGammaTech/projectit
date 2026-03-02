@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, CheckSquare, Calendar as CalendarIcon, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
+import { CalendarSkeleton } from '@/components/ui/PageSkeletons';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -44,7 +45,7 @@ export default function MySchedule() {
     setNextMonth(addMonths(currentMonth, 1));
   }, [currentMonth]);
 
-  const { data: tasks = [] } = useQuery({
+  const { data: tasks = [], isLoading: loadingTasks } = useQuery({
     queryKey: ['myScheduleTasks'],
     queryFn: () => api.entities.Task.list('-due_date')
   });
@@ -144,6 +145,8 @@ export default function MySchedule() {
 
   // Get unique dates with tasks, sorted
   const datesWithTasks = [...new Set(myTasks.map(t => t.due_date))].sort();
+
+  if (loadingTasks) return <CalendarSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">

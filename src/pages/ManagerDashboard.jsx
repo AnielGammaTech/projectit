@@ -16,6 +16,7 @@ import { createPageUrl } from '@/utils';
 import UserAvatar from '@/components/UserAvatar';
 import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
+import { DashboardSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function ManagerDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -27,7 +28,7 @@ export default function ManagerDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading: loadingProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: () => api.entities.Project.list('-created_date'),
     refetchInterval: 30000
@@ -134,6 +135,8 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
     const parts = name.split(' ');
     return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
   };
+
+  if (loadingProjects) return <DashboardSkeleton />;
 
   return (
     <div className="min-h-screen bg-slate-900 dark:bg-[#151d2b] text-white p-6">

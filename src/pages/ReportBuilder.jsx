@@ -37,6 +37,7 @@ import {
 } from 'recharts';
 import { format, subDays, subMonths, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { TablePageSkeleton } from '@/components/ui/PageSkeletons';
 
 const COLORS = ['#0069AF', '#133F5C', '#74C7FF', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -94,7 +95,7 @@ export default function ReportBuilder() {
   const [selectedReport, setSelectedReport] = useState(null);
 
   // Fetch all data
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading: loadingProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: () => api.entities.Project.list()
   });
@@ -314,6 +315,8 @@ export default function ReportBuilder() {
         return null;
     }
   };
+
+  if (loadingProjects) return <TablePageSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">

@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { CheckSquare, MessageSquare, ListTodo } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
+import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -39,7 +40,7 @@ export default function MyAssignments() {
     api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
-  const { data: tasks = [] } = useQuery({
+  const { data: tasks = [], isLoading: loadingTasks } = useQuery({
     queryKey: ['myTasks'],
     queryFn: () => api.entities.Task.list('-created_date')
   });
@@ -210,6 +211,8 @@ export default function MyAssignments() {
       return acc;
     }, {});
   };
+
+  if (loadingTasks) return <CardGridSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">

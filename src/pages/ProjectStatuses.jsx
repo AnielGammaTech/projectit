@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { ProjectSubpageSkeleton } from '@/components/ui/PageSkeletons';
 
 const colorOptions = [
   { name: 'slate', bg: 'bg-slate-500', light: 'bg-slate-100 text-slate-700 border-slate-200' },
@@ -55,7 +56,7 @@ export default function ProjectStatuses() {
   const [editingStatus, setEditingStatus] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  const { data: statuses = [], refetch } = useQuery({
+  const { data: statuses = [], isLoading: loadingStatuses, refetch } = useQuery({
     queryKey: ['projectStatuses'],
     queryFn: () => api.entities.ProjectStatus.list('order')
   });
@@ -108,6 +109,8 @@ export default function ProjectStatuses() {
   const getColorConfig = (colorName) => {
     return colorOptions.find(c => c.name === colorName) || colorOptions[0];
   };
+
+  if (loadingStatuses) return <ProjectSubpageSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">

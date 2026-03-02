@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 const notificationConfig = {
   mention: { icon: AtSign, bg: 'bg-indigo-100', color: 'text-indigo-600' },
@@ -89,13 +90,7 @@ export default function MyNotifications() {
     }
   });
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0069AF]" />
-      </div>
-    );
-  }
+  if (loading) return <CardGridSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">

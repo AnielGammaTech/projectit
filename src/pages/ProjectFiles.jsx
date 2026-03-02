@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import FilePreviewPanel from '@/components/files/FilePreviewPanel';
+import { ProjectSubpageSkeleton } from '@/components/ui/PageSkeletons';
 import { folderColors, getFolderColor, getFileIcon, formatFileSize } from '@/lib/fileConstants';
 
 export default function ProjectFiles() {
@@ -226,13 +227,7 @@ export default function ProjectFiles() {
   };
   const selectedFileIndex = selectedFile ? currentFiles.findIndex(f => f.id === selectedFile.id) : -1;
 
-  if (!project) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading...</div>
-      </div>
-    );
-  }
+  if (!project) return <ProjectSubpageSkeleton />;
 
   return (
     <div

@@ -13,6 +13,7 @@ import {
   Edit2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ProjectSubpageSkeleton } from '@/components/ui/PageSkeletons';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -90,13 +91,7 @@ export default function ProjectTime() {
     setEditingBudget(false);
   };
 
-  if (!project) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading...</div>
-      </div>
-    );
-  }
+  if (!project) return <ProjectSubpageSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">

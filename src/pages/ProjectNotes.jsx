@@ -25,6 +25,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import MeetingUpdateModal from '@/components/modals/MeetingUpdateModal';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
+import { ProjectSubpageSkeleton } from '@/components/ui/PageSkeletons';
 
 const typeConfig = {
   note: { icon: StickyNote, color: 'bg-slate-100 text-slate-700', label: 'Note' },
@@ -119,6 +120,8 @@ export default function ProjectNotes() {
       </div>
     );
   }
+
+  if (isLoading) return <ProjectSubpageSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">

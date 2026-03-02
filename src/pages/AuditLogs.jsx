@@ -25,6 +25,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { TablePageSkeleton } from '@/components/ui/PageSkeletons';
 
 const categoryConfig = {
   auth: { label: 'Authentication', icon: Shield, color: 'bg-slate-100 text-slate-700' },
@@ -154,11 +155,13 @@ export default function AuditLogs() {
     return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
   };
 
+  if (isLoading) return <TablePageSkeleton />;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }} 
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"

@@ -29,6 +29,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { FormPageSkeleton } from '@/components/ui/PageSkeletons';
 
 const roleColors = {
   slate: 'bg-slate-500', red: 'bg-red-500', orange: 'bg-orange-500',
@@ -171,7 +172,7 @@ export default function RolesPermissions() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'matrix'
 
-  const { data: customRoles = [], refetch } = useQuery({
+  const { data: customRoles = [], isLoading: loadingRoles, refetch } = useQuery({
     queryKey: ['customRoles'],
     queryFn: () => api.entities.CustomRole.list('name')
   });
@@ -218,12 +219,14 @@ export default function RolesPermissions() {
     return teamMembers.filter(m => m.role === roleName).length;
   };
 
+  if (loadingRoles) return <FormPageSkeleton />;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }} 
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >

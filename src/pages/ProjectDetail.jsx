@@ -98,6 +98,7 @@ import ArchiveProjectModal from '@/components/modals/ArchiveProjectModal';
 import OnHoldReasonModal from '@/components/modals/OnHoldReasonModal';
 import CompleteProjectModal from '@/components/modals/CompleteProjectModal';
 import { cn } from '@/lib/utils';
+import { ProjectDetailSkeleton } from '@/components/ui/PageSkeletons';
 
 const statusColors = {
   planning: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -1223,13 +1224,7 @@ export default function ProjectDetail() {
     setDeleteConfirm({ open: false, type: null, item: null });
   };
 
-  if (loadingProject) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading project...</div>
-      </div>
-    );
-  }
+  if (loadingProject) return <ProjectDetailSkeleton />;
 
   if (!project) {
     return (

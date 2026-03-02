@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { parseLocalDate } from '@/utils/dateUtils';
+import { DashboardSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function TechDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -39,7 +40,7 @@ export default function TechDashboard() {
     refetchInterval: 30000
   });
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading: loadingProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: () => api.entities.Project.list()
   });
@@ -75,6 +76,8 @@ export default function TechDashboard() {
     await api.entities.Task.update(task.id, { status: 'completed' });
     refetchTasks();
   };
+
+  if (!currentUser || loadingProjects) return <DashboardSkeleton />;
 
   return (
     <div className="min-h-screen bg-slate-900 text-white p-6">

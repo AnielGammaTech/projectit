@@ -9,6 +9,7 @@ import { format, addDays, differenceInDays, max, parseISO } from 'date-fns';
 import GanttChart from '@/components/project/GanttChart';
 import TaskModal from '@/components/modals/TaskModal';
 import TaskDetailModal from '@/components/modals/TaskDetailModal';
+import { ProjectSubpageSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function ProjectTimeline() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -89,13 +90,7 @@ export default function ProjectTimeline() {
     await recalculateProjectDates();
   };
 
-  if (loadingProject) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading timeline...</div>
-      </div>
-    );
-  }
+  if (loadingProject) return <ProjectSubpageSkeleton />;
 
   if (!project) {
     return (

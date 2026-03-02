@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TemplateModal from '@/components/modals/TemplateModal';
+import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function Templates() {
   const queryClient = useQueryClient();
@@ -68,7 +69,7 @@ export default function Templates() {
      c.email?.toLowerCase().includes(customerSearch.toLowerCase()))
   ).slice(0, 5);
 
-  const { data: templates = [] } = useQuery({
+  const { data: templates = [], isLoading: loadingTemplates } = useQuery({
     queryKey: ['templates'],
     queryFn: () => api.entities.ProjectTemplate.list('-created_date')
   });
@@ -266,6 +267,8 @@ export default function Templates() {
       </motion.div>
     );
   };
+
+  if (loadingTemplates) return <CardGridSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">

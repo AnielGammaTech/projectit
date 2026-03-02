@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import QuoteRequestModal from '@/components/modals/QuoteRequestModal';
 import QuoteRequestDetailModal from '@/components/modals/QuoteRequestDetailModal';
+import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 const statusConfig = {
   pending: { label: 'Pending', color: 'bg-slate-100 text-slate-700', icon: Clock },
@@ -78,6 +79,8 @@ export default function QuoteRequests() {
   // Separate pending/in-progress from completed
   const activeQuotes = filteredQuotes.filter(q => !['received'].includes(q.status));
   const completedQuotes = filteredQuotes.filter(q => ['received'].includes(q.status));
+
+  if (isLoading) return <CardGridSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">

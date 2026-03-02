@@ -34,6 +34,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import CustomerCommunication from '@/components/customers/CustomerCommunication';
+import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -313,6 +314,8 @@ export default function Customers() {
       </div>
     );
   }
+
+  if (loadingCustomers) return <CardGridSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">

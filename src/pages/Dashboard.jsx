@@ -44,6 +44,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import ProcessingOverlay from '@/components/ui/ProcessingOverlay';
 import { fireTaskConfetti, fireSubtleConfetti } from '@/utils/confetti';
+import { DashboardSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function Dashboard() {
     const [showProjectModal, setShowProjectModal] = useState(false);
@@ -849,6 +850,8 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  if (loadingProjects) return <DashboardSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
