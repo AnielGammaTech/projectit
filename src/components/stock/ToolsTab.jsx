@@ -59,14 +59,20 @@ export default function ToolsTab() {
   });
 
   const handleSave = async (data) => {
-    if (editingTool) {
-      await api.entities.Tool.update(editingTool.id, data);
-    } else {
-      await api.entities.Tool.create(data);
+    try {
+      if (editingTool) {
+        await api.entities.Tool.update(editingTool.id, data);
+      } else {
+        await api.entities.Tool.create(data);
+      }
+      refetch();
+      setShowModal(false);
+      setEditingTool(null);
+    } catch (err) {
+      console.error('Tool save failed:', err);
+      // Re-throw so ToolModal can display the error
+      throw err;
     }
-    refetch();
-    setShowModal(false);
-    setEditingTool(null);
   };
 
   const handleDelete = async () => {
@@ -199,6 +205,7 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
   const [actionData, setActionData] = useState({ quantity: 1, project_id: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [actionError, setActionError] = useState(null);
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['toolTransactions', tool?.id],
@@ -210,6 +217,7 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
     setActiveAction(null);
     setActionData({ quantity: 1, project_id: '', notes: '' });
     setShowHistory(false);
+    setActionError(null);
   }, [tool, open]);
 
   if (!tool) return null;
@@ -217,6 +225,7 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
   const handleAction = async () => {
     if (!activeAction || submitting) return;
     setSubmitting(true);
+    setActionError(null);
     try {
       const qty = Number(actionData.quantity) || 1;
       await api.entities.ToolTransaction.create({
@@ -247,6 +256,7 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
       setActionData({ quantity: 1, project_id: '', notes: '' });
     } catch (err) {
       console.error('Action failed:', err);
+      setActionError(err.message || 'Action failed. Please try again.');
     }
     setSubmitting(false);
   };
@@ -326,6 +336,9 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
                 <Label className="text-xs">Notes</Label>
                 <Textarea value={actionData.notes} onChange={(e) => setActionData(p => ({ ...p, notes: e.target.value }))} className="mt-1 h-16 text-sm" placeholder="Optional notes..." />
               </div>
+              {actionError && (
+                <p className="text-xs text-red-600 bg-red-50 rounded p-2 text-center">{actionError}</p>
+              )}
               <div className="flex justify-end gap-2">
                 <Button size="sm" variant="outline" onClick={() => setActiveAction(null)}>Cancel</Button>
                 <Button size="sm" onClick={handleAction} disabled={submitting || !actionData.quantity} className={activeAction === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-purple-600 hover:bg-purple-700'}>
@@ -377,8 +390,12 @@ function ToolModal({ open, onClose, tool, onSave }) {
     quantity_on_hand: 0, checked_out_count: 0, manufacturer: '', category: ''
   });
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
+    setSaveError(null);
+    setSaving(false);
     if (tool) {
       setFormData({
         name: tool.name || '', serial_number: tool.serial_number || '',
@@ -402,9 +419,18 @@ function ToolModal({ open, onClose, tool, onSave }) {
     setUploading(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({ ...formData, quantity_on_hand: parseInt(formData.quantity_on_hand) || 0, checked_out_count: parseInt(formData.checked_out_count) || 0 });
+    setSaveError(null);
+    setSaving(true);
+    try {
+      await onSave({ ...formData, quantity_on_hand: parseInt(formData.quantity_on_hand) || 0, checked_out_count: parseInt(formData.checked_out_count) || 0 });
+    } catch (err) {
+      console.error('Tool save error:', err);
+      setSaveError(err.message || 'Failed to save tool. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -434,9 +460,15 @@ function ToolModal({ open, onClose, tool, onSave }) {
             <div><Label>Quantity Available</Label><Input type="number" value={formData.quantity_on_hand} onChange={(e) => setFormData(p => ({ ...p, quantity_on_hand: e.target.value }))} /></div>
           </div>
           <div><Label>Description</Label><Textarea value={formData.description} onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))} rows={2} /></div>
+          {saveError && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3 text-center">{saveError}</p>
+          )}
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e]">{tool ? 'Save Changes' : 'Add Tool'}</Button>
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e]" disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              {tool ? 'Save Changes' : 'Add Tool'}
+            </Button>
           </div>
         </form>
       </DialogContent>

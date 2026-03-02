@@ -161,14 +161,19 @@ export default function ProductsTab() {
   };
 
   const handleSave = async (data) => {
-    if (editingProduct) {
-      await api.entities.Product.update(editingProduct.id, data);
-    } else {
-      await api.entities.Product.create(data);
+    try {
+      if (editingProduct) {
+        await api.entities.Product.update(editingProduct.id, data);
+      } else {
+        await api.entities.Product.create(data);
+      }
+      refetch();
+      setShowModal(false);
+      setEditingProduct(null);
+    } catch (err) {
+      console.error('Product save failed:', err);
+      throw err;
     }
-    refetch();
-    setShowModal(false);
-    setEditingProduct(null);
   };
 
   const handleDelete = async () => {
