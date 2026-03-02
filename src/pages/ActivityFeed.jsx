@@ -69,10 +69,6 @@ export default function ActivityFeed() {
     queryFn: () => api.entities.TeamMember.list()
   });
 
-  const { data: appUsers = [] } = useQuery({
-    queryKey: ['appUsers'],
-    queryFn: () => api.entities.User.list()
-  });
 
   const { data: projectTags = [] } = useQuery({
     queryKey: ['projectTags'],
@@ -84,13 +80,7 @@ export default function ActivityFeed() {
     return member?.avatar_url;
   };
 
-  // Combine team members and app users, deduplicate by email
   const allPeople = [...teamMembers];
-  appUsers.forEach(user => {
-    if (!allPeople.find(m => m.email === user.email)) {
-      allPeople.push({ id: user.id, email: user.email, name: user.full_name || user.email });
-    }
-  });
 
   const getProjectName = (projectId) => {
     const project = projects.find(p => p.id === projectId);
