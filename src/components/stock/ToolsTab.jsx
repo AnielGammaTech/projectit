@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, HardDrive, Edit2, Trash2, Filter, X, ChevronDown, ShoppingCart, RotateCcw, History, Loader2, ImagePlus } from 'lucide-react';
+import { Plus, Search, HardDrive, Edit2, Trash2, Filter, X, ChevronDown, ShoppingCart, RotateCcw, History, Loader2, ImagePlus, LogOut, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
@@ -28,6 +28,10 @@ export default function ToolsTab() {
   const [viewingTool, setViewingTool] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [stockFilter, setStockFilter] = useState('all');
+  const [quickAction, setQuickAction] = useState(null); // { type: 'checkout' | 'return' }
+  const [quickActionTool, setQuickActionTool] = useState('');
+  const [quickActionQty, setQuickActionQty] = useState(1);
+  const [quickActionSubmitting, setQuickActionSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: tools = [], refetch } = useQuery({
@@ -87,6 +91,45 @@ export default function ToolsTab() {
     }
   };
 
+  const handleQuickAction = async (tool, type, qty = 1) => {
+    try {
+      await api.entities.ToolTransaction.create({
+        tool_id: tool.id,
+        type,
+        quantity: qty,
+        project_id: null,
+        user_email: currentUser?.email || '',
+        user_name: currentUser?.name || currentUser?.email || '',
+        notes: ''
+      });
+      const isReturn = type === 'return';
+      const newOnHand = isReturn ? (tool.quantity_on_hand || 0) + qty : (tool.quantity_on_hand || 0) - qty;
+      const newCheckedOut = isReturn
+        ? Math.max(0, (tool.checked_out_count || 0) - qty)
+        : (tool.checked_out_count || 0) + qty;
+      await api.entities.Tool.update(tool.id, {
+        quantity_on_hand: Math.max(0, newOnHand),
+        checked_out_count: newCheckedOut
+      });
+      queryClient.invalidateQueries({ queryKey: ['tools'] });
+      queryClient.invalidateQueries({ queryKey: ['toolTransactions', tool.id] });
+      refetch();
+    } catch (err) {
+      console.error('Quick action failed:', err);
+    }
+  };
+
+  const handleQuickActionSubmit = async () => {
+    const tool = tools.find(t => t.id === quickActionTool);
+    if (!tool || !quickAction) return;
+    setQuickActionSubmitting(true);
+    await handleQuickAction(tool, quickAction.type, quickActionQty);
+    setQuickActionSubmitting(false);
+    setQuickAction(null);
+    setQuickActionTool('');
+    setQuickActionQty(1);
+  };
+
   return (
     <div>
       {/* Header */}
@@ -115,6 +158,14 @@ export default function ToolsTab() {
           </DropdownMenu>
           <div className="flex-1" />
           <span className="text-xs sm:text-sm text-slate-500 shrink-0">{filteredTools.length} tools</span>
+          <Button variant="outline" size="sm" onClick={() => { setQuickAction({ type: 'return' }); setQuickActionTool(''); setQuickActionQty(1); }} className="gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800">
+            <LogIn className="w-4 h-4" />
+            <span className="hidden sm:inline">Check In</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => { setQuickAction({ type: 'checkout' }); setQuickActionTool(''); setQuickActionQty(1); }} className="gap-1.5 border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-800">
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Check Out</span>
+          </Button>
           <Button onClick={() => { setEditingTool(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e]" size="sm">
             <Plus className="w-4 h-4 sm:mr-2" />
             <span className="hidden sm:inline">Add Tool</span>
@@ -159,12 +210,32 @@ export default function ToolsTab() {
                     {tool.quantity_on_hand || 0}
                   </Badge>
                 </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setDeleteConfirm(tool); }}
-                  className="absolute top-1.5 left-1.5 p-1.5 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDeleteConfirm(tool); }}
+                    className="p-1.5 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                  {(tool.quantity_on_hand || 0) > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleQuickAction(tool, 'checkout'); }}
+                      className="p-1.5 rounded bg-white/80 hover:bg-orange-50 text-slate-400 hover:text-orange-600"
+                      title="Quick checkout (1 unit)"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {(tool.checked_out_count || 0) > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleQuickAction(tool, 'return'); }}
+                      className="p-1.5 rounded bg-white/80 hover:bg-purple-50 text-slate-400 hover:text-purple-600"
+                      title="Quick check in (1 unit)"
+                    >
+                      <LogIn className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="p-2">
                 <h3 className="font-medium text-slate-900 text-sm truncate" title={tool.name}>{tool.name}</h3>
@@ -208,6 +279,61 @@ export default function ToolsTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Quick Check Out / Check In Dialog */}
+      <Dialog open={!!quickAction} onOpenChange={() => setQuickAction(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {quickAction?.type === 'checkout' ? (
+                <><LogOut className="w-5 h-5 text-orange-600" /> Check Out Tool</>
+              ) : (
+                <><LogIn className="w-5 h-5 text-purple-600" /> Check In Tool</>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div>
+              <Label className="text-xs font-medium">Tool</Label>
+              <Select value={quickActionTool} onValueChange={setQuickActionTool}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select a tool..." /></SelectTrigger>
+                <SelectContent>
+                  {tools
+                    .filter(t => quickAction?.type === 'checkout' ? (t.quantity_on_hand || 0) > 0 : (t.checked_out_count || 0) > 0)
+                    .map(t => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name} {t.serial_number ? `(${t.serial_number})` : ''} — {quickAction?.type === 'checkout' ? `${t.quantity_on_hand} avail` : `${t.checked_out_count} out`}
+                      </SelectItem>
+                    ))
+                  }
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs font-medium">Quantity</Label>
+              <Input
+                type="number"
+                min={1}
+                max={quickActionTool ? (quickAction?.type === 'checkout' ? (tools.find(t => t.id === quickActionTool)?.quantity_on_hand || 1) : (tools.find(t => t.id === quickActionTool)?.checked_out_count || 1)) : 1}
+                value={quickActionQty}
+                onChange={(e) => setQuickActionQty(Number(e.target.value) || 1)}
+                className="mt-1"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setQuickAction(null)} disabled={quickActionSubmitting}>Cancel</Button>
+              <Button
+                onClick={handleQuickActionSubmit}
+                disabled={!quickActionTool || quickActionSubmitting}
+                className={quickAction?.type === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-purple-600 hover:bg-purple-700'}
+              >
+                {quickActionSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                {quickAction?.type === 'checkout' ? 'Check Out' : 'Check In'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
