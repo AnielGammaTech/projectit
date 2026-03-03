@@ -43,6 +43,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     description: '',
     client: '',
     customer_id: '',
+    client_company: '',
     status: 'in_progress',
     start_date: '',
     due_date: '',
@@ -96,6 +97,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         description: project.description || '',
         client: project.client || '',
         customer_id: project.customer_id || '',
+        client_company: project.customer_id ? (customers.find(c => c.id === project.customer_id)?.company || '') : '',
         status: project.status || 'in_progress',
         start_date: project.start_date || '',
         due_date: project.due_date || '',
@@ -125,6 +127,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         description: prefillData.description || '',
         client: clientName,
         customer_id: customerId,
+        client_company: customerId ? (customers.find(c => c.id === customerId)?.company || '') : '',
         status: defaultStatus,
         start_date: '',
         due_date: '',
@@ -355,12 +358,17 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: selectedColor + '15' }}>
                         <Building2 className="w-3.5 h-3.5" style={{ color: selectedColor }} />
                       </div>
-                      <span className="flex-1 text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{formData.client}</span>
+                      <span className="flex-1 text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                        {formData.client}
+                        {formData.client_company && (
+                          <span className="text-slate-400 font-normal"> — {formData.client_company}</span>
+                        )}
+                      </span>
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setFormData(prev => ({ ...prev, client: '', customer_id: '' }));
+                          setFormData(prev => ({ ...prev, client: '', customer_id: '', client_company: '' }));
                         }}
                         className="text-slate-400 hover:text-slate-600"
                       >
@@ -403,7 +411,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                               key={customer.id}
                               type="button"
                               onClick={() => {
-                                setFormData(prev => ({ ...prev, client: customer.name || '', customer_id: customer.id }));
+                                setFormData(prev => ({ ...prev, client: customer.name || '', customer_id: customer.id, client_company: customer.company || '' }));
                                 setShowCustomerDropdown(false);
                                 setCustomerSearch('');
                               }}
@@ -426,10 +434,12 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm truncate">{customer.name}</p>
-                                {customer.company && customer.type !== 'company' && (
-                                  <p className="text-xs text-slate-500 truncate">{customer.company}</p>
-                                )}
+                                <p className="font-medium text-sm truncate">
+                                  {customer.name}
+                                  {customer.company && (
+                                    <span className="text-slate-400 font-normal"> — {customer.company}</span>
+                                  )}
+                                </p>
                               </div>
                               {formData.customer_id === customer.id && (
                                 <Check className="w-4 h-4" style={{ color: selectedColor }} />

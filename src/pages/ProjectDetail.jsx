@@ -1416,17 +1416,23 @@ export default function ProjectDetail() {
                     to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')}
                     className="text-[#0069AF] hover:underline text-sm"
                   >
-                    {project.client} →
+                    {project.client}{project.client_company ? ` — ${project.client_company}` : ''} →
                   </Link>
                 )}
-                {project.project_lead && (
-                  <div className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">
-                    <Crown className="w-3 h-3 text-amber-500" />
-                    <span className="font-medium">
-                      {teamMembers.find(m => m.email === project.project_lead)?.name || project.project_lead.split('@')[0]}
-                    </span>
-                  </div>
-                )}
+                {project.project_lead && (() => {
+                  const leadMember = teamMembers.find(m => m.email === project.project_lead);
+                  return (
+                    <div className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">
+                      <Crown className="w-3 h-3 text-amber-500" />
+                      <span className="font-medium">
+                        {leadMember?.name || project.project_lead.split('@')[0]}
+                      </span>
+                      {leadMember?.company && (
+                        <span className="text-amber-500 font-normal">· {leadMember.company}</span>
+                      )}
+                    </div>
+                  );
+                })()}
                 {(integrationSettings?.quoteit_api_url && (project.quoteit_quote_id || linkedQuote?.quoteit_id)) && (
                   <a
                     href={`${integrationSettings.quoteit_api_url}/QuoteView?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
