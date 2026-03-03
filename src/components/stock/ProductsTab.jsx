@@ -178,17 +178,22 @@ export default function ProductsTab() {
 
   const handleDelete = async () => {
     if (deleteConfirm) {
-      await api.entities.Product.delete(deleteConfirm.id);
-      refetch();
-      setDeleteConfirm(null);
+      try {
+        await api.entities.Product.delete(deleteConfirm.id);
+        refetch();
+        setDeleteConfirm(null);
+      } catch (err) {
+        console.error('Product delete failed:', err);
+      }
     }
   };
 
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="space-y-3 mb-4">
+        {/* Search Row */}
+        <div className="relative w-full sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search products..."
@@ -198,106 +203,110 @@ export default function ProductsTab() {
           />
         </div>
 
-        {/* Stock Filter */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <Filter className="w-4 h-4" />
-              Stock
-              <ChevronDown className="w-3 h-3" />
+        {/* Filters + Actions Row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Stock Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Filter className="w-4 h-4" />
+                <span className="hidden sm:inline">Stock</span>
+                {stockFilter !== 'all' && <Badge className="h-5 w-5 p-0 justify-center bg-[#0069AF]">1</Badge>}
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuCheckboxItem checked={stockFilter === 'all'} onCheckedChange={() => setStockFilter('all')}>
+                All Products
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={stockFilter === 'in_stock'} onCheckedChange={() => setStockFilter('in_stock')}>
+                In Stock
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={stockFilter === 'low_stock'} onCheckedChange={() => setStockFilter('low_stock')}>
+                Low Stock (≤5)
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={stockFilter === 'out_of_stock'} onCheckedChange={() => setStockFilter('out_of_stock')}>
+                Out of Stock
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Manufacturer Filter */}
+          {allManufacturers.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 hidden sm:flex">
+                  <span>Manufacturer</span>
+                  {selectedManufacturers.length > 0 && (
+                    <Badge className="h-5 w-5 p-0 justify-center bg-[#0069AF]">{selectedManufacturers.length}</Badge>
+                  )}
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="max-h-64 overflow-y-auto">
+                {allManufacturers.map(mfr => (
+                  <DropdownMenuCheckboxItem
+                    key={mfr}
+                    checked={selectedManufacturers.includes(mfr)}
+                    onCheckedChange={(checked) => {
+                      setSelectedManufacturers(prev =>
+                        checked ? [...prev, mfr] : prev.filter(m => m !== mfr)
+                      );
+                    }}
+                  >
+                    {mfr}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {/* Tags Filter */}
+          {allTags.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 hidden sm:flex">
+                  <span>Tags</span>
+                  {selectedTags.length > 0 && (
+                    <Badge className="h-5 w-5 p-0 justify-center bg-[#0069AF]">{selectedTags.length}</Badge>
+                  )}
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="max-h-64 overflow-y-auto">
+                {allTags.map(tag => (
+                  <DropdownMenuCheckboxItem
+                    key={tag}
+                    checked={selectedTags.includes(tag)}
+                    onCheckedChange={(checked) => {
+                      setSelectedTags(prev =>
+                        checked ? [...prev, tag] : prev.filter(t => t !== tag)
+                      );
+                    }}
+                  >
+                    {tag}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {activeFiltersCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-slate-500 hover:text-slate-700">
+              <X className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Clear filters</span>
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuCheckboxItem checked={stockFilter === 'all'} onCheckedChange={() => setStockFilter('all')}>
-              All Products
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem checked={stockFilter === 'in_stock'} onCheckedChange={() => setStockFilter('in_stock')}>
-              In Stock
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem checked={stockFilter === 'low_stock'} onCheckedChange={() => setStockFilter('low_stock')}>
-              Low Stock (≤5)
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem checked={stockFilter === 'out_of_stock'} onCheckedChange={() => setStockFilter('out_of_stock')}>
-              Out of Stock
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          )}
 
-        {/* Manufacturer Filter */}
-        {allManufacturers.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                Manufacturer
-                {selectedManufacturers.length > 0 && (
-                  <Badge className="ml-1 h-5 w-5 p-0 justify-center bg-[#0069AF]">{selectedManufacturers.length}</Badge>
-                )}
-                <ChevronDown className="w-3 h-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="max-h-64 overflow-y-auto">
-              {allManufacturers.map(mfr => (
-                <DropdownMenuCheckboxItem 
-                  key={mfr} 
-                  checked={selectedManufacturers.includes(mfr)}
-                  onCheckedChange={(checked) => {
-                    setSelectedManufacturers(prev => 
-                      checked ? [...prev, mfr] : prev.filter(m => m !== mfr)
-                    );
-                  }}
-                >
-                  {mfr}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+          <div className="flex-1" />
 
-        {/* Tags Filter */}
-        {allTags.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                Tags
-                {selectedTags.length > 0 && (
-                  <Badge className="ml-1 h-5 w-5 p-0 justify-center bg-[#0069AF]">{selectedTags.length}</Badge>
-                )}
-                <ChevronDown className="w-3 h-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="max-h-64 overflow-y-auto">
-              {allTags.map(tag => (
-                <DropdownMenuCheckboxItem 
-                  key={tag} 
-                  checked={selectedTags.includes(tag)}
-                  onCheckedChange={(checked) => {
-                    setSelectedTags(prev => 
-                      checked ? [...prev, tag] : prev.filter(t => t !== tag)
-                    );
-                  }}
-                >
-                  {tag}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+          <span className="text-xs sm:text-sm text-slate-500 shrink-0">{filteredProducts.length} products</span>
 
-        {activeFiltersCount > 0 && (
-          <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-slate-500 hover:text-slate-700">
-            <X className="w-4 h-4 mr-1" />
-            Clear filters
+          <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e]" size="sm">
+            <Plus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Add Product</span>
           </Button>
-        )}
-
-        <div className="flex-1" />
-
-        <span className="text-sm text-slate-500">{filteredProducts.length} products</span>
-
-        <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e]">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Product
-        </Button>
+        </div>
       </div>
 
       {/* Products Grid - Compact Tiles */}
@@ -358,14 +367,14 @@ export default function ProductsTab() {
                   {/* Delete button overlay */}
                   <button
                     onClick={(e) => { e.stopPropagation(); setDeleteConfirm(product); }}
-                    className="absolute top-1.5 left-1.5 p-1 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-1.5 left-1.5 p-1.5 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
 
-                  {/* Hover action buttons */}
+                  {/* Action buttons - always visible on mobile, hover on desktop */}
                   {!isQuickOpen && (
-                    <div className="absolute bottom-0 inset-x-0 flex gap-1 p-1.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute bottom-0 inset-x-0 flex gap-1 p-1.5 bg-gradient-to-t from-black/50 to-transparent opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => openQuickAction(e, product, 'take')}
                         disabled={(product.quantity_on_hand || 0) === 0}
@@ -597,10 +606,10 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-lg">
-            <div className="text-center"><p className="text-xs text-slate-500">In Stock</p><p className={cn("text-lg font-bold", (product.quantity_on_hand || 0) === 0 ? "text-red-600" : "text-slate-900")}>{product.quantity_on_hand || 0}</p></div>
-            <div className="text-center"><p className="text-xs text-slate-500">Cost</p><p className="text-sm font-medium text-slate-900">${product.cost?.toFixed(2) || '0.00'}</p></div>
-            <div className="text-center"><p className="text-xs text-slate-500">Sell Price</p><p className="text-sm font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</p></div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-3 bg-slate-50 rounded-lg">
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">In Stock</p><p className={cn("text-base sm:text-lg font-bold", (product.quantity_on_hand || 0) === 0 ? "text-red-600" : "text-slate-900")}>{product.quantity_on_hand || 0}</p></div>
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">Cost</p><p className="text-xs sm:text-sm font-medium text-slate-900">${product.cost?.toFixed(2) || '0.00'}</p></div>
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">Sell Price</p><p className="text-xs sm:text-sm font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</p></div>
           </div>
 
           {product.description && <div><p className="text-xs text-slate-500 mb-1">Description</p><p className="text-sm text-slate-700 line-clamp-3">{product.description}</p></div>}
@@ -630,7 +639,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-2 pt-2 border-t">
+          <div className="flex flex-wrap gap-2 pt-2 border-t">
             <Button size="sm" variant={activeAction === 'take' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'take' ? null : 'take')} disabled={(product.quantity_on_hand || 0) === 0} className={activeAction === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : ''}>
               <Minus className="w-3.5 h-3.5 mr-1.5" />Take
             </Button>
@@ -647,7 +656,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
           {activeAction && (
             <div className="p-3 bg-slate-50 rounded-lg border space-y-3">
               <p className="text-sm font-semibold text-slate-700">{activeAction === 'take' ? 'Take from Stock' : 'Restock'}</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs">Quantity</Label>
                   <Input type="number" min={1} max={activeAction === 'take' ? (product.quantity_on_hand || 0) : 9999} value={actionData.quantity} onChange={(e) => setActionData(p => ({ ...p, quantity: e.target.value }))} className="mt-1 h-8" />

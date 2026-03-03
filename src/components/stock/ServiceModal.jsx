@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ImagePlus, X, Plus, Trash2 } from 'lucide-react';
+import { ImagePlus, X, Plus, Trash2, Loader2 } from 'lucide-react';
 import { api } from '@/api/apiClient';
 
 export default function ServiceModal({ open, onClose, service, onSave }) {
@@ -19,8 +19,12 @@ export default function ServiceModal({ open, onClose, service, onSave }) {
   const [newTag, setNewTag] = useState('');
   const [newRate, setNewRate] = useState({ name: '', price: '', unit: 'hour' });
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
+    setSaveError(null);
+    setSaving(false);
     if (service) {
       setFormData({
         name: service.name || '',
@@ -103,9 +107,18 @@ export default function ServiceModal({ open, onClose, service, onSave }) {
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(formData);
+    setSaveError(null);
+    setSaving(true);
+    try {
+      await onSave(formData);
+    } catch (err) {
+      console.error('Service save error:', err);
+      setSaveError(err.message || 'Failed to save service. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -184,29 +197,31 @@ export default function ServiceModal({ open, onClose, service, onSave }) {
                 </div>
               ))}
             </div>
-            <div className="flex gap-2 mt-2">
+            <div className="grid grid-cols-[1fr_auto] sm:flex gap-2 mt-2">
               <Input
                 placeholder="Rate name"
                 value={newRate.name}
                 onChange={(e) => setNewRate(prev => ({ ...prev, name: e.target.value }))}
-                className="flex-1"
+                className="col-span-2 sm:col-auto sm:flex-1"
               />
               <Input
                 type="number"
                 placeholder="Price"
                 value={newRate.price}
                 onChange={(e) => setNewRate(prev => ({ ...prev, price: e.target.value }))}
-                className="w-24"
+                className="w-full sm:w-24"
               />
-              <Input
-                placeholder="Unit"
-                value={newRate.unit}
-                onChange={(e) => setNewRate(prev => ({ ...prev, unit: e.target.value }))}
-                className="w-20"
-              />
-              <Button type="button" variant="outline" onClick={addRate}>
-                <Plus className="w-4 h-4" />
-              </Button>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Unit"
+                  value={newRate.unit}
+                  onChange={(e) => setNewRate(prev => ({ ...prev, unit: e.target.value }))}
+                  className="flex-1 sm:w-20"
+                />
+                <Button type="button" variant="outline" onClick={addRate} className="shrink-0">
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -238,9 +253,13 @@ export default function ServiceModal({ open, onClose, service, onSave }) {
             )}
           </div>
 
+          {saveError && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3 text-center">{saveError}</p>
+          )}
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e]">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e]" disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {service ? 'Save Changes' : 'Add Service'}
             </Button>
           </div>

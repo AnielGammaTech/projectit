@@ -64,29 +64,38 @@ export default function BundlesTab() {
   };
 
   const handleSave = async (data) => {
-    if (editingBundle) {
-      await api.entities.ServiceBundle.update(editingBundle.id, data);
-    } else {
-      await api.entities.ServiceBundle.create(data);
+    try {
+      if (editingBundle) {
+        await api.entities.ServiceBundle.update(editingBundle.id, data);
+      } else {
+        await api.entities.ServiceBundle.create(data);
+      }
+      refetch();
+      setShowModal(false);
+      setEditingBundle(null);
+    } catch (err) {
+      console.error('Bundle save failed:', err);
+      throw err;
     }
-    refetch();
-    setShowModal(false);
-    setEditingBundle(null);
   };
 
   const handleDelete = async () => {
     if (deleteConfirm) {
-      await api.entities.ServiceBundle.delete(deleteConfirm.id);
-      refetch();
-      setDeleteConfirm(null);
+      try {
+        await api.entities.ServiceBundle.delete(deleteConfirm.id);
+        refetch();
+        setDeleteConfirm(null);
+      } catch (err) {
+        console.error('Bundle delete failed:', err);
+      }
     }
   };
 
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4 sm:mb-6">
+        <div className="relative w-full sm:flex-1 sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search bundles..."
@@ -95,7 +104,7 @@ export default function BundlesTab() {
             className="pl-10"
           />
         </div>
-        <Button onClick={() => { setEditingBundle(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e]">
+        <Button onClick={() => { setEditingBundle(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e] w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Create Bundle
         </Button>
@@ -135,8 +144,8 @@ export default function BundlesTab() {
                       <Layers className="w-12 h-12 text-[#0F2F44]/30" />
                     </div>
                   )}
-                  {/* Actions overlay */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  {/* Actions overlay - always visible on mobile, hover on desktop */}
+                  <div className="absolute inset-0 bg-black/50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <Button size="sm" variant="secondary" onClick={() => { setEditingBundle(bundle); setShowModal(true); }}>
                       <Edit2 className="w-4 h-4" />
                     </Button>

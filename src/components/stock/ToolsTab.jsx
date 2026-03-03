@@ -77,37 +77,49 @@ export default function ToolsTab() {
 
   const handleDelete = async () => {
     if (deleteConfirm) {
-      await api.entities.Tool.delete(deleteConfirm.id);
-      refetch();
-      setDeleteConfirm(null);
+      try {
+        await api.entities.Tool.delete(deleteConfirm.id);
+        refetch();
+        setDeleteConfirm(null);
+      } catch (err) {
+        console.error('Tool delete failed:', err);
+      }
     }
   };
 
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="space-y-3 mb-4">
+        {/* Search Row */}
+        <div className="relative w-full sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input placeholder="Search tools..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <Filter className="w-4 h-4" />Status<ChevronDown className="w-3 h-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuCheckboxItem checked={stockFilter === 'all'} onCheckedChange={() => setStockFilter('all')}>All Tools</DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem checked={stockFilter === 'available'} onCheckedChange={() => setStockFilter('available')}>Available</DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem checked={stockFilter === 'checked_out'} onCheckedChange={() => setStockFilter('checked_out')}>Checked Out</DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <div className="flex-1" />
-        <span className="text-sm text-slate-500">{filteredTools.length} tools</span>
-        <Button onClick={() => { setEditingTool(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e]">
-          <Plus className="w-4 h-4 mr-2" />Add Tool
-        </Button>
+        {/* Filters + Actions Row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Filter className="w-4 h-4" />
+                <span className="hidden sm:inline">Status</span>
+                {stockFilter !== 'all' && <Badge variant="default" className="h-5 w-5 p-0 justify-center bg-[#0069AF]">1</Badge>}
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuCheckboxItem checked={stockFilter === 'all'} onCheckedChange={() => setStockFilter('all')}>All Tools</DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={stockFilter === 'available'} onCheckedChange={() => setStockFilter('available')}>Available</DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={stockFilter === 'checked_out'} onCheckedChange={() => setStockFilter('checked_out')}>Checked Out</DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <div className="flex-1" />
+          <span className="text-xs sm:text-sm text-slate-500 shrink-0">{filteredTools.length} tools</span>
+          <Button onClick={() => { setEditingTool(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e]" size="sm">
+            <Plus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Add Tool</span>
+          </Button>
+        </div>
       </div>
 
       {/* Tools Grid */}
@@ -149,7 +161,7 @@ export default function ToolsTab() {
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); setDeleteConfirm(tool); }}
-                  className="absolute top-1.5 left-1.5 p-1 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-1.5 left-1.5 p-1.5 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -293,16 +305,16 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
             {tool.manufacturer && <div><p className="text-xs text-slate-500">Manufacturer</p><p className="text-sm font-medium">{tool.manufacturer}</p></div>}
           </div>
 
-          <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-lg">
-            <div className="text-center"><p className="text-xs text-slate-500">Available</p><p className={cn("text-lg font-bold", tool.quantity_on_hand === 0 ? "text-red-600" : "text-slate-900")}>{tool.quantity_on_hand || 0}</p></div>
-            <div className="text-center"><p className="text-xs text-slate-500">Checked Out</p><p className="text-lg font-bold text-orange-600">{tool.checked_out_count || 0}</p></div>
-            <div className="text-center"><p className="text-xs text-slate-500">Total</p><p className="text-lg font-bold text-slate-900">{(tool.quantity_on_hand || 0) + (tool.checked_out_count || 0)}</p></div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-3 bg-slate-50 rounded-lg">
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">Available</p><p className={cn("text-base sm:text-lg font-bold", tool.quantity_on_hand === 0 ? "text-red-600" : "text-slate-900")}>{tool.quantity_on_hand || 0}</p></div>
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">Checked Out</p><p className="text-base sm:text-lg font-bold text-orange-600">{tool.checked_out_count || 0}</p></div>
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">Total</p><p className="text-base sm:text-lg font-bold text-slate-900">{(tool.quantity_on_hand || 0) + (tool.checked_out_count || 0)}</p></div>
           </div>
 
           {tool.description && <div><p className="text-xs text-slate-500 mb-1">Description</p><p className="text-sm text-slate-700 line-clamp-3">{tool.description}</p></div>}
 
           {/* Action Buttons */}
-          <div className="flex gap-2 pt-2 border-t">
+          <div className="flex flex-wrap gap-2 pt-2 border-t">
             <Button size="sm" variant={activeAction === 'checkout' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'checkout' ? null : 'checkout')} disabled={tool.quantity_on_hand === 0} className={activeAction === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : ''}>
               <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />Checkout
             </Button>
@@ -319,7 +331,7 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
           {activeAction && (
             <div className="p-3 bg-slate-50 rounded-lg border space-y-3">
               <p className="text-sm font-semibold text-slate-700">{activeAction === 'checkout' ? 'Checkout Tool' : 'Return Tool'}</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs">Quantity</Label>
                   <Input type="number" min={1} max={activeAction === 'checkout' ? tool.quantity_on_hand : (tool.checked_out_count || 0)} value={actionData.quantity} onChange={(e) => setActionData(p => ({ ...p, quantity: e.target.value }))} className="mt-1 h-8" />
@@ -452,8 +464,8 @@ function ToolModal({ open, onClose, tool, onSave }) {
             </div>
             <input id="tool-image-input" type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2"><Label>Name *</Label><Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} required /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2"><Label>Name *</Label><Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} required /></div>
             <div><Label>Serial Number</Label><Input value={formData.serial_number} onChange={(e) => setFormData(p => ({ ...p, serial_number: e.target.value }))} /></div>
             <div><Label>Category</Label><Input value={formData.category} onChange={(e) => setFormData(p => ({ ...p, category: e.target.value }))} /></div>
             <div><Label>Manufacturer</Label><Input value={formData.manufacturer} onChange={(e) => setFormData(p => ({ ...p, manufacturer: e.target.value }))} /></div>

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ImagePlus, X, Plus, Trash2, Package, Wrench } from 'lucide-react';
+import { ImagePlus, X, Plus, Trash2, Package, Wrench, Loader2 } from 'lucide-react';
 import { api } from '@/api/apiClient';
 
 export default function BundleModal({ open, onClose, bundle, products, services, onSave }) {
@@ -21,8 +21,12 @@ export default function BundleModal({ open, onClose, bundle, products, services,
   });
   const [newTag, setNewTag] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
+    setSaveError(null);
+    setSaving(false);
     if (bundle) {
       setFormData({
         name: bundle.name || '',
@@ -153,12 +157,21 @@ export default function BundleModal({ open, onClose, bundle, products, services,
   const getServiceName = (id) => services.find(s => s.id === id)?.name || 'Unknown';
   const getServiceRates = (id) => services.find(s => s.id === id)?.rates || [];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({
-      ...formData,
-      bundle_price: formData.bundle_price ? parseFloat(formData.bundle_price) : null
-    });
+    setSaveError(null);
+    setSaving(true);
+    try {
+      await onSave({
+        ...formData,
+        bundle_price: formData.bundle_price ? parseFloat(formData.bundle_price) : null
+      });
+    } catch (err) {
+      console.error('Bundle save error:', err);
+      setSaveError(err.message || 'Failed to save bundle. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -205,8 +218,8 @@ export default function BundleModal({ open, onClose, bundle, products, services,
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
               <Label>Name *</Label>
               <Input
                 value={formData.name}
@@ -215,7 +228,7 @@ export default function BundleModal({ open, onClose, bundle, products, services,
               />
             </div>
 
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <Label>Description</Label>
               <Textarea
                 value={formData.description}
@@ -245,15 +258,15 @@ export default function BundleModal({ open, onClose, bundle, products, services,
             <div className="space-y-2 mt-2">
               {formData.products.map((item) => (
                 <div key={item.product_id} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-                  <span className="flex-1 font-medium truncate">{getProductName(item.product_id)}</span>
+                  <span className="flex-1 font-medium truncate text-sm">{getProductName(item.product_id)}</span>
                   <Input
                     type="number"
                     min="1"
                     value={item.quantity}
                     onChange={(e) => updateProductQty(item.product_id, e.target.value)}
-                    className="w-20"
+                    className="w-16 sm:w-20"
                   />
-                  <button type="button" onClick={() => removeProduct(item.product_id)} className="text-red-500 hover:text-red-700">
+                  <button type="button" onClick={() => removeProduct(item.product_id)} className="text-red-500 hover:text-red-700 p-1">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -281,30 +294,32 @@ export default function BundleModal({ open, onClose, bundle, products, services,
               {formData.services.map((item, i) => {
                 const serviceRates = getServiceRates(item.service_id);
                 return (
-                  <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-                    <span className="flex-1 font-medium truncate">{getServiceName(item.service_id)}</span>
-                    {serviceRates.length > 0 && (
-                      <Select value={item.rate_name} onValueChange={(v) => updateServiceRate(i, v)}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {serviceRates.map(r => (
-                            <SelectItem key={r.name} value={r.name}>{r.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                    <Input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateServiceQty(i, e.target.value)}
-                      className="w-20"
-                    />
-                    <button type="button" onClick={() => removeService(i)} className="text-red-500 hover:text-red-700">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div key={i} className="flex flex-wrap items-center gap-2 p-2 bg-slate-50 rounded-lg">
+                    <span className="flex-1 min-w-0 font-medium truncate text-sm">{getServiceName(item.service_id)}</span>
+                    <div className="flex items-center gap-2">
+                      {serviceRates.length > 0 && (
+                        <Select value={item.rate_name} onValueChange={(v) => updateServiceRate(i, v)}>
+                          <SelectTrigger className="w-24 sm:w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {serviceRates.map(r => (
+                              <SelectItem key={r.name} value={r.name}>{r.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      <Input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => updateServiceQty(i, e.target.value)}
+                        className="w-16 sm:w-20"
+                      />
+                      <button type="button" onClick={() => removeService(i)} className="text-red-500 hover:text-red-700 p-1">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -349,9 +364,13 @@ export default function BundleModal({ open, onClose, bundle, products, services,
             )}
           </div>
 
+          {saveError && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3 text-center">{saveError}</p>
+          )}
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e]">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e]" disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {bundle ? 'Save Changes' : 'Create Bundle'}
             </Button>
           </div>

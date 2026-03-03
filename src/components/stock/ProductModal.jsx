@@ -159,8 +159,8 @@ export default function ProductModal({ open, onClose, product, onSave }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
               <Label>Name *</Label>
               <Input
                 value={formData.name}
@@ -194,7 +194,7 @@ export default function ProductModal({ open, onClose, product, onSave }) {
               />
             </div>
 
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <Label className="flex items-center gap-1.5">
                 Purchase Link
                 <ExternalLink className="w-3 h-3 text-slate-400" />

@@ -230,7 +230,7 @@ const CASCADE_MAP = {
     { entity: 'TaskComment', foreignKey: 'task_id' },
   ],
   Part: [
-    { entity: 'TaskComment', foreignKey: 'task_id' },
+    // Part has no child entities to cascade
   ],
   Customer: [
     { entity: 'Site', foreignKey: 'customer_id' },
