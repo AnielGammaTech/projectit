@@ -33,7 +33,7 @@ const WIDGET_TYPES = {
   overdue_parts: { icon: Package, label: 'Overdue Parts', color: 'bg-red-500' },
   project_progress: { icon: TrendingUp, label: 'Project Progress', color: 'bg-teal-500' },
   billing_summary: { icon: Clock, label: 'Billable Hours', color: 'bg-orange-500' },
-  pending_proposals: { icon: FileText, label: 'Pending Proposals', color: 'bg-indigo-500' },
+  pending_proposals: { icon: FileText, label: 'QuoteIT Proposals', color: 'bg-amber-500' },
 };
 
 // Pending Proposals Widget
@@ -46,13 +46,13 @@ function PendingProposalsWidget({ quotes }) {
         <p className="text-sm text-slate-500 text-center py-4">No pending proposals</p>
       ) : (
         pendingQuotes.map((quote) => (
-          <div key={quote.id} className="flex items-center gap-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
-            <FileText className="w-4 h-4 text-indigo-500" />
+          <div key={quote.id} className="flex items-center gap-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+            <img src="/quoteit-favicon.svg" alt="" className="w-4 h-4 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{quote.title}</p>
               <p className="text-[10px] text-slate-500 truncate">{quote.customer_name}</p>
             </div>
-            <Badge className="text-[10px] bg-indigo-100 text-indigo-700">
+            <Badge className="text-[10px] bg-amber-100 text-amber-700">
               ${quote.amount?.toLocaleString()}
             </Badge>
           </div>

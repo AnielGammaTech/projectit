@@ -1438,10 +1438,21 @@ export default function ProjectDetail() {
                     href={`${integrationSettings.quoteit_api_url}/QuoteView?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors border border-orange-200"
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors border border-amber-200"
                   >
-                    <FileText className="w-3 h-3" />
-                    QuoteIT
+                    <img src="/quoteit-favicon.svg" alt="" className="w-3.5 h-3.5" />
+                    Quote<span className="text-amber-500">IT</span>
+                  </a>
+                )}
+                {integrationSettings?.portalit_api_url && (
+                  <a
+                    href={`${integrationSettings.portalit_api_url}/project/${project.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors border border-emerald-200"
+                  >
+                    <img src="/portalit-favicon.svg" alt="" className="w-3.5 h-3.5" />
+                    Portal<span className="text-emerald-500">IT</span>
                   </a>
                 )}
                 {project.status !== 'archived' && project.status !== 'completed' && (

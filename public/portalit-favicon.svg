@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F2F44"/>
+      <stop offset="100%" stop-color="#163D57"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#bg)"/>
+  <!-- Subtle corner glow -->
+  <circle cx="26" cy="6" r="8" fill="#34D399" opacity="0.08"/>
+  <!-- Portal/Globe icon path -->
+  <circle cx="14" cy="16" r="7" fill="none" stroke="#FFFFFF" stroke-width="1.8"/>
+  <ellipse cx="14" cy="16" rx="3.5" ry="7" fill="none" stroke="#FFFFFF" stroke-width="1.4"/>
+  <line x1="7" y1="16" x2="21" y2="16" stroke="#FFFFFF" stroke-width="1.4"/>
+  <!-- Emerald accent dot (the "i" dot) -->
+  <circle cx="22.5" cy="11" r="2.2" fill="#34D399"/>
+</svg>

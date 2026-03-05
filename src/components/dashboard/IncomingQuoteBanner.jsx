@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, ArrowRight, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function IncomingQuoteBanner({ quotes, onCreateProject, onDismiss }) {
@@ -37,8 +37,8 @@ export default function IncomingQuoteBanner({ quotes, onCreateProject, onDismiss
 
             {/* Quote info */}
             <div className="flex-1 min-w-0 flex items-center gap-3">
-              <div className="p-1.5 bg-orange-100 rounded-lg flex-shrink-0">
-                <FileText className="w-4 h-4 text-orange-600" />
+              <div className="p-1.5 bg-amber-50 rounded-lg flex-shrink-0 border border-amber-200">
+                <img src="/quoteit-favicon.svg" alt="QuoteIT" className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">

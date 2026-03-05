@@ -2752,6 +2752,12 @@ function IntegrationsSection({ queryClient }) {
         )}
       </div>
 
+      {/* QuoteIT Integration Card */}
+      <QuoteITIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+
+      {/* PortalIT Integration Card */}
+      <PortalITIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+
       {/* Resend Integration Card */}
       <ResendIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
 
@@ -2763,6 +2769,300 @@ function IntegrationsSection({ queryClient }) {
 
       {/* Giphy Integration Card */}
       <GiphyIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+    </div>
+  );
+}
+
+function QuoteITIntegrationCard({ expandedIntegration, toggleIntegration }) {
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const [formData, setFormData] = useState({
+    quoteit_enabled: false,
+    quoteit_api_url: '',
+    quoteit_api_key: '',
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['integrationSettings'],
+    queryFn: () => api.entities.IntegrationSettings.filter({ setting_key: 'main' })
+  });
+
+  useEffect(() => {
+    if (settings[0]) {
+      setFormData(prev => ({
+        ...prev,
+        quoteit_enabled: settings[0].quoteit_enabled || false,
+        quoteit_api_url: settings[0].quoteit_api_url || '',
+        quoteit_api_key: settings[0].quoteit_api_key || '',
+      }));
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setResult(null);
+    try {
+      const payload = { setting_key: 'main', ...formData };
+      if (settings[0]) {
+        await api.entities.IntegrationSettings.update(settings[0].id, payload);
+      } else {
+        await api.entities.IntegrationSettings.create(payload);
+      }
+      refetch();
+      setResult({ success: true, message: 'QuoteIT settings saved' });
+    } catch (err) {
+      setResult({ success: false, message: err.message || 'Failed to save' });
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <button
+        onClick={() => toggleIntegration('quoteit')}
+        className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0F2F44] to-[#163D57] flex items-center justify-center shadow-sm">
+            <img src="/quoteit-favicon.svg" alt="" className="w-7 h-7" />
+          </div>
+          <div className="text-left">
+            <h3 className="text-base font-semibold text-slate-900">Quote<span className="text-amber-500">IT</span></h3>
+            <p className="text-xs text-slate-500 mt-0.5">Quoting & proposals — sync accepted quotes to projects</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {formData.quoteit_enabled ? (
+            <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Connected</Badge>
+          ) : (
+            <Badge variant="outline" className="text-slate-400 border-slate-200 text-xs">Not configured</Badge>
+          )}
+          <ChevronDown className={cn(
+            "w-5 h-5 text-slate-400 transition-transform duration-200",
+            expandedIntegration === 'quoteit' && "rotate-180"
+          )} />
+        </div>
+      </button>
+
+      {expandedIntegration === 'quoteit' && (
+        <div className="border-t p-6 space-y-5">
+          {/* How it works */}
+          <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-100">
+            <h4 className="text-sm font-semibold text-slate-700 mb-2">What this does</h4>
+            <ul className="text-xs text-slate-600 space-y-1.5">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-amber-500" />
+                Sync accepted quotes from QuoteIT into ProjectIT
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-amber-500" />
+                Auto-create projects from incoming proposals
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-amber-500" />
+                Link projects back to their original quotes
+              </li>
+            </ul>
+          </div>
+
+          {/* Enable toggle */}
+          <label className="flex items-center gap-3 cursor-pointer">
+            <Checkbox checked={formData.quoteit_enabled} onCheckedChange={(v) => setFormData(p => ({ ...p, quoteit_enabled: v }))} />
+            <span className="font-medium text-sm">Enable QuoteIT Integration</span>
+          </label>
+
+          {formData.quoteit_enabled && (
+            <>
+              <div>
+                <Label className="text-xs">QuoteIT URL</Label>
+                <Input
+                  value={formData.quoteit_api_url}
+                  onChange={e => setFormData(p => ({ ...p, quoteit_api_url: e.target.value }))}
+                  placeholder="https://quoteit.gtools.io"
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-400 mt-1">Your QuoteIT instance URL</p>
+              </div>
+              <div>
+                <Label className="text-xs">API Key</Label>
+                <Input
+                  value={formData.quoteit_api_key}
+                  onChange={e => setFormData(p => ({ ...p, quoteit_api_key: e.target.value }))}
+                  placeholder="Enter your QuoteIT API key"
+                  type="password"
+                  className="mt-1"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSave} disabled={saving} size="sm">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Save Settings
+            </Button>
+          </div>
+
+          {/* Result */}
+          {result && (
+            <div className={cn(
+              "p-3 rounded-lg text-xs font-medium",
+              result.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+            )}>
+              {result.message}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PortalITIntegrationCard({ expandedIntegration, toggleIntegration }) {
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const [formData, setFormData] = useState({
+    portalit_enabled: false,
+    portalit_api_url: '',
+    portalit_api_key: '',
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['integrationSettings'],
+    queryFn: () => api.entities.IntegrationSettings.filter({ setting_key: 'main' })
+  });
+
+  useEffect(() => {
+    if (settings[0]) {
+      setFormData(prev => ({
+        ...prev,
+        portalit_enabled: settings[0].portalit_enabled || false,
+        portalit_api_url: settings[0].portalit_api_url || '',
+        portalit_api_key: settings[0].portalit_api_key || '',
+      }));
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setResult(null);
+    try {
+      const payload = { setting_key: 'main', ...formData };
+      if (settings[0]) {
+        await api.entities.IntegrationSettings.update(settings[0].id, payload);
+      } else {
+        await api.entities.IntegrationSettings.create(payload);
+      }
+      refetch();
+      setResult({ success: true, message: 'PortalIT settings saved' });
+    } catch (err) {
+      setResult({ success: false, message: err.message || 'Failed to save' });
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <button
+        onClick={() => toggleIntegration('portalit')}
+        className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0F2F44] to-[#163D57] flex items-center justify-center shadow-sm">
+            <img src="/portalit-favicon.svg" alt="" className="w-7 h-7" />
+          </div>
+          <div className="text-left">
+            <h3 className="text-base font-semibold text-slate-900">Portal<span className="text-emerald-500">IT</span></h3>
+            <p className="text-xs text-slate-500 mt-0.5">Customer portal — project visibility & communication</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {formData.portalit_enabled ? (
+            <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Connected</Badge>
+          ) : (
+            <Badge variant="outline" className="text-slate-400 border-slate-200 text-xs">Not configured</Badge>
+          )}
+          <ChevronDown className={cn(
+            "w-5 h-5 text-slate-400 transition-transform duration-200",
+            expandedIntegration === 'portalit' && "rotate-180"
+          )} />
+        </div>
+      </button>
+
+      {expandedIntegration === 'portalit' && (
+        <div className="border-t p-6 space-y-5">
+          {/* How it works */}
+          <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
+            <h4 className="text-sm font-semibold text-slate-700 mb-2">What this does</h4>
+            <ul className="text-xs text-slate-600 space-y-1.5">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Give customers a self-service portal to view project progress
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Sync project data, timelines & milestones to PortalIT
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Enable customer communication & file sharing
+              </li>
+            </ul>
+          </div>
+
+          {/* Enable toggle */}
+          <label className="flex items-center gap-3 cursor-pointer">
+            <Checkbox checked={formData.portalit_enabled} onCheckedChange={(v) => setFormData(p => ({ ...p, portalit_enabled: v }))} />
+            <span className="font-medium text-sm">Enable PortalIT Integration</span>
+          </label>
+
+          {formData.portalit_enabled && (
+            <>
+              <div>
+                <Label className="text-xs">PortalIT URL</Label>
+                <Input
+                  value={formData.portalit_api_url}
+                  onChange={e => setFormData(p => ({ ...p, portalit_api_url: e.target.value }))}
+                  placeholder="https://portalit.gtools.io"
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-400 mt-1">Your PortalIT instance URL</p>
+              </div>
+              <div>
+                <Label className="text-xs">API Key</Label>
+                <Input
+                  value={formData.portalit_api_key}
+                  onChange={e => setFormData(p => ({ ...p, portalit_api_key: e.target.value }))}
+                  placeholder="Enter your PortalIT API key"
+                  type="password"
+                  className="mt-1"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSave} disabled={saving} size="sm">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Save Settings
+            </Button>
+          </div>
+
+          {/* Result */}
+          {result && (
+            <div className={cn(
+              "p-3 rounded-lg text-xs font-medium",
+              result.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+            )}>
+              {result.message}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

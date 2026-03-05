@@ -1001,9 +1001,12 @@ export default function Customers() {
                         {getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).map(quote => (
                           <div key={quote.id} className="p-3 bg-white border rounded-lg hover:shadow-sm transition-all">
                             <div className="flex items-center justify-between">
-                              <div>
-                                <span className="font-medium text-slate-900">{quote.title}</span>
-                                <p className="text-xs text-slate-500">ID: {quote.quoteit_id}</p>
+                              <div className="flex items-center gap-2">
+                                <img src="/quoteit-favicon.svg" alt="" className="w-5 h-5 flex-shrink-0" />
+                                <div>
+                                  <span className="font-medium text-slate-900">{quote.title}</span>
+                                  <p className="text-xs text-slate-500">ID: {quote.quoteit_id}</p>
+                                </div>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold text-slate-700">${(quote.amount || 0).toLocaleString()}</span>
