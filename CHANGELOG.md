@@ -5,6 +5,10 @@
 ### Fixed
 - **Doc scan returning wrong parts** - Images uploaded via "Scan Doc/Image" were sent to Claude as plain text URLs instead of vision content blocks. Claude never saw the actual image and hallucinated random parts. Now images are sent as `type: 'image'` content blocks using the Anthropic vision API.
 - **PDF scan not reading documents** - PDFs were also sent as text URL references. Now sent as `type: 'document'` content blocks so Claude can parse and extract data from uploaded PDFs.
+- **Pasting image in dialogs triggered Scan Doc/Image** - The global clipboard paste listener in PartsUploader intercepted paste events even inside modals (Order Part, Part Detail, etc.). Now skips paste events originating inside dialogs.
+
+### Changed
+- **Part detail opens in view mode** - Clicking a part now opens a read-only view. An Edit (pencil) button in the header toggles into edit mode. Status changes and comments remain always interactive.
 
 ### Security
 - **27 function endpoints were publicly accessible** - The `/api/functions/:name` route used `optionalAuth`, allowing unauthenticated access to email sending, LLM invocation, third-party syncs, workflow execution, and settings modification. Functions are now split into public (webhooks with their own secret validation) and authenticated (require valid user session).
