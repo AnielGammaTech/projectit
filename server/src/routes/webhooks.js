@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import entityService from '../services/entityService.js';
+import { webhookLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
 
@@ -8,7 +9,7 @@ const router = Router();
  * Dedicated public endpoint for GammaAi to push task results back.
  * Validates via x-gammaai-webhook-secret header.
  */
-router.post('/gammaai', async (req, res) => {
+router.post('/gammaai', webhookLimiter, async (req, res) => {
   try {
     const webhookSecret = req.headers['x-gammaai-webhook-secret'];
 

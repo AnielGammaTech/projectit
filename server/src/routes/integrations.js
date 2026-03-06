@@ -4,11 +4,12 @@ import emailService from '../services/emailService.js';
 import smsService from '../services/smsService.js';
 import fileService, { upload } from '../services/fileService.js';
 import pool from '../config/database.js';
+import { costlyApiLimiter, uploadLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
 
 // POST /api/integrations/invoke-llm
-router.post('/invoke-llm', async (req, res, next) => {
+router.post('/invoke-llm', costlyApiLimiter, async (req, res, next) => {
   try {
     const { prompt, response_json_schema, file_urls, feature } = req.body;
     if (!prompt) {
@@ -22,7 +23,7 @@ router.post('/invoke-llm', async (req, res, next) => {
 });
 
 // POST /api/integrations/upload-file (multipart/form-data)
-router.post('/upload-file', upload.single('file'), async (req, res, next) => {
+router.post('/upload-file', uploadLimiter, upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -35,7 +36,7 @@ router.post('/upload-file', upload.single('file'), async (req, res, next) => {
 });
 
 // POST /api/integrations/send-email
-router.post('/send-email', async (req, res, next) => {
+router.post('/send-email', costlyApiLimiter, async (req, res, next) => {
   try {
     const { to, subject, body, from_name, from_email } = req.body;
     if (!to || !subject) {
@@ -49,7 +50,7 @@ router.post('/send-email', async (req, res, next) => {
 });
 
 // POST /api/integrations/send-sms
-router.post('/send-sms', async (req, res, next) => {
+router.post('/send-sms', costlyApiLimiter, async (req, res, next) => {
   try {
     const { to, body } = req.body;
     if (!to || !body) {
@@ -64,7 +65,7 @@ router.post('/send-sms', async (req, res, next) => {
 
 // POST /api/integrations/extract-data
 // Extracts structured data from an uploaded file using LLM
-router.post('/extract-data', async (req, res, next) => {
+router.post('/extract-data', costlyApiLimiter, async (req, res, next) => {
   try {
     const { file_url, json_schema } = req.body;
     if (!file_url) {
