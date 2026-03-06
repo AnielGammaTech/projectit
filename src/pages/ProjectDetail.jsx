@@ -1574,7 +1574,7 @@ export default function ProjectDetail() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="sm:col-start-2 sm:row-span-3 lg:col-start-3 lg:row-start-1 lg:row-span-3"
+              className="sm:col-start-2 sm:row-span-2 lg:col-start-3 lg:row-start-1 lg:row-span-2"
             >
               <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} teamMembers={teamMembers} />
             </motion.div>
