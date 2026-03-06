@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import authMiddleware from '../../middleware/auth.js';
 import { optionalAuth } from '../../middleware/auth.js';
+import { webhookLimiter } from '../../middleware/rateLimiter.js';
 
 // Import all function handlers
 import executeWorkflow from './executeWorkflow.js';
@@ -89,7 +90,9 @@ router.post('/:name', (req, res, next) => {
 
   if (publicHandlers[name]) {
     // Public handlers validate their own auth (API keys, webhook secrets)
-    return optionalAuth(req, res, runHandler(publicHandlers[name]));
+    return webhookLimiter(req, res, () => {
+      optionalAuth(req, res, runHandler(publicHandlers[name]));
+    });
   }
 
   if (authHandlers[name]) {
