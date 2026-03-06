@@ -17,7 +17,7 @@ import {
 import {
   Package, Calendar as CalendarIcon, User, MessageSquare, Send, Trash2,
   DollarSign, Hash, Truck, UserPlus, ChevronDown, Check, PackageCheck,
-  Wrench, Pencil, X
+  Wrench, Pencil, X, Link, ExternalLink
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseLocalDate } from '@/utils/dateUtils';
@@ -66,6 +66,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
   const [quantity, setQuantity] = useState(1);
   const [unitCost, setUnitCost] = useState(0);
   const [supplier, setSupplier] = useState('');
+  const [purchaseLink, setPurchaseLink] = useState('');
   const [notes, setNotes] = useState('');
 
   // Sync state from part prop and reset to view mode on open
@@ -76,6 +77,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
       setQuantity(part.quantity || 1);
       setUnitCost(part.unit_cost || 0);
       setSupplier(part.supplier || '');
+      setPurchaseLink(part.purchase_link || '');
       setNotes(part.notes || '');
     }
     setIsEditing(false);
@@ -131,6 +133,12 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
     }
   };
 
+  const handlePurchaseLinkBlur = () => {
+    if (purchaseLink !== (part.purchase_link || '')) {
+      autoSave({ purchase_link: purchaseLink });
+    }
+  };
+
   const handleNotesBlur = () => {
     if (notes !== (part.notes || '')) {
       autoSave({ notes });
@@ -158,6 +166,15 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
     } else {
       const member = teamMembers.find(m => m.email === email);
       autoSave({ assigned_to: email, assigned_name: member?.name || email });
+    }
+  };
+
+  const handleReceiverAssign = (email) => {
+    if (email === 'unassigned') {
+      autoSave({ receiver_email: '', receiver_name: '' });
+    } else {
+      const member = teamMembers.find(m => m.email === email);
+      autoSave({ receiver_email: email, receiver_name: member?.name || email });
     }
   };
 
@@ -516,6 +533,96 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
                 )}
               </div>
             </div>
+
+            {/* Purchase Link */}
+            <div className="mt-4">
+              <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                <Link className="w-3 h-3" /> Purchase Link
+              </label>
+              {isEditing ? (
+                <input
+                  value={purchaseLink}
+                  onChange={(e) => setPurchaseLink(e.target.value)}
+                  onBlur={handlePurchaseLinkBlur}
+                  placeholder="https://..."
+                  className="w-full text-sm text-slate-900 bg-transparent outline-none border border-slate-200 hover:border-slate-300 focus:border-indigo-300 rounded-lg px-3 py-2 transition-colors placeholder-slate-300"
+                />
+              ) : (
+                <div className="px-3 py-2">
+                  {part.purchase_link ? (
+                    <a
+                      href={part.purchase_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1.5 break-all"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+                      {(() => {
+                        try { return new URL(part.purchase_link).hostname; } catch { return part.purchase_link; }
+                      })()}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-slate-400">--</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Receiver (show if ordered or later) */}
+            {(part.status === 'ordered' || part.status === 'received' || part.status === 'ready_to_install' || part.status === 'installed') && (
+              <div className="mt-4">
+                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                  <PackageCheck className="w-3 h-3" /> Receiver
+                </label>
+                {isEditing ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="inline-flex items-center gap-2 text-sm border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-2 transition-colors">
+                        {part.receiver_name ? (
+                          <>
+                            <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(part.receiver_email))}>
+                              {getInitials(part.receiver_name)}
+                            </div>
+                            <span className="text-slate-900">{part.receiver_name}</span>
+                          </>
+                        ) : (
+                          <span className="text-slate-300">Assign receiver...</span>
+                        )}
+                        <ChevronDown className="w-3 h-3 text-slate-400" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => handleReceiverAssign('unassigned')}>
+                        <User className="w-4 h-4 mr-2 text-slate-400" />
+                        Unassigned
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {teamMembers.map(m => (
+                        <DropdownMenuItem key={m.id} onClick={() => handleReceiverAssign(m.email)}>
+                          <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(m.email))}>
+                            {getInitials(m.name)}
+                          </div>
+                          {m.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <p className="text-sm text-slate-900 px-3 py-2 inline-flex items-center gap-2">
+                    {part.receiver_name ? (
+                      <>
+                        <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(part.receiver_email))}>
+                          {getInitials(part.receiver_name)}
+                        </div>
+                        {part.receiver_name}
+                      </>
+                    ) : (
+                      <span className="text-slate-400">--</span>
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Installer (show if received or later) */}
             {(part.status === 'received' || part.status === 'ready_to_install' || part.status === 'installed') && (

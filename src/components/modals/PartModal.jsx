@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Loader2, Package, Search } from 'lucide-react';
+import { CalendarIcon, Loader2, Package, Search, Link } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +25,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
     unit_cost: 0,
     status: 'needed',
     supplier: '',
+    purchase_link: '',
     notes: '',
     assigned_to: '',
     assigned_name: '',
@@ -54,6 +55,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
         unit_cost: part.unit_cost || 0,
         status: part.status || 'needed',
         supplier: part.supplier || '',
+        purchase_link: part.purchase_link || '',
         notes: part.notes || '',
         assigned_to: part.assigned_to || '',
         assigned_name: part.assigned_name || '',
@@ -74,6 +76,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
         unit_cost: 0,
         status: 'needed',
         supplier: '',
+        purchase_link: '',
         notes: '',
         assigned_to: '',
         assigned_name: '',
@@ -245,15 +248,29 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="supplier">Supplier</Label>
-            <Input
-              id="supplier"
-              value={formData.supplier}
-              onChange={(e) => setFormData(prev => ({ ...prev, supplier: e.target.value }))}
-              placeholder="e.g., Amazon, CDW, NewEgg"
-              className="mt-1.5"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="supplier">Supplier</Label>
+              <Input
+                id="supplier"
+                value={formData.supplier}
+                onChange={(e) => setFormData(prev => ({ ...prev, supplier: e.target.value }))}
+                placeholder="e.g., Amazon, CDW"
+                className="mt-1.5"
+              />
+            </div>
+            <div>
+              <Label htmlFor="purchase_link" className="flex items-center gap-1">
+                <Link className="w-3.5 h-3.5" /> Purchase Link
+              </Label>
+              <Input
+                id="purchase_link"
+                value={formData.purchase_link}
+                onChange={(e) => setFormData(prev => ({ ...prev, purchase_link: e.target.value }))}
+                placeholder="https://..."
+                className="mt-1.5"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
