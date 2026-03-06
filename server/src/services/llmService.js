@@ -89,8 +89,16 @@ const llmService = {
               url: url,
             },
           });
+        } else if (lowerUrl.endsWith('.pdf') || lowerUrl.includes('.pdf?') || lowerUrl.includes('application/pdf')) {
+          content.push({
+            type: 'document',
+            source: {
+              type: 'url',
+              url: url,
+            },
+          });
         } else {
-          // For non-image files (PDFs, etc.), include as text reference
+          // For other file types, include as text reference
           content.push({
             type: 'text',
             text: `Referenced file: ${url}`,
