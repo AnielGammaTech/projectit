@@ -380,6 +380,9 @@ export default async function agentBridge(req, res) {
       }
 
       case 'saveSettings': {
+        if (req.user?.role !== 'admin') {
+          return res.status(403).json({ error: 'Admin access required' });
+        }
         const { gammaai_url, gammaai_api_key, gammaai_webhook_secret, gammaai_enabled, gammaai_auto_send, gammaai_default_agent_id } = params;
 
         const existing = await entityService.filter('IntegrationSettings', { provider: 'gammaai' });

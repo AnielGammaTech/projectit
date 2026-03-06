@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import authMiddleware from '../../middleware/auth.js';
+import { optionalAuth } from '../../middleware/auth.js';
 
 // Import all function handlers
 import executeWorkflow from './executeWorkflow.js';
@@ -33,15 +35,24 @@ import sendMfaReminders from './sendMfaReminders.js';
 
 const router = Router();
 
-// Map function names to handlers
-const handlers = {
+// --- Public functions (webhooks/receivers that validate their own secrets) ---
+const publicHandlers = {
+  incomingWebhook,
+  gammaStackReceiver,
+  haloPSAWebhook,
+  proposalWebhook,
+  receiveProposal,
+  logProposalView,
+};
+
+// --- Authenticated functions (require a valid user session) ---
+const authHandlers = {
   executeWorkflow,
   sendEmail,
   sendNotificationEmail,
   sendDueReminders,
   haloPSASync,
   haloPSATicket,
-  haloPSAWebhook,
   syncHaloPSACustomers,
   syncHaloPSATickets,
   pullQuoteITQuotes,
@@ -49,14 +60,9 @@ const handlers = {
   linkQuoteToProject,
   quickbooksSync,
   syncHuduCustomers,
-  incomingWebhook,
-  gammaStackReceiver,
   getProjectITData,
   halopsa,
   sendEmailit,
-  logProposalView,
-  proposalWebhook,
-  receiveProposal,
   updateQuoteITStatus,
   haloPSACustomerList,
   resendEmail,
@@ -67,22 +73,31 @@ const handlers = {
 };
 
 // POST /api/functions/:name
-router.post('/:name', async (req, res) => {
+router.post('/:name', (req, res, next) => {
   const { name } = req.params;
-  const handler = handlers[name];
 
-  if (!handler) {
-    return res.status(404).json({ error: `Function "${name}" not found` });
-  }
-
-  try {
-    await handler(req, res);
-  } catch (error) {
-    console.error(`Function "${name}" error:`, error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: error.message });
+  const runHandler = (handler) => async () => {
+    try {
+      await handler(req, res);
+    } catch (error) {
+      console.error(`Function "${name}" error:`, error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: error.message });
+      }
     }
+  };
+
+  if (publicHandlers[name]) {
+    // Public handlers validate their own auth (API keys, webhook secrets)
+    return optionalAuth(req, res, runHandler(publicHandlers[name]));
   }
+
+  if (authHandlers[name]) {
+    // Authenticated handlers require a valid user session
+    return authMiddleware(req, res, runHandler(authHandlers[name]));
+  }
+
+  return res.status(404).json({ error: `Function "${name}" not found` });
 });
 
 export default router;

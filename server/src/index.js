@@ -9,7 +9,6 @@ import integrationRoutes from './routes/integrations.js';
 import functionRoutes from './routes/functions/index.js';
 import webhookRoutes from './routes/webhooks.js';
 import authMiddleware from './middleware/auth.js';
-import { optionalAuth } from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
 // File uploads now go to Supabase Storage (no local UPLOAD_DIR needed)
 
@@ -37,7 +36,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/entities', authMiddleware, entityRoutes);
 app.use('/api/integrations', authMiddleware, integrationRoutes);
-app.use('/api/functions', optionalAuth, functionRoutes);
+app.use('/api/functions', functionRoutes); // Auth handled per-function inside router
 app.use('/api/webhooks', webhookRoutes);
 
 // Error handler (must be last)

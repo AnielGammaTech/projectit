@@ -135,6 +135,9 @@ Respond as JSON: { "suggestions": [{ "title": "...", "description": "...", "prio
       }
 
       case 'saveSettings': {
+        if (req.user?.role !== 'admin') {
+          return res.status(403).json({ error: 'Admin access required' });
+        }
         const { api_key_configured, instructions } = params;
         // Save that AI is enabled (the actual API key is in env vars)
         const existing = await entityService.filter('IntegrationSettings', { provider: 'claude_ai' });
