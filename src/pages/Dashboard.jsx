@@ -804,6 +804,17 @@ export default function Dashboard() {
           }
         }
 
+        if (template?.default_messages?.length) {
+          for (const msg of template.default_messages) {
+            await api.entities.ProjectNote.create({
+              project_id: newProject.id,
+              title: msg.title || '',
+              content: msg.content || '',
+              type: msg.type || 'note'
+            });
+          }
+        }
+
         if (extractedParts?.length) {
           for (const part of extractedParts) {
             await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });

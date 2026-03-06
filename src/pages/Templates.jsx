@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
-import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase, Loader2, Search, Building2, Users, X } from 'lucide-react';
+import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase, Loader2, Search, Building2, Users, X, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -139,7 +139,18 @@ export default function Templates() {
         await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
       }
     }
-    
+
+    if (createFromTemplate.default_messages?.length) {
+      for (const msg of createFromTemplate.default_messages) {
+        await api.entities.ProjectNote.create({
+          project_id: newProject.id,
+          title: msg.title || '',
+          content: msg.content || '',
+          type: msg.type || 'note'
+        });
+      }
+    }
+
     setCreating(false);
     setCreateFromTemplate(null);
     navigate(createPageUrl('ProjectDetail') + `?id=${newProject.id}`);
@@ -231,10 +242,18 @@ export default function Templates() {
             {template.default_tasks?.length || 0}
           </div>
           {isProject && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 text-amber-700 text-xs font-medium">
-              <Package className="w-3 h-3" />
-              {template.default_parts?.length || 0}
-            </div>
+            <>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 text-amber-700 text-xs font-medium">
+                <Package className="w-3 h-3" />
+                {template.default_parts?.length || 0}
+              </div>
+              {(template.default_messages?.length || 0) > 0 && (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-violet-100 text-violet-700 text-xs font-medium">
+                  <MessageSquare className="w-3 h-3" />
+                  {template.default_messages.length}
+                </div>
+              )}
+            </>
           )}
         </div>
       </motion.div>
@@ -473,6 +492,12 @@ export default function Templates() {
                     <Package className="w-4 h-4 text-amber-500" />
                     {createFromTemplate.default_parts?.length || 0} parts
                   </div>
+                  {(createFromTemplate.default_messages?.length || 0) > 0 && (
+                    <div className="flex items-center gap-1 text-sm text-slate-700">
+                      <MessageSquare className="w-4 h-4 text-violet-500" />
+                      {createFromTemplate.default_messages.length} messages
+                    </div>
+                  )}
                 </div>
               </div>
             )}
