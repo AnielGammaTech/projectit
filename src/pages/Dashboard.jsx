@@ -791,9 +791,30 @@ export default function Dashboard() {
           if (typeof refetchIncomingQuotes === 'function') refetchIncomingQuotes();
         }
 
+        // Create task groups first and map template IDs to real IDs
+        const groupIdMap = {};
+        if (template?.default_groups?.length) {
+          for (const group of template.default_groups) {
+            const created = await api.entities.TaskGroup.create({
+              name: group.name,
+              color: group.color,
+              project_id: newProject.id
+            });
+            if (group._template_id) {
+              groupIdMap[group._template_id] = created.id;
+            }
+          }
+        }
+
         if (template?.default_tasks?.length) {
           for (const task of template.default_tasks) {
-            await api.entities.Task.create({ ...task, project_id: newProject.id });
+            const taskData = { ...task, project_id: newProject.id };
+            if (taskData.group_id && groupIdMap[taskData.group_id]) {
+              taskData.group_id = String(groupIdMap[taskData.group_id]);
+            } else {
+              delete taskData.group_id;
+            }
+            await api.entities.Task.create(taskData);
           }
           refetchTasks();
         }

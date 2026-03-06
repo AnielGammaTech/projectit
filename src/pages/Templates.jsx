@@ -35,17 +35,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import TemplateModal from '@/components/modals/TemplateModal';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function Templates() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [showModal, setShowModal] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [activeTab, setActiveTab] = useState('project');
-  const [newTemplateType, setNewTemplateType] = useState('project');
   const [createFromTemplate, setCreateFromTemplate] = useState(null);
   const [projectName, setProjectName] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -77,18 +73,6 @@ export default function Templates() {
   // Separate templates by type
   const projectTemplates = templates.filter(t => t.template_type !== 'todo');
   const todoTemplates = templates.filter(t => t.template_type === 'todo');
-
-  const handleSave = async (data) => {
-    const templateData = { ...data, template_type: newTemplateType };
-    if (editingTemplate) {
-      await api.entities.ProjectTemplate.update(editingTemplate.id, templateData);
-    } else {
-      await api.entities.ProjectTemplate.create(templateData);
-    }
-    queryClient.invalidateQueries({ queryKey: ['templates'] });
-    setShowModal(false);
-    setEditingTemplate(null);
-  };
 
   const handleDelete = async () => {
     await api.entities.ProjectTemplate.delete(deleteConfirm.id);
@@ -128,9 +112,31 @@ export default function Templates() {
       team_members: selectedTeamMembers
     });
     
+    // Create task groups first and map template IDs to real IDs
+    const groupIdMap = {};
+    if (createFromTemplate.default_groups?.length) {
+      for (const group of createFromTemplate.default_groups) {
+        const created = await api.entities.TaskGroup.create({
+          name: group.name,
+          color: group.color,
+          project_id: newProject.id
+        });
+        if (group._template_id) {
+          groupIdMap[group._template_id] = created.id;
+        }
+      }
+    }
+
     if (createFromTemplate.default_tasks?.length) {
       for (const task of createFromTemplate.default_tasks) {
-        await api.entities.Task.create({ ...task, project_id: newProject.id, status: 'todo' });
+        const taskData = { ...task, project_id: newProject.id, status: 'todo' };
+        // Map template group_id to real group_id
+        if (taskData.group_id && groupIdMap[taskData.group_id]) {
+          taskData.group_id = String(groupIdMap[taskData.group_id]);
+        } else {
+          delete taskData.group_id;
+        }
+        await api.entities.Task.create(taskData);
       }
     }
     
@@ -156,16 +162,12 @@ export default function Templates() {
     navigate(createPageUrl('ProjectDetail') + `?id=${newProject.id}`);
   };
 
-  const handleNewTemplate = (type) => {
-    setNewTemplateType(type);
-    setEditingTemplate(null);
-    setShowModal(true);
+  const handleNewTemplate = () => {
+    navigate(createPageUrl('TemplateEditor'));
   };
 
   const handleEditTemplate = (template) => {
-    setNewTemplateType(template.template_type || 'project');
-    setEditingTemplate(template);
-    setShowModal(true);
+    navigate(createPageUrl('TemplateEditor') + `?id=${template.id}`);
   };
 
   const TemplateCard = ({ template, index }) => {
@@ -266,7 +268,7 @@ export default function Templates() {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        onClick={() => handleNewTemplate(type)}
+        onClick={() => handleNewTemplate()}
         className={cn(
           "relative rounded-2xl border-2 border-dashed p-5 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[180px]",
           isProject
@@ -365,14 +367,6 @@ export default function Templates() {
           </TabsContent>
         </Tabs>
       </div>
-
-      <TemplateModal
-        open={showModal}
-        onClose={() => { setShowModal(false); setEditingTemplate(null); }}
-        template={editingTemplate}
-        onSave={handleSave}
-        templateType={newTemplateType}
-      />
 
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <AlertDialogContent>
