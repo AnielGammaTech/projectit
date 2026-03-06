@@ -1,0 +1,658 @@
+# Instincts generated from https://github.com/AnielGammaTech/projectit
+# Generated: 2026-03-06T16:45:22.051Z
+# Version: 2.0
+
+---
+id: projectit-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Commit Length
+
+## Action
+
+Keep commit messages concise (under 50 characters)
+
+## Evidence
+
+- Average commit message length: 43 chars
+- Based on 200 commits
+
+---
+id: projectit-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Naming Files
+
+## Action
+
+Use PascalCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: PascalCase
+
+---
+id: projectit-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Export Style
+
+## Action
+
+Prefer default exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: default
+
+---
+id: projectit-arch-type-based
+trigger: "when adding new code"
+confidence: 0.8
+domain: architecture
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Arch Type Based
+
+## Action
+
+Place code in the appropriate type folder (components/, services/, utils/, etc.)
+
+## Evidence
+
+- Type-based module organization detected
+- Folders: api, assets, components, hooks, lib
+
+---
+id: projectit-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: projectit-workflow-database-migration
+trigger: "when modifying the database schema or adding tables"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Database Migration
+
+## Action
+
+Follow the database-migration workflow:
+1. Create migration file
+2. Update schema definitions
+3. Generate/update types
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: migrations/*
+
+---
+id: projectit-workflow-feature-development
+trigger: "when implementing a new feature"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Feature Development
+
+## Action
+
+Follow the feature-development workflow:
+1. Add feature implementation
+2. Add tests for feature
+3. Update documentation
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~19x per month
+- Files: src/components/*, src/components/dashboard/*, src/components/modals/*
+
+---
+id: projectit-workflow-security-enhancement
+trigger: "when doing security enhancement"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Security Enhancement
+
+## Action
+
+Follow the security-enhancement workflow:
+1. Add middleware (rateLimiter.js)
+2. Update auth routes
+3. Modify function handlers
+4. Add admin guards
+5. Update route protection
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: server/src/middleware/rateLimiter.js, server/src/routes/auth.js, server/src/routes/functions/*.js
+
+---
+id: projectit-workflow-llm-service-enhancement
+trigger: "when doing llm service enhancement"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Llm Service Enhancement
+
+## Action
+
+Follow the llm-service-enhancement workflow:
+1. Modify llmService.js
+2. Update content block handling
+3. Fix PDF/image processing
+4. Test AI responses
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: server/src/services/llmService.js
+
+---
+id: projectit-workflow-database-migration
+trigger: "when modifying the database schema or adding tables"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Database Migration
+
+## Action
+
+Follow the database-migration workflow:
+1. Create migration SQL file
+2. Register in migrate.js
+3. Add to VALID_ENTITIES whitelist
+4. Add cascade delete rules
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: server/src/db/migrations/*.sql, server/src/db/migrate.js, server/src/services/entityService.js
+
+---
+id: projectit-workflow-ui-enhancement-with-modals
+trigger: "when doing ui enhancement with modals"
+confidence: 0.75
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Ui Enhancement With Modals
+
+## Action
+
+Follow the ui-enhancement-with-modals workflow:
+1. Create/update modal components
+2. Add form handling logic
+3. Update main page component
+4. Add responsive design
+5. Add error handling
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~5x per month
+- Files: src/components/*/Modal.jsx, src/pages/*.jsx, src/components/ui/*.jsx
+
+---
+id: projectit-workflow-adminland-settings-expansion
+trigger: "when doing adminland settings expansion"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Adminland Settings Expansion
+
+## Action
+
+Follow the adminland-settings-expansion workflow:
+1. Add new section to Adminland.jsx
+2. Create settings components
+3. Add backend function handlers
+4. Update navigation/menu
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: src/pages/Adminland.jsx, server/src/routes/functions/*.js
+
+---
+id: projectit-workflow-package-dependency-update
+trigger: "when doing package dependency update"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Package Dependency Update
+
+## Action
+
+Follow the package-dependency-update workflow:
+1. Update package.json
+2. Update package-lock.json
+3. Update version numbers
+4. Update changelog
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: package.json, server/package.json, server/package-lock.json
+
+---
+id: projectit-workflow-project-detail-ui-fixes
+trigger: "when doing project detail ui fixes"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Project Detail Ui Fixes
+
+## Action
+
+Follow the project-detail-ui-fixes workflow:
+1. Update ProjectDetail.jsx
+2. Fix layout issues
+3. Improve responsive design
+4. Add loading states
+5. Fix component interactions
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: src/pages/ProjectDetail.jsx, src/pages/Project*.jsx, src/components/project/*.jsx
+
+---
+id: projectit-pascal-case-files
+trigger: "When creating or naming React component files"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Pascal Case Files
+
+## Action
+
+Use PascalCase for file names (e.g., FilePreviewPanel.jsx, ProjectDetail.jsx)
+
+## Evidence
+
+- Seen in src/components/files/FilePreviewPanel.jsx
+- Pattern in src/pages/ProjectDetail.jsx
+- Consistent across all component files
+
+---
+id: projectit-camel-case-functions
+trigger: "When naming functions and variables"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Camel Case Functions
+
+## Action
+
+Use camelCase for function names and variables
+
+## Evidence
+
+- Pattern in server/src/services/authService.js
+- Consistent in API client functions
+
+---
+id: projectit-screaming-snake-constants
+trigger: "When defining constants"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Screaming Snake Constants
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constants
+
+## Evidence
+
+- Pattern in src/lib/fileConstants.js
+- Seen in VALID_ENTITIES whitelist
+
+---
+id: projectit-default-exports
+trigger: "When exporting React components or main module functions"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Default Exports
+
+## Action
+
+Use default exports for components and main functions
+
+## Evidence
+
+- Pattern across all component files
+- Consistent in pages/*.jsx structure
+
+---
+id: projectit-absolute-imports
+trigger: "When importing modules within the src directory"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Absolute Imports
+
+## Action
+
+Use absolute imports from src root
+
+## Evidence
+
+- Pattern in import statements
+- Consistent across component imports
+
+---
+id: projectit-try-catch-errors
+trigger: "When handling potential errors in async operations"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Try Catch Errors
+
+## Action
+
+Use try-catch blocks for error handling without custom error classes
+
+## Evidence
+
+- Pattern in server routes
+- Seen in API service functions
+
+---
+id: projectit-conventional-commits
+trigger: "When making a commit"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Conventional Commits
+
+## Action
+
+Use conventional commit format with feat:/fix:/chore:/docs: prefixes, average 43 characters
+
+## Evidence
+
+- feat: add rate limiting, fix webhook security gaps, add changelog
+- fix: require authentication on /api/functions routes
+- docs: add comprehensive README
+
+---
+id: projectit-security-middleware-first
+trigger: "When implementing security enhancements"
+confidence: 0.92
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Security Middleware First
+
+## Action
+
+Start by adding middleware (rateLimiter.js), then update auth routes and function handlers
+
+## Evidence
+
+- Security enhancement workflow pattern
+- Seen in rate limiting implementation commits
+
+---
+id: projectit-migration-sequence
+trigger: "When adding new database entities"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Migration Sequence
+
+## Action
+
+Create migration SQL file, register in migrate.js, add to VALID_ENTITIES whitelist, add cascade delete rules
+
+## Evidence
+
+- Database migration workflow
+- Pattern in 005_create_file_comment_table.sql
+- EntityService.js updates
+
+---
+id: projectit-llm-content-blocks
+trigger: "When fixing LLM service issues"
+confidence: 0.88
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Llm Content Blocks
+
+## Action
+
+Focus on content block handling, PDF/image processing in llmService.js
+
+## Evidence
+
+- fix: add PDF support as document content blocks
+- fix: send images as vision content blocks instead of text URLs
+
+---
+id: projectit-modal-pattern
+trigger: "When adding UI features requiring user input"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Modal Pattern
+
+## Action
+
+Create modal components, add form handling, update main page component, ensure responsive design
+
+## Evidence
+
+- UI enhancement workflow pattern
+- Modal.jsx pattern in components
+- Form handling in multiple features
+
+---
+id: projectit-adminland-expansion
+trigger: "When adding administrative features"
+confidence: 0.87
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Adminland Expansion
+
+## Action
+
+Add new section to Adminland.jsx, create settings components, add backend function handlers
+
+## Evidence
+
+- Adminland settings expansion workflow
+- Pattern in src/pages/Adminland.jsx
+- Function handlers in server/src/routes/functions/
+
+---
+id: projectit-package-update-sequence
+trigger: "When updating dependencies"
+confidence: 0.83
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Package Update Sequence
+
+## Action
+
+Update package.json files, update package-lock.json, update version numbers, update changelog
+
+## Evidence
+
+- Package dependency update workflow
+- Pattern in package.json updates
+- Changelog updates in src/changelog.js
+
+---
+id: projectit-project-ui-fixes
+trigger: "When fixing project page issues"
+confidence: 0.86
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Project Ui Fixes
+
+## Action
+
+Update ProjectDetail.jsx, fix layout issues, improve responsive design, add loading states
+
+## Evidence
+
+- Project detail UI fixes workflow
+- Pattern in src/pages/ProjectDetail.jsx updates
+- Component interaction fixes
+
+---
+id: projectit-jsx-extension
+trigger: "When creating React component files"
+confidence: 0.9
+domain: architecture
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Jsx Extension
+
+## Action
+
+Use .jsx extension for React components
+
+## Evidence
+
+- All React components use .jsx
+- Entry points: App.jsx, main.jsx
+- Consistent across component structure
+
+---
+id: projectit-type-based-organization
+trigger: "When organizing code files"
+confidence: 0.85
+domain: architecture
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Type Based Organization
+
+## Action
+
+Organize modules by type (components/, pages/, hooks/, lib/, utils/)
+
+## Evidence
+
+- Folder structure follows type-based organization
+- Clear separation: api/, components/, hooks/, lib/, pages/, utils/
+
