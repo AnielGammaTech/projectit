@@ -33,6 +33,7 @@ import Stock from './pages/Stock';
 import Team from './pages/Team';
 import TechDashboard from './pages/TechDashboard';
 import Templates from './pages/Templates';
+import TemplateEditor from './pages/TemplateEditor';
 import TimeReport from './pages/TimeReport';
 import UserGroups from './pages/UserGroups';
 import Workflows from './pages/Workflows';
@@ -74,6 +75,7 @@ export const PAGES = {
     "Stock": Stock,
     "Team": Team,
     "TechDashboard": TechDashboard,
+    "TemplateEditor": TemplateEditor,
     "Templates": Templates,
     "TimeReport": TimeReport,
     "UserGroups": UserGroups,

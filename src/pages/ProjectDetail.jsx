@@ -1142,13 +1142,24 @@ export default function ProjectDetail() {
 
   // Save as Template
   const handleSaveAsTemplate = async () => {
+    // Build group mapping for tasks
+    const groupTemplateIds = {};
+    const templateGroups = taskGroups.map(g => {
+      const templateId = `grp_${g.id}`;
+      groupTemplateIds[g.id] = templateId;
+      return { name: g.name, color: g.color || 'slate', _template_id: templateId };
+    });
+
     const templateData = {
       name: `${project.name} Template`,
       description: project.description || '',
+      template_type: 'project',
+      default_groups: templateGroups,
       default_tasks: tasks.map(t => ({
         title: t.title,
         description: t.description || '',
-        priority: t.priority || 'medium'
+        priority: t.priority || 'medium',
+        group_id: t.group_id ? (groupTemplateIds[parseInt(t.group_id)] || '') : ''
       })),
       default_parts: parts.map(p => ({
         name: p.name,
