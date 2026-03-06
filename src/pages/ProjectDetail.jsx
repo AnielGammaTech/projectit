@@ -1154,6 +1154,11 @@ export default function ProjectDetail() {
         name: p.name,
         part_number: p.part_number || '',
         quantity: p.quantity || 1
+      })),
+      default_messages: projectNotes.map(n => ({
+        title: n.title || '',
+        content: n.content || '',
+        type: n.type || 'note'
       }))
     };
     await api.entities.ProjectTemplate.create(templateData);
