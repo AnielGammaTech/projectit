@@ -10,6 +10,8 @@
 - **Full-page template editor** - Templates redesigned as project-like pages with clickable sub-views for task groups, messages, and parts.
 - **Template task groups** - Create and manage task groups with color coding directly inside templates.
 - **Template messages** - Add messages with type selection (note/message/update) to templates.
+- **Purchase link field on parts** - View mode shows the hostname as a clickable hyperlink with external link icon; edit mode shows a text input. No migration needed (JSONB column).
+- **Receiver assignment for ordered parts** - When a part status is "Ordered" or later, a Receiver dropdown appears to assign a team member to receive the part.
 
 ### Fixed
 - **Due Soon tab showed empty results** - Filter was restricted to current user only; now shows all tasks with due dates.

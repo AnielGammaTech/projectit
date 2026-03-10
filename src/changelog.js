@@ -23,6 +23,8 @@ export const changelog = [
       { type: 'feature', text: 'Templates redesigned as full pages mirroring real projects with task groups, messages, and parts sub-views' },
       { type: 'feature', text: 'Template task groups with color coding and inline creation' },
       { type: 'feature', text: 'Template messages with type selection (note/message/update)' },
+      { type: 'feature', text: 'Purchase link field on parts — view shows clickable hostname, edit shows text input' },
+      { type: 'feature', text: 'Receiver assignment for ordered parts — assign a team member to receive incoming parts' },
       { type: 'fix', text: 'Due Soon tab was empty — filter now correctly shows tasks with due dates' },
       { type: 'fix', text: 'Due Dates card on project detail constrained to match sibling card heights' },
       { type: 'improvement', text: 'Renamed Due Soon to Overdue for clarity' },
