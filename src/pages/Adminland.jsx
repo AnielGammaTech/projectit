@@ -1932,6 +1932,7 @@ function DatabaseHealthSection() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [fixing, setFixing] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
 
   const getToken = async () => {
@@ -1969,6 +1970,27 @@ function DatabaseHealthSection() {
     } catch (err) {
       console.error('Failed to fetch history:', err);
     }
+  };
+
+  const fixOrphanedRecords = async (issue) => {
+    if (!issue.orphaned_ids?.length) return;
+    setFixing(issue.entity);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_URL}/api/integrations/data-health/fix`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entity: issue.entity, orphaned_ids: issue.orphaned_ids }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Re-run health check to refresh data
+        await fetchHealth();
+      }
+    } catch (err) {
+      console.error('Failed to fix orphaned records:', err);
+    }
+    setFixing(null);
   };
 
   useEffect(() => {
@@ -2211,7 +2233,7 @@ function DatabaseHealthSection() {
                         <div key={i} className="border border-amber-200 bg-amber-50 rounded-lg p-4">
                           <div className="flex items-start gap-3">
                             <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                            <div>
+                            <div className="flex-1">
                               <p className="font-medium text-amber-800">
                                 {issue.type === 'orphaned_records'
                                   ? `${issue.count} orphaned ${issue.entity} record(s)`
@@ -2223,6 +2245,15 @@ function DatabaseHealthSection() {
                                   : `Team members with emails that don't match any user account`}
                               </p>
                             </div>
+                            {issue.type === 'orphaned_records' && issue.orphaned_ids?.length > 0 && (
+                              <button
+                                onClick={() => fixOrphanedRecords(issue)}
+                                disabled={fixing === issue.entity}
+                                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors shrink-0"
+                              >
+                                {fixing === issue.entity ? 'Fixing...' : `Delete ${issue.count} orphan${issue.count !== 1 ? 's' : ''}`}
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}

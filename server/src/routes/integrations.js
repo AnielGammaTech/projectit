@@ -289,6 +289,44 @@ router.get('/data-health', async (req, res, next) => {
   }
 });
 
+// POST /api/integrations/data-health/fix
+// Deletes orphaned records identified by the health check (admin-only)
+router.post('/data-health/fix', async (req, res, next) => {
+  try {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { entity, orphaned_ids } = req.body;
+    if (!entity || !Array.isArray(orphaned_ids) || orphaned_ids.length === 0) {
+      return res.status(400).json({ error: 'entity and orphaned_ids are required' });
+    }
+
+    // Validate entity name to prevent SQL injection (only allow known entity tables)
+    const allowedEntities = [
+      'Task', 'Part', 'ProjectNote', 'ProjectFile', 'FileFolder', 'TaskGroup',
+      'TimeEntry', 'ProgressUpdate', 'ProjectActivity', 'Proposal', 'TaskComment',
+      'Site', 'CommunicationLog', 'WorkflowLog', 'FileComment', 'ChangeOrder',
+    ];
+    if (!allowedEntities.includes(entity)) {
+      return res.status(400).json({ error: `Entity "${entity}" is not allowed for cleanup` });
+    }
+
+    // Delete orphaned records by IDs
+    const placeholders = orphaned_ids.map((_, i) => `$${i + 1}::uuid`).join(', ');
+    const { rowCount } = await pool.query(
+      `DELETE FROM "${entity}" WHERE id IN (${placeholders})`,
+      orphaned_ids
+    );
+
+    console.log(`[Health Fix] Deleted ${rowCount} orphaned ${entity} record(s) by ${req.user.email}`);
+
+    res.json({ success: true, deleted: rowCount, entity });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/integrations/data-health-history
 // Returns stored health check history (admin-only)
 router.get('/data-health-history', async (req, res, next) => {
