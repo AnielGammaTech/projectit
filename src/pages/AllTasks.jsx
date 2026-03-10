@@ -449,7 +449,7 @@ export default function AllTasks() {
     if (viewMode === 'mine') {
       matchesViewMode = task.assigned_to === currentUser?.email;
     } else if (viewMode === 'mine_due') {
-      matchesViewMode = task.assigned_to === currentUser?.email && task.due_date;
+      matchesViewMode = !!task.due_date;
     }
 
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
@@ -490,7 +490,7 @@ export default function AllTasks() {
   // Only count tasks from active projects
   const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
   const myTasksCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed').length;
-  const myTasksWithDueCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.due_date && t.status !== 'completed').length;
+  const myTasksWithDueCount = activeTasks.filter(t => t.due_date && t.status !== 'completed').length;
 
   const handleQuickComplete = async (e, taskId) => {
     e.stopPropagation();
