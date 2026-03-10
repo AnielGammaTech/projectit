@@ -367,7 +367,7 @@ export default function AllTasks() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('all'); // 'all', 'mine', 'mine_due'
+  const [viewMode, setViewMode] = useState('all'); // 'all', 'mine', 'my_overdue', 'mine_due'
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
@@ -448,6 +448,15 @@ export default function AllTasks() {
     let matchesViewMode = true;
     if (viewMode === 'mine') {
       matchesViewMode = task.assigned_to === currentUser?.email;
+    } else if (viewMode === 'my_overdue') {
+      if (!task.due_date || task.assigned_to !== currentUser?.email) {
+        matchesViewMode = false;
+      } else {
+        const dueDate = parseLocalDate(task.due_date);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        matchesViewMode = dueDate <= today;
+      }
     } else if (viewMode === 'mine_due') {
       // Show only overdue tasks and tasks due today
       if (!task.due_date) {
@@ -498,6 +507,13 @@ export default function AllTasks() {
   // Only count tasks from active projects
   const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
   const myTasksCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed').length;
+  const myOverdueCount = activeTasks.filter(t => {
+    if (!t.due_date || t.status === 'completed' || t.assigned_to !== currentUser?.email) return false;
+    const dueDate = parseLocalDate(t.due_date);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return dueDate <= today;
+  }).length;
   const myTasksWithDueCount = activeTasks.filter(t => {
     if (!t.due_date || t.status === 'completed') return false;
     const dueDate = parseLocalDate(t.due_date);
@@ -712,6 +728,17 @@ export default function AllTasks() {
                 )}
               >
                 My Tasks ({myTasksCount})
+              </button>
+              <button
+                onClick={() => setViewMode('my_overdue')}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  viewMode === 'my_overdue'
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                My Overdue ({myOverdueCount})
               </button>
               <button
                 onClick={() => setViewMode('mine_due')}
