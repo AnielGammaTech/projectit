@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.3.0] - 2026-03-10
+
+### Added
+- **Monday.com-style All Tasks table** - Redesigned task list as a flat table with collapsible project groups, inline columns for status, priority, assignee, and due date. Complete tasks directly from the table.
+- **Monday.com-style All Parts table** - Parts tab redesigned as a flat table with collapsible project groups, inline status dropdown, assignee picker, and ETA date picker per row. Status filter pills replace the old dropdown and summary cards.
+- **My Overdue tab** - Filter to show only your own overdue and due-today tasks.
+- **Overdue tab** - Filter to show all overdue and due-today tasks across all projects.
+- **Automatic overdue email reminders** - Server sends overdue email notifications every 4 hours with deduplication to prevent duplicate alerts.
+- **Full-page template editor** - Templates redesigned as project-like pages with clickable sub-views for task groups, messages, and parts.
+- **Template task groups** - Create and manage task groups with color coding directly inside templates.
+- **Template messages** - Add messages with type selection (note/message/update) to templates.
+- **Purchase link field on parts** - View mode shows the hostname as a clickable hyperlink with external link icon; edit mode shows a text input. No migration needed (JSONB column).
+- **Receiver assignment for ordered parts** - When a part status is "Ordered" or later, a Receiver dropdown appears to assign a team member to receive the part.
+
+### Fixed
+- **Due Soon tab showed empty results** - Filter was restricted to current user only; now shows all tasks with due dates.
+- **Due Dates card too tall** - Constrained height to match sibling cards with scrollable content.
+
+### Changed
+- **Renamed Due Soon to Overdue** - Label now accurately reflects the filter behavior.
+- **Completed tasks section** - Now shows project name and assignee avatar inline.
+
 ## [Unreleased] - 2026-03-06
 
 ### Fixed
