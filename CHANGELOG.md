@@ -4,6 +4,7 @@
 
 ### Added
 - **Monday.com-style All Tasks table** - Redesigned task list as a flat table with collapsible project groups, inline columns for status, priority, assignee, and due date. Complete tasks directly from the table.
+- **Monday.com-style All Parts table** - Parts tab redesigned as a flat table with collapsible project groups, inline status dropdown, assignee picker, and ETA date picker per row. Status filter pills replace the old dropdown and summary cards.
 - **My Overdue tab** - Filter to show only your own overdue and due-today tasks.
 - **Overdue tab** - Filter to show all overdue and due-today tasks across all projects.
 - **Automatic overdue email reminders** - Server sends overdue email notifications every 4 hours with deduplication to prevent duplicate alerts.

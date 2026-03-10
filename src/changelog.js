@@ -9,7 +9,7 @@ export const changelog = [
     date: '2026-03-10',
     title: 'Task Management Overhaul & Overdue Reminders',
     highlights: [
-      'Monday.com-style task table on All Tasks page',
+      'Monday.com-style table for both Tasks and Parts tabs',
       'Automatic overdue email reminders every 4 hours',
       'Redesigned project templates as full project-like pages',
       'My Overdue & Overdue filter tabs',
@@ -25,6 +25,7 @@ export const changelog = [
       { type: 'feature', text: 'Template messages with type selection (note/message/update)' },
       { type: 'feature', text: 'Purchase link field on parts — view shows clickable hostname, edit shows text input' },
       { type: 'feature', text: 'Receiver assignment for ordered parts — assign a team member to receive incoming parts' },
+      { type: 'feature', text: 'Parts tab redesigned as flat table with collapsible project groups, inline status/assignee/ETA columns and status filter pills' },
       { type: 'fix', text: 'Due Soon tab was empty — filter now correctly shows tasks with due dates' },
       { type: 'fix', text: 'Due Dates card on project detail constrained to match sibling card heights' },
       { type: 'improvement', text: 'Renamed Due Soon to Overdue for clarity' },
