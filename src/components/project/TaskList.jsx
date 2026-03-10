@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -27,7 +28,8 @@ const priorityColors = {
 
 const getDueDateInfo = (dueDate, status) => {
   if (!dueDate || status === 'completed') return null;
-  const date = new Date(dueDate);
+  const date = parseLocalDate(dueDate);
+  if (!date) return null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -163,7 +165,7 @@ export default function TaskList({ tasks = [], onStatusChange, onEdit, onDelete,
       if (!a.due_date && !b.due_date) return 0;
       if (!a.due_date) return 1;
       if (!b.due_date) return -1;
-      return new Date(a.due_date) - new Date(b.due_date);
+      return parseLocalDate(a.due_date) - parseLocalDate(b.due_date);
     });
   });
 

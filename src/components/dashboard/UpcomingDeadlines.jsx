@@ -5,6 +5,7 @@ import { Calendar, CheckCircle2, Package, AlertTriangle, Clock } from 'lucide-re
 import { Badge } from '@/components/ui/badge';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 export default function UpcomingDeadlines({ tasks = [], parts = [], projects = [] }) {
   const getProjectName = (projectId) => {
@@ -15,10 +16,10 @@ export default function UpcomingDeadlines({ tasks = [], parts = [], projects = [
   const deadlines = [
     ...tasks
       .filter(t => t.due_date && t.status !== 'completed')
-      .map(t => ({ ...t, type: 'task', date: new Date(t.due_date) })),
+      .map(t => ({ ...t, type: 'task', date: parseLocalDate(t.due_date) })),
     ...parts
       .filter(p => p.due_date && p.status !== 'installed')
-      .map(p => ({ ...p, type: 'part', date: new Date(p.due_date) }))
+      .map(p => ({ ...p, type: 'part', date: parseLocalDate(p.due_date) }))
   ]
     .sort((a, b) => a.date - b.date)
     .slice(0, 8);

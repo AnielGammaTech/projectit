@@ -13,6 +13,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 import {
   Select,
   SelectContent,
@@ -350,7 +351,7 @@ function PartCard({ part, expanded, onToggle, onStatusChange, onSaveTracking, ed
             {part.quantity && <span>Qty: {part.quantity}</span>}
             {part.supplier && <span>Supplier: {part.supplier}</span>}
             {part.assigned_name && <span>Assigned: {part.assigned_name}</span>}
-            {part.due_date && <span>Due: {format(new Date(part.due_date), 'MMM d')}</span>}
+            {part.due_date && <span>Due: {format(parseLocalDate(part.due_date), 'MMM d')}</span>}
           </div>
         </div>
       )}

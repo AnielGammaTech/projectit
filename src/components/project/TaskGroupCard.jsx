@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/UserAvatar';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 const groupColors = {
   slate:   { accent: 'from-slate-500 to-slate-400',   light: 'bg-slate-50',   border: 'border-slate-200', text: 'text-slate-600', progress: 'bg-slate-400' },
@@ -127,7 +128,7 @@ export default function TaskGroupCard({ group, tasks = [], onEditGroup, onDelete
                   {task.due_date && (
                     <span className="text-[10px] text-slate-400 flex items-center gap-0.5 bg-slate-50 px-1.5 py-0.5 rounded-md">
                       <Clock className="w-3 h-3" />
-                      {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {parseLocalDate(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
                   )}
                   {task.priority === 'high' && (

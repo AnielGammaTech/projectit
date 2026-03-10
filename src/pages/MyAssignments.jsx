@@ -4,6 +4,7 @@ import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { format, isPast, isToday, isTomorrow, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { CheckSquare, MessageSquare, ListTodo } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
@@ -115,8 +116,8 @@ export default function MyAssignments() {
     });
 
     // Sort by date within each group
-    overdue.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-    dueLater.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+    overdue.sort((a, b) => parseLocalDate(a.due_date) - parseLocalDate(b.due_date));
+    dueLater.sort((a, b) => parseLocalDate(a.due_date) - parseLocalDate(b.due_date));
 
     // Group due later by date
     const dueLaterGrouped = dueLater.reduce((acc, task) => {

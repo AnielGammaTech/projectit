@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format, subDays, subMonths, startOfQuarter, endOfQuarter, subQuarters } from 'date-fns';
@@ -64,12 +65,12 @@ export default function AIReportAssistant({
       projects: {
         total: projects.length,
         byStatus: projects.reduce((acc, p) => { acc[p.status] = (acc[p.status] || 0) + 1; return acc; }, {}),
-        overdue: projects.filter(p => p.due_date && new Date(p.due_date) < now && p.status !== 'completed')
+        overdue: projects.filter(p => { const d = parseLocalDate(p.due_date); return d && d < now && p.status !== 'completed'; })
       },
       tasks: {
         total: tasks.length,
         byStatus: tasks.reduce((acc, t) => { acc[t.status] = (acc[t.status] || 0) + 1; return acc; }, {}),
-        overdue: tasks.filter(t => t.due_date && new Date(t.due_date) < now && t.status !== 'completed'),
+        overdue: tasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < now && t.status !== 'completed'; }),
         completionRate: tasks.length > 0 ? (tasks.filter(t => t.status === 'completed').length / tasks.length * 100).toFixed(1) : 0,
         byAssignee: tasks.reduce((acc, t) => {
           if (t.assigned_to) {
