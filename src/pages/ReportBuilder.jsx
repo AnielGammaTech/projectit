@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -140,8 +141,8 @@ export default function ReportBuilder() {
       case 'quarter': return { start: startOfQuarter(now), end: endOfQuarter(now) };
       case 'year': return { start: startOfYear(now), end: endOfYear(now) };
       case 'custom': return {
-        start: reportConfig.filters.start_date ? new Date(reportConfig.filters.start_date) : subMonths(now, 1),
-        end: reportConfig.filters.end_date ? new Date(reportConfig.filters.end_date) : now
+        start: reportConfig.filters.start_date ? parseLocalDate(reportConfig.filters.start_date) || subMonths(now, 1) : subMonths(now, 1),
+        end: reportConfig.filters.end_date ? parseLocalDate(reportConfig.filters.end_date) || now : now
       };
       default: return { start: startOfMonth(now), end: now };
     }
@@ -169,7 +170,7 @@ export default function ReportBuilder() {
       completed_projects: projects.filter(p => p.status === 'completed').length,
       total_tasks: tasks.length,
       completed_tasks: tasks.filter(t => t.status === 'completed').length,
-      overdue_tasks: tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length,
+      overdue_tasks: tasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && t.status !== 'completed'; }).length,
       total_hours: Math.round(timeEntries.reduce((sum, t) => sum + (t.duration_minutes || 0), 0) / 60),
       billable_hours: Math.round(timeEntries.filter(t => t.billing_status !== 'excluded').reduce((sum, t) => sum + (t.duration_minutes || 0), 0) / 60),
       proposals_sent: proposals.filter(p => p.status !== 'draft').length,

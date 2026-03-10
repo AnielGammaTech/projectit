@@ -4,6 +4,7 @@ import { createPageUrl } from '@/utils';
 import { ListTodo, ChevronRight, ChevronLeft, CheckCircle2, Calendar } from 'lucide-react';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 export default function UpcomingTasksWidget({ projectId, tasks = [] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -15,7 +16,7 @@ export default function UpcomingTasksWidget({ projectId, tasks = [] }) {
       if (!a.due_date && !b.due_date) return 0;
       if (!a.due_date) return 1;
       if (!b.due_date) return -1;
-      return new Date(a.due_date) - new Date(b.due_date);
+      return parseLocalDate(a.due_date) - parseLocalDate(b.due_date);
     })
     .slice(0, 5);
 
@@ -33,7 +34,8 @@ export default function UpcomingTasksWidget({ projectId, tasks = [] }) {
 
   const getDueDateLabel = (date) => {
     if (!date) return null;
-    const d = new Date(date);
+    const d = parseLocalDate(date);
+    if (!d) return null;
     if (isPast(d) && !isToday(d)) return { label: 'Overdue', className: 'text-red-600 font-medium' };
     if (isToday(d)) return { label: 'Today', className: 'text-amber-600 font-medium' };
     if (isTomorrow(d)) return { label: 'Tomorrow', className: 'text-blue-600' };

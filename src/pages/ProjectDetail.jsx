@@ -67,6 +67,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { format, isToday, isPast } from 'date-fns';
 import { parseLocalDate } from '@/utils/dateUtils';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
@@ -130,7 +131,8 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
   const getDueDateLabel = (dueDate) => {
     if (!dueDate) return null;
     const now = new Date();
-    const due = new Date(dueDate);
+    const due = parseLocalDate(dueDate);
+    if (!due) return null;
     const diffDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
     if (diffDays < 0) return { text: `${Math.abs(diffDays)}d overdue`, color: 'text-red-500' };
     if (diffDays === 0) return { text: 'Today', color: 'text-orange-500' };

@@ -24,6 +24,7 @@ import {
 import { format, isToday, isTomorrow, isPast, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/UserAvatar';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 const priorityColors = {
   high: 'bg-red-100 text-red-700 border-red-200',
@@ -44,19 +45,19 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [], proj
   // Get dates with tasks/parts for calendar highlighting
   const taskDates = tasks
     .filter(t => t.due_date && t.status !== 'completed' && t.status !== 'archived')
-    .map(t => new Date(t.due_date));
+    .map(t => parseLocalDate(t.due_date));
 
   const partDates = parts
     .filter(p => p.est_delivery_date && p.status !== 'installed')
-    .map(p => new Date(p.est_delivery_date));
+    .map(p => parseLocalDate(p.est_delivery_date));
 
   // ── Stats calculations ──
   const activeTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived');
   const completedTasks = tasks.filter(t => t.status === 'completed');
   const overdueTasks = activeTasks.filter(t => {
     if (!t.due_date) return false;
-    const d = new Date(t.due_date);
-    return isPast(d) && !isToday(d);
+    const d = parseLocalDate(t.due_date);
+    return d && isPast(d) && !isToday(d);
   });
   const inProgressTasks = tasks.filter(t => t.status === 'in_progress');
   const taskCompletion = tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0;
@@ -65,8 +66,8 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [], proj
   const installedParts = parts.filter(p => p.status === 'installed');
   const overdueParts = activeParts.filter(p => {
     if (!p.est_delivery_date) return false;
-    const d = new Date(p.est_delivery_date);
-    return isPast(d) && !isToday(d);
+    const d = parseLocalDate(p.est_delivery_date);
+    return d && isPast(d) && !isToday(d);
   });
   const partCompletion = parts.length > 0 ? Math.round((installedParts.length / parts.length) * 100) : 0;
 
