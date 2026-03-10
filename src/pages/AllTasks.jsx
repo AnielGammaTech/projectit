@@ -449,7 +449,15 @@ export default function AllTasks() {
     if (viewMode === 'mine') {
       matchesViewMode = task.assigned_to === currentUser?.email;
     } else if (viewMode === 'mine_due') {
-      matchesViewMode = !!task.due_date;
+      // Show only overdue tasks and tasks due today
+      if (!task.due_date) {
+        matchesViewMode = false;
+      } else {
+        const dueDate = parseLocalDate(task.due_date);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        matchesViewMode = dueDate <= today;
+      }
     }
 
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
@@ -490,7 +498,13 @@ export default function AllTasks() {
   // Only count tasks from active projects
   const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
   const myTasksCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed').length;
-  const myTasksWithDueCount = activeTasks.filter(t => t.due_date && t.status !== 'completed').length;
+  const myTasksWithDueCount = activeTasks.filter(t => {
+    if (!t.due_date || t.status === 'completed') return false;
+    const dueDate = parseLocalDate(t.due_date);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return dueDate <= today;
+  }).length;
 
   const handleQuickComplete = async (e, taskId) => {
     e.stopPropagation();
@@ -708,7 +722,7 @@ export default function AllTasks() {
                     : "text-slate-600 hover:text-slate-900"
                 )}
               >
-                Due Soon ({myTasksWithDueCount})
+                Overdue ({myTasksWithDueCount})
               </button>
             </div>
 
