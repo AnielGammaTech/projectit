@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, Package, Edit2, Trash2, Filter, X, ChevronDown, Minus, RotateCcw, History, Loader2, MessageSquare, ExternalLink, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { StockProductsSkeleton } from '@/components/ui/PageSkeletons';
 import ProductModal from './ProductModal';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -54,7 +55,7 @@ export default function ProductsTab() {
     api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
-  const { data: products = [], refetch } = useQuery({
+  const { data: products = [], isLoading, refetch } = useQuery({
     queryKey: ['products'],
     queryFn: () => api.entities.Product.list('-created_date'),
     staleTime: 300000
@@ -187,6 +188,8 @@ export default function ProductsTab() {
       }
     }
   };
+
+  if (isLoading) return <StockProductsSkeleton />;
 
   return (
     <div>

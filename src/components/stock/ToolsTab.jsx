@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, HardDrive, Edit2, Trash2, Filter, X, ChevronDown, ShoppingCart, RotateCcw, History, Loader2, ImagePlus, LogOut, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { StockListSkeleton } from '@/components/ui/PageSkeletons';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -34,7 +35,7 @@ export default function ToolsTab() {
   const [quickActionSubmitting, setQuickActionSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: tools = [], refetch } = useQuery({
+  const { data: tools = [], isLoading, refetch } = useQuery({
     queryKey: ['tools'],
     queryFn: () => api.entities.Tool.list('-created_date'),
     staleTime: 300000
@@ -129,6 +130,8 @@ export default function ToolsTab() {
     setQuickActionTool('');
     setQuickActionQty(1);
   };
+
+  if (isLoading) return <StockListSkeleton />;
 
   return (
     <div>

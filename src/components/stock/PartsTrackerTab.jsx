@@ -14,6 +14,7 @@ import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { parseLocalDate } from '@/utils/dateUtils';
+import { StockPartsTrackerSkeleton } from '@/components/ui/PageSkeletons';
 import {
   Select,
   SelectContent,
@@ -43,7 +44,7 @@ export default function PartsTrackerTab() {
   const [savingPart, setSavingPart] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: parts = [], refetch: refetchParts } = useQuery({
+  const { data: parts = [], isLoading, refetch: refetchParts } = useQuery({
     queryKey: ['allParts'],
     queryFn: () => api.entities.Part.list('-created_date'),
     staleTime: 60000
@@ -161,6 +162,8 @@ export default function PartsTrackerTab() {
       </Collapsible>
     );
   };
+
+  if (isLoading) return <StockPartsTrackerSkeleton />;
 
   return (
     <div>

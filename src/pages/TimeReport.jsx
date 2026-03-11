@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { format, subDays, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { TimeReportSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function TimeReport() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -19,12 +20,12 @@ export default function TimeReport() {
   const [selectedProject, setSelectedProject] = useState(projectIdParam || 'all');
   const [dateRange, setDateRange] = useState('30');
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading: loadingProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: () => api.entities.Project.list('name')
   });
 
-  const { data: timeEntries = [] } = useQuery({
+  const { data: timeEntries = [], isLoading: loadingEntries } = useQuery({
     queryKey: ['timeEntries'],
     queryFn: () => api.entities.TimeEntry.list('-created_date')
   });
@@ -33,6 +34,8 @@ export default function TimeReport() {
     queryKey: ['teamMembers'],
     queryFn: () => api.entities.TeamMember.list()
   });
+
+  const isLoading = loadingProjects || loadingEntries;
 
   // Filter entries
   const startDate = subDays(new Date(), parseInt(dateRange));
@@ -95,6 +98,14 @@ export default function TimeReport() {
     a.download = `time-report-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+        <TimeReportSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">

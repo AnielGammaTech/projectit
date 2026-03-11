@@ -67,7 +67,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { format, isToday, isPast } from 'date-fns';
 import { parseLocalDate } from '@/utils/dateUtils';
-import { parseLocalDate } from '@/utils/dateUtils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';

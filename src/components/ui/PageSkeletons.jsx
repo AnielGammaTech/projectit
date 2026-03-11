@@ -364,6 +364,224 @@ export function FormPageSkeleton() {
 
 // ─── 7. CalendarSkeleton ────────────────────────────────────────────
 // For: MySchedule
+// ─── 7. StockProductsSkeleton ─────────────────────────────────────
+// For: ProductsTab (product grid with image tiles)
+export function StockProductsSkeleton() {
+  return (
+    <div>
+      {/* Search */}
+      <div className="space-y-3 mb-4">
+        <Skeleton className="h-10 w-full max-w-sm rounded-lg" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-8 w-20 rounded-lg" />
+          <Skeleton className="h-8 w-28 rounded-lg" />
+          <Skeleton className="h-8 w-16 rounded-lg" />
+          <div className="flex-1" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-8 w-28 rounded-lg" />
+        </div>
+      </div>
+      {/* Product grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        {[...Array(12)].map((_, i) => (
+          <div key={i} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+            <div className="aspect-square bg-slate-50 relative">
+              <Skeleton className="w-full h-full" />
+              <div className="absolute top-1.5 right-1.5">
+                <Skeleton className="h-5 w-8 rounded-full" />
+              </div>
+            </div>
+            <div className="p-2 space-y-1.5">
+              <Skeleton className="h-4 w-4/5" />
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="h-3 w-12" />
+              </div>
+              <Skeleton className="h-2.5 w-2/3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 8. StockListSkeleton ────────────────────────────────────────
+// For: ToolsTab, ServicesTab, BundlesTab (search + list cards)
+export function StockListSkeleton() {
+  return (
+    <div>
+      {/* Search + actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4 sm:mb-6">
+        <Skeleton className="h-10 w-full sm:max-w-md rounded-lg" />
+        <div className="flex gap-2 ml-auto">
+          <Skeleton className="h-8 w-20 rounded-lg" />
+          <Skeleton className="h-8 w-28 rounded-lg" />
+        </div>
+      </div>
+      {/* List items */}
+      <div className="space-y-3">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-lg flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-2/5" />
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <Skeleton className="h-8 w-8 rounded-lg" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 9. StockPartsTrackerSkeleton ────────────────────────────────
+// For: PartsTrackerTab (search + stats + grouped parts)
+export function StockPartsTrackerSkeleton() {
+  return (
+    <div>
+      {/* Search + filter */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4 sm:mb-6">
+        <Skeleton className="h-10 w-full sm:max-w-md rounded-lg" />
+        <Skeleton className="h-10 w-full sm:w-40 rounded-lg" />
+      </div>
+      {/* Stats row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="p-4 rounded-xl border border-slate-200">
+            <div className="flex items-center gap-2 mb-1">
+              <Skeleton className="h-4 w-4 rounded" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+            <Skeleton className="h-7 w-10" />
+          </div>
+        ))}
+      </div>
+      {/* Status groups */}
+      {[...Array(3)].map((_, g) => (
+        <div key={g} className="mb-4">
+          <div className="flex items-center gap-2 p-3 bg-white rounded-xl border border-slate-200 mb-2">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-5 w-8 rounded-full ml-auto" />
+          </div>
+          <div className="space-y-2">
+            {[...Array(g === 0 ? 3 : 2)].map((_, i) => (
+              <div key={i} className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4">
+                <div className="flex items-start sm:items-center gap-2 sm:gap-4">
+                  <Skeleton className="h-4 w-4 mt-1 sm:mt-0" />
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <Skeleton className="h-4 w-3/5" />
+                    <Skeleton className="h-3 w-2/5" />
+                  </div>
+                  <Skeleton className="h-8 w-28 sm:w-36 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── 10. TimeReportSkeleton ──────────────────────────────────────
+// For: TimeReport page
+export function TimeReportSkeleton() {
+  return (
+    <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1.5">
+          <Skeleton className="h-7 w-40" />
+          <Skeleton className="h-4 w-56" />
+        </div>
+        <Skeleton className="h-10 w-32 rounded-xl" />
+      </div>
+      {/* Filters */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <Skeleton className="h-10 w-44 rounded-lg" />
+        <Skeleton className="h-10 w-44 rounded-lg" />
+        <Skeleton className="h-10 w-32 rounded-lg" />
+      </div>
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="rounded-xl border border-slate-100 bg-white p-4 space-y-2">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-7 w-16" />
+          </div>
+        ))}
+      </div>
+      {/* Table */}
+      <div className="rounded-xl border border-slate-100 bg-white overflow-hidden">
+        <div className="flex items-center gap-4 p-4 border-b border-slate-100">
+          <Skeleton className="h-4 w-1/5" />
+          <Skeleton className="h-4 w-1/5" />
+          <Skeleton className="h-4 w-1/5" />
+          <Skeleton className="h-4 w-1/5" />
+          <Skeleton className="h-4 w-1/5" />
+        </div>
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="flex items-center gap-4 p-4 border-b border-slate-50 last:border-0">
+            <Skeleton className="h-4 w-1/5" />
+            <Skeleton className="h-4 w-1/5" />
+            <Skeleton className="h-6 w-16 rounded-full" />
+            <Skeleton className="h-4 w-1/5" />
+            <Skeleton className="h-4 w-12" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 11. WorkflowsSkeleton ───────────────────────────────────────
+// For: Workflows page
+export function WorkflowsSkeleton() {
+  return (
+    <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1.5">
+          <Skeleton className="h-7 w-36" />
+          <Skeleton className="h-4 w-52" />
+        </div>
+        <Skeleton className="h-10 w-36 rounded-xl" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="rounded-2xl border border-slate-100 bg-white p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-6 w-14 rounded-full" />
+            </div>
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-3/4" />
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+              <Skeleton className="h-4 w-4 rounded" />
+              <Skeleton className="h-3 w-20" />
+              <div className="flex-1" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 12. CalendarSkeleton ────────────────────────────────────────
+// For: MySchedule
 export function CalendarSkeleton() {
   return (
     <div className="p-6 max-w-[1600px] mx-auto space-y-6">

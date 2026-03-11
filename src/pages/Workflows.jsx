@@ -38,6 +38,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { WorkflowsSkeleton } from '@/components/ui/PageSkeletons';
 import AIWorkflowSuggestions from '@/components/workflows/AIWorkflowSuggestions';
 
 const triggerTypes = {
@@ -70,7 +71,7 @@ export default function Workflows() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [activeTab, setActiveTab] = useState('workflows');
 
-  const { data: workflows = [], refetch } = useQuery({
+  const { data: workflows = [], isLoading, refetch } = useQuery({
     queryKey: ['workflows'],
     queryFn: () => api.entities.Workflow.list('-created_date')
   });
@@ -111,6 +112,14 @@ export default function Workflows() {
     await api.entities.Workflow.update(workflow.id, { ...workflow, is_active: !workflow.is_active });
     refetch();
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+        <WorkflowsSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">

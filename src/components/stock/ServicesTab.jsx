@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Wrench, Edit2, Trash2 } from 'lucide-react';
+import { StockListSkeleton } from '@/components/ui/PageSkeletons';
 import ServiceModal from './ServiceModal';
 import {
   AlertDialog,
@@ -23,7 +24,7 @@ export default function ServicesTab() {
   const [editingService, setEditingService] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  const { data: services = [], refetch } = useQuery({
+  const { data: services = [], isLoading, refetch } = useQuery({
     queryKey: ['services'],
     queryFn: () => api.entities.Service.list('-created_date'),
     staleTime: 300000
@@ -61,6 +62,8 @@ export default function ServicesTab() {
       }
     }
   };
+
+  if (isLoading) return <StockListSkeleton />;
 
   return (
     <div>

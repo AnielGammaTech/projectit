@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Layers, Edit2, Trash2, Package, Wrench } from 'lucide-react';
+import { StockListSkeleton } from '@/components/ui/PageSkeletons';
 import BundleModal from './BundleModal';
 import {
   AlertDialog,
@@ -23,7 +24,7 @@ export default function BundlesTab() {
   const [editingBundle, setEditingBundle] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  const { data: bundles = [], refetch } = useQuery({
+  const { data: bundles = [], isLoading, refetch } = useQuery({
     queryKey: ['bundles'],
     queryFn: () => api.entities.ServiceBundle.list('-created_date'),
     staleTime: 300000
@@ -90,6 +91,8 @@ export default function BundlesTab() {
       }
     }
   };
+
+  if (isLoading) return <StockListSkeleton />;
 
   return (
     <div>

@@ -57,6 +57,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { ProjectSubpageSkeleton } from '@/components/ui/PageSkeletons';
 import PartModal from '@/components/modals/PartModal';
 import PartDetailModal from '@/components/modals/PartDetailModal';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
@@ -417,8 +418,8 @@ export default function ProjectParts() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+        <ProjectSubpageSkeleton />
       </div>
     );
   }
