@@ -862,7 +862,7 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-[#133F5C] dark:text-slate-100">
-                Howdy, {currentUser?.full_name?.split(' ')[0] || 'there'}! 👋
+                Hello nerd, {currentUser?.full_name?.split(' ')[0] || 'there'}! 👋
               </h1>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
