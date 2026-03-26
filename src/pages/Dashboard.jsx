@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square, Bell, AtSign, MessageSquare, FolderOpen, Eye, ListTodo, Activity as ActivityIcon } from 'lucide-react';
+import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square, ListTodo, Activity as ActivityIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -62,7 +62,6 @@ export default function Dashboard() {
   });
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
   const [listFilter, setListFilter] = useState('all'); // 'all', 'pinned', 'projects', 'teams', 'clients', 'archived'
-  const [dismissedAlert, setDismissedAlert] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedProjects, setSelectedProjects] = useState([]);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
@@ -78,23 +77,9 @@ export default function Dashboard() {
   const [isSyncingQuotes, setIsSyncingQuotes] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingType, setProcessingType] = useState(null);
-  const [dismissedCatchUp, setDismissedCatchUp] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Notification type config for "While you were away" banner
-  const missedConfig = {
-    mention: { icon: AtSign, bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' },
-    task_assigned: { icon: CheckCircle2, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
-    task_due: { icon: Clock, bg: 'bg-amber-100 dark:bg-amber-900/30', color: 'text-amber-600 dark:text-amber-400' },
-    task_completed: { icon: CheckCircle2, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
-    task_overdue: { icon: AlertTriangle, bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400' },
-    part_status: { icon: Package, bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' },
-    project_update: { icon: FolderOpen, bg: 'bg-violet-100 dark:bg-violet-900/30', color: 'text-violet-600 dark:text-violet-400' },
-    project_assigned: { icon: FolderOpen, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
-    comment: { icon: MessageSquare, bg: 'bg-teal-100 dark:bg-teal-900/30', color: 'text-teal-600 dark:text-teal-400' },
-    progress_update: { icon: CheckCircle2, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
-  };
   const [permanentDeleteConfirm, setPermanentDeleteConfirm] = useState({ open: false, project: null });
   const [showProposalsModal, setShowProposalsModal] = useState(false);
 
@@ -169,31 +154,6 @@ export default function Dashboard() {
     enabled: !!currentUser?.email,
     staleTime: 30000,
   });
-
-  const handleMarkNotificationRead = async (notification) => {
-    try {
-      await api.entities.UserNotification.update(notification.id, { is_read: true });
-      refetchMissed();
-      queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
-      if (notification.link) {
-        navigate(notification.link);
-      }
-    } catch (err) {
-      console.error('Failed to mark notification as read:', err);
-    }
-  };
-
-  const handleMarkAllMissedRead = async () => {
-    try {
-      await Promise.all(
-        missedNotifications.map(n => api.entities.UserNotification.update(n.id, { is_read: true }))
-      );
-      refetchMissed();
-      queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
-    } catch (err) {
-      console.error('Failed to mark all as read:', err);
-    }
-  };
 
   const { data: projects = [], isLoading: loadingProjects, refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
@@ -868,7 +828,7 @@ export default function Dashboard() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6 space-y-4">
+                <div key={i} className="bg-white dark:bg-card rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700" />
                     <div className="flex-1 space-y-2">
@@ -1021,7 +981,7 @@ export default function Dashboard() {
           >
             <ActivityTimeline
               projects={projects}
-              quoteRequests={quoteRequests}
+              proposals={quoteRequests}
             />
           </CollapsibleSection>
         </div>
@@ -1099,11 +1059,11 @@ export default function Dashboard() {
 
             {/* Bulk Actions Bar */}
             {selectionMode && (
-              <div className="mb-4 p-3 bg-[#0069AF]/10 dark:bg-blue-900/30 rounded-xl border border-[#0069AF]/20 dark:border-blue-700/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div className="mb-4 p-3 bg-primary/10 dark:bg-blue-900/30 rounded-xl border border-primary/20 dark:border-blue-700/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={selectAllProjects}
-                    className="flex items-center gap-2 text-sm font-medium text-[#0069AF] hover:text-[#133F5C] dark:text-blue-400 dark:hover:text-blue-300"
+                    className="flex items-center gap-2 text-sm font-medium text-primary hover:text-foreground dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     {selectedProjects.length === filteredProjects.length ? (
                       <CheckSquare className="w-4 h-4" />
@@ -1145,12 +1105,12 @@ export default function Dashboard() {
             {unpinnedProjects.length > 25 && viewMode === 'cards' && !showArchived && (
               <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <span className="text-xs text-slate-500 sm:mr-2 shrink-0">Jump to:</span>
-                <div className="flex items-center gap-0.5 bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700 p-1.5 overflow-x-auto max-w-full scrollbar-thin">
+                <div className="flex items-center gap-0.5 bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-slate-700 p-1.5 overflow-x-auto max-w-full scrollbar-thin">
                   <button
                     onClick={() => { setActiveLetter(null); setCurrentPage(1); }}
                     className={cn(
                       "px-2 py-1 rounded-lg text-xs font-medium transition-all",
-                      !activeLetter ? "bg-[#0069AF] text-white" : "text-slate-500 hover:bg-slate-100"
+                      !activeLetter ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-100"
                     )}
                   >
                     All
@@ -1166,7 +1126,7 @@ export default function Dashboard() {
                         className={cn(
                           "w-7 h-7 rounded-lg text-xs font-medium transition-all relative group",
                           activeLetter === letter 
-                            ? "bg-[#0069AF] text-white scale-110 shadow-lg z-10" 
+                            ? "bg-primary text-white scale-110 shadow-lg z-10"
                             : hasProjects 
                               ? "text-slate-700 hover:bg-slate-100 hover:scale-125 hover:shadow-lg hover:z-10" 
                               : "text-slate-300 cursor-not-allowed"
@@ -1193,7 +1153,7 @@ export default function Dashboard() {
             {filteredProjects.length > 0 ? (
               viewMode === 'list' ? (
                 /* List View */
-                <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
                   {/* List Header */}
                   <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-[#1a2535]">
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center mb-4">All Projects</h2>
@@ -1230,7 +1190,7 @@ export default function Dashboard() {
                           className={cn(
                             "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
                             listFilter === filter.key
-                              ? "bg-[#0F2F44] dark:bg-blue-600 text-white"
+                              ? "bg-primary dark:bg-blue-600 text-white"
                               : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
                           )}
                         >
@@ -1288,7 +1248,7 @@ export default function Dashboard() {
                                   <div className="flex items-center gap-2">
                                     <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">{project.name}</h3>
                                     {project.client && (
-                                      <span className="text-[#0F2F44]/60 dark:text-slate-400 text-sm">• {project.client}</span>
+                                      <span className="text-muted-foreground dark:text-slate-400 text-sm">• {project.client}</span>
                                     )}
                                     {project.status === 'deleted' && (
                                       <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded">Deleted</span>
@@ -1347,7 +1307,7 @@ export default function Dashboard() {
                             <div className="flex items-center gap-2">
                               <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">{project.name}</h3>
                               {project.client && (
-                                <span className="text-[#0F2F44]/60 dark:text-slate-400 text-sm">• {project.client}</span>
+                                <span className="text-muted-foreground dark:text-slate-400 text-sm">• {project.client}</span>
                               )}
                             </div>
                             {project.description && (
@@ -1518,7 +1478,7 @@ export default function Dashboard() {
                                           ref={provided.innerRef}
                                           {...provided.draggableProps}
                                           style={provided.draggableProps.style}
-                                          className={cn("h-full", snapshot.combineTargetFor ? 'ring-2 ring-[#0069AF] ring-offset-2 rounded-2xl scale-[1.02] shadow-lg transition-all' : 'transition-all')}
+                                          className={cn("h-full", snapshot.combineTargetFor ? 'ring-2 ring-primary ring-offset-2 rounded-2xl scale-[1.02] shadow-lg transition-all' : 'transition-all')}
                                         >
                                           <ProjectCard
                                                                                             project={project}
@@ -1571,7 +1531,7 @@ export default function Dashboard() {
                             className={cn(
                               "w-8 h-8 rounded-lg text-sm font-medium transition-all",
                               currentPage === page
-                                ? "bg-[#0069AF] text-white"
+                                ? "bg-primary text-white"
                                 : "bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
                             )}
                           >
@@ -1592,13 +1552,13 @@ export default function Dashboard() {
                         </DragDropContext>
                         )
             ) : (
-              <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 dark:from-[#1a2535] dark:to-[#1e2a3a] rounded-2xl border border-slate-200/60 dark:border-slate-700/50 p-8 sm:p-16 text-center shadow-card">
-                  <div className="w-16 h-16 rounded-2xl bg-[#0F2F44]/10 dark:bg-slate-700/50 flex items-center justify-center mx-auto mb-5">
-                    <FolderKanban className="w-8 h-8 text-[#0F2F44]/40 dark:text-slate-400" />
+              <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 dark:from-card dark:to-card rounded-2xl border border-slate-200/60 dark:border-slate-700/50 p-8 sm:p-16 text-center shadow-card">
+                  <div className="w-16 h-16 rounded-2xl bg-muted dark:bg-slate-700/50 flex items-center justify-center mx-auto mb-5">
+                    <FolderKanban className="w-8 h-8 text-muted-foreground dark:text-slate-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-[#133F5C] dark:text-slate-100 mb-2">No projects yet</h3>
+                  <h3 className="text-xl font-semibold text-foreground dark:text-slate-100 mb-2">No projects yet</h3>
                   <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm mx-auto">Create your first project to start tracking tasks, parts, and progress.</p>
-                  <Button onClick={() => setShowProjectModal(true)} size="lg" className="bg-[#0F2F44] hover:bg-[#1a4a6e] dark:bg-blue-600 dark:hover:bg-blue-700 shadow-md">
+                  <Button onClick={() => setShowProjectModal(true)} size="lg" className="bg-primary hover:bg-primary/80 dark:bg-blue-600 dark:hover:bg-blue-700 shadow-md">
                     <Plus className="w-5 h-5 mr-2" />
                     Create Your First Project
                   </Button>

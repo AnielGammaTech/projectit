@@ -109,9 +109,9 @@ export default function ActivityTimeline({ proposals = [], projects = [] }) {
 
   if (events.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-100 p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Recent Activity</h3>
-        <div className="text-center py-8 text-slate-400">
+      <div className="bg-white dark:bg-card rounded-2xl border border-slate-100 dark:border-border p-6">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Recent Activity</h3>
+        <div className="text-center py-8 text-slate-400 dark:text-slate-500">
           <Clock className="w-10 h-10 mx-auto mb-2 opacity-50" />
           <p className="text-sm">No recent activity</p>
         </div>
@@ -120,12 +120,12 @@ export default function ActivityTimeline({ proposals = [], projects = [] }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-6">
-      <h3 className="text-lg font-semibold text-slate-900 mb-4">Recent Activity</h3>
+    <div className="bg-white dark:bg-card rounded-2xl border border-slate-100 dark:border-border p-6">
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Recent Activity</h3>
       
       <div className="relative">
         {/* Timeline line */}
-        <div className="absolute left-4 top-2 bottom-2 w-0.5 bg-slate-100" />
+        <div className="absolute left-4 top-2 bottom-2 w-0.5 bg-slate-100 dark:bg-border" />
         
         <div className="space-y-4">
           {displayEvents.map((event, idx) => {
@@ -141,7 +141,7 @@ export default function ActivityTimeline({ proposals = [], projects = [] }) {
               >
                 <Link
                   to={event.link}
-                  className="flex items-start gap-4 group p-2 -ml-2 rounded-lg hover:bg-slate-50 transition-colors"
+                  className="flex items-start gap-4 group p-2 -ml-2 rounded-lg hover:bg-slate-50 dark:hover:bg-muted transition-colors"
                 >
                   <div className={cn(
                     "relative z-10 p-2 rounded-full shadow-sm transition-transform group-hover:scale-110",
@@ -150,12 +150,12 @@ export default function ActivityTimeline({ proposals = [], projects = [] }) {
                     <Icon className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0 pt-0.5">
-                    <p className="text-sm font-medium text-slate-900 truncate group-hover:text-primary">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate group-hover:text-primary">
                       {config.label}: {event.title}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
                       {event.customer && (
-                        <span className="text-xs text-slate-500">{event.customer}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{event.customer}</span>
                       )}
                       {event.value && (
                         <span className="text-xs font-medium text-emerald-600">${event.value.toLocaleString()}</span>
@@ -163,8 +163,8 @@ export default function ActivityTimeline({ proposals = [], projects = [] }) {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 pt-1">
-                    <span className="text-xs text-slate-400">{formatEventDate(event.date)}</span>
-                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+                    <span className="text-xs text-slate-400 dark:text-slate-500">{formatEventDate(event.date)}</span>
+                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors" />
                   </div>
                 </Link>
               </motion.div>
@@ -176,7 +176,7 @@ export default function ActivityTimeline({ proposals = [], projects = [] }) {
       {events.length > 6 && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="w-full mt-4 pt-3 border-t text-sm text-primary hover:text-foreground font-medium"
+          className="w-full mt-4 pt-3 border-t border-slate-100 dark:border-border text-sm text-primary hover:text-foreground font-medium"
         >
           {showAll ? 'Show less' : `View all ${events.length} events`}
         </button>
