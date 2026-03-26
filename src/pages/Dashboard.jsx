@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square, Bell, AtSign, MessageSquare, FolderOpen, Eye } from 'lucide-react';
+import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square, Bell, AtSign, MessageSquare, FolderOpen, Eye, ListTodo, Activity as ActivityIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -15,8 +15,10 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import ProjectStackCard from '@/components/dashboard/ProjectStackCard';
 
-import DashboardWidgets from '@/components/dashboard/DashboardWidgets';
 import PendingProposalsModal from '@/components/dashboard/PendingProposalsModal';
+import ProjectHealthGrid from '@/components/dashboard/ProjectHealthGrid';
+import CollapsibleSection from '@/components/dashboard/CollapsibleSection';
+import IncomingQuoteBanner from '@/components/dashboard/IncomingQuoteBanner';
 
 // Filter out in_progress and medium priority from dashboard display
 // These values are removed from the system
@@ -892,18 +894,18 @@ export default function Dashboard() {
   if (loadingProjects) return <DashboardSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+    <div className="min-h-screen bg-background">
       <ProcessingOverlay isVisible={isProcessing} type={processingType} />
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Mobile Search Bar */}
         <div className="sm:hidden mb-4">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search projects..."
-              className="pl-10 pr-4 h-11 text-sm rounded-xl bg-white dark:bg-[#1e2a3a] border-slate-200 dark:border-slate-700/50 shadow-sm"
+              className="pl-10 pr-4 h-11 text-sm rounded-xl bg-card border shadow-sm"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
@@ -913,308 +915,135 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Welcome Header — hidden on mobile */}
-        <div className="mb-6 hidden sm:block">
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-[#133F5C] dark:text-slate-100">
-                Howdy, {currentUser?.full_name?.split(' ')[0] || 'there'}! 👋
-              </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-              </p>
-            </div>
-            <div className="flex flex-col items-stretch sm:items-end gap-1 flex-1 sm:flex-initial">
-              <Button
-                onClick={() => setShowProjectModal(true)}
-                className="bg-[#0F2F44] hover:bg-[#1a4a6e] dark:bg-blue-600 dark:hover:bg-blue-700 shadow-lg text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3 h-10 sm:h-12 w-full sm:w-auto"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                New Project
-              </Button>
-              <Link to={createPageUrl('Templates')} className="text-xs sm:text-sm text-[#0069AF] hover:text-[#133F5C] dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors underline underline-offset-2 text-center sm:text-right">
-                or use a template →
-              </Link>
-            </div>
+        {/* Greeting + CTA */}
+        <div className="mb-6 hidden sm:flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Welcome back, {currentUser?.full_name?.split(' ')[0] || 'there'}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link to={createPageUrl('Templates')} className="text-sm text-muted-foreground hover:text-foreground font-medium transition-colors">
+              Templates
+            </Link>
+            <Button
+              onClick={() => setShowProjectModal(true)}
+              className="bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 shadow-lg px-5 py-2.5 h-10"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Project
+            </Button>
           </div>
         </div>
 
-        {/* While You Were Away Banner */}
-        {missedNotifications.length > 0 && !dismissedCatchUp && (() => {
-          // Group duplicate notifications by type + title + message
-          const grouped = missedNotifications.reduce((acc, notification) => {
-            const key = `${notification.type}::${notification.title}::${notification.message}`;
-            const existing = acc.find(g => g.key === key);
-            if (existing) {
-              existing.count += 1;
-              existing.ids.push(notification.id);
-              if (notification.created_date > existing.latest.created_date) {
-                existing.latest = notification;
-              }
-            } else {
-              acc.push({ key, count: 1, latest: notification, ids: [notification.id] });
-            }
-            return acc;
-          }, []);
 
-          const handleMarkGroupRead = async (group) => {
-            try {
-              await Promise.all(
-                group.ids.map(id => api.entities.UserNotification.update(id, { is_read: true }))
-              );
-              refetchMissed();
-              queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
-              if (group.latest.link) {
-                navigate(group.latest.link);
-              }
-            } catch (err) {
-              console.error('Failed to mark grouped notifications as read:', err);
-            }
-          };
-
-          return (
-          <div className="mb-6 max-w-2xl mx-auto">
-            <div className="rounded-2xl border-2 border-[#0069AF]/20 dark:border-blue-500/20 bg-gradient-to-r from-[#0069AF]/5 via-blue-50/50 to-indigo-50/30 dark:from-blue-900/20 dark:via-[#1e2a3a] dark:to-[#1e2a3a] shadow-sm overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 py-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-[#0069AF] shadow-sm shadow-[#0069AF]/30">
-                    <Bell className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
-                    While you were away
-                  </h3>
-                  <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-[#0069AF] text-white">
-                    {missedNotifications.length}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setDismissedCatchUp(true)}
-                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-700/50 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Notification items */}
-              <div className="px-2 pb-2 space-y-1">
-                {grouped.slice(0, 5).map((group) => {
-                  const config = missedConfig[group.latest.type] || missedConfig.project_update;
-                  const Icon = config.icon;
-                  return (
-                    <button
-                      key={group.key}
-                      onClick={() => handleMarkGroupRead(group)}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/70 dark:bg-[#1e2a3a]/70 hover:bg-white dark:hover:bg-[#1e2a3a] border border-transparent hover:border-slate-200 dark:hover:border-slate-700/50 transition-all text-left group"
-                    >
-                      <div className={cn("p-1.5 rounded-lg flex-shrink-0 relative", config.bg)}>
-                        <Icon className={cn("w-3.5 h-3.5", config.color)} />
-                        {group.count > 1 && (
-                          <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] flex items-center justify-center px-0.5 text-[9px] font-bold rounded-full bg-red-500 text-white shadow-sm">
-                            {group.count}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
-                          {group.latest.title}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                          {group.latest.message}
-                        </p>
-                      </div>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap flex-shrink-0">
-                        {group.latest.created_date
-                          ? formatDistanceToNow(new Date(group.latest.created_date), { addSuffix: true })
-                          : ''}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between px-4 py-2 border-t border-[#0069AF]/10 dark:border-blue-800/20">
-                <button
-                  onClick={handleMarkAllMissedRead}
-                  className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#0069AF] dark:hover:text-blue-400 transition-colors flex items-center gap-1.5"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  Mark all as read
-                </button>
-                <Link
-                  to={createPageUrl('MyNotifications')}
-                  className="text-xs font-medium text-[#0069AF] dark:text-blue-400 hover:text-[#133F5C] dark:hover:text-blue-300 transition-colors"
-                >
-                  View all notifications →
-                </Link>
-              </div>
-            </div>
-          </div>
-          );
-        })()}
-
-        {/* Urgent Tasks Alert */}
-        {!dismissedAlert && myUrgentTasks.length > 0 && (
-          <div className={cn(
-              "mb-6 rounded-2xl p-4 border-2 shadow-lg relative overflow-hidden",
-              overdueTasks.length > 0 
-                ? "bg-gradient-to-r from-red-500 to-red-600 border-red-400 text-white" 
-                : "bg-gradient-to-r from-amber-500 to-orange-500 border-amber-400 text-white"
-            )}
-          >
-            {/* Animated background pulse for overdue */}
-            {overdueTasks.length > 0 && (
-              <div className="absolute inset-0 bg-red-400/30 animate-pulse" />
-            )}
-            
-            <div className="relative flex flex-col sm:flex-row items-start justify-between gap-3">
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className={cn(
-                  "p-2.5 sm:p-3 rounded-xl shadow-lg shrink-0",
-                  overdueTasks.length > 0 ? "bg-white/20" : "bg-white/20"
-                )}>
-                  {overdueTasks.length > 0 ? (
-                    <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 animate-bounce" />
-                  ) : (
-                    <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg flex items-center gap-2">
-                    {overdueTasks.length > 0 ? (
-                      <>
-                        <span className="animate-pulse">⚠️</span> 
-                        You have {overdueTasks.length} overdue task{overdueTasks.length > 1 ? 's' : ''}!
-                      </>
-                    ) : (
-                      <>Tasks due soon</>
-                    )}
-                  </h3>
-                  <div className="mt-2 space-y-1">
-                    {overdueTasks.slice(0, 3).map(task => {
-                      const daysOverdue = differenceInDays(new Date(), parseLocalDate(task.due_date));
-                      return (
-                        <div key={task.id} className="flex items-center gap-2 text-sm">
-                          <span className="font-medium">{task.title}</span>
-                          <span className="text-white/80">• {daysOverdue} day{daysOverdue > 1 ? 's' : ''} overdue</span>
-                        </div>
-                      );
-                    })}
-                    {dueTodayTasks.slice(0, 2).map(task => (
-                      <div key={task.id} className="flex items-center gap-2 text-sm">
-                        <span className="font-medium">{task.title}</span>
-                        <span className="text-white/80">• Due today</span>
-                      </div>
-                    ))}
-                    {dueTomorrowTasks.slice(0, 2).map(task => (
-                      <div key={task.id} className="flex items-center gap-2 text-sm">
-                        <span className="font-medium">{task.title}</span>
-                        <span className="text-white/80">• Due tomorrow</span>
-                      </div>
-                    ))}
-                    {myUrgentTasks.length > 5 && (
-                      <p className="text-sm text-white/80 mt-1">
-                        +{myUrgentTasks.length - 5} more task{myUrgentTasks.length - 5 > 1 ? 's' : ''}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 self-end sm:self-start">
-                <Link to={createPageUrl('AllTasks') + '?view=mine_due'}>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className={cn(
-                      "font-semibold shadow-lg h-9",
-                      overdueTasks.length > 0
-                        ? "bg-white text-red-600 hover:bg-red-50"
-                        : "bg-white text-amber-600 hover:bg-amber-50"
-                    )}
-                  >
-                    View Tasks
-                  </Button>
-                </Link>
-                <button
-                  onClick={() => setDismissedAlert(true)}
-                  className="p-2 rounded-lg hover:bg-white/20 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Customizable Widgets - Optional based on user settings */}
-        {currentUser?.show_dashboard_widgets === true && (
-          <div className="mb-8">
-            <DashboardWidgets />
-          </div>
-        )}
-
-        {/* Compact Stats Bar + My Tasks Inline — hidden on mobile */}
-        <div className="hidden sm:flex flex-col lg:flex-row gap-3 mb-5">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
-            <StatsCard
-              title="Active Projects"
-              value={activeProjects.length}
-              icon={Briefcase}
-              iconColor="bg-[#0069AF]"
-              href={createPageUrl('Dashboard')}
-            />
-            <StatsCard
-              title="Parts Tracking"
-              value={pendingParts.length}
-              subtitle={activeParts.filter(p => p.status === 'ready_to_install').length > 0 ? `${activeParts.filter(p => p.status === 'ready_to_install').length} ready` : null}
-              icon={Box}
-              iconColor="bg-amber-500"
-              href={createPageUrl('AllTasks') + '?tab=parts'}
-            />
-            <StatsCard
-              title="All Tasks"
-              value={activeTasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}
-              subtitle={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && !isToday(d) && t.status !== 'completed'; }).length > 0 ? `${activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && !isToday(d) && t.status !== 'completed'; }).length} overdue` : null}
-              icon={ClipboardList}
-              iconColor="bg-[#0069AF]"
-              href={createPageUrl('AllTasks')}
-            />
-            <StatsCard
-              title="Proposals Pending"
-              value={incomingQuotes.length}
-              subtitle={incomingQuotes.length > 0 ? 'awaiting' : null}
-              icon={FileText}
-              iconColor={incomingQuotes.length > 0 ? "bg-orange-500" : "bg-emerald-500"}
-              highlight={incomingQuotes.length > 0}
-              onClick={() => setShowProposalsModal(true)}
-            />
-          </div>
-        </div>
-
-        {/* My Tasks Inline Strip — hidden on mobile */}
-        <div className="hidden sm:block mb-5">
-          <MyTasksCard
-            tasks={tasks}
-            parts={parts}
-            projects={projects}
-            currentUserEmail={currentUser?.email}
-            onTaskComplete={handleTaskComplete}
-            inline
+        {/* -- TOP ZONE: KPIs -- */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <StatsCard
+            title="Active Projects"
+            value={activeProjects.length}
+            icon={Briefcase}
+            iconColor="bg-indigo-500"
+            href={createPageUrl('Dashboard')}
+          />
+          <StatsCard
+            title="Pending Parts"
+            value={pendingParts.length}
+            subtitle={activeParts.filter(p => p.status === 'ready_to_install').length > 0 ? `${activeParts.filter(p => p.status === 'ready_to_install').length} ready` : null}
+            icon={Box}
+            iconColor="bg-amber-500"
+            href={createPageUrl('AllTasks') + '?tab=parts'}
+          />
+          <StatsCard
+            title="Overdue Tasks"
+            value={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived'; }).length}
+            icon={AlertTriangle}
+            iconColor="bg-red-500"
+            highlight={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived'; }).length > 0}
+            href={createPageUrl('AllTasks') + '?view=mine_due'}
+          />
+          <StatsCard
+            title="Completed Tasks"
+            value={completedTasks.length}
+            icon={CheckCircle2}
+            iconColor="bg-emerald-500"
+            href={createPageUrl('AllTasks') + '?view=completed'}
           />
         </div>
 
-        {/* Projects Section - Full Width */}
+        {/* -- TOP ZONE: Incoming Quotes -- */}
+        <div className="mb-6">
+          <IncomingQuoteBanner
+            quotes={incomingQuotes}
+            onCreateProject={handleCreateProjectFromQuote}
+            onDismiss={handleDismissQuote}
+            onSync={handleSyncQuotes}
+            isSyncing={isSyncingQuotes}
+          />
+        </div>
+
+        {/* -- TOP ZONE: Project Health -- */}
+        <div className="mb-6">
+          <ProjectHealthGrid
+            projects={activeProjects}
+            tasks={activeTasks}
+          />
+        </div>
+
+        {/* -- BELOW FOLD: Collapsible Widgets -- */}
+        <div className="space-y-4 mb-6">
+          <CollapsibleSection
+            id="my-tasks"
+            title="My Tasks"
+            icon={ListTodo}
+            summary={`${myUrgentTasks.length} due soon`}
+            defaultOpen={true}
+          >
+            <MyTasksCard
+              tasks={tasks}
+              parts={parts}
+              projects={projects}
+              currentUserEmail={currentUser?.email}
+              onTaskComplete={handleTaskComplete}
+              inline
+            />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            id="activity"
+            title="Recent Activity"
+            icon={ActivityIcon}
+            summary={missedNotifications.length > 0 ? `${missedNotifications.length} new` : 'Up to date'}
+            defaultOpen={false}
+          >
+            <ActivityTimeline
+              projects={projects}
+              quoteRequests={quoteRequests}
+            />
+          </CollapsibleSection>
+        </div>
+
+        {/* -- BELOW FOLD: Projects -- */}
+        <CollapsibleSection
+          id="projects"
+          title={showArchived ? 'Archived Projects' : 'Active Projects'}
+          icon={FolderKanban}
+          summary={`${activeProjects.length} active`}
+          defaultOpen={true}
+        >
         <div>
           <div className="min-w-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-base sm:text-lg font-semibold text-[#0F2F44] dark:text-slate-100">
+                <h2 className="text-base sm:text-lg font-semibold text-foreground">
                   {showArchived ? 'Archived Projects' : 'Active Projects'}
                 </h2>
                 <button
                   onClick={() => setShowArchived(!showArchived)}
-                  className="flex items-center gap-1.5 text-xs sm:text-sm text-[#0F2F44]/60 hover:text-[#0F2F44] dark:text-slate-400 dark:hover:text-slate-200"
+                  className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-foreground"
                 >
                   <Archive className="w-4 h-4" />
                   <span className="hidden sm:inline">{showArchived ? 'Show Active' : `Archived (${archivedProjects.length})`}</span>
@@ -1228,7 +1057,7 @@ export default function Dashboard() {
                     onClick={() => { setSelectionMode(!selectionMode); setSelectedProjects([]); }}
                     className={cn(
                       "p-2 rounded-md transition-all",
-                      selectionMode ? "bg-[#0069AF] text-white" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                      selectionMode ? "bg-primary text-white" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
                     )}
                     title="Select multiple projects"
                   >
@@ -1236,12 +1065,12 @@ export default function Dashboard() {
                   </button>
                 )}
                 {/* View Mode Toggle */}
-                <div className="flex items-center bg-[#0F2F44]/10 dark:bg-slate-700/50 rounded-lg p-1">
+                <div className="flex items-center bg-muted rounded-lg p-1">
                     <button
                       onClick={() => setViewMode('cards')}
                       className={cn(
                         "p-2 rounded-md transition-all",
-                        viewMode === 'cards' ? "bg-white dark:bg-slate-600 shadow-sm text-[#0F2F44] dark:text-slate-100" : "text-[#0F2F44]/60 dark:text-slate-400 hover:text-[#0F2F44] dark:hover:text-slate-200"
+                        viewMode === 'cards' ? "bg-white dark:bg-slate-600 shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <LayoutGrid className="w-4 h-4" />
@@ -1250,19 +1079,19 @@ export default function Dashboard() {
                       onClick={() => setViewMode('list')}
                       className={cn(
                         "p-2 rounded-md transition-all",
-                        viewMode === 'list' ? "bg-white dark:bg-slate-600 shadow-sm text-[#0F2F44] dark:text-slate-100" : "text-[#0F2F44]/60 dark:text-slate-400 hover:text-[#0F2F44] dark:hover:text-slate-200"
+                        viewMode === 'list' ? "bg-white dark:bg-slate-600 shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <List className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="relative flex-1 sm:flex-initial">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0F2F44]/40 dark:text-slate-500" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder="Search..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 w-full sm:w-48 bg-[#0F2F44]/5 dark:bg-slate-700/50 border-[#0F2F44]/10 dark:border-slate-600 h-9"
+                      className="pl-9 w-full sm:w-48 bg-muted/50 border h-9"
                     />
                   </div>
               </div>
@@ -1778,6 +1607,7 @@ export default function Dashboard() {
           </div>
 
         </div>
+        </CollapsibleSection>
 
       </div>
 
