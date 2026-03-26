@@ -80,7 +80,7 @@ export default function TechDashboard() {
   if (!currentUser || loadingProjects) return <DashboardSkeleton />;
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-3 sm:p-6">
+    <div className="min-h-screen bg-background text-foreground p-3 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
