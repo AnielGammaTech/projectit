@@ -218,7 +218,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
           className="absolute top-2 left-2 z-10 p-1.5 rounded-lg bg-white/90 backdrop-blur shadow-sm transition-all"
         >
           {isSelected ? (
-            <CheckSquare className="w-4 h-4 text-[#0069AF]" />
+            <CheckSquare className="w-4 h-4 text-primary" />
           ) : (
             <Square className="w-4 h-4 text-slate-400" />
           )}
@@ -305,10 +305,10 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
           }
         }}
         className={cn(
-          "bg-white dark:bg-[#1e2a3a] rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/50 shadow-card hover:shadow-card-hover hover:border-slate-300/80 dark:hover:border-slate-600 transition-all duration-300 border-l-4 cursor-pointer h-full flex flex-col",
+          "bg-white dark:bg-card rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/50 shadow-card hover:shadow-card-hover hover:border-slate-300/80 dark:hover:border-slate-600 transition-all duration-300 border-l-4 cursor-pointer h-full flex flex-col",
           colorClass,
           isPinned && "ring-2 ring-amber-200 dark:ring-amber-700 bg-amber-50/30 dark:bg-amber-900/10",
-          isSelected && "ring-2 ring-[#0069AF] dark:ring-blue-500 bg-[#0069AF]/5 dark:bg-blue-900/20"
+          isSelected && "ring-2 ring-primary dark:ring-blue-500 bg-primary/5 dark:bg-blue-900/20"
         )}
       >
         <div className="flex items-start justify-between mb-2">

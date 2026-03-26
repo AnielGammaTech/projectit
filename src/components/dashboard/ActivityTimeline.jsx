@@ -150,7 +150,7 @@ export default function ActivityTimeline({ proposals = [], projects = [] }) {
                     <Icon className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0 pt-0.5">
-                    <p className="text-sm font-medium text-slate-900 truncate group-hover:text-[#0069AF]">
+                    <p className="text-sm font-medium text-slate-900 truncate group-hover:text-primary">
                       {config.label}: {event.title}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -176,7 +176,7 @@ export default function ActivityTimeline({ proposals = [], projects = [] }) {
       {events.length > 6 && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="w-full mt-4 pt-3 border-t text-sm text-[#0069AF] hover:text-[#133F5C] font-medium"
+          className="w-full mt-4 pt-3 border-t text-sm text-primary hover:text-foreground font-medium"
         >
           {showAll ? 'Show less' : `View all ${events.length} events`}
         </button>

@@ -176,14 +176,14 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
     const topItems = myTasks.slice(0, 8);
 
     return (
-      <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200/80 dark:border-slate-700/50 overflow-hidden">
+      <div className="bg-white dark:bg-card rounded-xl border border-slate-200/80 dark:border-slate-700/50 overflow-hidden">
         {/* Summary bar — always visible */}
         <button
           onClick={() => setInlineOpen(prev => !prev)}
           className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors text-left"
         >
-          <div className="p-1.5 rounded-lg bg-[#0069AF]/10 dark:bg-blue-900/30 shrink-0">
-            <ListTodo className="w-3.5 h-3.5 text-[#0069AF] dark:text-blue-400" />
+          <div className="p-1.5 rounded-lg bg-primary/10 dark:bg-blue-900/30 shrink-0">
+            <ListTodo className="w-3.5 h-3.5 text-primary dark:text-blue-400" />
           </div>
           <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">My Tasks</span>
 
@@ -209,7 +209,7 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
             <Link
               to={createPageUrl('AllTasks')}
               onClick={(e) => e.stopPropagation()}
-              className="text-[10px] text-[#0069AF] dark:text-blue-400 hover:underline font-medium"
+              className="text-[10px] text-primary dark:text-blue-400 hover:underline font-medium"
             >
               View All
             </Link>
@@ -266,7 +266,7 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                 })}
                 {totalItems > 8 && (
                   <div className="text-center py-1">
-                    <Link to={createPageUrl('AllTasks')} className="text-[11px] text-[#0069AF] dark:text-blue-400 hover:underline font-medium">
+                    <Link to={createPageUrl('AllTasks')} className="text-[11px] text-primary dark:text-blue-400 hover:underline font-medium">
                       +{totalItems - 8} more tasks →
                     </Link>
                   </div>
@@ -280,13 +280,13 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
   }
 
   return (
-    <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6">
+    <div className="bg-white dark:bg-card rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6">
       {/* Header with tabs */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={cn("p-2 rounded-xl transition-colors", activeTab === 'tasks' ? "bg-[#0069AF]/10 dark:bg-blue-900/30" : "bg-amber-100/80 dark:bg-amber-900/30")}>
+          <div className={cn("p-2 rounded-xl transition-colors", activeTab === 'tasks' ? "bg-primary/10 dark:bg-blue-900/30" : "bg-amber-100/80 dark:bg-amber-900/30")}>
             {activeTab === 'tasks' ? (
-              <ListTodo className="w-5 h-5 text-[#0069AF] dark:text-blue-400" />
+              <ListTodo className="w-5 h-5 text-primary dark:text-blue-400" />
             ) : (
               <Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             )}
