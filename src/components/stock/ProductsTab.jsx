@@ -204,7 +204,7 @@ export default function ProductsTab() {
         </div>
 
         {/* Filters + Actions Row */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 overflow-x-auto flex-nowrap sm:flex-wrap pb-1 sm:pb-0">
           {/* Stock Filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -311,7 +311,7 @@ export default function ProductsTab() {
 
       {/* Products Grid - Compact Tiles */}
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           {[...Array(12)].map((_, i) => (
             <div key={i} className="bg-card rounded-lg border overflow-hidden animate-pulse">
               <div className="aspect-square bg-muted" />
@@ -350,7 +350,7 @@ export default function ProductsTab() {
             <div
               key={product.id}
               onClick={() => handleProductClick(product)}
-              className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-3 flex items-center gap-3 cursor-pointer active:bg-slate-50 transition-colors"
+              className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-3 flex items-center gap-3 cursor-pointer active:bg-slate-50 transition-colors min-h-[44px]"
             >
               {/* Small thumbnail */}
               <div className="w-12 h-12 rounded-lg bg-slate-50 dark:bg-[#151d2b] flex items-center justify-center shrink-0 overflow-hidden">
@@ -696,15 +696,17 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 pt-2 border-t">
-            <Button size="sm" variant={activeAction === 'take' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'take' ? null : 'take')} disabled={(product.quantity_on_hand || 0) === 0} className={activeAction === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : ''}>
-              <Minus className="w-3.5 h-3.5 mr-1.5" />Take
-            </Button>
-            <Button size="sm" variant={activeAction === 'restock' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'restock' ? null : 'restock')} className={activeAction === 'restock' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}>
-              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />Restock
-            </Button>
-            <div className="flex-1" />
-            <Button size="sm" variant="outline" onClick={() => onEdit(product)}>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-2 border-t">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button size="sm" variant={activeAction === 'take' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'take' ? null : 'take')} disabled={(product.quantity_on_hand || 0) === 0} className={cn("w-full sm:w-auto min-h-[44px] sm:min-h-0", activeAction === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : '')}>
+                <Minus className="w-3.5 h-3.5 mr-1.5" />Take
+              </Button>
+              <Button size="sm" variant={activeAction === 'restock' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'restock' ? null : 'restock')} className={cn("w-full sm:w-auto min-h-[44px] sm:min-h-0", activeAction === 'restock' ? 'bg-emerald-600 hover:bg-emerald-700' : '')}>
+                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />Restock
+              </Button>
+            </div>
+            <div className="hidden sm:block flex-1" />
+            <Button size="sm" variant="outline" onClick={() => onEdit(product)} className="w-full sm:w-auto min-h-[44px] sm:min-h-0">
               <Edit2 className="w-3.5 h-3.5 mr-1.5" />Edit
             </Button>
           </div>

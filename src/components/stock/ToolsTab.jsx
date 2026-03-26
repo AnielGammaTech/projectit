@@ -159,10 +159,10 @@ export default function ToolsTab() {
           <Input placeholder="Search tools..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
         </div>
         {/* Filters + Actions Row */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 overflow-x-auto flex-nowrap sm:flex-wrap pb-1 sm:pb-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5">
+              <Button variant="outline" size="sm" className="gap-1.5 min-h-[44px] sm:min-h-0 shrink-0">
                 <Filter className="w-4 h-4" />
                 <span className="hidden sm:inline">Status</span>
                 {stockFilter !== 'all' && <Badge variant="default" className="h-5 w-5 p-0 justify-center bg-[#0069AF]">1</Badge>}
@@ -177,15 +177,15 @@ export default function ToolsTab() {
           </DropdownMenu>
           <div className="flex-1" />
           <span className="text-xs sm:text-sm text-slate-500 shrink-0">{filteredTools.length} tools</span>
-          <Button variant="outline" size="sm" onClick={() => { setQuickAction({ type: 'return' }); setQuickActionTool(''); setQuickActionQty(1); }} className="gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800">
+          <Button variant="outline" size="sm" onClick={() => { setQuickAction({ type: 'return' }); setQuickActionTool(''); setQuickActionQty(1); }} className="gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800 min-h-[44px] sm:min-h-0 shrink-0">
             <LogIn className="w-4 h-4" />
             <span className="hidden sm:inline">Check In</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => { setQuickAction({ type: 'checkout' }); setQuickActionTool(''); setQuickActionQty(1); }} className="gap-1.5 border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-800">
+          <Button variant="outline" size="sm" onClick={() => { setQuickAction({ type: 'checkout' }); setQuickActionTool(''); setQuickActionQty(1); }} className="gap-1.5 border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-800 min-h-[44px] sm:min-h-0 shrink-0">
             <LogOut className="w-4 h-4" />
             <span className="hidden sm:inline">Check Out</span>
           </Button>
-          <Button onClick={() => { setEditingTool(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e]" size="sm">
+          <Button onClick={() => { setEditingTool(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e] min-h-[44px] sm:min-h-0 shrink-0" size="sm">
             <Plus className="w-4 h-4 sm:mr-2" />
             <span className="hidden sm:inline">Add Tool</span>
           </Button>
@@ -194,7 +194,7 @@ export default function ToolsTab() {
 
       {/* Tools Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           {[...Array(12)].map((_, i) => (
             <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden animate-pulse">
               <div className="aspect-square bg-slate-100 dark:bg-[#151d2b]" />
@@ -221,7 +221,7 @@ export default function ToolsTab() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           {filteredTools.map((tool) => (
             <div
               key={tool.id}
@@ -351,12 +351,12 @@ export default function ToolsTab() {
                 className="mt-1"
               />
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setQuickAction(null)} disabled={quickActionSubmitting}>Cancel</Button>
+            <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setQuickAction(null)} disabled={quickActionSubmitting} className="w-full sm:w-auto min-h-[44px] sm:min-h-0">Cancel</Button>
               <Button
                 onClick={handleQuickActionSubmit}
                 disabled={!quickActionTool || quickActionSubmitting}
-                className={quickAction?.type === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-purple-600 hover:bg-purple-700'}
+                className={cn("w-full sm:w-auto min-h-[44px] sm:min-h-0", quickAction?.type === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-purple-600 hover:bg-purple-700')}
               >
                 {quickActionSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                 {quickAction?.type === 'checkout' ? 'Check Out' : 'Check In'}
@@ -471,15 +471,17 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
           {tool.description && <div><p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Description</p><p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-3">{tool.description}</p></div>}
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 pt-2 border-t">
-            <Button size="sm" variant={activeAction === 'checkout' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'checkout' ? null : 'checkout')} disabled={tool.quantity_on_hand === 0} className={activeAction === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : ''}>
-              <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />Checkout
-            </Button>
-            <Button size="sm" variant={activeAction === 'return' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'return' ? null : 'return')} disabled={(tool.checked_out_count || 0) === 0} className={activeAction === 'return' ? 'bg-purple-600 hover:bg-purple-700' : ''}>
-              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />Return
-            </Button>
-            <div className="flex-1" />
-            <Button size="sm" variant="outline" onClick={() => onEdit(tool)}>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-2 border-t">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button size="sm" variant={activeAction === 'checkout' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'checkout' ? null : 'checkout')} disabled={tool.quantity_on_hand === 0} className={cn("w-full sm:w-auto min-h-[44px] sm:min-h-0", activeAction === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : '')}>
+                <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />Checkout
+              </Button>
+              <Button size="sm" variant={activeAction === 'return' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'return' ? null : 'return')} disabled={(tool.checked_out_count || 0) === 0} className={cn("w-full sm:w-auto min-h-[44px] sm:min-h-0", activeAction === 'return' ? 'bg-purple-600 hover:bg-purple-700' : '')}>
+                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />Return
+              </Button>
+            </div>
+            <div className="hidden sm:block flex-1" />
+            <Button size="sm" variant="outline" onClick={() => onEdit(tool)} className="w-full sm:w-auto min-h-[44px] sm:min-h-0">
               <Edit2 className="w-3.5 h-3.5 mr-1.5" />Edit
             </Button>
           </div>
