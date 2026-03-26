@@ -36,6 +36,7 @@ import Templates from './pages/Templates';
 import TemplateEditor from './pages/TemplateEditor';
 import TimeReport from './pages/TimeReport';
 import UserGroups from './pages/UserGroups';
+import WeeklyMeetingUpdate from './pages/WeeklyMeetingUpdate';
 import Workflows from './pages/Workflows';
 import __Layout from './Layout.jsx';
 
@@ -79,6 +80,7 @@ export const PAGES = {
     "Templates": Templates,
     "TimeReport": TimeReport,
     "UserGroups": UserGroups,
+    "WeeklyMeetingUpdate": WeeklyMeetingUpdate,
     "Workflows": Workflows,
 }
 

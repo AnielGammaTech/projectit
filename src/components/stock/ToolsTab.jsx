@@ -34,7 +34,7 @@ export default function ToolsTab() {
   const [quickActionSubmitting, setQuickActionSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: tools = [], refetch } = useQuery({
+  const { data: tools = [], refetch, isLoading } = useQuery({
     queryKey: ['tools'],
     queryFn: () => api.entities.Tool.list('-created_date'),
     staleTime: 300000
@@ -174,13 +174,25 @@ export default function ToolsTab() {
       </div>
 
       {/* Tools Grid */}
-      {filteredTools.length === 0 ? (
-        <div className="text-center py-16 bg-[#0F2F44]/5 rounded-2xl border border-[#0F2F44]/10">
-          <HardDrive className="w-12 h-12 mx-auto text-[#0F2F44]/30 mb-4" />
-          <h3 className="text-lg font-medium text-[#0F2F44] mb-2">
+      {isLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden animate-pulse">
+              <div className="aspect-square bg-slate-100 dark:bg-[#151d2b]" />
+              <div className="p-2 space-y-1.5">
+                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
+                <div className="h-3 bg-slate-100 dark:bg-slate-700/50 rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredTools.length === 0 ? (
+        <div className="text-center py-16 bg-slate-50 dark:bg-[#1e2a3a]/50 rounded-2xl border border-slate-200 dark:border-slate-700/50">
+          <HardDrive className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+          <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">
             {tools.length === 0 ? 'No tools yet' : 'No tools match filters'}
           </h3>
-          <p className="text-[#0F2F44]/60 mb-4">
+          <p className="text-slate-500 dark:text-slate-400 mb-4">
             {tools.length === 0 ? 'Add tools that can be checked out and returned' : 'Try adjusting your filters'}
           </p>
           {tools.length === 0 && (
@@ -195,14 +207,14 @@ export default function ToolsTab() {
             <div
               key={tool.id}
               onClick={() => setViewingTool(tool)}
-              className="bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-md hover:border-[#0069AF]/30 transition-all cursor-pointer group"
+              className="bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden hover:shadow-md hover:border-[#0069AF]/30 dark:hover:border-blue-500/30 transition-all cursor-pointer group"
             >
-              <div className="aspect-square bg-slate-50 relative">
+              <div className="aspect-square bg-slate-50 dark:bg-[#151d2b] relative">
                 {tool.image_url ? (
                   <img src={tool.image_url} alt={tool.name} className="w-full h-full object-contain p-2" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <HardDrive className="w-10 h-10 text-slate-200" />
+                    <HardDrive className="w-10 h-10 text-slate-200 dark:text-slate-700" />
                   </div>
                 )}
                 <div className="absolute top-1.5 right-1.5">
@@ -213,14 +225,14 @@ export default function ToolsTab() {
                 <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={(e) => { e.stopPropagation(); setDeleteConfirm(tool); }}
-                    className="p-1.5 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600"
+                    className="p-1.5 rounded bg-white/80 dark:bg-slate-800/80 hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-600"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                   {(tool.quantity_on_hand || 0) > 0 && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handleQuickAction(tool, 'checkout'); }}
-                      className="p-1.5 rounded bg-white/80 hover:bg-orange-50 text-slate-400 hover:text-orange-600"
+                      className="p-1.5 rounded bg-white/80 dark:bg-slate-800/80 hover:bg-orange-50 dark:hover:bg-orange-900/30 text-slate-400 hover:text-orange-600"
                       title="Quick checkout (1 unit)"
                     >
                       <LogOut className="w-3.5 h-3.5" />
@@ -229,7 +241,7 @@ export default function ToolsTab() {
                   {(tool.checked_out_count || 0) > 0 && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handleQuickAction(tool, 'return'); }}
-                      className="p-1.5 rounded bg-white/80 hover:bg-purple-50 text-slate-400 hover:text-purple-600"
+                      className="p-1.5 rounded bg-white/80 dark:bg-slate-800/80 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-slate-400 hover:text-purple-600"
                       title="Quick check in (1 unit)"
                     >
                       <LogIn className="w-3.5 h-3.5" />
@@ -238,9 +250,9 @@ export default function ToolsTab() {
                 </div>
               </div>
               <div className="p-2">
-                <h3 className="font-medium text-slate-900 text-sm truncate" title={tool.name}>{tool.name}</h3>
-                {tool.serial_number && <p className="text-[10px] text-slate-400 truncate mt-0.5">SN: {tool.serial_number}</p>}
-                {tool.category && <p className="text-[10px] text-slate-400 truncate">{tool.category}</p>}
+                <h3 className="font-medium text-slate-900 dark:text-slate-100 text-sm truncate" title={tool.name}>{tool.name}</h3>
+                {tool.serial_number && <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">SN: {tool.serial_number}</p>}
+                {tool.category && <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{tool.category}</p>}
               </div>
             </div>
           ))}
@@ -431,13 +443,13 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
             {tool.manufacturer && <div><p className="text-xs text-slate-500">Manufacturer</p><p className="text-sm font-medium">{tool.manufacturer}</p></div>}
           </div>
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-3 bg-slate-50 rounded-lg">
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">Available</p><p className={cn("text-base sm:text-lg font-bold", tool.quantity_on_hand === 0 ? "text-red-600" : "text-slate-900")}>{tool.quantity_on_hand || 0}</p></div>
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">Checked Out</p><p className="text-base sm:text-lg font-bold text-orange-600">{tool.checked_out_count || 0}</p></div>
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">Total</p><p className="text-base sm:text-lg font-bold text-slate-900">{(tool.quantity_on_hand || 0) + (tool.checked_out_count || 0)}</p></div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-3 bg-slate-50 dark:bg-[#151d2b] rounded-lg">
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Available</p><p className={cn("text-base sm:text-lg font-bold", tool.quantity_on_hand === 0 ? "text-red-600" : "text-slate-900 dark:text-slate-100")}>{tool.quantity_on_hand || 0}</p></div>
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Checked Out</p><p className="text-base sm:text-lg font-bold text-orange-600 dark:text-orange-400">{tool.checked_out_count || 0}</p></div>
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Total</p><p className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">{(tool.quantity_on_hand || 0) + (tool.checked_out_count || 0)}</p></div>
           </div>
 
-          {tool.description && <div><p className="text-xs text-slate-500 mb-1">Description</p><p className="text-sm text-slate-700 line-clamp-3">{tool.description}</p></div>}
+          {tool.description && <div><p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Description</p><p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-3">{tool.description}</p></div>}
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2 pt-2 border-t">
@@ -455,8 +467,8 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
 
           {/* Inline Action Panel */}
           {activeAction && (
-            <div className="p-3 bg-slate-50 rounded-lg border space-y-3">
-              <p className="text-sm font-semibold text-slate-700">{activeAction === 'checkout' ? 'Checkout Tool' : 'Return Tool'}</p>
+            <div className="p-3 bg-slate-50 dark:bg-[#151d2b] rounded-lg border dark:border-slate-700/50 space-y-3">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{activeAction === 'checkout' ? 'Checkout Tool' : 'Return Tool'}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs">Quantity</Label>
@@ -489,7 +501,7 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
 
           {/* Transaction History */}
           <div className="border-t pt-3">
-            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 w-full">
+            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 w-full">
               <History className="w-4 h-4" />History ({transactions.length})
               {showHistory ? <X className="w-3.5 h-3.5 ml-auto" /> : <ChevronDown className="w-3.5 h-3.5 ml-auto" />}
             </button>
@@ -501,12 +513,12 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
                   const cfg = txConfig[tx.type] || txConfig.checkout;
                   const proj = projects.find(p => p.id === tx.project_id);
                   return (
-                    <div key={tx.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded hover:bg-slate-50">
+                    <div key={tx.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700/30">
                       <Badge className={cn("text-[10px] px-1.5 py-0", cfg.color)}>{cfg.label}</Badge>
-                      <span className="font-semibold text-slate-700">{cfg.sign}{tx.quantity}</span>
-                      {proj && <span className="text-slate-500 truncate">→ {proj.name}</span>}
-                      <span className="text-slate-400 ml-auto shrink-0">{tx.user_name?.split(' ')[0]}</span>
-                      <span className="text-slate-400 shrink-0">{tx.created_date ? format(new Date(tx.created_date), 'MMM d') : ''}</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">{cfg.sign}{tx.quantity}</span>
+                      {proj && <span className="text-slate-500 dark:text-slate-400 truncate">→ {proj.name}</span>}
+                      <span className="text-slate-400 dark:text-slate-500 ml-auto shrink-0">{tx.user_name?.split(' ')[0]}</span>
+                      <span className="text-slate-400 dark:text-slate-500 shrink-0">{tx.created_date ? format(new Date(tx.created_date), 'MMM d') : ''}</span>
                     </div>
                   );
                 })}

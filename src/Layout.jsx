@@ -479,7 +479,7 @@ function LayoutContent({ children, currentPageName }) {
       </div>
 
       {/* Main Content */}
-      <main className="pt-14">
+      <main className="pt-14 pb-20 lg:pb-0">
         {children}
       </main>
 

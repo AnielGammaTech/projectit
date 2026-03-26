@@ -277,34 +277,45 @@ export default function Customers() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse space-y-6">
+          <div className="space-y-6">
+            {/* Header skeleton */}
             <div className="flex items-center justify-between">
-              <div>
-                <div className="h-8 w-48 bg-slate-200 rounded-lg" />
-                <div className="h-4 w-64 bg-slate-100 rounded mt-2" />
+              <div className="space-y-2">
+                <div className="h-8 w-48 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse" />
+                <div className="h-4 w-64 bg-slate-100 dark:bg-slate-700/60 rounded animate-pulse" />
               </div>
               <div className="flex gap-2">
-                <div className="h-10 w-40 bg-slate-200 rounded-lg" />
-                <div className="h-10 w-36 bg-slate-200 rounded-lg" />
+                <div className="h-10 w-40 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse" />
+                <div className="h-10 w-36 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse" />
               </div>
             </div>
-            <div className="bg-white rounded-2xl border border-slate-100 p-4">
-              <div className="h-10 bg-slate-100 rounded-lg" />
+            {/* Search bar skeleton */}
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4">
+              <div className="flex gap-3">
+                <div className="flex-1 h-10 bg-slate-100 dark:bg-slate-700/40 rounded-lg animate-pulse" />
+                <div className="h-10 w-20 bg-slate-100 dark:bg-slate-700/40 rounded-lg animate-pulse" />
+                <div className="h-10 w-72 bg-slate-100 dark:bg-slate-700/40 rounded-lg animate-pulse" />
+              </div>
             </div>
+            {/* Card grid skeleton */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-white rounded-xl border p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-slate-200" />
+              {Array.from({ length: 8 }, (_, i) => (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-4"
+                  style={{ animationDelay: `${i * 75}ms` }}
+                >
+                  <div className="flex items-start gap-3 animate-pulse">
+                    <div className="w-9 h-9 rounded-lg bg-slate-200 dark:bg-slate-700 flex-shrink-0" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-slate-200 rounded w-3/4" />
-                      <div className="h-3 bg-slate-100 rounded w-1/2" />
+                      <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/5" />
+                      <div className="h-3 bg-slate-100 dark:bg-slate-700/60 rounded w-2/5" />
                     </div>
                   </div>
-                  <div className="flex gap-3 pt-3 border-t border-slate-100">
-                    <div className="h-6 w-12 bg-slate-100 rounded" />
-                    <div className="h-6 w-12 bg-slate-100 rounded" />
-                    <div className="h-6 w-12 bg-slate-100 rounded" />
+                  <div className="flex gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/40 animate-pulse">
+                    <div className="h-5 w-10 bg-slate-100 dark:bg-slate-700/40 rounded" />
+                    <div className="h-5 w-10 bg-slate-100 dark:bg-slate-700/40 rounded" />
+                    <div className="h-5 w-10 bg-slate-100 dark:bg-slate-700/40 rounded" />
                   </div>
                 </div>
               ))}
@@ -314,8 +325,6 @@ export default function Customers() {
       </div>
     );
   }
-
-  if (loadingCustomers) return <CardGridSkeleton />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
@@ -427,22 +436,18 @@ export default function Customers() {
           {/* Companies Grid */}
           {(viewFilter === 'all' || viewFilter === 'companies') && filteredCompanies.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {filteredCompanies.map((company, idx) => {
+              {filteredCompanies.map((company) => {
                 const contacts = getContactsForCompany(company.id);
                 const companySites = getSitesForCompany(company.id);
                 const companyProjects = getProjectCount(company.id);
-                // Get address from company directly, or fall back to first site's address
-                const displayAddress = (company.address || company.city) 
+                const displayAddress = (company.address || company.city)
                   ? [company.address, company.city, company.state].filter(Boolean).join(', ')
-                  : companySites.length > 0 
+                  : companySites.length > 0
                     ? [companySites[0].address, companySites[0].city, companySites[0].state].filter(Boolean).join(', ')
                     : null;
                 return (
-                  <motion.div
+                  <div
                     key={company.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.02 }}
                     className={cn(
                       "bg-white dark:bg-[#1e2a3a] rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
                       selectedIds.has(company.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
@@ -518,7 +523,7 @@ export default function Customers() {
                         <span className="text-xs font-medium text-slate-700">{companyProjects}</span>
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -528,12 +533,9 @@ export default function Customers() {
           {/* Standalone Contacts */}
           {(viewFilter === 'all' || viewFilter === 'contacts') && filteredStandaloneContacts.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-              {filteredStandaloneContacts.map((customer, idx) => (
-                <motion.div
+              {filteredStandaloneContacts.map((customer) => (
+                <div
                   key={customer.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.02 }}
                   className={cn(
                     "bg-white dark:bg-[#1e2a3a] rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
                     selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
@@ -584,7 +586,7 @@ export default function Customers() {
                       <span className="text-xs font-medium text-slate-700">{getProjectCount(customer.id)}</span>
                     </button>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
@@ -754,300 +756,319 @@ export default function Customers() {
 
       {/* Customer Detail Modal */}
       <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
-        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-hidden p-0">
           {selectedCustomer && (() => {
             const customerSites = getSitesForCompany(selectedCustomer.id);
             const customerContacts = getContactsForCompany(selectedCustomer.id);
             const customerProjects = getCustomerProjects(selectedCustomer.id);
+            const customerQuotes = getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email);
+            const fullAddress = [selectedCustomer.address, selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ');
+            const siteAddress = customerSites.length > 0 ? [customerSites[0].address, customerSites[0].city, customerSites[0].state, customerSites[0].zip].filter(Boolean).join(', ') : '';
+            const displayAddress = fullAddress || siteAddress;
+
             return (
               <>
-                {/* Header */}
-                <div className="flex items-start justify-between border-b pb-4 mb-4">
-                  <div>
-                    <Link 
-                      to="#" 
-                      onClick={(e) => { e.preventDefault(); setSelectedCustomer(null); }}
-                      className="text-sm text-slate-500 hover:text-[#0069AF] flex items-center gap-1 mb-2"
-                    >
-                      ← Back to Customers
-                    </Link>
-                    <h2 className="text-2xl font-bold text-slate-900">{selectedCustomer.name}</h2>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
-                      {selectedCustomer.email ? (
-                        <span className="flex items-center gap-1">
-                          <Mail className="w-3.5 h-3.5" /> {selectedCustomer.email}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">No email</span>
-                      )}
-                      {selectedCustomer.phone ? (
-                        <span className="flex items-center gap-1">
-                          <Phone className="w-3.5 h-3.5" /> {selectedCustomer.phone}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">No phone</span>
-                      )}
+                {/* Hero Header */}
+                <div className="bg-gradient-to-r from-[#0F2F44] to-[#133F5C] px-6 pt-6 pb-5 text-white relative overflow-hidden">
+                  <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#74C7FF]/10 rounded-full" />
+                  <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-[#0069AF]/10 rounded-full" />
+                  <div className="relative z-10">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-2xl font-bold">
+                          {selectedCustomer.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h2 className="text-xl font-bold">{selectedCustomer.name}</h2>
+                            {selectedCustomer.source === 'halo_psa' && (
+                              <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-white/20 text-white/90">HaloPSA</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 mt-1 text-sm text-white/70">
+                            {selectedCustomer.email && (
+                              <span className="flex items-center gap-1.5">
+                                <Mail className="w-3.5 h-3.5" /> {selectedCustomer.email}
+                              </span>
+                            )}
+                            {selectedCustomer.phone && (
+                              <span className="flex items-center gap-1.5">
+                                <Phone className="w-3.5 h-3.5" /> {selectedCustomer.phone}
+                              </span>
+                            )}
+                          </div>
+                          {displayAddress && (
+                            <p className="flex items-center gap-1.5 mt-1 text-sm text-white/60">
+                              <MapPin className="w-3.5 h-3.5 flex-shrink-0" /> {displayAddress}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setEditingCustomer(selectedCustomer); setShowModal(true); }}
+                        className="text-white/80 hover:text-white hover:bg-white/15 h-8"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 mr-1.5" /> Edit
+                      </Button>
                     </div>
-                    {(selectedCustomer.address || selectedCustomer.city) && (
-                      <p className="flex items-center gap-1 mt-1 text-sm text-slate-500">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {[selectedCustomer.address, selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}
-                      </p>
-                    )}
-                    {selectedCustomer.source === 'halo_psa' && (
-                      <Badge variant="outline" className="mt-2 text-xs bg-blue-50 text-blue-600 border-blue-200">
-                        Synced from HaloPSA
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => { setEditingCustomer(selectedCustomer); setShowModal(true); }}>
-                      <Edit2 className="w-4 h-4 mr-1" /> Edit
-                    </Button>
+
+                    {/* Quick stats */}
+                    <div className="flex items-center gap-4 mt-4">
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-lg text-sm">
+                        <MapPin className="w-3.5 h-3.5 text-emerald-300" />
+                        <span className="font-medium">{customerSites.length}</span>
+                        <span className="text-white/60">sites</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-lg text-sm">
+                        <Users className="w-3.5 h-3.5 text-blue-300" />
+                        <span className="font-medium">{customerContacts.length}</span>
+                        <span className="text-white/60">contacts</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-lg text-sm">
+                        <FolderKanban className="w-3.5 h-3.5 text-orange-300" />
+                        <span className="font-medium">{customerProjects.length}</span>
+                        <span className="text-white/60">projects</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-lg text-sm">
+                        <FileText className="w-3.5 h-3.5 text-violet-300" />
+                        <span className="font-medium">{customerQuotes.length}</span>
+                        <span className="text-white/60">proposals</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex items-center gap-4 border-b mb-4">
-                  <button
-                    onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: 'details' }))}
-                    className={cn(
-                      "pb-2 text-sm font-medium border-b-2 transition-colors",
-                      (companyTabs[selectedCustomer.id] || 'details') === 'details'
-                        ? "border-[#0069AF] text-[#0069AF]"
-                        : "border-transparent text-slate-500 hover:text-slate-700"
-                    )}
-                  >
-                    Details & Contacts
-                  </button>
-                  <button
-                    onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: 'proposals' }))}
-                    className={cn(
-                      "pb-2 text-sm font-medium border-b-2 transition-colors",
-                      companyTabs[selectedCustomer.id] === 'proposals'
-                        ? "border-[#0069AF] text-[#0069AF]"
-                        : "border-transparent text-slate-500 hover:text-slate-700"
-                    )}
-                  >
-                    Proposals ({getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).length})
-                  </button>
-                  <button
-                    onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: 'projects' }))}
-                    className={cn(
-                      "pb-2 text-sm font-medium border-b-2 transition-colors",
-                      companyTabs[selectedCustomer.id] === 'projects'
-                        ? "border-[#0069AF] text-[#0069AF]"
-                        : "border-transparent text-slate-500 hover:text-slate-700"
-                    )}
-                  >
-                    Projects ({customerProjects.length})
-                  </button>
+                <div className="flex items-center gap-1 px-6 pt-3 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a]">
+                  {[
+                    { key: 'details', label: 'Details & Contacts' },
+                    { key: 'proposals', label: `Proposals (${customerQuotes.length})` },
+                    { key: 'projects', label: `Projects (${customerProjects.length})` },
+                  ].map(tab => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: tab.key }))}
+                      className={cn(
+                        "px-4 pb-2.5 text-sm font-medium border-b-2 transition-colors",
+                        (companyTabs[selectedCustomer.id] || 'details') === tab.key
+                          ? "border-[#0069AF] text-[#0069AF]"
+                          : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </div>
 
-                {/* Details & Contacts Tab */}
-                {(companyTabs[selectedCustomer.id] || 'details') === 'details' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Company Info */}
-                    <div className="bg-white border rounded-xl p-4">
-                      <h4 className="font-semibold text-slate-900 mb-4">Company Info</h4>
-                      <div className="space-y-3 text-sm">
-                        <div>
-                          <p className="text-slate-400 text-xs uppercase tracking-wide">Address</p>
-                          {(selectedCustomer.address || selectedCustomer.city) ? (
+                {/* Tab content */}
+                <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 260px)' }}>
+                  {/* Details & Contacts Tab */}
+                  {(companyTabs[selectedCustomer.id] || 'details') === 'details' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Company Info */}
+                      <div className="bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl p-5">
+                        <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-[#0069AF]" />
+                          Company Info
+                        </h4>
+                        <div className="space-y-4 text-sm">
+                          <div>
+                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Address</p>
+                            {(selectedCustomer.address || selectedCustomer.city) ? (
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-slate-700 dark:text-slate-300 hover:text-[#0069AF] hover:underline"
+                              >
+                                {selectedCustomer.address && <p>{selectedCustomer.address}</p>}
+                                <p>{[selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}</p>
+                              </a>
+                            ) : customerSites.length > 0 && (customerSites[0].address || customerSites[0].city) ? (
+                              <>
+                                <p className="text-slate-700 dark:text-slate-300">{customerSites[0].address || '--'}</p>
+                                <p className="text-slate-700 dark:text-slate-300">{[customerSites[0].city, customerSites[0].state, customerSites[0].zip].filter(Boolean).join(', ')}</p>
+                                <p className="text-xs text-slate-400 mt-1">(from site: {customerSites[0].name})</p>
+                              </>
+                            ) : (
+                              <p className="text-slate-400">--</p>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Primary Contact</p>
+                            <p className="text-slate-700 dark:text-slate-300">{customerContacts[0]?.name || '--'}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Email</p>
+                            <p className="text-slate-700 dark:text-slate-300">{selectedCustomer.email || '--'}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Phone</p>
+                            <p className="text-slate-700 dark:text-slate-300">{selectedCustomer.phone || '--'}</p>
+                          </div>
+
+                          {/* Sites/Locations */}
+                          <div className="pt-3 border-t border-slate-200 dark:border-slate-700/50">
+                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-2">Sites / Locations ({customerSites.length})</p>
+                            {customerSites.length > 0 ? (
+                              <div className="space-y-2">
+                                {customerSites.map(site => (
+                                  <div key={site.id} className="p-2.5 bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50">
+                                    <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">{site.name}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                      {[site.address, site.city, site.state, site.zip].filter(Boolean).join(', ') || 'No address'}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-slate-400 text-sm">No sites</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Associated Contacts */}
+                      <div className="bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                            <Users className="w-4 h-4 text-[#0069AF]" />
+                            Contacts
+                          </h4>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-slate-500 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full">{customerContacts.length}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => { setAddingContactTo(selectedCustomer.id); setShowModal(true); }}
+                              className="h-7 text-xs"
+                            >
+                              <UserPlus className="w-3.5 h-3.5 mr-1" /> Add
+                            </Button>
+                          </div>
+                        </div>
+                        {customerContacts.length > 5 && (
+                          <div className="relative mb-3">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                            <Input
+                              placeholder="Search contacts..."
+                              value={contactSearch}
+                              onChange={(e) => { setContactSearch(e.target.value); setContactPage(1); }}
+                              className="pl-9 h-8 text-sm"
+                            />
+                          </div>
+                        )}
+                        {(() => {
+                          const filtered = customerContacts.filter(c =>
+                            c.name?.toLowerCase().includes(contactSearch.toLowerCase()) ||
+                            c.email?.toLowerCase().includes(contactSearch.toLowerCase())
+                          );
+                          const totalPages = Math.ceil(filtered.length / 10);
+                          const paginated = filtered.slice((contactPage - 1) * 10, contactPage * 10);
+                          return filtered.length > 0 ? (
                             <>
-                              <p className="text-slate-700">{selectedCustomer.address || '--'}</p>
-                              {(selectedCustomer.city || selectedCustomer.state || selectedCustomer.zip) && (
-                                <p className="text-slate-700">{[selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}</p>
-                              )}
-                            </>
-                          ) : customerSites.length > 0 && (customerSites[0].address || customerSites[0].city) ? (
-                            <>
-                              <p className="text-slate-700">{customerSites[0].address || '--'}</p>
-                              {(customerSites[0].city || customerSites[0].state || customerSites[0].zip) && (
-                                <p className="text-slate-700">{[customerSites[0].city, customerSites[0].state, customerSites[0].zip].filter(Boolean).join(', ')}</p>
-                              )}
-                              <p className="text-xs text-slate-400 mt-1">(from site: {customerSites[0].name})</p>
-                            </>
-                          ) : (
-                            <p className="text-slate-700">--</p>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-slate-400 text-xs uppercase tracking-wide">Primary Contact</p>
-                          <p className="text-slate-700">{customerContacts[0]?.name || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-slate-400 text-xs uppercase tracking-wide">Email</p>
-                          <p className="text-slate-700">{selectedCustomer.email || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-slate-400 text-xs uppercase tracking-wide">Phone</p>
-                          <p className="text-slate-700">{selectedCustomer.phone || '--'}</p>
-                        </div>
-                        
-                        {/* Sites/Locations */}
-                        <div className="pt-3 border-t">
-                          <p className="text-slate-400 text-xs uppercase tracking-wide mb-2">Sites / Locations ({customerSites.length})</p>
-                          {customerSites.length > 0 ? (
-                            <div className="space-y-2">
-                              {customerSites.map(site => (
-                                <div key={site.id} className="p-2 bg-slate-50 rounded-lg">
-                                  <p className="font-medium text-slate-800 text-sm">{site.name}</p>
-                                  <p className="text-xs text-slate-500">
-                                    {[site.address, site.city, site.state, site.zip].filter(Boolean).join(', ') || 'No address'}
-                                  </p>
+                              <div className="space-y-1.5">
+                                {paginated.map(contact => (
+                                  <div key={contact.id} className="flex items-center gap-3 p-2.5 bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50 hover:border-[#0069AF]/30 transition-colors">
+                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0069AF]/20 to-[#74C7FF]/20 flex items-center justify-center text-[#0069AF] dark:text-[#74C7FF] font-semibold text-sm flex-shrink-0">
+                                      {contact.name?.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">{contact.name}</p>
+                                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                        {contact.email && <span className="truncate">{contact.email}</span>}
+                                        {contact.phone && <span>{contact.phone}</span>}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              {totalPages > 1 && (
+                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200 dark:border-slate-700/50">
+                                  <span className="text-xs text-slate-500">
+                                    {(contactPage - 1) * 10 + 1}-{Math.min(contactPage * 10, filtered.length)} of {filtered.length}
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={contactPage === 1} onClick={() => setContactPage(p => p - 1)}>Prev</Button>
+                                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={contactPage >= totalPages} onClick={() => setContactPage(p => p + 1)}>Next</Button>
+                                  </div>
                                 </div>
-                              ))}
-                            </div>
+                              )}
+                            </>
                           ) : (
-                            <p className="text-slate-400 text-sm">No sites</p>
-                          )}
-                        </div>
+                            <p className="text-slate-400 text-sm text-center py-6">
+                              {contactSearch ? 'No contacts match your search' : 'No contacts'}
+                            </p>
+                          );
+                        })()}
                       </div>
                     </div>
-                    
-                    {/* Associated Contacts */}
-                    <div className="bg-white border rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-slate-900">Associated Contacts</h4>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{customerContacts.length}</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => { setAddingContactTo(selectedCustomer.id); setShowModal(true); }}
-                            className="h-7 text-xs"
-                          >
-                            <UserPlus className="w-3.5 h-3.5 mr-1" /> Add
-                          </Button>
+                  )}
+
+                  {/* Proposals Tab */}
+                  {companyTabs[selectedCustomer.id] === 'proposals' && (
+                    <div>
+                      {customerQuotes.length > 0 ? (
+                        <div className="space-y-2">
+                          {customerQuotes.map(quote => (
+                            <div key={quote.id} className="p-4 bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl hover:border-[#0069AF]/30 transition-all">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <img src="/quoteit-favicon.svg" alt="" className="w-5 h-5 flex-shrink-0" />
+                                  <div>
+                                    <span className="font-medium text-slate-900 dark:text-slate-100">{quote.title}</span>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">ID: {quote.quoteit_id}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-slate-700 dark:text-slate-200">${(quote.amount || 0).toLocaleString()}</span>
+                                  <Badge variant="outline" className={cn(
+                                    quote.status === 'converted' && "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400",
+                                    quote.status === 'pending' && "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                                  )}>{quote.status}</Badge>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                      {customerContacts.length > 5 && (
-                        <div className="relative mb-3">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                          <Input
-                            placeholder="Search contacts..."
-                            value={contactSearch}
-                            onChange={(e) => { setContactSearch(e.target.value); setContactPage(1); }}
-                            className="pl-9 h-8 text-sm"
-                          />
+                      ) : (
+                        <div className="text-center py-12">
+                          <FileText className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                          <p className="text-sm text-slate-400">No proposals found</p>
                         </div>
                       )}
-                      {(() => {
-                        const filtered = customerContacts.filter(c =>
-                          c.name?.toLowerCase().includes(contactSearch.toLowerCase()) ||
-                          c.email?.toLowerCase().includes(contactSearch.toLowerCase())
-                        );
-                        const totalPages = Math.ceil(filtered.length / 10);
-                        const paginated = filtered.slice((contactPage - 1) * 10, contactPage * 10);
-                        return filtered.length > 0 ? (
-                          <>
-                            <div className="space-y-2">
-                              {paginated.map(contact => (
-                                <div key={contact.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                  <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm">
-                                    {contact.name?.charAt(0).toUpperCase()}
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="font-medium text-slate-800 text-sm">{contact.name}</p>
-                                    {contact.email && <p className="text-xs text-slate-500">{contact.email}</p>}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            {totalPages > 1 && (
-                              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                                <span className="text-xs text-slate-500">
-                                  Showing {(contactPage - 1) * 10 + 1}-{Math.min(contactPage * 10, filtered.length)} of {filtered.length}
-                                </span>
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 px-2 text-xs"
-                                    disabled={contactPage === 1}
-                                    onClick={() => setContactPage(p => p - 1)}
-                                  >
-                                    Prev
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 px-2 text-xs"
-                                    disabled={contactPage >= totalPages}
-                                    onClick={() => setContactPage(p => p + 1)}
-                                  >
-                                    Next
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <p className="text-slate-400 text-sm text-center py-6">
-                            {contactSearch ? 'No contacts match your search' : 'No contacts'}
-                          </p>
-                        );
-                      })()}
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Proposals Tab */}
-                {companyTabs[selectedCustomer.id] === 'proposals' && (
-                  <div>
-                    {getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).length > 0 ? (
-                      <div className="space-y-2">
-                        {getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).map(quote => (
-                          <div key={quote.id} className="p-3 bg-white border rounded-lg hover:shadow-sm transition-all">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <img src="/quoteit-favicon.svg" alt="" className="w-5 h-5 flex-shrink-0" />
-                                <div>
-                                  <span className="font-medium text-slate-900">{quote.title}</span>
-                                  <p className="text-xs text-slate-500">ID: {quote.quoteit_id}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-slate-700">${(quote.amount || 0).toLocaleString()}</span>
+                  {/* Projects Tab */}
+                  {companyTabs[selectedCustomer.id] === 'projects' && (
+                    <div>
+                      {customerProjects.length > 0 ? (
+                        <div className="space-y-2">
+                          {customerProjects.map(project => (
+                            <Link key={project.id} to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="block p-4 bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl hover:border-[#0069AF]/30 transition-all">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium text-slate-900 dark:text-slate-100">{project.name}</span>
                                 <Badge variant="outline" className={cn(
-                                  quote.status === 'converted' && "bg-emerald-50 text-emerald-700",
-                                  quote.status === 'pending' && "bg-blue-50 text-blue-700"
-                                )}>{quote.status}</Badge>
+                                  project.status === 'completed' && "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400",
+                                  project.status === 'in_progress' && "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
+                                  project.status === 'planning' && "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                                )}>{project.status?.replace('_', ' ')}</Badge>
                               </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-slate-400 text-center py-8">No proposals found</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Projects Tab */}
-                {companyTabs[selectedCustomer.id] === 'projects' && (
-                  <div>
-                    {customerProjects.length > 0 ? (
-                      <div className="space-y-2">
-                        {customerProjects.map(project => (
-                          <Link key={project.id} to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="block p-3 bg-white border rounded-lg hover:shadow-sm transition-all">
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium text-slate-900">{project.name}</span>
-                              <Badge variant="outline" className={cn(
-                                project.status === 'completed' && "bg-emerald-50 text-emerald-700",
-                                project.status === 'in_progress' && "bg-blue-50 text-blue-700",
-                                project.status === 'planning' && "bg-amber-50 text-amber-700"
-                              )}>{project.status?.replace('_', ' ')}</Badge>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-slate-400 text-center py-8">No projects linked</p>
-                    )}
-                  </div>
-                )}
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12">
+                          <FolderKanban className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                          <p className="text-sm text-slate-400">No projects linked</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </>
             );
           })()}

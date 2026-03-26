@@ -147,13 +147,13 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-blue-100/60 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-blue-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-blue-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
         <div className="p-3.5 pb-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/50">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/50 dark:shadow-blue-900/30">
                 <ListTodo className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -171,7 +171,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
             <Button
               size="sm"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAddTask(); }}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-md shadow-blue-200/40 h-7 w-7 p-0 rounded-lg"
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-md shadow-blue-200/40 dark:shadow-blue-900/20 h-7 w-7 p-0 rounded-lg"
             >
               <Plus className="w-3.5 h-3.5" />
             </Button>
@@ -184,13 +184,13 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
             const assigneeName = assignee?.name || (t.assigned_to ? t.assigned_to.split('@')[0] : null);
             const dueInfo = getDueDateLabel(t.due_date);
             return (
-              <div key={t.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-blue-50/60 transition-colors">
+              <div key={t.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-blue-50/60 dark:hover:bg-blue-900/20 transition-colors">
                 <div className={cn("w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0",
                   t.status === 'in_progress' ? "border-blue-400" : t.status === 'review' ? "border-amber-400" : "border-slate-300")}>
                   {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
                   {t.status === 'review' && <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
                 </div>
-                <span className="text-xs text-slate-700 font-medium truncate flex-1 min-w-0">{t.title}</span>
+                <span className="text-xs text-slate-700 dark:text-slate-200 font-medium truncate flex-1 min-w-0">{t.title}</span>
                 {assigneeName && (
                   <span className="text-[9px] text-slate-400 shrink-0">{assigneeName.split(' ')[0]}</span>
                 )}
@@ -211,7 +211,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTaskPage(p => Math.max(0, p - 1)); }}
               disabled={taskPage === 0}
-              className="px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50 rounded disabled:opacity-30"
+              className="px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded disabled:opacity-30"
             >
               Prev
             </button>
@@ -219,7 +219,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTaskPage(p => Math.min(totalPages - 1, p + 1)); }}
               disabled={taskPage >= totalPages - 1}
-              className="px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50 rounded disabled:opacity-30"
+              className="px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded disabled:opacity-30"
             >
               Next
             </button>
@@ -384,13 +384,13 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-emerald-100/60 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 hover:shadow-lg hover:shadow-emerald-100/50 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-emerald-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-emerald-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
         <div className="p-3.5 pb-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200/50">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30">
                 <Package className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -408,7 +408,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
             <Button
               size="sm"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAddPart(); }}
-              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-200/40 h-7 w-7 p-0 rounded-lg flex-shrink-0"
+              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-200/40 dark:shadow-emerald-900/20 h-7 w-7 p-0 rounded-lg flex-shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
             </Button>
@@ -420,13 +420,13 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
             const dueInfo = !etaInfo ? getDateLabel(p.due_date) : null;
             const dateInfo = etaInfo || dueInfo;
             return (
-              <div key={p.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-emerald-50/60 transition-colors group/part">
+              <div key={p.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20 transition-colors group/part">
                 {/* Status badge */}
                 <Badge variant="outline" className={cn("text-[8px] px-1 py-0 shrink-0 leading-tight", partStatusConfig[p.status]?.color)}>
                   {partStatusConfig[p.status]?.label || p.status}
                 </Badge>
                 {/* Name */}
-                <span className="text-xs text-slate-700 font-medium truncate flex-1 min-w-0">{p.name}</span>
+                <span className="text-xs text-slate-700 dark:text-slate-200 font-medium truncate flex-1 min-w-0">{p.name}</span>
                 {/* Assignee */}
                 {p.assigned_name && (
                   <div className="flex items-center gap-0.5 shrink-0" title={p.assigned_name}>
@@ -544,7 +544,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPartPage(p => Math.max(0, p - 1)); }}
               disabled={partPage === 0}
-              className="px-2 py-0.5 text-[10px] font-medium text-emerald-600 hover:bg-emerald-50 rounded disabled:opacity-30"
+              className="px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded disabled:opacity-30"
             >
               Prev
             </button>
@@ -552,7 +552,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPartPage(p => Math.min(totalPages - 1, p + 1)); }}
               disabled={partPage >= totalPages - 1}
-              className="px-2 py-0.5 text-[10px] font-medium text-emerald-600 hover:bg-emerald-50 rounded disabled:opacity-30"
+              className="px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded disabled:opacity-30"
             >
               Next
             </button>
@@ -1301,7 +1301,7 @@ export default function ProjectDetail() {
           >
             <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${
               project.status === 'archived'
-                ? 'bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-200/50'
+                ? 'bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-200/50 dark:shadow-amber-900/30'
                 : 'bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-200/50'
             }`}>
               {project.status === 'archived' ? (
@@ -1533,7 +1533,7 @@ export default function ProjectDetail() {
           {project.description && <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 line-clamp-2">{project.description}</p>}
 
           {/* Row 2: Progress bar + status actions */}
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
             <div className="flex-1 min-w-0">
               <ProgressNeedle
                 projectId={projectId}
@@ -1614,13 +1614,13 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-violet-100/60 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 hover:shadow-lg hover:shadow-violet-100/50 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-violet-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-violet-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-400" />
                 <div className="p-3.5 pb-2">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-200/50">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-200/50 dark:shadow-violet-900/30">
                         <MessageSquare className="w-4 h-4 text-white" />
                       </div>
                       <div>
@@ -1668,13 +1668,13 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-amber-100/60 bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 hover:shadow-lg hover:shadow-amber-100/50 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-amber-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-amber-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-400" />
                 <div className="p-3.5">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-200/50">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-200/50 dark:shadow-amber-900/30">
                         <FileText className="w-4 h-4 text-white" />
                       </div>
                       <div>

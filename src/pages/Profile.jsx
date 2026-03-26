@@ -1,15 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { motion } from 'framer-motion';
-import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2, Sun, Moon, Monitor, Palette, Bell, CheckCircle2, AtSign, MessageCircle, LayoutGrid, Shield, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2, Sun, Moon, Monitor, Palette, Bell, CheckCircle2, AtSign, MessageCircle, LayoutGrid, Shield, ShieldCheck, ShieldAlert, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
@@ -25,10 +21,10 @@ const avatarColors = [
 ];
 
 const themeOptions = [
-  { value: 'light', label: 'Light', icon: Sun, description: 'Light background with dark text' },
-  { value: 'dark', label: 'Dark', icon: Moon, description: 'Dark background with light text' },
-  { value: 'system', label: 'System', icon: Monitor, description: 'Follow your system preferences' },
-  { value: 'high_contrast', label: 'High Contrast', icon: Palette, description: 'Enhanced visibility' }
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'system', label: 'System', icon: Monitor },
+  { value: 'high_contrast', label: 'Contrast', icon: Palette }
 ];
 
 export default function Profile() {
@@ -38,6 +34,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
     full_name: '',
     avatar_url: '',
@@ -118,7 +115,6 @@ export default function Profile() {
     await api.auth.updateMe(formData);
     const updated = await api.auth.me();
     setCurrentUser(updated);
-    // Apply theme change immediately
     if (formData.theme) {
       applyTheme(formData.theme);
     }
@@ -132,93 +128,128 @@ export default function Profile() {
   const getInitials = (name) => {
     if (!name) return '?';
     const parts = name.split(' ');
-    return parts.length >= 2 
+    return parts.length >= 2
       ? (parts[0][0] + parts[1][0]).toUpperCase()
       : name.slice(0, 2).toUpperCase();
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-background dark:via-background dark:to-background flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#0069AF]" />
       </div>
     );
   }
 
+  const tabs = [
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'security', label: 'Security', icon: Shield },
+    { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-background dark:via-background dark:to-background">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-[#0069AF] hover:text-[#133F5C] mb-6">
-          <ArrowLeft className="w-4 h-4 mr-2" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+      <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8">
+        <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-[#0069AF] hover:text-[#133F5C] mb-5 text-sm">
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to Dashboard
         </Link>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5 text-[#0069AF]" />
-                My Profile
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Avatar Section */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6">
-                <div className="relative">
-                  {formData.avatar_url ? (
-                    <img
-                      src={resolveUploadUrl(formData.avatar_url)}
-                      alt="Avatar"
-                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                    />
+        {/* Profile Hero */}
+        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden mb-6">
+          <div className="h-20 bg-gradient-to-r from-[#0F2F44] via-[#133F5C] to-[#0069AF]" />
+          <div className="px-6 pb-5 -mt-10">
+            <div className="flex items-end gap-4">
+              <div className="relative">
+                {formData.avatar_url ? (
+                  <img
+                    src={resolveUploadUrl(formData.avatar_url)}
+                    alt="Avatar"
+                    className="w-20 h-20 rounded-xl object-cover border-4 border-white dark:border-[#1e2a3a] shadow-lg"
+                  />
+                ) : (
+                  <div className={cn(
+                    "w-20 h-20 rounded-xl flex items-center justify-center text-white text-xl font-bold border-4 border-white dark:border-[#1e2a3a] shadow-lg",
+                    formData.avatar_color
+                  )}>
+                    {getInitials(formData.full_name || currentUser?.email)}
+                  </div>
+                )}
+                <label className="absolute -bottom-1 -right-1 p-1.5 bg-white dark:bg-slate-700 rounded-lg shadow-md cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+                  {uploading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0069AF]" />
                   ) : (
-                    <div className={cn(
-                      "w-24 h-24 rounded-full flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg",
-                      formData.avatar_color
-                    )}>
-                      {getInitials(formData.full_name || currentUser?.email)}
-                    </div>
+                    <Camera className="w-3.5 h-3.5 text-[#0069AF]" />
                   )}
-                  <label className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                    {uploading ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-[#0069AF]" />
-                    ) : (
-                      <Camera className="w-4 h-4 text-[#0069AF]" />
-                    )}
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                  </label>
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{currentUser?.full_name || 'User'}</h2>
-                  <p className="text-slate-500 dark:text-slate-400">{currentUser?.email}</p>
-                  <p className="text-xs text-slate-400 mt-1 capitalize">{currentUser?.role || 'user'}</p>
-                </div>
+                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                </label>
               </div>
+              <div className="flex-1 min-w-0 pb-1">
+                <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 truncate">{currentUser?.full_name || 'User'}</h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{currentUser?.email}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800/50 dark:hover:bg-red-900/20 shrink-0">
+                <LogOut className="w-3.5 h-3.5 mr-1.5" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        </div>
 
-              {/* Name */}
+        {/* Tab Navigation */}
+        <div className="flex gap-1 mb-6 bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-1 overflow-x-auto">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-1 justify-center",
+                  activeTab === tab.id
+                    ? "bg-[#0069AF] text-white shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                )}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                {tab.badge > 0 && (
+                  <Badge className={cn("h-5 min-w-5 p-0 justify-center text-[10px]", activeTab === tab.id ? "bg-white/20 text-white" : "bg-red-500 text-white")}>
+                    {tab.badge}
+                  </Badge>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tab Content */}
+        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden">
+          {activeTab === 'profile' && (
+            <div className="p-6 space-y-5">
               <div>
-                <Label>Full Name</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Full Name</Label>
                 <Input
                   value={formData.full_name}
                   onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-                  className="mt-1"
                 />
               </div>
 
               {/* Avatar Color (if no image) */}
               {!formData.avatar_url && (
                 <div>
-                  <Label>Avatar Color</Label>
-                  <div className="flex gap-2 mt-2 flex-wrap">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Avatar Color</Label>
+                  <div className="flex gap-2 flex-wrap">
                     {avatarColors.map(color => (
                       <button
                         key={color}
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, avatar_color: color }))}
                         className={cn(
-                          "w-8 h-8 rounded-full transition-all",
+                          "w-7 h-7 rounded-full transition-all",
                           color,
-                          formData.avatar_color === color && "ring-2 ring-offset-2 ring-[#0069AF]"
+                          formData.avatar_color === color && "ring-2 ring-offset-2 ring-[#0069AF] dark:ring-offset-[#1e2a3a]"
                         )}
                       />
                     ))}
@@ -227,8 +258,8 @@ export default function Profile() {
               )}
 
               {formData.avatar_url && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => setFormData(prev => ({ ...prev, avatar_url: '' }))}
                 >
@@ -236,142 +267,69 @@ export default function Profile() {
                 </Button>
               )}
 
-              <Button 
-                onClick={handleSave} 
-                disabled={saving}
-                className="w-full bg-[#0069AF] hover:bg-[#133F5C]"
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Notifications */}
-          <Card className="mb-6">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-[#0069AF]" />
-                  Notifications
-                  {unreadCount > 0 && (
-                    <Badge className="bg-red-500 text-white">{unreadCount}</Badge>
-                  )}
-                </CardTitle>
-                {unreadCount > 0 && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => markAllAsRead.mutate()}
-                    className="text-xs text-slate-500"
-                  >
-                    Mark all as read
-                  </Button>
-                )}
-              </div>
-              <CardDescription>Mentions and updates from your team</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {notifications.length > 0 ? (
-                <ScrollArea className="h-48 sm:h-64">
-                  <div className="space-y-2">
-                    {notifications.map(notification => (
-                      <div
-                        key={notification.id}
-                        className={cn(
-                          "p-3 rounded-lg border transition-all",
-                          notification.is_read 
-                            ? "bg-white border-slate-100" 
-                            : "bg-blue-50 border-blue-100"
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-start gap-3">
-                            <div className={cn(
-                              "p-2 rounded-lg",
-                              notification.type === 'mention' && "bg-indigo-100 text-indigo-600",
-                              notification.type === 'progress_update' && "bg-emerald-100 text-emerald-600",
-                              notification.type === 'task_assigned' && "bg-blue-100 text-blue-600"
-                            )}>
-                              {notification.type === 'mention' && <AtSign className="w-4 h-4" />}
-                              {notification.type === 'progress_update' && <MessageCircle className="w-4 h-4" />}
-                              {notification.type === 'task_assigned' && <CheckCircle2 className="w-4 h-4" />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-900">{notification.title}</p>
-                              <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{notification.message}</p>
-                              {notification.from_user_name && (
-                                <p className="text-xs text-slate-400 mt-1">From: {notification.from_user_name}</p>
-                              )}
-                              <p className="text-[10px] text-slate-400 mt-1">
-                                {format(new Date(notification.created_date), 'MMM d, h:mm a')}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {notification.link && (
-                              <Link to={notification.link}>
-                                <Button variant="ghost" size="sm" className="text-xs h-7">
-                                  View
-                                </Button>
-                              </Link>
-                            )}
-                            {!notification.is_read && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => markAsRead.mutate(notification.id)}
-                                className="text-xs h-7"
-                              >
-                                <CheckCircle2 className="w-3 h-3" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              ) : (
-                <div className="text-center py-8">
-                  <Bell className="w-10 h-10 text-slate-200 mx-auto mb-2" />
-                  <p className="text-sm text-slate-500">No notifications yet</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Dashboard Settings */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <LayoutGrid className="w-5 h-5 text-[#0069AF]" />
-                Dashboard
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
+              {/* Dashboard Settings inline */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-700/50">
                 <div>
-                  <Label>Show Widgets</Label>
-                  <p className="text-xs text-slate-500 mt-1">Display customizable widgets on your dashboard</p>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Dashboard Widgets</Label>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Show widgets on your dashboard</p>
                 </div>
                 <Switch
                   checked={formData.show_dashboard_widgets}
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, show_dashboard_widgets: checked }))}
                 />
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Account Security */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-[#0069AF]" />
-                Account Security
-              </CardTitle>
-              <CardDescription>Two-factor authentication status</CardDescription>
-            </CardHeader>
-            <CardContent>
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full bg-[#0069AF] hover:bg-[#133F5C]"
+              >
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          )}
+
+          {activeTab === 'appearance' && (
+            <div className="p-6">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 block">Theme</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {themeOptions.map(option => {
+                  const Icon = option.icon;
+                  const isActive = formData.theme === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, theme: option.value }));
+                        applyTheme(option.value);
+                      }}
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
+                        isActive
+                          ? "border-[#0069AF] bg-blue-50 dark:bg-blue-900/30 dark:border-blue-500"
+                          : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                      )}
+                    >
+                      <div className={cn(
+                        "p-2.5 rounded-xl",
+                        isActive ? "bg-[#0069AF] text-white" : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                      )}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className={cn("text-sm font-medium", isActive ? "text-[#0069AF] dark:text-blue-400" : "text-slate-700 dark:text-slate-300")}>{option.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-slate-400 mt-4 text-center">
+                Theme is saved to your profile and syncs across devices.
+              </p>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={cn(
@@ -386,9 +344,7 @@ export default function Profile() {
                     }
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900 dark:text-slate-100">
-                      Two-Factor Authentication
-                    </p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100">Two-Factor Authentication</p>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
                       {mfaEnabled ? 'Enabled via Authenticator App' : 'Not yet configured'}
                     </p>
@@ -404,85 +360,92 @@ export default function Profile() {
                 </Badge>
               </div>
               {!mfaEnabled && mfaDeadline && (
-                <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-lg">
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-lg">
                   <p className="text-sm text-amber-800 dark:text-amber-300">
                     You must set up 2FA by <strong>{format(mfaDeadline, 'MMMM d, yyyy')}</strong>
                   </p>
                 </div>
               )}
-              <div className="mt-4">
-                <Link to={createPageUrl('SecuritySettings')}>
-                  <Button className="bg-[#0069AF] hover:bg-[#133F5C]">
-                    {mfaEnabled ? 'Manage 2FA' : 'Set Up 2FA'}
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+              <Link to={createPageUrl('SecuritySettings')}>
+                <Button className="bg-[#0069AF] hover:bg-[#133F5C]">
+                  {mfaEnabled ? 'Manage 2FA' : 'Set Up 2FA'}
+                </Button>
+              </Link>
+            </div>
+          )}
 
-          {/* Theme Settings */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="w-5 h-5 text-[#0069AF]" />
-                Appearance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Label className="mb-4 block">Theme</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {themeOptions.map(option => {
-                  const Icon = option.icon;
-                  return (
-                    <button
-                      key={option.value}
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, theme: option.value }));
-                        applyTheme(option.value);
-                      }}
+          {activeTab === 'notifications' && (
+            <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
+              {unreadCount > 0 && (
+                <div className="px-6 py-3 flex items-center justify-between bg-slate-50/50 dark:bg-[#151d2b]/50">
+                  <span className="text-sm text-slate-500 dark:text-slate-400">{unreadCount} unread</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => markAllAsRead.mutate()}
+                    className="text-xs text-[#0069AF]"
+                  >
+                    Mark all as read
+                  </Button>
+                </div>
+              )}
+              {notifications.length > 0 ? (
+                <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50">
+                  {notifications.map(notification => (
+                    <div
+                      key={notification.id}
                       className={cn(
-                        "flex items-start gap-3 p-4 rounded-xl border-2 transition-all text-left",
-                        formData.theme === option.value
-                          ? "border-[#0069AF] bg-blue-50 dark:bg-blue-900/30 dark:border-blue-500"
-                          : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                        "px-6 py-3 flex items-start gap-3 transition-colors",
+                        !notification.is_read && "bg-blue-50/50 dark:bg-blue-900/10"
                       )}
                     >
                       <div className={cn(
-                        "p-2 rounded-lg",
-                        formData.theme === option.value ? "bg-[#0069AF] text-white" : "bg-slate-100 text-slate-600"
+                        "p-1.5 rounded-lg mt-0.5 shrink-0",
+                        notification.type === 'mention' && "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400",
+                        notification.type === 'progress_update' && "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400",
+                        notification.type === 'task_assigned' && "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
                       )}>
-                        <Icon className="w-4 h-4" />
+                        {notification.type === 'mention' && <AtSign className="w-3.5 h-3.5" />}
+                        {notification.type === 'progress_update' && <MessageCircle className="w-3.5 h-3.5" />}
+                        {notification.type === 'task_assigned' && <CheckCircle2 className="w-3.5 h-3.5" />}
                       </div>
-                      <div>
-                        <div className="font-medium text-slate-900 dark:text-slate-100">{option.label}</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">{option.description}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{notification.title}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{notification.message}</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          {notification.from_user_name && `${notification.from_user_name} · `}
+                          {format(new Date(notification.created_date), 'MMM d, h:mm a')}
+                        </p>
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-slate-400 mt-3">
-                Theme settings are saved to your profile and will apply across all your devices.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-600">
-                <LogOut className="w-5 h-5" />
-                Sign Out
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-500 mb-4">Sign out of your account on this device.</p>
-              <Button variant="outline" onClick={handleLogout} className="text-red-600 border-red-200 hover:bg-red-50">
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {notification.link && (
+                          <Link to={notification.link}>
+                            <Button variant="ghost" size="sm" className="text-xs h-7 px-2">View</Button>
+                          </Link>
+                        )}
+                        {!notification.is_read && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => markAsRead.mutate(notification.id)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Bell className="w-10 h-10 text-slate-200 dark:text-slate-700 mx-auto mb-2" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400">No notifications yet</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

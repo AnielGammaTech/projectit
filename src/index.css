@@ -107,9 +107,12 @@ html {
   scrollbar-gutter: stable;
 }
 
-/* Fix scrollbar disappearing when Radix dialogs/popovers open */
+/* Fix scrollbar disappearing when Radix dialogs/popovers open.
+   Radix's react-remove-scroll sets inline overflow:hidden + padding-right
+   on <body>. We override all of it so the scrollbar never vanishes. */
+body,
 body[data-scroll-locked] {
-  overflow: scroll !important;
+  overflow-y: scroll !important;
   padding-right: 0px !important;
   margin-right: 0px !important;
 }
@@ -117,6 +120,12 @@ body[data-scroll-locked] {
 /* Also prevent the fixed overlay from inheriting shift */
 [data-radix-popper-content-wrapper] {
   margin-right: 0px !important;
+}
+
+/* Prevent Radix remove-scroll style tags from hiding scrollbar */
+[data-radix-scroll-body-lock] {
+  overflow-y: scroll !important;
+  padding-right: 0px !important;
 }
 
 [data-radix-scroll-area-viewport] {

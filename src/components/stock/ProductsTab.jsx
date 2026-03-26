@@ -54,7 +54,7 @@ export default function ProductsTab() {
     api.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
-  const { data: products = [], refetch } = useQuery({
+  const { data: products = [], refetch, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: () => api.entities.Product.list('-created_date'),
     staleTime: 300000
@@ -310,7 +310,19 @@ export default function ProductsTab() {
       </div>
 
       {/* Products Grid - Compact Tiles */}
-      {filteredProducts.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden animate-pulse">
+              <div className="aspect-square bg-slate-100 dark:bg-[#151d2b]" />
+              <div className="p-2 space-y-1.5">
+                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
+                <div className="h-3 bg-slate-100 dark:bg-slate-700/50 rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredProducts.length === 0 ? (
         <div className="text-center py-16 bg-[#0F2F44]/5 rounded-2xl border border-[#0F2F44]/10">
           <Package className="w-12 h-12 mx-auto text-[#0F2F44]/30 mb-4" />
           <h3 className="text-lg font-medium text-[#0F2F44] mb-2">

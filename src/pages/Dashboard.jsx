@@ -916,7 +916,39 @@ export default function Dashboard() {
         </div>
 
         {/* While You Were Away Banner */}
-        {missedNotifications.length > 0 && !dismissedCatchUp && (
+        {missedNotifications.length > 0 && !dismissedCatchUp && (() => {
+          // Group duplicate notifications by type + title + message
+          const grouped = missedNotifications.reduce((acc, notification) => {
+            const key = `${notification.type}::${notification.title}::${notification.message}`;
+            const existing = acc.find(g => g.key === key);
+            if (existing) {
+              existing.count += 1;
+              existing.ids.push(notification.id);
+              if (notification.created_date > existing.latest.created_date) {
+                existing.latest = notification;
+              }
+            } else {
+              acc.push({ key, count: 1, latest: notification, ids: [notification.id] });
+            }
+            return acc;
+          }, []);
+
+          const handleMarkGroupRead = async (group) => {
+            try {
+              await Promise.all(
+                group.ids.map(id => api.entities.UserNotification.update(id, { is_read: true }))
+              );
+              refetchMissed();
+              queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
+              if (group.latest.link) {
+                navigate(group.latest.link);
+              }
+            } catch (err) {
+              console.error('Failed to mark grouped notifications as read:', err);
+            }
+          };
+
+          return (
           <div className="mb-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-700/50 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-transparent dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-transparent">
               <div className="flex items-center gap-2.5">
@@ -938,29 +970,39 @@ export default function Dashboard() {
               </button>
             </div>
             <div className="divide-y divide-slate-100 dark:divide-slate-700/40">
-              {missedNotifications.slice(0, 5).map((notification) => {
-                const config = missedConfig[notification.type] || missedConfig.project_update;
+              {grouped.slice(0, 5).map((group) => {
+                const config = missedConfig[group.latest.type] || missedConfig.project_update;
                 const Icon = config.icon;
                 return (
                   <button
-                    key={notification.id}
-                    onClick={() => handleMarkNotificationRead(notification)}
+                    key={group.key}
+                    onClick={() => handleMarkGroupRead(group)}
                     className="w-full flex items-center gap-3.5 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors text-left group"
                   >
-                    <div className={cn("p-1.5 rounded-lg flex-shrink-0", config.bg)}>
+                    <div className={cn("p-1.5 rounded-lg flex-shrink-0 relative", config.bg)}>
                       <Icon className={cn("w-3.5 h-3.5", config.color)} />
+                      {group.count > 1 && (
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold rounded-full bg-slate-700 text-white dark:bg-slate-200 dark:text-slate-800 shadow-sm">
+                          {group.count}
+                        </span>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
-                        {notification.title}
+                        {group.latest.title}
+                        {group.count > 1 && (
+                          <span className="ml-1.5 text-[11px] font-normal text-slate-400 dark:text-slate-500">
+                            ({group.count} times)
+                          </span>
+                        )}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        {notification.message}
+                        {group.latest.message}
                       </p>
                     </div>
                     <span className="text-[11px] text-slate-400 dark:text-slate-500 whitespace-nowrap flex-shrink-0">
-                      {notification.created_date
-                        ? formatDistanceToNow(new Date(notification.created_date), { addSuffix: true })
+                      {group.latest.created_date
+                        ? formatDistanceToNow(new Date(group.latest.created_date), { addSuffix: true })
                         : ''}
                     </span>
                   </button>
@@ -983,7 +1025,8 @@ export default function Dashboard() {
               </Link>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* Urgent Tasks Alert */}
         {!dismissedAlert && myUrgentTasks.length > 0 && (

@@ -71,7 +71,9 @@ const groupColors = {
 
 const adminMenuGroups = [
   {
-    title: 'People',
+    title: 'People & Access',
+    icon: Users,
+    color: 'from-blue-500 to-indigo-600',
     items: [
       { id: 'people', label: 'People & Teams', icon: Users, description: 'Team members, groups, and admins' },
       { id: 'roles', label: 'Roles & Permissions', icon: Shield, description: 'Access control', page: 'RolesPermissions' },
@@ -79,35 +81,43 @@ const adminMenuGroups = [
   },
   {
     title: 'Projects',
+    icon: Layers,
+    color: 'from-violet-500 to-purple-600',
     items: [
-      { id: 'project-management', label: 'Archived & Deleted', icon: Archive, description: 'Manage old projects' },
       { id: 'tags', label: 'Tags', icon: Tags, description: 'Project tags' },
       { id: 'statuses', label: 'Statuses', icon: Layers, description: 'Project statuses', page: 'ProjectStatuses' },
       { id: 'templates', label: 'Templates', icon: FileText, description: 'Project & task templates', page: 'Templates' },
+      { id: 'project-management', label: 'Archived & Deleted', icon: Archive, description: 'Manage old projects' },
+    ]
+  },
+  {
+    title: 'Integrations & AI',
+    icon: GitMerge,
+    color: 'from-emerald-500 to-teal-600',
+    items: [
+      { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'HaloPSA & external services' },
+      { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automation triggers', page: 'Workflows' },
+      { id: 'ai-agents', label: 'AI Agents', icon: Bot, description: 'GammaAi agent connection' },
     ]
   },
   {
     title: 'Inventory',
+    icon: Package,
+    color: 'from-amber-500 to-orange-600',
     items: [
       { id: 'inventory-settings', label: 'Inventory Settings', icon: Package, description: 'Stock locations, permissions & tools' },
     ]
   },
   {
-    title: 'Automation',
+    title: 'System',
+    icon: Wrench,
+    color: 'from-slate-500 to-slate-700',
     items: [
-      { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automation triggers', page: 'Workflows' },
-      { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'HaloPSA & external services' },
-      { id: 'ai-agents', label: 'AI Agents', icon: Bot, description: 'GammaAi agent connection' },
-    ]
-  },
-  {
-    title: 'Settings',
-    items: [
-      { id: 'company', label: 'App Settings', icon: Building2, description: 'Branding' },
+      { id: 'company', label: 'App Settings', icon: Building2, description: 'Branding & appearance' },
       { id: 'database-health', label: 'Database Health', icon: Database, description: 'Integrity checks & size' },
-      { id: 'about', label: 'About & System', icon: Info, description: 'Version, build, environment' },
+      { id: 'audit', label: 'Audit Logs', icon: Activity, description: 'Activity tracking', page: 'AuditLogs' },
       { id: 'feedback', label: 'Feedback', icon: MessageSquare, description: 'Bug reports', page: 'FeedbackManagement' },
-      { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Activity tracking', page: 'AuditLogs' },
+      { id: 'about', label: 'About & System', icon: Info, description: 'Version, build, environment' },
     ]
   }
 ];
@@ -124,7 +134,30 @@ export default function Adminland() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading...</div>
+        <div className="max-w-4xl w-full mx-auto px-4 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+              <div className="h-4 w-48 bg-slate-100 dark:bg-slate-700/50 rounded animate-pulse" />
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-2xl border dark:border-slate-700/50 overflow-hidden animate-pulse">
+                <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b]"><div className="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded" /></div>
+                <div className="p-3 space-y-3">
+                  {[...Array(3)].map((_, j) => (
+                    <div key={j} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700/50" />
+                      <div className="flex-1 space-y-1"><div className="h-4 w-2/3 bg-slate-200 dark:bg-slate-700 rounded" /><div className="h-3 w-1/2 bg-slate-100 dark:bg-slate-700/50 rounded" /></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -198,7 +231,7 @@ export default function Adminland() {
               <p className="text-slate-500 dark:text-slate-400">Manage your workspace settings</p>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {adminMenuGroups.map((group, gIdx) => (
                 <motion.div
                   key={group.title}
@@ -207,41 +240,44 @@ export default function Adminland() {
                   transition={{ delay: gIdx * 0.1 }}
                   className="bg-white dark:bg-[#1e2a3a] rounded-2xl border dark:border-slate-700/50 shadow-sm overflow-hidden"
                 >
-                  <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b] border-b dark:border-slate-700/50">
+                  <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b] border-b dark:border-slate-700/50 flex items-center gap-3">
+                    <div className={cn("p-1.5 rounded-lg bg-gradient-to-br shadow-sm", group.color)}>
+                      <group.icon className="w-4 h-4 text-white" />
+                    </div>
                     <h2 className="font-semibold text-slate-700 dark:text-slate-200">{group.title}</h2>
                   </div>
-                  <div className="divide-y">
-                    {group.items.map((item) => (
-                      item.page ? (
-                        <Link
-                          key={item.id}
-                          to={createPageUrl(item.page)}
-                          className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group"
-                        >
-                          <div className="p-1.5 rounded-lg bg-[#0069AF]/10 dark:bg-blue-900/30 group-hover:bg-[#0069AF] transition-colors">
-                            <item.icon className="w-4 h-4 text-[#0069AF] dark:text-blue-400 group-hover:text-white transition-colors" />
+                  <div className="divide-y dark:divide-slate-700/50">
+                    {group.items.map((item) => {
+                      const content = (
+                        <>
+                          <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700/50 group-hover:bg-[#0069AF] transition-colors">
+                            <item.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-white transition-colors" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <span className="text-sm font-medium text-slate-900 dark:text-slate-100 block">{item.label}</span>
                             <span className="text-xs text-slate-500 dark:text-slate-400">{item.description}</span>
                           </div>
+                          <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-[#0069AF] transition-colors" />
+                        </>
+                      );
+                      return item.page ? (
+                        <Link
+                          key={item.id}
+                          to={createPageUrl(item.page)}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group"
+                        >
+                          {content}
                         </Link>
                       ) : (
                         <button
                           key={item.id}
                           onClick={() => setActiveSection(item.id)}
-                          className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group text-left"
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group text-left"
                         >
-                          <div className="p-1.5 rounded-lg bg-[#0069AF]/10 dark:bg-blue-900/30 group-hover:bg-[#0069AF] transition-colors">
-                            <item.icon className="w-4 h-4 text-[#0069AF] dark:text-blue-400 group-hover:text-white transition-colors" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium text-slate-900 dark:text-slate-100 block">{item.label}</span>
-                            <span className="text-xs text-slate-500 dark:text-slate-400">{item.description}</span>
-                          </div>
+                          {content}
                         </button>
-                      )
-                    ))}
+                      );
+                    })}
                   </div>
                 </motion.div>
               ))}

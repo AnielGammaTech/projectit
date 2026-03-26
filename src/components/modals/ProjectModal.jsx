@@ -250,7 +250,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
   const selectedColor = colorOptions.find(c => c.value === formData.color)?.color || '#3b82f6';
   const isEdit = !!project;
-  const canSubmit = formData.name && formData.customer_id && formData.description;
+  const canSubmit = formData.name && formData.customer_id && formData.description && formData.project_lead;
   const leadMember = formData.project_lead ? getMember(formData.project_lead) : null;
 
   const filteredAvailableMembers = teamMembers.filter(m =>

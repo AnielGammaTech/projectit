@@ -23,7 +23,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import MeetingUpdateModal from '@/components/modals/MeetingUpdateModal';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import { ProjectSubpageSkeleton } from '@/components/ui/PageSkeletons';
 
@@ -44,7 +43,6 @@ export default function ProjectNotes() {
   const [newContent, setNewContent] = useState('');
   const [newType, setNewType] = useState('note');
   const [expandedNotes, setExpandedNotes] = useState(new Set());
-  const [showMeetingModal, setShowMeetingModal] = useState(false);
 
   useEffect(() => {
     api.auth.me().then(setCurrentUser).catch(() => {});
@@ -139,10 +137,12 @@ export default function ProjectNotes() {
               <p className="text-slate-500 dark:text-slate-400">{notes.length} entries</p>
             </div>
           </div>
-          <Button onClick={() => setShowMeetingModal(true)} className="bg-indigo-600 hover:bg-indigo-700">
-            <CalendarCheck className="w-4 h-4 mr-2" />
-            Meeting Update
-          </Button>
+          <Link to={createPageUrl('WeeklyMeetingUpdate') + `?id=${projectId}`}>
+            <Button className="bg-[#0069AF] hover:bg-[#0F2F44]">
+              <CalendarCheck className="w-4 h-4 mr-2" />
+              Meeting Update
+            </Button>
+          </Link>
         </div>
 
         {/* Add New */}
@@ -323,15 +323,6 @@ export default function ProjectNotes() {
         </div>
       </div>
 
-      <MeetingUpdateModal
-        open={showMeetingModal}
-        onClose={() => setShowMeetingModal(false)}
-        projectId={projectId}
-        currentUser={currentUser}
-        teamMembers={teamMembers}
-        onNoteSaved={() => queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] })}
-        onTasksCreated={() => queryClient.invalidateQueries({ queryKey: ['tasks', projectId] })}
-      />
     </div>
   );
 }
