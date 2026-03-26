@@ -313,11 +313,11 @@ export default function ProductsTab() {
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           {[...Array(12)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden animate-pulse">
-              <div className="aspect-square bg-slate-100 dark:bg-[#151d2b]" />
+            <div key={i} className="bg-card rounded-lg border overflow-hidden animate-pulse">
+              <div className="aspect-square bg-muted" />
               <div className="p-2 space-y-1.5">
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
-                <div className="h-3 bg-slate-100 dark:bg-slate-700/50 rounded w-1/2" />
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-3 bg-muted rounded w-1/2" />
               </div>
             </div>
           ))}

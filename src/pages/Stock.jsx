@@ -8,21 +8,24 @@ import ServicesTab from '@/components/stock/ServicesTab';
 import BundlesTab from '@/components/stock/BundlesTab';
 import PartsTrackerTab from '@/components/stock/PartsTrackerTab';
 import ToolsTab from '@/components/stock/ToolsTab';
+import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function Stock() {
   const [activeTab, setActiveTab] = useState('products');
 
-  const { data: products = [] } = useQuery({
+  const { data: products = [], isLoading: loadingProducts } = useQuery({
     queryKey: ['products'],
     queryFn: () => api.entities.Product.list(),
     staleTime: 300000
   });
 
-  const { data: tools = [] } = useQuery({
+  const { data: tools = [], isLoading: loadingTools } = useQuery({
     queryKey: ['tools'],
     queryFn: () => api.entities.Tool.list(),
     staleTime: 300000
   });
+
+  if (loadingProducts || loadingTools) return <CardGridSkeleton />;
 
   const totalProducts = products.length;
   const lowStockProducts = products.filter(p => (p.quantity_on_hand || 0) > 0 && (p.quantity_on_hand || 0) <= 5).length;
