@@ -93,9 +93,9 @@ export default function MyNotifications() {
   if (loading) return <CardGridSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+    <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-4 sm:py-8">
-        <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-[#0069AF] hover:text-[#133F5C] mb-6">
+        <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-primary hover:text-foreground mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
         </Link>
@@ -105,7 +105,7 @@ export default function MyNotifications() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
-                  <Inbox className="w-5 h-5 text-[#0069AF]" />
+                  <Inbox className="w-5 h-5 text-primary" />
                   My Notifications
                   {unreadCount > 0 && (
                     <Badge className="bg-red-500 text-white">{unreadCount}</Badge>
@@ -156,7 +156,7 @@ export default function MyNotifications() {
                             <div className="flex items-center gap-2">
                               <p className="font-medium text-sm text-slate-900 truncate">{notification.title}</p>
                               {notification.project_name && (
-                                <span className="text-xs text-[#0069AF] truncate">• {notification.project_name}</span>
+                                <span className="text-xs text-primary truncate">• {notification.project_name}</span>
                               )}
                             </div>
                             <p className="text-xs text-slate-500 truncate">{notification.message}</p>
@@ -200,8 +200,8 @@ export default function MyNotifications() {
               ) : (
                 <div className="text-center py-16">
                   <Inbox className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-slate-900 mb-1">No notifications</h3>
-                  <p className="text-sm text-slate-500">You're all caught up! Notifications will appear here when someone mentions you or assigns you a task.</p>
+                  <h3 className="text-lg font-medium text-foreground mb-1">No notifications</h3>
+                  <p className="text-sm text-muted-foreground">You're all caught up! Notifications will appear here when someone mentions you or assigns you a task.</p>
                 </div>
               )}
             </CardContent>
