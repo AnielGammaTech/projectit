@@ -41,8 +41,8 @@ export default function ProjectNavHeader({ project, currentPage }) {
           <ProjectSwitcher currentProject={project} currentPage={currentPage} />
         </div>
 
-        {/* Bottom row - Tab Navigation */}
-        <div className="flex items-center gap-0.5 sm:gap-1 -mb-px overflow-x-auto pb-px scrollbar-none">
+        {/* Bottom row - Tab Navigation — hidden on mobile */}
+        <div className="hidden sm:flex items-center gap-0.5 sm:gap-1 -mb-px overflow-x-auto pb-px scrollbar-none">
           {navTabs.map(tab => {
             const Icon = tab.icon;
             const isActive = currentPage === tab.page;

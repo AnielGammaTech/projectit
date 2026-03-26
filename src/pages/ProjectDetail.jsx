@@ -1500,10 +1500,12 @@ export default function ProjectDetail() {
                   timeBudgetHours={project.time_budget_hours || 0}
                 />
               </span>
-              <HaloPSATicketLink
-                project={project}
-                onUpdate={refetchProject}
-              />
+              <span className="hidden sm:inline-flex">
+                <HaloPSATicketLink
+                  project={project}
+                  onUpdate={refetchProject}
+                />
+              </span>
               <Button variant="outline" size="sm" onClick={() => setShowProjectModal(true)} className="h-8 px-2.5 touch-manipulation">
                 <Edit2 className="w-3.5 h-3.5" />
               </Button>
@@ -1602,124 +1604,87 @@ export default function ProjectDetail() {
           </div>
         </motion.div>
 
-        {/* ── Mobile: Horizontal scroll cards ── */}
-        <div className="sm:hidden -mx-4 px-4 overflow-x-auto scrollbar-none pb-3">
-          <div className="flex gap-3" style={{ width: 'max-content' }}>
-            {/* Tasks mini card */}
-            <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`} className="w-[200px] shrink-0">
-              <div className="relative rounded-xl overflow-hidden border border-blue-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white to-blue-50/40 dark:from-[#1e2a3a] dark:to-[#1e2a3a] h-[120px] p-3">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-400" />
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 shadow-sm">
-                    <ListTodo className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-xs">Tasks</h3>
-                    <span className="text-[10px] text-slate-500">{completedTasks}/{tasks.filter(t => t.project_id === projectId).length} done</span>
-                  </div>
+        {/* ── Mobile: Compact 2x2 grid cards ── */}
+        <div className="sm:hidden grid grid-cols-2 gap-2 pb-3">
+          {/* Tasks */}
+          <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="p-1.5 rounded-lg bg-blue-500/10 dark:bg-blue-500/20">
+                  <ListTodo className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 </div>
-                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden mb-2">
+                <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Tasks</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div className="h-full bg-blue-500 rounded-full" style={{ width: `${taskProgress}%` }} />
                 </div>
-                {tasks.filter(t => t.project_id === projectId && t.status !== 'completed' && t.status !== 'archived').slice(0, 2).map(task => (
-                  <p key={task.id} className="text-[11px] text-slate-600 dark:text-slate-300 truncate leading-relaxed">• {task.title}</p>
-                ))}
-              </div>
-            </Link>
-
-            {/* Messages mini card */}
-            <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`} className="w-[200px] shrink-0">
-              <div className="relative rounded-xl overflow-hidden border border-violet-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white to-violet-50/40 dark:from-[#1e2a3a] dark:to-[#1e2a3a] h-[120px] p-3">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-purple-400" />
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 shadow-sm">
-                    <MessageSquare className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-xs">Messages</h3>
-                    <span className="text-[10px] text-slate-500">{projectNotes.length} total</span>
-                  </div>
-                </div>
-                {projectNotes.length > 0 ? (
-                  [...projectNotes].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 2).map(note => (
-                    <p key={note.id} className="text-[11px] text-slate-600 dark:text-slate-300 truncate leading-relaxed">• {(note.title?.trim() || note.content)?.replace(/[#*_]/g, '').slice(0, 40)}</p>
-                  ))
-                ) : (
-                  <p className="text-[11px] text-slate-400 mt-2">No messages yet</p>
-                )}
-              </div>
-            </Link>
-
-            {/* Parts mini card */}
-            <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`} className="w-[200px] shrink-0">
-              <div className="relative rounded-xl overflow-hidden border border-emerald-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white to-emerald-50/40 dark:from-[#1e2a3a] dark:to-[#1e2a3a] h-[120px] p-3">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400" />
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm">
-                    <Package className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-xs">Parts</h3>
-                    <span className="text-[10px] text-slate-500">{parts.filter(p => p.project_id === projectId).length} total</span>
-                  </div>
-                </div>
-                {parts.filter(p => p.project_id === projectId && p.status !== 'installed').length > 0 ? (
-                  parts.filter(p => p.project_id === projectId && p.status !== 'installed').slice(0, 2).map(part => (
-                    <p key={part.id} className="text-[11px] text-slate-600 dark:text-slate-300 truncate leading-relaxed">• {part.name}</p>
-                  ))
-                ) : (
-                  <p className="text-[11px] text-slate-400 mt-2">No active parts</p>
-                )}
-              </div>
-            </Link>
-
-            {/* Files mini card */}
-            <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`} className="w-[200px] shrink-0">
-              <div className="relative rounded-xl overflow-hidden border border-amber-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white to-amber-50/40 dark:from-[#1e2a3a] dark:to-[#1e2a3a] h-[120px] p-3">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-400" />
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 shadow-sm">
-                    <FileText className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-xs">Files</h3>
-                    <span className="text-[10px] text-slate-500">{projectFiles.length} file{projectFiles.length !== 1 ? 's' : ''}</span>
-                  </div>
-                </div>
-                {fileFolders.slice(0, 2).map(folder => (
-                  <p key={folder.id} className="text-[11px] text-slate-600 dark:text-slate-300 truncate leading-relaxed">📁 {folder.name}</p>
-                ))}
-                {fileFolders.length === 0 && projectFiles.length > 0 && (
-                  <p className="text-[11px] text-slate-500 mt-2">{projectFiles.length} files</p>
-                )}
-                {fileFolders.length === 0 && projectFiles.length === 0 && (
-                  <p className="text-[11px] text-slate-400 mt-2">No files yet</p>
-                )}
-              </div>
-            </Link>
-
-            {/* Due Dates mini card */}
-            <div className="w-[200px] shrink-0">
-              <div className="relative rounded-xl overflow-hidden border border-red-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white to-red-50/40 dark:from-[#1e2a3a] dark:to-[#1e2a3a] h-[120px] p-3">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-rose-400" />
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 shadow-sm">
-                    <Clock className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <h3 className="font-bold text-slate-800 dark:text-slate-100 text-xs">Due Dates</h3>
-                </div>
-                {(() => {
-                  const upcoming = [...tasks.filter(t => t.project_id === projectId && t.due_date && t.status !== 'completed'), ...parts.filter(p => p.project_id === projectId && p.due_date && p.status !== 'installed')]
-                    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
-                    .slice(0, 3);
-                  return upcoming.length > 0 ? upcoming.map(item => (
-                    <p key={item.id} className="text-[11px] text-slate-600 dark:text-slate-300 truncate leading-relaxed">
-                      <span className="text-slate-400">{format(new Date(item.due_date), 'M/d')}</span> {item.title || item.name}
-                    </p>
-                  )) : <p className="text-[11px] text-slate-400 mt-2">No upcoming dates</p>;
-                })()}
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">{completedTasks}/{tasks.filter(t => t.project_id === projectId).length}</span>
               </div>
             </div>
+          </Link>
+
+          {/* Messages */}
+          <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`}>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="p-1.5 rounded-lg bg-violet-500/10 dark:bg-violet-500/20">
+                  <MessageSquare className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+                </div>
+                <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Messages</span>
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">{projectNotes.length} total</span>
+            </div>
+          </Link>
+
+          {/* Parts */}
+          <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`}>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="p-1.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20">
+                  <Package className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Parts</span>
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">{parts.filter(p => p.project_id === projectId).length} total</span>
+            </div>
+          </Link>
+
+          {/* Files */}
+          <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`}>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="p-1.5 rounded-lg bg-amber-500/10 dark:bg-amber-500/20">
+                  <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Files</span>
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">{projectFiles.length} file{projectFiles.length !== 1 ? 's' : ''}</span>
+            </div>
+          </Link>
+
+          {/* Due Dates — full width */}
+          <div className="col-span-2 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="p-1.5 rounded-lg bg-red-500/10 dark:bg-red-500/20">
+                <Clock className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+              </div>
+              <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Upcoming Due Dates</span>
+            </div>
+            {(() => {
+              const upcoming = [...tasks.filter(t => t.project_id === projectId && t.due_date && t.status !== 'completed'), ...parts.filter(p => p.project_id === projectId && p.due_date && p.status !== 'installed')]
+                .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+                .slice(0, 3);
+              return upcoming.length > 0 ? (
+                <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+                  {upcoming.map(item => (
+                    <p key={item.id} className="text-[11px] text-slate-600 dark:text-slate-300 truncate">
+                      <span className="text-slate-400">{format(new Date(item.due_date), 'M/d')}</span> {item.title || item.name}
+                    </p>
+                  ))}
+                </div>
+              ) : <p className="text-[11px] text-slate-400">No upcoming dates</p>;
+            })()}
           </div>
         </div>
 
