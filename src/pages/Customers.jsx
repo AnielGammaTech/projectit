@@ -275,8 +275,8 @@ export default function Customers() {
 
   if (loadingCustomers) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="space-y-6">
             {/* Header skeleton */}
             <div className="flex items-center justify-between">
@@ -290,7 +290,7 @@ export default function Customers() {
               </div>
             </div>
             {/* Search bar skeleton */}
-            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4">
+            <div className="bg-card rounded-2xl border border-slate-100 dark:border-border p-4">
               <div className="flex gap-3">
                 <div className="flex-1 h-10 bg-slate-100 dark:bg-slate-700/40 rounded-lg animate-pulse" />
                 <div className="h-10 w-20 bg-slate-100 dark:bg-slate-700/40 rounded-lg animate-pulse" />
@@ -302,7 +302,7 @@ export default function Customers() {
               {Array.from({ length: 8 }, (_, i) => (
                 <div
                   key={i}
-                  className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-4"
+                  className="bg-card rounded-xl border border-slate-200 dark:border-border p-4"
                   style={{ animationDelay: `${i * 75}ms` }}
                 >
                   <div className="flex items-start gap-3 animate-pulse">
@@ -327,15 +327,15 @@ export default function Customers() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between gap-3 mb-3 sm:mb-6"
         >
           <div className="flex items-center gap-3">
-            <h1 className="text-lg sm:text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Customers</h1>
+            <h1 className="text-lg sm:text-3xl font-bold text-foreground tracking-tight">Customers</h1>
             <span className="text-xs text-slate-400 sm:hidden">{companies.length + standaloneContacts.length}</span>
             <p className="hidden sm:block text-slate-500 text-sm">Manage your client relationships</p>
           </div>
@@ -347,7 +347,7 @@ export default function Customers() {
             <Button variant="ghost" size="sm" onClick={handleHaloPSASync} disabled={syncing} className="sm:hidden h-8 w-8 p-0">
               <RefreshCw className={cn("w-4 h-4", syncing && "animate-spin")} />
             </Button>
-            <Button size="sm" onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#0F2F44] h-8 sm:h-9 text-xs sm:text-sm px-2.5 sm:px-3">
+            <Button size="sm" onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-primary hover:bg-primary/80 h-8 sm:h-9 text-xs sm:text-sm px-2.5 sm:px-3">
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-2" />
               <span className="hidden sm:inline">Add Customer</span>
             </Button>
@@ -390,7 +390,7 @@ export default function Customers() {
               placeholder="Search customers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-10 text-sm rounded-xl bg-white dark:bg-[#1e2a3a] border-slate-200 dark:border-slate-700/50"
+              className="pl-9 h-10 text-sm rounded-xl bg-card border-slate-200 dark:border-border"
             />
           </div>
           <div className="flex gap-0.5 bg-slate-100 dark:bg-slate-700/50 p-0.5 rounded-full">
@@ -398,7 +398,7 @@ export default function Customers() {
               onClick={() => setViewFilter('all')}
               className={cn(
                 "flex-1 px-3 py-1.5 text-xs font-medium rounded-full transition-colors text-center flex items-center justify-center gap-1",
-                viewFilter === 'all' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-500"
+                viewFilter === 'all' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-slate-500"
               )}
             >
               All
@@ -407,7 +407,7 @@ export default function Customers() {
               onClick={() => setViewFilter('companies')}
               className={cn(
                 "flex-1 px-3 py-1.5 text-xs font-medium rounded-full transition-colors text-center flex items-center justify-center gap-1",
-                viewFilter === 'companies' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-500"
+                viewFilter === 'companies' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-slate-500"
               )}
             >
               <Building2 className="w-3 h-3" /> Companies
@@ -416,7 +416,7 @@ export default function Customers() {
               onClick={() => setViewFilter('contacts')}
               className={cn(
                 "flex-1 px-3 py-1.5 text-xs font-medium rounded-full transition-colors text-center flex items-center justify-center gap-1",
-                viewFilter === 'contacts' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-500"
+                viewFilter === 'contacts' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-slate-500"
               )}
             >
               <Users className="w-3 h-3" /> People
@@ -425,7 +425,7 @@ export default function Customers() {
         </div>
 
         {/* Desktop: search + filter toolbar in card */}
-        <div className="hidden sm:block bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6">
+        <div className="hidden sm:block bg-card rounded-2xl border border-slate-100 dark:border-border p-4 mb-6">
           <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -450,7 +450,7 @@ export default function Customers() {
                 onClick={() => setViewFilter('all')}
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                  viewFilter === 'all' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                  viewFilter === 'all' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 All ({companies.length + standaloneContacts.length})
@@ -459,7 +459,7 @@ export default function Customers() {
                 onClick={() => setViewFilter('companies')}
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
-                  viewFilter === 'companies' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                  viewFilter === 'companies' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Building2 className="w-3.5 h-3.5" />
@@ -469,7 +469,7 @@ export default function Customers() {
                 onClick={() => setViewFilter('contacts')}
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
-                  viewFilter === 'contacts' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                  viewFilter === 'contacts' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Users className="w-3.5 h-3.5" />
@@ -484,7 +484,7 @@ export default function Customers() {
           {(viewFilter === 'all' || viewFilter === 'companies') && filteredCompanies.length > 0 && (
             <>
               {/* Mobile compact list */}
-              <div className="sm:hidden bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/30">
+              <div className="sm:hidden bg-card rounded-xl border border-slate-200 dark:border-border overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/30">
                 {filteredCompanies.map((company) => {
                   const contacts = getContactsForCompany(company.id);
                   const companySites = getSitesForCompany(company.id);
@@ -505,7 +505,7 @@ export default function Customers() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h3 className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">{company.name}</h3>
+                          <h3 className="font-medium text-sm text-foreground truncate">{company.name}</h3>
                           {company.source === 'halo_psa' && (
                             <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-600 border-blue-200 px-1 py-0 shrink-0">Halo</Badge>
                           )}
@@ -546,8 +546,8 @@ export default function Customers() {
                   <div
                     key={company.id}
                     className={cn(
-                      "bg-white dark:bg-[#1e2a3a] rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
-                      selectedIds.has(company.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
+                      "bg-card rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
+                      selectedIds.has(company.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-600"
                     )}
                     onClick={() => setSelectedCustomer(company)}
                   >
@@ -581,7 +581,7 @@ export default function Customers() {
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="text-xs text-slate-500 truncate mt-0.5 hover:text-[#0069AF] hover:underline block"
+                              className="text-xs text-slate-500 truncate mt-0.5 hover:text-primary hover:underline block"
                             >
                               {displayAddress}
                             </a>
@@ -632,18 +632,18 @@ export default function Customers() {
           {(viewFilter === 'all' || viewFilter === 'contacts') && filteredStandaloneContacts.length > 0 && (
             <>
               {/* Mobile compact list */}
-              <div className="sm:hidden bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/30 mt-2">
+              <div className="sm:hidden bg-card rounded-xl border border-slate-200 dark:border-border overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/30 mt-2">
                 {filteredStandaloneContacts.map((customer) => (
                   <div
                     key={customer.id}
                     className="flex items-center gap-3 px-3 py-2.5 active:bg-slate-50 dark:active:bg-slate-700/30 cursor-pointer"
                     onClick={() => setSelectedCustomer(customer)}
                   >
-                    <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-xs shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-xs shrink-0">
                       {customer.name?.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">{customer.name}</h3>
+                      <h3 className="font-medium text-sm text-foreground truncate">{customer.name}</h3>
                       {customer.company && <p className="text-[11px] text-slate-400 truncate">{customer.company}</p>}
                     </div>
                     {getProjectCount(customer.id) > 0 && (
@@ -662,8 +662,8 @@ export default function Customers() {
                   <div
                     key={customer.id}
                     className={cn(
-                      "bg-white dark:bg-[#1e2a3a] rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
-                      selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
+                      "bg-card rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
+                      selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-600"
                     )}
                     onClick={() => setSelectedCustomer(customer)}
                   >
@@ -681,7 +681,7 @@ export default function Customers() {
                             )}
                           </button>
                         )}
-                        <div className="w-9 h-9 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm flex-shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm flex-shrink-0">
                           {customer.name?.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -720,16 +720,16 @@ export default function Customers() {
           {((viewFilter === 'all' && filteredCompanies.length === 0 && filteredStandaloneContacts.length === 0) ||
             (viewFilter === 'companies' && filteredCompanies.length === 0) ||
             (viewFilter === 'contacts' && filteredStandaloneContacts.length === 0)) && (
-            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-12 text-center">
+            <div className="bg-card rounded-2xl border border-slate-100 dark:border-border p-12 text-center">
               <Users className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No customers yet</h3>
-              <p className="text-slate-500 dark:text-slate-400 mb-6">Add your first company or sync from HaloPSA</p>
+              <h3 className="text-lg font-medium text-foreground mb-2">No customers yet</h3>
+              <p className="text-muted-foreground mb-6">Add your first company or sync from HaloPSA</p>
               <div className="flex justify-center gap-2">
                 <Button variant="outline" onClick={handleHaloPSASync} disabled={syncing}>
                   <RefreshCw className={cn("w-4 h-4 mr-2", syncing && "animate-spin")} />
                   Sync from HaloPSA
                 </Button>
-                <Button onClick={() => { setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#0F2F44]">
+                <Button onClick={() => { setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-primary hover:bg-primary/80">
                   <Plus className="w-4 h-4 mr-2" />Add Customer
                 </Button>
               </div>
@@ -814,7 +814,7 @@ export default function Customers() {
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
-              <Button onClick={handleSave} className="bg-[#0069AF] hover:bg-[#133F5C]">
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/80">
                 {editingCustomer ? 'Update' : formData.is_company ? 'Add Company' : 'Add Contact'}
               </Button>
             </div>
@@ -871,7 +871,7 @@ export default function Customers() {
             />
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowImportModal(false)}>Cancel</Button>
-              <Button onClick={handleImport} disabled={importing || !importData.trim()} className="bg-[#0069AF] hover:bg-[#133F5C]">
+              <Button onClick={handleImport} disabled={importing || !importData.trim()} className="bg-primary hover:bg-primary/80">
                 {importing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
                 Import
               </Button>
@@ -895,9 +895,9 @@ export default function Customers() {
             return (
               <>
                 {/* Hero Header */}
-                <div className="bg-gradient-to-r from-[#0F2F44] to-[#133F5C] px-4 sm:px-6 pt-3 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden rounded-t-2xl sm:rounded-t-2xl">
-                  <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#74C7FF]/10 rounded-full" />
-                  <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-[#0069AF]/10 rounded-full" />
+                <div className="bg-primary px-4 sm:px-6 pt-3 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden rounded-t-2xl sm:rounded-t-2xl">
+                  <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
+                  <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-white/10 rounded-full" />
                   <div className="relative z-10">
                     {/* Mobile: drag handle + close/edit bar */}
                     <div className="sm:hidden flex items-center justify-between mb-3">
@@ -986,7 +986,7 @@ export default function Customers() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex items-center gap-1 px-3 sm:px-6 pt-3 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a]">
+                <div className="flex items-center gap-1 px-3 sm:px-6 pt-3 border-b border-slate-200 dark:border-border bg-card">
                   {[
                     { key: 'details', label: 'Details', mobileLabel: 'Details' },
                     { key: 'contacts', label: null, mobileLabel: `Contacts`, mobileOnly: true },
@@ -1000,8 +1000,8 @@ export default function Customers() {
                         "px-2.5 sm:px-4 pb-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                         tab.mobileOnly && "sm:hidden",
                         (companyTabs[selectedCustomer.id] || 'details') === tab.key
-                          ? "border-[#0069AF] text-[#0069AF]"
-                          : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                          ? "border-primary text-primary"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <span className={tab.mobileOnly ? "" : "sm:hidden"}>{tab.mobileLabel}</span>
@@ -1016,9 +1016,9 @@ export default function Customers() {
                   {(companyTabs[selectedCustomer.id] || 'details') === 'details' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Company Info */}
-                      <div className="bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl p-5">
-                        <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-[#0069AF]" />
+                      <div className="bg-slate-50 dark:bg-background border border-slate-200 dark:border-border rounded-xl p-5">
+                        <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-primary" />
                           Company Info
                         </h4>
                         <div className="space-y-4 text-sm">
@@ -1029,7 +1029,7 @@ export default function Customers() {
                                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-slate-700 dark:text-slate-300 hover:text-[#0069AF] hover:underline"
+                                className="text-slate-700 dark:text-slate-300 hover:text-primary hover:underline"
                               >
                                 {selectedCustomer.address && <p>{selectedCustomer.address}</p>}
                                 <p>{[selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}</p>
@@ -1058,14 +1058,14 @@ export default function Customers() {
                           </div>
 
                           {/* Sites/Locations */}
-                          <div className="pt-3 border-t border-slate-200 dark:border-slate-700/50">
+                          <div className="pt-3 border-t border-slate-200 dark:border-border">
                             <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-2">Sites / Locations ({customerSites.length})</p>
                             {customerSites.length > 0 ? (
                               <div className="space-y-2">
                                 {customerSites.map(site => (
-                                  <div key={site.id} className="p-2.5 bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50">
+                                  <div key={site.id} className="p-2.5 bg-card rounded-lg border border-slate-200 dark:border-border">
                                     <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">{site.name}</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    <p className="text-xs text-muted-foreground">
                                       {[site.address, site.city, site.state, site.zip].filter(Boolean).join(', ') || 'No address'}
                                     </p>
                                   </div>
@@ -1079,10 +1079,10 @@ export default function Customers() {
                       </div>
 
                       {/* Associated Contacts — hidden on mobile (has its own tab) */}
-                      <div className="hidden sm:block bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl p-5">
+                      <div className="hidden sm:block bg-slate-50 dark:bg-background border border-slate-200 dark:border-border rounded-xl p-5">
                         <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                            <Users className="w-4 h-4 text-[#0069AF]" />
+                          <h4 className="font-semibold text-foreground flex items-center gap-2">
+                            <Users className="w-4 h-4 text-primary" />
                             Contacts
                           </h4>
                           <div className="flex items-center gap-2">
@@ -1119,13 +1119,13 @@ export default function Customers() {
                             <>
                               <div className="space-y-1.5">
                                 {paginated.map(contact => (
-                                  <div key={contact.id} className="flex items-center gap-3 p-2.5 bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50 hover:border-[#0069AF]/30 transition-colors">
-                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0069AF]/20 to-[#74C7FF]/20 flex items-center justify-center text-[#0069AF] dark:text-[#74C7FF] font-semibold text-sm flex-shrink-0">
+                                  <div key={contact.id} className="flex items-center gap-3 p-2.5 bg-card rounded-lg border border-slate-200 dark:border-border hover:border-primary/30 transition-colors">
+                                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm flex-shrink-0">
                                       {contact.name?.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <p className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">{contact.name}</p>
-                                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                         {contact.email && <span className="truncate">{contact.email}</span>}
                                         {contact.phone && <span>{contact.phone}</span>}
                                       </div>
@@ -1134,7 +1134,7 @@ export default function Customers() {
                                 ))}
                               </div>
                               {totalPages > 1 && (
-                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200 dark:border-slate-700/50">
+                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200 dark:border-border">
                                   <span className="text-xs text-slate-500">
                                     {(contactPage - 1) * 10 + 1}-{Math.min(contactPage * 10, filtered.length)} of {filtered.length}
                                   </span>
@@ -1159,8 +1159,8 @@ export default function Customers() {
                   {companyTabs[selectedCustomer.id] === 'contacts' && (
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2 text-sm">
-                          <Users className="w-4 h-4 text-[#0069AF]" />
+                        <h4 className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                          <Users className="w-4 h-4 text-primary" />
                           Contacts
                           <span className="text-xs font-medium text-slate-500 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full">{customerContacts.length}</span>
                         </h4>
@@ -1194,13 +1194,13 @@ export default function Customers() {
                         return filtered.length > 0 ? (
                           <div className="space-y-2">
                             {paginated.map(contact => (
-                              <div key={contact.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-[#151d2b] rounded-xl border border-slate-200 dark:border-slate-700/50">
-                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0069AF]/20 to-[#74C7FF]/20 flex items-center justify-center text-[#0069AF] dark:text-[#74C7FF] font-semibold text-sm shrink-0">
+                              <div key={contact.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-background rounded-xl border border-slate-200 dark:border-border">
+                                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
                                   {contact.name?.charAt(0).toUpperCase()}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">{contact.name}</p>
-                                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                     {contact.email && <span className="truncate">{contact.email}</span>}
                                     {contact.phone && <span>{contact.phone}</span>}
                                   </div>
@@ -1208,7 +1208,7 @@ export default function Customers() {
                               </div>
                             ))}
                             {totalPages > 1 && (
-                              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200 dark:border-slate-700/50">
+                              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200 dark:border-border">
                                 <span className="text-xs text-slate-500">
                                   {(contactPage - 1) * 10 + 1}-{Math.min(contactPage * 10, filtered.length)} of {filtered.length}
                                 </span>
@@ -1243,13 +1243,13 @@ export default function Customers() {
                       {customerQuotes.length > 0 ? (
                         <div className="space-y-2">
                           {customerQuotes.map(quote => (
-                            <div key={quote.id} className="p-4 bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl hover:border-[#0069AF]/30 transition-all">
+                            <div key={quote.id} className="p-4 bg-slate-50 dark:bg-background border border-slate-200 dark:border-border rounded-xl hover:border-primary/30 transition-all">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <img src="/quoteit-favicon.svg" alt="" className="w-5 h-5 flex-shrink-0" />
                                   <div>
-                                    <span className="font-medium text-slate-900 dark:text-slate-100">{quote.title}</span>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">ID: {quote.quoteit_id}</p>
+                                    <span className="font-medium text-foreground">{quote.title}</span>
+                                    <p className="text-xs text-muted-foreground">ID: {quote.quoteit_id}</p>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -1278,9 +1278,9 @@ export default function Customers() {
                       {customerProjects.length > 0 ? (
                         <div className="space-y-2">
                           {customerProjects.map(project => (
-                            <Link key={project.id} to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="block p-4 bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl hover:border-[#0069AF]/30 transition-all">
+                            <Link key={project.id} to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="block p-4 bg-slate-50 dark:bg-background border border-slate-200 dark:border-border rounded-xl hover:border-primary/30 transition-all">
                               <div className="flex items-center justify-between">
-                                <span className="font-medium text-slate-900 dark:text-slate-100">{project.name}</span>
+                                <span className="font-medium text-foreground">{project.name}</span>
                                 <Badge variant="outline" className={cn(
                                   project.status === 'completed' && "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400",
                                   project.status === 'in_progress' && "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
@@ -1310,7 +1310,7 @@ export default function Customers() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Send className="w-5 h-5 text-[#0069AF]" />
+              <Send className="w-5 h-5 text-primary" />
               Contact {selectedCustomer?.name}
             </DialogTitle>
           </DialogHeader>

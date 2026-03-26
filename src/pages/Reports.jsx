@@ -145,7 +145,7 @@ export default function Reports() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+      <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-8 w-40 bg-slate-200 rounded-lg" />
@@ -162,13 +162,13 @@ export default function Reports() {
     );
   }
 
-  const StatCard = ({ icon: Icon, label, value, sub, color = 'text-slate-900', iconBg = 'bg-slate-100', iconColor = 'text-slate-600' }) => (
-    <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-4 hover:shadow-sm transition-shadow">
+  const StatCard = ({ icon: Icon, label, value, sub, color = 'text-foreground', iconBg = 'bg-slate-100', iconColor = 'text-slate-600' }) => (
+    <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-center gap-3 mb-3">
         <div className={cn("p-2 rounded-lg", iconBg)}>
           <Icon className={cn("w-4 h-4", iconColor)} />
         </div>
-        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</span>
       </div>
       <p className={cn("text-lg sm:text-2xl font-bold", color)}>{value}</p>
       {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
@@ -176,7 +176,7 @@ export default function Reports() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <motion.div
@@ -184,8 +184,8 @@ export default function Reports() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <h1 className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Reports</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Business metrics and team performance</p>
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Reports</h1>
+          <p className="text-muted-foreground mt-1">Business metrics and team performance</p>
 
           {/* Tabs */}
           <div className="flex gap-1 mt-4 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg w-fit">
@@ -198,8 +198,8 @@ export default function Reports() {
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
                     activeTab === tab.key
-                      ? "bg-white dark:bg-[#1e2a3a] text-slate-900 dark:text-slate-100 shadow-sm"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-slate-700 dark:hover:text-slate-200"
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -215,7 +215,7 @@ export default function Reports() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard icon={Activity} label="Active Projects" value={activeProjects.length} sub={`${completedTasks.length} tasks completed`} iconBg="bg-[#0069AF]/10" iconColor="text-[#0069AF]" />
+              <StatCard icon={Activity} label="Active Projects" value={activeProjects.length} sub={`${completedTasks.length} tasks completed`} iconBg="bg-primary/10" iconColor="text-primary" />
               <StatCard icon={CheckCircle2} label="Task Completion" value={`${projectTasks.length > 0 ? Math.round((completedTasks.length / projectTasks.length) * 100) : 0}%`} sub={`${activeTasks.length} active tasks`} color="text-emerald-600" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
               <StatCard icon={Clock} label="Hours Logged" value={`${totalHours.toFixed(0)}h`} sub={`${timeEntries.length} entries`} iconBg="bg-amber-50" iconColor="text-amber-600" />
               <StatCard icon={DollarSign} label="Portfolio Value" value={`$${totalRetail.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`} sub={`${marginPercent}% margin`} color="text-emerald-600" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
@@ -224,9 +224,9 @@ export default function Reports() {
             {/* Charts Row */}
             <div className="grid lg:grid-cols-2 gap-3 sm:gap-6">
               {/* Task Status Pie */}
-              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                  <PieChart className="w-4 h-4 text-[#0069AF] dark:text-blue-400" />
+              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <PieChart className="w-4 h-4 text-primary" />
                   Task Status
                 </h3>
                 {taskStatusData.length > 0 ? (
@@ -248,7 +248,7 @@ export default function Reports() {
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
                             <span className="text-sm text-slate-600 dark:text-slate-300">{item.name}</span>
                           </div>
-                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.value}</span>
+                          <span className="text-sm font-medium text-foreground">{item.value}</span>
                         </div>
                       ))}
                     </div>
@@ -259,9 +259,9 @@ export default function Reports() {
               </div>
 
               {/* Completion Trend */}
-              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-[#0069AF] dark:text-blue-400" />
+              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-primary" />
                   Completion Trend
                 </h3>
                 <ResponsiveContainer width="100%" height={180}>
@@ -284,8 +284,8 @@ export default function Reports() {
 
             {/* Overdue & Pipeline summary */}
             <div className="grid lg:grid-cols-3 gap-4">
-              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3 text-sm">Overdue Tasks</h3>
+              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+                <h3 className="font-semibold text-foreground mb-3 text-sm">Overdue Tasks</h3>
                 {overdueTasks.length > 0 ? (
                   <div className="space-y-2">
                     {overdueTasks.slice(0, 5).map(task => (
@@ -309,8 +309,8 @@ export default function Reports() {
                 )}
               </div>
 
-              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3 text-sm">Parts Pipeline</h3>
+              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+                <h3 className="font-semibold text-foreground mb-3 text-sm">Parts Pipeline</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -336,8 +336,8 @@ export default function Reports() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3 text-sm">Project Health</h3>
+              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+                <h3 className="font-semibold text-foreground mb-3 text-sm">Project Health</h3>
                 <div className="space-y-3">
                   {activeProjects.slice(0, 4).map(project => {
                     const pTasks = projectTasks.filter(t => t.project_id === project.id);
@@ -346,7 +346,7 @@ export default function Reports() {
                     return (
                       <div key={project.id}>
                         <div className="flex items-center justify-between mb-1">
-                          <Link to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="text-xs text-slate-700 hover:text-[#0069AF] truncate">{project.name}</Link>
+                          <Link to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="text-xs text-slate-700 hover:text-primary truncate">{project.name}</Link>
                           <span className="text-[10px] text-slate-400">{pct}%</span>
                         </div>
                         <Progress value={pct} className="h-1.5" />
@@ -365,22 +365,22 @@ export default function Reports() {
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard icon={Package} label="Project Items" value={`$${projectItemsCost.toLocaleString(undefined, {maximumFractionDigits: 0})}`} sub={`${projectParts.length} items | Retail: $${projectItemsRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}`} iconBg="bg-emerald-50" iconColor="text-emerald-600" />
-              <StatCard icon={Package} label="Stocked Inventory" value={`$${stockedCost.toLocaleString(undefined, {maximumFractionDigits: 0})}`} sub={`${inventory.length} items | Retail: $${stockedRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}`} iconBg="bg-[#0069AF]/10" iconColor="text-[#0069AF]" />
+              <StatCard icon={Package} label="Stocked Inventory" value={`$${stockedCost.toLocaleString(undefined, {maximumFractionDigits: 0})}`} sub={`${inventory.length} items | Retail: $${stockedRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}`} iconBg="bg-primary/10" iconColor="text-primary" />
               <StatCard icon={Truck} label="In Transit" value={`$${transitCost.toLocaleString(undefined, {maximumFractionDigits: 0})}`} sub={`${partsInTransit.length} items ordered`} iconBg="bg-amber-50" iconColor="text-amber-600" />
               <StatCard icon={ShoppingCart} label="To be Ordered" value={`$${neededCost.toLocaleString(undefined, {maximumFractionDigits: 0})}`} sub={`${partsNeeded.length} items pending`} color="text-red-600" iconBg="bg-red-50" iconColor="text-red-600" />
             </div>
 
             {/* Totals Row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-4 sm:p-5">
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Total Cost</p>
-                <p className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">${totalCost.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-4 sm:p-5">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Total Cost</p>
+                <p className="text-xl sm:text-3xl font-bold text-foreground">${totalCost.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
               </div>
-              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-4 sm:p-5">
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Total Retail</p>
+              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-4 sm:p-5">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Total Retail</p>
                 <p className="text-xl sm:text-3xl font-bold text-emerald-600">${totalRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
               </div>
-              <div className="bg-gradient-to-r from-[#0069AF] to-[#133F5C] rounded-xl p-4 sm:p-5 text-white">
+              <div className="bg-primary rounded-xl p-4 sm:p-5 text-white">
                 <p className="text-xs font-medium text-white/70 uppercase tracking-wide mb-2">Margin</p>
                 <p className="text-xl sm:text-3xl font-bold">${margin.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
                 <p className="text-sm text-white/70">{marginPercent}%</p>
@@ -388,8 +388,8 @@ export default function Reports() {
             </div>
 
             {/* Project Drilldown */}
-            <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Project Cost Breakdown</h3>
+            <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+              <h3 className="font-semibold text-foreground mb-4">Project Cost Breakdown</h3>
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger className="w-full max-w-md mb-4">
                   <SelectValue placeholder="Select a project to view details..." />
@@ -408,8 +408,8 @@ export default function Reports() {
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h4 className="font-semibold text-slate-900 dark:text-slate-100">{selectedProject.name}</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">{selectedCustomer?.name || selectedProject.client}</p>
+                      <h4 className="font-semibold text-foreground">{selectedProject.name}</h4>
+                      <p className="text-sm text-muted-foreground">{selectedCustomer?.name || selectedProject.client}</p>
                     </div>
                     <Badge variant="outline">{selectedProjectParts.length} items</Badge>
                   </div>
@@ -431,13 +431,13 @@ export default function Reports() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="bg-slate-50 dark:bg-[#151d2b] rounded-lg p-4">
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Cost</p>
-                      <p className="text-xl font-bold text-slate-900 dark:text-slate-100">${projTotalCost.toFixed(0)}</p>
+                    <div className="bg-slate-50 dark:bg-background rounded-lg p-4">
+                      <p className="text-xs text-muted-foreground mb-1">Cost</p>
+                      <p className="text-xl font-bold text-foreground">${projTotalCost.toFixed(0)}</p>
                     </div>
-                    <div className="bg-slate-50 dark:bg-[#151d2b] rounded-lg p-4">
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Retail</p>
-                      <p className="text-xl font-bold text-slate-900 dark:text-slate-100">${projTotalRetail.toFixed(0)}</p>
+                    <div className="bg-slate-50 dark:bg-background rounded-lg p-4">
+                      <p className="text-xs text-muted-foreground mb-1">Retail</p>
+                      <p className="text-xl font-bold text-foreground">${projTotalRetail.toFixed(0)}</p>
                     </div>
                     <div className="bg-emerald-50 rounded-lg p-4">
                       <p className="text-xs text-emerald-600 mb-1">Margin</p>
@@ -456,23 +456,23 @@ export default function Reports() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard icon={Users} label="Team Size" value={teamMembers.length} sub="Active members" iconBg="bg-[#0069AF]/10" iconColor="text-[#0069AF]" />
+              <StatCard icon={Users} label="Team Size" value={teamMembers.length} sub="Active members" iconBg="bg-primary/10" iconColor="text-primary" />
               <StatCard icon={Timer} label="Total Hours" value={`${totalHours.toFixed(0)}h`} sub={`${timeEntries.length} entries`} iconBg="bg-amber-50" iconColor="text-amber-600" />
               <StatCard icon={CheckCircle2} label="Tasks Completed" value={completedTasks.length} sub={`out of ${projectTasks.length} total`} color="text-emerald-600" iconBg="bg-emerald-50" iconColor="text-emerald-600" />
               <StatCard icon={Clock} label="Active Timers" value={timeEntries.filter(e => e.is_running).length} sub="Running now" iconBg="bg-violet-50" iconColor="text-violet-600" />
             </div>
 
             {/* Team Performance */}
-            <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#0069AF] dark:text-blue-400" />
+            <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Users className="w-4 h-4 text-primary" />
                 Team Performance
               </h3>
               {tasksByMember.length > 0 ? (
                 <div className="space-y-4">
                   {tasksByMember.map((member, idx) => (
                     <div key={idx} className="flex items-center gap-4">
-                      <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-xs font-bold text-[#0069AF] shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
                         {member.name[0]}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -497,9 +497,9 @@ export default function Reports() {
             </div>
 
             {/* Recent Time Entries */}
-            <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#0069AF] dark:text-blue-400" />
+            <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
                 Recent Time Entries
               </h3>
               <div className="space-y-1">
@@ -515,7 +515,7 @@ export default function Reports() {
                       </div>
                     </div>
                     <div className="text-right shrink-0 ml-4">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{((entry.duration_minutes || 0) / 60).toFixed(1)}h</p>
+                      <p className="text-sm font-semibold text-foreground">{((entry.duration_minutes || 0) / 60).toFixed(1)}h</p>
                       <p className="text-[10px] text-slate-400">{entry.start_time && format(new Date(entry.start_time), 'MMM d')}</p>
                     </div>
                   </div>
@@ -528,8 +528,8 @@ export default function Reports() {
 
             {/* Team Bar Chart */}
             {tasksByMember.length > 0 && (
-              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Tasks by Team Member</h3>
+              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+                <h3 className="font-semibold text-foreground mb-4">Tasks by Team Member</h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={tasksByMember} barCategoryGap="20%">
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
