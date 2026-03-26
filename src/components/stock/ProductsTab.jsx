@@ -343,6 +343,7 @@ export default function ProductsTab() {
           )}
         </div>
       ) : (
+        <>
         {/* ── Mobile: List view ── */}
         <div className="sm:hidden space-y-2">
           {filteredProducts.map((product) => (
@@ -529,6 +530,7 @@ export default function ProductsTab() {
             );
           })}
         </div>
+        </>
       )}
 
       {/* View Modal */}
