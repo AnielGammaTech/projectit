@@ -882,7 +882,7 @@ export default function Customers() {
 
       {/* Customer Detail Modal */}
       <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
-        <DialogContent className="h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl sm:max-w-3xl max-h-[100dvh] sm:max-h-[90vh] overflow-hidden p-0">
+        <DialogContent hideCloseOnMobile className="h-[95dvh] sm:h-auto rounded-t-2xl sm:rounded-2xl sm:max-w-3xl max-h-[95dvh] sm:max-h-[90vh] overflow-hidden p-0 top-auto sm:top-[50%] translate-y-0 sm:translate-y-[-50%] bottom-0 sm:bottom-auto">
           {selectedCustomer && (() => {
             const customerSites = getSitesForCompany(selectedCustomer.id);
             const customerContacts = getContactsForCompany(selectedCustomer.id);
@@ -895,10 +895,28 @@ export default function Customers() {
             return (
               <>
                 {/* Hero Header */}
-                <div className="bg-gradient-to-r from-[#0F2F44] to-[#133F5C] px-4 sm:px-6 pt-3 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden">
+                <div className="bg-gradient-to-r from-[#0F2F44] to-[#133F5C] px-4 sm:px-6 pt-3 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden rounded-t-2xl sm:rounded-t-2xl">
                   <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#74C7FF]/10 rounded-full" />
                   <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-[#0069AF]/10 rounded-full" />
                   <div className="relative z-10">
+                    {/* Mobile: drag handle + close/edit bar */}
+                    <div className="sm:hidden flex items-center justify-between mb-3">
+                      <button
+                        onClick={() => setSelectedCustomer(null)}
+                        className="flex items-center gap-1 text-white/70 text-xs font-medium"
+                      >
+                        <X className="w-4 h-4" /> Close
+                      </button>
+                      <div className="w-8 h-1 rounded-full bg-white/30 mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setEditingCustomer(selectedCustomer); setShowModal(true); }}
+                        className="text-white/80 hover:text-white hover:bg-white/15 h-7 text-xs px-2"
+                      >
+                        <Edit2 className="w-3 h-3 mr-1" /> Edit
+                      </Button>
+                    </div>
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
                         <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-lg sm:text-2xl font-bold shrink-0">
@@ -930,13 +948,14 @@ export default function Customers() {
                           )}
                         </div>
                       </div>
+                      {/* Desktop edit button */}
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => { setEditingCustomer(selectedCustomer); setShowModal(true); }}
-                        className="text-white/80 hover:text-white hover:bg-white/15 h-8 shrink-0"
+                        className="hidden sm:flex text-white/80 hover:text-white hover:bg-white/15 h-8 shrink-0"
                       >
-                        <Edit2 className="w-3.5 h-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">Edit</span>
+                        <Edit2 className="w-3.5 h-3.5 mr-1.5" /> Edit
                       </Button>
                     </div>
 
@@ -970,6 +989,7 @@ export default function Customers() {
                 <div className="flex items-center gap-1 px-3 sm:px-6 pt-3 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a]">
                   {[
                     { key: 'details', label: 'Details', mobileLabel: 'Details' },
+                    { key: 'contacts', label: null, mobileLabel: `Contacts`, mobileOnly: true },
                     { key: 'proposals', label: `Proposals (${customerQuotes.length})`, mobileLabel: `Proposals` },
                     { key: 'projects', label: `Projects (${customerProjects.length})`, mobileLabel: `Projects` },
                   ].map(tab => (
@@ -978,13 +998,14 @@ export default function Customers() {
                       onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: tab.key }))}
                       className={cn(
                         "px-2.5 sm:px-4 pb-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+                        tab.mobileOnly && "sm:hidden",
                         (companyTabs[selectedCustomer.id] || 'details') === tab.key
                           ? "border-[#0069AF] text-[#0069AF]"
                           : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                       )}
                     >
-                      <span className="sm:hidden">{tab.mobileLabel}</span>
-                      <span className="hidden sm:inline">{tab.label}</span>
+                      <span className={tab.mobileOnly ? "" : "sm:hidden"}>{tab.mobileLabel}</span>
+                      {tab.label && <span className="hidden sm:inline">{tab.label}</span>}
                     </button>
                   ))}
                 </div>
@@ -1057,8 +1078,8 @@ export default function Customers() {
                         </div>
                       </div>
 
-                      {/* Associated Contacts */}
-                      <div className="bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl p-5">
+                      {/* Associated Contacts — hidden on mobile (has its own tab) */}
+                      <div className="hidden sm:block bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl p-5">
                         <div className="flex items-center justify-between mb-3">
                           <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                             <Users className="w-4 h-4 text-[#0069AF]" />
@@ -1131,6 +1152,88 @@ export default function Customers() {
                           );
                         })()}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Contacts Tab (mobile only) */}
+                  {companyTabs[selectedCustomer.id] === 'contacts' && (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2 text-sm">
+                          <Users className="w-4 h-4 text-[#0069AF]" />
+                          Contacts
+                          <span className="text-xs font-medium text-slate-500 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full">{customerContacts.length}</span>
+                        </h4>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => { setAddingContactTo(selectedCustomer.id); setShowModal(true); }}
+                          className="h-8 text-xs"
+                        >
+                          <UserPlus className="w-3.5 h-3.5 mr-1" /> Add
+                        </Button>
+                      </div>
+                      {customerContacts.length > 5 && (
+                        <div className="relative mb-3">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                          <Input
+                            placeholder="Search contacts..."
+                            value={contactSearch}
+                            onChange={(e) => { setContactSearch(e.target.value); setContactPage(1); }}
+                            className="pl-9 h-9 text-sm"
+                          />
+                        </div>
+                      )}
+                      {(() => {
+                        const filtered = customerContacts.filter(c =>
+                          c.name?.toLowerCase().includes(contactSearch.toLowerCase()) ||
+                          c.email?.toLowerCase().includes(contactSearch.toLowerCase())
+                        );
+                        const totalPages = Math.ceil(filtered.length / 10);
+                        const paginated = filtered.slice((contactPage - 1) * 10, contactPage * 10);
+                        return filtered.length > 0 ? (
+                          <div className="space-y-2">
+                            {paginated.map(contact => (
+                              <div key={contact.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-[#151d2b] rounded-xl border border-slate-200 dark:border-slate-700/50">
+                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0069AF]/20 to-[#74C7FF]/20 flex items-center justify-center text-[#0069AF] dark:text-[#74C7FF] font-semibold text-sm shrink-0">
+                                  {contact.name?.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">{contact.name}</p>
+                                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                    {contact.email && <span className="truncate">{contact.email}</span>}
+                                    {contact.phone && <span>{contact.phone}</span>}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            {totalPages > 1 && (
+                              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200 dark:border-slate-700/50">
+                                <span className="text-xs text-slate-500">
+                                  {(contactPage - 1) * 10 + 1}-{Math.min(contactPage * 10, filtered.length)} of {filtered.length}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={contactPage === 1} onClick={() => setContactPage(p => p - 1)}>Prev</Button>
+                                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={contactPage >= totalPages} onClick={() => setContactPage(p => p + 1)}>Next</Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12">
+                            <Users className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                            <p className="text-sm text-slate-400">{contactSearch ? 'No contacts match your search' : 'No contacts yet'}</p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => { setAddingContactTo(selectedCustomer.id); setShowModal(true); }}
+                              className="mt-3 h-8 text-xs"
+                            >
+                              <UserPlus className="w-3.5 h-3.5 mr-1" /> Add First Contact
+                            </Button>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
 

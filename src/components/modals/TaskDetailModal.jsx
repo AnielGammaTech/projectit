@@ -158,9 +158,32 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl p-0 gap-0 max-h-[90vh] sm:max-h-[90vh] h-[100dvh] sm:h-auto overflow-hidden flex flex-col rounded-none sm:rounded-2xl dark:bg-[#1e2a3a]">
+      <DialogContent hideCloseOnMobile className="sm:max-w-4xl p-0 gap-0 max-h-[95dvh] sm:max-h-[90vh] h-[95dvh] sm:h-auto overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl dark:bg-[#1e2a3a] top-auto sm:top-[50%] translate-y-0 sm:translate-y-[-50%] bottom-0 sm:bottom-auto">
+        {/* Mobile action bar */}
+        <div className="sm:hidden flex items-center justify-between px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-700/50 flex-shrink-0">
+          <button onClick={onClose} className="flex items-center gap-1 text-slate-500 text-xs font-medium">
+            <X className="w-4 h-4" /> Close
+          </button>
+          <div className="w-8 h-1 rounded-full bg-slate-200 dark:bg-slate-600 absolute left-1/2 -translate-x-1/2 top-1.5" />
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={() => onEdit(task)} className="h-7 text-xs px-2 text-slate-500">
+              <Edit2 className="w-3 h-3 mr-1" /> Edit
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-500">
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem className="text-red-600"><Trash2 className="w-4 h-4 mr-2" />Delete Task</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
         {/* Header */}
-        <div className="px-4 sm:px-8 pt-4 sm:pt-6 pb-3 sm:pb-5 border-b border-slate-200/80 dark:border-slate-700/50 flex-shrink-0">
+        <div className="px-4 sm:px-8 pt-3 sm:pt-6 pb-3 sm:pb-5 border-b border-slate-200/80 dark:border-slate-700/50 flex-shrink-0">
           <div className="flex items-start gap-2 sm:gap-3">
             <motion.button onClick={handleStatusToggle} whileTap={{ scale: 0.85 }} className={cn("w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 mt-0.5", isCompleted ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 hover:border-emerald-400")}>
               <AnimatePresence>{isCompleted && (<motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }}><Check className="w-4 h-4" /></motion.div>)}</AnimatePresence>
@@ -169,7 +192,8 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
               <h2 className={cn("text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 leading-snug", isCompleted && "line-through text-slate-400")}>{task.title}</h2>
               <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1">Created by {task.created_by || 'Unknown'} · {format(new Date(task.created_date), 'MMM d, yyyy')}</p>
             </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
+            {/* Desktop actions */}
+            <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
               <Button variant="ghost" size="icon" onClick={() => onEdit(task)} className="h-8 w-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><Edit2 className="w-4 h-4" /></Button>
               <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem className="text-red-600"><Trash2 className="w-4 h-4 mr-2" />Delete Task</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
             </div>

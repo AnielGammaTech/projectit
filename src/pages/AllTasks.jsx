@@ -42,13 +42,13 @@ function TaskTableRow({ task, teamMembers, currentUser, statusConfig, priorityCo
   return (
     <div
       onClick={() => onNavigate(task)}
-      className="group flex items-center gap-2 px-3 py-2.5 border-b border-slate-100 dark:border-slate-700/30 hover:bg-blue-50/50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer"
+      className="group flex items-center gap-2 px-3 py-3.5 sm:py-2.5 border-b border-slate-100 dark:border-slate-700/30 hover:bg-blue-50/50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer active:bg-blue-50/50"
     >
       {/* Complete checkbox */}
       <button
         onClick={(e) => onComplete(e, task.id)}
         className={cn(
-          "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all active:scale-90",
+          "w-6 h-6 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all active:scale-90",
           task.status === 'completed'
             ? "bg-emerald-500 border-emerald-500 text-white"
             : "border-slate-300 hover:border-emerald-500 hover:bg-emerald-50"
@@ -682,11 +682,11 @@ export default function AllTasks() {
             className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-3 sm:p-4 mb-4 sm:mb-6"
           >
             {/* View Mode Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg w-full sm:w-fit mb-3 sm:mb-4 overflow-x-auto">
+            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-xl w-full sm:w-fit mb-3 sm:mb-4 overflow-x-auto">
               <button
                 onClick={() => setViewMode('all')}
                 className={cn(
-                  "px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
+                  "px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
                   viewMode === 'all'
                     ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
@@ -697,7 +697,7 @@ export default function AllTasks() {
               <button
                 onClick={() => setViewMode('mine')}
                 className={cn(
-                  "px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
+                  "px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
                   viewMode === 'mine'
                     ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
@@ -708,7 +708,7 @@ export default function AllTasks() {
               <button
                 onClick={() => setViewMode('my_overdue')}
                 className={cn(
-                  "px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
+                  "px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
                   viewMode === 'my_overdue'
                     ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
@@ -836,22 +836,18 @@ export default function AllTasks() {
                       <div key={projectId}>
                         {/* Project group header */}
                         <div
-                          className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-[#1a2535] border-b border-slate-100 dark:border-slate-700/30 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors"
+                          className="flex items-center gap-2 px-3 py-3 sm:py-1.5 bg-slate-50/50 dark:bg-[#1a2535] border-b border-slate-100 dark:border-slate-700/30 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors active:bg-slate-100"
                           onClick={() => setExpandedGroups(prev => ({ ...prev, [projectId]: prev[projectId] === true ? false : true }))}
                         >
-                          <ChevronRight className={cn("w-3.5 h-3.5 text-slate-400 transition-transform", !isCollapsed && "rotate-90")} />
-                          <FolderKanban className="w-3.5 h-3.5 text-[#0069AF]" />
-                          <Link
-                            to={createPageUrl('ProjectDetail') + `?id=${projectId}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="font-semibold text-xs text-slate-700 dark:text-slate-200 hover:text-[#0069AF] truncate"
-                          >
+                          <ChevronRight className={cn("w-4 h-4 sm:w-3.5 sm:h-3.5 text-slate-400 transition-transform shrink-0", !isCollapsed && "rotate-90")} />
+                          <FolderKanban className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-[#0069AF] shrink-0" />
+                          <span className="font-semibold text-sm sm:text-xs text-slate-700 dark:text-slate-200 truncate flex-1 min-w-0">
                             {getProjectName(projectId)}
-                          </Link>
+                          </span>
                           {getProjectNumber(projectId) && (
-                            <span className="px-1.5 py-0 bg-slate-700 text-white rounded text-[9px] font-mono shrink-0">#{getProjectNumber(projectId)}</span>
+                            <span className="px-1.5 py-0.5 bg-slate-700 text-white rounded text-[9px] font-mono shrink-0">#{getProjectNumber(projectId)}</span>
                           )}
-                          <span className="text-[10px] text-slate-400 ml-auto shrink-0">{projectTasks.length} task{projectTasks.length !== 1 ? 's' : ''}</span>
+                          <span className="text-[11px] sm:text-[10px] text-slate-400 shrink-0">{projectTasks.length}</span>
                         </div>
 
                         {/* Tasks in this project */}
