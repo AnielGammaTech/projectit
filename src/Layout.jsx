@@ -206,7 +206,7 @@ function LayoutContent({ children, currentPageName }) {
                           )} />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-52 p-1">
+                      <DropdownMenuContent align="start" className="w-52 p-1 rounded-xl">
                         {item.submenu.map((subItem) => {
                           const SubIcon = subItem.icon;
                           const subTypeParam = subItem.params ? new URLSearchParams(subItem.params).get('type') : null;
@@ -242,7 +242,7 @@ function LayoutContent({ children, currentPageName }) {
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group relative",
                       isActive
-                        ? "text-white font-medium"
+                        ? "text-white font-medium bg-white/15 shadow-sm"
                         : "text-white/70 hover:text-white hover:bg-white/5"
                     )}
                     >
@@ -312,7 +312,7 @@ function LayoutContent({ children, currentPageName }) {
                   />
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56 rounded-xl">
                 <div className="px-3 py-2 border-b border-slate-100 dark:border-border">
                   <p className="text-sm font-medium text-slate-900 dark:text-foreground">{currentUser?.full_name || 'User'}</p>
                   <p className="text-xs text-slate-500 dark:text-muted-foreground">{currentUser?.email}</p>
@@ -345,7 +345,7 @@ function LayoutContent({ children, currentPageName }) {
                             <ChevronDown className="w-3 h-3 ml-2" />
                           </div>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent side="left" align="start">
+                        <DropdownMenuContent side="left" align="start" className="rounded-xl">
                           <DropdownMenuItem asChild>
                             <Link to={createPageUrl('ManagerDashboard')} className="cursor-pointer">
                               <Activity className="w-4 h-4 mr-2 text-indigo-500" />
@@ -443,7 +443,7 @@ function LayoutContent({ children, currentPageName }) {
                             key={subItem.name}
                             to={createPageUrl(subItem.page) + (subItem.params || '')}
                             onClick={() => setMobileMenuOpen(false)}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-muted touch-manipulation"
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-slate-50 dark:hover:bg-muted touch-manipulation"
                           >
                             <SubIcon className="w-4 h-4" />
                             {subItem.name}
@@ -493,7 +493,7 @@ function LayoutContent({ children, currentPageName }) {
       <FeedbackButton />
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-card/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-border z-40 pb-safe">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-card/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-border z-40 pb-safe rounded-t-2xl">
         <div className="flex items-center justify-around h-16">
           {navItems.slice(0, 4).map((item) => {
             const Icon = item.icon;
@@ -503,7 +503,7 @@ function LayoutContent({ children, currentPageName }) {
                 key={item.name}
                 to={createPageUrl(item.page) + (item.params || '')}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors touch-manipulation active:scale-95",
+                  "relative flex flex-col items-center justify-center gap-0.5 w-full h-full transition-all duration-200 touch-manipulation active:scale-95",
                   isActive ? "text-[#0069AF]" : "text-slate-400 active:text-slate-600"
                 )}
               >

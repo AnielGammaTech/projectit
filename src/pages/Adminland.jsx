@@ -16,7 +16,7 @@ import {
   FileText, Layers, MessageSquare, Database, Activity,
   HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send, Copy, Check, Globe, KeyRound,
   Image, Search, Info, Rocket, Bug, Star, Wrench, Package, MapPin, Bell, Clock,
-  Monitor, Smartphone, Wifi
+  Monitor, Smartphone, Wifi, Palette, Server
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -4734,14 +4734,14 @@ function AboutSection() {
   return (
     <div className="space-y-6">
       {/* System Info Card */}
-      <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-lg overflow-hidden">
-        <div className="p-6 border-b dark:border-slate-700/50 flex items-center justify-between">
+      <div className="bg-white dark:bg-card rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6 border-b dark:border-border flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
               <Info className="w-5 h-5 text-[#0069AF]" />
               About & System Info
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Build information and environment details
             </p>
           </div>
@@ -4751,18 +4751,18 @@ function AboutSection() {
           </Button>
         </div>
 
-        <div className="divide-y dark:divide-slate-700/50">
+        <div className="divide-y dark:divide-border">
           {infoRows.map((row) => (
             <div key={row.label} className="px-6 py-3 flex items-center justify-between">
-              <span className="text-sm text-slate-500 dark:text-slate-400">{row.label}</span>
+              <span className="text-sm text-muted-foreground">{row.label}</span>
               {row.badge ? (
                 <Badge variant="secondary" className="font-mono text-xs">
                   {row.value}
                 </Badge>
               ) : (
                 <span className={cn(
-                  "text-sm text-slate-900 dark:text-slate-100",
-                  row.mono && "font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded"
+                  "text-sm text-foreground",
+                  row.mono && "font-mono text-xs bg-slate-100 dark:bg-muted px-2 py-0.5 rounded"
                 )}>
                   {row.value}
                 </span>
@@ -4772,25 +4772,214 @@ function AboutSection() {
         </div>
       </div>
 
+      {/* Design System Reference */}
+      <div className="bg-white dark:bg-card rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6 border-b dark:border-border">
+          <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+            <Palette className="w-5 h-5 text-[#0069AF]" />
+            Design System
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Colors, typography, spacing, and component patterns
+          </p>
+        </div>
+        <div className="p-6 space-y-6">
+          {/* Colors */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Brand Colors</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { name: 'Primary', hex: '#0F2F44', css: '--primary', swatch: 'bg-[#0F2F44]' },
+                { name: 'Secondary', hex: '#133F5C', css: '--secondary', swatch: 'bg-[#133F5C]' },
+                { name: 'Accent', hex: '#0069AF', css: '--accent / --ring', swatch: 'bg-[#0069AF]' },
+                { name: 'Highlight', hex: '#74C7FF', css: '--highlight', swatch: 'bg-[#74C7FF]' },
+              ].map((c) => (
+                <div key={c.name} className="flex items-center gap-3 p-2 rounded-xl border bg-card">
+                  <div className={`w-8 h-8 rounded-lg ${c.swatch} flex-shrink-0`} />
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">{c.name}</p>
+                    <p className="text-[10px] font-mono text-muted-foreground">{c.hex}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Status Colors */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Status Colors</h3>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { status: 'todo', color: 'bg-slate-100 text-slate-700' },
+                { status: 'in_progress', color: 'bg-blue-100 text-blue-700' },
+                { status: 'review', color: 'bg-violet-100 text-violet-700' },
+                { status: 'completed', color: 'bg-emerald-100 text-emerald-700' },
+                { status: 'on_hold', color: 'bg-amber-100 text-amber-700' },
+                { status: 'needed', color: 'bg-orange-100 text-orange-700' },
+                { status: 'ordered', color: 'bg-sky-100 text-sky-700' },
+                { status: 'critical', color: 'bg-red-100 text-red-700' },
+              ].map((s) => (
+                <span key={s.status} className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold capitalize ${s.color}`}>
+                  {s.status.replace(/_/g, ' ')}
+                </span>
+              ))}
+            </div>
+          </div>
+          {/* Typography */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Typography</h3>
+            <div className="space-y-2 text-sm">
+              <p><span className="text-muted-foreground">Font:</span> <span className="font-semibold">Poppins</span> (300-700)</p>
+              <p><span className="text-muted-foreground">Page Title:</span> <span className="text-2xl font-bold">text-2xl font-bold</span></p>
+              <p><span className="text-muted-foreground">Section Header:</span> <span className="text-lg font-semibold">text-lg font-semibold</span></p>
+              <p><span className="text-muted-foreground">Body:</span> <span className="text-sm">text-sm (14px)</span></p>
+              <p><span className="text-muted-foreground">Caption:</span> <span className="text-xs text-muted-foreground">text-xs text-muted-foreground</span></p>
+            </div>
+          </div>
+          {/* Spacing & Radius */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Spacing & Radius</h3>
+            <div className="space-y-1 text-sm">
+              <p><span className="text-muted-foreground">Card radius:</span> <span className="font-mono">rounded-2xl</span> (1rem / 16px)</p>
+              <p><span className="text-muted-foreground">Button radius:</span> <span className="font-mono">rounded-lg</span> (0.5rem)</p>
+              <p><span className="text-muted-foreground">Badge radius:</span> <span className="font-mono">rounded-md</span> (0.375rem)</p>
+              <p><span className="text-muted-foreground">Section gap:</span> <span className="font-mono">gap-6</span> (1.5rem)</p>
+              <p><span className="text-muted-foreground">Card padding:</span> <span className="font-mono">p-5</span> (1.25rem)</p>
+              <p><span className="text-muted-foreground">Page max-width:</span> <span className="font-mono">max-w-7xl</span> (80rem)</p>
+            </div>
+          </div>
+          {/* Component Patterns */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Shared Components</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+              {[
+                { name: 'PageShell', desc: 'Page wrapper with title, breadcrumbs, actions' },
+                { name: 'InlineEdit', desc: 'Click-to-edit with Enter/Escape/blur' },
+                { name: 'AnimatedList', desc: 'Framer Motion staggered list' },
+                { name: 'DataTable', desc: 'Sortable, filterable, paginated table' },
+                { name: 'EmptyState', desc: 'Empty state with icon, message, CTA' },
+                { name: 'ConfirmDialog', desc: 'Reusable confirmation modal' },
+                { name: 'StatusBadge', desc: 'Unified status/priority badge' },
+                { name: 'QuickActions', desc: 'Row-level action dropdown' },
+                { name: 'CollapsibleSection', desc: 'Collapsible with localStorage state' },
+              ].map((comp) => (
+                <div key={comp.name} className="flex items-start gap-2 p-2 rounded-lg bg-muted/50">
+                  <code className="text-xs font-mono text-[#0069AF] whitespace-nowrap">{comp.name}</code>
+                  <span className="text-xs text-muted-foreground">{comp.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Architecture Overview */}
+      <div className="bg-white dark:bg-card rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6 border-b dark:border-border">
+          <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+            <Server className="w-5 h-5 text-[#0069AF]" />
+            Architecture
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Tech stack, file structure, and data flow
+          </p>
+        </div>
+        <div className="p-6 space-y-6">
+          {/* Tech Stack */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Tech Stack</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+              {[
+                { category: 'Frontend', items: 'React 18, Vite 6' },
+                { category: 'Styling', items: 'Tailwind CSS, shadcn/ui' },
+                { category: 'State', items: 'TanStack React Query 5' },
+                { category: 'Animations', items: 'Framer Motion 11' },
+                { category: 'Icons', items: 'Lucide React' },
+                { category: 'Backend', items: 'Supabase (Auth + DB)' },
+                { category: 'Hosting', items: 'Railway' },
+                { category: 'Routing', items: 'React Router 6' },
+                { category: 'Charts', items: 'Recharts' },
+              ].map((t) => (
+                <div key={t.category} className="p-2 rounded-lg bg-muted/50">
+                  <p className="text-xs font-semibold text-foreground">{t.category}</p>
+                  <p className="text-xs text-muted-foreground">{t.items}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* File Structure */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">File Structure</h3>
+            <pre className="text-xs font-mono text-muted-foreground bg-muted/50 p-4 rounded-xl overflow-x-auto">
+{`src/
+  api/          API client (Supabase + REST)
+  components/
+    ui/         Shared UI primitives (shadcn/ui + custom)
+    dashboard/  Dashboard-specific components
+    project/    Project page components
+    modals/     Modal dialogs
+    ...         Domain-grouped components
+  hooks/        Custom React hooks
+  pages/        Route-level page components (42 pages)
+  utils/        Utility functions
+  lib/          Library config (cn, etc.)`}
+            </pre>
+          </div>
+          {/* Data Flow */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Data Flow</h3>
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <p>1. Pages fetch data via <code className="text-xs font-mono bg-muted px-1 rounded">useQuery</code> hooks from TanStack React Query</p>
+              <p>2. API calls go through <code className="text-xs font-mono bg-muted px-1 rounded">api.entities.EntityName.method()</code></p>
+              <p>3. Mutations use <code className="text-xs font-mono bg-muted px-1 rounded">useOptimisticMutation</code> for instant UI + rollback</p>
+              <p>4. Auth tokens managed by Supabase client (JWT in session)</p>
+              <p>5. Query staleTime: 30s (fast-changing) / 5min (slow-changing)</p>
+            </div>
+          </div>
+          {/* API Pattern */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">API Pattern</h3>
+            <pre className="text-xs font-mono text-muted-foreground bg-muted/50 p-4 rounded-xl overflow-x-auto">
+{`// Fetch all
+api.entities.Project.list('-created_date')
+
+// Filter
+api.entities.Task.filter({ project_id: id })
+
+// Create
+api.entities.Project.create({ name, client })
+
+// Update
+api.entities.Project.update(id, { status: 'completed' })
+
+// Delete
+api.entities.Project.delete(id)
+
+// Cloud functions
+api.functions.invoke('functionName', { params })`}
+            </pre>
+          </div>
+        </div>
+      </div>
+
       {/* Release History Card */}
-      <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-lg overflow-hidden">
-        <div className="p-6 border-b dark:border-slate-700/50">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+      <div className="bg-white dark:bg-card rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6 border-b dark:border-border">
+          <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-amber-500" />
             Release History
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Recent changes and updates
           </p>
         </div>
         <div className="p-6 space-y-4">
           {changelog.slice(0, 5).map((release) => (
-            <div key={release.version} className="border dark:border-slate-700/50 rounded-xl p-4">
+            <div key={release.version} className="border dark:border-border rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline" className="font-mono text-xs">v{release.version}</Badge>
-                <span className="text-xs text-slate-500 dark:text-slate-400">{release.date}</span>
+                <span className="text-xs text-muted-foreground">{release.date}</span>
               </div>
-              <h3 className="font-medium text-sm text-slate-900 dark:text-slate-100 mb-2">{release.title}</h3>
+              <h3 className="font-medium text-sm text-foreground mb-2">{release.title}</h3>
               <ul className="space-y-1.5">
                 {release.changes.map((change, i) => {
                   const config = changeTypeConfig[change.type] || changeTypeConfig.feature;
