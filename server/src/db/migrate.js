@@ -20,6 +20,7 @@ const migrations = [
   '004_add_supabase_uid.sql',
   '005_create_file_comment_table.sql',
   '006_create_stock_tables.sql',
+  '007_create_apikey_table.sql',
 ];
 
 async function migrate() {
