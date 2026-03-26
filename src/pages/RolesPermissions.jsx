@@ -222,7 +222,7 @@ export default function RolesPermissions() {
   if (loadingRoles) return <FormPageSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <motion.div
@@ -233,10 +233,10 @@ export default function RolesPermissions() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
+                <div className="p-2.5 rounded-xl bg-primary shadow-lg shadow-primary/20">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] tracking-tight">Roles & Permissions</h1>
+                <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Roles & Permissions</h1>
               </div>
               <p className="text-slate-500">Manage user roles and access control</p>
             </div>
@@ -246,7 +246,7 @@ export default function RolesPermissions() {
                   onClick={() => setViewMode('cards')}
                   className={cn(
                     "px-4 py-2 text-sm font-medium transition-colors",
-                    viewMode === 'cards' ? "bg-[#0069AF] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+                    viewMode === 'cards' ? "bg-primary text-white" : "bg-white text-slate-600 hover:bg-slate-50"
                   )}
                 >
                   Cards
@@ -255,13 +255,13 @@ export default function RolesPermissions() {
                   onClick={() => setViewMode('matrix')}
                   className={cn(
                     "px-4 py-2 text-sm font-medium transition-colors",
-                    viewMode === 'matrix' ? "bg-[#0069AF] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+                    viewMode === 'matrix' ? "bg-primary text-white" : "bg-white text-slate-600 hover:bg-slate-50"
                   )}
                 >
                   Matrix
                 </button>
               </div>
-              <Button onClick={() => { setEditingRole(null); setShowRoleModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+              <Button onClick={() => { setEditingRole(null); setShowRoleModal(true); }} className="bg-primary hover:bg-primary/80">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Role
               </Button>
@@ -523,7 +523,7 @@ function RoleModal({ open, onClose, role, onSave }) {
                     className={cn(
                       "w-7 h-7 rounded-full transition-all",
                       className,
-                      formData.color === name && "ring-2 ring-offset-2 ring-[#0069AF]"
+                      formData.color === name && "ring-2 ring-offset-2 ring-primary"
                     )}
                   />
                 ))}
@@ -591,7 +591,7 @@ function RoleModal({ open, onClose, role, onSave }) {
 
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]">
+            <Button type="submit" className="bg-primary hover:bg-primary/80">
               {role?.id ? 'Update Role' : 'Create Role'}
             </Button>
           </div>
