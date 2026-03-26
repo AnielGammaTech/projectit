@@ -31,14 +31,14 @@ app.use(cors({
     const isAllowed = allowed.some(a =>
       a instanceof RegExp ? a.test(origin) : a === origin
     );
-    callback(null, isAllowed || true);
+    callback(null, isAllowed);
   },
   credentials: true,
 }));
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(morgan('combined'));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
 // File uploads are served directly from Supabase Storage CDN
 
