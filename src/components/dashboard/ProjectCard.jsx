@@ -210,7 +210,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
   };
 
   return (
-    <div className="group relative hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200">
+    <div className="group relative hover:-translate-y-0.5 hover:scale-[1.01] transition-all duration-200 h-full">
       {/* Selection checkbox */}
       {selectionMode && (
         <button
@@ -295,7 +295,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
         </Popover>
       </div>
 
-      <div 
+      <div
         {...dragHandleProps}
         onClick={() => {
           if (selectionMode) {
@@ -305,7 +305,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
           }
         }}
         className={cn(
-          "bg-white dark:bg-[#1e2a3a] rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/50 shadow-card hover:shadow-card-hover hover:border-slate-300/80 dark:hover:border-slate-600 transition-all duration-300 border-l-4 cursor-pointer",
+          "bg-white dark:bg-[#1e2a3a] rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/50 shadow-card hover:shadow-card-hover hover:border-slate-300/80 dark:hover:border-slate-600 transition-all duration-300 border-l-4 cursor-pointer h-full flex flex-col",
           colorClass,
           isPinned && "ring-2 ring-amber-200 dark:ring-amber-700 bg-amber-50/30 dark:bg-amber-900/10",
           isSelected && "ring-2 ring-[#0069AF] dark:ring-blue-500 bg-[#0069AF]/5 dark:bg-blue-900/20"
@@ -374,9 +374,11 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
         </div>
         
         {/* AI Short Description */}
-        {project.description && (
-          <p className="text-xs text-slate-500 line-clamp-2 mb-2">{project.description}</p>
-        )}
+        <div className="flex-1">
+          {project.description && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-2">{project.description}</p>
+          )}
+        </div>
 
         {/* Progress Bar - Simple */}
         <TooltipProvider>
