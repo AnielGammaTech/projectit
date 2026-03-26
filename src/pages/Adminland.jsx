@@ -15,7 +15,8 @@ import {
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
   FileText, Layers, MessageSquare, Database, Activity,
   HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send, Copy, Check, Globe, KeyRound,
-  Image, Search, Info, Rocket, Bug, Star, Wrench, Package, MapPin, Bell, Clock
+  Image, Search, Info, Rocket, Bug, Star, Wrench, Package, MapPin, Bell, Clock,
+  Monitor, Smartphone, Wifi
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -416,6 +417,30 @@ function PeopleSection({ queryClient }) {
 
   const admins = members.filter(m => m.role === 'Admin');
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedMember, setExpandedMember] = useState(null);
+
+  // Fetch user sessions/activity for online status and last sign-in
+  const { data: userSessions = [] } = useQuery({
+    queryKey: ['userSessions'],
+    queryFn: async () => {
+      try {
+        const result = await api.entities.UserSession?.list?.();
+        return result || [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 30000
+  });
+
+  const getSessionInfo = (email) => {
+    const sessions = userSessions.filter(s => s.user_email === email);
+    const latest = sessions.sort((a, b) => new Date(b.created_date || b.last_active) - new Date(a.created_date || a.last_active))[0];
+    if (!latest) return null;
+    const lastActive = new Date(latest.last_active || latest.created_date);
+    const isOnline = (Date.now() - lastActive.getTime()) < 5 * 60 * 1000; // 5 min
+    return { ...latest, isOnline, lastActive };
+  };
 
   const filteredMembers = useMemo(() => {
     if (!searchQuery.trim()) return members;
@@ -491,71 +516,187 @@ function PeopleSection({ queryClient }) {
             </Button>
           </div>
           <div className="divide-y dark:divide-slate-700/50">
-            {filteredMembers.map((member) => (
-            <div key={member.id} className="px-5 py-4 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-700/20 transition-colors group">
-              <div className="flex items-center gap-4 min-w-0">
-                <UserAvatar
-                  email={member.email}
-                  name={member.name}
-                  avatarUrl={member.avatar_url}
-                  avatarColor={member.avatar_color}
-                  size="lg"
-                  className="ring-2 ring-white dark:ring-slate-800 shadow-sm"
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2.5">
-                    <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">{member.name}</p>
-                    {member.role && (
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-[10px] px-2 py-0 h-5 font-medium",
-                          member.role === 'Admin' && "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50",
-                          member.role === 'Manager' && "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/50",
-                          member.role === 'Technician' && "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50",
-                          member.role === 'Viewer' && "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-700/30 dark:text-slate-400 dark:border-slate-600/50"
+            {filteredMembers.map((member) => {
+              const session = getSessionInfo(member.email);
+              const isExpanded = expandedMember === member.id;
+              return (
+                <div key={member.id} className="transition-colors">
+                  <div
+                    className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-700/20 cursor-pointer group"
+                    onClick={() => setExpandedMember(isExpanded ? null : member.id)}
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      <div className="relative shrink-0">
+                        <UserAvatar
+                          email={member.email}
+                          name={member.name}
+                          avatarUrl={member.avatar_url}
+                          avatarColor={member.avatar_color}
+                          size="lg"
+                          className="ring-2 ring-white dark:ring-slate-800 shadow-sm"
+                        />
+                        {/* Online indicator */}
+                        <div className={cn(
+                          "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#1e2a3a]",
+                          session?.isOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                        )} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{member.name}</p>
+                          {member.role && (
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px] px-2 py-0 h-5 font-medium shrink-0",
+                                member.role === 'Admin' && "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50",
+                                member.role === 'Manager' && "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/50",
+                                member.role === 'Technician' && "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50",
+                                member.role === 'Viewer' && "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-700/30 dark:text-slate-400 dark:border-slate-600/50"
+                              )}
+                            >
+                              {member.role}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{member.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="hidden sm:flex items-center gap-1 mr-2">
+                        {session?.isOnline ? (
+                          <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full">Online</span>
+                        ) : session?.lastActive ? (
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                            Last seen {(() => {
+                              const diff = Date.now() - session.lastActive.getTime();
+                              const mins = Math.floor(diff / 60000);
+                              if (mins < 60) return `${mins}m ago`;
+                              const hrs = Math.floor(mins / 60);
+                              if (hrs < 24) return `${hrs}h ago`;
+                              const days = Math.floor(hrs / 24);
+                              return `${days}d ago`;
+                            })()}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">Never signed in</span>
                         )}
-                      >
-                        {member.role}
-                      </Badge>
-                    )}
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditing(member); setShowModal(true); }}>
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-4 h-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setEditing(member); setShowModal(true); }}>
+                              <Edit2 className="w-4 h-4 mr-2" />Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleResendInvite(member)} disabled={resendingInvite === member.email}>
+                              <Send className="w-4 h-4 mr-2" />
+                              {resendingInvite === member.email ? 'Sending...' : 'Re-invite'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setResetPasswordMember(member)}>
+                              <KeyRound className="w-4 h-4 mr-2" />Reset Password
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setResetMfaMember(member)}>
+                              <Shield className="w-4 h-4 mr-2" />Reset MFA
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'member', item: member })} className="text-red-600">
+                              <Trash2 className="w-4 h-4 mr-2" />Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform", isExpanded && "rotate-180")} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                    <span className="flex items-center gap-1.5 truncate"><Mail className="w-3.5 h-3.5 flex-shrink-0" />{member.email}</span>
-                    {member.phone && <span className="flex items-center gap-1.5 hidden sm:flex"><Phone className="w-3.5 h-3.5 flex-shrink-0" />{member.phone}</span>}
-                  </div>
+
+                  {/* Expanded Details */}
+                  {isExpanded && (
+                    <div className="px-5 pb-4 pt-1 bg-slate-50/50 dark:bg-[#151d2b]/50 border-t border-slate-100 dark:border-slate-700/30">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 ml-[52px]">
+                        {/* Contact Info */}
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Contact</p>
+                          <div className="space-y-1.5">
+                            <a href={`mailto:${member.email}`} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 hover:text-[#0069AF] transition-colors">
+                              <Mail className="w-3.5 h-3.5 text-slate-400" />
+                              {member.email}
+                            </a>
+                            {member.phone ? (
+                              <a href={`tel:${member.phone}`} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 hover:text-[#0069AF] transition-colors">
+                                <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                {member.phone}
+                              </a>
+                            ) : (
+                              <p className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+                                <Phone className="w-3.5 h-3.5" />
+                                No phone
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Last Sign-In */}
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Last Sign-In</p>
+                          <div className="space-y-1.5">
+                            {session?.lastActive ? (
+                              <>
+                                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                  {session.lastActive.toLocaleDateString()} at {session.lastActive.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                  <Globe className="w-3.5 h-3.5 text-slate-400" />
+                                  {session.ip_address || 'IP not available'}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                  {(session.device_type === 'mobile' || session.user_agent?.includes('Mobile')) ? (
+                                    <Smartphone className="w-3.5 h-3.5 text-slate-400" />
+                                  ) : (
+                                    <Monitor className="w-3.5 h-3.5 text-slate-400" />
+                                  )}
+                                  {session.device_type || session.user_agent?.split('(')[1]?.split(')')[0]?.slice(0, 30) || 'Unknown device'}
+                                </div>
+                              </>
+                            ) : (
+                              <p className="text-xs text-slate-400 dark:text-slate-500 italic">No sign-in data available</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Status */}
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Status</p>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2 text-xs">
+                              <div className={cn("w-2 h-2 rounded-full", session?.isOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600")} />
+                              <span className={cn(session?.isOnline ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-slate-500 dark:text-slate-400")}>
+                                {session?.isOnline ? 'Currently Online' : 'Offline'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                              <Shield className="w-3.5 h-3.5 text-slate-400" />
+                              {member.role || 'No role assigned'}
+                            </div>
+                            {member.created_date && (
+                              <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                Joined {new Date(member.created_date).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(member); setShowModal(true); }}>
-                  <Edit2 className="w-3.5 h-3.5" />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => { setEditing(member); setShowModal(true); }}>
-                      <Edit2 className="w-4 h-4 mr-2" />Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleResendInvite(member)} disabled={resendingInvite === member.email}>
-                      <Send className="w-4 h-4 mr-2" />
-                      {resendingInvite === member.email ? 'Sending...' : 'Re-invite'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setResetPasswordMember(member)}>
-                      <KeyRound className="w-4 h-4 mr-2" />Reset Password
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setResetMfaMember(member)}>
-                      <Shield className="w-4 h-4 mr-2" />Reset MFA
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'member', item: member })} className="text-red-600">
-                      <Trash2 className="w-4 h-4 mr-2" />Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-            ))}
+              );
+            })}
             {filteredMembers.length === 0 && members.length > 0 && (
               <div className="p-8 text-center text-slate-500 dark:text-slate-400">
                 <Search className="w-8 h-8 mx-auto mb-2 opacity-30" />

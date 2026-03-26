@@ -20,16 +20,16 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 const notificationConfig = {
-  mention: { icon: AtSign, bg: 'bg-indigo-100', color: 'text-indigo-600' },
-  task_assigned: { icon: CheckCircle2, bg: 'bg-blue-100', color: 'text-blue-600' },
-  task_due: { icon: Clock, bg: 'bg-amber-100', color: 'text-amber-600' },
-  task_completed: { icon: CheckCircle2, bg: 'bg-emerald-100', color: 'text-emerald-600' },
-  task_overdue: { icon: AlertTriangle, bg: 'bg-red-100', color: 'text-red-600' },
-  part_status: { icon: Package, bg: 'bg-orange-100', color: 'text-orange-600' },
-  project_update: { icon: FolderOpen, bg: 'bg-violet-100', color: 'text-violet-600' },
-  project_assigned: { icon: FolderOpen, bg: 'bg-blue-100', color: 'text-blue-600' },
-  comment: { icon: MessageSquare, bg: 'bg-teal-100', color: 'text-teal-600' },
-  progress_update: { icon: CheckCircle2, bg: 'bg-emerald-100', color: 'text-emerald-600' },
+  mention: { icon: AtSign, bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' },
+  task_assigned: { icon: CheckCircle2, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
+  task_due: { icon: Clock, bg: 'bg-amber-100 dark:bg-amber-900/30', color: 'text-amber-600 dark:text-amber-400' },
+  task_completed: { icon: CheckCircle2, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
+  task_overdue: { icon: AlertTriangle, bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400' },
+  part_status: { icon: Package, bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' },
+  project_update: { icon: FolderOpen, bg: 'bg-violet-100 dark:bg-violet-900/30', color: 'text-violet-600 dark:text-violet-400' },
+  project_assigned: { icon: FolderOpen, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
+  comment: { icon: MessageSquare, bg: 'bg-teal-100 dark:bg-teal-900/30', color: 'text-teal-600 dark:text-teal-400' },
+  progress_update: { icon: CheckCircle2, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
 };
 
 export default function NotificationPanel({ currentUser, onClose }) {
@@ -151,9 +151,9 @@ export default function NotificationPanel({ currentUser, onClose }) {
   });
 
   return (
-    <div className="w-[380px] max-h-[520px] flex flex-col">
+    <div className="w-[380px] max-h-[520px] flex flex-col bg-white dark:bg-[#1e2a3a]">
       <Tabs defaultValue="notifications" className="flex flex-col h-full">
-        <div className="px-4 pt-3 pb-2 border-b border-slate-100">
+        <div className="px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-700/50">
           <TabsList className="w-full">
             <TabsTrigger value="notifications" className="flex-1 text-xs">
               <Bell className="w-3.5 h-3.5 mr-1.5" />
@@ -172,8 +172,8 @@ export default function NotificationPanel({ currentUser, onClose }) {
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="flex-1 m-0 overflow-hidden">
           {unreadCount > 0 && (
-            <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center">
-              <span className="text-xs text-slate-500">{unreadCount} unread</span>
+            <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
+              <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} unread</span>
               <button
                 onClick={() => markAllAsRead.mutate()}
                 disabled={markAllAsRead.isPending}
@@ -197,8 +197,8 @@ export default function NotificationPanel({ currentUser, onClose }) {
                       className={cn(
                         "px-3 py-2.5 rounded-lg transition-all group flex items-start gap-2.5 relative",
                         notification.is_read
-                          ? "hover:bg-slate-50"
-                          : "bg-blue-50/60 hover:bg-blue-50"
+                          ? "hover:bg-slate-50 dark:hover:bg-slate-700/30"
+                          : "bg-blue-50/60 dark:bg-blue-900/20 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                       )}
                     >
                       {!notification.is_read && (
@@ -208,8 +208,8 @@ export default function NotificationPanel({ currentUser, onClose }) {
                         <IconComponent className="w-3.5 h-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-xs text-slate-900 leading-tight">{notification.title}</p>
-                        <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{notification.message}</p>
+                        <p className="font-medium text-xs text-slate-900 dark:text-slate-100 leading-tight">{notification.title}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{notification.message}</p>
                         <div className="flex items-center gap-2 mt-1">
                           {notification.project_name && (
                             <span className="text-[10px] text-[#0069AF] font-medium">{notification.project_name}</span>
@@ -254,9 +254,9 @@ export default function NotificationPanel({ currentUser, onClose }) {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 px-4">
-                <Inbox className="w-10 h-10 text-slate-200 mb-3" />
-                <p className="text-sm font-medium text-slate-900">All caught up</p>
-                <p className="text-xs text-slate-500 text-center mt-1">
+                <Inbox className="w-10 h-10 text-slate-200 dark:text-slate-600 mb-3" />
+                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">All caught up</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-1">
                   Notifications for assignments, mentions, and due tasks will appear here.
                 </p>
               </div>
@@ -264,7 +264,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
           </ScrollArea>
 
           {notifications.length > 0 && (
-            <div className="px-4 py-2 border-t border-slate-100">
+            <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-700/50">
               <Link
                 to={createPageUrl('MyNotifications')}
                 onClick={onClose}
@@ -280,16 +280,16 @@ export default function NotificationPanel({ currentUser, onClose }) {
         <TabsContent value="settings" className="flex-1 m-0 overflow-hidden">
           <ScrollArea className="h-[420px]">
             <div className="p-4 space-y-3">
-              <div className="pb-2 border-b border-slate-100">
-                <p className="text-xs font-medium text-slate-900">Email Notifications</p>
-                <p className="text-[11px] text-slate-500">Choose what you get emailed about</p>
+              <div className="pb-2 border-b border-slate-100 dark:border-slate-700/50">
+                <p className="text-xs font-medium text-slate-900 dark:text-slate-100">Email Notifications</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Choose what you get emailed about</p>
               </div>
 
               {/* Email Frequency */}
               <div className="flex items-center justify-between py-1">
                 <div>
-                  <Label className="text-xs font-medium text-slate-700">Delivery</Label>
-                  <p className="text-[11px] text-slate-500">How often to send emails</p>
+                  <Label className="text-xs font-medium text-slate-700 dark:text-slate-200">Delivery</Label>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">How often to send emails</p>
                 </div>
                 <Select
                   value={settings.email_frequency}
@@ -306,8 +306,8 @@ export default function NotificationPanel({ currentUser, onClose }) {
                 </Select>
               </div>
 
-              <div className="border-t border-slate-100 pt-2">
-                <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-2">Notify me when...</p>
+              <div className="border-t border-slate-100 dark:border-slate-700/50 pt-2">
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Notify me when...</p>
               </div>
 
               {/* Task Assigned */}
@@ -317,7 +317,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
                     <CheckCircle2 className="w-3 h-3 text-blue-600" />
                   </div>
                   <div>
-                    <Label className="text-xs font-medium text-slate-700">Task assigned to me</Label>
+                    <Label className="text-xs font-medium text-slate-700 dark:text-slate-200">Task assigned to me</Label>
                   </div>
                 </div>
                 <Switch
@@ -334,7 +334,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
                     <FolderOpen className="w-3 h-3 text-blue-600" />
                   </div>
                   <div>
-                    <Label className="text-xs font-medium text-slate-700">Added to a project</Label>
+                    <Label className="text-xs font-medium text-slate-700 dark:text-slate-200">Added to a project</Label>
                   </div>
                 </div>
                 <Switch
@@ -351,7 +351,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
                     <AtSign className="w-3 h-3 text-indigo-600" />
                   </div>
                   <div>
-                    <Label className="text-xs font-medium text-slate-700">Someone @mentions me</Label>
+                    <Label className="text-xs font-medium text-slate-700 dark:text-slate-200">Someone @mentions me</Label>
                   </div>
                 </div>
                 <Switch
@@ -368,7 +368,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
                     <Clock className="w-3 h-3 text-amber-600" />
                   </div>
                   <div>
-                    <Label className="text-xs font-medium text-slate-700">Upcoming due tasks</Label>
+                    <Label className="text-xs font-medium text-slate-700 dark:text-slate-200">Upcoming due tasks</Label>
                   </div>
                 </div>
                 <Switch
@@ -406,7 +406,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
                     <AlertTriangle className="w-3 h-3 text-red-600" />
                   </div>
                   <div>
-                    <Label className="text-xs font-medium text-slate-700">Overdue tasks</Label>
+                    <Label className="text-xs font-medium text-slate-700 dark:text-slate-200">Overdue tasks</Label>
                   </div>
                 </div>
                 <Switch
@@ -433,7 +433,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
                 </Button>
               )}
 
-              <p className="text-[10px] text-slate-400 text-center pt-1">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center pt-1">
                 Only notifications from active (non-archived) projects are shown and emailed.
               </p>
             </div>

@@ -92,21 +92,21 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [], proj
           classNames={{
             months: "flex flex-col",
             month: "space-y-2",
-            caption: "flex justify-center pt-1 relative items-center text-xs",
-            caption_label: "text-xs font-medium",
+            caption: "flex justify-center pt-1 relative items-center text-xs text-slate-900 dark:text-slate-100",
+            caption_label: "text-xs font-medium text-slate-900 dark:text-slate-100",
             nav: "space-x-1 flex items-center",
-            nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100",
+            nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100 text-slate-600 dark:text-slate-300",
             nav_button_previous: "absolute left-1",
             nav_button_next: "absolute right-1",
             table: "w-full border-collapse",
             head_row: "flex",
-            head_cell: "text-slate-500 rounded-md w-7 font-normal text-[10px]",
+            head_cell: "text-slate-500 dark:text-slate-400 rounded-md w-7 font-normal text-[10px]",
             row: "flex w-full mt-1",
             cell: "h-7 w-7 text-center text-xs p-0 relative",
-            day: "h-7 w-7 p-0 font-normal text-[11px] hover:bg-slate-100 rounded-full",
+            day: "h-7 w-7 p-0 font-normal text-[11px] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-full",
             day_selected: "bg-indigo-600 text-white hover:bg-indigo-600",
-            day_today: "bg-slate-100 font-semibold",
-            day_outside: "text-slate-300",
+            day_today: "bg-slate-100 dark:bg-slate-700 font-semibold text-slate-900 dark:text-white",
+            day_outside: "text-slate-300 dark:text-slate-600",
           }}
           modifiers={{
             hasTask: taskDates,
@@ -145,10 +145,10 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [], proj
         {/* Task progress bar */}
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] text-slate-500 font-medium">Tasks</span>
-            <span className="text-[11px] font-bold text-slate-600">{completedTasks.length}/{tasks.length}</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Tasks</span>
+            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{completedTasks.length}/{tasks.length}</span>
           </div>
-          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
             <div
               className={cn("h-2 rounded-full transition-all duration-500", taskCompletion === 100 ? "bg-emerald-500" : "bg-blue-500")}
               style={{ width: `${taskCompletion}%` }}
@@ -160,10 +160,10 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [], proj
         {parts.length > 0 && (
           <div className="mb-3">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] text-slate-500 font-medium">Parts</span>
-              <span className="text-[11px] font-bold text-slate-600">{installedParts.length}/{parts.length}</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Parts</span>
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{installedParts.length}/{parts.length}</span>
             </div>
-            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
               <div
                 className={cn("h-2 rounded-full transition-all duration-500", partCompletion === 100 ? "bg-emerald-500" : "bg-teal-500")}
                 style={{ width: `${partCompletion}%` }}
@@ -174,32 +174,32 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [], proj
 
         {/* Quick stat pills */}
         <div className="grid grid-cols-2 gap-2 mt-3">
-          <div className={cn("flex items-center gap-1.5 px-2.5 py-2 rounded-lg border", inProgressTasks.length > 0 ? "bg-blue-50/80 border-blue-100" : "bg-slate-50 border-slate-100")}>
-            <Zap className={cn("w-3.5 h-3.5", inProgressTasks.length > 0 ? "text-blue-500" : "text-slate-400")} />
+          <div className={cn("flex items-center gap-1.5 px-2.5 py-2 rounded-lg border", inProgressTasks.length > 0 ? "bg-blue-50/80 border-blue-100 dark:bg-blue-900/20 dark:border-blue-800/40" : "bg-slate-50 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700/50")}>
+            <Zap className={cn("w-3.5 h-3.5", inProgressTasks.length > 0 ? "text-blue-500 dark:text-blue-400" : "text-slate-400")} />
             <div>
-              <div className="text-sm font-bold text-slate-800 leading-none">{inProgressTasks.length}</div>
-              <div className="text-[9px] text-slate-500 mt-0.5">In Progress</div>
+              <div className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">{inProgressTasks.length}</div>
+              <div className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">In Progress</div>
             </div>
           </div>
-          <div className={cn("flex items-center gap-1.5 px-2.5 py-2 rounded-lg border", overdueTasks.length > 0 ? "bg-red-50/80 border-red-100" : "bg-slate-50 border-slate-100")}>
-            <AlertTriangle className={cn("w-3.5 h-3.5", overdueTasks.length > 0 ? "text-red-500" : "text-slate-400")} />
+          <div className={cn("flex items-center gap-1.5 px-2.5 py-2 rounded-lg border", overdueTasks.length > 0 ? "bg-red-50/80 border-red-100 dark:bg-red-900/20 dark:border-red-800/40" : "bg-slate-50 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700/50")}>
+            <AlertTriangle className={cn("w-3.5 h-3.5", overdueTasks.length > 0 ? "text-red-500 dark:text-red-400" : "text-slate-400")} />
             <div>
-              <div className={cn("text-sm font-bold leading-none", overdueTasks.length > 0 ? "text-red-600" : "text-slate-800")}>{overdueTasks.length}</div>
-              <div className="text-[9px] text-slate-500 mt-0.5">Overdue</div>
+              <div className={cn("text-sm font-bold leading-none", overdueTasks.length > 0 ? "text-red-600 dark:text-red-400" : "text-slate-800 dark:text-slate-100")}>{overdueTasks.length}</div>
+              <div className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">Overdue</div>
             </div>
           </div>
-          <div className={cn("flex items-center gap-1.5 px-2.5 py-2 rounded-lg border", activeParts.length > 0 ? "bg-amber-50/80 border-amber-100" : "bg-slate-50 border-slate-100")}>
-            <Package className={cn("w-3.5 h-3.5", activeParts.length > 0 ? "text-amber-500" : "text-slate-400")} />
+          <div className={cn("flex items-center gap-1.5 px-2.5 py-2 rounded-lg border", activeParts.length > 0 ? "bg-amber-50/80 border-amber-100 dark:bg-amber-900/20 dark:border-amber-800/40" : "bg-slate-50 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700/50")}>
+            <Package className={cn("w-3.5 h-3.5", activeParts.length > 0 ? "text-amber-500 dark:text-amber-400" : "text-slate-400")} />
             <div>
-              <div className="text-sm font-bold text-slate-800 leading-none">{activeParts.length}</div>
-              <div className="text-[9px] text-slate-500 mt-0.5">Pending</div>
+              <div className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">{activeParts.length}</div>
+              <div className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">Pending</div>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-emerald-50/80 border border-emerald-100">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+          <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-emerald-50/80 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/40">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
             <div>
-              <div className="text-sm font-bold text-slate-800 leading-none">{completedTasks.length}</div>
-              <div className="text-[9px] text-slate-500 mt-0.5">Done</div>
+              <div className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">{completedTasks.length}</div>
+              <div className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">Done</div>
             </div>
           </div>
         </div>
@@ -215,8 +215,8 @@ export default function ProjectSidebar({ projectId, tasks = [], parts = [], proj
           <div className="space-y-2.5">
             {recentUpdates.map((update, idx) => (
               <div key={update.id || idx} className="relative pl-4">
-                <div className="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-slate-300" />
-                {idx < recentUpdates.length - 1 && <div className="absolute left-[3px] top-3.5 w-0.5 h-full bg-slate-100" />}
+                <div className="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600" />
+                {idx < recentUpdates.length - 1 && <div className="absolute left-[3px] top-3.5 w-0.5 h-full bg-slate-100 dark:bg-slate-700" />}
                 <div>
                   <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                     {update.content || update.title || 'Progress update'}

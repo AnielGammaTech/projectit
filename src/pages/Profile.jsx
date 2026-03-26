@@ -66,8 +66,18 @@ export default function Profile() {
     const checkMfa = async () => {
       try {
         const { data: factorsData } = await supabase.auth.mfa.listFactors();
-        const hasVerified = factorsData?.totp?.some(f => f.status === 'verified');
-        setMfaEnabled(!!hasVerified);
+        // Check both totp and all arrays for verified factors
+        const totpVerified = factorsData?.totp?.some(f => f.status === 'verified');
+        const allVerified = factorsData?.all?.some(f => f.status === 'verified');
+        if (totpVerified || allVerified) {
+          setMfaEnabled(true);
+        } else {
+          // Fallback: check AAL level from the session
+          const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+          if (aalData?.currentLevel === 'aal2' || aalData?.nextLevel === 'aal2') {
+            setMfaEnabled(true);
+          }
+        }
         if (currentUser.mfa_enforcement_deadline) {
           setMfaDeadline(new Date(currentUser.mfa_enforcement_deadline));
         }
@@ -322,55 +332,108 @@ export default function Profile() {
                   );
                 })}
               </div>
-              <p className="text-xs text-slate-400 mt-4 text-center">
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full bg-[#0069AF] hover:bg-[#133F5C] mt-5"
+              >
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                {saving ? 'Saving...' : 'Save Theme'}
+              </Button>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 text-center">
                 Theme is saved to your profile and syncs across devices.
               </p>
             </div>
           )}
 
           {activeTab === 'security' && (
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+            <div className="p-6 space-y-5">
+              {/* MFA Status Card */}
+              <div className={cn(
+                "rounded-xl border p-4",
+                mfaEnabled
+                  ? "bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800/40"
+                  : "bg-amber-50/50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40"
+              )}>
+                <div className="flex items-center gap-3 mb-3">
                   <div className={cn(
-                    "p-2 rounded-lg",
+                    "p-2.5 rounded-xl",
                     mfaEnabled
-                      ? "bg-emerald-100 dark:bg-emerald-900/30"
-                      : "bg-amber-100 dark:bg-amber-900/30"
+                      ? "bg-emerald-100 dark:bg-emerald-900/40"
+                      : "bg-amber-100 dark:bg-amber-900/40"
                   )}>
                     {mfaEnabled
                       ? <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                       : <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                     }
                   </div>
-                  <div>
-                    <p className="font-medium text-slate-900 dark:text-slate-100">Two-Factor Authentication</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {mfaEnabled ? 'Enabled via Authenticator App' : 'Not yet configured'}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-slate-900 dark:text-slate-100">Two-Factor Authentication</p>
+                      <Badge className={cn(
+                        "border-0 text-[10px] px-2",
+                        mfaEnabled
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
+                          : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+                      )}>
+                        {mfaEnabled ? 'Active' : 'Not Set Up'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                      {mfaEnabled
+                        ? 'Your account is protected with an authenticator app'
+                        : 'Add an extra layer of security to your account'
+                      }
                     </p>
                   </div>
                 </div>
-                <Badge className={cn(
-                  "border-0",
-                  mfaEnabled
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                    : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                )}>
-                  {mfaEnabled ? 'Enabled' : 'Disabled'}
-                </Badge>
+
+                {!mfaEnabled && mfaDeadline && (
+                  <div className="p-3 bg-amber-100/60 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/30 rounded-lg mb-3">
+                    <p className="text-sm text-amber-800 dark:text-amber-300">
+                      You must set up 2FA by <strong>{format(mfaDeadline, 'MMMM d, yyyy')}</strong>
+                    </p>
+                  </div>
+                )}
+
+                <Link to={createPageUrl('SecuritySettings')}>
+                  <Button className={cn(
+                    "w-full",
+                    mfaEnabled
+                      ? "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600"
+                      : "bg-[#0069AF] hover:bg-[#133F5C] text-white"
+                  )}>
+                    <Shield className="w-4 h-4 mr-2" />
+                    {mfaEnabled ? 'Manage 2FA Settings' : 'Set Up 2FA Now'}
+                  </Button>
+                </Link>
               </div>
-              {!mfaEnabled && mfaDeadline && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-lg">
-                  <p className="text-sm text-amber-800 dark:text-amber-300">
-                    You must set up 2FA by <strong>{format(mfaDeadline, 'MMMM d, yyyy')}</strong>
-                  </p>
+
+              {/* Account Security Info */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Account Security</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-slate-50 dark:bg-[#151d2b] border border-slate-100 dark:border-slate-700/50">
+                    <div className="flex items-center gap-2.5">
+                      <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                      <div>
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Email</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">{currentUser?.email}</p>
+                      </div>
+                    </div>
+                    <Badge className="border-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 text-[10px]">Verified</Badge>
+                  </div>
+                  <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-slate-50 dark:bg-[#151d2b] border border-slate-100 dark:border-slate-700/50">
+                    <div className="flex items-center gap-2.5">
+                      <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                      <div>
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Password</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">Last changed unknown</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <Link to={createPageUrl('SecuritySettings')}>
-                <Button className="bg-[#0069AF] hover:bg-[#133F5C]">
-                  {mfaEnabled ? 'Manage 2FA' : 'Set Up 2FA'}
-                </Button>
-              </Link>
+              </div>
             </div>
           )}
 
