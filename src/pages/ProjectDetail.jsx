@@ -1474,8 +1474,8 @@ export default function ProjectDetail() {
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {project.client && (
                   <Link
-                    to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')}
-                    className="text-primary hover:underline text-sm"
+                    to={createPageUrl('Customers') + `?search=${encodeURIComponent(project.client)}`}
+                    className="text-muted-foreground hover:text-primary transition-colors hover:underline text-sm"
                   >
                     {project.client}{project.client_company ? ` — ${project.client_company}` : ''} →
                   </Link>
