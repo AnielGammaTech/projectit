@@ -1125,8 +1125,8 @@ export default function ProjectTasks() {
                 </button>
               ))}
             </div>
-            {/* View Mode Toggle */}
-            <div className="flex gap-1 p-1 bg-slate-100/80 dark:bg-slate-700/50 rounded-xl shrink-0">
+            {/* View Mode Toggle — hidden on mobile */}
+            <div className="hidden sm:flex gap-1 p-1 bg-slate-100/80 dark:bg-slate-700/50 rounded-xl shrink-0">
               <button
                 onClick={() => setViewMode('list')}
                 className={cn(
@@ -1150,7 +1150,7 @@ export default function ProjectTasks() {
               variant={selectionMode ? "default" : "outline"}
               size="sm"
               onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
-              className={cn("h-9 shrink-0 touch-manipulation", selectionMode && "bg-[#0069AF] hover:bg-[#005a96]")}
+              className={cn("hidden sm:inline-flex h-9 shrink-0 touch-manipulation", selectionMode && "bg-[#0069AF] hover:bg-[#005a96]")}
             >
               <CheckSquare className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">{selectionMode ? 'Done' : 'Select'}</span>
