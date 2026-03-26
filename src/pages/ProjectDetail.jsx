@@ -1405,14 +1405,52 @@ export default function ProjectDetail() {
           {/* Row 1: Title + Actions */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
-              {/* Project number + title */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {project.project_number && (
-                  <span className="px-2 py-0.5 bg-slate-800 text-white rounded text-xs font-mono font-semibold">
-                    #{project.project_number}
-                  </span>
-                )}
-                <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 break-words">{project.name}</h1>
+              {/* Project number + title + mobile actions */}
+              <div className="flex items-start gap-2">
+                <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                  {project.project_number && (
+                    <span className="px-2 py-0.5 bg-slate-800 text-white rounded text-xs font-mono font-semibold">
+                      #{project.project_number}
+                    </span>
+                  )}
+                  <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 break-words">{project.name}</h1>
+                </div>
+                {/* Mobile-only: edit + more inline with title */}
+                <div className="flex items-center gap-1 sm:hidden shrink-0">
+                  <Button variant="ghost" size="sm" onClick={() => setShowProjectModal(true)} className="h-7 w-7 p-0 text-slate-400">
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400">
+                        <MoreHorizontal className="w-3.5 h-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => navigate(createPageUrl('TimeReport') + `?project_id=${projectId}`)}>
+                        <Clock className="w-4 h-4 mr-2" />
+                        Time Report
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleSaveAsTemplate}>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Save as Template
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowArchiveModal(true)}>
+                        <Archive className="w-4 h-4 mr-2" />
+                        Archive Project
+                      </DropdownMenuItem>
+                      {currentUser?.role === 'admin' && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-red-600">
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Move to Trash
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
 
               {/* Tags — below title on mobile */}
@@ -1491,8 +1529,8 @@ export default function ProjectDetail() {
               </div>
             </div>
 
-            {/* Right: actions — edit + more (desktop shows timer too) */}
-            <div className="flex items-center gap-1.5 shrink-0">
+            {/* Right: actions — edit + more (desktop shows timer too, hidden on mobile — shown inline with title) */}
+            <div className="hidden sm:flex items-center gap-1.5 shrink-0">
               <span className="hidden sm:inline-flex">
                 <TimeTracker
                   projectId={projectId}
@@ -1608,8 +1646,8 @@ export default function ProjectDetail() {
         <div className="sm:hidden grid grid-cols-2 gap-2 pb-3">
           {/* Tasks */}
           <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
-            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3">
-              <div className="flex items-center gap-2 mb-1.5">
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+              <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-blue-500/10 dark:bg-blue-500/20">
                   <ListTodo className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 </div>
@@ -1626,8 +1664,8 @@ export default function ProjectDetail() {
 
           {/* Messages */}
           <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`}>
-            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3">
-              <div className="flex items-center gap-2 mb-1.5">
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+              <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-violet-500/10 dark:bg-violet-500/20">
                   <MessageSquare className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
                 </div>
@@ -1639,8 +1677,8 @@ export default function ProjectDetail() {
 
           {/* Parts */}
           <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`}>
-            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3">
-              <div className="flex items-center gap-2 mb-1.5">
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+              <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20">
                   <Package className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 </div>
@@ -1652,8 +1690,8 @@ export default function ProjectDetail() {
 
           {/* Files */}
           <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`}>
-            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3">
-              <div className="flex items-center gap-2 mb-1.5">
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+              <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-amber-500/10 dark:bg-amber-500/20">
                   <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 </div>

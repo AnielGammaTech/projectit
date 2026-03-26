@@ -889,23 +889,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <ProcessingOverlay isVisible={isProcessing} type={processingType} />
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Mobile Search Bar — visible only on mobile */}
-        <div className="sm:hidden mb-4">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search projects, tasks, customers..."
-              className="pl-11 pr-4 h-12 text-base rounded-xl bg-white dark:bg-[#1e2a3a] border-slate-200 dark:border-slate-700/50 shadow-sm focus:ring-2 focus:ring-[#0069AF]/30 dark:focus:ring-blue-500/30"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
-                <X className="w-4 h-4 text-slate-400" />
-              </button>
-            )}
-          </div>
-        </div>
+        {/* Mobile Search Bar — removed, top navbar handles search */}
 
         {/* Welcome Header — hidden on mobile */}
         <div className="mb-6 hidden sm:block">
@@ -1215,7 +1199,7 @@ export default function Dashboard() {
                   <span className="sm:hidden">{showArchived ? 'Active' : `(${archivedProjects.length})`}</span>
                 </button>
               </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="hidden sm:flex items-center gap-2 w-full sm:w-auto">
                 {/* Selection Mode Toggle */}
                 {!showArchived && (
                   <button
