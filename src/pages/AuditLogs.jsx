@@ -158,7 +158,7 @@ export default function AuditLogs() {
   if (isLoading) return <TablePageSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <motion.div
@@ -167,10 +167,10 @@ export default function AuditLogs() {
           className="mb-8"
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
+            <div className="p-2.5 rounded-xl bg-primary shadow-lg shadow-primary/20">
               <Shield className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] tracking-tight">Audit Logs</h1>
+            <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Audit Logs</h1>
           </div>
           <p className="text-slate-500">Track all user actions and system changes</p>
         </motion.div>
@@ -315,7 +315,7 @@ export default function AuditLogs() {
 
                       <div className="flex items-center gap-4 shrink-0">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-[#0069AF] flex items-center justify-center text-white text-xs font-medium">
+                          <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white text-xs font-medium">
                             {getUserInitials(log.user_name)}
                           </div>
                           <span className="text-sm text-slate-600">{log.user_name || log.user_email}</span>
