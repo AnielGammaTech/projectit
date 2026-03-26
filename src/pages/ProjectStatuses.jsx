@@ -123,7 +123,7 @@ export default function ProjectStatuses() {
   if (loadingStatuses) return <ProjectSubpageSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -132,14 +132,14 @@ export default function ProjectStatuses() {
         >
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
+              <div className="p-2.5 rounded-xl bg-primary shadow-lg shadow-primary/20">
                 <Tag className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] tracking-tight">Project Statuses</h1>
+              <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Project Statuses</h1>
             </div>
             <p className="text-slate-500">Customize project statuses and their display</p>
           </div>
-          <Button onClick={() => { setEditingStatus(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          <Button onClick={() => { setEditingStatus(null); setShowModal(true); }} className="bg-primary hover:bg-primary/80">
             <Plus className="w-4 h-4 mr-2" />
             Add Status
           </Button>
@@ -154,7 +154,7 @@ export default function ProjectStatuses() {
                     <Tag className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-slate-900 mb-2">No custom statuses yet</h3>
                     <p className="text-slate-500 mb-4">Create statuses like "Planning", "In Progress", "Completed"</p>
-                    <Button onClick={() => setShowModal(true)} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                    <Button onClick={() => setShowModal(true)} className="bg-primary hover:bg-primary/80">
                       <Plus className="w-4 h-4 mr-2" />
                       Add Status
                     </Button>
@@ -170,7 +170,7 @@ export default function ProjectStatuses() {
                             {...provided.draggableProps}
                             className={cn(
                               "bg-white rounded-xl border p-4 hover:shadow-md transition-all",
-                              snapshot.isDragging && "shadow-lg ring-2 ring-[#0069AF]"
+                              snapshot.isDragging && "shadow-lg ring-2 ring-primary"
                             )}
                           >
                             <div className="flex items-center justify-between">
@@ -345,7 +345,7 @@ function StatusModal({ open, onClose, status, onSave }) {
                   className={cn(
                     "w-8 h-8 rounded-full transition-all hover:scale-110",
                     c.bg,
-                    formData.color === c.name && "ring-2 ring-offset-2 ring-[#0069AF]"
+                    formData.color === c.name && "ring-2 ring-offset-2 ring-primary"
                   )}
                 />
               ))}
@@ -365,7 +365,7 @@ function StatusModal({ open, onClose, status, onSave }) {
 
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={!formData.name || !formData.key} className="bg-[#0069AF] hover:bg-[#133F5C]">
+            <Button onClick={handleSubmit} disabled={!formData.name || !formData.key} className="bg-primary hover:bg-primary/80">
               {status ? 'Update' : 'Create'}
             </Button>
           </div>

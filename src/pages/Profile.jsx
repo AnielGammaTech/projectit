@@ -145,8 +145,8 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0069AF]" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -159,16 +159,16 @@ export default function Profile() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+    <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8">
-        <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-[#0069AF] hover:text-[#133F5C] mb-5 text-sm">
+        <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-primary hover:text-foreground mb-5 text-sm">
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to Dashboard
         </Link>
 
         {/* Profile Hero */}
-        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden mb-6">
-          <div className="h-16 bg-gradient-to-r from-[#0F2F44] via-[#133F5C] to-[#0069AF]" />
+        <div className="bg-card rounded-2xl border border-slate-200 dark:border-border shadow-sm overflow-hidden mb-6">
+          <div className="h-16 bg-primary" />
           <div className="px-4 sm:px-6 py-5">
             <div className="flex items-center gap-4">
               <div className="relative shrink-0">
@@ -188,16 +188,16 @@ export default function Profile() {
                 )}
                 <label className="absolute -bottom-1 -right-1 p-1.5 bg-white dark:bg-slate-700 rounded-lg shadow-md cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
                   {uploading ? (
-                    <Loader2 className="w-3 h-3 animate-spin text-[#0069AF]" />
+                    <Loader2 className="w-3 h-3 animate-spin text-primary" />
                   ) : (
-                    <Camera className="w-3 h-3 text-[#0069AF]" />
+                    <Camera className="w-3 h-3 text-primary" />
                   )}
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 truncate">{currentUser?.full_name || 'User'}</h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{currentUser?.email}</p>
+                <h1 className="text-lg font-bold text-foreground truncate">{currentUser?.full_name || 'User'}</h1>
+                <p className="text-sm text-muted-foreground truncate">{currentUser?.email}</p>
               </div>
               <Button variant="outline" size="sm" onClick={handleLogout} className="text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800/50 dark:hover:bg-red-900/20 shrink-0">
                 <LogOut className="w-3.5 h-3.5 mr-1.5" />
@@ -208,7 +208,7 @@ export default function Profile() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-1 mb-6 bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-1 overflow-x-auto">
+        <div className="flex gap-1 mb-6 bg-card rounded-xl border border-slate-200 dark:border-border p-1 overflow-x-auto">
           {tabs.map(tab => {
             const Icon = tab.icon;
             return (
@@ -218,8 +218,8 @@ export default function Profile() {
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-1 justify-center",
                   activeTab === tab.id
-                    ? "bg-[#0069AF] text-white shadow-sm"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <Icon className="w-4 h-4" />
@@ -235,7 +235,7 @@ export default function Profile() {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden">
+        <div className="bg-card rounded-2xl border border-slate-200 dark:border-border shadow-sm overflow-hidden">
           {activeTab === 'profile' && (
             <div className="p-4 sm:p-6 space-y-5">
               <div>
@@ -259,7 +259,7 @@ export default function Profile() {
                         className={cn(
                           "w-7 h-7 rounded-full transition-all",
                           color,
-                          formData.avatar_color === color && "ring-2 ring-offset-2 ring-[#0069AF] dark:ring-offset-[#1e2a3a]"
+                          formData.avatar_color === color && "ring-2 ring-offset-2 ring-primary dark:ring-offset-card"
                         )}
                       />
                     ))}
@@ -278,7 +278,7 @@ export default function Profile() {
               )}
 
               {/* Dashboard Settings inline */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-700/50">
+              <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-border">
                 <div>
                   <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Dashboard Widgets</Label>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Show widgets on your dashboard</p>
@@ -292,7 +292,7 @@ export default function Profile() {
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full bg-[#0069AF] hover:bg-[#133F5C]"
+                className="w-full bg-primary hover:bg-primary/80"
               >
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -317,17 +317,17 @@ export default function Profile() {
                       className={cn(
                         "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
                         isActive
-                          ? "border-[#0069AF] bg-blue-50 dark:bg-blue-900/30 dark:border-blue-500"
+                          ? "border-primary bg-primary/10 dark:bg-primary/20 dark:border-primary"
                           : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                       )}
                     >
                       <div className={cn(
                         "p-2.5 rounded-xl",
-                        isActive ? "bg-[#0069AF] text-white" : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                        isActive ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-700 text-muted-foreground"
                       )}>
                         <Icon className="w-5 h-5" />
                       </div>
-                      <span className={cn("text-sm font-medium", isActive ? "text-[#0069AF] dark:text-blue-400" : "text-slate-700 dark:text-slate-300")}>{option.label}</span>
+                      <span className={cn("text-sm font-medium", isActive ? "text-primary" : "text-slate-700 dark:text-slate-300")}>{option.label}</span>
                     </button>
                   );
                 })}
@@ -335,7 +335,7 @@ export default function Profile() {
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full bg-[#0069AF] hover:bg-[#133F5C] mt-5"
+                className="w-full bg-primary hover:bg-primary/80 mt-5"
               >
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 {saving ? 'Saving...' : 'Save Theme'}
@@ -369,7 +369,7 @@ export default function Profile() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold text-slate-900 dark:text-slate-100">Two-Factor Authentication</p>
+                      <p className="font-semibold text-foreground">Two-Factor Authentication</p>
                       <Badge className={cn(
                         "border-0 text-[10px] px-2",
                         mfaEnabled
@@ -379,7 +379,7 @@ export default function Profile() {
                         {mfaEnabled ? 'Active' : 'Not Set Up'}
                       </Badge>
                     </div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-0.5">
                       {mfaEnabled
                         ? 'Your account is protected with an authenticator app'
                         : 'Add an extra layer of security to your account'
@@ -401,7 +401,7 @@ export default function Profile() {
                     "w-full",
                     mfaEnabled
                       ? "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600"
-                      : "bg-[#0069AF] hover:bg-[#133F5C] text-white"
+                      : "bg-primary hover:bg-primary/80 text-white"
                   )}>
                     <Shield className="w-4 h-4 mr-2" />
                     {mfaEnabled ? 'Manage 2FA Settings' : 'Set Up 2FA Now'}
@@ -413,22 +413,22 @@ export default function Profile() {
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Account Security</h3>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-slate-50 dark:bg-[#151d2b] border border-slate-100 dark:border-slate-700/50">
+                  <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-slate-50 dark:bg-background border border-slate-100 dark:border-border">
                     <div className="flex items-center gap-2.5">
-                      <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                      <Mail className="w-4 h-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Email</p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500">{currentUser?.email}</p>
+                        <p className="text-sm font-medium text-foreground">Email</p>
+                        <p className="text-xs text-muted-foreground">{currentUser?.email}</p>
                       </div>
                     </div>
                     <Badge className="border-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 text-[10px]">Verified</Badge>
                   </div>
-                  <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-slate-50 dark:bg-[#151d2b] border border-slate-100 dark:border-slate-700/50">
+                  <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-slate-50 dark:bg-background border border-slate-100 dark:border-border">
                     <div className="flex items-center gap-2.5">
-                      <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                      <Lock className="w-4 h-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Password</p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500">Last changed unknown</p>
+                        <p className="text-sm font-medium text-foreground">Password</p>
+                        <p className="text-xs text-muted-foreground">Last changed unknown</p>
                       </div>
                     </div>
                   </div>
@@ -438,22 +438,22 @@ export default function Profile() {
           )}
 
           {activeTab === 'notifications' && (
-            <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
+            <div className="divide-y divide-slate-100 dark:divide-border">
               {unreadCount > 0 && (
-                <div className="px-4 sm:px-6 py-3 flex items-center justify-between bg-slate-50/50 dark:bg-[#151d2b]/50">
-                  <span className="text-sm text-slate-500 dark:text-slate-400">{unreadCount} unread</span>
+                <div className="px-4 sm:px-6 py-3 flex items-center justify-between bg-slate-50/50 dark:bg-background/50">
+                  <span className="text-sm text-muted-foreground">{unreadCount} unread</span>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => markAllAsRead.mutate()}
-                    className="text-xs text-[#0069AF]"
+                    className="text-xs text-primary"
                   >
                     Mark all as read
                   </Button>
                 </div>
               )}
               {notifications.length > 0 ? (
-                <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50">
+                <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-100 dark:divide-border">
                   {notifications.map(notification => (
                     <div
                       key={notification.id}
@@ -473,8 +473,8 @@ export default function Profile() {
                         {notification.type === 'task_assigned' && <CheckCircle2 className="w-3.5 h-3.5" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{notification.title}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{notification.message}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{notification.title}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1">{notification.message}</p>
                         <p className="text-[10px] text-slate-400 mt-0.5">
                           {notification.from_user_name && `${notification.from_user_name} · `}
                           {format(new Date(notification.created_date), 'MMM d, h:mm a')}
@@ -503,7 +503,7 @@ export default function Profile() {
               ) : (
                 <div className="text-center py-12">
                   <Bell className="w-10 h-10 text-slate-200 dark:text-slate-700 mx-auto mb-2" />
-                  <p className="text-sm text-slate-500 dark:text-slate-400">No notifications yet</p>
+                  <p className="text-sm text-muted-foreground">No notifications yet</p>
                 </div>
               )}
             </div>

@@ -28,9 +28,9 @@ export default function AcceptInvite() {
 
   if (!supabase) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-sm">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-8 text-center">
             <p className="text-red-600 text-sm">Authentication service not configured</p>
           </div>
         </div>
@@ -145,14 +145,14 @@ export default function AcceptInvite() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-4 sm:p-8">
           <div className="flex justify-center mb-3">
             <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
           </div>
-          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 text-center mb-1">
-            Project<span className="text-[#0069AF]">IT</span>
+          <h1 className="text-lg sm:text-2xl font-bold text-foreground text-center mb-1">
+            Project<span className="text-primary">IT</span>
           </h1>
 
           {/* Step indicator */}
@@ -173,16 +173,16 @@ export default function AcceptInvite() {
           {/* Step 1: Enter email */}
           {step === 'email' && (
             <form onSubmit={handleSendCode} className="space-y-4">
-              <p className="text-slate-500 text-center text-sm mb-2">
+              <p className="text-muted-foreground text-center text-sm mb-2">
                 Enter your email to receive a verification code
               </p>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Email</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                   placeholder="you@company.com"
                   required
                   autoFocus
@@ -191,7 +191,7 @@ export default function AcceptInvite() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-slate-900 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-primary text-white py-2.5 rounded-lg text-sm font-medium hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Sending code...' : 'Send verification code'}
               </button>
@@ -201,17 +201,17 @@ export default function AcceptInvite() {
           {/* Step 2: Enter OTP code */}
           {step === 'otp' && (
             <form onSubmit={handleVerifyCode} className="space-y-4">
-              <p className="text-slate-500 text-center text-sm mb-2">
-                We sent a 6-digit code to <strong className="text-slate-700">{email}</strong>
+              <p className="text-muted-foreground text-center text-sm mb-2">
+                We sent a 6-digit code to <strong className="text-foreground">{email}</strong>
               </p>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Verification code</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Verification code</label>
                 <input
                   ref={otpInputRef}
                   type="text"
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="w-full px-3 py-3 border border-slate-300 rounded-lg text-center text-lg sm:text-2xl font-mono tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-3 border border-border rounded-lg text-center text-lg sm:text-2xl font-mono tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                   placeholder="000000"
                   maxLength={6}
                   required
@@ -221,7 +221,7 @@ export default function AcceptInvite() {
               <button
                 type="submit"
                 disabled={loading || otpCode.length < 6}
-                className="w-full bg-slate-900 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-primary text-white py-2.5 rounded-lg text-sm font-medium hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Verifying...' : 'Verify code'}
               </button>
@@ -229,7 +229,7 @@ export default function AcceptInvite() {
                 <button
                   type="button"
                   onClick={() => { setStep('email'); setOtpCode(''); setError(''); }}
-                  className="text-slate-500 hover:text-slate-700"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   ← Change email
                 </button>
@@ -237,7 +237,7 @@ export default function AcceptInvite() {
                   type="button"
                   onClick={handleResendCode}
                   disabled={loading}
-                  className="text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                  className="text-primary hover:text-primary/80 font-medium disabled:opacity-50"
                 >
                   Resend code
                 </button>
@@ -248,16 +248,16 @@ export default function AcceptInvite() {
           {/* Step 3: Set password */}
           {step === 'password' && (
             <form onSubmit={handleSetPassword} className="space-y-4">
-              <p className="text-slate-500 text-center text-sm mb-2">
+              <p className="text-muted-foreground text-center text-sm mb-2">
                 Set your password to activate your account
               </p>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                   placeholder="At least 8 characters"
                   minLength={8}
                   required
@@ -265,12 +265,12 @@ export default function AcceptInvite() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm password</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Confirm password</label>
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                   placeholder="Repeat your password"
                   minLength={8}
                   required
@@ -279,16 +279,16 @@ export default function AcceptInvite() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-slate-900 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-primary text-white py-2.5 rounded-lg text-sm font-medium hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Activating...' : 'Activate account'}
               </button>
             </form>
           )}
 
-          <p className="text-center text-sm text-slate-500 mt-6">
+          <p className="text-center text-sm text-muted-foreground mt-6">
             Already have an account?{' '}
-            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link to="/login" className="text-primary hover:text-primary/80 font-medium">
               Sign in
             </Link>
           </p>

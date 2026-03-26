@@ -320,7 +320,7 @@ export default function ReportBuilder() {
   if (loadingProjects) return <TablePageSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -333,10 +333,10 @@ export default function ReportBuilder() {
               Back to Reports
             </Link>
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
+              <div className="p-2.5 rounded-xl bg-primary shadow-lg shadow-primary/20">
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] tracking-tight">Report Builder</h1>
+              <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Report Builder</h1>
             </div>
           </div>
           <div className="flex gap-2">
@@ -344,7 +344,7 @@ export default function ReportBuilder() {
               <Download className="w-4 h-4 mr-2" />
               Export CSV
             </Button>
-            <Button onClick={() => setShowSaveModal(true)} className="bg-[#0069AF] hover:bg-[#133F5C]">
+            <Button onClick={() => setShowSaveModal(true)} className="bg-primary hover:bg-primary/80">
               <Save className="w-4 h-4 mr-2" />
               Save Report
             </Button>
@@ -441,7 +441,7 @@ export default function ReportBuilder() {
                             className={cn(
                               "p-3 rounded-lg border-2 text-center transition-all",
                               reportConfig.chart_type === ct.id
-                                ? "border-[#0069AF] bg-blue-50"
+                                ? "border-primary bg-primary/10"
                                 : "border-slate-200 hover:border-slate-300"
                             )}
                           >
@@ -590,7 +590,7 @@ export default function ReportBuilder() {
               </div>
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setShowSaveModal(false)}>Cancel</Button>
-                <Button onClick={() => handleSaveReport(reportConfig.name)} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                <Button onClick={() => handleSaveReport(reportConfig.name)} className="bg-primary hover:bg-primary/80">
                   Save Report
                 </Button>
               </div>

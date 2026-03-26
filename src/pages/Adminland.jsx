@@ -136,7 +136,7 @@ export default function Adminland() {
   // Block non-admin users
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
+      <div className="min-h-screen bg-background  flex items-center justify-center">
         <div className="max-w-4xl w-full mx-auto px-4 space-y-6">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
@@ -147,8 +147,8 @@ export default function Adminland() {
           </div>
           <div className="grid md:grid-cols-2 gap-3 sm:gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-2xl border dark:border-slate-700/50 overflow-hidden animate-pulse">
-                <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b]"><div className="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded" /></div>
+              <div key={i} className="bg-card rounded-2xl border dark:border-border overflow-hidden animate-pulse">
+                <div className="px-4 py-3 bg-slate-50 dark:bg-background"><div className="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded" /></div>
                 <div className="p-3 space-y-3">
                   {[...Array(3)].map((_, j) => (
                     <div key={j} className="flex items-center gap-3">
@@ -167,11 +167,11 @@ export default function Adminland() {
 
   if (currentUser?.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
+      <div className="min-h-screen bg-background  flex items-center justify-center">
         <div className="text-center">
           <Shield className="w-16 h-16 mx-auto text-red-400 mb-4" />
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Access Denied</h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-4">You need administrator privileges to access this page.</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Access Denied</h2>
+          <p className="text-muted-foreground mb-4">You need administrator privileges to access this page.</p>
           <Link to={createPageUrl('Dashboard')}>
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -211,13 +211,13 @@ export default function Adminland() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+    <div className="min-h-screen bg-background ">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {activeSection ? (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
             <button 
               onClick={() => setActiveSection(null)}
-              className="flex items-center gap-2 text-[#0069AF] hover:text-[#133F5C] mb-6 transition-colors"
+              className="flex items-center gap-2 text-primary hover:text-foreground mb-6 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Adminland
@@ -228,12 +228,12 @@ export default function Adminland() {
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
+                <div className="p-2.5 rounded-xl bg-primary shadow-lg shadow-primary/20">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Adminland</h1>
+                <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Adminland</h1>
               </div>
-              <p className="text-slate-500 dark:text-slate-400">Manage your workspace settings</p>
+              <p className="text-muted-foreground">Manage your workspace settings</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -243,9 +243,9 @@ export default function Adminland() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: gIdx * 0.1 }}
-                  className="bg-white dark:bg-[#1e2a3a] rounded-2xl border dark:border-slate-700/50 shadow-sm overflow-hidden"
+                  className="bg-card rounded-2xl border dark:border-border shadow-sm overflow-hidden"
                 >
-                  <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b] border-b dark:border-slate-700/50 flex items-center gap-3">
+                  <div className="px-4 py-3 bg-slate-50 dark:bg-background border-b dark:border-border flex items-center gap-3">
                     <div className={cn("p-1.5 rounded-lg bg-gradient-to-br shadow-sm", group.color)}>
                       <group.icon className="w-4 h-4 text-white" />
                     </div>
@@ -255,14 +255,14 @@ export default function Adminland() {
                     {group.items.map((item) => {
                       const content = (
                         <>
-                          <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700/50 group-hover:bg-[#0069AF] transition-colors">
-                            <item.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-white transition-colors" />
+                          <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700/50 group-hover:bg-primary transition-colors">
+                            <item.icon className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium text-slate-900 dark:text-slate-100 block">{item.label}</span>
-                            <span className="text-xs text-slate-500 dark:text-slate-400">{item.description}</span>
+                            <span className="text-sm font-medium text-foreground block">{item.label}</span>
+                            <span className="text-xs text-muted-foreground">{item.description}</span>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-[#0069AF] transition-colors" />
+                          <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-primary transition-colors" />
                         </>
                       );
                       return item.page ? (
@@ -457,14 +457,14 @@ function PeopleSection({ queryClient }) {
   }, [members, searchQuery]);
 
   return (
-    <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-lg dark:shadow-none dark:border dark:border-slate-700/50 overflow-hidden">
-      <div className="p-6 border-b dark:border-slate-700/50">
+    <div className="bg-card rounded-2xl shadow-lg dark:shadow-none dark:border dark:border-border overflow-hidden">
+      <div className="p-6 border-b dark:border-border">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">People & Teams</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage team members, groups, and admin access</p>
+            <h2 className="text-xl font-semibold text-foreground">People & Teams</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">Manage team members, groups, and admin access</p>
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="w-4 h-4" />
             <span>{members.length} member{members.length !== 1 ? 's' : ''}</span>
           </div>
@@ -472,7 +472,7 @@ function PeopleSection({ queryClient }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#151d2b]/50">
+      <div className="flex border-b dark:border-border bg-slate-50/50 dark:bg-background/50">
         {[
           { id: 'members', label: 'Team Members', count: members.length },
           { id: 'groups', label: 'Groups', count: groups.length },
@@ -484,15 +484,15 @@ function PeopleSection({ queryClient }) {
             className={cn(
               "px-6 py-3.5 text-sm font-medium border-b-2 transition-all",
               activeTab === tab.id
-                ? "border-[#0069AF] text-[#0069AF] dark:text-blue-400 dark:border-blue-400"
-                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                ? "border-primary text-primary dark:text-blue-400 dark:border-blue-400"
+                : "border-transparent text-muted-foreground hover:text-slate-700 dark:hover:text-slate-200"
             )}
           >
             {tab.label}
             <span className={cn(
               "ml-2 px-2 py-0.5 text-xs rounded-full",
               activeTab === tab.id
-                ? "bg-[#0069AF]/10 text-[#0069AF] dark:bg-blue-400/10 dark:text-blue-400"
+                ? "bg-primary/10 text-primary dark:bg-blue-400/10 dark:text-blue-400"
                 : "bg-slate-200/70 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
             )}>
               {tab.count}
@@ -504,17 +504,17 @@ function PeopleSection({ queryClient }) {
       {/* Team Members Tab */}
       {activeTab === 'members' && (
         <div>
-          <div className="p-4 border-b dark:border-slate-700/50 flex items-center gap-3">
+          <div className="p-4 border-b dark:border-border flex items-center gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search members..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 bg-slate-50 dark:bg-[#151d2b] border-slate-200 dark:border-slate-700/50"
+                className="pl-9 h-9 bg-slate-50 dark:bg-background border-slate-200 dark:border-border"
               />
             </div>
-            <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C] h-9">
+            <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-primary hover:bg-primary/80 h-9">
               <Plus className="w-4 h-4 mr-2" />
               Add Member
             </Button>
@@ -541,13 +541,13 @@ function PeopleSection({ queryClient }) {
                         />
                         {/* Online indicator */}
                         <div className={cn(
-                          "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#1e2a3a]",
+                          "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-card",
                           session?.isOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
                         )} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{member.name}</p>
+                          <p className="font-semibold text-sm text-foreground truncate">{member.name}</p>
                           {member.role && (
                             <Badge
                               variant="outline"
@@ -563,7 +563,7 @@ function PeopleSection({ queryClient }) {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{member.email}</p>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{member.email}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -620,18 +620,18 @@ function PeopleSection({ queryClient }) {
 
                   {/* Expanded Details */}
                   {isExpanded && (
-                    <div className="px-5 pb-4 pt-1 bg-slate-50/50 dark:bg-[#151d2b]/50 border-t border-slate-100 dark:border-slate-700/30">
+                    <div className="px-5 pb-4 pt-1 bg-slate-50/50 dark:bg-background/50 border-t border-slate-100 dark:border-border">
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 ml-[52px]">
                         {/* Contact Info */}
                         <div className="space-y-2">
                           <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Contact</p>
                           <div className="space-y-1.5">
-                            <a href={`mailto:${member.email}`} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 hover:text-[#0069AF] transition-colors">
+                            <a href={`mailto:${member.email}`} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">
                               <Mail className="w-3.5 h-3.5 text-slate-400" />
                               {member.email}
                             </a>
                             {member.phone ? (
-                              <a href={`tel:${member.phone}`} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 hover:text-[#0069AF] transition-colors">
+                              <a href={`tel:${member.phone}`} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">
                                 <Phone className="w-3.5 h-3.5 text-slate-400" />
                                 {member.phone}
                               </a>
@@ -679,7 +679,7 @@ function PeopleSection({ queryClient }) {
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2 text-xs">
                               <div className={cn("w-2 h-2 rounded-full", session?.isOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600")} />
-                              <span className={cn(session?.isOnline ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-slate-500 dark:text-slate-400")}>
+                              <span className={cn(session?.isOnline ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-muted-foreground")}>
                                 {session?.isOnline ? 'Currently Online' : 'Offline'}
                               </span>
                             </div>
@@ -702,7 +702,7 @@ function PeopleSection({ queryClient }) {
               );
             })}
             {filteredMembers.length === 0 && members.length > 0 && (
-              <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+              <div className="p-8 text-center text-muted-foreground">
                 <Search className="w-8 h-8 mx-auto mb-2 opacity-30" />
                 <p>No members match "{searchQuery}"</p>
               </div>
@@ -710,7 +710,7 @@ function PeopleSection({ queryClient }) {
             {members.length === 0 && (
               <div className="p-12 text-center">
                 <Users className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
-                <p className="text-slate-500 dark:text-slate-400 font-medium">No team members yet</p>
+                <p className="text-muted-foreground font-medium">No team members yet</p>
                 <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Invite someone to get started</p>
               </div>
             )}
@@ -721,8 +721,8 @@ function PeopleSection({ queryClient }) {
       {/* Groups Tab */}
       {activeTab === 'groups' && (
         <div>
-          <div className="p-4 border-b dark:border-slate-700/50 flex justify-end">
-            <Button onClick={() => { setEditingGroup(null); setShowGroupModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C] h-9">
+          <div className="p-4 border-b dark:border-border flex justify-end">
+            <Button onClick={() => { setEditingGroup(null); setShowGroupModal(true); }} className="bg-primary hover:bg-primary/80 h-9">
               <Plus className="w-4 h-4 mr-2" />
               Add Group
             </Button>
@@ -735,8 +735,8 @@ function PeopleSection({ queryClient }) {
                     <Users className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">{group.name}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{group.member_emails?.length || 0} member{(group.member_emails?.length || 0) !== 1 ? 's' : ''}</p>
+                    <p className="font-semibold text-foreground">{group.name}</p>
+                    <p className="text-sm text-muted-foreground">{group.member_emails?.length || 0} member{(group.member_emails?.length || 0) !== 1 ? 's' : ''}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -762,7 +762,7 @@ function PeopleSection({ queryClient }) {
             {groups.length === 0 && (
               <div className="p-12 text-center">
                 <Users className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
-                <p className="text-slate-500 dark:text-slate-400 font-medium">No groups yet</p>
+                <p className="text-muted-foreground font-medium">No groups yet</p>
                 <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Create a group to organize your team</p>
               </div>
             )}
@@ -774,8 +774,8 @@ function PeopleSection({ queryClient }) {
       {activeTab === 'admins' && (
         <div className="p-5 space-y-5">
           {admins.length > 0 && (
-            <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
-              <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b] border-b dark:border-slate-700/50">
+            <div className="rounded-xl border border-slate-200 dark:border-border overflow-hidden">
+              <div className="px-4 py-3 bg-slate-50 dark:bg-background border-b dark:border-border">
                 <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Current Administrators</h3>
               </div>
               <div className="divide-y dark:divide-slate-700/50">
@@ -790,8 +790,8 @@ function PeopleSection({ queryClient }) {
                         size="md"
                       />
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-slate-100">{member.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{member.email}</p>
+                        <p className="font-medium text-foreground">{member.name}</p>
+                        <p className="text-xs text-muted-foreground">{member.email}</p>
                       </div>
                     </div>
                     <Button size="sm" variant="outline" className="text-xs dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700" onClick={() => toggleAdmin(member)}>
@@ -803,8 +803,8 @@ function PeopleSection({ queryClient }) {
             </div>
           )}
 
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
-            <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b] border-b dark:border-slate-700/50">
+          <div className="rounded-xl border border-slate-200 dark:border-border overflow-hidden">
+            <div className="px-4 py-3 bg-slate-50 dark:bg-background border-b dark:border-border">
               <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Make Admin</h3>
             </div>
             <div className="divide-y dark:divide-slate-700/50">
@@ -819,17 +819,17 @@ function PeopleSection({ queryClient }) {
                       size="md"
                     />
                     <div>
-                      <p className="font-medium text-slate-900 dark:text-slate-100">{member.name}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{member.email}</p>
+                      <p className="font-medium text-foreground">{member.name}</p>
+                      <p className="text-xs text-muted-foreground">{member.email}</p>
                     </div>
                   </div>
-                  <Button size="sm" className="bg-[#0069AF] hover:bg-[#133F5C] text-xs" onClick={() => toggleAdmin(member)}>
+                  <Button size="sm" className="bg-primary hover:bg-primary/80 text-xs" onClick={() => toggleAdmin(member)}>
                     Make Admin
                   </Button>
                 </div>
               ))}
               {members.filter(m => m.role !== 'Admin').length === 0 && (
-                <p className="text-slate-500 dark:text-slate-400 text-center py-6 text-sm">All team members are administrators</p>
+                <p className="text-muted-foreground text-center py-6 text-sm">All team members are administrators</p>
               )}
             </div>
           </div>
@@ -956,7 +956,7 @@ function ResetPasswordModal({ open, onClose, member, onSave }) {
           )}
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
-            <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]" disabled={saving}>
+            <Button type="submit" className="bg-primary hover:bg-primary/80" disabled={saving}>
               {saving ? 'Resetting...' : 'Reset Password'}
             </Button>
           </div>
@@ -1049,7 +1049,7 @@ function TeamMemberModal({ open, onClose, member, onSave, saving, error }) {
               <select
                 value={getCurrentRoleId()}
                 onChange={(e) => handleRoleChange(e.target.value)}
-                className="mt-1 w-full h-10 px-3 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#0069AF] focus:border-transparent"
+                className="mt-1 w-full h-10 px-3 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="">Select role...</option>
                 <optgroup label="System Roles">
@@ -1076,7 +1076,7 @@ function TeamMemberModal({ open, onClose, member, onSave, saving, error }) {
             <div className="flex gap-2 mt-2 flex-wrap">
               {avatarColors.map(color => (
                 <button key={color} type="button" onClick={() => setFormData(p => ({ ...p, avatar_color: color }))}
-                  className={cn("w-8 h-8 rounded-full", color, formData.avatar_color === color && "ring-2 ring-offset-2 ring-[#0069AF]")} />
+                  className={cn("w-8 h-8 rounded-full", color, formData.avatar_color === color && "ring-2 ring-offset-2 ring-primary")} />
               ))}
             </div>
           </div>
@@ -1087,7 +1087,7 @@ function TeamMemberModal({ open, onClose, member, onSave, saving, error }) {
           )}
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
-            <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]" disabled={saving}>
+            <Button type="submit" className="bg-primary hover:bg-primary/80" disabled={saving}>
               {saving ? (member ? 'Updating...' : 'Adding...') : (member ? 'Update' : 'Add')}
             </Button>
           </div>
@@ -1139,7 +1139,7 @@ function UserGroupModal({ open, onClose, group, members, onSave }) {
             <div className="flex gap-2 mt-2 flex-wrap">
               {Object.entries(groupColors).map(([name, className]) => (
                 <button key={name} type="button" onClick={() => setFormData(p => ({ ...p, color: name }))}
-                  className={cn("w-8 h-8 rounded-full", className, formData.color === name && "ring-2 ring-offset-2 ring-[#0069AF]")} />
+                  className={cn("w-8 h-8 rounded-full", className, formData.color === name && "ring-2 ring-offset-2 ring-primary")} />
               ))}
             </div>
           </div>
@@ -1158,7 +1158,7 @@ function UserGroupModal({ open, onClose, group, members, onSave }) {
           </div>
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]">{group ? 'Update' : 'Create'}</Button>
+            <Button type="submit" className="bg-primary hover:bg-primary/80">{group ? 'Update' : 'Create'}</Button>
           </div>
         </form>
       </DialogContent>
@@ -1275,7 +1275,7 @@ function InventorySettingsSection({ queryClient }) {
   const GroupPicker = ({ field, label, description }) => (
     <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
       <Label className="text-sm font-medium">{label}</Label>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{description}</p>
+      <p className="text-xs text-muted-foreground mb-2">{description}</p>
       {groups.length === 0 ? (
         <p className="text-xs text-slate-400 italic">No user groups found. Create groups in People & Teams first.</p>
       ) : (
@@ -1289,8 +1289,8 @@ function InventorySettingsSection({ queryClient }) {
                 className={cn(
                   "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
                   selected
-                    ? "bg-[#0069AF] text-white border-[#0069AF]"
-                    : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-[#0069AF]"
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-primary"
                 )}
               >
                 {g.name}
@@ -1306,16 +1306,16 @@ function InventorySettingsSection({ queryClient }) {
   );
 
   return (
-    <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-6 border-b dark:border-slate-700/50 flex items-center justify-between">
+    <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6 border-b dark:border-border flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Package className="w-5 h-5 text-[#0069AF]" />
+          <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+            <Package className="w-5 h-5 text-primary" />
             Inventory Settings
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Manage access, stock locations, notifications & tool policies</p>
+          <p className="text-sm text-muted-foreground">Manage access, stock locations, notifications & tool policies</p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+        <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/80">
           {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
         </Button>
       </div>
@@ -1332,8 +1332,8 @@ function InventorySettingsSection({ queryClient }) {
                 <Shield className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100">Access Control</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Who can view, edit, and checkout inventory</p>
+                <h3 className="font-semibold text-foreground">Access Control</h3>
+                <p className="text-xs text-muted-foreground">Who can view, edit, and checkout inventory</p>
               </div>
             </div>
             {expandedSections.access ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
@@ -1358,8 +1358,8 @@ function InventorySettingsSection({ queryClient }) {
                 <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100">Stock Locations</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Predefined storage locations for inventory items</p>
+                <h3 className="font-semibold text-foreground">Stock Locations</h3>
+                <p className="text-xs text-muted-foreground">Predefined storage locations for inventory items</p>
               </div>
             </div>
             {expandedSections.locations ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
@@ -1374,7 +1374,7 @@ function InventorySettingsSection({ queryClient }) {
                   className="flex-1"
                   onKeyDown={(e) => e.key === 'Enter' && addLocation()}
                 />
-                <Button onClick={addLocation} size="sm" className="bg-[#0069AF] hover:bg-[#133F5C]">
+                <Button onClick={addLocation} size="sm" className="bg-primary hover:bg-primary/80">
                   <Plus className="w-4 h-4 mr-1" /> Add
                 </Button>
               </div>
@@ -1408,8 +1408,8 @@ function InventorySettingsSection({ queryClient }) {
                 <Bell className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100">Low Stock Notifications</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Get alerted when items run low or out of stock</p>
+                <h3 className="font-semibold text-foreground">Low Stock Notifications</h3>
+                <p className="text-xs text-muted-foreground">Get alerted when items run low or out of stock</p>
               </div>
             </div>
             {expandedSections.notifications ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
@@ -1419,7 +1419,7 @@ function InventorySettingsSection({ queryClient }) {
               <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                 <div>
                   <Label className="text-sm font-medium">Low stock alerts</Label>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Notify when items fall below minimum quantity</p>
+                  <p className="text-xs text-muted-foreground">Notify when items fall below minimum quantity</p>
                 </div>
                 <Switch
                   checked={formData.inventory_notify_low_stock}
@@ -1429,7 +1429,7 @@ function InventorySettingsSection({ queryClient }) {
               <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                 <div>
                   <Label className="text-sm font-medium">Out of stock alerts</Label>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Notify when items reach zero quantity</p>
+                  <p className="text-xs text-muted-foreground">Notify when items reach zero quantity</p>
                 </div>
                 <Switch
                   checked={formData.inventory_notify_out_of_stock}
@@ -1439,7 +1439,7 @@ function InventorySettingsSection({ queryClient }) {
               <GroupPicker field="inventory_alert_groups" label="Alert recipients" description="Select which groups receive stock notifications (leave empty = admins only)" />
               <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                 <Label className="text-sm font-medium">Alert frequency</Label>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">How often to send notification digests</p>
+                <p className="text-xs text-muted-foreground mb-2">How often to send notification digests</p>
                 <Select
                   value={formData.inventory_alert_frequency}
                   onValueChange={(val) => setFormData(p => ({ ...p, inventory_alert_frequency: val }))}
@@ -1469,8 +1469,8 @@ function InventorySettingsSection({ queryClient }) {
                 <Wrench className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100">Tool Management</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Checkout policies and overdue tracking</p>
+                <h3 className="font-semibold text-foreground">Tool Management</h3>
+                <p className="text-xs text-muted-foreground">Checkout policies and overdue tracking</p>
               </div>
             </div>
             {expandedSections.tools ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
@@ -1480,7 +1480,7 @@ function InventorySettingsSection({ queryClient }) {
               <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                 <div>
                   <Label className="text-sm font-medium">Require project for checkout</Label>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Users must assign a project when checking out tools</p>
+                  <p className="text-xs text-muted-foreground">Users must assign a project when checking out tools</p>
                 </div>
                 <Switch
                   checked={formData.inventory_tool_require_project}
@@ -1490,7 +1490,7 @@ function InventorySettingsSection({ queryClient }) {
               <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                 <div>
                   <Label className="text-sm font-medium">Overdue tool alerts</Label>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Alert when checked-out tools exceed the return window</p>
+                  <p className="text-xs text-muted-foreground">Alert when checked-out tools exceed the return window</p>
                 </div>
                 <Switch
                   checked={formData.inventory_tool_overdue_alert}
@@ -1500,7 +1500,7 @@ function InventorySettingsSection({ queryClient }) {
               {formData.inventory_tool_overdue_alert && (
                 <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                   <Label className="text-sm font-medium">Overdue after (days)</Label>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Number of days before a tool is considered overdue</p>
+                  <p className="text-xs text-muted-foreground mb-2">Number of days before a tool is considered overdue</p>
                   <Input
                     type="number"
                     min="1"
@@ -1578,7 +1578,7 @@ function CompanySettingsSection({ queryClient }) {
           <h2 className="text-xl font-semibold text-slate-900">App Settings</h2>
           <p className="text-sm text-slate-500">Branding and app identity</p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+        <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/80">
           {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
@@ -1615,7 +1615,7 @@ function CompanySettingsSection({ queryClient }) {
                       >×</button>
                     </div>
                   ) : (
-                    <label className="w-20 h-20 border-2 border-dashed border-indigo-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#0069AF] hover:bg-white transition-colors">
+                    <label className="w-20 h-20 border-2 border-dashed border-indigo-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-white transition-colors">
                       {uploading ? (
                         <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
                       ) : (
@@ -1695,7 +1695,7 @@ function ProjectTagsSection({ queryClient }) {
           <h2 className="text-xl font-semibold text-slate-900">Project Tags</h2>
           <p className="text-sm text-slate-500">Create and manage tags for organizing projects</p>
         </div>
-        <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+        <Button onClick={() => { setEditing(null); setShowModal(true); }} className="bg-primary hover:bg-primary/80">
           <Plus className="w-4 h-4 mr-2" />
           Add Tag
         </Button>
@@ -1798,13 +1798,13 @@ function ProjectTagForm({ tag, tagColors, onSave, onCancel }) {
         <div className="flex gap-2 mt-2 flex-wrap">
           {Object.entries(tagColors).map(([name, className]) => (
             <button key={name} type="button" onClick={() => setFormData(p => ({ ...p, color: name }))}
-              className={cn("w-8 h-8 rounded-full", className, formData.color === name && "ring-2 ring-offset-2 ring-[#0069AF]")} />
+              className={cn("w-8 h-8 rounded-full", className, formData.color === name && "ring-2 ring-offset-2 ring-primary")} />
           ))}
         </div>
       </div>
       <div className="flex justify-end gap-3 pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit" className="bg-[#0069AF] hover:bg-[#133F5C]">{tag ? 'Update' : 'Create'}</Button>
+        <Button type="submit" className="bg-primary hover:bg-primary/80">{tag ? 'Update' : 'Create'}</Button>
       </div>
     </form>
   );
@@ -1834,7 +1834,7 @@ function ProjectManagementSection({ queryClient }) {
           onClick={() => setActiveTab('archived')}
           className={cn(
             "px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
-            activeTab === 'archived' ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+            activeTab === 'archived' ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-700"
           )}
         >
           <Archive className="w-4 h-4" />
@@ -1844,7 +1844,7 @@ function ProjectManagementSection({ queryClient }) {
           onClick={() => setActiveTab('deleted')}
           className={cn(
             "px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
-            activeTab === 'deleted' ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+            activeTab === 'deleted' ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-700"
           )}
         >
           <Trash2 className="w-4 h-4" />
@@ -2193,7 +2193,7 @@ function DatabaseHealthSection() {
         <div className="p-6 border-b flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-              <Database className="w-5 h-5 text-[#0069AF]" />
+              <Database className="w-5 h-5 text-primary" />
               Database Health
             </h2>
             <p className="text-sm text-slate-500 mt-1">Integrity checks run automatically every 24 hours</p>
@@ -2201,7 +2201,7 @@ function DatabaseHealthSection() {
           <Button
             onClick={() => { fetchHealth(); fetchHistory(); }}
             disabled={running}
-            className="bg-[#0069AF] hover:bg-[#133F5C]"
+            className="bg-primary hover:bg-primary/80"
           >
             {running ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Checking...</> : <><RefreshCw className="w-4 h-4 mr-2" />Run Check</>}
           </Button>
@@ -2245,7 +2245,7 @@ function DatabaseHealthSection() {
               onClick={() => setActiveTab(tab.id)}
               className={cn(
                 "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
-                activeTab === tab.id ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+                activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-700"
               )}
             >
               {tab.label} {tab.count !== undefined ? `(${tab.count})` : ''}
@@ -2724,7 +2724,7 @@ function IntegrationsSection({ queryClient }) {
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
                     "px-6 py-3 text-sm font-medium border-b-2 transition-colors",
-                    activeTab === tab.id ? "border-[#0069AF] text-[#0069AF]" : "border-transparent text-slate-500 hover:text-slate-700"
+                    activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-700"
                   )}
                 >
                   {tab.label}
@@ -2746,7 +2746,7 @@ function IntegrationsSection({ queryClient }) {
                     {/* Connection */}
                     <div className="space-y-4">
                       <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                         Connection
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2792,7 +2792,7 @@ function IntegrationsSection({ queryClient }) {
                     {/* Sync Options */}
                     <div className="space-y-3 pt-4 border-t">
                       <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                         Sync Options
                       </h3>
                       <div className="flex flex-wrap gap-3 sm:gap-6">
@@ -2839,7 +2839,7 @@ function IntegrationsSection({ queryClient }) {
 
                     {/* Actions */}
                     <div className="flex items-center gap-3 pt-4 border-t">
-                      <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                      <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/80">
                         {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : 'Save Settings'}
                       </Button>
                       <Button onClick={handleTestConnection} disabled={testingConnection || syncing} variant="outline">
@@ -2881,7 +2881,7 @@ function IntegrationsSection({ queryClient }) {
                     <h3 className="text-sm font-semibold text-slate-700">HaloPSA Customer Mapping</h3>
                     <p className="text-xs text-slate-500 mt-0.5">View customers from HaloPSA and map them to local records</p>
                   </div>
-                  <Button onClick={fetchHaloCustomers} disabled={loadingCustomers} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                  <Button onClick={fetchHaloCustomers} disabled={loadingCustomers} className="bg-primary hover:bg-primary/80">
                     {loadingCustomers ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Loading...</> : <><RefreshCw className="w-4 h-4 mr-2" />Load Customers</>}
                   </Button>
                 </div>
@@ -3036,7 +3036,7 @@ function QuoteITIntegrationCard({ expandedIntegration, toggleIntegration }) {
         className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors"
       >
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0F2F44] to-[#163D57] flex items-center justify-center shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
             <img src="/quoteit-favicon.svg" alt="" className="w-7 h-7" />
           </div>
           <div className="text-left">
@@ -3183,7 +3183,7 @@ function PortalITIntegrationCard({ expandedIntegration, toggleIntegration }) {
         className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors"
       >
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0F2F44] to-[#163D57] flex items-center justify-center shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
             <img src="/portalit-favicon.svg" alt="" className="w-7 h-7" />
           </div>
           <div className="text-left">
@@ -3583,7 +3583,7 @@ function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
 
           {/* Actions */}
           <div className="flex items-center gap-3 pt-4 border-t">
-            <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#0F2F44]">
+            <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary">
               {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Settings</>}
             </Button>
             <Button onClick={handleTest} disabled={testing} variant="outline">
@@ -3722,7 +3722,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
                 Set RESEND_API_KEY in Railway env vars
               </div>
             )}
-            <p className="text-xs text-slate-400 mt-1">Get your API key from <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-[#0069AF] hover:underline">resend.com/api-keys</a></p>
+            <p className="text-xs text-slate-400 mt-1">Get your API key from <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com/api-keys</a></p>
           </div>
 
           {/* From settings */}
@@ -3741,7 +3741,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
           {hasEnvApiKey && (
             <div className="pt-4 border-t space-y-3">
               <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                 Send Test Email
               </h3>
               <div className="flex gap-2">
@@ -3771,7 +3771,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
 
           {/* Actions */}
           <div className="flex items-center gap-3 pt-4 border-t">
-            <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#0F2F44]">
+            <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary">
               {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Settings</>}
             </Button>
             <Button onClick={handleTest} disabled={testing || !hasEnvApiKey} variant="outline">
@@ -4159,8 +4159,8 @@ function AIAgentsSection({ queryClient }) {
   return (
     <div className="space-y-4">
       <div className="mb-2">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">AI Agents</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Connect to GammaAi to send feedback for automated analysis and fixes</p>
+        <h2 className="text-xl font-semibold text-foreground">AI Agents</h2>
+        <p className="text-sm text-muted-foreground mt-1">Connect to GammaAi to send feedback for automated analysis and fixes</p>
       </div>
 
       {/* Connection Settings Card */}
@@ -4174,8 +4174,8 @@ function AIAgentsSection({ queryClient }) {
               <Bot className="w-5 h-5 text-white" />
             </div>
             <div className="text-left">
-              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">GammaAi Connection</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Agent orchestration platform for automated feedback processing</p>
+              <h3 className="text-base font-semibold text-foreground">GammaAi Connection</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Agent orchestration platform for automated feedback processing</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -4310,7 +4310,7 @@ function AIAgentsSection({ queryClient }) {
 
             {/* Actions */}
             <div className="flex items-center gap-3 pt-4 border-t">
-              <Button onClick={handleSave} disabled={saving} className="bg-[#0069AF] hover:bg-[#0F2F44]">
+              <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary">
                 {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Settings</>}
               </Button>
               <Button onClick={handleTestConnection} disabled={testingConnection} variant="outline">
@@ -4333,8 +4333,8 @@ function AIAgentsSection({ queryClient }) {
                 <Activity className="w-5 h-5 text-white" />
               </div>
               <div className="text-left">
-                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">Available Agents</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <h3 className="text-base font-semibold text-foreground">Available Agents</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {loadingAgents ? 'Loading agents...' : agents.length > 0 ? `${agents.length} agents available` : agentError ? 'Connection error' : 'No agents found'}
                 </p>
               </div>
@@ -4376,9 +4376,9 @@ function AIAgentsSection({ queryClient }) {
                         <div className="flex items-center gap-3">
                           <div className={cn("w-2 h-2 rounded-full", statusColors[agent.status] || 'bg-slate-400')} />
                           <div>
-                            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{agent.name}</span>
+                            <span className="text-sm font-medium text-foreground">{agent.name}</span>
                             {agent.description && (
-                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{agent.description}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{agent.description}</p>
                             )}
                           </div>
                         </div>
@@ -4738,7 +4738,7 @@ function AboutSection() {
         <div className="p-6 border-b dark:border-border flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <Info className="w-5 h-5 text-[#0069AF]" />
+              <Info className="w-5 h-5 text-primary" />
               About & System Info
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
@@ -4776,7 +4776,7 @@ function AboutSection() {
       <div className="bg-white dark:bg-card rounded-2xl shadow-lg overflow-hidden">
         <div className="p-6 border-b dark:border-border">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <Palette className="w-5 h-5 text-[#0069AF]" />
+            <Palette className="w-5 h-5 text-primary" />
             Design System
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
@@ -4789,9 +4789,9 @@ function AboutSection() {
             <h3 className="text-sm font-semibold text-foreground mb-3">Brand Colors</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { name: 'Primary', hex: '#0F2F44', css: '--primary', swatch: 'bg-[#0F2F44]' },
-                { name: 'Secondary', hex: '#133F5C', css: '--secondary', swatch: 'bg-[#133F5C]' },
-                { name: 'Accent', hex: '#0069AF', css: '--accent / --ring', swatch: 'bg-[#0069AF]' },
+                { name: 'Primary', hex: '#0F2F44', css: '--primary', swatch: 'bg-primary' },
+                { name: 'Secondary', hex: '#133F5C', css: '--secondary', swatch: 'bg-primary' },
+                { name: 'Accent', hex: '#0069AF', css: '--accent / --ring', swatch: 'bg-primary' },
                 { name: 'Highlight', hex: '#74C7FF', css: '--highlight', swatch: 'bg-[#74C7FF]' },
               ].map((c) => (
                 <div key={c.name} className="flex items-center gap-3 p-2 rounded-xl border bg-card">
@@ -4863,7 +4863,7 @@ function AboutSection() {
                 { name: 'CollapsibleSection', desc: 'Collapsible with localStorage state' },
               ].map((comp) => (
                 <div key={comp.name} className="flex items-start gap-2 p-2 rounded-lg bg-muted/50">
-                  <code className="text-xs font-mono text-[#0069AF] whitespace-nowrap">{comp.name}</code>
+                  <code className="text-xs font-mono text-primary whitespace-nowrap">{comp.name}</code>
                   <span className="text-xs text-muted-foreground">{comp.desc}</span>
                 </div>
               ))}
@@ -4876,7 +4876,7 @@ function AboutSection() {
       <div className="bg-white dark:bg-card rounded-2xl shadow-lg overflow-hidden">
         <div className="p-6 border-b dark:border-border">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <Server className="w-5 h-5 text-[#0069AF]" />
+            <Server className="w-5 h-5 text-primary" />
             Architecture
           </h2>
           <p className="text-sm text-muted-foreground mt-1">

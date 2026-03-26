@@ -153,12 +153,12 @@ ${formData.additionalNotes || 'None'}`;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+    <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Back Link */}
         <Link
           to={createPageUrl('ProjectNotes') + `?id=${projectId}`}
-          className="inline-flex items-center text-[#0069AF] hover:text-[#133F5C] mb-5 text-sm"
+          className="inline-flex items-center text-primary hover:text-foreground mb-5 text-sm"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to Notes
@@ -170,29 +170,29 @@ ${formData.additionalNotes || 'None'}`;
             <ClipboardList className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Weekly Meeting Update</h1>
-            {project && <p className="text-sm text-slate-500 dark:text-slate-400">{project.name}</p>}
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Weekly Meeting Update</h1>
+            {project && <p className="text-sm text-muted-foreground">{project.name}</p>}
           </div>
         </div>
 
         {/* Form */}
         <div className="space-y-5">
           {/* Meeting Title */}
-          <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 p-5">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Meeting Title</Label>
+          <div className="bg-card rounded-2xl border border-slate-200 dark:border-border p-5">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Meeting Title</Label>
             <Input
               value={meetingTitle}
               onChange={(e) => setMeetingTitle(e.target.value)}
               placeholder={`Weekly Update - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-              className="dark:bg-[#151d2b] dark:border-slate-600"
+              className="dark:bg-background dark:border-slate-600"
             />
           </div>
 
           {/* Project Status */}
-          <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 p-5">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Project Status</Label>
+          <div className="bg-card rounded-2xl border border-slate-200 dark:border-border p-5">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Project Status</Label>
             <Select value={formData.projectStatus} onValueChange={(v) => setFormData(p => ({ ...p, projectStatus: v }))}>
-              <SelectTrigger className="dark:bg-[#151d2b] dark:border-slate-600">
+              <SelectTrigger className="dark:bg-background dark:border-slate-600">
                 <SelectValue placeholder="How is the project going?" />
               </SelectTrigger>
               <SelectContent>
@@ -245,16 +245,16 @@ ${formData.additionalNotes || 'None'}`;
           >
             <div className="space-y-3">
               {formData.nextSteps.map((step, idx) => (
-                <div key={idx} className="p-3 bg-white dark:bg-[#151d2b] rounded-xl border border-slate-200 dark:border-slate-700/50 space-y-2">
+                <div key={idx} className="p-3 bg-white dark:bg-background rounded-xl border border-slate-200 dark:border-border space-y-2">
                   <Input
                     value={step.title}
                     onChange={(e) => updateNextStep(idx, { title: e.target.value })}
                     placeholder="What needs to be done..."
-                    className="font-medium dark:bg-[#1a2535] dark:border-slate-600"
+                    className="font-medium dark:bg-background dark:border-slate-600"
                   />
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Select value={step.assigned_to} onValueChange={(v) => handleAssigneeChange(idx, v)}>
-                      <SelectTrigger className="flex-1 dark:bg-[#1a2535] dark:border-slate-600">
+                      <SelectTrigger className="flex-1 dark:bg-background dark:border-slate-600">
                         <SelectValue placeholder="Assign to...">
                           {step.assigned_name ? (
                             <div className="flex items-center gap-2">
@@ -278,7 +278,7 @@ ${formData.additionalNotes || 'None'}`;
 
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className="w-full sm:w-32 dark:bg-[#1a2535] dark:border-slate-600">
+                        <Button variant="outline" size="sm" className="w-full sm:w-32 dark:bg-background dark:border-slate-600">
                           <CalendarIcon className="w-4 h-4 mr-1" />
                           {step.due_date ? format(step.due_date, 'MMM d') : 'Due date'}
                         </Button>
@@ -317,18 +317,18 @@ ${formData.additionalNotes || 'None'}`;
               value={formData.clientFeedback}
               onChange={(e) => setFormData(p => ({ ...p, clientFeedback: e.target.value }))}
               placeholder="Notes from client communication..."
-              className="min-h-[80px] dark:bg-[#151d2b] dark:border-slate-600"
+              className="min-h-[80px] dark:bg-background dark:border-slate-600"
             />
           </SectionCard>
 
           {/* Additional Notes */}
-          <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 p-5">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Additional Notes</Label>
+          <div className="bg-card rounded-2xl border border-slate-200 dark:border-border p-5">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Additional Notes</Label>
             <Textarea
               value={formData.additionalNotes}
               onChange={(e) => setFormData(p => ({ ...p, additionalNotes: e.target.value }))}
               placeholder="Any other notes..."
-              className="min-h-[60px] dark:bg-[#151d2b] dark:border-slate-600"
+              className="min-h-[60px] dark:bg-background dark:border-slate-600"
             />
           </div>
 
@@ -337,7 +337,7 @@ ${formData.additionalNotes || 'None'}`;
             <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`}>
               <Button variant="outline">Cancel</Button>
             </Link>
-            <Button onClick={handleSubmit} disabled={saving} className="bg-[#0069AF] hover:bg-[#0F2F44]">
+            <Button onClick={handleSubmit} disabled={saving} className="bg-primary hover:bg-primary/80">
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               {saving ? 'Saving...' : 'Save & Create Tasks'}
             </Button>
@@ -374,7 +374,7 @@ function SectionCard({ icon, title, subtitle, color, children }) {
         <span className={iconColorMap[color]}>{icon}</span>
         <h3 className={cn("font-semibold text-sm", titleColorMap[color])}>{title}</h3>
       </div>
-      {subtitle && <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">{subtitle}</p>}
+      {subtitle && <p className="text-xs text-muted-foreground mb-3">{subtitle}</p>}
       {children}
     </div>
   );
@@ -389,7 +389,7 @@ function ListSection({ items, placeholder, onUpdate, onRemove, onAdd }) {
             value={item}
             onChange={(e) => onUpdate(idx, e.target.value)}
             placeholder={placeholder}
-            className="flex-1 bg-white dark:bg-[#151d2b] dark:border-slate-600"
+            className="flex-1 bg-white dark:bg-background dark:border-slate-600"
           />
           {items.length > 1 && (
             <Button variant="ghost" size="icon" onClick={() => onRemove(idx)} className="text-slate-400 hover:text-red-500 shrink-0">

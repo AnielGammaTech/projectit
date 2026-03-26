@@ -157,7 +157,7 @@ export default function MyAssignments() {
           <Link 
             to={createPageUrl('ProjectTasks') + `?id=${task.project_id}`}
             className={cn(
-              "font-medium text-slate-900 hover:text-[#0069AF] transition-colors",
+              "font-medium text-foreground hover:text-primary transition-colors",
               task.status === 'completed' && "line-through text-slate-400"
             )}
           >
@@ -216,7 +216,7 @@ export default function MyAssignments() {
   if (loadingTasks) return <CardGridSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header with Avatar */}
         <motion.div
@@ -234,7 +234,7 @@ export default function MyAssignments() {
               getInitials(currentUser?.full_name)
             )}
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Here are your assignments</h1>
+          <h1 className="text-2xl font-bold text-foreground">Here are your assignments</h1>
         </motion.div>
 
         {/* Tabs */}
@@ -387,8 +387,8 @@ export default function MyAssignments() {
           {filteredTasks.length === 0 && (
             <div className="p-12 text-center">
               <ListTodo className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">No assignments</h3>
-              <p className="text-slate-500">You're all caught up!</p>
+              <h3 className="text-lg font-medium text-foreground mb-2">No assignments</h3>
+              <p className="text-muted-foreground">You're all caught up!</p>
             </div>
           )}
         </div>
