@@ -107,7 +107,7 @@ export default function MySchedule() {
 
     return (
       <div className="flex-1">
-        <div className="text-center font-semibold text-slate-900 mb-4">
+        <div className="text-center font-semibold text-foreground mb-4">
           {format(month, 'MMMM yyyy')}
         </div>
         <div className="grid grid-cols-7 gap-1">
@@ -149,7 +149,7 @@ export default function MySchedule() {
   if (loadingTasks) return <CalendarSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 py-4 sm:py-8">
         {/* Header with Avatar */}
         <motion.div
@@ -167,7 +167,7 @@ export default function MySchedule() {
               getInitials(currentUser?.full_name)
             )}
           </div>
-          <h1 className="text-lg sm:text-2xl font-bold text-slate-900">Your Schedule</h1>
+          <h1 className="text-lg sm:text-2xl font-bold text-foreground">Your Schedule</h1>
         </motion.div>
 
         {/* Calendar Navigation */}
@@ -256,7 +256,7 @@ export default function MySchedule() {
                             <div className="flex-1">
                               <Link 
                                 to={createPageUrl('ProjectTasks') + `?id=${task.project_id}`}
-                                className="font-medium text-slate-900 hover:text-[#0069AF] transition-colors flex items-center gap-2"
+                                className="font-medium text-foreground hover:text-primary transition-colors flex items-center gap-2"
                               >
                                 {task.title}
                                 {assignees.slice(0, 3).map((assignee, idx) => (
@@ -287,8 +287,8 @@ export default function MySchedule() {
           ) : (
             <div className="p-12 text-center">
               <CalendarIcon className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">No scheduled tasks</h3>
-              <p className="text-slate-500">Tasks with due dates will appear here</p>
+              <h3 className="text-lg font-medium text-foreground mb-2">No scheduled tasks</h3>
+              <p className="text-muted-foreground">Tasks with due dates will appear here</p>
             </div>
           )}
         </div>
