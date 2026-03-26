@@ -64,8 +64,8 @@ router.use(validateApiKey);
 router.post('/quotes/accepted', async (req, res) => {
   try {
     const {
-      quote_id, title, customer_name, customer_email,
-      customer_id, amount, items, accepted_at, metadata
+      quote_id, quote_number, title, customer_name, customer_email,
+      customer_id, amount, items, accepted_at, sent_by, metadata
     } = req.body;
 
     if (!quote_id || !title) {
@@ -95,15 +95,17 @@ router.post('/quotes/accepted', async (req, res) => {
       });
     }
 
-    // Create incoming quote
+    // Create incoming quote with all fields
     const incomingQuote = await entityService.create('IncomingQuote', {
       quoteit_id: String(quote_id),
+      quote_number: quote_number || '',
       title,
       customer_name: customer_name || '',
       customer_email: customer_email || '',
       customer_id: customer_id || '',
       amount: amount || 0,
       items: items || [],
+      sent_by: sent_by || '',
       received_date: new Date().toISOString(),
       accepted_at: accepted_at || new Date().toISOString(),
       status: 'pending',
@@ -127,25 +129,34 @@ router.post('/quotes/accepted', async (req, res) => {
       const allProjects = await entityService.list('Project', '-project_number', 1);
       const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
 
-      // Find or resolve customer_id
-      let resolvedCustomerId = customer_id || '';
-      if (!resolvedCustomerId && customer_name) {
+      // Find ProjectIT customer by name match (QuoteIT customer_id won't match ProjectIT IDs)
+      let resolvedCustomerId = '';
+      if (customer_name) {
         const customers = await entityService.list('Customer');
+        const normalizedName = customer_name.toLowerCase().trim();
         const match = customers.find(c =>
-          (c.company || c.name || '').toLowerCase().trim() === customer_name.toLowerCase().trim()
+          (c.company || c.name || '').toLowerCase().trim() === normalizedName
         );
         if (match) resolvedCustomerId = match.id;
       }
 
-      // Create the project
+      // Create the project with quote number and sender info
+      const projectName = quote_number
+        ? `${title} - Proposal# ${quote_number}`
+        : title;
+
       project = await entityService.create('Project', {
-        name: title,
-        description: `Auto-created from accepted QuoteIT quote #${quote_id}`,
+        name: projectName,
+        description: sent_by
+          ? `Auto-created from accepted QuoteIT quote. Sent by: ${sent_by}`
+          : `Auto-created from accepted QuoteIT quote`,
         status: 'planning',
         project_number: nextNumber,
         customer_id: resolvedCustomerId,
         customer_name: customer_name || '',
         quoteit_quote_id: String(quote_id),
+        quoteit_quote_number: quote_number || '',
+        sent_by: sent_by || '',
         budget: amount || 0,
         start_date: null,
         due_date: null,
