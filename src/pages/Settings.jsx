@@ -237,7 +237,7 @@ export default function Settings() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-rose-50/30 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -246,8 +246,8 @@ export default function Settings() {
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-red-100 to-rose-200 flex items-center justify-center">
             <ShieldAlert className="w-10 h-10 text-red-500" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-3">Admin Access Required</h2>
-          <p className="text-slate-500">Only administrators can access and modify settings.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-3">Admin Access Required</h2>
+          <p className="text-muted-foreground">Only administrators can access and modify settings.</p>
         </motion.div>
       </div>
     );
@@ -255,7 +255,7 @@ export default function Settings() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <motion.div 
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -267,13 +267,13 @@ export default function Settings() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30">
+    <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 rounded-3xl p-8 mb-8 shadow-2xl shadow-indigo-200/50"
+          className="bg-primary rounded-3xl p-8 mb-8 shadow-2xl shadow-primary/20"
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -282,7 +282,7 @@ export default function Settings() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">Settings</h1>
-                <p className="text-indigo-200 mt-1">Customize your workspace options and labels</p>
+                <p className="text-white/70 mt-1">Customize your workspace options and labels</p>
               </div>
             </div>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -291,7 +291,7 @@ export default function Settings() {
                 disabled={!hasChanges || saveMutation.isPending}
                 size="lg"
                 className={cn(
-                  "bg-white text-indigo-700 hover:bg-indigo-50 shadow-lg font-semibold px-6",
+                  "bg-white text-primary hover:bg-primary/10 shadow-lg font-semibold px-6",
                   hasChanges && "animate-pulse"
                 )}
               >
@@ -316,15 +316,15 @@ export default function Settings() {
         {/* Tabs */}
         <Tabs defaultValue="projects" className="space-y-6">
           <TabsList className="bg-white/80 backdrop-blur-sm border border-slate-200 p-1.5 rounded-2xl shadow-sm">
-            <TabsTrigger value="projects" className="rounded-xl px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all">
+            <TabsTrigger value="projects" className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all">
               <FolderKanban className="w-4 h-4 mr-2" />
               Projects
             </TabsTrigger>
-            <TabsTrigger value="tasks" className="rounded-xl px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all">
+            <TabsTrigger value="tasks" className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all">
               <ListTodo className="w-4 h-4 mr-2" />
               Tasks
             </TabsTrigger>
-            <TabsTrigger value="parts" className="rounded-xl px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all">
+            <TabsTrigger value="parts" className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all">
               <Package className="w-4 h-4 mr-2" />
               Parts
             </TabsTrigger>
@@ -342,8 +342,8 @@ export default function Settings() {
                   <Sparkles className="w-5 h-5 text-indigo-600" />
                 </div>
                 <div>
-                  <Label className="text-xl font-bold text-slate-900 block">Project Statuses</Label>
-                  <p className="text-sm text-slate-500">Define workflow stages for your projects</p>
+                  <Label className="text-xl font-bold text-foreground block">Project Statuses</Label>
+                  <p className="text-sm text-muted-foreground">Define workflow stages for your projects</p>
                 </div>
               </div>
               <OptionEditor
@@ -363,8 +363,8 @@ export default function Settings() {
                   <Sparkles className="w-5 h-5 text-orange-600" />
                 </div>
                 <div>
-                  <Label className="text-xl font-bold text-slate-900 block">Project Priorities</Label>
-                  <p className="text-sm text-slate-500">Set urgency levels for better organization</p>
+                  <Label className="text-xl font-bold text-foreground block">Project Priorities</Label>
+                  <p className="text-sm text-muted-foreground">Set urgency levels for better organization</p>
                 </div>
               </div>
               <OptionEditor
@@ -387,8 +387,8 @@ export default function Settings() {
                   <Sparkles className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
-                  <Label className="text-xl font-bold text-slate-900 block">Task Statuses</Label>
-                  <p className="text-sm text-slate-500">Track progress with custom task stages</p>
+                  <Label className="text-xl font-bold text-foreground block">Task Statuses</Label>
+                  <p className="text-sm text-muted-foreground">Track progress with custom task stages</p>
                 </div>
               </div>
               <OptionEditor
@@ -408,8 +408,8 @@ export default function Settings() {
                   <Sparkles className="w-5 h-5 text-violet-600" />
                 </div>
                 <div>
-                  <Label className="text-xl font-bold text-slate-900 block">Task Priorities</Label>
-                  <p className="text-sm text-slate-500">Highlight what needs attention first</p>
+                  <Label className="text-xl font-bold text-foreground block">Task Priorities</Label>
+                  <p className="text-sm text-muted-foreground">Highlight what needs attention first</p>
                 </div>
               </div>
               <OptionEditor
@@ -432,8 +432,8 @@ export default function Settings() {
                   <Sparkles className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
-                  <Label className="text-xl font-bold text-slate-900 block">Part Statuses</Label>
-                  <p className="text-sm text-slate-500">Track materials from order to installation</p>
+                  <Label className="text-xl font-bold text-foreground block">Part Statuses</Label>
+                  <p className="text-sm text-muted-foreground">Track materials from order to installation</p>
                 </div>
               </div>
               <OptionEditor
