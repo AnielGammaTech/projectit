@@ -1130,46 +1130,59 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Stats Grid - Focused */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <StatsCard
-            title="Active Projects"
-            value={activeProjects.length}
-            icon={Briefcase}
-            iconColor="bg-[#0069AF]"
-            href={createPageUrl('Dashboard')}
-          />
+        {/* Compact Stats Bar + My Tasks Inline */}
+        <div className="flex flex-col lg:flex-row gap-3 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
+            <StatsCard
+              title="Active Projects"
+              value={activeProjects.length}
+              icon={Briefcase}
+              iconColor="bg-[#0069AF]"
+              href={createPageUrl('Dashboard')}
+            />
+            <StatsCard
+              title="Parts Tracking"
+              value={pendingParts.length}
+              subtitle={activeParts.filter(p => p.status === 'ready_to_install').length > 0 ? `${activeParts.filter(p => p.status === 'ready_to_install').length} ready` : null}
+              icon={Box}
+              iconColor="bg-amber-500"
+              href={createPageUrl('AllTasks') + '?tab=parts'}
+            />
+            <StatsCard
+              title="All Tasks"
+              value={activeTasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}
+              subtitle={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && !isToday(d) && t.status !== 'completed'; }).length > 0 ? `${activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && !isToday(d) && t.status !== 'completed'; }).length} overdue` : null}
+              icon={ClipboardList}
+              iconColor="bg-[#0069AF]"
+              href={createPageUrl('AllTasks')}
+            />
+            <StatsCard
+              title="Proposals Pending"
+              value={incomingQuotes.length}
+              subtitle={incomingQuotes.length > 0 ? 'awaiting' : null}
+              icon={FileText}
+              iconColor={incomingQuotes.length > 0 ? "bg-orange-500" : "bg-emerald-500"}
+              highlight={incomingQuotes.length > 0}
+              onClick={() => setShowProposalsModal(true)}
+            />
+          </div>
+        </div>
 
-          <StatsCard
-            title="Parts Tracking"
-            value={pendingParts.length}
-            subtitle={activeParts.filter(p => p.status === 'ready_to_install').length > 0 ? `${activeParts.filter(p => p.status === 'ready_to_install').length} ready` : null}
-            icon={Box}
-            iconColor="bg-amber-500"
-            href={createPageUrl('AllTasks') + '?tab=parts'}
-          />
-          <StatsCard
-            title="All Tasks"
-            value={activeTasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}
-            subtitle={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && !isToday(d) && t.status !== 'completed'; }).length > 0 ? `${activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && !isToday(d) && t.status !== 'completed'; }).length} overdue` : null}
-            icon={ClipboardList}
-            iconColor="bg-[#0069AF]"
-            href={createPageUrl('AllTasks')}
-          />
-          <StatsCard
-            title="Proposals Pending"
-            value={incomingQuotes.length}
-            subtitle={incomingQuotes.length > 0 ? 'awaiting project' : null}
-            icon={FileText}
-            iconColor={incomingQuotes.length > 0 ? "bg-orange-500" : "bg-emerald-500"}
-            highlight={incomingQuotes.length > 0}
-            onClick={() => setShowProposalsModal(true)}
+        {/* My Tasks Inline Strip */}
+        <div className="mb-5">
+          <MyTasksCard
+            tasks={tasks}
+            parts={parts}
+            projects={projects}
+            currentUserEmail={currentUser?.email}
+            onTaskComplete={handleTaskComplete}
+            inline
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Projects Section */}
-          <div className="lg:col-span-2 min-w-0">
+        {/* Projects Section - Full Width */}
+        <div>
+          <div className="min-w-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-base sm:text-lg font-semibold text-[#0F2F44] dark:text-slate-100">
@@ -1523,7 +1536,7 @@ export default function Dashboard() {
                             <Pin className="w-4 h-4 text-amber-600" />
                             <span className="text-sm font-semibold text-amber-700">Pinned Projects</span>
                           </div>
-                          <div className="grid sm:grid-cols-2 gap-4">
+                          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
                             {pinnedProjects.map((project, idx) => (
                               <Draggable key={project.id} draggableId={project.id} index={idx}>
                                 {(provided, snapshot) => (
@@ -1587,7 +1600,7 @@ export default function Dashboard() {
 
                   {/* Stacks Section */}
                   {projectStacks.length > 0 && (
-                    <div className="mb-6 grid sm:grid-cols-2 gap-4">
+                    <div className="mb-6 grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
                       {projectStacks.map(stack => (
                         <ProjectStackCard
                           key={stack.id}
@@ -1644,7 +1657,7 @@ export default function Dashboard() {
                                 </button>
                               )}
                               {!isCollapsed && (
-                                <div className="grid sm:grid-cols-2 gap-4">
+                                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
                                   {groupProjects.slice((currentPage - 1) * PROJECTS_PER_PAGE, currentPage * PROJECTS_PER_PAGE).map((project, idx) => (
                                     <Draggable key={project.id} draggableId={project.id} index={idx}>
                                       {(provided, snapshot) => (
@@ -1740,16 +1753,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Sidebar - My Tasks (with Focus tab) */}
-          <div className="space-y-4">
-            <MyTasksCard
-              tasks={tasks}
-              parts={parts}
-              projects={projects}
-              currentUserEmail={currentUser?.email}
-              onTaskComplete={handleTaskComplete}
-            />
-          </div>
         </div>
 
       </div>
