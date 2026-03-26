@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square, Bell, AtSign, MessageSquare, FolderOpen, Eye } from 'lucide-react';
+import { RefreshCw, FolderKanban, CheckCircle2, Package, Plus, Search, ChevronDown, ChevronRight, Archive, FileText, DollarSign, AlertTriangle, Clock, X, Briefcase, TrendingUp, Box, ClipboardList, FileStack, Pin, LayoutGrid, List, Star, Trash2, MoreHorizontal, CheckSquare, Square, ListTodo, Activity as ActivityIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPageUrl } from '@/utils';
@@ -15,8 +15,10 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import ProjectStackCard from '@/components/dashboard/ProjectStackCard';
 
-import DashboardWidgets from '@/components/dashboard/DashboardWidgets';
 import PendingProposalsModal from '@/components/dashboard/PendingProposalsModal';
+import ProjectHealthGrid from '@/components/dashboard/ProjectHealthGrid';
+import CollapsibleSection from '@/components/dashboard/CollapsibleSection';
+import IncomingQuoteBanner from '@/components/dashboard/IncomingQuoteBanner';
 
 // Filter out in_progress and medium priority from dashboard display
 // These values are removed from the system
@@ -60,7 +62,6 @@ export default function Dashboard() {
   });
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
   const [listFilter, setListFilter] = useState('all'); // 'all', 'pinned', 'projects', 'teams', 'clients', 'archived'
-  const [dismissedAlert, setDismissedAlert] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedProjects, setSelectedProjects] = useState([]);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
@@ -76,36 +77,28 @@ export default function Dashboard() {
   const [isSyncingQuotes, setIsSyncingQuotes] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingType, setProcessingType] = useState(null);
-  const [dismissedCatchUp, setDismissedCatchUp] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Notification type config for "While you were away" banner
-  const missedConfig = {
-    mention: { icon: AtSign, bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' },
-    task_assigned: { icon: CheckCircle2, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
-    task_due: { icon: Clock, bg: 'bg-amber-100 dark:bg-amber-900/30', color: 'text-amber-600 dark:text-amber-400' },
-    task_completed: { icon: CheckCircle2, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
-    task_overdue: { icon: AlertTriangle, bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400' },
-    part_status: { icon: Package, bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' },
-    project_update: { icon: FolderOpen, bg: 'bg-violet-100 dark:bg-violet-900/30', color: 'text-violet-600 dark:text-violet-400' },
-    project_assigned: { icon: FolderOpen, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
-    comment: { icon: MessageSquare, bg: 'bg-teal-100 dark:bg-teal-900/30', color: 'text-teal-600 dark:text-teal-400' },
-    progress_update: { icon: CheckCircle2, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
-  };
   const [permanentDeleteConfirm, setPermanentDeleteConfirm] = useState({ open: false, project: null });
   const [showProposalsModal, setShowProposalsModal] = useState(false);
 
   const handleCreateProjectFromQuote = (quote) => {
+    // Use matched_items if available (includes product matching from sync),
+    // otherwise fall back to raw items
+    const items = quote.matched_items?.length > 0
+      ? quote.matched_items
+      : (quote.raw_data?.items || []);
+
     setPrefillData({
       name: quote.title,
       client: quote.customer_name,
-      customer_id: quote.customer_id, // Pass matched customer ID
+      customer_id: quote.customer_id || '',
       budget: quote.amount || quote.raw_data?.total_amount || 0,
-      quoteit_quote_id: quote.quoteit_id, // Pass ID to link
-      incoming_quote_id: quote.id, // Pass internal ID to update status later
+      quoteit_quote_id: quote.quoteit_id,
+      incoming_quote_id: quote.id,
       description: quote.raw_data?.other_relevant_details || '',
-      proposalItems: quote.raw_data?.items || []
+      proposalItems: items,
     });
     setShowProjectModal(true);
   };
@@ -118,7 +111,7 @@ export default function Dashboard() {
   const { data: incomingQuotesRaw = [], refetch: refetchIncomingQuotes } = useQuery({
     queryKey: ['incomingQuotes'],
     queryFn: () => api.entities.IncomingQuote.filter({ status: 'pending' }),
-    staleTime: 300000,
+    staleTime: 30000,
     gcTime: 600000
   });
 
@@ -137,7 +130,7 @@ export default function Dashboard() {
     queryKey: ['dashboardViews', currentUser?.id],
     queryFn: () => api.entities.DashboardView.filter({ user_id: currentUser?.id }),
     enabled: !!currentUser?.id,
-    staleTime: 600000,
+    staleTime: 300000,
     gcTime: 900000
   });
 
@@ -162,35 +155,10 @@ export default function Dashboard() {
     staleTime: 30000,
   });
 
-  const handleMarkNotificationRead = async (notification) => {
-    try {
-      await api.entities.UserNotification.update(notification.id, { is_read: true });
-      refetchMissed();
-      queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
-      if (notification.link) {
-        navigate(notification.link);
-      }
-    } catch (err) {
-      console.error('Failed to mark notification as read:', err);
-    }
-  };
-
-  const handleMarkAllMissedRead = async () => {
-    try {
-      await Promise.all(
-        missedNotifications.map(n => api.entities.UserNotification.update(n.id, { is_read: true }))
-      );
-      refetchMissed();
-      queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
-    } catch (err) {
-      console.error('Failed to mark all as read:', err);
-    }
-  };
-
   const { data: projects = [], isLoading: loadingProjects, refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: () => api.entities.Project.list('-created_date'),
-    staleTime: 120000, // 2 minutes
+    staleTime: 300000, // 5 minutes
     gcTime: 300000
   });
 
@@ -203,27 +171,27 @@ export default function Dashboard() {
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks'],
     queryFn: () => api.entities.Task.list('-created_date'),
-    staleTime: 120000,
+    staleTime: 300000,
     gcTime: 300000
   });
 
   const { data: parts = [] } = useQuery({
     queryKey: ['parts'],
     queryFn: () => api.entities.Part.list('-created_date'),
-    staleTime: 180000, // 3 minutes
+    staleTime: 300000, // 5 minutes
     gcTime: 300000
   });
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
     queryFn: () => api.entities.ProjectTemplate.list(),
-    staleTime: 600000 // 10 minutes
+    staleTime: 300000 // 5 minutes
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: () => api.entities.TeamMember.list(),
-    staleTime: 600000
+    staleTime: 300000
   });
 
   const { data: quoteRequests = [] } = useQuery({
@@ -235,7 +203,7 @@ export default function Dashboard() {
   const { data: customStatuses = [] } = useQuery({
     queryKey: ['projectStatuses'],
     queryFn: () => api.entities.ProjectStatus.list('order'),
-    staleTime: 600000
+    staleTime: 300000
   });
 
   const { data: projectStacksData = [], refetch: refetchStacks } = useQuery({
@@ -791,9 +759,30 @@ export default function Dashboard() {
           if (typeof refetchIncomingQuotes === 'function') refetchIncomingQuotes();
         }
 
+        // Create task groups first and map template IDs to real IDs
+        const groupIdMap = {};
+        if (template?.default_groups?.length) {
+          for (const group of template.default_groups) {
+            const created = await api.entities.TaskGroup.create({
+              name: group.name,
+              color: group.color,
+              project_id: newProject.id
+            });
+            if (group._template_id) {
+              groupIdMap[group._template_id] = created.id;
+            }
+          }
+        }
+
         if (template?.default_tasks?.length) {
           for (const task of template.default_tasks) {
-            await api.entities.Task.create({ ...task, project_id: newProject.id });
+            const taskData = { ...task, project_id: newProject.id };
+            if (taskData.group_id && groupIdMap[taskData.group_id]) {
+              taskData.group_id = String(groupIdMap[taskData.group_id]);
+            } else {
+              delete taskData.group_id;
+            }
+            await api.entities.Task.create(taskData);
           }
           refetchTasks();
         }
@@ -801,6 +790,17 @@ export default function Dashboard() {
         if (template?.default_parts?.length) {
           for (const part of template.default_parts) {
             await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
+          }
+        }
+
+        if (template?.default_messages?.length) {
+          for (const msg of template.default_messages) {
+            await api.entities.ProjectNote.create({
+              project_id: newProject.id,
+              title: msg.title || '',
+              content: msg.content || '',
+              type: msg.type || 'note'
+            });
           }
         }
 
@@ -828,7 +828,7 @@ export default function Dashboard() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6 space-y-4">
+                <div key={i} className="bg-white dark:bg-card rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700" />
                     <div className="flex-1 space-y-2">
@@ -854,217 +854,63 @@ export default function Dashboard() {
   if (loadingProjects) return <DashboardSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+    <div className="min-h-screen bg-background">
       <ProcessingOverlay isVisible={isProcessing} type={processingType} />
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Header */}
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-[#133F5C] dark:text-slate-100">
-                Hello nerd, {currentUser?.full_name?.split(' ')[0] || 'there'}! 👋
-              </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-              </p>
-            </div>
-            <div className="flex flex-col items-stretch sm:items-end gap-1 flex-1 sm:flex-initial">
-              <Button
-                onClick={() => setShowProjectModal(true)}
-                className="bg-[#0F2F44] hover:bg-[#1a4a6e] dark:bg-blue-600 dark:hover:bg-blue-700 shadow-lg text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3 h-10 sm:h-12 w-full sm:w-auto"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                New Project
-              </Button>
-              <Link to={createPageUrl('Templates')} className="text-xs sm:text-sm text-[#0069AF] hover:text-[#133F5C] dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors underline underline-offset-2 text-center sm:text-right">
-                or use a template →
-              </Link>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Mobile Search Bar */}
+        <div className="sm:hidden mb-4">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search projects..."
+              className="pl-10 pr-4 h-11 text-sm rounded-xl bg-card border shadow-sm"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                <X className="w-4 h-4 text-slate-400" />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* While You Were Away Banner */}
-        {missedNotifications.length > 0 && !dismissedCatchUp && (
-          <div className="mb-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-700/50 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-transparent dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-transparent">
-              <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-[#0069AF]/10 dark:bg-blue-500/15">
-                  <Bell className="w-4 h-4 text-[#0069AF] dark:text-blue-400" />
-                </div>
-                <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
-                  While you were away
-                </h3>
-                <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-[#0069AF]/10 text-[#0069AF] dark:bg-blue-400/15 dark:text-blue-400">
-                  {missedNotifications.length} new
-                </span>
-              </div>
-              <button
-                onClick={() => setDismissedCatchUp(true)}
-                className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-700/50 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="divide-y divide-slate-100 dark:divide-slate-700/40">
-              {missedNotifications.slice(0, 5).map((notification) => {
-                const config = missedConfig[notification.type] || missedConfig.project_update;
-                const Icon = config.icon;
-                return (
-                  <button
-                    key={notification.id}
-                    onClick={() => handleMarkNotificationRead(notification)}
-                    className="w-full flex items-center gap-3.5 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors text-left group"
-                  >
-                    <div className={cn("p-1.5 rounded-lg flex-shrink-0", config.bg)}>
-                      <Icon className={cn("w-3.5 h-3.5", config.color)} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
-                        {notification.title}
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        {notification.message}
-                      </p>
-                    </div>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 whitespace-nowrap flex-shrink-0">
-                      {notification.created_date
-                        ? formatDistanceToNow(new Date(notification.created_date), { addSuffix: true })
-                        : ''}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="flex items-center justify-between px-5 py-2.5 border-t border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#151d2b]/50">
-              <button
-                onClick={handleMarkAllMissedRead}
-                className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#0069AF] dark:hover:text-blue-400 transition-colors flex items-center gap-1.5"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                Mark all as read
-              </button>
-              <Link
-                to={createPageUrl('MyNotifications')}
-                className="text-xs font-medium text-[#0069AF] dark:text-blue-400 hover:text-[#133F5C] dark:hover:text-blue-300 transition-colors"
-              >
-                View all notifications →
-              </Link>
-            </div>
+        {/* Greeting + CTA */}
+        <div className="mb-6 hidden sm:flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Welcome back, {currentUser?.full_name?.split(' ')[0] || 'there'}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
           </div>
-        )}
-
-        {/* Urgent Tasks Alert */}
-        {!dismissedAlert && myUrgentTasks.length > 0 && (
-          <div className={cn(
-              "mb-6 rounded-2xl p-4 border-2 shadow-lg relative overflow-hidden",
-              overdueTasks.length > 0 
-                ? "bg-gradient-to-r from-red-500 to-red-600 border-red-400 text-white" 
-                : "bg-gradient-to-r from-amber-500 to-orange-500 border-amber-400 text-white"
-            )}
-          >
-            {/* Animated background pulse for overdue */}
-            {overdueTasks.length > 0 && (
-              <div className="absolute inset-0 bg-red-400/30 animate-pulse" />
-            )}
-            
-            <div className="relative flex flex-col sm:flex-row items-start justify-between gap-3">
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className={cn(
-                  "p-2.5 sm:p-3 rounded-xl shadow-lg shrink-0",
-                  overdueTasks.length > 0 ? "bg-white/20" : "bg-white/20"
-                )}>
-                  {overdueTasks.length > 0 ? (
-                    <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 animate-bounce" />
-                  ) : (
-                    <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg flex items-center gap-2">
-                    {overdueTasks.length > 0 ? (
-                      <>
-                        <span className="animate-pulse">⚠️</span> 
-                        You have {overdueTasks.length} overdue task{overdueTasks.length > 1 ? 's' : ''}!
-                      </>
-                    ) : (
-                      <>Tasks due soon</>
-                    )}
-                  </h3>
-                  <div className="mt-2 space-y-1">
-                    {overdueTasks.slice(0, 3).map(task => {
-                      const daysOverdue = differenceInDays(new Date(), parseLocalDate(task.due_date));
-                      return (
-                        <div key={task.id} className="flex items-center gap-2 text-sm">
-                          <span className="font-medium">{task.title}</span>
-                          <span className="text-white/80">• {daysOverdue} day{daysOverdue > 1 ? 's' : ''} overdue</span>
-                        </div>
-                      );
-                    })}
-                    {dueTodayTasks.slice(0, 2).map(task => (
-                      <div key={task.id} className="flex items-center gap-2 text-sm">
-                        <span className="font-medium">{task.title}</span>
-                        <span className="text-white/80">• Due today</span>
-                      </div>
-                    ))}
-                    {dueTomorrowTasks.slice(0, 2).map(task => (
-                      <div key={task.id} className="flex items-center gap-2 text-sm">
-                        <span className="font-medium">{task.title}</span>
-                        <span className="text-white/80">• Due tomorrow</span>
-                      </div>
-                    ))}
-                    {myUrgentTasks.length > 5 && (
-                      <p className="text-sm text-white/80 mt-1">
-                        +{myUrgentTasks.length - 5} more task{myUrgentTasks.length - 5 > 1 ? 's' : ''}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 self-end sm:self-start">
-                <Link to={createPageUrl('AllTasks') + '?view=mine_due'}>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className={cn(
-                      "font-semibold shadow-lg h-9",
-                      overdueTasks.length > 0
-                        ? "bg-white text-red-600 hover:bg-red-50"
-                        : "bg-white text-amber-600 hover:bg-amber-50"
-                    )}
-                  >
-                    View Tasks
-                  </Button>
-                </Link>
-                <button
-                  onClick={() => setDismissedAlert(true)}
-                  className="p-2 rounded-lg hover:bg-white/20 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+          <div className="flex items-center gap-3">
+            <Link to={createPageUrl('Templates')} className="text-sm text-muted-foreground hover:text-foreground font-medium transition-colors">
+              Templates
+            </Link>
+            <Button
+              onClick={() => setShowProjectModal(true)}
+              className="bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 shadow-lg px-5 py-2.5 h-10"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Project
+            </Button>
           </div>
-        )}
+        </div>
 
-        {/* Customizable Widgets - Optional based on user settings */}
-        {currentUser?.show_dashboard_widgets === true && (
-          <div className="mb-8">
-            <DashboardWidgets />
-          </div>
-        )}
 
-        {/* Stats Grid - Focused */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {/* -- TOP ZONE: KPIs -- */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <StatsCard
             title="Active Projects"
             value={activeProjects.length}
             icon={Briefcase}
-            iconColor="bg-[#0069AF]"
+            iconColor="bg-indigo-500"
             href={createPageUrl('Dashboard')}
           />
-
           <StatsCard
-            title="Parts Tracking"
+            title="Pending Parts"
             value={pendingParts.length}
             subtitle={activeParts.filter(p => p.status === 'ready_to_install').length > 0 ? `${activeParts.filter(p => p.status === 'ready_to_install').length} ready` : null}
             icon={Box}
@@ -1072,49 +918,106 @@ export default function Dashboard() {
             href={createPageUrl('AllTasks') + '?tab=parts'}
           />
           <StatsCard
-            title="All Tasks"
-            value={activeTasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length}
-            subtitle={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && !isToday(d) && t.status !== 'completed'; }).length > 0 ? `${activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && !isToday(d) && t.status !== 'completed'; }).length} overdue` : null}
-            icon={ClipboardList}
-            iconColor="bg-[#0069AF]"
-            href={createPageUrl('AllTasks')}
+            title="Overdue Tasks"
+            value={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived'; }).length}
+            icon={AlertTriangle}
+            iconColor="bg-red-500"
+            highlight={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived'; }).length > 0}
+            href={createPageUrl('AllTasks') + '?view=mine_due'}
           />
           <StatsCard
-            title="Proposals Pending"
-            value={incomingQuotes.length}
-            subtitle={incomingQuotes.length > 0 ? 'awaiting project' : null}
-            icon={FileText}
-            iconColor={incomingQuotes.length > 0 ? "bg-orange-500" : "bg-emerald-500"}
-            highlight={incomingQuotes.length > 0}
-            onClick={() => setShowProposalsModal(true)}
+            title="Completed Tasks"
+            value={completedTasks.length}
+            icon={CheckCircle2}
+            iconColor="bg-emerald-500"
+            href={createPageUrl('AllTasks') + '?view=completed'}
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Projects Section */}
-          <div className="lg:col-span-2 min-w-0">
+        {/* -- TOP ZONE: Incoming Quotes -- */}
+        <div className="mb-6">
+          <IncomingQuoteBanner
+            quotes={incomingQuotes}
+            onCreateProject={handleCreateProjectFromQuote}
+            onDismiss={handleDismissQuote}
+            onSync={handleSyncQuotes}
+            isSyncing={isSyncingQuotes}
+          />
+        </div>
+
+        {/* -- TOP ZONE: Project Health -- */}
+        <div className="mb-6">
+          <ProjectHealthGrid
+            projects={activeProjects}
+            tasks={activeTasks}
+          />
+        </div>
+
+        {/* -- BELOW FOLD: Collapsible Widgets -- */}
+        <div className="space-y-4 mb-6">
+          <CollapsibleSection
+            id="my-tasks"
+            title="My Tasks"
+            icon={ListTodo}
+            summary={`${myUrgentTasks.length} due soon`}
+            defaultOpen={true}
+          >
+            <MyTasksCard
+              tasks={tasks}
+              parts={parts}
+              projects={projects}
+              currentUserEmail={currentUser?.email}
+              onTaskComplete={handleTaskComplete}
+              inline
+            />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            id="activity"
+            title="Recent Activity"
+            icon={ActivityIcon}
+            summary={missedNotifications.length > 0 ? `${missedNotifications.length} new` : 'Up to date'}
+            defaultOpen={false}
+          >
+            <ActivityTimeline
+              projects={projects}
+              proposals={quoteRequests}
+            />
+          </CollapsibleSection>
+        </div>
+
+        {/* -- BELOW FOLD: Projects -- */}
+        <CollapsibleSection
+          id="projects"
+          title={showArchived ? 'Archived Projects' : 'Active Projects'}
+          icon={FolderKanban}
+          summary={`${activeProjects.length} active`}
+          defaultOpen={true}
+        >
+        <div>
+          <div className="min-w-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-base sm:text-lg font-semibold text-[#0F2F44] dark:text-slate-100">
+                <h2 className="text-base sm:text-lg font-semibold text-foreground">
                   {showArchived ? 'Archived Projects' : 'Active Projects'}
                 </h2>
                 <button
                   onClick={() => setShowArchived(!showArchived)}
-                  className="flex items-center gap-1.5 text-xs sm:text-sm text-[#0F2F44]/60 hover:text-[#0F2F44] dark:text-slate-400 dark:hover:text-slate-200"
+                  className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-foreground"
                 >
                   <Archive className="w-4 h-4" />
                   <span className="hidden sm:inline">{showArchived ? 'Show Active' : `Archived (${archivedProjects.length})`}</span>
                   <span className="sm:hidden">{showArchived ? 'Active' : `(${archivedProjects.length})`}</span>
                 </button>
               </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="hidden sm:flex items-center gap-2 w-full sm:w-auto">
                 {/* Selection Mode Toggle */}
                 {!showArchived && (
                   <button
                     onClick={() => { setSelectionMode(!selectionMode); setSelectedProjects([]); }}
                     className={cn(
                       "p-2 rounded-md transition-all",
-                      selectionMode ? "bg-[#0069AF] text-white" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                      selectionMode ? "bg-primary text-white" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
                     )}
                     title="Select multiple projects"
                   >
@@ -1122,12 +1025,12 @@ export default function Dashboard() {
                   </button>
                 )}
                 {/* View Mode Toggle */}
-                <div className="flex items-center bg-[#0F2F44]/10 dark:bg-slate-700/50 rounded-lg p-1">
+                <div className="flex items-center bg-muted rounded-lg p-1">
                     <button
                       onClick={() => setViewMode('cards')}
                       className={cn(
                         "p-2 rounded-md transition-all",
-                        viewMode === 'cards' ? "bg-white dark:bg-slate-600 shadow-sm text-[#0F2F44] dark:text-slate-100" : "text-[#0F2F44]/60 dark:text-slate-400 hover:text-[#0F2F44] dark:hover:text-slate-200"
+                        viewMode === 'cards' ? "bg-white dark:bg-slate-600 shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <LayoutGrid className="w-4 h-4" />
@@ -1136,19 +1039,19 @@ export default function Dashboard() {
                       onClick={() => setViewMode('list')}
                       className={cn(
                         "p-2 rounded-md transition-all",
-                        viewMode === 'list' ? "bg-white dark:bg-slate-600 shadow-sm text-[#0F2F44] dark:text-slate-100" : "text-[#0F2F44]/60 dark:text-slate-400 hover:text-[#0F2F44] dark:hover:text-slate-200"
+                        viewMode === 'list' ? "bg-white dark:bg-slate-600 shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <List className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="relative flex-1 sm:flex-initial">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0F2F44]/40 dark:text-slate-500" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder="Search..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 w-full sm:w-48 bg-[#0F2F44]/5 dark:bg-slate-700/50 border-[#0F2F44]/10 dark:border-slate-600 h-9"
+                      className="pl-9 w-full sm:w-48 bg-muted/50 border h-9"
                     />
                   </div>
               </div>
@@ -1156,11 +1059,11 @@ export default function Dashboard() {
 
             {/* Bulk Actions Bar */}
             {selectionMode && (
-              <div className="mb-4 p-3 bg-[#0069AF]/10 dark:bg-blue-900/30 rounded-xl border border-[#0069AF]/20 dark:border-blue-700/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div className="mb-4 p-3 bg-primary/10 dark:bg-blue-900/30 rounded-xl border border-primary/20 dark:border-blue-700/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={selectAllProjects}
-                    className="flex items-center gap-2 text-sm font-medium text-[#0069AF] hover:text-[#133F5C] dark:text-blue-400 dark:hover:text-blue-300"
+                    className="flex items-center gap-2 text-sm font-medium text-primary hover:text-foreground dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     {selectedProjects.length === filteredProjects.length ? (
                       <CheckSquare className="w-4 h-4" />
@@ -1202,12 +1105,12 @@ export default function Dashboard() {
             {unpinnedProjects.length > 25 && viewMode === 'cards' && !showArchived && (
               <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <span className="text-xs text-slate-500 sm:mr-2 shrink-0">Jump to:</span>
-                <div className="flex items-center gap-0.5 bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700 p-1.5 overflow-x-auto max-w-full scrollbar-thin">
+                <div className="flex items-center gap-0.5 bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-slate-700 p-1.5 overflow-x-auto max-w-full scrollbar-thin">
                   <button
                     onClick={() => { setActiveLetter(null); setCurrentPage(1); }}
                     className={cn(
                       "px-2 py-1 rounded-lg text-xs font-medium transition-all",
-                      !activeLetter ? "bg-[#0069AF] text-white" : "text-slate-500 hover:bg-slate-100"
+                      !activeLetter ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-100"
                     )}
                   >
                     All
@@ -1223,7 +1126,7 @@ export default function Dashboard() {
                         className={cn(
                           "w-7 h-7 rounded-lg text-xs font-medium transition-all relative group",
                           activeLetter === letter 
-                            ? "bg-[#0069AF] text-white scale-110 shadow-lg z-10" 
+                            ? "bg-primary text-white scale-110 shadow-lg z-10"
                             : hasProjects 
                               ? "text-slate-700 hover:bg-slate-100 hover:scale-125 hover:shadow-lg hover:z-10" 
                               : "text-slate-300 cursor-not-allowed"
@@ -1250,7 +1153,7 @@ export default function Dashboard() {
             {filteredProjects.length > 0 ? (
               viewMode === 'list' ? (
                 /* List View */
-                <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
                   {/* List Header */}
                   <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-[#1a2535]">
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center mb-4">All Projects</h2>
@@ -1287,7 +1190,7 @@ export default function Dashboard() {
                           className={cn(
                             "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
                             listFilter === filter.key
-                              ? "bg-[#0F2F44] dark:bg-blue-600 text-white"
+                              ? "bg-primary dark:bg-blue-600 text-white"
                               : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
                           )}
                         >
@@ -1345,7 +1248,7 @@ export default function Dashboard() {
                                   <div className="flex items-center gap-2">
                                     <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">{project.name}</h3>
                                     {project.client && (
-                                      <span className="text-[#0F2F44]/60 dark:text-slate-400 text-sm">• {project.client}</span>
+                                      <span className="text-muted-foreground dark:text-slate-400 text-sm">• {project.client}</span>
                                     )}
                                     {project.status === 'deleted' && (
                                       <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded">Deleted</span>
@@ -1404,7 +1307,7 @@ export default function Dashboard() {
                             <div className="flex items-center gap-2">
                               <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">{project.name}</h3>
                               {project.client && (
-                                <span className="text-[#0F2F44]/60 dark:text-slate-400 text-sm">• {project.client}</span>
+                                <span className="text-muted-foreground dark:text-slate-400 text-sm">• {project.client}</span>
                               )}
                             </div>
                             {project.description && (
@@ -1446,7 +1349,7 @@ export default function Dashboard() {
                             <Pin className="w-4 h-4 text-amber-600" />
                             <span className="text-sm font-semibold text-amber-700">Pinned Projects</span>
                           </div>
-                          <div className="grid sm:grid-cols-2 gap-4">
+                          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
                             {pinnedProjects.map((project, idx) => (
                               <Draggable key={project.id} draggableId={project.id} index={idx}>
                                 {(provided, snapshot) => (
@@ -1454,6 +1357,7 @@ export default function Dashboard() {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     style={provided.draggableProps.style}
+                                    className="h-full"
                                   >
                                     <ProjectCard
                                                                                       project={project}
@@ -1509,7 +1413,7 @@ export default function Dashboard() {
 
                   {/* Stacks Section */}
                   {projectStacks.length > 0 && (
-                    <div className="mb-6 grid sm:grid-cols-2 gap-4">
+                    <div className="mb-6 grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
                       {projectStacks.map(stack => (
                         <ProjectStackCard
                           key={stack.id}
@@ -1566,7 +1470,7 @@ export default function Dashboard() {
                                 </button>
                               )}
                               {!isCollapsed && (
-                                <div className="grid sm:grid-cols-2 gap-4">
+                                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
                                   {groupProjects.slice((currentPage - 1) * PROJECTS_PER_PAGE, currentPage * PROJECTS_PER_PAGE).map((project, idx) => (
                                     <Draggable key={project.id} draggableId={project.id} index={idx}>
                                       {(provided, snapshot) => (
@@ -1574,7 +1478,7 @@ export default function Dashboard() {
                                           ref={provided.innerRef}
                                           {...provided.draggableProps}
                                           style={provided.draggableProps.style}
-                                          className={snapshot.combineTargetFor ? 'ring-2 ring-[#0069AF] ring-offset-2 rounded-2xl scale-[1.02] shadow-lg transition-all' : 'transition-all'}
+                                          className={cn("h-full", snapshot.combineTargetFor ? 'ring-2 ring-primary ring-offset-2 rounded-2xl scale-[1.02] shadow-lg transition-all' : 'transition-all')}
                                         >
                                           <ProjectCard
                                                                                             project={project}
@@ -1627,7 +1531,7 @@ export default function Dashboard() {
                             className={cn(
                               "w-8 h-8 rounded-lg text-sm font-medium transition-all",
                               currentPage === page
-                                ? "bg-[#0069AF] text-white"
+                                ? "bg-primary text-white"
                                 : "bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600"
                             )}
                           >
@@ -1648,13 +1552,13 @@ export default function Dashboard() {
                         </DragDropContext>
                         )
             ) : (
-              <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 dark:from-[#1a2535] dark:to-[#1e2a3a] rounded-2xl border border-slate-200/60 dark:border-slate-700/50 p-8 sm:p-16 text-center shadow-card">
-                  <div className="w-16 h-16 rounded-2xl bg-[#0F2F44]/10 dark:bg-slate-700/50 flex items-center justify-center mx-auto mb-5">
-                    <FolderKanban className="w-8 h-8 text-[#0F2F44]/40 dark:text-slate-400" />
+              <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 dark:from-card dark:to-card rounded-2xl border border-slate-200/60 dark:border-slate-700/50 p-8 sm:p-16 text-center shadow-card">
+                  <div className="w-16 h-16 rounded-2xl bg-muted dark:bg-slate-700/50 flex items-center justify-center mx-auto mb-5">
+                    <FolderKanban className="w-8 h-8 text-muted-foreground dark:text-slate-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-[#133F5C] dark:text-slate-100 mb-2">No projects yet</h3>
+                  <h3 className="text-xl font-semibold text-foreground dark:text-slate-100 mb-2">No projects yet</h3>
                   <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm mx-auto">Create your first project to start tracking tasks, parts, and progress.</p>
-                  <Button onClick={() => setShowProjectModal(true)} size="lg" className="bg-[#0F2F44] hover:bg-[#1a4a6e] dark:bg-blue-600 dark:hover:bg-blue-700 shadow-md">
+                  <Button onClick={() => setShowProjectModal(true)} size="lg" className="bg-primary hover:bg-primary/80 dark:bg-blue-600 dark:hover:bg-blue-700 shadow-md">
                     <Plus className="w-5 h-5 mr-2" />
                     Create Your First Project
                   </Button>
@@ -1662,17 +1566,8 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Sidebar - My Tasks (with Focus tab) */}
-          <div className="space-y-4">
-            <MyTasksCard
-              tasks={tasks}
-              parts={parts}
-              projects={projects}
-              currentUserEmail={currentUser?.email}
-              onTaskComplete={handleTaskComplete}
-            />
-          </div>
         </div>
+        </CollapsibleSection>
 
       </div>
 

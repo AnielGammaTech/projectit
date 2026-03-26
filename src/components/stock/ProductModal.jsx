@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ImagePlus, X, Plus, ExternalLink } from 'lucide-react';
+import { ImagePlus, X, Plus, ExternalLink, Loader2 } from 'lucide-react';
 import { api } from '@/api/apiClient';
 
 export default function ProductModal({ open, onClose, product, onSave }) {
@@ -25,8 +25,12 @@ export default function ProductModal({ open, onClose, product, onSave }) {
   const [formData, setFormData] = useState(emptyForm);
   const [newTag, setNewTag] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
+    setSaveError(null);
+    setSaving(false);
     if (product) {
       setFormData({
         name: product.name || '',
@@ -92,14 +96,23 @@ export default function ProductModal({ open, onClose, product, onSave }) {
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({
-      ...formData,
-      cost: parseFloat(formData.cost) || 0,
-      selling_price: parseFloat(formData.selling_price) || 0,
-      quantity_on_hand: parseInt(formData.quantity_on_hand) || 0
-    });
+    setSaveError(null);
+    setSaving(true);
+    try {
+      await onSave({
+        ...formData,
+        cost: parseFloat(formData.cost) || 0,
+        selling_price: parseFloat(formData.selling_price) || 0,
+        quantity_on_hand: parseInt(formData.quantity_on_hand) || 0
+      });
+    } catch (err) {
+      console.error('Product save error:', err);
+      setSaveError(err.message || 'Failed to save product. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -146,8 +159,8 @@ export default function ProductModal({ open, onClose, product, onSave }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
               <Label>Name *</Label>
               <Input
                 value={formData.name}
@@ -181,7 +194,7 @@ export default function ProductModal({ open, onClose, product, onSave }) {
               />
             </div>
 
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <Label className="flex items-center gap-1.5">
                 Purchase Link
                 <ExternalLink className="w-3 h-3 text-slate-400" />
@@ -261,9 +274,13 @@ export default function ProductModal({ open, onClose, product, onSave }) {
             )}
           </div>
 
+          {saveError && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3 text-center">{saveError}</p>
+          )}
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e]">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e]" disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {product ? 'Save Changes' : 'Add Product'}
             </Button>
           </div>

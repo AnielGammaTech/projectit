@@ -105,7 +105,7 @@ export default function ProjectTime() {
               <Clock className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Time Tracking</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Time Tracking</h1>
               <p className="text-slate-500 dark:text-slate-400">{timeEntries.length} time entries logged</p>
             </div>
           </div>
@@ -116,7 +116,7 @@ export default function ProjectTime() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className={cn(
-            "bg-white dark:bg-[#1e2a3a] rounded-2xl border p-6 mb-6 shadow-sm",
+            "bg-white dark:bg-[#1e2a3a] rounded-2xl border p-4 sm:p-6 mb-6 shadow-sm",
             isOverBudget ? "border-red-200 bg-red-50/30" : "border-slate-100 dark:border-slate-700/50"
           )}
         >
@@ -154,7 +154,7 @@ export default function ProjectTime() {
             <>
               <div className="flex items-end justify-between mb-3">
                 <div>
-                  <span className="text-4xl font-bold text-slate-900 dark:text-slate-100">{totalHours.toFixed(1)}</span>
+                  <span className="text-2xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100">{totalHours.toFixed(1)}</span>
                   <span className="text-lg text-slate-500 dark:text-slate-400 ml-1">/ {budgetHours}h</span>
                 </div>
                 <div className="text-right">
@@ -212,7 +212,7 @@ export default function ProjectTime() {
               </div>
               <div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Total Hours</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{totalHours.toFixed(1)}h</p>
+                <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">{totalHours.toFixed(1)}h</p>
               </div>
             </div>
           </motion.div>
@@ -229,7 +229,7 @@ export default function ProjectTime() {
               </div>
               <div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">This Week</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{thisWeekHours.toFixed(1)}h</p>
+                <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">{thisWeekHours.toFixed(1)}h</p>
               </div>
             </div>
           </motion.div>
@@ -246,7 +246,7 @@ export default function ProjectTime() {
               </div>
               <div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Team Members</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{Object.keys(hoursByMember).length}</p>
+                <p className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">{Object.keys(hoursByMember).length}</p>
               </div>
             </div>
           </motion.div>
@@ -257,7 +257,7 @@ export default function ProjectTime() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6 mb-6"
+          className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 sm:p-6 mb-6"
         >
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
             <User className="w-5 h-5 text-slate-400" />
@@ -302,7 +302,7 @@ export default function ProjectTime() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6"
+          className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 sm:p-6"
         >
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-slate-400" />

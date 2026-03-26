@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { ShieldCheck, ArrowLeft, Loader2 } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Loader2, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,6 +13,7 @@ export default function Login() {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [mfaVerifying, setMfaVerifying] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { checkAppState } = useAuth();
@@ -152,16 +153,38 @@ export default function Login() {
   // MFA Verification Screen
   if (mfaRequired) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#151d2b] px-4">
-        <div className="w-full max-w-sm">
-          <div className="bg-white dark:bg-[#1e2a3a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/50 p-8">
+      <div className="min-h-screen flex">
+        {/* Left branding panel */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0F2F44] via-[#133F5C] to-[#0F2F44] relative overflow-hidden">
+          <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20">
+            <div className="flex items-center gap-3 mb-10">
+              <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
+              <span className="text-white font-semibold text-xl tracking-tight">ProjectIT</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
+              IT project delivery,{' '}
+              <span className="text-[#74C7FF]">simplified.</span>
+            </h2>
+            <p className="text-slate-300 text-lg max-w-md">
+              Track projects from quote to completion. Assign tasks, manage stock, monitor timelines, and keep every client in the loop.
+            </p>
+          </div>
+          {/* Decorative elements */}
+          <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-[#0069AF]/10 rounded-full" />
+          <div className="absolute -top-16 -right-16 w-64 h-64 bg-[#74C7FF]/5 rounded-full" />
+          <div className="absolute bottom-20 right-10 w-32 h-32 bg-[#0069AF]/5 rounded-full" />
+        </div>
+
+        {/* Right form panel */}
+        <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-6 sm:px-12 bg-white dark:bg-[#151d2b]">
+          <div className="w-full max-w-md">
             <div className="flex justify-center mb-3">
-              <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                <ShieldCheck className="w-6 h-6 text-[#0069AF] dark:text-blue-400" />
+              <div className="w-12 h-12 rounded-full bg-[#0069AF]/10 dark:bg-[#0069AF]/20 flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6 text-[#0069AF] dark:text-[#74C7FF]" />
               </div>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 text-center mb-1">Two-Factor Authentication</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-center mb-6 text-sm">
+            <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100 text-center mb-1">Two-Factor Authentication</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-center mb-8 text-sm">
               Enter the 6-digit code from your authenticator app
             </p>
 
@@ -171,52 +194,58 @@ export default function Login() {
               </div>
             )}
 
-            <div className="flex justify-center mb-6">
-              <InputOTP
-                maxLength={6}
-                value={mfaCode}
-                onChange={(value) => {
-                  setMfaCode(value);
-                  if (value.length === 6) {
-                    handleMfaVerify(value);
-                  }
-                }}
-                disabled={mfaVerifying}
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700/50 p-4 sm:p-8">
+              <div className="flex justify-center mb-6">
+                <InputOTP
+                  maxLength={6}
+                  value={mfaCode}
+                  onChange={(value) => {
+                    setMfaCode(value);
+                    if (value.length === 6) {
+                      handleMfaVerify(value);
+                    }
+                  }}
+                  disabled={mfaVerifying}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
+                    <InputOTPSlot index={1} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
+                    <InputOTPSlot index={2} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
+                    <InputOTPSlot index={3} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
+                    <InputOTPSlot index={4} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
+                    <InputOTPSlot index={5} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+
+              <button
+                onClick={() => handleMfaVerify()}
+                disabled={mfaVerifying || mfaCode.length !== 6}
+                className="w-full bg-[#0069AF] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#005a96] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0069AF]/25"
               >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
-                  <InputOTPSlot index={1} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
-                  <InputOTPSlot index={2} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
-                  <InputOTPSlot index={3} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
-                  <InputOTPSlot index={4} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
-                  <InputOTPSlot index={5} className="w-11 h-12 text-lg dark:bg-muted dark:border-border" />
-                </InputOTPGroup>
-              </InputOTP>
+                {mfaVerifying ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  'Verify'
+                )}
+              </button>
+
+              <button
+                onClick={handleBackToLogin}
+                className="w-full mt-4 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 flex items-center justify-center gap-1 transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to sign in
+              </button>
             </div>
-
-            <button
-              onClick={() => handleMfaVerify()}
-              disabled={mfaVerifying || mfaCode.length !== 6}
-              className="w-full bg-[#0069AF] text-white py-2.5 rounded-lg text-sm font-medium hover:bg-[#005a96] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            >
-              {mfaVerifying ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                'Verify'
-              )}
-            </button>
-
-            <button
-              onClick={handleBackToLogin}
-              className="w-full mt-3 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 flex items-center justify-center gap-1 transition-colors"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back to sign in
-            </button>
           </div>
+
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-12">
+            Powered by <span className="font-medium text-slate-500 dark:text-slate-400">Gamma Tech Services</span>
+          </p>
         </div>
       </div>
     );
@@ -224,59 +253,104 @@ export default function Login() {
 
   // Standard Login Screen
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#151d2b] px-4">
-      <div className="w-full max-w-sm">
-        <div className="bg-white dark:bg-[#1e2a3a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/50 p-8">
-          <div className="flex justify-center mb-3">
+    <div className="min-h-screen flex">
+      {/* Left branding panel */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0F2F44] via-[#133F5C] to-[#0F2F44] relative overflow-hidden">
+        <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20">
+          <div className="flex items-center gap-3 mb-10">
             <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
+            <span className="text-white font-semibold text-xl tracking-tight">ProjectIT</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center mb-1">Project<span className="text-[#0069AF] dark:text-blue-400">IT</span></h1>
-          <p className="text-slate-500 dark:text-slate-400 text-center mb-6 text-sm">Sign in to your account</p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-700 text-sm rounded-lg px-4 py-3 border border-red-200">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white dark:bg-muted dark:text-foreground dark:border-border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="you@company.com"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white dark:bg-muted dark:text-foreground dark:border-border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#0069AF] text-white py-2.5 rounded-lg text-sm font-medium hover:bg-[#005a96] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
-            Contact your administrator to get an invite.
+          <h2 className="text-2xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
+            IT project delivery,{' '}
+            <span className="text-[#74C7FF]">simplified.</span>
+          </h2>
+          <p className="text-slate-300 text-lg max-w-md">
+            Track projects from quote to completion. Assign tasks, manage stock, monitor timelines, and keep every client in the loop.
           </p>
         </div>
+        {/* Decorative elements */}
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-[#0069AF]/10 rounded-full" />
+        <div className="absolute -top-16 -right-16 w-64 h-64 bg-[#74C7FF]/5 rounded-full" />
+        <div className="absolute bottom-20 right-10 w-32 h-32 bg-[#0069AF]/5 rounded-full" />
+      </div>
+
+      {/* Right form panel */}
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-6 sm:px-12 bg-white dark:bg-[#151d2b]">
+        <div className="w-full max-w-md">
+          <h1 className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1 text-center">Welcome back</h1>
+          <p className="text-slate-500 dark:text-slate-400 mb-8 text-center">Sign in to your account to continue.</p>
+
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm rounded-lg px-4 py-3 border border-red-200 dark:border-red-800/50 mb-4">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700/50 p-4 sm:p-8 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Email address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-[#0d1520] dark:text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                    placeholder="you@company.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-10 pr-10 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-[#0d1520] dark:text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#0069AF] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#005a96] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0069AF]/25"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-12">
+          Powered by <span className="font-medium text-slate-500 dark:text-slate-400">Gamma Tech Services</span>
+        </p>
       </div>
     </div>
   );

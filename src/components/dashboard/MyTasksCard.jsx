@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ListTodo, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, Package, Target, Star, Check, X, Plus, Sparkles } from 'lucide-react';
+import { ListTodo, CheckCircle2, Circle, Clock, ArrowUpCircle, Calendar, Package, Target, Star, Check, X, Plus, Sparkles, ChevronDown, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +49,7 @@ function getDueBadge(dateStr) {
   return { label, className: 'bg-slate-50 text-slate-500 border-slate-200' };
 }
 
-export default function MyTasksCard({ tasks = [], parts = [], projects = [], currentUserEmail, onTaskComplete }) {
+export default function MyTasksCard({ tasks = [], parts = [], projects = [], currentUserEmail, onTaskComplete, inline = false }) {
   const [activeTab, setActiveTab] = useState('tasks');
 
   // ─── Tasks logic ───
@@ -165,14 +165,128 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
 
   const completedFocus = focusItems.filter(i => i.done).length;
 
+  // ─── Inline mode: collapsible dropdown ───
+  const [inlineOpen, setInlineOpen] = useState(false);
+
+  if (inline) {
+    if (totalItems === 0) return null;
+
+    const overdueCount = myTasks.filter(t => getDueStatus(t.due_date) === 'overdue').length;
+    const soonCount = myTasks.filter(t => getDueStatus(t.due_date) === 'soon').length;
+    const topItems = myTasks.slice(0, 8);
+
+    return (
+      <div className="bg-white dark:bg-card rounded-xl border border-slate-200/80 dark:border-slate-700/50 overflow-hidden">
+        {/* Summary bar — always visible */}
+        <button
+          onClick={() => setInlineOpen(prev => !prev)}
+          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors text-left"
+        >
+          <div className="p-1.5 rounded-lg bg-primary/10 dark:bg-blue-900/30 shrink-0">
+            <ListTodo className="w-3.5 h-3.5 text-primary dark:text-blue-400" />
+          </div>
+          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">My Tasks</span>
+
+          <div className="flex items-center gap-2 ml-1">
+            {overdueCount > 0 && (
+              <span className="flex items-center gap-1 text-[11px] font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full border border-red-200/60 dark:border-red-800/40">
+                <AlertTriangle className="w-3 h-3" />
+                {overdueCount} overdue
+              </span>
+            )}
+            {soonCount > 0 && (
+              <span className="flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full border border-amber-200/60 dark:border-amber-800/40">
+                <Clock className="w-3 h-3" />
+                {soonCount} due soon
+              </span>
+            )}
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">
+              {totalItems} assigned
+            </span>
+          </div>
+
+          <div className="ml-auto flex items-center gap-2 shrink-0">
+            <Link
+              to={createPageUrl('AllTasks')}
+              onClick={(e) => e.stopPropagation()}
+              className="text-[10px] text-primary dark:text-blue-400 hover:underline font-medium"
+            >
+              View All
+            </Link>
+            <ChevronDown className={cn(
+              "w-4 h-4 text-slate-400 transition-transform duration-200",
+              inlineOpen && "rotate-180"
+            )} />
+          </div>
+        </button>
+
+        {/* Expandable task list */}
+        <AnimatePresence>
+          {inlineOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="border-t border-slate-100 dark:border-slate-700/50 px-2 py-1.5 space-y-0.5">
+                {topItems.map((task) => {
+                  const status = statusConfig[task.status] || statusConfig.todo;
+                  const StatusIcon = status.icon;
+                  const dueStatus = getDueStatus(task.due_date);
+                  const dueBadge = getDueBadge(task.due_date);
+                  return (
+                    <div
+                      key={task.id}
+                      className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}
+                    >
+                      <button
+                        onClick={() => handleTaskCompleteWithSync(task)}
+                        className={cn("p-0.5 rounded-md hover:scale-110 transition-transform shrink-0", status.bg)}
+                      >
+                        <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
+                      </button>
+                      <Link to={createPageUrl('ProjectTasks') + `?id=${task.project_id}`} className="flex-1 min-w-0 flex items-center gap-2">
+                        <p className="font-medium text-slate-900 dark:text-slate-100 text-xs truncate">{task.title}</p>
+                      </Link>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
+                          {getProjectName(task.project_id)}
+                        </span>
+                        {dueBadge && (
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", dueBadge.className)}>
+                            <Calendar className="w-2.5 h-2.5 mr-0.5" />
+                            {dueBadge.label}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                {totalItems > 8 && (
+                  <div className="text-center py-1">
+                    <Link to={createPageUrl('AllTasks')} className="text-[11px] text-primary dark:text-blue-400 hover:underline font-medium">
+                      +{totalItems - 8} more tasks →
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6">
+    <div className="bg-white dark:bg-card rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6">
       {/* Header with tabs */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={cn("p-2 rounded-xl transition-colors", activeTab === 'tasks' ? "bg-[#0069AF]/10 dark:bg-blue-900/30" : "bg-amber-100/80 dark:bg-amber-900/30")}>
+          <div className={cn("p-2 rounded-xl transition-colors", activeTab === 'tasks' ? "bg-primary/10 dark:bg-blue-900/30" : "bg-amber-100/80 dark:bg-amber-900/30")}>
             {activeTab === 'tasks' ? (
-              <ListTodo className="w-5 h-5 text-[#0069AF] dark:text-blue-400" />
+              <ListTodo className="w-5 h-5 text-primary dark:text-blue-400" />
             ) : (
               <Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             )}

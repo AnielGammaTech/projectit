@@ -51,7 +51,7 @@ export default function TeamMemberModal({ open, onClose, member, onSave }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
         <DialogHeader>
           <DialogTitle>{member ? 'Edit Team Member' : 'Add Team Member'}</DialogTitle>
         </DialogHeader>
@@ -97,7 +97,7 @@ export default function TeamMemberModal({ open, onClose, member, onSave }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label htmlFor="role">Role</Label>
               <Input

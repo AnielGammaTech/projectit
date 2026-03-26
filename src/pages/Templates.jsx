@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
-import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase, Loader2, Search, Building2, Users, X } from 'lucide-react';
+import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase, Loader2, Search, Building2, Users, X, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -35,17 +35,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import TemplateModal from '@/components/modals/TemplateModal';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function Templates() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [showModal, setShowModal] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [activeTab, setActiveTab] = useState('project');
-  const [newTemplateType, setNewTemplateType] = useState('project');
   const [createFromTemplate, setCreateFromTemplate] = useState(null);
   const [projectName, setProjectName] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -77,18 +73,6 @@ export default function Templates() {
   // Separate templates by type
   const projectTemplates = templates.filter(t => t.template_type !== 'todo');
   const todoTemplates = templates.filter(t => t.template_type === 'todo');
-
-  const handleSave = async (data) => {
-    const templateData = { ...data, template_type: newTemplateType };
-    if (editingTemplate) {
-      await api.entities.ProjectTemplate.update(editingTemplate.id, templateData);
-    } else {
-      await api.entities.ProjectTemplate.create(templateData);
-    }
-    queryClient.invalidateQueries({ queryKey: ['templates'] });
-    setShowModal(false);
-    setEditingTemplate(null);
-  };
 
   const handleDelete = async () => {
     await api.entities.ProjectTemplate.delete(deleteConfirm.id);
@@ -128,9 +112,31 @@ export default function Templates() {
       team_members: selectedTeamMembers
     });
     
+    // Create task groups first and map template IDs to real IDs
+    const groupIdMap = {};
+    if (createFromTemplate.default_groups?.length) {
+      for (const group of createFromTemplate.default_groups) {
+        const created = await api.entities.TaskGroup.create({
+          name: group.name,
+          color: group.color,
+          project_id: newProject.id
+        });
+        if (group._template_id) {
+          groupIdMap[group._template_id] = created.id;
+        }
+      }
+    }
+
     if (createFromTemplate.default_tasks?.length) {
       for (const task of createFromTemplate.default_tasks) {
-        await api.entities.Task.create({ ...task, project_id: newProject.id, status: 'todo' });
+        const taskData = { ...task, project_id: newProject.id, status: 'todo' };
+        // Map template group_id to real group_id
+        if (taskData.group_id && groupIdMap[taskData.group_id]) {
+          taskData.group_id = String(groupIdMap[taskData.group_id]);
+        } else {
+          delete taskData.group_id;
+        }
+        await api.entities.Task.create(taskData);
       }
     }
     
@@ -139,22 +145,29 @@ export default function Templates() {
         await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
       }
     }
-    
+
+    if (createFromTemplate.default_messages?.length) {
+      for (const msg of createFromTemplate.default_messages) {
+        await api.entities.ProjectNote.create({
+          project_id: newProject.id,
+          title: msg.title || '',
+          content: msg.content || '',
+          type: msg.type || 'note'
+        });
+      }
+    }
+
     setCreating(false);
     setCreateFromTemplate(null);
     navigate(createPageUrl('ProjectDetail') + `?id=${newProject.id}`);
   };
 
-  const handleNewTemplate = (type) => {
-    setNewTemplateType(type);
-    setEditingTemplate(null);
-    setShowModal(true);
+  const handleNewTemplate = () => {
+    navigate(createPageUrl('TemplateEditor'));
   };
 
   const handleEditTemplate = (template) => {
-    setNewTemplateType(template.template_type || 'project');
-    setEditingTemplate(template);
-    setShowModal(true);
+    navigate(createPageUrl('TemplateEditor') + `?id=${template.id}`);
   };
 
   const TemplateCard = ({ template, index }) => {
@@ -231,10 +244,18 @@ export default function Templates() {
             {template.default_tasks?.length || 0}
           </div>
           {isProject && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 text-amber-700 text-xs font-medium">
-              <Package className="w-3 h-3" />
-              {template.default_parts?.length || 0}
-            </div>
+            <>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 text-amber-700 text-xs font-medium">
+                <Package className="w-3 h-3" />
+                {template.default_parts?.length || 0}
+              </div>
+              {(template.default_messages?.length || 0) > 0 && (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-violet-100 text-violet-700 text-xs font-medium">
+                  <MessageSquare className="w-3 h-3" />
+                  {template.default_messages.length}
+                </div>
+              )}
+            </>
           )}
         </div>
       </motion.div>
@@ -247,7 +268,7 @@ export default function Templates() {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        onClick={() => handleNewTemplate(type)}
+        onClick={() => handleNewTemplate()}
         className={cn(
           "relative rounded-2xl border-2 border-dashed p-5 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[180px]",
           isProject
@@ -279,7 +300,7 @@ export default function Templates() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-3">Project Templates</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-3">Project Templates</h1>
           <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
             Save yourself time by creating project templates with frequently-used tools, to-do lists, files, and more. 
             Anyone on your account who can create projects can use and edit these templates.
@@ -346,14 +367,6 @@ export default function Templates() {
           </TabsContent>
         </Tabs>
       </div>
-
-      <TemplateModal
-        open={showModal}
-        onClose={() => { setShowModal(false); setEditingTemplate(null); }}
-        template={editingTemplate}
-        onSave={handleSave}
-        templateType={newTemplateType}
-      />
 
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <AlertDialogContent>
@@ -473,6 +486,12 @@ export default function Templates() {
                     <Package className="w-4 h-4 text-amber-500" />
                     {createFromTemplate.default_parts?.length || 0} parts
                   </div>
+                  {(createFromTemplate.default_messages?.length || 0) > 0 && (
+                    <div className="flex items-center gap-1 text-sm text-slate-700">
+                      <MessageSquare className="w-4 h-4 text-violet-500" />
+                      {createFromTemplate.default_messages.length} messages
+                    </div>
+                  )}
                 </div>
               </div>
             )}

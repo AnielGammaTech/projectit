@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { 
   CheckCircle2, PlusCircle, Package, MessageSquare, Edit2, 
   Trash2, ArrowUpCircle, User, Clock, FileText, Zap
@@ -60,11 +60,11 @@ export default function ProjectActivityFeed({ projectId, progressUpdates = [], c
   if (activities.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-          <Clock className="w-8 h-8 text-slate-300" />
+        <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+          <Clock className="w-8 h-8 text-slate-300 dark:text-slate-600" />
         </div>
-        <p className="text-slate-500 font-medium">No activity yet</p>
-        <p className="text-sm text-slate-400">Activity will appear here as you work on this project</p>
+        <p className="text-slate-500 dark:text-slate-400 font-medium">No activity yet</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500">Activity will appear here as you work on this project</p>
       </div>
     );
   }
@@ -87,7 +87,7 @@ export default function ProjectActivityFeed({ projectId, progressUpdates = [], c
   return (
     <div className="relative">
       {/* Timeline line */}
-      <div className="absolute left-5 top-0 bottom-0 w-px bg-gradient-to-b from-indigo-200 via-slate-200 to-transparent" />
+      <div className="absolute left-5 top-0 bottom-0 w-px bg-gradient-to-b from-indigo-200 dark:from-indigo-800 via-slate-200 dark:via-slate-700 to-transparent" />
       
       <div className="space-y-1">
         <AnimatePresence>
@@ -123,21 +123,23 @@ export default function ProjectActivityFeed({ projectId, progressUpdates = [], c
 
                 {/* Content */}
                 <div className="flex-1 min-w-0 pt-1">
-                  <p className="text-sm text-slate-700 leading-relaxed">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                     {activity.actor_name && (
-                      <span className="font-semibold text-slate-900">{activity.actor_name} </span>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">{activity.actor_name} </span>
                     )}
                     {activity.description}
                   </p>
-                  {/* Show note for progress updates */}
                   {activity.note && (
-                    <div className="mt-1 p-2 bg-slate-50 rounded-lg border border-slate-100">
-                      <p className="text-xs text-slate-600 italic">"{activity.note}"</p>
+                    <div className="mt-1 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700/50">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 italic">"{activity.note}"</p>
                     </div>
                   )}
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs text-slate-400 font-medium">
+                    <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
                       {formatDistanceToNow(new Date(activity.created_date), { addSuffix: true })}
+                    </span>
+                    <span className="text-[10px] text-slate-300 dark:text-slate-600">
+                      {format(new Date(activity.created_date), 'MMM d, yyyy · h:mm a')}
                     </span>
                   </div>
                 </div>

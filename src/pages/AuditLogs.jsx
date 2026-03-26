@@ -159,10 +159,10 @@ export default function AuditLogs() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }} 
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
@@ -170,7 +170,7 @@ export default function AuditLogs() {
             <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
               <Shield className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Audit Logs</h1>
+            <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] tracking-tight">Audit Logs</h1>
           </div>
           <p className="text-slate-500">Track all user actions and system changes</p>
         </motion.div>
@@ -254,7 +254,7 @@ export default function AuditLogs() {
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-slate-900">{count}</p>
+                    <p className="text-lg sm:text-2xl font-bold text-slate-900">{count}</p>
                     <p className="text-xs text-slate-500">{config.label}</p>
                   </div>
                 </div>

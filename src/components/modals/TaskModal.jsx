@@ -133,7 +133,7 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
         <DialogHeader>
           <DialogTitle>{task ? 'Edit Task' : 'New Task'}</DialogTitle>
         </DialogHeader>
@@ -248,7 +248,7 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <Label>Assign To</Label>
                   <Select value={formData.assigned_to || 'unassigned'} onValueChange={handleAssigneeChange}>
@@ -279,7 +279,7 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <Label>Status</Label>
                   <Select value={formData.status} onValueChange={(v) => setFormData(prev => ({ ...prev, status: v }))}>

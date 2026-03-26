@@ -114,7 +114,7 @@ export default function Workflows() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -125,7 +125,7 @@ export default function Workflows() {
               <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
                 <Zap className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Workflows</h1>
+              <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] tracking-tight">Workflows</h1>
             </div>
             <p className="text-slate-500">Automate actions based on triggers</p>
           </div>
@@ -246,8 +246,8 @@ export default function Workflows() {
           </TabsContent>
 
           <TabsContent value="suggestions">
-            <div className="bg-white rounded-2xl border p-6">
-              <AIWorkflowSuggestions 
+            <div className="bg-white rounded-2xl border p-3 sm:p-6">
+              <AIWorkflowSuggestions
                 existingWorkflows={workflows}
                 onCreateWorkflow={async (workflow) => {
                   await api.entities.Workflow.create(workflow);
@@ -440,7 +440,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
             <div className="space-y-4">
               <h3 className="font-semibold text-slate-900">Select Trigger</h3>
               <p className="text-sm text-slate-500">Choose what event starts this workflow</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Object.entries(triggerTypes).map(([key, config]) => {
                   const Icon = config.icon;
                   return (

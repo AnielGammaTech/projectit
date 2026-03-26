@@ -155,14 +155,14 @@ export default function ActivityFeed() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-4 sm:mb-8"
         >
-          <h1 className="text-2xl font-bold text-slate-900 mb-4">Latest Activity</h1>
+          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 mb-4">Latest Activity</h1>
           
           {/* Filter Tabs */}
           <div className="flex justify-center gap-2 mb-4">
@@ -269,7 +269,7 @@ export default function ActivityFeed() {
             <p className="text-slate-500">Activity will appear here as you work on projects</p>
           </motion.div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-4 sm:space-y-8">
             {Object.entries(groupedActivities).map(([date, dayActivities]) => {
               const dateObj = new Date(date);
               const isActivityToday = isToday(dateObj);

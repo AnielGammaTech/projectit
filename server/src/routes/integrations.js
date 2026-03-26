@@ -4,11 +4,12 @@ import emailService from '../services/emailService.js';
 import smsService from '../services/smsService.js';
 import fileService, { upload } from '../services/fileService.js';
 import pool from '../config/database.js';
+import { costlyApiLimiter, uploadLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
 
 // POST /api/integrations/invoke-llm
-router.post('/invoke-llm', async (req, res, next) => {
+router.post('/invoke-llm', costlyApiLimiter, async (req, res, next) => {
   try {
     const { prompt, response_json_schema, file_urls, feature } = req.body;
     if (!prompt) {
@@ -22,7 +23,7 @@ router.post('/invoke-llm', async (req, res, next) => {
 });
 
 // POST /api/integrations/upload-file (multipart/form-data)
-router.post('/upload-file', upload.single('file'), async (req, res, next) => {
+router.post('/upload-file', uploadLimiter, upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -35,7 +36,7 @@ router.post('/upload-file', upload.single('file'), async (req, res, next) => {
 });
 
 // POST /api/integrations/send-email
-router.post('/send-email', async (req, res, next) => {
+router.post('/send-email', costlyApiLimiter, async (req, res, next) => {
   try {
     const { to, subject, body, from_name, from_email } = req.body;
     if (!to || !subject) {
@@ -49,7 +50,7 @@ router.post('/send-email', async (req, res, next) => {
 });
 
 // POST /api/integrations/send-sms
-router.post('/send-sms', async (req, res, next) => {
+router.post('/send-sms', costlyApiLimiter, async (req, res, next) => {
   try {
     const { to, body } = req.body;
     if (!to || !body) {
@@ -64,7 +65,7 @@ router.post('/send-sms', async (req, res, next) => {
 
 // POST /api/integrations/extract-data
 // Extracts structured data from an uploaded file using LLM
-router.post('/extract-data', async (req, res, next) => {
+router.post('/extract-data', costlyApiLimiter, async (req, res, next) => {
   try {
     const { file_url, json_schema } = req.body;
     if (!file_url) {
@@ -283,6 +284,44 @@ router.get('/data-health', async (req, res, next) => {
     }
 
     res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/integrations/data-health/fix
+// Deletes orphaned records identified by the health check (admin-only)
+router.post('/data-health/fix', async (req, res, next) => {
+  try {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { entity, orphaned_ids } = req.body;
+    if (!entity || !Array.isArray(orphaned_ids) || orphaned_ids.length === 0) {
+      return res.status(400).json({ error: 'entity and orphaned_ids are required' });
+    }
+
+    // Validate entity name to prevent SQL injection (only allow known entity tables)
+    const allowedEntities = [
+      'Task', 'Part', 'ProjectNote', 'ProjectFile', 'FileFolder', 'TaskGroup',
+      'TimeEntry', 'ProgressUpdate', 'ProjectActivity', 'Proposal', 'TaskComment',
+      'Site', 'CommunicationLog', 'WorkflowLog', 'FileComment', 'ChangeOrder',
+    ];
+    if (!allowedEntities.includes(entity)) {
+      return res.status(400).json({ error: `Entity "${entity}" is not allowed for cleanup` });
+    }
+
+    // Delete orphaned records by IDs
+    const placeholders = orphaned_ids.map((_, i) => `$${i + 1}::uuid`).join(', ');
+    const { rowCount } = await pool.query(
+      `DELETE FROM "${entity}" WHERE id IN (${placeholders})`,
+      orphaned_ids
+    );
+
+    console.log(`[Health Fix] Deleted ${rowCount} orphaned ${entity} record(s) by ${req.user.email}`);
+
+    res.json({ success: true, deleted: rowCount, entity });
   } catch (err) {
     next(err);
   }

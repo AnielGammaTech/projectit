@@ -32,326 +32,305 @@ const priorityColors = {
   high: 'bg-red-100 text-red-700'
 };
 
-// Task row component with its own state for date picker
-function TaskRow({ task, teamMembers, currentUser, statusConfig, priorityColors, getDueDateLabel, groupName, onComplete, onAssign, onUnassign, onDueDateChange, onNavigate }) {
+// Monday.com-style task row for the flat table view
+function TaskTableRow({ task, teamMembers, currentUser, statusConfig, priorityColors, getDueDateLabel, projectName, projectNumber, onComplete, onAssign, onUnassign, onDueDateChange, onNavigate }) {
   const [dateOpen, setDateOpen] = useState(false);
   const status = statusConfig[task.status] || statusConfig.todo;
+  const StatusIcon = status.icon;
   const dueInfo = task.due_date ? getDueDateLabel(task.due_date) : null;
 
   return (
     <div
       onClick={() => onNavigate(task)}
-      className="bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-100 dark:border-slate-700/50 p-3 hover:shadow-md hover:border-slate-200 dark:hover:border-slate-600 transition-all cursor-pointer group"
+      className="group flex items-center gap-2 px-3 py-3.5 sm:py-2.5 border-b border-slate-100 dark:border-slate-700/30 hover:bg-blue-50/50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer active:bg-blue-50/50"
     >
-      <div className="flex items-start gap-2">
-        {/* Checkmark */}
-        <button
-          onClick={(e) => onComplete(e, task.id)}
-          className={cn(
-            "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all active:scale-90 mt-0.5",
-            task.status === 'completed'
-              ? "bg-emerald-500 border-emerald-500 text-white"
-              : "border-slate-300 hover:border-[#0069AF] hover:bg-[#0069AF]/5"
-          )}
-          title="Mark as completed"
-        >
-          {task.status === 'completed' ? (
-            <CheckCircle2 className="w-3 h-3" />
-          ) : (
-            <CheckCircle2 className="w-3 h-3 opacity-0 group-hover:opacity-30" />
-          )}
-        </button>
+      {/* Complete checkbox */}
+      <button
+        onClick={(e) => onComplete(e, task.id)}
+        className={cn(
+          "w-6 h-6 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all active:scale-90",
+          task.status === 'completed'
+            ? "bg-emerald-500 border-emerald-500 text-white"
+            : "border-slate-300 hover:border-emerald-500 hover:bg-emerald-50"
+        )}
+        title="Mark as completed"
+      >
+        {task.status === 'completed' ? (
+          <CheckCircle2 className="w-3 h-3" />
+        ) : (
+          <CheckCircle2 className="w-3 h-3 opacity-0 group-hover:opacity-40" />
+        )}
+      </button>
 
+      {/* Task title + project name */}
+      <div className="flex-1 min-w-0 flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{task.title}</h4>
-          {groupName && (
-            <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mt-0.5 inline-block">{groupName}</span>
-          )}
+          <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate block">{task.title}</span>
         </div>
       </div>
 
-      {/* Bottom row: priority + assignee + date */}
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
-        <div className="flex items-center gap-1.5">
-          {task.priority && (
-            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", priorityColors[task.priority])}>
-              {task.priority}
-            </Badge>
-          )}
-        </div>
+      {/* Project badge */}
+      <div className="hidden sm:flex items-center gap-1.5 shrink-0 max-w-[200px]">
+        <FolderKanban className="w-3 h-3 text-slate-400 shrink-0" />
+        <span className="text-xs text-slate-500 truncate">{projectName}</span>
+        {projectNumber && <span className="px-1 py-0 bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded text-[9px] font-mono shrink-0">#{projectNumber}</span>}
+      </div>
 
-        <div className="flex items-center gap-1.5">
-          {/* Inline assignee dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              {task.assigned_name ? (
-                <button
-                  onClick={(e) => e.stopPropagation()}
-                  className="hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 rounded-full shrink-0"
-                  title={task.assigned_name}
-                >
-                  <UserAvatar
-                    email={task.assigned_to}
-                    name={task.assigned_name}
-                    avatarUrl={teamMembers.find(m => m.email === task.assigned_to)?.avatar_url}
-                    size="sm"
-                  />
-                </button>
-              ) : (
-                <button
-                  onClick={(e) => e.stopPropagation()}
-                  className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 hover:border-[#0069AF]"
-                  title="Assign"
-                >
-                  <UserPlus className="w-3 h-3 text-slate-400" />
-                </button>
-              )}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-              {task.assigned_to && (
-                <DropdownMenuItem onClick={() => onUnassign(task)}>
-                  <User className="w-4 h-4 mr-2" />
-                  Unassign
-                </DropdownMenuItem>
-              )}
-              {teamMembers.map((member) => (
-                <DropdownMenuItem key={member.id} onClick={() => onAssign(task, member.email)}>
-                  <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="xs" className="mr-2" />
-                  {member.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+      {/* Status badge */}
+      <div className="hidden md:block shrink-0 w-24">
+        <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full", status.bg, status.color)}>
+          <StatusIcon className="w-3 h-3" />
+          {status.label}
+        </span>
+      </div>
 
-          {/* Inline due date picker */}
-          <Popover open={dateOpen} onOpenChange={setDateOpen}>
-            <PopoverTrigger asChild>
-              {dueInfo ? (
-                <Badge
-                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                  variant="outline"
-                  className={cn("text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80", dueInfo.color)}
-                >
-                  {dueInfo.label}
-                </Badge>
-              ) : (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                  className="p-0.5 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                  title="Set due date"
-                >
-                  <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
-                </button>
-              )}
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
-              <Calendar
-                mode="single"
-                selected={task.due_date ? (() => {
-                  const dateStr = task.due_date.split('T')[0];
-                  const [year, month, day] = dateStr.split('-').map(Number);
-                  return new Date(year, month - 1, day);
-                })() : undefined}
-                onSelect={(date) => { onDueDateChange(task, date); setDateOpen(false); }}
-              />
-              {task.due_date && (
-                <div className="p-2 border-t">
-                  <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => { onDueDateChange(task, null); setDateOpen(false); }}>
-                    Clear date
-                  </Button>
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
-        </div>
+      {/* Priority */}
+      <div className="hidden lg:block shrink-0 w-16">
+        {task.priority && (
+          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-5", priorityColors[task.priority])}>
+            {task.priority}
+          </Badge>
+        )}
+      </div>
+
+      {/* Assignee */}
+      <div className="shrink-0 w-8">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {task.assigned_name ? (
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="hover:ring-2 hover:ring-offset-1 hover:ring-blue-300 rounded-full"
+                title={task.assigned_name}
+              >
+                <UserAvatar
+                  email={task.assigned_to}
+                  name={task.assigned_name}
+                  avatarUrl={teamMembers.find(m => m.email === task.assigned_to)?.avatar_url}
+                  size="sm"
+                />
+              </button>
+            ) : (
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-blue-400"
+                title="Assign"
+              >
+                <UserPlus className="w-3 h-3 text-slate-400" />
+              </button>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+            {task.assigned_to && (
+              <DropdownMenuItem onClick={() => onUnassign(task)}>
+                <User className="w-4 h-4 mr-2" />
+                Unassign
+              </DropdownMenuItem>
+            )}
+            {teamMembers.map((member) => (
+              <DropdownMenuItem key={member.id} onClick={() => onAssign(task, member.email)}>
+                <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="xs" className="mr-2" />
+                {member.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Due date */}
+      <div className="shrink-0 w-20 text-right">
+        <Popover open={dateOpen} onOpenChange={setDateOpen}>
+          <PopoverTrigger asChild>
+            {dueInfo ? (
+              <Badge
+                onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                variant="outline"
+                className={cn("text-[10px] px-1.5 py-0.5 h-5 cursor-pointer hover:opacity-80", dueInfo.color)}
+              >
+                {dueInfo.label}
+              </Badge>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Set due date"
+              >
+                <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            )}
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
+            <Calendar
+              mode="single"
+              selected={task.due_date ? (() => {
+                const dateStr = task.due_date.split('T')[0];
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return new Date(year, month - 1, day);
+              })() : undefined}
+              onSelect={(date) => { onDueDateChange(task, date); setDateOpen(false); }}
+            />
+            {task.due_date && (
+              <div className="p-2 border-t">
+                <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => { onDueDateChange(task, null); setDateOpen(false); }}>
+                  Clear date
+                </Button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );
 }
 
-// Part row component with its own state for date picker
-function PartRow({ part, teamMembers, getDueDateLabel, onAssign, onUnassign, onDueDateChange, onStatusChange, onETAChange, onNavigate }) {
-  const [dateOpen, setDateOpen] = useState(false);
+// Monday.com-style part row for the flat table view
+function PartTableRow({ part, teamMembers, projectName, projectNumber, getDueDateLabel, onAssign, onUnassign, onDueDateChange, onStatusChange, onETAChange, onNavigate }) {
   const [etaOpen, setEtaOpen] = useState(false);
-  const dueInfo = part.due_date && parseLocalDate(part.due_date) ? getDueDateLabel(part.due_date) : null;
   const deliveryInfo = part.est_delivery_date && parseLocalDate(part.est_delivery_date) ? getDueDateLabel(part.est_delivery_date) : null;
-  const statusColors = {
-    needed: 'bg-red-100 text-red-700',
-    ordered: 'bg-blue-100 text-blue-700',
-    received: 'bg-amber-100 text-amber-700',
-    installed: 'bg-emerald-100 text-emerald-700',
+  const partStatusConfig = {
+    needed: { label: 'Needed', color: 'text-red-700', bg: 'bg-red-100' },
+    ordered: { label: 'Ordered', color: 'text-blue-700', bg: 'bg-blue-100' },
+    received: { label: 'Received', color: 'text-amber-700', bg: 'bg-amber-100' },
+    installed: { label: 'Installed', color: 'text-emerald-700', bg: 'bg-emerald-100' },
   };
+  const st = partStatusConfig[part.status] || partStatusConfig.needed;
 
   return (
     <div
       onClick={() => onNavigate(part)}
-      className="bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-100 dark:border-slate-700/50 p-3 hover:shadow-md hover:border-slate-200 dark:hover:border-slate-600 transition-all cursor-pointer group"
+      className="group flex items-center gap-2 px-3 py-2.5 border-b border-slate-100 dark:border-slate-700/30 hover:bg-amber-50/50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer"
     >
-      <div className="flex items-start gap-2">
-        <Package className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+      {/* Part icon */}
+      <Package className="w-4 h-4 text-amber-500 shrink-0" />
+
+      {/* Part name + number */}
+      <div className="flex-1 min-w-0 flex items-center gap-2">
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{part.name}</h4>
-          {part.part_number && (
-            <span className="text-[10px] text-slate-400 font-mono">#{part.part_number}</span>
-          )}
+          <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate block">{part.name}</span>
         </div>
+        {part.part_number && (
+          <span className="hidden sm:inline text-[10px] text-slate-400 font-mono shrink-0">#{part.part_number}</span>
+        )}
       </div>
 
-      {/* Bottom row: status + assignee + dates */}
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
-        <div className="flex items-center gap-1.5">
-          {/* Inline status dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Badge
+      {/* Project badge */}
+      <div className="hidden sm:flex items-center gap-1.5 shrink-0 max-w-[180px]">
+        <FolderKanban className="w-3 h-3 text-slate-400 shrink-0" />
+        <span className="text-xs text-slate-500 truncate">{projectName}</span>
+        {projectNumber && <span className="px-1 py-0 bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded text-[9px] font-mono shrink-0">#{projectNumber}</span>}
+      </div>
+
+      {/* Status dropdown */}
+      <div className="shrink-0 w-20">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <span
+              onClick={(e) => e.stopPropagation()}
+              className={cn("inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full cursor-pointer hover:opacity-80", st.bg, st.color)}
+            >
+              {st.label}
+            </span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+            {Object.entries(partStatusConfig).map(([key, cfg]) => (
+              <DropdownMenuItem key={key} onClick={() => onStatusChange?.(part, key)}>
+                <span className={cn("inline-flex items-center text-[10px] font-medium px-1.5 py-0 rounded-full mr-2", cfg.bg, cfg.color)}>
+                  {cfg.label}
+                </span>
+                {cfg.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Assignee */}
+      <div className="shrink-0 w-8">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {part.assigned_name ? (
+              <button
                 onClick={(e) => e.stopPropagation()}
-                variant="outline"
-                className={cn("text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80", statusColors[part.status] || 'bg-slate-100 text-slate-600')}
+                className="hover:ring-2 hover:ring-offset-1 hover:ring-blue-300 rounded-full"
+                title={part.assigned_name}
               >
-                {part.status?.replace('_', ' ')}
+                <UserAvatar
+                  email={part.assigned_to}
+                  name={part.assigned_name}
+                  avatarUrl={teamMembers.find(m => m.email === part.assigned_to)?.avatar_url}
+                  size="sm"
+                />
+              </button>
+            ) : (
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-blue-400"
+                title="Assign"
+              >
+                <UserPlus className="w-3 h-3 text-slate-400" />
+              </button>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+            {part.assigned_to && (
+              <DropdownMenuItem onClick={() => onUnassign(part)}>
+                <User className="w-4 h-4 mr-2" />
+                Unassign
+              </DropdownMenuItem>
+            )}
+            {teamMembers.map((member) => (
+              <DropdownMenuItem key={member.id} onClick={() => onAssign(part, member.email)}>
+                <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="xs" className="mr-2" />
+                {member.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* ETA date */}
+      <div className="shrink-0 w-24 text-right">
+        <Popover open={etaOpen} onOpenChange={setEtaOpen}>
+          <PopoverTrigger asChild>
+            {deliveryInfo ? (
+              <Badge
+                onClick={(e) => { e.stopPropagation(); setEtaOpen(true); }}
+                variant="outline"
+                className={cn("text-[10px] px-1.5 py-0.5 h-5 cursor-pointer hover:opacity-80 bg-cyan-50 text-cyan-700 border-cyan-200")}
+              >
+                ETA: {deliveryInfo.label}
               </Badge>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-              {Object.entries(statusColors).map(([key, color]) => (
-                <DropdownMenuItem key={key} onClick={() => onStatusChange?.(part, key)}>
-                  <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 mr-2", color)}>
-                    {key.replace('_', ' ')}
-                  </Badge>
-                  {key.replace('_', ' ')}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          {/* Inline assignee dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              {part.assigned_name ? (
-                <button
-                  onClick={(e) => e.stopPropagation()}
-                  className="hover:ring-2 hover:ring-offset-1 hover:ring-indigo-300 rounded-full shrink-0"
-                  title={part.assigned_name}
-                >
-                  <UserAvatar
-                    email={part.assigned_to}
-                    name={part.assigned_name}
-                    avatarUrl={teamMembers.find(m => m.email === part.assigned_to)?.avatar_url}
-                    size="sm"
-                  />
-                </button>
-              ) : (
-                <button
-                  onClick={(e) => e.stopPropagation()}
-                  className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 hover:border-[#0069AF]"
-                  title="Assign"
-                >
-                  <UserPlus className="w-3 h-3 text-slate-400" />
-                </button>
-              )}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-              {part.assigned_to && (
-                <DropdownMenuItem onClick={() => onUnassign(part)}>
-                  <User className="w-4 h-4 mr-2" />
-                  Unassign
-                </DropdownMenuItem>
-              )}
-              {teamMembers.map((member) => (
-                <DropdownMenuItem key={member.id} onClick={() => onAssign(part, member.email)}>
-                  <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="xs" className="mr-2" />
-                  {member.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* ETA date picker */}
-          <Popover open={etaOpen} onOpenChange={setEtaOpen}>
-            <PopoverTrigger asChild>
-              {deliveryInfo ? (
-                <Badge
-                  onClick={(e) => { e.stopPropagation(); setEtaOpen(true); }}
-                  variant="outline"
-                  className="text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80 bg-cyan-50 text-cyan-700 border-cyan-200"
-                >
-                  ETA: {deliveryInfo.label}
-                </Badge>
-              ) : (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setEtaOpen(true); }}
-                  className="text-[10px] text-slate-400 hover:text-[#0069AF] opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Set ETA"
-                >
-                  <Truck className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
-              <Calendar
-                mode="single"
-                selected={part.est_delivery_date ? (() => {
-                  const dateStr = part.est_delivery_date.split('T')[0];
-                  const [year, month, day] = dateStr.split('-').map(Number);
-                  return new Date(year, month - 1, day);
-                })() : undefined}
-                onSelect={(date) => { onETAChange?.(part, date); setEtaOpen(false); }}
-              />
-              {part.est_delivery_date && (
-                <div className="p-2 border-t">
-                  <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => { onETAChange?.(part, null); setEtaOpen(false); }}>
-                    Clear ETA
-                  </Button>
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
-
-          {/* Due date picker */}
-          <Popover open={dateOpen} onOpenChange={setDateOpen}>
-            <PopoverTrigger asChild>
-              {dueInfo ? (
-                <Badge
-                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                  variant="outline"
-                  className={cn("text-[10px] px-1.5 py-0 h-4 cursor-pointer hover:opacity-80", dueInfo.color)}
-                >
-                  {dueInfo.label}
-                </Badge>
-              ) : (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                  className="p-0.5 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                  title="Set due date"
-                >
-                  <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
-                </button>
-              )}
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
-              <Calendar
-                mode="single"
-                selected={part.due_date ? (() => {
-                  const dateStr = part.due_date.split('T')[0];
-                  const [year, month, day] = dateStr.split('-').map(Number);
-                  return new Date(year, month - 1, day);
-                })() : undefined}
-                onSelect={(date) => { onDueDateChange(part, date); setDateOpen(false); }}
-              />
-              {part.due_date && (
-                <div className="p-2 border-t">
-                  <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => { onDueDateChange(part, null); setDateOpen(false); }}>
-                    Clear date
-                  </Button>
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
-        </div>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); setEtaOpen(true); }}
+                className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Set ETA"
+              >
+                <Truck className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            )}
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
+            <Calendar
+              mode="single"
+              selected={part.est_delivery_date ? (() => {
+                const dateStr = part.est_delivery_date.split('T')[0];
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return new Date(year, month - 1, day);
+              })() : undefined}
+              onSelect={(date) => { onETAChange?.(part, date); setEtaOpen(false); }}
+            />
+            {part.est_delivery_date && (
+              <div className="p-2 border-t">
+                <Button variant="ghost" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => { onETAChange?.(part, null); setEtaOpen(false); }}>
+                  Clear ETA
+                </Button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );
@@ -367,7 +346,7 @@ export default function AllTasks() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('all'); // 'all', 'mine', 'mine_due'
+  const [viewMode, setViewMode] = useState('all'); // 'all', 'mine', 'my_overdue', 'mine_due'
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
@@ -448,8 +427,25 @@ export default function AllTasks() {
     let matchesViewMode = true;
     if (viewMode === 'mine') {
       matchesViewMode = task.assigned_to === currentUser?.email;
+    } else if (viewMode === 'my_overdue') {
+      if (!task.due_date || task.assigned_to !== currentUser?.email) {
+        matchesViewMode = false;
+      } else {
+        const dueDate = parseLocalDate(task.due_date);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        matchesViewMode = dueDate <= today;
+      }
     } else if (viewMode === 'mine_due') {
-      matchesViewMode = task.assigned_to === currentUser?.email && task.due_date;
+      // Show only overdue tasks and tasks due today
+      if (!task.due_date) {
+        matchesViewMode = false;
+      } else {
+        const dueDate = parseLocalDate(task.due_date);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        matchesViewMode = dueDate <= today;
+      }
     }
 
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesViewMode;
@@ -490,7 +486,20 @@ export default function AllTasks() {
   // Only count tasks from active projects
   const activeTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
   const myTasksCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.status !== 'completed').length;
-  const myTasksWithDueCount = activeTasks.filter(t => t.assigned_to === currentUser?.email && t.due_date && t.status !== 'completed').length;
+  const myOverdueCount = activeTasks.filter(t => {
+    if (!t.due_date || t.status === 'completed' || t.assigned_to !== currentUser?.email) return false;
+    const dueDate = parseLocalDate(t.due_date);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return dueDate <= today;
+  }).length;
+  const myTasksWithDueCount = activeTasks.filter(t => {
+    if (!t.due_date || t.status === 'completed') return false;
+    const dueDate = parseLocalDate(t.due_date);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return dueDate <= today;
+  }).length;
 
   const handleQuickComplete = async (e, taskId) => {
     e.stopPropagation();
@@ -591,7 +600,7 @@ export default function AllTasks() {
   if (loadingTasks) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="animate-pulse space-y-6">
             <div>
               <div className="h-8 w-48 bg-slate-200 rounded-lg" />
@@ -632,83 +641,91 @@ export default function AllTasks() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tasks & Parts</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">View and filter all tasks and parts across projects</p>
-
+        <div className="flex items-center justify-between mb-4 sm:mb-8">
+          <div>
+            <h1 className="text-lg sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tasks & Parts</h1>
+            <p className="hidden sm:block text-slate-500 dark:text-slate-400 mt-1">View and filter all tasks and parts across projects</p>
+          </div>
           {/* Main Tabs */}
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-1.5 sm:gap-2">
             <button
               onClick={() => setActiveTab('tasks')}
               className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                activeTab === 'tasks' ? "bg-[#0069AF] text-white" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2",
+                activeTab === 'tasks' ? "bg-[#0069AF] text-white" : "bg-white dark:bg-[#1e2a3a] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
               )}
             >
-              <ListTodo className="w-4 h-4" />
+              <ListTodo className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Tasks
             </button>
             <button
               onClick={() => setActiveTab('parts')}
               className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                activeTab === 'parts' ? "bg-[#0F2F44] text-white" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2",
+                activeTab === 'parts' ? "bg-[#0F2F44] text-white" : "bg-white dark:bg-[#1e2a3a] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
               )}
             >
-              <Package className="w-4 h-4" />
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Parts
-              <span className={cn("text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-[#133F5C]" : "bg-[#0069AF]/10 text-[#0069AF]")}>{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
+              <span className={cn("text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-[#133F5C]" : "bg-[#0069AF]/10 text-[#0069AF]")}>{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
             </button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Unified Toolbar - Tasks */}
         {activeTab === 'tasks' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6"
+            className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-3 sm:p-4 mb-4 sm:mb-6"
           >
             {/* View Mode Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg w-fit mb-4">
+            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-xl w-full sm:w-fit mb-3 sm:mb-4 overflow-x-auto">
               <button
                 onClick={() => setViewMode('all')}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  "px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
                   viewMode === 'all'
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
-                All Tasks ({activeTasks.filter(t => t.status !== 'completed').length})
+                All ({activeTasks.filter(t => t.status !== 'completed').length})
               </button>
               <button
                 onClick={() => setViewMode('mine')}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  "px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
                   viewMode === 'mine'
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
-                My Tasks ({myTasksCount})
+                Mine ({myTasksCount})
+              </button>
+              <button
+                onClick={() => setViewMode('my_overdue')}
+                className={cn(
+                  "px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
+                  viewMode === 'my_overdue'
+                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                )}
+              >
+                Overdue ({myOverdueCount})
               </button>
               <button
                 onClick={() => setViewMode('mine_due')}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  "hidden sm:block px-3 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
                   viewMode === 'mine_due'
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
-                Due Soon ({myTasksWithDueCount})
+                Due ({myTasksWithDueCount})
               </button>
             </div>
 
@@ -753,9 +770,9 @@ export default function AllTasks() {
                 })}
               </div>
 
-              <div className="flex items-center gap-2 sm:ml-auto">
+              <div className="hidden sm:flex items-center gap-2 sm:ml-auto">
                 <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                  <SelectTrigger className="flex-1 sm:w-32 h-10 sm:h-9">
+                  <SelectTrigger className="w-32 h-9">
                     <SelectValue placeholder="Priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -767,7 +784,7 @@ export default function AllTasks() {
                 </Select>
 
                 <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-                  <SelectTrigger className="flex-1 sm:w-36 h-10 sm:h-9">
+                  <SelectTrigger className="w-36 h-9">
                     <SelectValue placeholder="Assignee" />
                   </SelectTrigger>
                   <SelectContent>
@@ -782,94 +799,81 @@ export default function AllTasks() {
           </motion.div>
         )}
 
-        {/* Tasks List — grouped by project */}
+        {/* Tasks List — flat table view (Monday.com style) */}
         {activeTab === 'tasks' && (
           <div className="space-y-3">
             {filteredTasks.length > 0 ? (
-              (() => {
-                // Group tasks by project
-                const grouped = {};
-                filteredTasks.forEach(task => {
-                  const pid = task.project_id;
-                  if (!grouped[pid]) grouped[pid] = [];
-                  grouped[pid].push(task);
-                });
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
+              >
+                {/* Table header — hidden on mobile */}
+                <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-200 dark:border-slate-700/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <div className="w-5 shrink-0" />
+                  <div className="flex-1">Task</div>
+                  <div className="w-[200px] shrink-0">Project</div>
+                  <div className="hidden md:block w-24 shrink-0">Status</div>
+                  <div className="hidden lg:block w-16 shrink-0">Priority</div>
+                  <div className="w-8 shrink-0">Owner</div>
+                  <div className="w-20 shrink-0 text-right">Due</div>
+                </div>
 
-                const entries = Object.entries(grouped);
+                {/* Task rows grouped by project with collapsible headers */}
+                {(() => {
+                  const grouped = {};
+                  filteredTasks.forEach(task => {
+                    const pid = task.project_id;
+                    if (!grouped[pid]) grouped[pid] = [];
+                    grouped[pid].push(task);
+                  });
 
-                return (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                    {entries.map(([projectId, projectTasks]) => {
-                      const isExpanded = expandedGroups[projectId];
-                      const visibleTasks = isExpanded ? projectTasks : projectTasks.slice(0, TASKS_PER_GROUP);
-                      const hiddenCount = projectTasks.length - TASKS_PER_GROUP;
+                  return Object.entries(grouped).map(([projectId, projectTasks]) => {
+                    // Default collapsed on mobile — only expand when explicitly toggled
+                    const isCollapsed = expandedGroups[projectId] !== true;
 
-                      return (
-                        <motion.div
-                          key={projectId}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
+                    return (
+                      <div key={projectId}>
+                        {/* Project group header */}
+                        <div
+                          className="flex items-center gap-2 px-3 py-3 sm:py-1.5 bg-slate-50/50 dark:bg-[#1a2535] border-b border-slate-100 dark:border-slate-700/30 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors active:bg-slate-100"
+                          onClick={() => setExpandedGroups(prev => ({ ...prev, [projectId]: prev[projectId] === true ? false : true }))}
                         >
-                          {/* Project header */}
-                          <Link
-                            to={createPageUrl('ProjectDetail') + `?id=${projectId}`}
-                            className="flex items-center justify-between px-3 py-1.5 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <FolderKanban className="w-3.5 h-3.5 text-[#0069AF] dark:text-blue-400 shrink-0" />
-                              <span className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{getProjectName(projectId)}</span>
-                              {getProjectNumber(projectId) && <span className="px-1.5 py-0.5 bg-slate-800 text-white rounded text-[10px] font-mono font-semibold shrink-0">#{getProjectNumber(projectId)}</span>}
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">{projectTasks.length}</Badge>
-                            </div>
-                          </Link>
+                          <ChevronRight className={cn("w-4 h-4 sm:w-3.5 sm:h-3.5 text-slate-400 transition-transform shrink-0", !isCollapsed && "rotate-90")} />
+                          <FolderKanban className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-[#0069AF] shrink-0" />
+                          <span className="font-semibold text-sm sm:text-xs text-slate-700 dark:text-slate-200 truncate flex-1 min-w-0">
+                            {getProjectName(projectId)}
+                          </span>
+                          {getProjectNumber(projectId) && (
+                            <span className="px-1.5 py-0.5 bg-slate-700 text-white rounded text-[9px] font-mono shrink-0">#{getProjectNumber(projectId)}</span>
+                          )}
+                          <span className="text-[11px] sm:text-[10px] text-slate-400 shrink-0">{projectTasks.length}</span>
+                        </div>
 
-                          {/* Task cards stacked inside project card */}
-                          <div className="p-2 space-y-1.5">
-                            {visibleTasks.map((task) => (
-                              <TaskRow
-                                key={task.id}
-                                task={task}
-                                teamMembers={teamMembers}
-                                currentUser={currentUser}
-                                statusConfig={statusConfig}
-                                priorityColors={priorityColors}
-                                getDueDateLabel={getDueDateLabel}
-                                groupName={getGroupName(task.group_id)}
-                                onComplete={handleQuickComplete}
-                                onAssign={handleTaskAssign}
-                                onUnassign={handleTaskUnassign}
-                                onDueDateChange={handleTaskDueDateChange}
-                                onNavigate={(t) => navigate(createPageUrl('ProjectTasks') + `?id=${t.project_id}`)}
-                              />
-                            ))}
-
-                            {/* Show more / Show less button */}
-                            {hiddenCount > 0 && (
-                              <button
-                                onClick={() => setExpandedGroups(prev => ({ ...prev, [projectId]: !prev[projectId] }))}
-                                className="w-full py-1.5 text-xs font-medium text-[#0069AF] hover:text-[#005a99] hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded-md transition-colors flex items-center justify-center gap-1"
-                              >
-                                {isExpanded ? (
-                                  <>
-                                    <ChevronDown className="w-3.5 h-3.5 rotate-180" />
-                                    Show less
-                                  </>
-                                ) : (
-                                  <>
-                                    <ChevronDown className="w-3.5 h-3.5" />
-                                    Show {hiddenCount} more task{hiddenCount !== 1 ? 's' : ''}
-                                  </>
-                                )}
-                              </button>
-                            )}
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                );
-              })()
+                        {/* Tasks in this project */}
+                        {!isCollapsed && projectTasks.map((task) => (
+                          <TaskTableRow
+                            key={task.id}
+                            task={task}
+                            teamMembers={teamMembers}
+                            currentUser={currentUser}
+                            statusConfig={statusConfig}
+                            priorityColors={priorityColors}
+                            getDueDateLabel={getDueDateLabel}
+                            projectName={getProjectName(task.project_id)}
+                            projectNumber={getProjectNumber(task.project_id)}
+                            onComplete={handleQuickComplete}
+                            onAssign={handleTaskAssign}
+                            onUnassign={handleTaskUnassign}
+                            onDueDateChange={handleTaskDueDateChange}
+                            onNavigate={(t) => navigate(createPageUrl('ProjectTasks') + `?id=${t.project_id}`)}
+                          />
+                        ))}
+                      </div>
+                    );
+                  });
+                })()}
+              </motion.div>
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -904,21 +908,31 @@ export default function AllTasks() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="bg-white rounded-xl border border-slate-100 overflow-hidden"
+                      className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
                     >
-                      <div className="divide-y divide-slate-50">
-                        {completedTasks.map((task) => (
-                          <div
-                            key={task.id}
-                            onClick={() => navigate(createPageUrl('ProjectTasks') + `?id=${task.project_id}`)}
-                            className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 transition-colors cursor-pointer"
-                          >
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                            <span className="text-sm text-slate-400 line-through truncate flex-1">{task.title}</span>
-                            <span className="text-[10px] text-slate-300">{getProjectName(task.project_id)}</span>
+                      {completedTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          onClick={() => navigate(createPageUrl('ProjectTasks') + `?id=${task.project_id}`)}
+                          className="flex items-center gap-2 px-3 py-2 border-b border-slate-50 dark:border-slate-700/30 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer group"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span className="text-sm text-slate-400 line-through truncate flex-1">{task.title}</span>
+                          <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+                            <FolderKanban className="w-3 h-3 text-slate-300" />
+                            <span className="text-[11px] text-slate-300">{getProjectName(task.project_id)}</span>
                           </div>
-                        ))}
-                      </div>
+                          {task.assigned_name && (
+                            <UserAvatar
+                              email={task.assigned_to}
+                              name={task.assigned_name}
+                              avatarUrl={teamMembers.find(m => m.email === task.assigned_to)?.avatar_url}
+                              size="sm"
+                              className="opacity-50"
+                            />
+                          )}
+                        </div>
+                      ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -927,144 +941,150 @@ export default function AllTasks() {
           </div>
         )}
 
-        {/* Parts Filters */}
+        {/* Parts Toolbar */}
         {activeTab === 'parts' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6"
           >
-            <div className="flex flex-wrap gap-4">
-              <div className="relative flex-1 min-w-[200px]">
+            {/* Status Pills Row */}
+            <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+              <div className="relative flex-1 min-w-[140px] sm:max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   placeholder="Search parts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-9 h-10 sm:h-9"
                 />
               </div>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="needed">Needed</SelectItem>
-                  <SelectItem value="ordered">Ordered</SelectItem>
-                  <SelectItem value="received">Received</SelectItem>
-                  <SelectItem value="installed">Installed</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Status pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                {[
+                  { key: 'needed', label: 'Needed', bg: 'bg-red-100', color: 'text-red-700' },
+                  { key: 'ordered', label: 'Ordered', bg: 'bg-blue-100', color: 'text-blue-700' },
+                  { key: 'received', label: 'Received', bg: 'bg-amber-100', color: 'text-amber-700' },
+                  { key: 'installed', label: 'Installed', bg: 'bg-emerald-100', color: 'text-emerald-700' },
+                ].map((s) => {
+                  const count = activeProjectParts.filter(p => p.status === s.key).length;
+                  return (
+                    <button
+                      key={s.key}
+                      onClick={() => setStatusFilter(statusFilter === s.key ? 'all' : s.key)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
+                        statusFilter === s.key
+                          ? "bg-[#0F2F44] text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      )}
+                    >
+                      <Package className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">{s.label}</span>
+                      <span className={cn(
+                        "px-1.5 py-0.5 rounded-full text-[10px]",
+                        statusFilter === s.key ? "bg-white/20" : "bg-white"
+                      )}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
 
-              <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Assignee" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Assignees</SelectItem>
-                  {teamMembers.map(member => (
-                    <SelectItem key={member.id} value={member.email}>{member.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2 sm:ml-auto">
+                <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+                  <SelectTrigger className="flex-1 sm:w-36 h-10 sm:h-9">
+                    <SelectValue placeholder="Assignee" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Assignees</SelectItem>
+                    {teamMembers.map(member => (
+                      <SelectItem key={member.id} value={member.email}>{member.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </motion.div>
         )}
 
-        {/* Parts Status Cards */}
-        {activeTab === 'parts' && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            {[
-              { key: 'needed', label: 'Needed', color: 'text-red-500', bg: 'bg-red-100' },
-              { key: 'ordered', label: 'Ordered', color: 'text-blue-500', bg: 'bg-blue-100' },
-              { key: 'received', label: 'Received', color: 'text-amber-500', bg: 'bg-amber-100' },
-              { key: 'installed', label: 'Installed', color: 'text-emerald-500', bg: 'bg-emerald-100' }
-            ].map((status) => {
-              const count = activeProjectParts.filter(p => p.status === status.key).length;
-              return (
-                <motion.div
-                  key={status.key}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={cn(
-                    "p-4 rounded-xl border transition-all cursor-pointer hover:shadow-md",
-                    statusFilter === status.key ? "border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-500/50" : "border-slate-100 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a]"
-                  )}
-                  onClick={() => setStatusFilter(statusFilter === status.key ? 'all' : status.key)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={cn("p-2 rounded-lg", status.bg)}>
-                      <Package className={cn("w-4 h-4", status.color)} />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{count}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{status.label}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Parts List — grouped by project */}
+        {/* Parts List — flat table view (Monday.com style) */}
         {activeTab === 'parts' && (
           <div className="space-y-3">
             {filteredParts.length > 0 ? (
-              (() => {
-                const grouped = {};
-                filteredParts.forEach(part => {
-                  const pid = part.project_id;
-                  if (!grouped[pid]) grouped[pid] = [];
-                  grouped[pid].push(part);
-                });
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
+              >
+                {/* Table header */}
+                <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-200 dark:border-slate-700/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <div className="w-4 shrink-0" />
+                  <div className="flex-1">Part</div>
+                  <div className="hidden sm:block w-[180px] shrink-0">Project</div>
+                  <div className="w-20 shrink-0">Status</div>
+                  <div className="w-8 shrink-0">Owner</div>
+                  <div className="w-24 shrink-0 text-right">ETA</div>
+                </div>
 
-                return (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                    {Object.entries(grouped).map(([projectId, projectParts]) => (
-                      <motion.div
-                        key={projectId}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
-                      >
-                        {/* Project header */}
-                        <Link
-                          to={createPageUrl('ProjectParts') + `?id=${projectId}`}
-                          className="flex items-center justify-between px-3 py-1.5 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
+                {/* Part rows grouped by project with collapsible headers */}
+                {(() => {
+                  const grouped = {};
+                  filteredParts.forEach(part => {
+                    const pid = part.project_id;
+                    if (!grouped[pid]) grouped[pid] = [];
+                    grouped[pid].push(part);
+                  });
+
+                  return Object.entries(grouped).map(([projectId, projectParts]) => {
+                    const isCollapsed = expandedGroups[`parts_${projectId}`] === false;
+
+                    return (
+                      <div key={projectId}>
+                        {/* Project group header */}
+                        <div
+                          className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-[#1a2535] border-b border-slate-100 dark:border-slate-700/30 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors"
+                          onClick={() => setExpandedGroups(prev => ({ ...prev, [`parts_${projectId}`]: prev[`parts_${projectId}`] === false ? true : false }))}
                         >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <FolderKanban className="w-3.5 h-3.5 text-[#0F2F44] shrink-0" />
-                            <span className="font-semibold text-sm text-slate-900 truncate">{getProjectName(projectId)}</span>
-                            {getProjectNumber(projectId) && <span className="px-1.5 py-0.5 bg-slate-800 text-white rounded text-[10px] font-mono font-semibold shrink-0">#{getProjectNumber(projectId)}</span>}
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shrink-0">{projectParts.length}</Badge>
-                          </div>
-                        </Link>
-
-                        {/* Part cards stacked inside project card */}
-                        <div className="p-2 space-y-1.5">
-                          {projectParts.map((part) => (
-                            <PartRow
-                              key={part.id}
-                              part={part}
-                              teamMembers={teamMembers}
-                              getDueDateLabel={getDueDateLabel}
-                              onAssign={handlePartAssign}
-                              onUnassign={handlePartUnassign}
-                              onDueDateChange={handlePartDueDateChange}
-                              onStatusChange={handlePartStatusChange}
-                              onETAChange={handlePartETAChange}
-                              onNavigate={(p) => navigate(createPageUrl('ProjectParts') + `?id=${p.project_id}`)}
-                            />
-                          ))}
+                          <ChevronRight className={cn("w-3.5 h-3.5 text-slate-400 transition-transform", !isCollapsed && "rotate-90")} />
+                          <FolderKanban className="w-3.5 h-3.5 text-[#0F2F44]" />
+                          <Link
+                            to={createPageUrl('ProjectParts') + `?id=${projectId}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="font-semibold text-xs text-slate-700 dark:text-slate-200 hover:text-[#0069AF] truncate"
+                          >
+                            {getProjectName(projectId)}
+                          </Link>
+                          {getProjectNumber(projectId) && (
+                            <span className="px-1.5 py-0 bg-slate-700 text-white rounded text-[9px] font-mono shrink-0">#{getProjectNumber(projectId)}</span>
+                          )}
+                          <span className="text-[10px] text-slate-400 ml-auto shrink-0">{projectParts.length} part{projectParts.length !== 1 ? 's' : ''}</span>
                         </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                );
-              })()
+
+                        {/* Parts in this project */}
+                        {!isCollapsed && projectParts.map((part) => (
+                          <PartTableRow
+                            key={part.id}
+                            part={part}
+                            teamMembers={teamMembers}
+                            projectName={getProjectName(part.project_id)}
+                            projectNumber={getProjectNumber(part.project_id)}
+                            getDueDateLabel={getDueDateLabel}
+                            onAssign={handlePartAssign}
+                            onUnassign={handlePartUnassign}
+                            onDueDateChange={handlePartDueDateChange}
+                            onStatusChange={handlePartStatusChange}
+                            onETAChange={handlePartETAChange}
+                            onNavigate={(p) => navigate(createPageUrl('ProjectParts') + `?id=${p.project_id}`)}
+                          />
+                        ))}
+                      </div>
+                    );
+                  });
+                })()}
+              </motion.div>
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}

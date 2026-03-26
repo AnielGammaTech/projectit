@@ -115,13 +115,13 @@ export default function NotificationSettings() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Notification Settings</h1>
+          <h1 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">Notification Settings</h1>
           <p className="text-slate-500 mt-1">Manage your email notification preferences</p>
         </motion.div>
 
@@ -131,7 +131,7 @@ export default function NotificationSettings() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="space-y-6"
+          className="space-y-3 sm:space-y-6"
         >
           {/* Email Frequency */}
           <Card>

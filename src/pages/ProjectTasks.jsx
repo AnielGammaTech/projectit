@@ -637,228 +637,320 @@ export default function ProjectTasks() {
     const checklistDone = Array.isArray(checklistItems) ? checklistItems.filter(i => i.completed || i.done).length : 0;
 
     return (
-      <div
-        className={cn(
-          "group flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg border transition-all cursor-pointer",
-          isCompleted || task.status === 'archived'
-            ? "opacity-50 bg-slate-50/30 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700/50"
-            : "border-slate-200/80 dark:border-slate-700/50 hover:shadow-sm hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50/50",
-          isSelected && "ring-2 ring-[#0069AF] bg-blue-50/50",
-          isDragging && "shadow-lg ring-2 ring-[#0069AF]"
-        )}
-        onClick={() => selectionMode ? toggleTaskSelection(task.id) : setSelectedTask(task)}
-      >
-        {/* Drag handle */}
-        <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing p-0.5 -ml-1 opacity-40 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity touch-manipulation">
-          <GripVertical className="w-3.5 h-3.5 text-slate-400" />
+      <>
+        {/* ── Mobile: Two-line task card ── */}
+        <div
+          className={cn(
+            "sm:hidden group flex flex-col gap-1.5 px-3 py-2.5 rounded-xl border transition-all cursor-pointer",
+            isCompleted || task.status === 'archived'
+              ? "opacity-50 bg-slate-50/30 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700/50"
+              : "border-slate-200/80 dark:border-slate-700/50 active:bg-slate-50",
+            isSelected && "ring-2 ring-[#0069AF] bg-blue-50/50"
+          )}
+          onClick={() => selectionMode ? toggleTaskSelection(task.id) : setSelectedTask(task)}
+        >
+          {/* Row 1: Checkbox + Title + Priority */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!selectionMode) handleStatusChange(task, isCompleted ? 'todo' : 'completed');
+              }}
+              className="shrink-0 touch-manipulation"
+            >
+              {isCompleted ? (
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center"
+                >
+                  <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                </motion.div>
+              ) : (
+                <div className={cn(
+                  "w-5 h-5 rounded-full border-2 transition-colors",
+                  task.priority === 'high' ? "border-red-400" : "border-slate-300"
+                )} />
+              )}
+            </button>
+            <span className={cn(
+              "flex-1 font-medium text-sm truncate min-w-0",
+              isCompleted ? "line-through text-slate-400" : "text-slate-900 dark:text-slate-100"
+            )}>
+              {task.title}
+            </span>
+            {task.priority === 'high' && (
+              <Flag className="w-3.5 h-3.5 text-red-500 fill-red-500 shrink-0" />
+            )}
+          </div>
+
+          {/* Row 2: Meta info chips */}
+          <div className="flex items-center gap-2 pl-7 flex-wrap">
+            {/* Status pill */}
+            <span className={cn(
+              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium",
+              pill.bg, pill.text
+            )}>
+              <div className={cn("w-1.5 h-1.5 rounded-full", pill.dot)} />
+              {pill.label}
+            </span>
+
+            {/* Due date */}
+            {dueDateInfo && (
+              <Badge className={cn("text-[10px] px-1.5 py-0", dueDateInfo.color)}>
+                {dueDateInfo.urgent && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
+                {dueDateInfo.label}
+              </Badge>
+            )}
+
+            {/* Checklist */}
+            {checklistTotal > 0 && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-slate-400">
+                <ListChecks className="w-3 h-3" />
+                {checklistDone}/{checklistTotal}
+              </span>
+            )}
+
+            {/* Comments */}
+            {commentCount > 0 && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-slate-400">
+                <MessageCircle className="w-3 h-3" />
+                {commentCount}
+              </span>
+            )}
+
+            {/* Assignee */}
+            {task.assigned_name && (
+              <UserAvatar email={task.assigned_to} name={task.assigned_name} size="xs" />
+            )}
+          </div>
         </div>
 
-        {/* Selection checkbox */}
-        {selectionMode && (
+        {/* ── Desktop: Original single-line row ── */}
+        <div
+          className={cn(
+            "hidden sm:flex group items-center gap-2.5 px-3 py-2 rounded-lg border transition-all cursor-pointer",
+            isCompleted || task.status === 'archived'
+              ? "opacity-50 bg-slate-50/30 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700/50"
+              : "border-slate-200/80 dark:border-slate-700/50 hover:shadow-sm hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50/50",
+            isSelected && "ring-2 ring-[#0069AF] bg-blue-50/50",
+            isDragging && "shadow-lg ring-2 ring-[#0069AF]"
+          )}
+          onClick={() => selectionMode ? toggleTaskSelection(task.id) : setSelectedTask(task)}
+        >
+          {/* Drag handle */}
+          <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing p-0.5 -ml-1 opacity-0 group-hover:opacity-100 transition-opacity touch-manipulation">
+            <GripVertical className="w-3.5 h-3.5 text-slate-400" />
+          </div>
+
+          {/* Selection checkbox */}
+          {selectionMode && (
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleTaskSelection(task.id); }}
+              className="p-1.5 touch-manipulation"
+            >
+              {isSelected ? (
+                <CheckSquare className="w-5 h-5 text-[#0069AF]" />
+              ) : (
+                <Square className="w-5 h-5 text-slate-300" />
+              )}
+            </button>
+          )}
+
+          {/* Asana-style round checkbox */}
           <button
-            onClick={(e) => { e.stopPropagation(); toggleTaskSelection(task.id); }}
-            className="p-1.5 touch-manipulation"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!selectionMode) handleStatusChange(task, isCompleted ? 'todo' : 'completed');
+            }}
+            className="shrink-0 touch-manipulation"
           >
-            {isSelected ? (
-              <CheckSquare className="w-5 h-5 text-[#0069AF]" />
+            {isCompleted ? (
+              <motion.div
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                className="w-[17px] h-[17px] rounded-full bg-emerald-500 flex items-center justify-center"
+              >
+                <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+              </motion.div>
             ) : (
-              <Square className="w-5 h-5 text-slate-300" />
+              <div className="w-[17px] h-[17px] rounded-full border-2 border-slate-300 hover:border-emerald-400 transition-colors" />
             )}
           </button>
-        )}
 
-        {/* Asana-style round checkbox */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!selectionMode) handleStatusChange(task, isCompleted ? 'todo' : 'completed');
-          }}
-          className="shrink-0 touch-manipulation"
-        >
-          {isCompleted ? (
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-              className="w-[17px] h-[17px] rounded-full bg-emerald-500 flex items-center justify-center"
-            >
-              <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-            </motion.div>
-          ) : (
-            <div className="w-[17px] h-[17px] rounded-full border-2 border-slate-300 hover:border-emerald-400 transition-colors" />
-          )}
-        </button>
+          {/* Title */}
+          <span className={cn(
+            "flex-1 font-medium text-[13px] truncate min-w-0",
+            isCompleted && "line-through text-slate-400"
+          )}>
+            {task.title}
+          </span>
 
-        {/* Title */}
-        <span className={cn(
-          "flex-1 font-medium text-[13px] truncate min-w-0",
-          isCompleted && "line-through text-slate-400"
-        )}>
-          {task.title}
-        </span>
+          {/* Indicators row */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Checklist progress mini-indicator */}
+            {checklistTotal > 0 && (
+              <div className="flex items-center gap-1 text-slate-400">
+                <ListChecks className="w-3.5 h-3.5" />
+                <span className="text-xs">{checklistDone}/{checklistTotal}</span>
+              </div>
+            )}
 
-        {/* Indicators row */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Checklist progress mini-indicator */}
-          {checklistTotal > 0 && (
-            <div className="hidden sm:flex items-center gap-1 text-slate-400">
-              <ListChecks className="w-3.5 h-3.5" />
-              <span className="text-xs">{checklistDone}/{checklistTotal}</span>
-            </div>
-          )}
+            {/* Comment count */}
+            {commentCount > 0 && (
+              <div className="flex items-center gap-1 text-slate-400">
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="text-xs">{commentCount}</span>
+              </div>
+            )}
 
-          {/* Comment count */}
-          {commentCount > 0 && (
-            <div className="hidden sm:flex items-center gap-1 text-slate-400">
-              <MessageCircle className="w-3.5 h-3.5" />
-              <span className="text-xs">{commentCount}</span>
-            </div>
-          )}
+            {/* Attachments indicator */}
+            {task.attachments?.length > 0 && (
+              <div className="flex items-center gap-1 text-slate-400">
+                <Paperclip className="w-3.5 h-3.5" />
+                <span className="text-xs">{task.attachments.length}</span>
+              </div>
+            )}
 
-          {/* Attachments indicator */}
-          {task.attachments?.length > 0 && (
-            <div className="hidden sm:flex items-center gap-1 text-slate-400">
-              <Paperclip className="w-3.5 h-3.5" />
-              <span className="text-xs">{task.attachments.length}</span>
-            </div>
-          )}
+            {/* Monday.com status pill with dropdown */}
+            <DropdownMenu open={statusDropdownOpen} onOpenChange={setStatusDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setStatusDropdownOpen(true); }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all hover:opacity-80",
+                    pill.bg, pill.text
+                  )}
+                >
+                  <div className={cn("w-1.5 h-1.5 rounded-full", pill.dot)} />
+                  {pill.label}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                {Object.entries(statusPillConfig).map(([key, config]) => (
+                  <DropdownMenuItem
+                    key={key}
+                    onClick={() => handleStatusChange(task, key)}
+                    className="gap-2"
+                  >
+                    <div className={cn("w-2 h-2 rounded-full", config.dot)} />
+                    {config.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          {/* Monday.com status pill with dropdown */}
-          <DropdownMenu open={statusDropdownOpen} onOpenChange={setStatusDropdownOpen}>
-            <DropdownMenuTrigger asChild>
-              <button
-                onClick={(e) => { e.stopPropagation(); setStatusDropdownOpen(true); }}
-                className={cn(
-                  "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all hover:opacity-80",
-                  pill.bg, pill.text
+            {/* Priority flag */}
+            {task.priority === 'high' && (
+              <Flag className="w-3.5 h-3.5 text-red-500 fill-red-500 shrink-0" />
+            )}
+
+            {/* Due date picker */}
+            <Popover open={dateOpen} onOpenChange={setDateOpen}>
+              <PopoverTrigger asChild>
+                {dueDateInfo ? (
+                  <Badge
+                    onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                    className={cn("text-[10px] px-1.5 py-0 cursor-pointer hover:opacity-80", dueDateInfo.color)}
+                  >
+                    {dueDateInfo.urgent && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
+                    {dueDateInfo.label}
+                  </Badge>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
+                    className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
+                  </button>
                 )}
-              >
-                <div className={cn("w-1.5 h-1.5 rounded-full", pill.dot)} />
-                {pill.label}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-              {Object.entries(statusPillConfig).map(([key, config]) => (
-                <DropdownMenuItem
-                  key={key}
-                  onClick={() => handleStatusChange(task, key)}
-                  className="gap-2"
-                >
-                  <div className={cn("w-2 h-2 rounded-full", config.dot)} />
-                  {config.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
+                <Calendar
+                  mode="single"
+                  selected={task.due_date ? (() => {
+                    const dateStr = task.due_date.split('T')[0];
+                    const [year, month, day] = dateStr.split('-').map(Number);
+                    return new Date(year, month - 1, day);
+                  })() : undefined}
+                  onSelect={(date) => { handleTaskDueDateChange(task, date); setDateOpen(false); }}
+                />
+                {task.due_date && (
+                  <div className="p-2 border-t">
+                    <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => { handleTaskDueDateChange(task, null); setDateOpen(false); }}>
+                      Clear date
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
 
-          {/* Priority flag */}
-          {task.priority === 'high' && (
-            <Flag className="w-3.5 h-3.5 text-red-500 fill-red-500 shrink-0" />
-          )}
+            {/* Assignee avatar */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                {task.assigned_name ? (
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className="hover:ring-2 hover:ring-offset-1 hover:ring-[#0069AF]/30 rounded-full touch-manipulation shrink-0"
+                    title={task.assigned_name}
+                  >
+                    <UserAvatar email={task.assigned_to} name={task.assigned_name} size="sm" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-[#0069AF]/40 touch-manipulation shrink-0"
+                  >
+                    <UserPlus className="w-2.5 h-2.5 text-slate-400" />
+                  </button>
+                )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                {task.assigned_to && (
+                  <DropdownMenuItem onClick={() => handleTaskUnassign(task)} className="text-slate-500">
+                    <User className="w-4 h-4 mr-2" />
+                    Unassign
+                  </DropdownMenuItem>
+                )}
+                {projectMembers.map((member) => (
+                  <DropdownMenuItem key={member.id} onClick={() => handleTaskAssign(task, member.email)}>
+                    <UserAvatar email={member.email} name={member.name} size="xs" className="mr-2" />
+                    {member.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          {/* Due date picker */}
-          <Popover open={dateOpen} onOpenChange={setDateOpen}>
-            <PopoverTrigger asChild>
-              {dueDateInfo ? (
-                <Badge
-                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                  className={cn("text-[10px] px-1.5 py-0 cursor-pointer hover:opacity-80", dueDateInfo.color)}
-                >
-                  {dueDateInfo.urgent && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
-                  {dueDateInfo.label}
-                </Badge>
-              ) : (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                  className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-all"
-                >
-                  <CalendarIcon className="w-4 h-4 text-slate-400" />
-                </button>
-              )}
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
-              <Calendar
-                mode="single"
-                selected={task.due_date ? (() => {
-                  const dateStr = task.due_date.split('T')[0];
-                  const [year, month, day] = dateStr.split('-').map(Number);
-                  return new Date(year, month - 1, day);
-                })() : undefined}
-                onSelect={(date) => { handleTaskDueDateChange(task, date); setDateOpen(false); }}
-              />
-              {task.due_date && (
-                <div className="p-2 border-t">
-                  <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => { handleTaskDueDateChange(task, null); setDateOpen(false); }}>
-                    Clear date
-                  </Button>
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
-
-          {/* Assignee avatar */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              {task.assigned_name ? (
-                <button
-                  onClick={(e) => e.stopPropagation()}
-                  className="hover:ring-2 hover:ring-offset-1 hover:ring-[#0069AF]/30 rounded-full touch-manipulation shrink-0"
-                  title={task.assigned_name}
-                >
-                  <UserAvatar email={task.assigned_to} name={task.assigned_name} size="sm" />
-                </button>
-              ) : (
-                <button
-                  onClick={(e) => e.stopPropagation()}
-                  className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-[#0069AF]/40 touch-manipulation shrink-0"
-                >
-                  <UserPlus className="w-2.5 h-2.5 text-slate-400" />
-                </button>
-              )}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-              {task.assigned_to && (
-                <DropdownMenuItem onClick={() => handleTaskUnassign(task)} className="text-slate-500">
-                  <User className="w-4 h-4 mr-2" />
-                  Unassign
+            {/* More menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 touch-manipulation" onClick={(e) => e.stopPropagation()}>
+                  <MoreHorizontal className="w-3.5 h-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => { setEditingTask(task); setShowTaskModal(true); }}>
+                  <Edit2 className="w-4 h-4 mr-2" />Edit
                 </DropdownMenuItem>
-              )}
-              {projectMembers.map((member) => (
-                <DropdownMenuItem key={member.id} onClick={() => handleTaskAssign(task, member.email)}>
-                  <UserAvatar email={member.email} name={member.name} size="xs" className="mr-2" />
-                  {member.name}
+                {task.status === 'archived' ? (
+                  <DropdownMenuItem onClick={() => handleStatusChange(task, 'todo')}>
+                    <ArrowUpCircle className="w-4 h-4 mr-2" />Restore
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => handleStatusChange(task, 'archived')}>
+                    <Archive className="w-4 h-4 mr-2" />Archive
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => { setSelectedTask(null); setDeleteConfirm({ open: true, type: 'task', item: task }); }} className="text-red-600">
+                  <Trash2 className="w-4 h-4 mr-2" />Delete
                 </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* More menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6 sm:opacity-0 sm:group-hover:opacity-100 touch-manipulation" onClick={(e) => e.stopPropagation()}>
-                <MoreHorizontal className="w-3.5 h-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => { setEditingTask(task); setShowTaskModal(true); }}>
-                <Edit2 className="w-4 h-4 mr-2" />Edit
-              </DropdownMenuItem>
-              {task.status === 'archived' ? (
-                <DropdownMenuItem onClick={() => handleStatusChange(task, 'todo')}>
-                  <ArrowUpCircle className="w-4 h-4 mr-2" />Restore
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => handleStatusChange(task, 'archived')}>
-                  <Archive className="w-4 h-4 mr-2" />Archive
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={() => { setSelectedTask(null); setDeleteConfirm({ open: true, type: 'task', item: task }); }} className="text-red-600">
-                <Trash2 className="w-4 h-4 mr-2" />Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-      </div>
+      </>
     );
   };
 
@@ -898,8 +990,41 @@ export default function ProjectTasks() {
       <ProjectNavHeader project={project} currentPage="ProjectTasks" />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Phase 1: Rich Stats Header Card */}
-        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden mb-6">
+        {/* Mobile: Compact inline header */}
+        <div className="sm:hidden flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">Tasks</h1>
+            <span className="text-xs text-slate-400 dark:text-slate-500">{completedTasks}/{totalTasks}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Button
+              onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
+              size="sm"
+              className="bg-[#0069AF] hover:bg-[#005a96] text-white h-8 text-xs px-2.5"
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              Task
+            </Button>
+            <Button
+              onClick={() => setShowGroupModal(true)}
+              variant="outline"
+              size="sm"
+              className="border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 h-8 text-xs px-2.5"
+            >
+              <FolderPlus className="w-3.5 h-3.5 mr-1" />
+              Group
+            </Button>
+          </div>
+        </div>
+        {/* Mobile: slim progress bar */}
+        <div className="sm:hidden mb-4">
+          <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-full rounded-full bg-blue-500" style={{ width: `${progressPercent}%` }} />
+          </div>
+        </div>
+
+        {/* Desktop: Rich Stats Header Card */}
+        <div className="hidden sm:block bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden mb-6">
           {/* Gradient accent bar */}
           <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
           <div className="p-4 sm:p-6">
@@ -929,8 +1054,7 @@ export default function ProjectTasks() {
                   className="border-[#0069AF]/30 text-[#0069AF] hover:bg-[#0069AF]/5 h-9 sm:h-10"
                 >
                   <FolderPlus className="w-4 h-4 mr-1.5" />
-                  <span className="hidden sm:inline">New Group</span>
-                  <span className="sm:hidden">Group</span>
+                  New Group
                 </Button>
               </div>
             </div>
@@ -1093,8 +1217,8 @@ export default function ProjectTasks() {
                 </button>
               ))}
             </div>
-            {/* View Mode Toggle */}
-            <div className="flex gap-1 p-1 bg-slate-100/80 dark:bg-slate-700/50 rounded-xl shrink-0">
+            {/* View Mode Toggle — hidden on mobile */}
+            <div className="hidden sm:flex gap-1 p-1 bg-slate-100/80 dark:bg-slate-700/50 rounded-xl shrink-0">
               <button
                 onClick={() => setViewMode('list')}
                 className={cn(
@@ -1118,7 +1242,7 @@ export default function ProjectTasks() {
               variant={selectionMode ? "default" : "outline"}
               size="sm"
               onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
-              className={cn("h-9 shrink-0 touch-manipulation", selectionMode && "bg-[#0069AF] hover:bg-[#005a96]")}
+              className={cn("hidden sm:inline-flex h-9 shrink-0 touch-manipulation", selectionMode && "bg-[#0069AF] hover:bg-[#005a96]")}
             >
               <CheckSquare className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">{selectionMode ? 'Done' : 'Select'}</span>

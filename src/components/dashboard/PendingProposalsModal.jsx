@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Plus, Building2, DollarSign, Calendar, RefreshCw } from 'lucide-react';
+import { Plus, Building2, DollarSign, Calendar, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -13,7 +13,7 @@ export default function PendingProposalsModal({ open, onClose, quotes, onCreateP
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-[#0F2F44]" />
+              <img src="/quoteit-favicon.svg" alt="QuoteIT" className="w-5 h-5" />
               Pending Proposals ({quotes.length})
             </div>
             <Button
@@ -32,7 +32,7 @@ export default function PendingProposalsModal({ open, onClose, quotes, onCreateP
         <div className="flex-1 overflow-y-auto space-y-3 pr-2">
           {quotes.length === 0 ? (
             <div className="text-center py-12 text-[#0F2F44]/60">
-              <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <img src="/quoteit-favicon.svg" alt="" className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No pending proposals</p>
             </div>
           ) : (

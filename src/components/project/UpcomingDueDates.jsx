@@ -75,9 +75,9 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId, te
   const firstUpcomingIdx = orderedItems.findIndex(item => !isBefore(item.date, today));
 
   return (
-    <div className="relative rounded-2xl overflow-hidden h-full flex flex-col border border-rose-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-rose-50/30 to-pink-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a]">
+    <div className="relative rounded-2xl overflow-hidden flex flex-col border border-rose-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-rose-50/30 to-pink-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] h-full" style={{ maxHeight: '452px' }}>
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400" />
-      <div className="p-3.5 pb-2">
+      <div className="p-3.5 pb-2 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-lg shadow-rose-200/50">
@@ -96,7 +96,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId, te
         </div>
       </div>
 
-      <div className="px-3 pb-3 space-y-1 flex-1 overflow-y-auto custom-scrollbar">
+      <div className="px-3 pb-3 space-y-1 flex-1 overflow-y-auto custom-scrollbar min-h-0">
         {hasOverdue && (
           <div className="flex items-center gap-1.5 px-1 py-0.5 sticky top-0 bg-gradient-to-br from-white via-rose-50/30 to-pink-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] z-10">
             <AlertCircle className="w-3 h-3 text-red-500" />

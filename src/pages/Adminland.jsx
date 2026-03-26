@@ -15,7 +15,8 @@ import {
   RefreshCw, Loader2, ChevronDown, ChevronRight, RotateCcw, Archive, Calendar,
   FileText, Layers, MessageSquare, Database, Activity,
   HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send, Copy, Check, Globe, KeyRound,
-  Image, Search, Info, Rocket, Bug, Star, Wrench, Package, MapPin, Bell, Clock
+  Image, Search, Info, Rocket, Bug, Star, Wrench, Package, MapPin, Bell, Clock,
+  Monitor, Smartphone, Wifi
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -55,6 +56,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
+import ApiDocsSection from '@/components/adminland/ApiDocsSection';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -71,7 +73,9 @@ const groupColors = {
 
 const adminMenuGroups = [
   {
-    title: 'People',
+    title: 'People & Access',
+    icon: Users,
+    color: 'from-blue-500 to-indigo-600',
     items: [
       { id: 'people', label: 'People & Teams', icon: Users, description: 'Team members, groups, and admins' },
       { id: 'roles', label: 'Roles & Permissions', icon: Shield, description: 'Access control', page: 'RolesPermissions' },
@@ -79,35 +83,44 @@ const adminMenuGroups = [
   },
   {
     title: 'Projects',
+    icon: Layers,
+    color: 'from-violet-500 to-purple-600',
     items: [
-      { id: 'project-management', label: 'Archived & Deleted', icon: Archive, description: 'Manage old projects' },
       { id: 'tags', label: 'Tags', icon: Tags, description: 'Project tags' },
       { id: 'statuses', label: 'Statuses', icon: Layers, description: 'Project statuses', page: 'ProjectStatuses' },
       { id: 'templates', label: 'Templates', icon: FileText, description: 'Project & task templates', page: 'Templates' },
+      { id: 'project-management', label: 'Archived & Deleted', icon: Archive, description: 'Manage old projects' },
+    ]
+  },
+  {
+    title: 'Integrations & AI',
+    icon: GitMerge,
+    color: 'from-emerald-500 to-teal-600',
+    items: [
+      { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'HaloPSA & external services' },
+      { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automation triggers', page: 'Workflows' },
+      { id: 'ai-agents', label: 'AI Agents', icon: Bot, description: 'GammaAi agent connection' },
+      { id: 'api-docs', label: 'API Docs & Keys', icon: Globe, description: 'External API documentation' },
     ]
   },
   {
     title: 'Inventory',
+    icon: Package,
+    color: 'from-amber-500 to-orange-600',
     items: [
       { id: 'inventory-settings', label: 'Inventory Settings', icon: Package, description: 'Stock locations, permissions & tools' },
     ]
   },
   {
-    title: 'Automation',
+    title: 'System',
+    icon: Wrench,
+    color: 'from-slate-500 to-slate-700',
     items: [
-      { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automation triggers', page: 'Workflows' },
-      { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'HaloPSA & external services' },
-      { id: 'ai-agents', label: 'AI Agents', icon: Bot, description: 'GammaAi agent connection' },
-    ]
-  },
-  {
-    title: 'Settings',
-    items: [
-      { id: 'company', label: 'App Settings', icon: Building2, description: 'Branding' },
+      { id: 'company', label: 'App Settings', icon: Building2, description: 'Branding & appearance' },
       { id: 'database-health', label: 'Database Health', icon: Database, description: 'Integrity checks & size' },
-      { id: 'about', label: 'About & System', icon: Info, description: 'Version, build, environment' },
+      { id: 'audit', label: 'Audit Logs', icon: Activity, description: 'Activity tracking', page: 'AuditLogs' },
       { id: 'feedback', label: 'Feedback', icon: MessageSquare, description: 'Bug reports', page: 'FeedbackManagement' },
-      { id: 'audit', label: 'Audit Logs', icon: Shield, description: 'Activity tracking', page: 'AuditLogs' },
+      { id: 'about', label: 'About & System', icon: Info, description: 'Version, build, environment' },
     ]
   }
 ];
@@ -124,7 +137,30 @@ export default function Adminland() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading...</div>
+        <div className="max-w-4xl w-full mx-auto px-4 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+              <div className="h-4 w-48 bg-slate-100 dark:bg-slate-700/50 rounded animate-pulse" />
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3 sm:gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-2xl border dark:border-slate-700/50 overflow-hidden animate-pulse">
+                <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b]"><div className="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded" /></div>
+                <div className="p-3 space-y-3">
+                  {[...Array(3)].map((_, j) => (
+                    <div key={j} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700/50" />
+                      <div className="flex-1 space-y-1"><div className="h-4 w-2/3 bg-slate-200 dark:bg-slate-700 rounded" /><div className="h-3 w-1/2 bg-slate-100 dark:bg-slate-700/50 rounded" /></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -165,6 +201,8 @@ export default function Adminland() {
         return <AIAgentsSection queryClient={queryClient} />;
       case 'inventory-settings':
         return <InventorySettingsSection queryClient={queryClient} />;
+      case 'api-docs':
+        return <ApiDocsSection queryClient={queryClient} />;
       case 'about':
         return <AboutSection />;
       default:
@@ -174,7 +212,7 @@ export default function Adminland() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {activeSection ? (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
             <button 
@@ -193,12 +231,12 @@ export default function Adminland() {
                 <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Adminland</h1>
+                <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Adminland</h1>
               </div>
               <p className="text-slate-500 dark:text-slate-400">Manage your workspace settings</p>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {adminMenuGroups.map((group, gIdx) => (
                 <motion.div
                   key={group.title}
@@ -207,41 +245,44 @@ export default function Adminland() {
                   transition={{ delay: gIdx * 0.1 }}
                   className="bg-white dark:bg-[#1e2a3a] rounded-2xl border dark:border-slate-700/50 shadow-sm overflow-hidden"
                 >
-                  <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b] border-b dark:border-slate-700/50">
+                  <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b] border-b dark:border-slate-700/50 flex items-center gap-3">
+                    <div className={cn("p-1.5 rounded-lg bg-gradient-to-br shadow-sm", group.color)}>
+                      <group.icon className="w-4 h-4 text-white" />
+                    </div>
                     <h2 className="font-semibold text-slate-700 dark:text-slate-200">{group.title}</h2>
                   </div>
-                  <div className="divide-y">
-                    {group.items.map((item) => (
-                      item.page ? (
-                        <Link
-                          key={item.id}
-                          to={createPageUrl(item.page)}
-                          className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group"
-                        >
-                          <div className="p-1.5 rounded-lg bg-[#0069AF]/10 dark:bg-blue-900/30 group-hover:bg-[#0069AF] transition-colors">
-                            <item.icon className="w-4 h-4 text-[#0069AF] dark:text-blue-400 group-hover:text-white transition-colors" />
+                  <div className="divide-y dark:divide-slate-700/50">
+                    {group.items.map((item) => {
+                      const content = (
+                        <>
+                          <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700/50 group-hover:bg-[#0069AF] transition-colors">
+                            <item.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-white transition-colors" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <span className="text-sm font-medium text-slate-900 dark:text-slate-100 block">{item.label}</span>
                             <span className="text-xs text-slate-500 dark:text-slate-400">{item.description}</span>
                           </div>
+                          <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-[#0069AF] transition-colors" />
+                        </>
+                      );
+                      return item.page ? (
+                        <Link
+                          key={item.id}
+                          to={createPageUrl(item.page)}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group"
+                        >
+                          {content}
                         </Link>
                       ) : (
                         <button
                           key={item.id}
                           onClick={() => setActiveSection(item.id)}
-                          className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group text-left"
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group text-left"
                         >
-                          <div className="p-1.5 rounded-lg bg-[#0069AF]/10 dark:bg-blue-900/30 group-hover:bg-[#0069AF] transition-colors">
-                            <item.icon className="w-4 h-4 text-[#0069AF] dark:text-blue-400 group-hover:text-white transition-colors" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium text-slate-900 dark:text-slate-100 block">{item.label}</span>
-                            <span className="text-xs text-slate-500 dark:text-slate-400">{item.description}</span>
-                          </div>
+                          {content}
                         </button>
-                      )
-                    ))}
+                      );
+                    })}
                   </div>
                 </motion.div>
               ))}
@@ -380,6 +421,30 @@ function PeopleSection({ queryClient }) {
 
   const admins = members.filter(m => m.role === 'Admin');
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedMember, setExpandedMember] = useState(null);
+
+  // Fetch user sessions/activity for online status and last sign-in
+  const { data: userSessions = [] } = useQuery({
+    queryKey: ['userSessions'],
+    queryFn: async () => {
+      try {
+        const result = await api.entities.UserSession?.list?.();
+        return result || [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 30000
+  });
+
+  const getSessionInfo = (email) => {
+    const sessions = userSessions.filter(s => s.user_email === email);
+    const latest = sessions.sort((a, b) => new Date(b.created_date || b.last_active) - new Date(a.created_date || a.last_active))[0];
+    if (!latest) return null;
+    const lastActive = new Date(latest.last_active || latest.created_date);
+    const isOnline = (Date.now() - lastActive.getTime()) < 5 * 60 * 1000; // 5 min
+    return { ...latest, isOnline, lastActive };
+  };
 
   const filteredMembers = useMemo(() => {
     if (!searchQuery.trim()) return members;
@@ -455,71 +520,187 @@ function PeopleSection({ queryClient }) {
             </Button>
           </div>
           <div className="divide-y dark:divide-slate-700/50">
-            {filteredMembers.map((member) => (
-            <div key={member.id} className="px-5 py-4 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-700/20 transition-colors group">
-              <div className="flex items-center gap-4 min-w-0">
-                <UserAvatar
-                  email={member.email}
-                  name={member.name}
-                  avatarUrl={member.avatar_url}
-                  avatarColor={member.avatar_color}
-                  size="lg"
-                  className="ring-2 ring-white dark:ring-slate-800 shadow-sm"
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2.5">
-                    <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">{member.name}</p>
-                    {member.role && (
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-[10px] px-2 py-0 h-5 font-medium",
-                          member.role === 'Admin' && "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50",
-                          member.role === 'Manager' && "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/50",
-                          member.role === 'Technician' && "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50",
-                          member.role === 'Viewer' && "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-700/30 dark:text-slate-400 dark:border-slate-600/50"
+            {filteredMembers.map((member) => {
+              const session = getSessionInfo(member.email);
+              const isExpanded = expandedMember === member.id;
+              return (
+                <div key={member.id} className="transition-colors">
+                  <div
+                    className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-700/20 cursor-pointer group"
+                    onClick={() => setExpandedMember(isExpanded ? null : member.id)}
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      <div className="relative shrink-0">
+                        <UserAvatar
+                          email={member.email}
+                          name={member.name}
+                          avatarUrl={member.avatar_url}
+                          avatarColor={member.avatar_color}
+                          size="lg"
+                          className="ring-2 ring-white dark:ring-slate-800 shadow-sm"
+                        />
+                        {/* Online indicator */}
+                        <div className={cn(
+                          "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#1e2a3a]",
+                          session?.isOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                        )} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{member.name}</p>
+                          {member.role && (
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px] px-2 py-0 h-5 font-medium shrink-0",
+                                member.role === 'Admin' && "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50",
+                                member.role === 'Manager' && "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/50",
+                                member.role === 'Technician' && "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50",
+                                member.role === 'Viewer' && "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-700/30 dark:text-slate-400 dark:border-slate-600/50"
+                              )}
+                            >
+                              {member.role}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{member.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="hidden sm:flex items-center gap-1 mr-2">
+                        {session?.isOnline ? (
+                          <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full">Online</span>
+                        ) : session?.lastActive ? (
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                            Last seen {(() => {
+                              const diff = Date.now() - session.lastActive.getTime();
+                              const mins = Math.floor(diff / 60000);
+                              if (mins < 60) return `${mins}m ago`;
+                              const hrs = Math.floor(mins / 60);
+                              if (hrs < 24) return `${hrs}h ago`;
+                              const days = Math.floor(hrs / 24);
+                              return `${days}d ago`;
+                            })()}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">Never signed in</span>
                         )}
-                      >
-                        {member.role}
-                      </Badge>
-                    )}
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditing(member); setShowModal(true); }}>
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-4 h-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setEditing(member); setShowModal(true); }}>
+                              <Edit2 className="w-4 h-4 mr-2" />Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleResendInvite(member)} disabled={resendingInvite === member.email}>
+                              <Send className="w-4 h-4 mr-2" />
+                              {resendingInvite === member.email ? 'Sending...' : 'Re-invite'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setResetPasswordMember(member)}>
+                              <KeyRound className="w-4 h-4 mr-2" />Reset Password
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setResetMfaMember(member)}>
+                              <Shield className="w-4 h-4 mr-2" />Reset MFA
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'member', item: member })} className="text-red-600">
+                              <Trash2 className="w-4 h-4 mr-2" />Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform", isExpanded && "rotate-180")} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                    <span className="flex items-center gap-1.5 truncate"><Mail className="w-3.5 h-3.5 flex-shrink-0" />{member.email}</span>
-                    {member.phone && <span className="flex items-center gap-1.5 hidden sm:flex"><Phone className="w-3.5 h-3.5 flex-shrink-0" />{member.phone}</span>}
-                  </div>
+
+                  {/* Expanded Details */}
+                  {isExpanded && (
+                    <div className="px-5 pb-4 pt-1 bg-slate-50/50 dark:bg-[#151d2b]/50 border-t border-slate-100 dark:border-slate-700/30">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 ml-[52px]">
+                        {/* Contact Info */}
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Contact</p>
+                          <div className="space-y-1.5">
+                            <a href={`mailto:${member.email}`} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 hover:text-[#0069AF] transition-colors">
+                              <Mail className="w-3.5 h-3.5 text-slate-400" />
+                              {member.email}
+                            </a>
+                            {member.phone ? (
+                              <a href={`tel:${member.phone}`} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 hover:text-[#0069AF] transition-colors">
+                                <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                {member.phone}
+                              </a>
+                            ) : (
+                              <p className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+                                <Phone className="w-3.5 h-3.5" />
+                                No phone
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Last Sign-In */}
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Last Sign-In</p>
+                          <div className="space-y-1.5">
+                            {session?.lastActive ? (
+                              <>
+                                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                  {session.lastActive.toLocaleDateString()} at {session.lastActive.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                  <Globe className="w-3.5 h-3.5 text-slate-400" />
+                                  {session.ip_address || 'IP not available'}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                  {(session.device_type === 'mobile' || session.user_agent?.includes('Mobile')) ? (
+                                    <Smartphone className="w-3.5 h-3.5 text-slate-400" />
+                                  ) : (
+                                    <Monitor className="w-3.5 h-3.5 text-slate-400" />
+                                  )}
+                                  {session.device_type || session.user_agent?.split('(')[1]?.split(')')[0]?.slice(0, 30) || 'Unknown device'}
+                                </div>
+                              </>
+                            ) : (
+                              <p className="text-xs text-slate-400 dark:text-slate-500 italic">No sign-in data available</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Status */}
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Status</p>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2 text-xs">
+                              <div className={cn("w-2 h-2 rounded-full", session?.isOnline ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600")} />
+                              <span className={cn(session?.isOnline ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-slate-500 dark:text-slate-400")}>
+                                {session?.isOnline ? 'Currently Online' : 'Offline'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                              <Shield className="w-3.5 h-3.5 text-slate-400" />
+                              {member.role || 'No role assigned'}
+                            </div>
+                            {member.created_date && (
+                              <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                Joined {new Date(member.created_date).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(member); setShowModal(true); }}>
-                  <Edit2 className="w-3.5 h-3.5" />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => { setEditing(member); setShowModal(true); }}>
-                      <Edit2 className="w-4 h-4 mr-2" />Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleResendInvite(member)} disabled={resendingInvite === member.email}>
-                      <Send className="w-4 h-4 mr-2" />
-                      {resendingInvite === member.email ? 'Sending...' : 'Re-invite'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setResetPasswordMember(member)}>
-                      <KeyRound className="w-4 h-4 mr-2" />Reset Password
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setResetMfaMember(member)}>
-                      <Shield className="w-4 h-4 mr-2" />Reset MFA
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setDeleteConfirm({ type: 'member', item: member })} className="text-red-600">
-                      <Trash2 className="w-4 h-4 mr-2" />Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-            ))}
+              );
+            })}
             {filteredMembers.length === 0 && members.length > 0 && (
               <div className="p-8 text-center text-slate-500 dark:text-slate-400">
                 <Search className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -862,7 +1043,7 @@ function TeamMemberModal({ open, onClose, member, onSave, saving, error }) {
             <Label>Email</Label>
             <Input type="email" value={formData.email} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))} required className="mt-1" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Role</Label>
               <select
@@ -1423,7 +1604,7 @@ function CompanySettingsSection({ queryClient }) {
           
           {expandedSections.branding && (
             <div className="px-4 pb-4 space-y-4">
-              <div className="flex items-start gap-6 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
+              <div className="flex items-start gap-3 sm:gap-6 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
                 <div className="flex-shrink-0">
                   {formData.app_logo_url ? (
                     <div className="relative">
@@ -1932,6 +2113,7 @@ function DatabaseHealthSection() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [fixing, setFixing] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
 
   const getToken = async () => {
@@ -1969,6 +2151,27 @@ function DatabaseHealthSection() {
     } catch (err) {
       console.error('Failed to fetch history:', err);
     }
+  };
+
+  const fixOrphanedRecords = async (issue) => {
+    if (!issue.orphaned_ids?.length) return;
+    setFixing(issue.entity);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API_URL}/api/integrations/data-health/fix`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entity: issue.entity, orphaned_ids: issue.orphaned_ids }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Re-run health check to refresh data
+        await fetchHealth();
+      }
+    } catch (err) {
+      console.error('Failed to fix orphaned records:', err);
+    }
+    setFixing(null);
   };
 
   useEffect(() => {
@@ -2067,21 +2270,21 @@ function DatabaseHealthSection() {
                         <HardDrive className="w-4 h-4 text-slate-400" />
                         <span className="text-xs font-medium text-slate-500 uppercase">Database Size</span>
                       </div>
-                      <p className="text-2xl font-bold text-slate-900">{healthData.database?.size_pretty || 'N/A'}</p>
+                      <p className="text-lg sm:text-2xl font-bold text-slate-900">{healthData.database?.size_pretty || 'N/A'}</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-4 border">
                       <div className="flex items-center gap-2 mb-2">
                         <Activity className="w-4 h-4 text-slate-400" />
                         <span className="text-xs font-medium text-slate-500 uppercase">Connections</span>
                       </div>
-                      <p className="text-2xl font-bold text-slate-900">{healthData.database?.active_connections || 0}</p>
+                      <p className="text-lg sm:text-2xl font-bold text-slate-900">{healthData.database?.active_connections || 0}</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-4 border">
                       <div className="flex items-center gap-2 mb-2">
                         <Database className="w-4 h-4 text-slate-400" />
                         <span className="text-xs font-medium text-slate-500 uppercase">Total Rows</span>
                       </div>
-                      <p className="text-2xl font-bold text-slate-900">{healthData.total_rows?.toLocaleString() || 0}</p>
+                      <p className="text-lg sm:text-2xl font-bold text-slate-900">{healthData.total_rows?.toLocaleString() || 0}</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-4 border">
                       <div className="flex items-center gap-2 mb-2">
@@ -2093,7 +2296,7 @@ function DatabaseHealthSection() {
                         <span className="text-xs font-medium text-slate-500 uppercase">Status</span>
                       </div>
                       <p className={cn(
-                        "text-2xl font-bold",
+                        "text-lg sm:text-2xl font-bold",
                         healthData.status === 'healthy' ? "text-emerald-600" : "text-amber-600"
                       )}>
                         {healthData.status === 'healthy' ? 'Healthy' : 'Issues'}
@@ -2211,7 +2414,7 @@ function DatabaseHealthSection() {
                         <div key={i} className="border border-amber-200 bg-amber-50 rounded-lg p-4">
                           <div className="flex items-start gap-3">
                             <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                            <div>
+                            <div className="flex-1">
                               <p className="font-medium text-amber-800">
                                 {issue.type === 'orphaned_records'
                                   ? `${issue.count} orphaned ${issue.entity} record(s)`
@@ -2223,6 +2426,15 @@ function DatabaseHealthSection() {
                                   : `Team members with emails that don't match any user account`}
                               </p>
                             </div>
+                            {issue.type === 'orphaned_records' && issue.orphaned_ids?.length > 0 && (
+                              <button
+                                onClick={() => fixOrphanedRecords(issue)}
+                                disabled={fixing === issue.entity}
+                                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors shrink-0"
+                              >
+                                {fixing === issue.entity ? 'Fixing...' : `Delete ${issue.count} orphan${issue.count !== 1 ? 's' : ''}`}
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -2522,7 +2734,7 @@ function IntegrationsSection({ queryClient }) {
 
             {/* Settings Tab */}
             {activeTab === 'settings' && (
-              <div className="p-6 space-y-6">
+              <div className="p-3 sm:p-6 space-y-6">
                 {/* Enable toggle */}
                 <label className="flex items-center gap-3 cursor-pointer">
                   <Checkbox checked={formData.halopsa_enabled} onCheckedChange={(v) => setFormData(p => ({ ...p, halopsa_enabled: v }))} />
@@ -2537,7 +2749,7 @@ function IntegrationsSection({ queryClient }) {
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
                         Connection
                       </h3>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <Label className="text-xs">Authorisation Server URL</Label>
                           <Input value={formData.halopsa_auth_url} onChange={e => setFormData(p => ({ ...p, halopsa_auth_url: e.target.value }))} placeholder="https://yourcompany.halopsa.com/auth" className="mt-1" />
@@ -2547,7 +2759,7 @@ function IntegrationsSection({ queryClient }) {
                           <Input value={formData.halopsa_api_url} onChange={e => setFormData(p => ({ ...p, halopsa_api_url: e.target.value }))} placeholder="https://yourcompany.halopsa.com/api" className="mt-1" />
                         </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                           <Label className="text-xs">Client ID</Label>
                           <Input value={formData.halopsa_client_id} onChange={e => setFormData(p => ({ ...p, halopsa_client_id: e.target.value }))} placeholder="Your Client ID" className="mt-1" />
@@ -2583,7 +2795,7 @@ function IntegrationsSection({ queryClient }) {
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
                         Sync Options
                       </h3>
-                      <div className="flex flex-wrap gap-6">
+                      <div className="flex flex-wrap gap-3 sm:gap-6">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <Checkbox checked={formData.halopsa_sync_customers} onCheckedChange={v => setFormData(p => ({ ...p, halopsa_sync_customers: v }))} />
                           <span className="text-sm">Sync Customers</span>
@@ -2606,7 +2818,7 @@ function IntegrationsSection({ queryClient }) {
                         <span className="font-medium">Field Mapping</span>
                       </button>
                       {showFieldMapping && (
-                        <div className="mt-3 grid grid-cols-2 gap-3">
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {Object.entries(formData.halopsa_field_mapping).map(([key, value]) => (
                             <div key={key} className="flex items-center gap-2">
                               <span className="text-xs font-medium text-slate-500 w-16 capitalize">{key}</span>
@@ -2752,6 +2964,12 @@ function IntegrationsSection({ queryClient }) {
         )}
       </div>
 
+      {/* QuoteIT Integration Card */}
+      <QuoteITIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+
+      {/* PortalIT Integration Card */}
+      <PortalITIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+
       {/* Resend Integration Card */}
       <ResendIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
 
@@ -2763,6 +2981,300 @@ function IntegrationsSection({ queryClient }) {
 
       {/* Giphy Integration Card */}
       <GiphyIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+    </div>
+  );
+}
+
+function QuoteITIntegrationCard({ expandedIntegration, toggleIntegration }) {
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const [formData, setFormData] = useState({
+    quoteit_enabled: false,
+    quoteit_api_url: '',
+    quoteit_api_key: '',
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['integrationSettings'],
+    queryFn: () => api.entities.IntegrationSettings.filter({ setting_key: 'main' })
+  });
+
+  useEffect(() => {
+    if (settings[0]) {
+      setFormData(prev => ({
+        ...prev,
+        quoteit_enabled: settings[0].quoteit_enabled || false,
+        quoteit_api_url: settings[0].quoteit_api_url || '',
+        quoteit_api_key: settings[0].quoteit_api_key || '',
+      }));
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setResult(null);
+    try {
+      const payload = { setting_key: 'main', ...formData };
+      if (settings[0]) {
+        await api.entities.IntegrationSettings.update(settings[0].id, payload);
+      } else {
+        await api.entities.IntegrationSettings.create(payload);
+      }
+      refetch();
+      setResult({ success: true, message: 'QuoteIT settings saved' });
+    } catch (err) {
+      setResult({ success: false, message: err.message || 'Failed to save' });
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <button
+        onClick={() => toggleIntegration('quoteit')}
+        className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0F2F44] to-[#163D57] flex items-center justify-center shadow-sm">
+            <img src="/quoteit-favicon.svg" alt="" className="w-7 h-7" />
+          </div>
+          <div className="text-left">
+            <h3 className="text-base font-semibold text-slate-900">Quote<span className="text-amber-500">IT</span></h3>
+            <p className="text-xs text-slate-500 mt-0.5">Quoting & proposals — sync accepted quotes to projects</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {formData.quoteit_enabled ? (
+            <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Connected</Badge>
+          ) : (
+            <Badge variant="outline" className="text-slate-400 border-slate-200 text-xs">Not configured</Badge>
+          )}
+          <ChevronDown className={cn(
+            "w-5 h-5 text-slate-400 transition-transform duration-200",
+            expandedIntegration === 'quoteit' && "rotate-180"
+          )} />
+        </div>
+      </button>
+
+      {expandedIntegration === 'quoteit' && (
+        <div className="border-t p-3 sm:p-6 space-y-5">
+          {/* How it works */}
+          <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-100">
+            <h4 className="text-sm font-semibold text-slate-700 mb-2">What this does</h4>
+            <ul className="text-xs text-slate-600 space-y-1.5">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-amber-500" />
+                Sync accepted quotes from QuoteIT into ProjectIT
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-amber-500" />
+                Auto-create projects from incoming proposals
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-amber-500" />
+                Link projects back to their original quotes
+              </li>
+            </ul>
+          </div>
+
+          {/* Enable toggle */}
+          <label className="flex items-center gap-3 cursor-pointer">
+            <Checkbox checked={formData.quoteit_enabled} onCheckedChange={(v) => setFormData(p => ({ ...p, quoteit_enabled: v }))} />
+            <span className="font-medium text-sm">Enable QuoteIT Integration</span>
+          </label>
+
+          {formData.quoteit_enabled && (
+            <>
+              <div>
+                <Label className="text-xs">QuoteIT URL</Label>
+                <Input
+                  value={formData.quoteit_api_url}
+                  onChange={e => setFormData(p => ({ ...p, quoteit_api_url: e.target.value }))}
+                  placeholder="https://quoteit.gtools.io"
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-400 mt-1">Your QuoteIT instance URL</p>
+              </div>
+              <div>
+                <Label className="text-xs">API Key</Label>
+                <Input
+                  value={formData.quoteit_api_key}
+                  onChange={e => setFormData(p => ({ ...p, quoteit_api_key: e.target.value }))}
+                  placeholder="Enter your QuoteIT API key"
+                  type="password"
+                  className="mt-1"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSave} disabled={saving} size="sm">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Save Settings
+            </Button>
+          </div>
+
+          {/* Result */}
+          {result && (
+            <div className={cn(
+              "p-3 rounded-lg text-xs font-medium",
+              result.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+            )}>
+              {result.message}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PortalITIntegrationCard({ expandedIntegration, toggleIntegration }) {
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const [formData, setFormData] = useState({
+    portalit_enabled: false,
+    portalit_api_url: '',
+    portalit_api_key: '',
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['integrationSettings'],
+    queryFn: () => api.entities.IntegrationSettings.filter({ setting_key: 'main' })
+  });
+
+  useEffect(() => {
+    if (settings[0]) {
+      setFormData(prev => ({
+        ...prev,
+        portalit_enabled: settings[0].portalit_enabled || false,
+        portalit_api_url: settings[0].portalit_api_url || '',
+        portalit_api_key: settings[0].portalit_api_key || '',
+      }));
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setResult(null);
+    try {
+      const payload = { setting_key: 'main', ...formData };
+      if (settings[0]) {
+        await api.entities.IntegrationSettings.update(settings[0].id, payload);
+      } else {
+        await api.entities.IntegrationSettings.create(payload);
+      }
+      refetch();
+      setResult({ success: true, message: 'PortalIT settings saved' });
+    } catch (err) {
+      setResult({ success: false, message: err.message || 'Failed to save' });
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <button
+        onClick={() => toggleIntegration('portalit')}
+        className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0F2F44] to-[#163D57] flex items-center justify-center shadow-sm">
+            <img src="/portalit-favicon.svg" alt="" className="w-7 h-7" />
+          </div>
+          <div className="text-left">
+            <h3 className="text-base font-semibold text-slate-900">Portal<span className="text-emerald-500">IT</span></h3>
+            <p className="text-xs text-slate-500 mt-0.5">Customer portal — project visibility & communication</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {formData.portalit_enabled ? (
+            <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Connected</Badge>
+          ) : (
+            <Badge variant="outline" className="text-slate-400 border-slate-200 text-xs">Not configured</Badge>
+          )}
+          <ChevronDown className={cn(
+            "w-5 h-5 text-slate-400 transition-transform duration-200",
+            expandedIntegration === 'portalit' && "rotate-180"
+          )} />
+        </div>
+      </button>
+
+      {expandedIntegration === 'portalit' && (
+        <div className="border-t p-3 sm:p-6 space-y-5">
+          {/* How it works */}
+          <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
+            <h4 className="text-sm font-semibold text-slate-700 mb-2">What this does</h4>
+            <ul className="text-xs text-slate-600 space-y-1.5">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Give customers a self-service portal to view project progress
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Sync project data, timelines & milestones to PortalIT
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Enable customer communication & file sharing
+              </li>
+            </ul>
+          </div>
+
+          {/* Enable toggle */}
+          <label className="flex items-center gap-3 cursor-pointer">
+            <Checkbox checked={formData.portalit_enabled} onCheckedChange={(v) => setFormData(p => ({ ...p, portalit_enabled: v }))} />
+            <span className="font-medium text-sm">Enable PortalIT Integration</span>
+          </label>
+
+          {formData.portalit_enabled && (
+            <>
+              <div>
+                <Label className="text-xs">PortalIT URL</Label>
+                <Input
+                  value={formData.portalit_api_url}
+                  onChange={e => setFormData(p => ({ ...p, portalit_api_url: e.target.value }))}
+                  placeholder="https://portalit.gtools.io"
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-400 mt-1">Your PortalIT instance URL</p>
+              </div>
+              <div>
+                <Label className="text-xs">API Key</Label>
+                <Input
+                  value={formData.portalit_api_key}
+                  onChange={e => setFormData(p => ({ ...p, portalit_api_key: e.target.value }))}
+                  placeholder="Enter your PortalIT API key"
+                  type="password"
+                  className="mt-1"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSave} disabled={saving} size="sm">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Save Settings
+            </Button>
+          </div>
+
+          {/* Result */}
+          {result && (
+            <div className={cn(
+              "p-3 rounded-lg text-xs font-medium",
+              result.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+            )}>
+              {result.message}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -2873,7 +3385,7 @@ function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
       </button>
 
       {expandedIntegration === 'gammaai' && (
-        <div className="border-t p-6 space-y-5">
+        <div className="border-t p-3 sm:p-6 space-y-5">
           {/* How it works */}
           <div className="p-4 bg-teal-50 rounded-xl border border-teal-100">
             <div className="flex items-start gap-3">
@@ -3023,7 +3535,7 @@ function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
             </div>
 
             {/* Toggles */}
-            <div className="flex items-center gap-6 pt-2">
+            <div className="flex items-center gap-3 sm:gap-6 pt-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox
                   checked={formData.gammaai_enabled}
@@ -3195,7 +3707,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
       </button>
 
       {expandedIntegration === 'resend' && (
-        <div className="border-t p-6 space-y-5">
+        <div className="border-t p-3 sm:p-6 space-y-5">
           {/* API Key — env var only */}
           <div>
             <Label className="text-xs">Resend API Key</Label>
@@ -3214,7 +3726,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
           </div>
 
           {/* From settings */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label className="text-xs">From Name</Label>
               <Input value={fromName} onChange={e => setFromName(e.target.value)} placeholder="ProjectIT" className="mt-1" />
@@ -3680,7 +4192,7 @@ function AIAgentsSection({ queryClient }) {
         </button>
 
         {expandedCard === 'connection' && (
-          <div className="border-t border-slate-200 dark:border-slate-700 p-6 space-y-5">
+          <div className="border-t border-slate-200 dark:border-slate-700 p-3 sm:p-6 space-y-5">
             {/* Info banner */}
             <div className="p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800">
               <div className="flex items-start gap-3">
@@ -3767,7 +4279,7 @@ function AIAgentsSection({ queryClient }) {
               </div>
 
               {/* Toggles */}
-              <div className="flex items-center gap-6 pt-2">
+              <div className="flex items-center gap-3 sm:gap-6 pt-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <Checkbox
                     checked={formData.gammaai_enabled}
@@ -3834,7 +4346,7 @@ function AIAgentsSection({ queryClient }) {
           </button>
 
           {expandedCard === 'agents' && (
-            <div className="border-t border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div className="border-t border-slate-200 dark:border-slate-700 p-3 sm:p-6 space-y-4">
               {loadingAgents ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
@@ -4041,7 +4553,7 @@ function GiphyIntegrationCard({ expandedIntegration, toggleIntegration }) {
       </button>
 
       {expandedIntegration === 'giphy' && (
-        <div className="border-t p-6 space-y-5">
+        <div className="border-t p-3 sm:p-6 space-y-5">
           {/* How it works */}
           <div className="p-4 bg-gradient-to-br from-purple-50/50 to-pink-50/30 rounded-xl border border-purple-100">
             <h4 className="text-sm font-semibold text-slate-700 mb-2">What this does</h4>
@@ -4079,7 +4591,7 @@ function GiphyIntegrationCard({ expandedIntegration, toggleIntegration }) {
           </div>
 
           {/* Settings */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label className="text-xs">Content Rating</Label>
               <select
@@ -4143,7 +4655,7 @@ function GiphyIntegrationCard({ expandedIntegration, toggleIntegration }) {
                 </Button>
               </div>
               {previewGifs.length > 0 && (
-                <div className="grid grid-cols-3 gap-2 mt-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
                   {previewGifs.map(gif => (
                     <div key={gif.id} className="relative rounded-lg overflow-hidden bg-slate-100 aspect-square group">
                       <img

@@ -268,7 +268,7 @@ export default function FeedbackManagement() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <div className="mb-6">
           <Link to={createPageUrl('Adminland')} className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 mb-4">
@@ -281,7 +281,7 @@ export default function FeedbackManagement() {
                 <MessageSquare className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">Feedback</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-slate-900">Feedback</h1>
                 <p className="text-slate-500">{feedbackList.length} submissions</p>
               </div>
             </div>

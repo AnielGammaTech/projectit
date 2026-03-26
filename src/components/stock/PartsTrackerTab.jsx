@@ -13,6 +13,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { parseLocalDate } from '@/utils/dateUtils';
 import {
   Select,
   SelectContent,
@@ -164,8 +165,8 @@ export default function PartsTrackerTab() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4 sm:mb-6">
+        <div className="relative w-full sm:flex-1 sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search parts, projects, tracking..."
@@ -175,7 +176,7 @@ export default function PartsTrackerTab() {
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -190,7 +191,7 @@ export default function PartsTrackerTab() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {Object.entries(groupedByStatus).map(([status, items]) => {
           const config = statusConfig[status];
           const Icon = config.icon;
@@ -232,63 +233,67 @@ function PartCard({ part, expanded, onToggle, onStatusChange, onSaveTracking, ed
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header Row */}
-      <div 
-        className="p-4 flex items-center gap-4 cursor-pointer hover:bg-slate-50 transition-colors"
+      <div
+        className="p-3 sm:p-4 cursor-pointer hover:bg-slate-50 transition-colors"
         onClick={onToggle}
       >
-        {expanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-slate-900 truncate">{part.name}</h3>
-            {part.part_number && (
-              <span className="text-xs text-slate-500">#{part.part_number}</span>
-            )}
+        <div className="flex items-start sm:items-center gap-2 sm:gap-4">
+          <div className="mt-1 sm:mt-0 shrink-0">
+            {expanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <Link 
-              to={createPageUrl('ProjectDetail') + `?id=${part.project_id}`}
-              className="hover:text-[#0069AF] hover:underline flex items-center gap-1"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {getProjectName(part.project_id)}
-              <ExternalLink className="w-3 h-3" />
-            </Link>
-            {productName && (
-              <>
-                <span>•</span>
-                <span className="text-emerald-600">{productName}</span>
-              </>
-            )}
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          {part.tracking_number && (
-            <Badge variant="outline" className="text-xs">
-              <Truck className="w-3 h-3 mr-1" />
-              {part.carrier || 'Track'}: {part.tracking_number}
-            </Badge>
-          )}
-          <Select value={part.status} onValueChange={(v) => onStatusChange(part, v)} disabled={saving}>
-            <SelectTrigger className={cn("w-36", config.color)}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="needed">Needed</SelectItem>
-              <SelectItem value="ordered">Ordered</SelectItem>
-              <SelectItem value="received">Received</SelectItem>
-              <SelectItem value="ready_to_install">Ready to Install</SelectItem>
-              <SelectItem value="installed">Installed</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-slate-900 truncate">{part.name}</h3>
+              {part.part_number && (
+                <span className="text-xs text-slate-500 hidden sm:inline">#{part.part_number}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-slate-500 flex-wrap">
+              <Link
+                to={createPageUrl('ProjectDetail') + `?id=${part.project_id}`}
+                className="hover:text-[#0069AF] hover:underline flex items-center gap-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {getProjectName(part.project_id)}
+                <ExternalLink className="w-3 h-3" />
+              </Link>
+              {productName && (
+                <>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="text-emerald-600">{productName}</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+            {part.tracking_number && (
+              <Badge variant="outline" className="text-xs hidden sm:flex">
+                <Truck className="w-3 h-3 mr-1" />
+                {part.carrier || 'Track'}: {part.tracking_number}
+              </Badge>
+            )}
+            <Select value={part.status} onValueChange={(v) => onStatusChange(part, v)} disabled={saving}>
+              <SelectTrigger className={cn("w-28 sm:w-36", config.color)}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="needed">Needed</SelectItem>
+                <SelectItem value="ordered">Ordered</SelectItem>
+                <SelectItem value="received">Received</SelectItem>
+                <SelectItem value="ready_to_install">Ready to Install</SelectItem>
+                <SelectItem value="installed">Installed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
       {/* Expanded Details */}
       {expanded && (
         <div className="px-4 pb-4 border-t border-slate-100 pt-4 space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div>
               <label className="text-xs text-slate-500 block mb-1">Tracking Number</label>
               <Input
@@ -342,11 +347,11 @@ function PartCard({ part, expanded, onToggle, onStatusChange, onSaveTracking, ed
           )}
 
           {/* Additional Info */}
-          <div className="flex items-center gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100">
             {part.quantity && <span>Qty: {part.quantity}</span>}
             {part.supplier && <span>Supplier: {part.supplier}</span>}
             {part.assigned_name && <span>Assigned: {part.assigned_name}</span>}
-            {part.due_date && <span>Due: {format(new Date(part.due_date), 'MMM d')}</span>}
+            {part.due_date && <span>Due: {format(parseLocalDate(part.due_date), 'MMM d')}</span>}
           </div>
         </div>
       )}

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { parseLocalDate } from '@/utils/dateUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -140,8 +141,8 @@ export default function ReportBuilder() {
       case 'quarter': return { start: startOfQuarter(now), end: endOfQuarter(now) };
       case 'year': return { start: startOfYear(now), end: endOfYear(now) };
       case 'custom': return {
-        start: reportConfig.filters.start_date ? new Date(reportConfig.filters.start_date) : subMonths(now, 1),
-        end: reportConfig.filters.end_date ? new Date(reportConfig.filters.end_date) : now
+        start: reportConfig.filters.start_date ? parseLocalDate(reportConfig.filters.start_date) || subMonths(now, 1) : subMonths(now, 1),
+        end: reportConfig.filters.end_date ? parseLocalDate(reportConfig.filters.end_date) || now : now
       };
       default: return { start: startOfMonth(now), end: now };
     }
@@ -169,7 +170,7 @@ export default function ReportBuilder() {
       completed_projects: projects.filter(p => p.status === 'completed').length,
       total_tasks: tasks.length,
       completed_tasks: tasks.filter(t => t.status === 'completed').length,
-      overdue_tasks: tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length,
+      overdue_tasks: tasks.filter(t => { const d = parseLocalDate(t.due_date); return d && d < new Date() && t.status !== 'completed'; }).length,
       total_hours: Math.round(timeEntries.reduce((sum, t) => sum + (t.duration_minutes || 0), 0) / 60),
       billable_hours: Math.round(timeEntries.filter(t => t.billing_status !== 'excluded').reduce((sum, t) => sum + (t.duration_minutes || 0), 0) / 60),
       proposals_sent: proposals.filter(p => p.status !== 'draft').length,
@@ -320,7 +321,7 @@ export default function ReportBuilder() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -335,7 +336,7 @@ export default function ReportBuilder() {
               <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Report Builder</h1>
+              <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] tracking-tight">Report Builder</h1>
             </div>
           </div>
           <div className="flex gap-2">
@@ -363,9 +364,9 @@ export default function ReportBuilder() {
           </TabsList>
 
           <TabsContent value="builder">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6">
               {/* Config Panel */}
-              <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-6">
                 {/* Date Range */}
                 <Card>
                   <CardHeader className="pb-3">
@@ -510,7 +511,7 @@ export default function ReportBuilder() {
                         return (
                           <div key={metricId} className="text-center">
                             <Icon className="w-5 h-5 mx-auto text-slate-400 mb-1" />
-                            <p className="text-2xl font-bold text-slate-900">
+                            <p className="text-lg sm:text-2xl font-bold text-slate-900">
                               {metricId.includes('value') ? `$${metrics[metricId]?.toLocaleString()}` : metrics[metricId]}
                             </p>
                             <p className="text-xs text-slate-500">{metric?.label}</p>

@@ -130,7 +130,8 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
   const getDueDateLabel = (dueDate) => {
     if (!dueDate) return null;
     const now = new Date();
-    const due = new Date(dueDate);
+    const due = parseLocalDate(dueDate);
+    if (!due) return null;
     const diffDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
     if (diffDays < 0) return { text: `${Math.abs(diffDays)}d overdue`, color: 'text-red-500' };
     if (diffDays === 0) return { text: 'Today', color: 'text-orange-500' };
@@ -145,13 +146,13 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-blue-100/60 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-blue-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-blue-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
         <div className="p-3.5 pb-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/50">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/50 dark:shadow-blue-900/30">
                 <ListTodo className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -169,7 +170,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
             <Button
               size="sm"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAddTask(); }}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-md shadow-blue-200/40 h-7 w-7 p-0 rounded-lg"
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-md shadow-blue-200/40 dark:shadow-blue-900/20 h-7 w-7 p-0 rounded-lg"
             >
               <Plus className="w-3.5 h-3.5" />
             </Button>
@@ -182,13 +183,13 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
             const assigneeName = assignee?.name || (t.assigned_to ? t.assigned_to.split('@')[0] : null);
             const dueInfo = getDueDateLabel(t.due_date);
             return (
-              <div key={t.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-blue-50/60 transition-colors">
+              <div key={t.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-blue-50/60 dark:hover:bg-blue-900/20 transition-colors">
                 <div className={cn("w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0",
                   t.status === 'in_progress' ? "border-blue-400" : t.status === 'review' ? "border-amber-400" : "border-slate-300")}>
                   {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
                   {t.status === 'review' && <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
                 </div>
-                <span className="text-xs text-slate-700 font-medium truncate flex-1 min-w-0">{t.title}</span>
+                <span className="text-xs text-slate-700 dark:text-slate-200 font-medium truncate flex-1 min-w-0">{t.title}</span>
                 {assigneeName && (
                   <span className="text-[9px] text-slate-400 shrink-0">{assigneeName.split(' ')[0]}</span>
                 )}
@@ -209,7 +210,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTaskPage(p => Math.max(0, p - 1)); }}
               disabled={taskPage === 0}
-              className="px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50 rounded disabled:opacity-30"
+              className="px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded disabled:opacity-30"
             >
               Prev
             </button>
@@ -217,7 +218,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTaskPage(p => Math.min(totalPages - 1, p + 1)); }}
               disabled={taskPage >= totalPages - 1}
-              className="px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50 rounded disabled:opacity-30"
+              className="px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded disabled:opacity-30"
             >
               Next
             </button>
@@ -382,13 +383,13 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-emerald-100/60 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 hover:shadow-lg hover:shadow-emerald-100/50 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-emerald-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-emerald-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
         <div className="p-3.5 pb-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200/50">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30">
                 <Package className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -406,7 +407,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
             <Button
               size="sm"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAddPart(); }}
-              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-200/40 h-7 w-7 p-0 rounded-lg flex-shrink-0"
+              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-200/40 dark:shadow-emerald-900/20 h-7 w-7 p-0 rounded-lg flex-shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
             </Button>
@@ -418,13 +419,13 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
             const dueInfo = !etaInfo ? getDateLabel(p.due_date) : null;
             const dateInfo = etaInfo || dueInfo;
             return (
-              <div key={p.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-emerald-50/60 transition-colors group/part">
+              <div key={p.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20 transition-colors group/part">
                 {/* Status badge */}
                 <Badge variant="outline" className={cn("text-[8px] px-1 py-0 shrink-0 leading-tight", partStatusConfig[p.status]?.color)}>
                   {partStatusConfig[p.status]?.label || p.status}
                 </Badge>
                 {/* Name */}
-                <span className="text-xs text-slate-700 font-medium truncate flex-1 min-w-0">{p.name}</span>
+                <span className="text-xs text-slate-700 dark:text-slate-200 font-medium truncate flex-1 min-w-0">{p.name}</span>
                 {/* Assignee */}
                 {p.assigned_name && (
                   <div className="flex items-center gap-0.5 shrink-0" title={p.assigned_name}>
@@ -542,7 +543,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPartPage(p => Math.max(0, p - 1)); }}
               disabled={partPage === 0}
-              className="px-2 py-0.5 text-[10px] font-medium text-emerald-600 hover:bg-emerald-50 rounded disabled:opacity-30"
+              className="px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded disabled:opacity-30"
             >
               Prev
             </button>
@@ -550,7 +551,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPartPage(p => Math.min(totalPages - 1, p + 1)); }}
               disabled={partPage >= totalPages - 1}
-              className="px-2 py-0.5 text-[10px] font-medium text-emerald-600 hover:bg-emerald-50 rounded disabled:opacity-30"
+              className="px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded disabled:opacity-30"
             >
               Next
             </button>
@@ -1142,18 +1143,34 @@ export default function ProjectDetail() {
 
   // Save as Template
   const handleSaveAsTemplate = async () => {
+    // Build group mapping for tasks
+    const groupTemplateIds = {};
+    const templateGroups = taskGroups.map(g => {
+      const templateId = `grp_${g.id}`;
+      groupTemplateIds[g.id] = templateId;
+      return { name: g.name, color: g.color || 'slate', _template_id: templateId };
+    });
+
     const templateData = {
       name: `${project.name} Template`,
       description: project.description || '',
+      template_type: 'project',
+      default_groups: templateGroups,
       default_tasks: tasks.map(t => ({
         title: t.title,
         description: t.description || '',
-        priority: t.priority || 'medium'
+        priority: t.priority || 'medium',
+        group_id: t.group_id ? (groupTemplateIds[parseInt(t.group_id)] || '') : ''
       })),
       default_parts: parts.map(p => ({
         name: p.name,
         part_number: p.part_number || '',
         quantity: p.quantity || 1
+      })),
+      default_messages: projectNotes.map(n => ({
+        title: n.title || '',
+        content: n.content || '',
+        type: n.type || 'note'
       }))
     };
     await api.entities.ProjectTemplate.create(templateData);
@@ -1283,7 +1300,7 @@ export default function ProjectDetail() {
           >
             <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${
               project.status === 'archived'
-                ? 'bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-200/50'
+                ? 'bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-200/50 dark:shadow-amber-900/30'
                 : 'bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-200/50'
             }`}>
               {project.status === 'archived' ? (
@@ -1386,79 +1403,147 @@ export default function ProjectDetail() {
           className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-sm p-4 mb-5"
         >
           {/* Row 1: Title + Actions */}
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
-              {/* Project number + tags inline with title */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {project.project_number && (
-                  <span className="px-2 py-0.5 bg-slate-800 text-white rounded text-xs font-mono font-semibold">
-                    #{project.project_number}
-                  </span>
-                )}
-                <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 truncate">{project.name}</h1>
-                {getProjectTags().map(tag => (
-                  <span
-                    key={tag.id}
-                    className={cn(
-                      "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium",
-                      tagColors[tag.color] || tagColors.slate
-                    )}
-                  >
-                    {tag.name}
-                  </span>
-                ))}
+              {/* Project number + title + mobile actions */}
+              <div className="flex items-start gap-2">
+                <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                  {project.project_number && (
+                    <span className="px-2 py-0.5 bg-slate-800 text-white rounded text-xs font-mono font-semibold">
+                      #{project.project_number}
+                    </span>
+                  )}
+                  <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 break-words">{project.name}</h1>
+                </div>
+                {/* Mobile-only: edit + more inline with title */}
+                <div className="flex items-center gap-1 sm:hidden shrink-0">
+                  <Button variant="ghost" size="sm" onClick={() => setShowProjectModal(true)} className="h-7 w-7 p-0 text-slate-400">
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400">
+                        <MoreHorizontal className="w-3.5 h-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => navigate(createPageUrl('TimeReport') + `?project_id=${projectId}`)}>
+                        <Clock className="w-4 h-4 mr-2" />
+                        Time Report
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleSaveAsTemplate}>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Save as Template
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowArchiveModal(true)}>
+                        <Archive className="w-4 h-4 mr-2" />
+                        Archive Project
+                      </DropdownMenuItem>
+                      {currentUser?.role === 'admin' && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-red-600">
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Move to Trash
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
 
+              {/* Tags — below title on mobile */}
+              {getProjectTags().length > 0 && (
+                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  {getProjectTags().map(tag => (
+                    <span
+                      key={tag.id}
+                      className={cn(
+                        "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium",
+                        tagColors[tag.color] || tagColors.slate
+                      )}
+                    >
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               {/* Meta row: client, lead, quote link */}
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {project.client && (
                   <Link
                     to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')}
                     className="text-[#0069AF] hover:underline text-sm"
                   >
-                    {project.client} →
+                    {project.client}{project.client_company ? ` — ${project.client_company}` : ''} →
                   </Link>
                 )}
-                {project.project_lead && (
-                  <div className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">
-                    <Crown className="w-3 h-3 text-amber-500" />
-                    <span className="font-medium">
-                      {teamMembers.find(m => m.email === project.project_lead)?.name || project.project_lead.split('@')[0]}
-                    </span>
-                  </div>
-                )}
+                {project.project_lead && (() => {
+                  const leadMember = teamMembers.find(m => m.email === project.project_lead);
+                  return (
+                    <div className="hidden sm:flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">
+                      <Crown className="w-3 h-3 text-amber-500" />
+                      <span className="font-medium">
+                        {leadMember?.name || project.project_lead.split('@')[0]}
+                      </span>
+                      {leadMember?.company && (
+                        <span className="text-amber-500 font-normal">· {leadMember.company}</span>
+                      )}
+                    </div>
+                  );
+                })()}
                 {(integrationSettings?.quoteit_api_url && (project.quoteit_quote_id || linkedQuote?.quoteit_id)) && (
                   <a
                     href={`${integrationSettings.quoteit_api_url}/QuoteView?id=${project.quoteit_quote_id || linkedQuote?.quoteit_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors border border-orange-200"
+                    className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors border border-amber-200"
                   >
-                    <FileText className="w-3 h-3" />
-                    QuoteIT
+                    <img src="/quoteit-favicon.svg" alt="" className="w-3.5 h-3.5" />
+                    Quote<span className="text-amber-500">IT</span>
                   </a>
                 )}
-                {project.status !== 'archived' && project.status !== 'completed' && (
-                  <TeamAvatars
-                    members={project.team_members || []}
-                    teamMembers={teamMembers}
-                    onUpdate={handleTeamUpdate}
-                  />
+                {integrationSettings?.portalit_api_url && (
+                  <a
+                    href={`${integrationSettings.portalit_api_url}/project/${project.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors border border-emerald-200"
+                  >
+                    <img src="/portalit-favicon.svg" alt="" className="w-3.5 h-3.5" />
+                    Portal<span className="text-emerald-500">IT</span>
+                  </a>
                 )}
+                {/* Team avatars — desktop only */}
+                <span className="hidden sm:inline-flex">
+                  {project.status !== 'archived' && project.status !== 'completed' && (
+                    <TeamAvatars
+                      members={project.team_members || []}
+                      teamMembers={teamMembers}
+                      onUpdate={handleTeamUpdate}
+                    />
+                  )}
+                </span>
               </div>
             </div>
 
-            {/* Right: actions — timer + ticket + edit + more */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <TimeTracker
-                projectId={projectId}
-                currentUser={currentUser}
-                timeBudgetHours={project.time_budget_hours || 0}
-              />
-              <HaloPSATicketLink
-                project={project}
-                onUpdate={refetchProject}
-              />
+            {/* Right: actions — edit + more (desktop shows timer too, hidden on mobile — shown inline with title) */}
+            <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+              <span className="hidden sm:inline-flex">
+                <TimeTracker
+                  projectId={projectId}
+                  currentUser={currentUser}
+                  timeBudgetHours={project.time_budget_hours || 0}
+                />
+              </span>
+              <span className="hidden sm:inline-flex">
+                <HaloPSATicketLink
+                  project={project}
+                  onUpdate={refetchProject}
+                />
+              </span>
               <Button variant="outline" size="sm" onClick={() => setShowProjectModal(true)} className="h-8 px-2.5 touch-manipulation">
                 <Edit2 className="w-3.5 h-3.5" />
               </Button>
@@ -1497,9 +1582,19 @@ export default function ProjectDetail() {
 
           {project.description && <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 line-clamp-2">{project.description}</p>}
 
+          {/* Mobile: Prominent Timer + Quick Actions */}
+          <div className="sm:hidden mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+            <TimeTracker
+              projectId={projectId}
+              currentUser={currentUser}
+              timeBudgetHours={project.time_budget_hours || 0}
+              variant="compact"
+            />
+          </div>
+
           {/* Row 2: Progress bar + status actions */}
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
-            <div className="flex-1 min-w-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+            <div className="flex-1 min-w-0 w-full">
               <ProgressNeedle
                 projectId={projectId}
                 value={project.progress || 0}
@@ -1547,8 +1642,92 @@ export default function ProjectDetail() {
           </div>
         </motion.div>
 
-        {/* ── Tool Cards Grid + Sidebar ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
+        {/* ── Mobile: Compact 2x2 grid cards ── */}
+        <div className="sm:hidden grid grid-cols-2 gap-2 pb-3">
+          {/* Tasks */}
+          <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-blue-500/10 dark:bg-blue-500/20">
+                  <ListTodo className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Tasks</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${taskProgress}%` }} />
+                </div>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">{completedTasks}/{tasks.filter(t => t.project_id === projectId).length}</span>
+              </div>
+            </div>
+          </Link>
+
+          {/* Messages */}
+          <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`}>
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-violet-500/10 dark:bg-violet-500/20">
+                  <MessageSquare className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+                </div>
+                <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Messages</span>
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">{projectNotes.length} total</span>
+            </div>
+          </Link>
+
+          {/* Parts */}
+          <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`}>
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20">
+                  <Package className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Parts</span>
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">{parts.filter(p => p.project_id === projectId).length} total</span>
+            </div>
+          </Link>
+
+          {/* Files */}
+          <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`}>
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-amber-500/10 dark:bg-amber-500/20">
+                  <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Files</span>
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">{projectFiles.length} file{projectFiles.length !== 1 ? 's' : ''}</span>
+            </div>
+          </Link>
+
+          {/* Due Dates — full width */}
+          <div className="col-span-2 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="p-1.5 rounded-lg bg-red-500/10 dark:bg-red-500/20">
+                <Clock className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+              </div>
+              <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Upcoming Due Dates</span>
+            </div>
+            {(() => {
+              const upcoming = [...tasks.filter(t => t.project_id === projectId && t.due_date && t.status !== 'completed'), ...parts.filter(p => p.project_id === projectId && p.due_date && p.status !== 'installed')]
+                .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+                .slice(0, 3);
+              return upcoming.length > 0 ? (
+                <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+                  {upcoming.map(item => (
+                    <p key={item.id} className="text-[11px] text-slate-600 dark:text-slate-300 truncate">
+                      <span className="text-slate-400">{format(new Date(item.due_date), 'M/d')}</span> {item.title || item.name}
+                    </p>
+                  ))}
+                </div>
+              ) : <p className="text-[11px] text-slate-400">No upcoming dates</p>;
+            })()}
+          </div>
+        </div>
+
+        {/* ── Desktop: Tool Cards Grid + Sidebar ── */}
+        <div className="hidden sm:grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
           {/* Main Cards — 2x2 grid + Due Dates right column */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_240px] gap-3 auto-rows-min">
 
@@ -1557,7 +1736,7 @@ export default function ProjectDetail() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="sm:col-start-2 sm:row-span-3 lg:col-start-3 lg:row-start-1 lg:row-span-3"
+              className="sm:col-start-2 sm:row-span-2 lg:col-start-3 lg:row-start-1 lg:row-span-2"
             >
               <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} teamMembers={teamMembers} />
             </motion.div>
@@ -1579,13 +1758,13 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-violet-100/60 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 hover:shadow-lg hover:shadow-violet-100/50 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-violet-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-violet-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-400" />
                 <div className="p-3.5 pb-2">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-200/50">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-200/50 dark:shadow-violet-900/30">
                         <MessageSquare className="w-4 h-4 text-white" />
                       </div>
                       <div>
@@ -1633,13 +1812,13 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-amber-100/60 bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 hover:shadow-lg hover:shadow-amber-100/50 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-amber-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-amber-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-400" />
                 <div className="p-3.5">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-200/50">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-200/50 dark:shadow-amber-900/30">
                         <FileText className="w-4 h-4 text-white" />
                       </div>
                       <div>

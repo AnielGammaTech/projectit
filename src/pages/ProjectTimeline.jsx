@@ -117,9 +117,9 @@ export default function ProjectTimeline() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
             <Link to={createPageUrl('ProjectDetail') + `?id=${projectId}`}>
               <Button variant="ghost" size="sm">
@@ -128,7 +128,7 @@ export default function ProjectTimeline() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{project.name} - Timeline</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">{project.name} - Timeline</h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 Drag tasks to reschedule • Drag edges to resize
               </p>
@@ -152,7 +152,7 @@ export default function ProjectTimeline() {
         </div>
 
         {/* Project Summary */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-4">
             <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Project Start</div>
             <div className="text-lg font-semibold text-slate-900 dark:text-slate-100">

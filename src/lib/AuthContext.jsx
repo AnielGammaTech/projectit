@@ -67,26 +67,23 @@ export const AuthProvider = ({ children }) => {
         }
 
         if (session) {
-          // We have a session — refresh it to guarantee a valid access token
-          const { data: refreshData } = await supabase.auth.refreshSession();
+          // Check if MFA verification is needed before authenticating.
+          // Do NOT call refreshSession() here — it can downgrade aal2 → aal1
+          // which causes an infinite login → MFA → signout loop.
+          // The Supabase client handles token refresh automatically via
+          // onAuthStateChange and the shared session state in supabase.js.
+          const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
           if (!mounted) return;
 
-          if (refreshData?.session) {
-            // Check if the user has MFA enrolled but hasn't completed verification
-            const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-            if (aalData && aalData.currentLevel === 'aal1' && aalData.nextLevel === 'aal2') {
-              // User has MFA enrolled but session is only aal1 — force re-login for MFA
-              console.log('MFA required but session is aal1 — redirecting to login');
-              await supabase.auth.signOut();
-              setIsAuthenticated(false);
-              setUser(null);
-            } else {
-              await fetchAppUser();
-            }
-          } else {
-            // Refresh failed — session is invalid
+          if (aalData && aalData.currentLevel === 'aal1' && aalData.nextLevel === 'aal2') {
+            // User has MFA enrolled but hasn't verified yet in this session.
+            // Don't sign out — just leave unauthenticated so Login.jsx can
+            // show the MFA screen with the existing session intact.
+            console.log('MFA verification needed — routing to login');
             setIsAuthenticated(false);
             setUser(null);
+          } else {
+            await fetchAppUser();
           }
         } else {
           setIsAuthenticated(false);
@@ -143,8 +140,9 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
 
     try {
-      // Force a refresh to get a valid token
-      const { data: { session } } = await supabase.auth.refreshSession();
+      // Use getSession instead of refreshSession to preserve AAL level.
+      // The Supabase client handles token refresh automatically.
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         await fetchAppUser();
       } else {

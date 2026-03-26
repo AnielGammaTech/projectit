@@ -98,7 +98,7 @@ export default function TimeReport() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Back Link */}
         {selectedProject !== 'all' && selectedProjectData && (
           <Link to={createPageUrl('ProjectDetail') + `?id=${selectedProject}`} className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-6 transition-colors">
@@ -118,7 +118,7 @@ export default function TimeReport() {
               <Clock className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Time Report</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-slate-900">Time Report</h1>
               <p className="text-slate-500">
                 {formatDuration(totalMinutes)} total logged
                 {selectedProjectData && ` for ${selectedProjectData.name}`}
@@ -161,19 +161,19 @@ export default function TimeReport() {
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-slate-500">Total Time</p>
-              <p className="text-2xl font-bold text-[#133F5C]">{totalHours.toFixed(1)}h</p>
+              <p className="text-lg sm:text-2xl font-bold text-[#133F5C]">{totalHours.toFixed(1)}h</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-slate-500">Entries</p>
-              <p className="text-2xl font-bold text-[#133F5C]">{filteredEntries.length}</p>
+              <p className="text-lg sm:text-2xl font-bold text-[#133F5C]">{filteredEntries.length}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-slate-500">Avg per Entry</p>
-              <p className="text-2xl font-bold text-[#133F5C]">
+              <p className="text-lg sm:text-2xl font-bold text-[#133F5C]">
                 {filteredEntries.length > 0 ? formatDuration(Math.round(totalMinutes / filteredEntries.length)) : '0h 0m'}
               </p>
             </CardContent>
@@ -181,13 +181,13 @@ export default function TimeReport() {
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-slate-500">Team Members</p>
-              <p className="text-2xl font-bold text-[#133F5C]">{Object.keys(entriesByUser).length}</p>
+              <p className="text-lg sm:text-2xl font-bold text-[#133F5C]">{Object.keys(entriesByUser).length}</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Time by User */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-6">
+        <div className="grid lg:grid-cols-3 gap-3 sm:gap-6 mb-6">
           <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">

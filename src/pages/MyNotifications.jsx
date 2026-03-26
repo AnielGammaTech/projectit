@@ -94,7 +94,7 @@ export default function MyNotifications() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto px-4 py-4 sm:py-8">
         <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-[#0069AF] hover:text-[#133F5C] mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard

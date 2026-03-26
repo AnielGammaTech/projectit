@@ -10,8 +10,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   CalendarIcon, Loader2, Users, Search, Building2, User, Check, Clock, X,
   FileStack, UserPlus, ChevronDown, Crown, Sparkles, FolderOpen, Palette,
-  Timer, ArrowRight, Plus, ChevronRight
+  Timer, ArrowRight, Plus, ChevronRight, Package, Link2, Unlink
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { api } from '@/api/apiClient';
 import { cn } from '@/lib/utils';
@@ -43,6 +44,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     description: '',
     client: '',
     customer_id: '',
+    client_company: '',
     status: 'in_progress',
     start_date: '',
     due_date: '',
@@ -87,6 +89,12 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     enabled: open
   });
 
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => api.entities.Product.list('name'),
+    enabled: open && extractedParts.length > 0
+  });
+
   const defaultStatus = projectStatuses.find(s => s.is_default)?.key || 'in_progress';
 
   useEffect(() => {
@@ -96,6 +104,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         description: project.description || '',
         client: project.client || '',
         customer_id: project.customer_id || '',
+        client_company: project.customer_id ? (customers.find(c => c.id === project.customer_id)?.company || '') : '',
         status: project.status || 'in_progress',
         start_date: project.start_date || '',
         due_date: project.due_date || '',
@@ -125,6 +134,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         description: prefillData.description || '',
         client: clientName,
         customer_id: customerId,
+        client_company: customerId ? (customers.find(c => c.id === customerId)?.company || '') : '',
         status: defaultStatus,
         start_date: '',
         due_date: '',
@@ -140,7 +150,9 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
           name: item.name || 'Unnamed Item',
           quantity: item.quantity || 1,
           unit_cost: item.unit_cost || item.unit_price || 0,
-          description: item.description || ''
+          description: item.description || '',
+          matched_product_id: item.matched_product_id || null,
+          matched_product_name: item.matched_product_name || null,
         })));
       } else {
         setExtractedParts([]);
@@ -236,9 +248,35 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     }
   };
 
+  const [showProductPicker, setShowProductPicker] = useState(null); // index of part being matched
+  const [productSearch, setProductSearch] = useState('');
+
+  const updatePartProduct = (index, product) => {
+    setExtractedParts(prev => prev.map((part, i) =>
+      i === index
+        ? { ...part, matched_product_id: product?.id || null, matched_product_name: product?.name || null }
+        : part
+    ));
+    setShowProductPicker(null);
+    setProductSearch('');
+  };
+
+  const removePart = (index) => {
+    setExtractedParts(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const [showValidation, setShowValidation] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (saving) return;
+
+    // Show validation errors if required fields are missing
+    if (!formData.name || !formData.customer_id || !formData.description || !formData.project_lead) {
+      setShowValidation(true);
+      return;
+    }
+
     setSaving(true);
     const template = selectedTemplate && selectedTemplate !== 'none' ? templates.find(t => t.id === selectedTemplate) : null;
     await onSave(formData, template, extractedParts);
@@ -247,7 +285,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
   const selectedColor = colorOptions.find(c => c.value === formData.color)?.color || '#3b82f6';
   const isEdit = !!project;
-  const canSubmit = formData.name && formData.customer_id && formData.description;
+  const canSubmit = formData.name && formData.customer_id && formData.description && formData.project_lead;
   const leadMember = formData.project_lead ? getMember(formData.project_lead) : null;
 
   const filteredAvailableMembers = teamMembers.filter(m =>
@@ -258,11 +296,11 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden max-h-[90vh] gap-0 dark:bg-[#1e2a3a]">
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden max-h-[90vh] gap-0 h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl dark:bg-[#1e2a3a]">
 
         {/* ── Colored Header ── */}
         <div
-          className="px-6 pt-6 pb-4 transition-colors duration-300"
+          className="px-4 sm:px-6 pt-6 pb-4 transition-colors duration-300"
           style={{ background: `linear-gradient(135deg, ${selectedColor}18, ${selectedColor}08)` }}
         >
           <div className="flex items-center justify-between mb-4">
@@ -320,27 +358,35 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             </Popover>
           </div>
 
-          {/* Project Name — Large, prominent */}
-          <Input
-            value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="What's the project called?"
-            className="text-lg font-semibold h-12 bg-white/80 dark:bg-[#151d2b]/80 backdrop-blur-sm border-white/50 dark:border-slate-600 shadow-sm placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-2 dark:text-slate-100"
-            style={{ '--tw-ring-color': selectedColor + '40' }}
-            required
-          />
+          {/* Project Name — Large, prominent (REQUIRED) */}
+          <div className="space-y-1">
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="What's the project called? *"
+              className={cn(
+                "text-lg font-semibold h-12 bg-white/80 dark:bg-[#151d2b]/80 backdrop-blur-sm shadow-sm placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-2 dark:text-slate-100",
+                !formData.name && saving ? "border-red-400 ring-1 ring-red-200" : "border-white/50 dark:border-slate-600"
+              )}
+              style={{ '--tw-ring-color': selectedColor + '40' }}
+              required
+            />
+            {!formData.name && saving && (
+              <p className="text-xs text-red-500 pl-1">Project name is required</p>
+            )}
+          </div>
         </div>
 
         {/* ── Scrollable Body ── */}
         <form onSubmit={handleSubmit} className="overflow-y-auto max-h-[calc(90vh-200px)]">
-          <div className="px-6 py-5 space-y-5">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
 
             {/* Client + Description row */}
             <div className="space-y-4">
               {/* Client Selection — Modern dropdown */}
               <div className="relative">
                 <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
-                  Client
+                  Client <span className="text-red-500">*</span>
                 </Label>
                 <div
                   className={cn(
@@ -355,12 +401,17 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: selectedColor + '15' }}>
                         <Building2 className="w-3.5 h-3.5" style={{ color: selectedColor }} />
                       </div>
-                      <span className="flex-1 text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{formData.client}</span>
+                      <span className="flex-1 text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                        {formData.client}
+                        {formData.client_company && (
+                          <span className="text-slate-400 font-normal"> — {formData.client_company}</span>
+                        )}
+                      </span>
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setFormData(prev => ({ ...prev, client: '', customer_id: '' }));
+                          setFormData(prev => ({ ...prev, client: '', customer_id: '', client_company: '' }));
                         }}
                         className="text-slate-400 hover:text-slate-600"
                       >
@@ -403,7 +454,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                               key={customer.id}
                               type="button"
                               onClick={() => {
-                                setFormData(prev => ({ ...prev, client: customer.name || '', customer_id: customer.id }));
+                                setFormData(prev => ({ ...prev, client: customer.name || '', customer_id: customer.id, client_company: customer.company || '' }));
                                 setShowCustomerDropdown(false);
                                 setCustomerSearch('');
                               }}
@@ -426,10 +477,12 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm truncate">{customer.name}</p>
-                                {customer.company && customer.type !== 'company' && (
-                                  <p className="text-xs text-slate-500 truncate">{customer.company}</p>
-                                )}
+                                <p className="font-medium text-sm truncate">
+                                  {customer.name}
+                                  {customer.company && (
+                                    <span className="text-slate-400 font-normal"> — {customer.company}</span>
+                                  )}
+                                </p>
                               </div>
                               {formData.customer_id === customer.id && (
                                 <Check className="w-4 h-4" style={{ color: selectedColor }} />
@@ -447,20 +500,29 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                     </div>
                   </>
                 )}
+                {showValidation && !formData.customer_id && (
+                  <p className="text-xs text-red-500 mt-1 pl-1">Please select a client</p>
+                )}
               </div>
 
               {/* Description */}
               <div>
                 <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
-                  Description
+                  Description <span className="text-red-500">*</span>
                 </Label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Brief summary of what this project is about..."
                   required
-                  className="h-20 resize-none rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-[#151d2b] dark:text-slate-100 focus-visible:border-blue-400 text-sm"
+                  className={cn(
+                    "h-20 resize-none rounded-xl border-2 dark:bg-[#151d2b] dark:text-slate-100 focus-visible:border-blue-400 text-sm",
+                    showValidation && !formData.description ? "border-red-400" : "border-slate-200 dark:border-slate-600"
+                  )}
                 />
+                {showValidation && !formData.description && (
+                  <p className="text-xs text-red-500 mt-1 pl-1">Description is required</p>
+                )}
               </div>
             </div>
 
@@ -499,7 +561,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg">
                     <Crown className="w-3 h-3" />
-                    Lead
+                    Lead <span className="text-red-500">*</span>
                   </div>
                   {leadMember ? (
                     <div className="flex items-center gap-2 flex-1">
@@ -521,9 +583,14 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                     <button
                       type="button"
                       onClick={() => setShowLeadPicker(!showLeadPicker)}
-                      className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                      className={cn(
+                        "text-sm transition-colors",
+                        showValidation && !formData.project_lead
+                          ? "text-red-500 hover:text-red-600"
+                          : "text-slate-400 hover:text-slate-600"
+                      )}
                     >
-                      Assign a lead...
+                      {showValidation && !formData.project_lead ? 'Lead is required — click to assign' : 'Assign a lead...'}
                     </button>
                   )}
                 </div>
@@ -641,7 +708,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             </div>
 
             {/* ── Options Row — Dates, Budget, Template ── */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Start Date */}
               <div>
                 <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
@@ -818,10 +885,116 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                 </div>
               )}
             </div>
+
+            {/* ── Quote Items / Parts Section ── */}
+            {extractedParts.length > 0 && (
+              <div className="rounded-xl border-2 border-amber-200 dark:border-amber-800/50 overflow-hidden">
+                <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800/50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-amber-600" />
+                    <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">Quote Items</span>
+                    <span className="text-xs text-amber-600 bg-amber-100 dark:bg-amber-800/40 px-1.5 py-0.5 rounded-full">
+                      {extractedParts.length}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-amber-600 dark:text-amber-400">
+                    {extractedParts.filter(p => p.matched_product_id).length}/{extractedParts.length} matched
+                  </span>
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                  {extractedParts.map((part, idx) => (
+                    <div key={idx} className="px-4 py-2.5 flex items-center gap-3 relative">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">{part.name}</span>
+                          <span className="text-xs text-slate-400">×{part.quantity}</span>
+                          {part.unit_cost > 0 && (
+                            <span className="text-xs text-emerald-600 font-medium">${part.unit_cost}</span>
+                          )}
+                        </div>
+                        {part.matched_product_id ? (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Link2 className="w-3 h-3 text-emerald-500" />
+                            <span className="text-[11px] text-emerald-600 font-medium">{part.matched_product_name}</span>
+                            <button
+                              type="button"
+                              onClick={() => updatePartProduct(idx, null)}
+                              className="text-slate-300 hover:text-red-500 ml-1"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => { setShowProductPicker(idx); setProductSearch(''); }}
+                            className="flex items-center gap-1 mt-0.5 text-[11px] text-amber-600 hover:text-amber-700"
+                          >
+                            <Unlink className="w-3 h-3" />
+                            Link to product...
+                          </button>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removePart(idx)}
+                        className="text-slate-300 hover:text-red-500 shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+
+                      {/* Product picker dropdown */}
+                      {showProductPicker === idx && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowProductPicker(null)} />
+                          <div className="absolute z-50 top-full left-4 right-4 mt-1 bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-600 shadow-xl max-h-48 overflow-hidden">
+                            <div className="p-2 border-b border-slate-100 dark:border-slate-700">
+                              <div className="relative">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                                <Input
+                                  value={productSearch}
+                                  onChange={(e) => setProductSearch(e.target.value)}
+                                  placeholder="Search products..."
+                                  className="pl-8 h-8 text-xs rounded-lg"
+                                  autoFocus
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            </div>
+                            <div className="max-h-32 overflow-y-auto p-1">
+                              {products
+                                .filter(p => p.name?.toLowerCase().includes(productSearch.toLowerCase()))
+                                .slice(0, 20)
+                                .map(product => (
+                                  <button
+                                    key={product.id}
+                                    type="button"
+                                    onClick={() => updatePartProduct(idx, product)}
+                                    className="w-full flex items-center gap-2 p-2 rounded-lg text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                                  >
+                                    <Package className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <span className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{product.name}</span>
+                                    {product.selling_price > 0 && (
+                                      <span className="text-[10px] text-emerald-600 ml-auto shrink-0">${product.selling_price}</span>
+                                    )}
+                                  </button>
+                                ))}
+                              {products.filter(p => p.name?.toLowerCase().includes(productSearch.toLowerCase())).length === 0 && (
+                                <p className="text-xs text-slate-400 text-center py-3">No products found</p>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── Footer ── */}
-          <div className="px-6 py-4 bg-slate-50 dark:bg-[#151d2b] border-t border-slate-200 dark:border-slate-600 flex items-center justify-between">
+          <div className="px-4 sm:px-6 py-4 bg-slate-50 dark:bg-[#151d2b] border-t border-slate-200 dark:border-slate-600 flex items-center justify-between">
             <button
               type="button"
               onClick={onClose}

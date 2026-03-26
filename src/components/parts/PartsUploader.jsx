@@ -36,9 +36,12 @@ export default function PartsUploader({ projectId, onPartsExtracted, compact = f
     }
   };
 
-  // Handle paste from clipboard
+  // Handle paste from clipboard (only when not inside a dialog/modal)
   useEffect(() => {
     const handlePaste = async (e) => {
+      // Skip if paste originated inside a dialog overlay (e.g. Order Part, Part Detail)
+      if (e.target.closest('[role="dialog"], [role="alertdialog"]')) return;
+
       const items = e.clipboardData?.items;
       if (!items) return;
 

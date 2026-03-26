@@ -122,7 +122,7 @@ export default function FeedbackButton() {
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Open feedback form"
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-1.5 px-1.5 py-3 rounded-r-lg bg-gradient-to-b from-[#0F2F44] to-[#133F5C] text-white/90 shadow-lg hover:text-white hover:brightness-125 hover:shadow-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#74C7FF] focus-visible:ring-offset-2"
+        className="hidden sm:flex fixed left-0 top-1/2 -translate-y-1/2 z-50 flex-col items-center gap-1.5 px-1.5 py-3 rounded-r-lg bg-gradient-to-b from-[#0F2F44] to-[#133F5C] text-white/90 shadow-lg hover:text-white hover:brightness-125 hover:shadow-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#74C7FF] focus-visible:ring-offset-2"
       >
         <MessageSquarePlus className="w-4 h-4 flex-shrink-0" />
         <span

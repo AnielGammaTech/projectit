@@ -73,12 +73,38 @@ const llmService = {
     // Build the user message content
     const content = [];
 
-    // Add file URLs as context if provided
+    // Add file URLs as image content blocks for vision analysis
     if (file_urls && file_urls.length > 0) {
-      content.push({
-        type: 'text',
-        text: `Referenced files:\n${file_urls.map(url => `- ${url}`).join('\n')}\n\n`,
-      });
+      for (const url of file_urls) {
+        // Detect if URL points to an image by extension or content type hint
+        const lowerUrl = url.toLowerCase();
+        const isImage = /\.(png|jpg|jpeg|gif|webp)(\?.*)?$/.test(lowerUrl) ||
+          lowerUrl.includes('image/');
+
+        if (isImage) {
+          content.push({
+            type: 'image',
+            source: {
+              type: 'url',
+              url: url,
+            },
+          });
+        } else if (lowerUrl.endsWith('.pdf') || lowerUrl.includes('.pdf?') || lowerUrl.includes('application/pdf')) {
+          content.push({
+            type: 'document',
+            source: {
+              type: 'url',
+              url: url,
+            },
+          });
+        } else {
+          // For other file types, include as text reference
+          content.push({
+            type: 'text',
+            text: `Referenced file: ${url}`,
+          });
+        }
+      }
     }
 
     // Add the main prompt

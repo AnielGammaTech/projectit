@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import authService from '../services/authService.js';
 import authMiddleware from '../middleware/auth.js';
+import { authLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
 
@@ -43,7 +44,7 @@ router.post('/resend-invite', authMiddleware, async (req, res, next) => {
 });
 
 // Send OTP verification code to invited user (via Resend, not Supabase email)
-router.post('/send-otp', async (req, res, next) => {
+router.post('/send-otp', authLimiter, async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -57,7 +58,7 @@ router.post('/send-otp', async (req, res, next) => {
 });
 
 // Verify OTP code and return auth token for session creation
-router.post('/verify-otp', async (req, res, next) => {
+router.post('/verify-otp', authLimiter, async (req, res, next) => {
   try {
     const { email, code } = req.body;
     if (!email || !code) {
@@ -92,7 +93,7 @@ router.post('/accept-invite', async (req, res, next) => {
 });
 
 // Login — proxy to Supabase Auth (frontend can also call Supabase directly)
-router.post('/login', async (req, res, next) => {
+router.post('/login', authLimiter, async (req, res, next) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {

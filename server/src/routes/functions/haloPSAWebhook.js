@@ -17,7 +17,11 @@ export default async function handler(req, res) {
     const webhookSecret = settings.halopsa_webhook_secret || process.env.HALOPSA_WEBHOOK_SECRET;
     const providedSecret = req.headers['x-webhook-secret'] || req.query?.secret;
 
-    if (webhookSecret && providedSecret !== webhookSecret) {
+    if (!webhookSecret) {
+      console.error('HaloPSA webhook secret not configured — rejecting request');
+      return res.status(401).json({ error: 'Webhook secret not configured' });
+    }
+    if (providedSecret !== webhookSecret) {
       console.error('Webhook authentication failed');
       return res.status(401).json({ error: 'Unauthorized' });
     }

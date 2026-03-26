@@ -113,7 +113,7 @@ export default function UserGroups() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -121,7 +121,7 @@ export default function UserGroups() {
           className="flex items-center justify-between mb-8"
         >
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">User Groups</h1>
+            <h1 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">User Groups</h1>
             <p className="text-slate-500 mt-1">Manage access groups for projects</p>
           </div>
           <Button onClick={() => handleOpenModal()} className="bg-indigo-600 hover:bg-indigo-700">
@@ -155,7 +155,7 @@ export default function UserGroups() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="bg-white rounded-2xl border border-slate-100 p-6 hover:shadow-lg transition-all"
+                className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-6 hover:shadow-lg transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">

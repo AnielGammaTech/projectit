@@ -69,11 +69,11 @@ export default function QuoteRequestDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
-              <DialogTitle className="text-xl">{quote.title}</DialogTitle>
+              <DialogTitle className="text-lg sm:text-xl">{quote.title}</DialogTitle>
               <div className="flex items-center gap-2 mt-2">
                 <Badge className={status.color}>{status.label}</Badge>
                 {quote.priority === 'urgent' && (
@@ -186,7 +186,7 @@ export default function QuoteRequestDetailModal({
           {(quote.quote_amount || quote.vendor || quote.expected_delivery || quote.install_date) && (
             <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 space-y-3">
               <h4 className="font-semibold text-emerald-800">Quote Details</h4>
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 {quote.quote_amount && (
                   <div>
                     <span className="text-emerald-600">Amount</span>
@@ -240,7 +240,7 @@ export default function QuoteRequestDetailModal({
                 </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-sm">Quote Amount</Label>
                   <Input
@@ -262,7 +262,7 @@ export default function QuoteRequestDetailModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-sm">Expected Delivery</Label>
                   <Popover>

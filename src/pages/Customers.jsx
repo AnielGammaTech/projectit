@@ -276,35 +276,46 @@ export default function Customers() {
   if (loadingCustomers) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse space-y-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="space-y-6">
+            {/* Header skeleton */}
             <div className="flex items-center justify-between">
-              <div>
-                <div className="h-8 w-48 bg-slate-200 rounded-lg" />
-                <div className="h-4 w-64 bg-slate-100 rounded mt-2" />
+              <div className="space-y-2">
+                <div className="h-8 w-48 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse" />
+                <div className="h-4 w-64 bg-slate-100 dark:bg-slate-700/60 rounded animate-pulse" />
               </div>
               <div className="flex gap-2">
-                <div className="h-10 w-40 bg-slate-200 rounded-lg" />
-                <div className="h-10 w-36 bg-slate-200 rounded-lg" />
+                <div className="h-10 w-40 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse" />
+                <div className="h-10 w-36 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse" />
               </div>
             </div>
-            <div className="bg-white rounded-2xl border border-slate-100 p-4">
-              <div className="h-10 bg-slate-100 rounded-lg" />
+            {/* Search bar skeleton */}
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4">
+              <div className="flex gap-3">
+                <div className="flex-1 h-10 bg-slate-100 dark:bg-slate-700/40 rounded-lg animate-pulse" />
+                <div className="h-10 w-20 bg-slate-100 dark:bg-slate-700/40 rounded-lg animate-pulse" />
+                <div className="h-10 w-72 bg-slate-100 dark:bg-slate-700/40 rounded-lg animate-pulse" />
+              </div>
             </div>
+            {/* Card grid skeleton */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-white rounded-xl border p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-slate-200" />
+              {Array.from({ length: 8 }, (_, i) => (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-4"
+                  style={{ animationDelay: `${i * 75}ms` }}
+                >
+                  <div className="flex items-start gap-3 animate-pulse">
+                    <div className="w-9 h-9 rounded-lg bg-slate-200 dark:bg-slate-700 flex-shrink-0" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-slate-200 rounded w-3/4" />
-                      <div className="h-3 bg-slate-100 rounded w-1/2" />
+                      <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/5" />
+                      <div className="h-3 bg-slate-100 dark:bg-slate-700/60 rounded w-2/5" />
                     </div>
                   </div>
-                  <div className="flex gap-3 pt-3 border-t border-slate-100">
-                    <div className="h-6 w-12 bg-slate-100 rounded" />
-                    <div className="h-6 w-12 bg-slate-100 rounded" />
-                    <div className="h-6 w-12 bg-slate-100 rounded" />
+                  <div className="flex gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/40 animate-pulse">
+                    <div className="h-5 w-10 bg-slate-100 dark:bg-slate-700/40 rounded" />
+                    <div className="h-5 w-10 bg-slate-100 dark:bg-slate-700/40 rounded" />
+                    <div className="h-5 w-10 bg-slate-100 dark:bg-slate-700/40 rounded" />
                   </div>
                 </div>
               ))}
@@ -315,28 +326,30 @@ export default function Customers() {
     );
   }
 
-  if (loadingCustomers) return <CardGridSkeleton />;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
+          className="flex items-center justify-between gap-3 mb-3 sm:mb-6"
         >
-          <div>
-            <h1 className="text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Customers</h1>
-            <p className="text-slate-500 mt-1">Manage your client relationships</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg sm:text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Customers</h1>
+            <span className="text-xs text-slate-400 sm:hidden">{companies.length + standaloneContacts.length}</span>
+            <p className="hidden sm:block text-slate-500 text-sm">Manage your client relationships</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleHaloPSASync} disabled={syncing}>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Button variant="outline" size="sm" onClick={handleHaloPSASync} disabled={syncing} className="hidden sm:inline-flex">
               <RefreshCw className={cn("w-4 h-4 mr-2", syncing && "animate-spin")} />
               Sync from HaloPSA
             </Button>
-            <Button onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#0F2F44]">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Customer
+            <Button variant="ghost" size="sm" onClick={handleHaloPSASync} disabled={syncing} className="sm:hidden h-8 w-8 p-0">
+              <RefreshCw className={cn("w-4 h-4", syncing && "animate-spin")} />
+            </Button>
+            <Button size="sm" onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#0F2F44] h-8 sm:h-9 text-xs sm:text-sm px-2.5 sm:px-3">
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Customer</span>
             </Button>
           </div>
         </motion.div>
@@ -369,8 +382,51 @@ export default function Customers() {
           </motion.div>
         )}
 
-        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-3">
+        {/* Mobile: compact search + inline filter tabs */}
+        <div className="sm:hidden space-y-2 mb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              placeholder="Search customers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10 text-sm rounded-xl bg-white dark:bg-[#1e2a3a] border-slate-200 dark:border-slate-700/50"
+            />
+          </div>
+          <div className="flex gap-0.5 bg-slate-100 dark:bg-slate-700/50 p-0.5 rounded-full">
+            <button
+              onClick={() => setViewFilter('all')}
+              className={cn(
+                "flex-1 px-3 py-1.5 text-xs font-medium rounded-full transition-colors text-center flex items-center justify-center gap-1",
+                viewFilter === 'all' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-500"
+              )}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setViewFilter('companies')}
+              className={cn(
+                "flex-1 px-3 py-1.5 text-xs font-medium rounded-full transition-colors text-center flex items-center justify-center gap-1",
+                viewFilter === 'companies' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-500"
+              )}
+            >
+              <Building2 className="w-3 h-3" /> Companies
+            </button>
+            <button
+              onClick={() => setViewFilter('contacts')}
+              className={cn(
+                "flex-1 px-3 py-1.5 text-xs font-medium rounded-full transition-colors text-center flex items-center justify-center gap-1",
+                viewFilter === 'contacts' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-500"
+              )}
+            >
+              <Users className="w-3 h-3" /> People
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop: search + filter toolbar in card */}
+        <div className="hidden sm:block bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6">
+          <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
@@ -380,21 +436,21 @@ export default function Customers() {
                 className="pl-10"
               />
             </div>
-            <Button 
-              variant={selectionMode ? "default" : "outline"} 
-              size="sm" 
+            <Button
+              variant={selectionMode ? "default" : "outline"}
+              size="sm"
               onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
               className={cn("h-10", selectionMode && "bg-red-600 hover:bg-red-700")}
             >
               <CheckSquare className="w-4 h-4 mr-2" />
               {selectionMode ? 'Done' : 'Select'}
             </Button>
-            <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+            <div className="flex gap-1 bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
               <button
                 onClick={() => setViewFilter('all')}
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                  viewFilter === 'all' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  viewFilter === 'all' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
                 All ({companies.length + standaloneContacts.length})
@@ -402,8 +458,8 @@ export default function Customers() {
               <button
                 onClick={() => setViewFilter('companies')}
                 className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5",
-                  viewFilter === 'companies' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
+                  viewFilter === 'companies' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
                 <Building2 className="w-3.5 h-3.5" />
@@ -412,8 +468,8 @@ export default function Customers() {
               <button
                 onClick={() => setViewFilter('contacts')}
                 className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5",
-                  viewFilter === 'contacts' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
+                  viewFilter === 'contacts' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
                 <Users className="w-3.5 h-3.5" />
@@ -423,26 +479,72 @@ export default function Customers() {
           </div>
         </div>
 
-        <div className="space-y-4">
-          {/* Companies Grid */}
+        <div className="space-y-2 sm:space-y-4">
+          {/* Companies — mobile list view */}
           {(viewFilter === 'all' || viewFilter === 'companies') && filteredCompanies.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {filteredCompanies.map((company, idx) => {
+            <>
+              {/* Mobile compact list */}
+              <div className="sm:hidden bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/30">
+                {filteredCompanies.map((company) => {
+                  const contacts = getContactsForCompany(company.id);
+                  const companySites = getSitesForCompany(company.id);
+                  const companyProjects = getProjectCount(company.id);
+                  const displayAddress = (company.address || company.city)
+                    ? [company.city, company.state].filter(Boolean).join(', ')
+                    : companySites.length > 0
+                      ? [companySites[0].city, companySites[0].state].filter(Boolean).join(', ')
+                      : null;
+                  return (
+                    <div
+                      key={company.id}
+                      className="flex items-center gap-3 px-3 py-2.5 active:bg-slate-50 dark:active:bg-slate-700/30 cursor-pointer"
+                      onClick={() => setSelectedCustomer(company)}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 shrink-0">
+                        <Building2 className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <h3 className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">{company.name}</h3>
+                          {company.source === 'halo_psa' && (
+                            <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-600 border-blue-200 px-1 py-0 shrink-0">Halo</Badge>
+                          )}
+                        </div>
+                        {displayAddress && (
+                          <p className="text-[11px] text-slate-400 truncate">{displayAddress}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 text-[10px] text-slate-400">
+                        {companySites.length > 0 && (
+                          <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{companySites.length}</span>
+                        )}
+                        {contacts.length > 0 && (
+                          <span className="flex items-center gap-0.5"><Users className="w-3 h-3" />{contacts.length}</span>
+                        )}
+                        {companyProjects > 0 && (
+                          <span className="flex items-center gap-0.5"><FolderKanban className="w-3 h-3" />{companyProjects}</span>
+                        )}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop card grid */}
+              <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 gap-3">
+              {filteredCompanies.map((company) => {
                 const contacts = getContactsForCompany(company.id);
                 const companySites = getSitesForCompany(company.id);
                 const companyProjects = getProjectCount(company.id);
-                // Get address from company directly, or fall back to first site's address
-                const displayAddress = (company.address || company.city) 
+                const displayAddress = (company.address || company.city)
                   ? [company.address, company.city, company.state].filter(Boolean).join(', ')
-                  : companySites.length > 0 
+                  : companySites.length > 0
                     ? [companySites[0].address, companySites[0].city, companySites[0].state].filter(Boolean).join(', ')
                     : null;
                 return (
-                  <motion.div
+                  <div
                     key={company.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.02 }}
                     className={cn(
                       "bg-white dark:bg-[#1e2a3a] rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
                       selectedIds.has(company.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
@@ -452,7 +554,7 @@ export default function Customers() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
                         {selectionMode && (
-                          <button 
+                          <button
                             onClick={(e) => { e.stopPropagation(); toggleSelection(company.id); }}
                             className="mt-0.5 p-0.5"
                           >
@@ -474,7 +576,7 @@ export default function Customers() {
                             )}
                           </div>
                           {displayAddress ? (
-                            <a 
+                            <a
                               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayAddress)}`}
                               target="_blank"
                               rel="noopener noreferrer"
@@ -518,75 +620,101 @@ export default function Customers() {
                         <span className="text-xs font-medium text-slate-700">{companyProjects}</span>
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
-            </div>
+              </div>
+            </>
           )}
 
 
           {/* Standalone Contacts */}
           {(viewFilter === 'all' || viewFilter === 'contacts') && filteredStandaloneContacts.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-              {filteredStandaloneContacts.map((customer, idx) => (
-                <motion.div
-                  key={customer.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.02 }}
-                  className={cn(
-                    "bg-white dark:bg-[#1e2a3a] rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
-                    selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
-                  )}
-                  onClick={() => setSelectedCustomer(customer)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      {selectionMode && (
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); toggleSelection(customer.id); }}
-                          className="mt-0.5 p-0.5"
-                        >
-                          {selectedIds.has(customer.id) ? (
-                            <CheckSquare className="w-4 h-4 text-red-600" />
-                          ) : (
-                            <Square className="w-4 h-4 text-slate-300" />
-                          )}
-                        </button>
-                      )}
-                      <div className="w-9 h-9 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm flex-shrink-0">
-                        {customer.name?.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-slate-900 truncate text-sm">{customer.name}</h3>
-                        {customer.company && <p className="text-xs text-slate-500 truncate">{customer.company}</p>}
-                      </div>
+            <>
+              {/* Mobile compact list */}
+              <div className="sm:hidden bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/30 mt-2">
+                {filteredStandaloneContacts.map((customer) => (
+                  <div
+                    key={customer.id}
+                    className="flex items-center gap-3 px-3 py-2.5 active:bg-slate-50 dark:active:bg-slate-700/30 cursor-pointer"
+                    onClick={() => setSelectedCustomer(customer)}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-xs shrink-0">
+                      {customer.name?.charAt(0).toUpperCase()}
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0 ml-2" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">{customer.name}</h3>
+                      {customer.company && <p className="text-[11px] text-slate-400 truncate">{customer.company}</p>}
+                    </div>
+                    {getProjectCount(customer.id) > 0 && (
+                      <span className="flex items-center gap-0.5 text-[10px] text-slate-400 shrink-0">
+                        <FolderKanban className="w-3 h-3" />{getProjectCount(customer.id)}
+                      </span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
                   </div>
-                  
-                  {/* Stats Row */}
-                  <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100">
-                    <button 
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
-                      title="Contacts"
-                    >
-                      <Users className="w-3.5 h-3.5 text-blue-600" />
-                      <span className="text-xs font-medium text-slate-700">0</span>
-                    </button>
-                    <button 
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-orange-50 transition-colors"
-                      title="Projects"
-                    >
-                      <FolderKanban className="w-3.5 h-3.5 text-orange-600" />
-                      <span className="text-xs font-medium text-slate-700">{getProjectCount(customer.id)}</span>
-                    </button>
+                ))}
+              </div>
+
+              {/* Desktop card grid */}
+              <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                {filteredStandaloneContacts.map((customer) => (
+                  <div
+                    key={customer.id}
+                    className={cn(
+                      "bg-white dark:bg-[#1e2a3a] rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
+                      selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
+                    )}
+                    onClick={() => setSelectedCustomer(customer)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {selectionMode && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleSelection(customer.id); }}
+                            className="mt-0.5 p-0.5"
+                          >
+                            {selectedIds.has(customer.id) ? (
+                              <CheckSquare className="w-4 h-4 text-red-600" />
+                            ) : (
+                              <Square className="w-4 h-4 text-slate-300" />
+                            )}
+                          </button>
+                        )}
+                        <div className="w-9 h-9 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm flex-shrink-0">
+                          {customer.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-slate-900 truncate text-sm">{customer.name}</h3>
+                          {customer.company && <p className="text-xs text-slate-500 truncate">{customer.company}</p>}
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0 ml-2" />
+                    </div>
+
+                    {/* Stats Row */}
+                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100">
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
+                        title="Contacts"
+                      >
+                        <Users className="w-3.5 h-3.5 text-blue-600" />
+                        <span className="text-xs font-medium text-slate-700">0</span>
+                      </button>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-orange-50 transition-colors"
+                        title="Projects"
+                      >
+                        <FolderKanban className="w-3.5 h-3.5 text-orange-600" />
+                        <span className="text-xs font-medium text-slate-700">{getProjectCount(customer.id)}</span>
+                      </button>
+                    </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
 
           {((viewFilter === 'all' && filteredCompanies.length === 0 && filteredStandaloneContacts.length === 0) ||
@@ -620,7 +748,7 @@ export default function Customers() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label>{formData.is_company ? 'Company Name *' : 'Name *'}</Label>
                 <Input value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} className="mt-1" />
@@ -630,7 +758,7 @@ export default function Customers() {
                 <Input type="email" value={formData.email} onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))} className="mt-1" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label>Phone</Label>
                 <Input value={formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} className="mt-1" />
@@ -664,7 +792,7 @@ export default function Customers() {
                   <Label>Address</Label>
                   <Input value={formData.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} className="mt-1" />
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div>
                     <Label>City</Label>
                     <Input value={formData.city} onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))} className="mt-1" />
@@ -754,173 +882,296 @@ export default function Customers() {
 
       {/* Customer Detail Modal */}
       <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
-        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent hideCloseOnMobile className="h-[95dvh] sm:h-auto rounded-t-2xl sm:rounded-2xl sm:max-w-3xl max-h-[95dvh] sm:max-h-[90vh] overflow-hidden p-0 top-auto sm:top-[50%] translate-y-0 sm:translate-y-[-50%] bottom-0 sm:bottom-auto">
           {selectedCustomer && (() => {
             const customerSites = getSitesForCompany(selectedCustomer.id);
             const customerContacts = getContactsForCompany(selectedCustomer.id);
             const customerProjects = getCustomerProjects(selectedCustomer.id);
+            const customerQuotes = getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email);
+            const fullAddress = [selectedCustomer.address, selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ');
+            const siteAddress = customerSites.length > 0 ? [customerSites[0].address, customerSites[0].city, customerSites[0].state, customerSites[0].zip].filter(Boolean).join(', ') : '';
+            const displayAddress = fullAddress || siteAddress;
+
             return (
               <>
-                {/* Header */}
-                <div className="flex items-start justify-between border-b pb-4 mb-4">
-                  <div>
-                    <Link 
-                      to="#" 
-                      onClick={(e) => { e.preventDefault(); setSelectedCustomer(null); }}
-                      className="text-sm text-slate-500 hover:text-[#0069AF] flex items-center gap-1 mb-2"
-                    >
-                      ← Back to Customers
-                    </Link>
-                    <h2 className="text-2xl font-bold text-slate-900">{selectedCustomer.name}</h2>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
-                      {selectedCustomer.email ? (
-                        <span className="flex items-center gap-1">
-                          <Mail className="w-3.5 h-3.5" /> {selectedCustomer.email}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">No email</span>
-                      )}
-                      {selectedCustomer.phone ? (
-                        <span className="flex items-center gap-1">
-                          <Phone className="w-3.5 h-3.5" /> {selectedCustomer.phone}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">No phone</span>
-                      )}
+                {/* Hero Header */}
+                <div className="bg-gradient-to-r from-[#0F2F44] to-[#133F5C] px-4 sm:px-6 pt-3 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden rounded-t-2xl sm:rounded-t-2xl">
+                  <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#74C7FF]/10 rounded-full" />
+                  <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-[#0069AF]/10 rounded-full" />
+                  <div className="relative z-10">
+                    {/* Mobile: drag handle + close/edit bar */}
+                    <div className="sm:hidden flex items-center justify-between mb-3">
+                      <button
+                        onClick={() => setSelectedCustomer(null)}
+                        className="flex items-center gap-1 text-white/70 text-xs font-medium"
+                      >
+                        <X className="w-4 h-4" /> Close
+                      </button>
+                      <div className="w-8 h-1 rounded-full bg-white/30 mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setEditingCustomer(selectedCustomer); setShowModal(true); }}
+                        className="text-white/80 hover:text-white hover:bg-white/15 h-7 text-xs px-2"
+                      >
+                        <Edit2 className="w-3 h-3 mr-1" /> Edit
+                      </Button>
                     </div>
-                    {(selectedCustomer.address || selectedCustomer.city) && (
-                      <p className="flex items-center gap-1 mt-1 text-sm text-slate-500">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {[selectedCustomer.address, selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}
-                      </p>
-                    )}
-                    {selectedCustomer.source === 'halo_psa' && (
-                      <Badge variant="outline" className="mt-2 text-xs bg-blue-50 text-blue-600 border-blue-200">
-                        Synced from HaloPSA
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => { setEditingCustomer(selectedCustomer); setShowModal(true); }}>
-                      <Edit2 className="w-4 h-4 mr-1" /> Edit
-                    </Button>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+                        <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-lg sm:text-2xl font-bold shrink-0">
+                          {selectedCustomer.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h2 className="text-base sm:text-xl font-bold truncate">{selectedCustomer.name}</h2>
+                            {selectedCustomer.source === 'halo_psa' && (
+                              <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-white/20 text-white/90 shrink-0">HaloPSA</span>
+                            )}
+                          </div>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-4 mt-1 text-xs sm:text-sm text-white/70">
+                            {selectedCustomer.email && (
+                              <span className="flex items-center gap-1.5 truncate">
+                                <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> {selectedCustomer.email}
+                              </span>
+                            )}
+                            {selectedCustomer.phone && (
+                              <span className="flex items-center gap-1.5">
+                                <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> {selectedCustomer.phone}
+                              </span>
+                            )}
+                          </div>
+                          {displayAddress && (
+                            <p className="flex items-center gap-1.5 mt-0.5 sm:mt-1 text-xs sm:text-sm text-white/60 truncate">
+                              <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" /> {displayAddress}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {/* Desktop edit button */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setEditingCustomer(selectedCustomer); setShowModal(true); }}
+                        className="hidden sm:flex text-white/80 hover:text-white hover:bg-white/15 h-8 shrink-0"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 mr-1.5" /> Edit
+                      </Button>
+                    </div>
+
+                    {/* Quick stats */}
+                    <div className="flex items-center gap-2 sm:gap-4 mt-3 sm:mt-4 flex-wrap">
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
+                        <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-300" />
+                        <span className="font-medium">{customerSites.length}</span>
+                        <span className="text-white/60">sites</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
+                        <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-300" />
+                        <span className="font-medium">{customerContacts.length}</span>
+                        <span className="text-white/60 hidden sm:inline">contacts</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
+                        <FolderKanban className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-300" />
+                        <span className="font-medium">{customerProjects.length}</span>
+                        <span className="text-white/60 hidden sm:inline">projects</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
+                        <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-violet-300" />
+                        <span className="font-medium">{customerQuotes.length}</span>
+                        <span className="text-white/60 hidden sm:inline">proposals</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex items-center gap-4 border-b mb-4">
-                  <button
-                    onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: 'details' }))}
-                    className={cn(
-                      "pb-2 text-sm font-medium border-b-2 transition-colors",
-                      (companyTabs[selectedCustomer.id] || 'details') === 'details'
-                        ? "border-[#0069AF] text-[#0069AF]"
-                        : "border-transparent text-slate-500 hover:text-slate-700"
-                    )}
-                  >
-                    Details & Contacts
-                  </button>
-                  <button
-                    onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: 'proposals' }))}
-                    className={cn(
-                      "pb-2 text-sm font-medium border-b-2 transition-colors",
-                      companyTabs[selectedCustomer.id] === 'proposals'
-                        ? "border-[#0069AF] text-[#0069AF]"
-                        : "border-transparent text-slate-500 hover:text-slate-700"
-                    )}
-                  >
-                    Proposals ({getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).length})
-                  </button>
-                  <button
-                    onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: 'projects' }))}
-                    className={cn(
-                      "pb-2 text-sm font-medium border-b-2 transition-colors",
-                      companyTabs[selectedCustomer.id] === 'projects'
-                        ? "border-[#0069AF] text-[#0069AF]"
-                        : "border-transparent text-slate-500 hover:text-slate-700"
-                    )}
-                  >
-                    Projects ({customerProjects.length})
-                  </button>
+                <div className="flex items-center gap-1 px-3 sm:px-6 pt-3 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a]">
+                  {[
+                    { key: 'details', label: 'Details', mobileLabel: 'Details' },
+                    { key: 'contacts', label: null, mobileLabel: `Contacts`, mobileOnly: true },
+                    { key: 'proposals', label: `Proposals (${customerQuotes.length})`, mobileLabel: `Proposals` },
+                    { key: 'projects', label: `Projects (${customerProjects.length})`, mobileLabel: `Projects` },
+                  ].map(tab => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: tab.key }))}
+                      className={cn(
+                        "px-2.5 sm:px-4 pb-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+                        tab.mobileOnly && "sm:hidden",
+                        (companyTabs[selectedCustomer.id] || 'details') === tab.key
+                          ? "border-[#0069AF] text-[#0069AF]"
+                          : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                      )}
+                    >
+                      <span className={tab.mobileOnly ? "" : "sm:hidden"}>{tab.mobileLabel}</span>
+                      {tab.label && <span className="hidden sm:inline">{tab.label}</span>}
+                    </button>
+                  ))}
                 </div>
 
-                {/* Details & Contacts Tab */}
-                {(companyTabs[selectedCustomer.id] || 'details') === 'details' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Company Info */}
-                    <div className="bg-white border rounded-xl p-4">
-                      <h4 className="font-semibold text-slate-900 mb-4">Company Info</h4>
-                      <div className="space-y-3 text-sm">
-                        <div>
-                          <p className="text-slate-400 text-xs uppercase tracking-wide">Address</p>
-                          {(selectedCustomer.address || selectedCustomer.city) ? (
-                            <>
-                              <p className="text-slate-700">{selectedCustomer.address || '--'}</p>
-                              {(selectedCustomer.city || selectedCustomer.state || selectedCustomer.zip) && (
-                                <p className="text-slate-700">{[selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}</p>
-                              )}
-                            </>
-                          ) : customerSites.length > 0 && (customerSites[0].address || customerSites[0].city) ? (
-                            <>
-                              <p className="text-slate-700">{customerSites[0].address || '--'}</p>
-                              {(customerSites[0].city || customerSites[0].state || customerSites[0].zip) && (
-                                <p className="text-slate-700">{[customerSites[0].city, customerSites[0].state, customerSites[0].zip].filter(Boolean).join(', ')}</p>
-                              )}
-                              <p className="text-xs text-slate-400 mt-1">(from site: {customerSites[0].name})</p>
-                            </>
-                          ) : (
-                            <p className="text-slate-700">--</p>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-slate-400 text-xs uppercase tracking-wide">Primary Contact</p>
-                          <p className="text-slate-700">{customerContacts[0]?.name || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-slate-400 text-xs uppercase tracking-wide">Email</p>
-                          <p className="text-slate-700">{selectedCustomer.email || '--'}</p>
-                        </div>
-                        <div>
-                          <p className="text-slate-400 text-xs uppercase tracking-wide">Phone</p>
-                          <p className="text-slate-700">{selectedCustomer.phone || '--'}</p>
-                        </div>
-                        
-                        {/* Sites/Locations */}
-                        <div className="pt-3 border-t">
-                          <p className="text-slate-400 text-xs uppercase tracking-wide mb-2">Sites / Locations ({customerSites.length})</p>
-                          {customerSites.length > 0 ? (
-                            <div className="space-y-2">
-                              {customerSites.map(site => (
-                                <div key={site.id} className="p-2 bg-slate-50 rounded-lg">
-                                  <p className="font-medium text-slate-800 text-sm">{site.name}</p>
-                                  <p className="text-xs text-slate-500">
-                                    {[site.address, site.city, site.state, site.zip].filter(Boolean).join(', ') || 'No address'}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-slate-400 text-sm">No sites</p>
-                          )}
+                {/* Tab content */}
+                <div className="overflow-y-auto p-3 sm:p-6 flex-1" style={{ maxHeight: 'calc(100dvh - 280px)' }}>
+                  {/* Details & Contacts Tab */}
+                  {(companyTabs[selectedCustomer.id] || 'details') === 'details' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Company Info */}
+                      <div className="bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl p-5">
+                        <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-[#0069AF]" />
+                          Company Info
+                        </h4>
+                        <div className="space-y-4 text-sm">
+                          <div>
+                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Address</p>
+                            {(selectedCustomer.address || selectedCustomer.city) ? (
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-slate-700 dark:text-slate-300 hover:text-[#0069AF] hover:underline"
+                              >
+                                {selectedCustomer.address && <p>{selectedCustomer.address}</p>}
+                                <p>{[selectedCustomer.city, selectedCustomer.state, selectedCustomer.zip].filter(Boolean).join(', ')}</p>
+                              </a>
+                            ) : customerSites.length > 0 && (customerSites[0].address || customerSites[0].city) ? (
+                              <>
+                                <p className="text-slate-700 dark:text-slate-300">{customerSites[0].address || '--'}</p>
+                                <p className="text-slate-700 dark:text-slate-300">{[customerSites[0].city, customerSites[0].state, customerSites[0].zip].filter(Boolean).join(', ')}</p>
+                                <p className="text-xs text-slate-400 mt-1">(from site: {customerSites[0].name})</p>
+                              </>
+                            ) : (
+                              <p className="text-slate-400">--</p>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Primary Contact</p>
+                            <p className="text-slate-700 dark:text-slate-300">{customerContacts[0]?.name || '--'}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Email</p>
+                            <p className="text-slate-700 dark:text-slate-300">{selectedCustomer.email || '--'}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Phone</p>
+                            <p className="text-slate-700 dark:text-slate-300">{selectedCustomer.phone || '--'}</p>
+                          </div>
+
+                          {/* Sites/Locations */}
+                          <div className="pt-3 border-t border-slate-200 dark:border-slate-700/50">
+                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-2">Sites / Locations ({customerSites.length})</p>
+                            {customerSites.length > 0 ? (
+                              <div className="space-y-2">
+                                {customerSites.map(site => (
+                                  <div key={site.id} className="p-2.5 bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50">
+                                    <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">{site.name}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                      {[site.address, site.city, site.state, site.zip].filter(Boolean).join(', ') || 'No address'}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-slate-400 text-sm">No sites</p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Associated Contacts */}
-                    <div className="bg-white border rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-slate-900">Associated Contacts</h4>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{customerContacts.length}</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => { setAddingContactTo(selectedCustomer.id); setShowModal(true); }}
-                            className="h-7 text-xs"
-                          >
-                            <UserPlus className="w-3.5 h-3.5 mr-1" /> Add
-                          </Button>
+
+                      {/* Associated Contacts — hidden on mobile (has its own tab) */}
+                      <div className="hidden sm:block bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                            <Users className="w-4 h-4 text-[#0069AF]" />
+                            Contacts
+                          </h4>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-slate-500 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full">{customerContacts.length}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => { setAddingContactTo(selectedCustomer.id); setShowModal(true); }}
+                              className="h-7 text-xs"
+                            >
+                              <UserPlus className="w-3.5 h-3.5 mr-1" /> Add
+                            </Button>
+                          </div>
                         </div>
+                        {customerContacts.length > 5 && (
+                          <div className="relative mb-3">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                            <Input
+                              placeholder="Search contacts..."
+                              value={contactSearch}
+                              onChange={(e) => { setContactSearch(e.target.value); setContactPage(1); }}
+                              className="pl-9 h-8 text-sm"
+                            />
+                          </div>
+                        )}
+                        {(() => {
+                          const filtered = customerContacts.filter(c =>
+                            c.name?.toLowerCase().includes(contactSearch.toLowerCase()) ||
+                            c.email?.toLowerCase().includes(contactSearch.toLowerCase())
+                          );
+                          const totalPages = Math.ceil(filtered.length / 10);
+                          const paginated = filtered.slice((contactPage - 1) * 10, contactPage * 10);
+                          return filtered.length > 0 ? (
+                            <>
+                              <div className="space-y-1.5">
+                                {paginated.map(contact => (
+                                  <div key={contact.id} className="flex items-center gap-3 p-2.5 bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50 hover:border-[#0069AF]/30 transition-colors">
+                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0069AF]/20 to-[#74C7FF]/20 flex items-center justify-center text-[#0069AF] dark:text-[#74C7FF] font-semibold text-sm flex-shrink-0">
+                                      {contact.name?.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">{contact.name}</p>
+                                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                        {contact.email && <span className="truncate">{contact.email}</span>}
+                                        {contact.phone && <span>{contact.phone}</span>}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              {totalPages > 1 && (
+                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200 dark:border-slate-700/50">
+                                  <span className="text-xs text-slate-500">
+                                    {(contactPage - 1) * 10 + 1}-{Math.min(contactPage * 10, filtered.length)} of {filtered.length}
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={contactPage === 1} onClick={() => setContactPage(p => p - 1)}>Prev</Button>
+                                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={contactPage >= totalPages} onClick={() => setContactPage(p => p + 1)}>Next</Button>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <p className="text-slate-400 text-sm text-center py-6">
+                              {contactSearch ? 'No contacts match your search' : 'No contacts'}
+                            </p>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contacts Tab (mobile only) */}
+                  {companyTabs[selectedCustomer.id] === 'contacts' && (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2 text-sm">
+                          <Users className="w-4 h-4 text-[#0069AF]" />
+                          Contacts
+                          <span className="text-xs font-medium text-slate-500 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full">{customerContacts.length}</span>
+                        </h4>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => { setAddingContactTo(selectedCustomer.id); setShowModal(true); }}
+                          className="h-8 text-xs"
+                        >
+                          <UserPlus className="w-3.5 h-3.5 mr-1" /> Add
+                        </Button>
                       </div>
                       {customerContacts.length > 5 && (
                         <div className="relative mb-3">
@@ -929,7 +1180,7 @@ export default function Customers() {
                             placeholder="Search contacts..."
                             value={contactSearch}
                             onChange={(e) => { setContactSearch(e.target.value); setContactPage(1); }}
-                            className="pl-9 h-8 text-sm"
+                            className="pl-9 h-9 text-sm"
                           />
                         </div>
                       )}
@@ -941,110 +1192,113 @@ export default function Customers() {
                         const totalPages = Math.ceil(filtered.length / 10);
                         const paginated = filtered.slice((contactPage - 1) * 10, contactPage * 10);
                         return filtered.length > 0 ? (
-                          <>
-                            <div className="space-y-2">
-                              {paginated.map(contact => (
-                                <div key={contact.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                  <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm">
-                                    {contact.name?.charAt(0).toUpperCase()}
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="font-medium text-slate-800 text-sm">{contact.name}</p>
-                                    {contact.email && <p className="text-xs text-slate-500">{contact.email}</p>}
+                          <div className="space-y-2">
+                            {paginated.map(contact => (
+                              <div key={contact.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-[#151d2b] rounded-xl border border-slate-200 dark:border-slate-700/50">
+                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0069AF]/20 to-[#74C7FF]/20 flex items-center justify-center text-[#0069AF] dark:text-[#74C7FF] font-semibold text-sm shrink-0">
+                                  {contact.name?.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">{contact.name}</p>
+                                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                    {contact.email && <span className="truncate">{contact.email}</span>}
+                                    {contact.phone && <span>{contact.phone}</span>}
                                   </div>
                                 </div>
-                              ))}
-                            </div>
+                              </div>
+                            ))}
                             {totalPages > 1 && (
-                              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                              <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200 dark:border-slate-700/50">
                                 <span className="text-xs text-slate-500">
-                                  Showing {(contactPage - 1) * 10 + 1}-{Math.min(contactPage * 10, filtered.length)} of {filtered.length}
+                                  {(contactPage - 1) * 10 + 1}-{Math.min(contactPage * 10, filtered.length)} of {filtered.length}
                                 </span>
                                 <div className="flex items-center gap-1">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 px-2 text-xs"
-                                    disabled={contactPage === 1}
-                                    onClick={() => setContactPage(p => p - 1)}
-                                  >
-                                    Prev
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 px-2 text-xs"
-                                    disabled={contactPage >= totalPages}
-                                    onClick={() => setContactPage(p => p + 1)}
-                                  >
-                                    Next
-                                  </Button>
+                                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={contactPage === 1} onClick={() => setContactPage(p => p - 1)}>Prev</Button>
+                                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={contactPage >= totalPages} onClick={() => setContactPage(p => p + 1)}>Next</Button>
                                 </div>
                               </div>
                             )}
-                          </>
+                          </div>
                         ) : (
-                          <p className="text-slate-400 text-sm text-center py-6">
-                            {contactSearch ? 'No contacts match your search' : 'No contacts'}
-                          </p>
+                          <div className="text-center py-12">
+                            <Users className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                            <p className="text-sm text-slate-400">{contactSearch ? 'No contacts match your search' : 'No contacts yet'}</p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => { setAddingContactTo(selectedCustomer.id); setShowModal(true); }}
+                              className="mt-3 h-8 text-xs"
+                            >
+                              <UserPlus className="w-3.5 h-3.5 mr-1" /> Add First Contact
+                            </Button>
+                          </div>
                         );
                       })()}
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Proposals Tab */}
-                {companyTabs[selectedCustomer.id] === 'proposals' && (
-                  <div>
-                    {getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).length > 0 ? (
-                      <div className="space-y-2">
-                        {getCustomerQuotes(selectedCustomer.name, selectedCustomer.company, selectedCustomer.email).map(quote => (
-                          <div key={quote.id} className="p-3 bg-white border rounded-lg hover:shadow-sm transition-all">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <span className="font-medium text-slate-900">{quote.title}</span>
-                                <p className="text-xs text-slate-500">ID: {quote.quoteit_id}</p>
+                  {/* Proposals Tab */}
+                  {companyTabs[selectedCustomer.id] === 'proposals' && (
+                    <div>
+                      {customerQuotes.length > 0 ? (
+                        <div className="space-y-2">
+                          {customerQuotes.map(quote => (
+                            <div key={quote.id} className="p-4 bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl hover:border-[#0069AF]/30 transition-all">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <img src="/quoteit-favicon.svg" alt="" className="w-5 h-5 flex-shrink-0" />
+                                  <div>
+                                    <span className="font-medium text-slate-900 dark:text-slate-100">{quote.title}</span>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">ID: {quote.quoteit_id}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-slate-700 dark:text-slate-200">${(quote.amount || 0).toLocaleString()}</span>
+                                  <Badge variant="outline" className={cn(
+                                    quote.status === 'converted' && "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400",
+                                    quote.status === 'pending' && "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                                  )}>{quote.status}</Badge>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-slate-700">${(quote.amount || 0).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12">
+                          <FileText className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                          <p className="text-sm text-slate-400">No proposals found</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Projects Tab */}
+                  {companyTabs[selectedCustomer.id] === 'projects' && (
+                    <div>
+                      {customerProjects.length > 0 ? (
+                        <div className="space-y-2">
+                          {customerProjects.map(project => (
+                            <Link key={project.id} to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="block p-4 bg-slate-50 dark:bg-[#151d2b] border border-slate-200 dark:border-slate-700/50 rounded-xl hover:border-[#0069AF]/30 transition-all">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium text-slate-900 dark:text-slate-100">{project.name}</span>
                                 <Badge variant="outline" className={cn(
-                                  quote.status === 'converted' && "bg-emerald-50 text-emerald-700",
-                                  quote.status === 'pending' && "bg-blue-50 text-blue-700"
-                                )}>{quote.status}</Badge>
+                                  project.status === 'completed' && "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400",
+                                  project.status === 'in_progress' && "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
+                                  project.status === 'planning' && "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                                )}>{project.status?.replace('_', ' ')}</Badge>
                               </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-slate-400 text-center py-8">No proposals found</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Projects Tab */}
-                {companyTabs[selectedCustomer.id] === 'projects' && (
-                  <div>
-                    {customerProjects.length > 0 ? (
-                      <div className="space-y-2">
-                        {customerProjects.map(project => (
-                          <Link key={project.id} to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="block p-3 bg-white border rounded-lg hover:shadow-sm transition-all">
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium text-slate-900">{project.name}</span>
-                              <Badge variant="outline" className={cn(
-                                project.status === 'completed' && "bg-emerald-50 text-emerald-700",
-                                project.status === 'in_progress' && "bg-blue-50 text-blue-700",
-                                project.status === 'planning' && "bg-amber-50 text-amber-700"
-                              )}>{project.status?.replace('_', ' ')}</Badge>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-slate-400 text-center py-8">No projects linked</p>
-                    )}
-                  </div>
-                )}
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12">
+                          <FolderKanban className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                          <p className="text-sm text-slate-400">No projects linked</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </>
             );
           })()}

@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { differenceInDays, isPast, isToday } from 'date-fns';
+import { parseLocalDate } from '@/utils/dateUtils';
 
 export default function ProjectInsightsWidget({ projectId, tasks: propTasks, parts: propParts, compact = false }) {
   const [expanded, setExpanded] = useState(false);
@@ -50,7 +51,8 @@ export default function ProjectInsightsWidget({ projectId, tasks: propTasks, par
   // Overdue tasks
   const overdueTasks = tasks.filter(t => {
     if (t.status === 'completed' || t.status === 'archived' || !t.due_date) return false;
-    return isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date));
+    const d = parseLocalDate(t.due_date);
+    return d && isPast(d) && !isToday(d);
   });
   if (overdueTasks.length > 0) {
     insights.push({

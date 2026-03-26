@@ -11,7 +11,7 @@ const VALID_ENTITIES = new Set([
   'SavedReport', 'Service', 'ServiceBundle', 'Site', 'Task', 'TaskComment', 'Ticket',
   'TaskGroup', 'TeamMember', 'TimeEntry', 'Tool', 'ToolTransaction',
   'UserGroup', 'UserNotification',
-  'UserSecuritySettings', 'Workflow', 'WorkflowLog',
+  'UserSecuritySettings', 'UserSession', 'ApiKey', 'Workflow', 'WorkflowLog',
 ]);
 
 function validateEntity(entityType) {
@@ -230,7 +230,7 @@ const CASCADE_MAP = {
     { entity: 'TaskComment', foreignKey: 'task_id' },
   ],
   Part: [
-    { entity: 'TaskComment', foreignKey: 'task_id' },
+    // Part has no child entities to cascade
   ],
   Customer: [
     { entity: 'Site', foreignKey: 'customer_id' },

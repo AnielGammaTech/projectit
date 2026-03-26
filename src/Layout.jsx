@@ -151,27 +151,27 @@ function LayoutContent({ children, currentPageName }) {
     <div className="min-h-screen bg-slate-50 dark:bg-background">
       {/* Top Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 h-14 bg-gradient-to-r from-[#0F2F44] to-[#133F5C] dark:from-[#0a1e2e] dark:to-[#0e2d40] z-40 px-4 shadow-lg shadow-[#0F2F44]/10">
-        <div className="max-w-[1800px] mx-auto h-full flex items-center">
+        <div className="max-w-[1800px] mx-auto h-full flex items-center justify-between">
           {/* Left: Logo */}
           <div className="flex items-center gap-4 flex-shrink-0">
-            {/* Mobile Menu Button */}
-            <Button 
-              variant="ghost" 
+            {/* Mobile Menu Button — hidden on mobile (bottom nav used instead) */}
+            <Button
+              variant="ghost"
               size="icon"
-              className="lg:hidden text-white"
+              className="hidden lg:hidden sm:inline-flex text-white"
               onClick={() => setMobileMenuOpen(true)}
             >
               <Menu className="w-5 h-5" />
             </Button>
 
-            {/* Logo */}
+            {/* Logo — always show name on mobile */}
             <Link to={createPageUrl('Dashboard')} className="flex items-center gap-2.5">
               {appLogoUrl ? (
                 <img src={resolveUploadUrl(appLogoUrl)} alt="" className="w-7 h-7 rounded-lg object-contain" />
               ) : (
                 <img src="/favicon.svg" alt="" className="w-7 h-7" />
               )}
-              <span className="font-bold text-white hidden sm:inline tracking-tight">Project<span className="text-[#74C7FF]">IT</span></span>
+              <span className="font-bold text-white tracking-tight">Project<span className="text-[#74C7FF]">IT</span></span>
             </Link>
           </div>
 
@@ -269,17 +269,10 @@ function LayoutContent({ children, currentPageName }) {
               <span className="hidden md:inline">Search...</span>
               <kbd className="hidden md:inline text-[10px] px-1.5 py-0.5 bg-white/20 rounded text-white/50 ml-2">⌘K</kbd>
             </button>
-            <button
-              onClick={() => setShowSearch(true)}
-              className="sm:hidden p-2 hover:bg-white/10 rounded-lg"
-            >
-              <Search className="w-5 h-5 text-white/70" />
-            </button>
-
-            {/* My Schedule */}
+            {/* My Schedule — hidden on mobile */}
             <Link
               to={createPageUrl('MySchedule')}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="hidden sm:block p-2 hover:bg-white/10 rounded-lg transition-colors"
               title="My Schedule"
             >
               <Calendar className="w-5 h-5 text-white/70" />
@@ -479,7 +472,7 @@ function LayoutContent({ children, currentPageName }) {
       </div>
 
       {/* Main Content */}
-      <main className="pt-14">
+      <main className="pt-14 pb-20 lg:pb-0">
         {children}
       </main>
 
@@ -502,10 +495,7 @@ function LayoutContent({ children, currentPageName }) {
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-card/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-border z-40 pb-safe">
         <div className="flex items-center justify-around h-16">
-          {[
-            ...navItems.slice(0, 4),
-            { name: 'Reports', icon: PieChart, page: 'Reports' }
-          ].map((item) => {
+          {navItems.slice(0, 4).map((item) => {
             const Icon = item.icon;
             const isActive = currentPageName === item.page;
             return (

@@ -139,7 +139,7 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
   if (loadingProjects) return <DashboardSkeleton />;
 
   return (
-    <div className="min-h-screen bg-slate-900 dark:bg-[#151d2b] text-white p-6">
+    <div className="min-h-screen bg-slate-900 dark:bg-[#151d2b] text-white p-3 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
@@ -149,7 +149,7 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
           <div className="flex items-center gap-3">
             <Monitor className="w-8 h-8 text-indigo-400" />
             <div>
-              <h1 className="text-2xl font-bold">Manager Dashboard</h1>
+              <h1 className="text-lg sm:text-2xl font-bold">Manager Dashboard</h1>
               <p className="text-slate-400 text-sm">{format(currentTime, 'EEEE, MMMM d, yyyy • h:mm a')}</p>
             </div>
           </div>
@@ -160,7 +160,7 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
         </Button>
       </div>
 
-      <div className="grid grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
         {/* Left Column - Stats */}
         <div className="space-y-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-800 rounded-2xl p-5">
@@ -172,11 +172,11 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-slate-700/50 rounded-xl p-3 text-center">
-                <p className="text-3xl font-bold text-white">{activeProjects.length}</p>
+                <p className="text-xl sm:text-3xl font-bold text-white">{activeProjects.length}</p>
                 <p className="text-xs text-slate-400">Active Projects</p>
               </div>
               <div className="bg-slate-700/50 rounded-xl p-3 text-center">
-                <p className="text-3xl font-bold text-emerald-400">{tasks.filter(t => t.status === 'completed').length}</p>
+                <p className="text-xl sm:text-3xl font-bold text-emerald-400">{tasks.filter(t => t.status === 'completed').length}</p>
                 <p className="text-xs text-slate-400">Completed Tasks</p>
               </div>
             </div>
@@ -194,19 +194,19 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
               {overdueTasks.length > 0 && (
                 <div className="flex items-center justify-between p-3 bg-red-500/10 rounded-xl border border-red-500/20">
                   <span className="text-red-400">Overdue Tasks</span>
-                  <span className="text-2xl font-bold text-red-400">{overdueTasks.length}</span>
+                  <span className="text-lg sm:text-2xl font-bold text-red-400">{overdueTasks.length}</span>
                 </div>
               )}
               {unassignedTasks.length > 0 && (
                 <div className="flex items-center justify-between p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
                   <span className="text-amber-400">Unassigned</span>
-                  <span className="text-2xl font-bold text-amber-400">{unassignedTasks.length}</span>
+                  <span className="text-lg sm:text-2xl font-bold text-amber-400">{unassignedTasks.length}</span>
                 </div>
               )}
               {readyToInstall.length > 0 && (
                 <div className="flex items-center justify-between p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
                   <span className="text-purple-400">Ready to Install</span>
-                  <span className="text-2xl font-bold text-purple-400">{readyToInstall.length}</span>
+                  <span className="text-lg sm:text-2xl font-bold text-purple-400">{readyToInstall.length}</span>
                 </div>
               )}
               {overdueTasks.length === 0 && unassignedTasks.length === 0 && readyToInstall.length === 0 && (
@@ -324,7 +324,7 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
           <span className="font-semibold">Overdue Items</span>
           <Badge className="bg-red-500/20 text-red-400">{overdueTasks.length}</Badge>
         </div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {overdueTasks.slice(0, 8).map(task => {
             const daysOverdue = differenceInDays(new Date(), parseLocalDate(task.due_date));
             return (
