@@ -18,19 +18,19 @@ export default function ProjectNavHeader({ project, currentPage }) {
   if (!project) return null;
 
   return (
-    <div className="bg-white dark:bg-[#1e2a3a] border-b border-slate-200 dark:border-slate-700 sticky top-14 z-30">
-      <div className="max-w-[1600px] mx-auto px-2 sm:px-6 lg:px-8">
+    <div className="bg-card border-b border sticky top-14 z-30">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         {/* Top row - Breadcrumbs & Switcher */}
         <div className="flex items-center justify-between py-2 sm:py-3 gap-2">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <Link
               to={createPageUrl('Dashboard')}
-              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 shrink-0"
+              className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             {/* Mobile: just show project name truncated */}
-            <span className="sm:hidden text-sm font-medium text-slate-900 dark:text-slate-100 truncate min-w-0">
+            <span className="sm:hidden text-sm font-medium text-foreground truncate min-w-0">
               {project.name}
             </span>
             {/* Desktop: full breadcrumbs */}
@@ -53,8 +53,8 @@ export default function ProjectNavHeader({ project, currentPage }) {
                 className={cn(
                   "flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                   isActive
-                    ? "border-[#0069AF] text-[#0069AF] dark:text-blue-400 dark:border-blue-400"
-                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
                 )}
               >
                 <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
