@@ -265,9 +265,18 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     setExtractedParts(prev => prev.filter((_, i) => i !== index));
   };
 
+  const [showValidation, setShowValidation] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (saving) return;
+
+    // Show validation errors if required fields are missing
+    if (!formData.name || !formData.customer_id || !formData.description || !formData.project_lead) {
+      setShowValidation(true);
+      return;
+    }
+
     setSaving(true);
     const template = selectedTemplate && selectedTemplate !== 'none' ? templates.find(t => t.id === selectedTemplate) : null;
     await onSave(formData, template, extractedParts);
@@ -349,15 +358,23 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             </Popover>
           </div>
 
-          {/* Project Name — Large, prominent */}
-          <Input
-            value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="What's the project called?"
-            className="text-lg font-semibold h-12 bg-white/80 dark:bg-[#151d2b]/80 backdrop-blur-sm border-white/50 dark:border-slate-600 shadow-sm placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-2 dark:text-slate-100"
-            style={{ '--tw-ring-color': selectedColor + '40' }}
-            required
-          />
+          {/* Project Name — Large, prominent (REQUIRED) */}
+          <div className="space-y-1">
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="What's the project called? *"
+              className={cn(
+                "text-lg font-semibold h-12 bg-white/80 dark:bg-[#151d2b]/80 backdrop-blur-sm shadow-sm placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-2 dark:text-slate-100",
+                !formData.name && saving ? "border-red-400 ring-1 ring-red-200" : "border-white/50 dark:border-slate-600"
+              )}
+              style={{ '--tw-ring-color': selectedColor + '40' }}
+              required
+            />
+            {!formData.name && saving && (
+              <p className="text-xs text-red-500 pl-1">Project name is required</p>
+            )}
+          </div>
         </div>
 
         {/* ── Scrollable Body ── */}
@@ -369,7 +386,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
               {/* Client Selection — Modern dropdown */}
               <div className="relative">
                 <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
-                  Client
+                  Client <span className="text-red-500">*</span>
                 </Label>
                 <div
                   className={cn(
@@ -483,20 +500,29 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                     </div>
                   </>
                 )}
+                {showValidation && !formData.customer_id && (
+                  <p className="text-xs text-red-500 mt-1 pl-1">Please select a client</p>
+                )}
               </div>
 
               {/* Description */}
               <div>
                 <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
-                  Description
+                  Description <span className="text-red-500">*</span>
                 </Label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Brief summary of what this project is about..."
                   required
-                  className="h-20 resize-none rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-[#151d2b] dark:text-slate-100 focus-visible:border-blue-400 text-sm"
+                  className={cn(
+                    "h-20 resize-none rounded-xl border-2 dark:bg-[#151d2b] dark:text-slate-100 focus-visible:border-blue-400 text-sm",
+                    showValidation && !formData.description ? "border-red-400" : "border-slate-200 dark:border-slate-600"
+                  )}
                 />
+                {showValidation && !formData.description && (
+                  <p className="text-xs text-red-500 mt-1 pl-1">Description is required</p>
+                )}
               </div>
             </div>
 
@@ -535,7 +561,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg">
                     <Crown className="w-3 h-3" />
-                    Lead
+                    Lead <span className="text-red-500">*</span>
                   </div>
                   {leadMember ? (
                     <div className="flex items-center gap-2 flex-1">
@@ -557,9 +583,14 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                     <button
                       type="button"
                       onClick={() => setShowLeadPicker(!showLeadPicker)}
-                      className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                      className={cn(
+                        "text-sm transition-colors",
+                        showValidation && !formData.project_lead
+                          ? "text-red-500 hover:text-red-600"
+                          : "text-slate-400 hover:text-slate-600"
+                      )}
                     >
-                      Assign a lead...
+                      {showValidation && !formData.project_lead ? 'Lead is required — click to assign' : 'Assign a lead...'}
                     </button>
                   )}
                 </div>
