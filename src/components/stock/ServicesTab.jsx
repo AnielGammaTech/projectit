@@ -94,7 +94,7 @@ export default function ServicesTab() {
             className="pl-10"
           />
         </div>
-        <Button onClick={() => { setEditingService(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e] w-full sm:w-auto">
+        <Button onClick={() => { setEditingService(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e] w-full sm:w-auto min-h-[44px] sm:min-h-0">
           <Plus className="w-4 h-4 mr-2" />
           Add Service
         </Button>
@@ -112,7 +112,7 @@ export default function ServicesTab() {
           </Button>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredServices.map((service) => (
             <div
               key={service.id}
@@ -129,10 +129,10 @@ export default function ServicesTab() {
                 )}
                 {/* Actions overlay - always visible on mobile, hover on desktop */}
                 <div className="absolute inset-0 bg-black/50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <Button size="sm" variant="secondary" onClick={() => { setEditingService(service); setShowModal(true); }}>
+                  <Button size="sm" variant="secondary" onClick={() => { setEditingService(service); setShowModal(true); }} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0">
                     <Edit2 className="w-4 h-4" />
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(service)}>
+                  <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(service)} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
@@ -145,9 +145,9 @@ export default function ServicesTab() {
                 {service.rates?.length > 0 && (
                   <div className="space-y-1 mb-3">
                     {service.rates.slice(0, 3).map((rate, i) => (
-                      <div key={i} className="flex items-center justify-between text-sm">
-                        <span className="text-slate-600">{rate.name}</span>
-                        <span className="font-medium text-emerald-600">${rate.price}/{rate.unit}</span>
+                      <div key={i} className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm">
+                        <span className="text-slate-600 truncate">{rate.name}</span>
+                        <span className="font-medium text-emerald-600 shrink-0">${rate.price}/{rate.unit}</span>
                       </div>
                     ))}
                     {service.rates.length > 3 && (
@@ -185,8 +185,8 @@ export default function ServicesTab() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+            <AlertDialogCancel className="min-h-[44px] sm:min-h-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 min-h-[44px] sm:min-h-0">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

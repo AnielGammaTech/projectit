@@ -135,7 +135,7 @@ export default function PartsTrackerTab() {
 
     return (
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mb-4">
-        <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
+        <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 min-h-[44px] sm:min-h-0 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
           {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           <Icon className="w-4 h-4" />
           <span className="font-semibold text-slate-900">{config.label}</span>
@@ -176,7 +176,7 @@ export default function PartsTrackerTab() {
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-40">
+          <SelectTrigger className="w-full sm:w-40 min-h-[44px] sm:min-h-0">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -275,7 +275,7 @@ function PartCard({ part, expanded, onToggle, onStatusChange, onSaveTracking, ed
               </Badge>
             )}
             <Select value={part.status} onValueChange={(v) => onStatusChange(part, v)} disabled={saving}>
-              <SelectTrigger className={cn("w-28 sm:w-36", config.color)}>
+              <SelectTrigger className={cn("w-28 sm:w-36 min-h-[44px] sm:min-h-0", config.color)}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -335,10 +335,10 @@ function PartCard({ part, expanded, onToggle, onStatusChange, onSaveTracking, ed
 
           {hasChanges && (
             <div className="flex justify-end">
-              <Button 
-                onClick={() => onSaveTracking(part)} 
+              <Button
+                onClick={() => onSaveTracking(part)}
                 disabled={saving}
-                className="bg-[#0F2F44] hover:bg-[#1a4a6e]"
+                className="bg-[#0F2F44] hover:bg-[#1a4a6e] w-full sm:w-auto min-h-[44px] sm:min-h-0"
               >
                 <Save className="w-4 h-4 mr-2" />
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -347,7 +347,7 @@ function PartCard({ part, expanded, onToggle, onStatusChange, onSaveTracking, ed
           )}
 
           {/* Additional Info */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100 overflow-hidden">
             {part.quantity && <span>Qty: {part.quantity}</span>}
             {part.supplier && <span>Supplier: {part.supplier}</span>}
             {part.assigned_name && <span>Assigned: {part.assigned_name}</span>}

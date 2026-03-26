@@ -123,7 +123,7 @@ export default function BundlesTab() {
             className="pl-10"
           />
         </div>
-        <Button onClick={() => { setEditingBundle(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e] w-full sm:w-auto">
+        <Button onClick={() => { setEditingBundle(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e] w-full sm:w-auto min-h-[44px] sm:min-h-0">
           <Plus className="w-4 h-4 mr-2" />
           Create Bundle
         </Button>
@@ -141,7 +141,7 @@ export default function BundlesTab() {
           </Button>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredBundles.map((bundle) => {
             const calculatedValue = calculateBundleValue(bundle);
             const displayPrice = bundle.bundle_price || calculatedValue;
@@ -165,10 +165,10 @@ export default function BundlesTab() {
                   )}
                   {/* Actions overlay - always visible on mobile, hover on desktop */}
                   <div className="absolute inset-0 bg-black/50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => { setEditingBundle(bundle); setShowModal(true); }}>
+                    <Button size="sm" variant="secondary" onClick={() => { setEditingBundle(bundle); setShowModal(true); }} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0">
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(bundle)}>
+                    <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(bundle)} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -176,20 +176,20 @@ export default function BundlesTab() {
 
                 {/* Details */}
                 <div className="p-4">
-                  <h3 className="font-semibold text-slate-900 mb-2">{bundle.name}</h3>
+                  <h3 className="font-semibold text-slate-900 mb-2 truncate">{bundle.name}</h3>
                   
                   {/* Bundle contents */}
                   <div className="space-y-1 mb-3 text-sm">
                     {bundle.products?.slice(0, 2).map((item, i) => (
-                      <div key={i} className="flex items-center gap-2 text-slate-600">
-                        <Package className="w-3 h-3" />
-                        <span>{item.quantity}x {getProductName(item.product_id)}</span>
+                      <div key={i} className="flex items-center gap-2 text-slate-600 min-w-0">
+                        <Package className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{item.quantity}x {getProductName(item.product_id)}</span>
                       </div>
                     ))}
                     {bundle.services?.slice(0, 2).map((item, i) => (
-                      <div key={i} className="flex items-center gap-2 text-slate-600">
-                        <Wrench className="w-3 h-3" />
-                        <span>{getServiceName(item.service_id)}</span>
+                      <div key={i} className="flex items-center gap-2 text-slate-600 min-w-0">
+                        <Wrench className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{getServiceName(item.service_id)}</span>
                       </div>
                     ))}
                     {(bundle.products?.length > 2 || bundle.services?.length > 2) && (
