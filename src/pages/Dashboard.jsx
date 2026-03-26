@@ -61,6 +61,7 @@ export default function Dashboard() {
     return saved ? JSON.parse(saved) : [];
   });
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
+  const [activeWidget, setActiveWidget] = useState(() => localStorage.getItem('dashboard-active-widget') || 'tasks');
   const [listFilter, setListFilter] = useState('all'); // 'all', 'pinned', 'projects', 'teams', 'clients', 'archived'
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedProjects, setSelectedProjects] = useState([]);
@@ -983,51 +984,75 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* -- BELOW FOLD: Collapsible Widgets -- */}
-        <div className="space-y-3 mb-4">
-          <CollapsibleSection
-            id="my-tasks"
-            title="My Tasks"
-            icon={ListTodo}
-            summary={`${myUrgentTasks.length} due soon`}
-            defaultOpen={true}
-          >
-            <MyTasksCard
-              tasks={tasks}
-              parts={parts}
-              projects={projects}
-              currentUserEmail={currentUser?.email}
-              onTaskComplete={handleTaskComplete}
-              inline
-            />
-          </CollapsibleSection>
-
-          <CollapsibleSection
-            id="activity"
-            title="Recent Activity"
-            icon={ActivityIcon}
-            summary={missedNotifications.length > 0 ? `${missedNotifications.length} new` : 'Up to date'}
-            defaultOpen={false}
-          >
-            <ActivityTimeline
-              projects={projects}
-              proposals={quoteRequests}
-            />
-          </CollapsibleSection>
-
-          <CollapsibleSection
-            id="project-health"
-            title="Projects Needing Attention"
-            icon={AlertTriangle}
-            summary={(() => { const count = activeProjects.filter(p => p.status === 'on_hold').length + activeProjects.filter(p => { if (!p.due_date) return false; const d = parseLocalDate(p.due_date); return d && isPast(d) && !isToday(d); }).length; return count > 0 ? `${count} need attention` : 'All good'; })()}
-            defaultOpen={false}
-          >
-            <ProjectHealthGrid
-              projects={activeProjects}
-              tasks={activeTasks}
-            />
-          </CollapsibleSection>
-        </div>
+        {/* -- BELOW FOLD: Tabbed Widget Card -- */}
+        {(() => {
+          const healthCount = activeProjects.filter(p => p.status === 'on_hold').length + activeProjects.filter(p => { if (!p.due_date) return false; const d = parseLocalDate(p.due_date); return d && isPast(d) && !isToday(d); }).length;
+          const widgetTabs = [
+            { id: 'tasks', label: 'My Tasks', icon: ListTodo, badge: myUrgentTasks.length > 0 ? myUrgentTasks.length : null },
+            { id: 'activity', label: 'Activity', icon: ActivityIcon, badge: missedNotifications.length > 0 ? missedNotifications.length : null },
+            { id: 'health', label: 'Attention', icon: AlertTriangle, badge: healthCount > 0 ? healthCount : null },
+          ];
+          const handleWidgetTab = (id) => { setActiveWidget(id); localStorage.setItem('dashboard-active-widget', id); };
+          return (
+            <div className="rounded-2xl border bg-card shadow-warm mb-4 overflow-hidden">
+              <div className="flex border-b">
+                {widgetTabs.map(tab => {
+                  const Icon = tab.icon;
+                  const isActive = activeWidget === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => handleWidgetTab(tab.id)}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px",
+                        isActive
+                          ? "border-primary text-primary"
+                          : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span className="hidden sm:inline">{tab.label}</span>
+                      {tab.badge && (
+                        <span className={cn(
+                          "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+                          tab.id === 'health' ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
+                          tab.id === 'activity' ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" :
+                          "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                        )}>
+                          {tab.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="p-4">
+                {activeWidget === 'tasks' && (
+                  <MyTasksCard
+                    tasks={tasks}
+                    parts={parts}
+                    projects={projects}
+                    currentUserEmail={currentUser?.email}
+                    onTaskComplete={handleTaskComplete}
+                    inline
+                  />
+                )}
+                {activeWidget === 'activity' && (
+                  <ActivityTimeline
+                    projects={projects}
+                    proposals={quoteRequests}
+                  />
+                )}
+                {activeWidget === 'health' && (
+                  <ProjectHealthGrid
+                    projects={activeProjects}
+                    tasks={activeTasks}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* -- BELOW FOLD: Projects -- */}
         <CollapsibleSection
