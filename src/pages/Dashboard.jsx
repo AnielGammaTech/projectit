@@ -97,15 +97,21 @@ export default function Dashboard() {
   const [showProposalsModal, setShowProposalsModal] = useState(false);
 
   const handleCreateProjectFromQuote = (quote) => {
+    // Use matched_items if available (includes product matching from sync),
+    // otherwise fall back to raw items
+    const items = quote.matched_items?.length > 0
+      ? quote.matched_items
+      : (quote.raw_data?.items || []);
+
     setPrefillData({
       name: quote.title,
       client: quote.customer_name,
-      customer_id: quote.customer_id, // Pass matched customer ID
+      customer_id: quote.customer_id || '',
       budget: quote.amount || quote.raw_data?.total_amount || 0,
-      quoteit_quote_id: quote.quoteit_id, // Pass ID to link
-      incoming_quote_id: quote.id, // Pass internal ID to update status later
+      quoteit_quote_id: quote.quoteit_id,
+      incoming_quote_id: quote.id,
       description: quote.raw_data?.other_relevant_details || '',
-      proposalItems: quote.raw_data?.items || []
+      proposalItems: items,
     });
     setShowProjectModal(true);
   };

@@ -10,8 +10,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   CalendarIcon, Loader2, Users, Search, Building2, User, Check, Clock, X,
   FileStack, UserPlus, ChevronDown, Crown, Sparkles, FolderOpen, Palette,
-  Timer, ArrowRight, Plus, ChevronRight
+  Timer, ArrowRight, Plus, ChevronRight, Package, Link2, Unlink
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { api } from '@/api/apiClient';
 import { cn } from '@/lib/utils';
@@ -88,6 +89,12 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     enabled: open
   });
 
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => api.entities.Product.list('name'),
+    enabled: open && extractedParts.length > 0
+  });
+
   const defaultStatus = projectStatuses.find(s => s.is_default)?.key || 'in_progress';
 
   useEffect(() => {
@@ -143,7 +150,9 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
           name: item.name || 'Unnamed Item',
           quantity: item.quantity || 1,
           unit_cost: item.unit_cost || item.unit_price || 0,
-          description: item.description || ''
+          description: item.description || '',
+          matched_product_id: item.matched_product_id || null,
+          matched_product_name: item.matched_product_name || null,
         })));
       } else {
         setExtractedParts([]);
@@ -237,6 +246,23 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
     } catch (err) {
       console.error('Failed to extract parts:', err);
     }
+  };
+
+  const [showProductPicker, setShowProductPicker] = useState(null); // index of part being matched
+  const [productSearch, setProductSearch] = useState('');
+
+  const updatePartProduct = (index, product) => {
+    setExtractedParts(prev => prev.map((part, i) =>
+      i === index
+        ? { ...part, matched_product_id: product?.id || null, matched_product_name: product?.name || null }
+        : part
+    ));
+    setShowProductPicker(null);
+    setProductSearch('');
+  };
+
+  const removePart = (index) => {
+    setExtractedParts(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -828,6 +854,112 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
                 </div>
               )}
             </div>
+
+            {/* ── Quote Items / Parts Section ── */}
+            {extractedParts.length > 0 && (
+              <div className="rounded-xl border-2 border-amber-200 dark:border-amber-800/50 overflow-hidden">
+                <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800/50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-amber-600" />
+                    <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">Quote Items</span>
+                    <span className="text-xs text-amber-600 bg-amber-100 dark:bg-amber-800/40 px-1.5 py-0.5 rounded-full">
+                      {extractedParts.length}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-amber-600 dark:text-amber-400">
+                    {extractedParts.filter(p => p.matched_product_id).length}/{extractedParts.length} matched
+                  </span>
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                  {extractedParts.map((part, idx) => (
+                    <div key={idx} className="px-4 py-2.5 flex items-center gap-3 relative">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">{part.name}</span>
+                          <span className="text-xs text-slate-400">×{part.quantity}</span>
+                          {part.unit_cost > 0 && (
+                            <span className="text-xs text-emerald-600 font-medium">${part.unit_cost}</span>
+                          )}
+                        </div>
+                        {part.matched_product_id ? (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Link2 className="w-3 h-3 text-emerald-500" />
+                            <span className="text-[11px] text-emerald-600 font-medium">{part.matched_product_name}</span>
+                            <button
+                              type="button"
+                              onClick={() => updatePartProduct(idx, null)}
+                              className="text-slate-300 hover:text-red-500 ml-1"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => { setShowProductPicker(idx); setProductSearch(''); }}
+                            className="flex items-center gap-1 mt-0.5 text-[11px] text-amber-600 hover:text-amber-700"
+                          >
+                            <Unlink className="w-3 h-3" />
+                            Link to product...
+                          </button>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removePart(idx)}
+                        className="text-slate-300 hover:text-red-500 shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+
+                      {/* Product picker dropdown */}
+                      {showProductPicker === idx && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowProductPicker(null)} />
+                          <div className="absolute z-50 top-full left-4 right-4 mt-1 bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-600 shadow-xl max-h-48 overflow-hidden">
+                            <div className="p-2 border-b border-slate-100 dark:border-slate-700">
+                              <div className="relative">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                                <Input
+                                  value={productSearch}
+                                  onChange={(e) => setProductSearch(e.target.value)}
+                                  placeholder="Search products..."
+                                  className="pl-8 h-8 text-xs rounded-lg"
+                                  autoFocus
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            </div>
+                            <div className="max-h-32 overflow-y-auto p-1">
+                              {products
+                                .filter(p => p.name?.toLowerCase().includes(productSearch.toLowerCase()))
+                                .slice(0, 20)
+                                .map(product => (
+                                  <button
+                                    key={product.id}
+                                    type="button"
+                                    onClick={() => updatePartProduct(idx, product)}
+                                    className="w-full flex items-center gap-2 p-2 rounded-lg text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                                  >
+                                    <Package className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <span className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{product.name}</span>
+                                    {product.selling_price > 0 && (
+                                      <span className="text-[10px] text-emerald-600 ml-auto shrink-0">${product.selling_price}</span>
+                                    )}
+                                  </button>
+                                ))}
+                              {products.filter(p => p.name?.toLowerCase().includes(productSearch.toLowerCase())).length === 0 && (
+                                <p className="text-xs text-slate-400 text-center py-3">No products found</p>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── Footer ── */}
