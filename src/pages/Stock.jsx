@@ -37,13 +37,13 @@ export default function Stock() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-[#0F2F44] dark:text-slate-100">Inventory & Tools</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Track products, tools, services, and parts</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Inventory & Tools</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">Track products, tools, services, and parts</p>
           </div>
           {/* Quick Stats */}
           <div className="flex gap-3 sm:gap-4">
@@ -55,8 +55,8 @@ export default function Stock() {
                     <Icon className={`w-3.5 h-3.5 ${stat.color}`} />
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-none">{stat.value}</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">{stat.label}</p>
+                    <p className="text-lg font-bold text-foreground leading-none">{stat.value}</p>
+                    <p className="text-[10px] text-muted-foreground">{stat.label}</p>
                   </div>
                 </div>
               );
@@ -67,24 +67,24 @@ export default function Stock() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-4 sm:mb-6">
-            <TabsList className="bg-white dark:bg-[#1e2a3a] border border-slate-200 dark:border-slate-700/50 w-max sm:w-auto p-1 rounded-xl">
-              <TabsTrigger value="products" className="gap-1.5 sm:gap-2 px-3 sm:px-4 rounded-lg data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsList className="bg-card border w-max sm:w-auto p-1 rounded-xl">
+              <TabsTrigger value="products" className="gap-1.5 sm:gap-2 px-3 sm:px-4 rounded-lg data-[state=active]:bg-primary dark:data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Package className="w-4 h-4" />
                 <span className="hidden sm:inline">Products</span>
               </TabsTrigger>
-              <TabsTrigger value="tools" className="gap-1.5 sm:gap-2 px-3 sm:px-4 rounded-lg data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              <TabsTrigger value="tools" className="gap-1.5 sm:gap-2 px-3 sm:px-4 rounded-lg data-[state=active]:bg-primary dark:data-[state=active]:bg-primary data-[state=active]:text-white">
                 <HardDrive className="w-4 h-4" />
                 <span className="hidden sm:inline">Tools</span>
               </TabsTrigger>
-              <TabsTrigger value="services" className="gap-1.5 sm:gap-2 px-3 sm:px-4 rounded-lg data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              <TabsTrigger value="services" className="gap-1.5 sm:gap-2 px-3 sm:px-4 rounded-lg data-[state=active]:bg-primary dark:data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Wrench className="w-4 h-4" />
                 <span className="hidden sm:inline">Services</span>
               </TabsTrigger>
-              <TabsTrigger value="bundles" className="gap-1.5 sm:gap-2 px-3 sm:px-4 rounded-lg data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              <TabsTrigger value="bundles" className="gap-1.5 sm:gap-2 px-3 sm:px-4 rounded-lg data-[state=active]:bg-primary dark:data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Layers className="w-4 h-4" />
                 <span className="hidden sm:inline">Bundles</span>
               </TabsTrigger>
-              <TabsTrigger value="parts-tracker" className="gap-1.5 sm:gap-2 px-3 sm:px-4 rounded-lg data-[state=active]:bg-[#0F2F44] dark:data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              <TabsTrigger value="parts-tracker" className="gap-1.5 sm:gap-2 px-3 sm:px-4 rounded-lg data-[state=active]:bg-primary dark:data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Truck className="w-4 h-4" />
                 <span className="hidden sm:inline">Parts Tracker</span>
               </TabsTrigger>
