@@ -336,16 +336,19 @@ export default function Customers() {
         >
           <div>
             <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Customers</h1>
-            <p className="text-slate-500 mt-1">Manage your client relationships</p>
+            <p className="hidden sm:block text-slate-500 mt-1">Manage your client relationships</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleHaloPSASync} disabled={syncing}>
+            <Button variant="outline" size="sm" onClick={handleHaloPSASync} disabled={syncing} className="hidden sm:inline-flex">
               <RefreshCw className={cn("w-4 h-4 mr-2", syncing && "animate-spin")} />
               Sync from HaloPSA
             </Button>
-            <Button onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#0F2F44]">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Customer
+            <Button variant="outline" size="icon" onClick={handleHaloPSASync} disabled={syncing} className="sm:hidden h-9 w-9">
+              <RefreshCw className={cn("w-4 h-4", syncing && "animate-spin")} />
+            </Button>
+            <Button size="sm" onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#0F2F44] h-9">
+              <Plus className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Customer</span>
             </Button>
           </div>
         </motion.div>
@@ -389,21 +392,21 @@ export default function Customers() {
                 className="pl-10"
               />
             </div>
-            <Button 
-              variant={selectionMode ? "default" : "outline"} 
-              size="sm" 
+            <Button
+              variant={selectionMode ? "default" : "outline"}
+              size="sm"
               onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
-              className={cn("h-10", selectionMode && "bg-red-600 hover:bg-red-700")}
+              className={cn("hidden sm:inline-flex h-10", selectionMode && "bg-red-600 hover:bg-red-700")}
             >
               <CheckSquare className="w-4 h-4 mr-2" />
               {selectionMode ? 'Done' : 'Select'}
             </Button>
-            <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+            <div className="flex gap-1 bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
               <button
                 onClick={() => setViewFilter('all')}
                 className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                  viewFilter === 'all' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  "px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors",
+                  viewFilter === 'all' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
                 All ({companies.length + standaloneContacts.length})
@@ -411,22 +414,24 @@ export default function Customers() {
               <button
                 onClick={() => setViewFilter('companies')}
                 className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5",
-                  viewFilter === 'companies' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  "px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center gap-1",
+                  viewFilter === 'companies' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
-                <Building2 className="w-3.5 h-3.5" />
-                Companies ({companies.length})
+                <Building2 className="w-3.5 h-3.5 hidden sm:block" />
+                <span className="sm:hidden">Co.</span>
+                <span className="hidden sm:inline">Companies</span> ({companies.length})
               </button>
               <button
                 onClick={() => setViewFilter('contacts')}
                 className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5",
-                  viewFilter === 'contacts' ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  "px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center gap-1",
+                  viewFilter === 'contacts' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
-                <Users className="w-3.5 h-3.5" />
-                Contacts ({standaloneContacts.length})
+                <Users className="w-3.5 h-3.5 hidden sm:block" />
+                <span className="sm:hidden">Ppl</span>
+                <span className="hidden sm:inline">Contacts</span> ({standaloneContacts.length})
               </button>
             </div>
           </div>
@@ -756,7 +761,7 @@ export default function Customers() {
 
       {/* Customer Detail Modal */}
       <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-hidden p-0">
+        <DialogContent className="h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl sm:max-w-3xl max-h-[100dvh] sm:max-h-[90vh] overflow-hidden p-0">
           {selectedCustomer && (() => {
             const customerSites = getSitesForCompany(selectedCustomer.id);
             const customerContacts = getContactsForCompany(selectedCustomer.id);
@@ -769,37 +774,37 @@ export default function Customers() {
             return (
               <>
                 {/* Hero Header */}
-                <div className="bg-gradient-to-r from-[#0F2F44] to-[#133F5C] px-4 sm:px-6 pt-4 sm:pt-6 pb-5 text-white relative overflow-hidden">
+                <div className="bg-gradient-to-r from-[#0F2F44] to-[#133F5C] px-4 sm:px-6 pt-3 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden">
                   <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#74C7FF]/10 rounded-full" />
                   <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-[#0069AF]/10 rounded-full" />
                   <div className="relative z-10">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-2xl font-bold">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+                        <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-lg sm:text-2xl font-bold shrink-0">
                           {selectedCustomer.name?.charAt(0).toUpperCase()}
                         </div>
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <h2 className="text-xl font-bold">{selectedCustomer.name}</h2>
+                            <h2 className="text-base sm:text-xl font-bold truncate">{selectedCustomer.name}</h2>
                             {selectedCustomer.source === 'halo_psa' && (
-                              <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-white/20 text-white/90">HaloPSA</span>
+                              <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-white/20 text-white/90 shrink-0">HaloPSA</span>
                             )}
                           </div>
-                          <div className="flex items-center gap-4 mt-1 text-sm text-white/70">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-4 mt-1 text-xs sm:text-sm text-white/70">
                             {selectedCustomer.email && (
-                              <span className="flex items-center gap-1.5">
-                                <Mail className="w-3.5 h-3.5" /> {selectedCustomer.email}
+                              <span className="flex items-center gap-1.5 truncate">
+                                <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> {selectedCustomer.email}
                               </span>
                             )}
                             {selectedCustomer.phone && (
                               <span className="flex items-center gap-1.5">
-                                <Phone className="w-3.5 h-3.5" /> {selectedCustomer.phone}
+                                <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> {selectedCustomer.phone}
                               </span>
                             )}
                           </div>
                           {displayAddress && (
-                            <p className="flex items-center gap-1.5 mt-1 text-sm text-white/60">
-                              <MapPin className="w-3.5 h-3.5 flex-shrink-0" /> {displayAddress}
+                            <p className="flex items-center gap-1.5 mt-0.5 sm:mt-1 text-xs sm:text-sm text-white/60 truncate">
+                              <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" /> {displayAddress}
                             </p>
                           )}
                         </div>
@@ -808,62 +813,63 @@ export default function Customers() {
                         variant="ghost"
                         size="sm"
                         onClick={() => { setEditingCustomer(selectedCustomer); setShowModal(true); }}
-                        className="text-white/80 hover:text-white hover:bg-white/15 h-8"
+                        className="text-white/80 hover:text-white hover:bg-white/15 h-8 shrink-0"
                       >
-                        <Edit2 className="w-3.5 h-3.5 mr-1.5" /> Edit
+                        <Edit2 className="w-3.5 h-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">Edit</span>
                       </Button>
                     </div>
 
                     {/* Quick stats */}
-                    <div className="flex items-center gap-4 mt-4">
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-lg text-sm">
-                        <MapPin className="w-3.5 h-3.5 text-emerald-300" />
+                    <div className="flex items-center gap-2 sm:gap-4 mt-3 sm:mt-4 flex-wrap">
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
+                        <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-300" />
                         <span className="font-medium">{customerSites.length}</span>
                         <span className="text-white/60">sites</span>
                       </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-lg text-sm">
-                        <Users className="w-3.5 h-3.5 text-blue-300" />
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
+                        <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-300" />
                         <span className="font-medium">{customerContacts.length}</span>
-                        <span className="text-white/60">contacts</span>
+                        <span className="text-white/60 hidden sm:inline">contacts</span>
                       </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-lg text-sm">
-                        <FolderKanban className="w-3.5 h-3.5 text-orange-300" />
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
+                        <FolderKanban className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-300" />
                         <span className="font-medium">{customerProjects.length}</span>
-                        <span className="text-white/60">projects</span>
+                        <span className="text-white/60 hidden sm:inline">projects</span>
                       </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-lg text-sm">
-                        <FileText className="w-3.5 h-3.5 text-violet-300" />
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
+                        <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-violet-300" />
                         <span className="font-medium">{customerQuotes.length}</span>
-                        <span className="text-white/60">proposals</span>
+                        <span className="text-white/60 hidden sm:inline">proposals</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex items-center gap-1 px-4 sm:px-6 pt-3 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a]">
+                <div className="flex items-center gap-1 px-3 sm:px-6 pt-3 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a]">
                   {[
-                    { key: 'details', label: 'Details & Contacts' },
-                    { key: 'proposals', label: `Proposals (${customerQuotes.length})` },
-                    { key: 'projects', label: `Projects (${customerProjects.length})` },
+                    { key: 'details', label: 'Details', mobileLabel: 'Details' },
+                    { key: 'proposals', label: `Proposals (${customerQuotes.length})`, mobileLabel: `Proposals` },
+                    { key: 'projects', label: `Projects (${customerProjects.length})`, mobileLabel: `Projects` },
                   ].map(tab => (
                     <button
                       key={tab.key}
                       onClick={() => setCompanyTabs(prev => ({ ...prev, [selectedCustomer.id]: tab.key }))}
                       className={cn(
-                        "px-4 pb-2.5 text-sm font-medium border-b-2 transition-colors",
+                        "px-2.5 sm:px-4 pb-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                         (companyTabs[selectedCustomer.id] || 'details') === tab.key
                           ? "border-[#0069AF] text-[#0069AF]"
                           : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                       )}
                     >
-                      {tab.label}
+                      <span className="sm:hidden">{tab.mobileLabel}</span>
+                      <span className="hidden sm:inline">{tab.label}</span>
                     </button>
                   ))}
                 </div>
 
                 {/* Tab content */}
-                <div className="overflow-y-auto p-4 sm:p-6" style={{ maxHeight: 'calc(90vh - 260px)' }}>
+                <div className="overflow-y-auto p-3 sm:p-6 flex-1" style={{ maxHeight: 'calc(100dvh - 280px)' }}>
                   {/* Details & Contacts Tab */}
                   {(companyTabs[selectedCustomer.id] || 'details') === 'details' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
