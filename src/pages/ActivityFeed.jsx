@@ -147,14 +147,14 @@ export default function ActivityFeed() {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-slate-400">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <motion.div
@@ -342,7 +342,7 @@ export default function ActivityFeed() {
                                       On{' '}
                                       <Link 
                                         to={createPageUrl('ProjectDetail') + `?id=${activity.project_id}`}
-                                        className="text-[#0069AF] hover:underline font-medium"
+                                        className="text-primary hover:underline font-medium"
                                       >
                                         {projectName}
                                       </Link>
