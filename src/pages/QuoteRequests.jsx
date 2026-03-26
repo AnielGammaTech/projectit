@@ -84,7 +84,7 @@ export default function QuoteRequests() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -92,7 +92,7 @@ export default function QuoteRequests() {
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
         >
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Quote Requests</h1>
+            <h1 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">Quote Requests</h1>
             <p className="text-slate-500 mt-1">Submit and track quote requests for projects</p>
           </div>
           <Button
@@ -129,7 +129,7 @@ export default function QuoteRequests() {
                         <Icon className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-slate-900">{count}</p>
+                        <p className="text-lg sm:text-2xl font-bold text-slate-900">{count}</p>
                         <p className="text-xs text-slate-500">{config.label}</p>
                       </div>
                     </div>

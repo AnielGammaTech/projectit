@@ -223,7 +223,7 @@ export default function RolesPermissions() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -236,7 +236,7 @@ export default function RolesPermissions() {
                 <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Roles & Permissions</h1>
+                <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] tracking-tight">Roles & Permissions</h1>
               </div>
               <p className="text-slate-500">Manage user roles and access control</p>
             </div>
@@ -271,7 +271,7 @@ export default function RolesPermissions() {
 
         {viewMode === 'cards' ? (
           /* Cards View */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {allRoles.map((role, idx) => (
               <motion.div
                 key={role.id || role.name}

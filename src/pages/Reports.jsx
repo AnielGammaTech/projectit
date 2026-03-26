@@ -146,13 +146,13 @@ export default function Reports() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-8 w-40 bg-slate-200 rounded-lg" />
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {[1,2,3,4].map(i => <div key={i} className="h-28 bg-slate-200 rounded-xl" />)}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="h-64 bg-slate-200 rounded-xl" />
               <div className="h-64 bg-slate-200 rounded-xl" />
             </div>
@@ -170,21 +170,21 @@ export default function Reports() {
         </div>
         <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">{label}</span>
       </div>
-      <p className={cn("text-2xl font-bold", color)}>{value}</p>
+      <p className={cn("text-lg sm:text-2xl font-bold", color)}>{value}</p>
       {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
     </div>
   );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Reports</h1>
+          <h1 className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Reports</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Business metrics and team performance</p>
 
           {/* Tabs */}
@@ -222,7 +222,7 @@ export default function Reports() {
             </div>
 
             {/* Charts Row */}
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid lg:grid-cols-2 gap-3 sm:gap-6">
               {/* Task Status Pie */}
               <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
                 <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
@@ -230,7 +230,7 @@ export default function Reports() {
                   Task Status
                 </h3>
                 {taskStatusData.length > 0 ? (
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-3 sm:gap-6">
                     <ResponsiveContainer width="50%" height={180}>
                       <RechartsPie>
                         <Pie data={taskStatusData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} dataKey="value" strokeWidth={2} stroke="#fff">
@@ -371,18 +371,18 @@ export default function Reports() {
             </div>
 
             {/* Totals Row */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-4 sm:p-5">
                 <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Total Cost</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">${totalCost.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                <p className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">${totalCost.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
               </div>
-              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-5">
+              <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-4 sm:p-5">
                 <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Total Retail</p>
-                <p className="text-3xl font-bold text-emerald-600">${totalRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                <p className="text-xl sm:text-3xl font-bold text-emerald-600">${totalRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
               </div>
-              <div className="bg-gradient-to-r from-[#0069AF] to-[#133F5C] rounded-xl p-5 text-white">
+              <div className="bg-gradient-to-r from-[#0069AF] to-[#133F5C] rounded-xl p-4 sm:p-5 text-white">
                 <p className="text-xs font-medium text-white/70 uppercase tracking-wide mb-2">Margin</p>
-                <p className="text-3xl font-bold">${margin.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                <p className="text-xl sm:text-3xl font-bold">${margin.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
                 <p className="text-sm text-white/70">{marginPercent}%</p>
               </div>
             </div>
@@ -430,7 +430,7 @@ export default function Reports() {
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="bg-slate-50 dark:bg-[#151d2b] rounded-lg p-4">
                       <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Cost</p>
                       <p className="text-xl font-bold text-slate-900 dark:text-slate-100">${projTotalCost.toFixed(0)}</p>

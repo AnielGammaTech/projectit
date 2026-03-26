@@ -889,8 +889,26 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <ProcessingOverlay isVisible={isProcessing} type={processingType} />
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Header */}
-        <div className="mb-6">
+        {/* Mobile Search Bar — visible only on mobile */}
+        <div className="sm:hidden mb-4">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search projects, tasks, customers..."
+              className="pl-11 pr-4 h-12 text-base rounded-xl bg-white dark:bg-[#1e2a3a] border-slate-200 dark:border-slate-700/50 shadow-sm focus:ring-2 focus:ring-[#0069AF]/30 dark:focus:ring-blue-500/30"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                <X className="w-4 h-4 text-slate-400" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Welcome Header — hidden on mobile */}
+        <div className="mb-6 hidden sm:block">
           <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-[#133F5C] dark:text-slate-100">
@@ -1130,8 +1148,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Compact Stats Bar + My Tasks Inline */}
-        <div className="flex flex-col lg:flex-row gap-3 mb-5">
+        {/* Compact Stats Bar + My Tasks Inline — hidden on mobile */}
+        <div className="hidden sm:flex flex-col lg:flex-row gap-3 mb-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
             <StatsCard
               title="Active Projects"
@@ -1168,8 +1186,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* My Tasks Inline Strip */}
-        <div className="mb-5">
+        {/* My Tasks Inline Strip — hidden on mobile */}
+        <div className="hidden sm:block mb-5">
           <MyTasksCard
             tasks={tasks}
             parts={parts}

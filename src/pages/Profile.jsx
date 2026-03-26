@@ -169,7 +169,7 @@ export default function Profile() {
         {/* Profile Hero */}
         <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden mb-6">
           <div className="h-16 bg-gradient-to-r from-[#0F2F44] via-[#133F5C] to-[#0069AF]" />
-          <div className="px-6 py-5">
+          <div className="px-4 sm:px-6 py-5">
             <div className="flex items-center gap-4">
               <div className="relative shrink-0">
                 {formData.avatar_url ? (
@@ -237,7 +237,7 @@ export default function Profile() {
         {/* Tab Content */}
         <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden">
           {activeTab === 'profile' && (
-            <div className="p-6 space-y-5">
+            <div className="p-4 sm:p-6 space-y-5">
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Full Name</Label>
                 <Input
@@ -301,7 +301,7 @@ export default function Profile() {
           )}
 
           {activeTab === 'appearance' && (
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 block">Theme</Label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {themeOptions.map(option => {
@@ -347,7 +347,7 @@ export default function Profile() {
           )}
 
           {activeTab === 'security' && (
-            <div className="p-6 space-y-5">
+            <div className="p-4 sm:p-6 space-y-5">
               {/* MFA Status Card */}
               <div className={cn(
                 "rounded-xl border p-4",
@@ -440,7 +440,7 @@ export default function Profile() {
           {activeTab === 'notifications' && (
             <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
               {unreadCount > 0 && (
-                <div className="px-6 py-3 flex items-center justify-between bg-slate-50/50 dark:bg-[#151d2b]/50">
+                <div className="px-4 sm:px-6 py-3 flex items-center justify-between bg-slate-50/50 dark:bg-[#151d2b]/50">
                   <span className="text-sm text-slate-500 dark:text-slate-400">{unreadCount} unread</span>
                   <Button
                     variant="ghost"
@@ -458,7 +458,7 @@ export default function Profile() {
                     <div
                       key={notification.id}
                       className={cn(
-                        "px-6 py-3 flex items-start gap-3 transition-colors",
+                        "px-4 sm:px-6 py-3 flex items-start gap-3 transition-colors",
                         !notification.is_read && "bg-blue-50/50 dark:bg-blue-900/10"
                       )}
                     >

@@ -125,9 +125,9 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
         {/* Header */}
-        <div className="px-6 pt-5 pb-4 border-b border-slate-200 dark:border-slate-700/50">
+        <div className="px-4 sm:px-6 pt-5 pb-4 border-b border-slate-200 dark:border-slate-700/50">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2.5 text-lg">
               <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md">
@@ -139,7 +139,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
         </div>
 
         <form onSubmit={handleSubmit} className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 140px)' }}>
-          <div className="p-6 space-y-5">
+          <div className="p-4 sm:p-6 space-y-5">
             {/* Link to Product */}
             <div className="relative">
               <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mb-2">
@@ -188,7 +188,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
             </div>
 
             {/* Part Name & Number */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Part Name *</Label>
                 <Input
@@ -211,7 +211,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
             </div>
 
             {/* Quantity, Cost, Status */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <div>
                 <Label htmlFor="quantity" className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Quantity</Label>
                 <Input
@@ -251,7 +251,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
             </div>
 
             {/* Supplier & Purchase Link */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label htmlFor="supplier" className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Supplier</Label>
                 <Input
@@ -278,7 +278,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
             </div>
 
             {/* Dates */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Due Date</Label>
                 <Popover>
@@ -331,7 +331,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#151d2b]/50 flex justify-end gap-3">
+          <div className="px-4 sm:px-6 py-4 border-t border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#151d2b]/50 flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
             <Button type="submit" className="bg-[#0069AF] hover:bg-[#0F2F44]" disabled={saving || !formData.name}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

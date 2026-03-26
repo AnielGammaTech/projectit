@@ -251,14 +251,14 @@ export default function SecuritySettings() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-4 sm:mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
               <Shield className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Security Settings</h1>
+            <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Security Settings</h1>
           </div>
           <p className="text-slate-500 dark:text-slate-400">Manage your account security and two-factor authentication</p>
         </motion.div>
@@ -269,7 +269,7 @@ export default function SecuritySettings() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-[#1e2a3a] rounded-2xl border dark:border-slate-700/50 shadow-sm overflow-hidden mb-6"
         >
-          <div className="p-6 border-b dark:border-slate-700/50">
+          <div className="p-4 sm:p-6 border-b dark:border-slate-700/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className={cn("p-3 rounded-xl", is2FAEnabled ? "bg-emerald-100 dark:bg-emerald-900/30" : "bg-amber-100 dark:bg-amber-900/30")}>
@@ -289,7 +289,7 @@ export default function SecuritySettings() {
           </div>
 
           {is2FAEnabled ? (
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <Smartphone className="w-5 h-5 text-slate-600 dark:text-slate-400" />
@@ -311,7 +311,7 @@ export default function SecuritySettings() {
               </div>
             </div>
           ) : (
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Protect your account with a TOTP authenticator app:</p>
               <button onClick={startAuthenticatorSetup} className="w-full p-4 border dark:border-slate-700/50 rounded-xl hover:border-[#0069AF] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all text-left group">
                 <div className="flex items-center justify-between">
@@ -332,7 +332,7 @@ export default function SecuritySettings() {
         </motion.div>
 
         {/* Security Tips */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-200 dark:border-blue-800/50 p-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-200 dark:border-blue-800/50 p-4 sm:p-6">
           <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-3">Security Tips</h3>
           <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-300">
             <li className="flex items-start gap-2"><Check className="w-4 h-4 mt-0.5 shrink-0" /><span>Enable two-factor authentication to protect your account</span></li>

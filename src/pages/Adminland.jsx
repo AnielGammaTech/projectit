@@ -145,7 +145,7 @@ export default function Adminland() {
               <div className="h-4 w-48 bg-slate-100 dark:bg-slate-700/50 rounded animate-pulse" />
             </div>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-3 sm:gap-6">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-2xl border dark:border-slate-700/50 overflow-hidden animate-pulse">
                 <div className="px-4 py-3 bg-slate-50 dark:bg-[#151d2b]"><div className="h-5 w-32 bg-slate-200 dark:bg-slate-700 rounded" /></div>
@@ -212,7 +212,7 @@ export default function Adminland() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {activeSection ? (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
             <button 
@@ -231,7 +231,7 @@ export default function Adminland() {
                 <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Adminland</h1>
+                <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Adminland</h1>
               </div>
               <p className="text-slate-500 dark:text-slate-400">Manage your workspace settings</p>
             </div>
@@ -1043,7 +1043,7 @@ function TeamMemberModal({ open, onClose, member, onSave, saving, error }) {
             <Label>Email</Label>
             <Input type="email" value={formData.email} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))} required className="mt-1" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Role</Label>
               <select
@@ -1604,7 +1604,7 @@ function CompanySettingsSection({ queryClient }) {
           
           {expandedSections.branding && (
             <div className="px-4 pb-4 space-y-4">
-              <div className="flex items-start gap-6 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
+              <div className="flex items-start gap-3 sm:gap-6 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
                 <div className="flex-shrink-0">
                   {formData.app_logo_url ? (
                     <div className="relative">
@@ -2270,21 +2270,21 @@ function DatabaseHealthSection() {
                         <HardDrive className="w-4 h-4 text-slate-400" />
                         <span className="text-xs font-medium text-slate-500 uppercase">Database Size</span>
                       </div>
-                      <p className="text-2xl font-bold text-slate-900">{healthData.database?.size_pretty || 'N/A'}</p>
+                      <p className="text-lg sm:text-2xl font-bold text-slate-900">{healthData.database?.size_pretty || 'N/A'}</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-4 border">
                       <div className="flex items-center gap-2 mb-2">
                         <Activity className="w-4 h-4 text-slate-400" />
                         <span className="text-xs font-medium text-slate-500 uppercase">Connections</span>
                       </div>
-                      <p className="text-2xl font-bold text-slate-900">{healthData.database?.active_connections || 0}</p>
+                      <p className="text-lg sm:text-2xl font-bold text-slate-900">{healthData.database?.active_connections || 0}</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-4 border">
                       <div className="flex items-center gap-2 mb-2">
                         <Database className="w-4 h-4 text-slate-400" />
                         <span className="text-xs font-medium text-slate-500 uppercase">Total Rows</span>
                       </div>
-                      <p className="text-2xl font-bold text-slate-900">{healthData.total_rows?.toLocaleString() || 0}</p>
+                      <p className="text-lg sm:text-2xl font-bold text-slate-900">{healthData.total_rows?.toLocaleString() || 0}</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-4 border">
                       <div className="flex items-center gap-2 mb-2">
@@ -2296,7 +2296,7 @@ function DatabaseHealthSection() {
                         <span className="text-xs font-medium text-slate-500 uppercase">Status</span>
                       </div>
                       <p className={cn(
-                        "text-2xl font-bold",
+                        "text-lg sm:text-2xl font-bold",
                         healthData.status === 'healthy' ? "text-emerald-600" : "text-amber-600"
                       )}>
                         {healthData.status === 'healthy' ? 'Healthy' : 'Issues'}
@@ -2734,7 +2734,7 @@ function IntegrationsSection({ queryClient }) {
 
             {/* Settings Tab */}
             {activeTab === 'settings' && (
-              <div className="p-6 space-y-6">
+              <div className="p-3 sm:p-6 space-y-6">
                 {/* Enable toggle */}
                 <label className="flex items-center gap-3 cursor-pointer">
                   <Checkbox checked={formData.halopsa_enabled} onCheckedChange={(v) => setFormData(p => ({ ...p, halopsa_enabled: v }))} />
@@ -2749,7 +2749,7 @@ function IntegrationsSection({ queryClient }) {
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
                         Connection
                       </h3>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <Label className="text-xs">Authorisation Server URL</Label>
                           <Input value={formData.halopsa_auth_url} onChange={e => setFormData(p => ({ ...p, halopsa_auth_url: e.target.value }))} placeholder="https://yourcompany.halopsa.com/auth" className="mt-1" />
@@ -2759,7 +2759,7 @@ function IntegrationsSection({ queryClient }) {
                           <Input value={formData.halopsa_api_url} onChange={e => setFormData(p => ({ ...p, halopsa_api_url: e.target.value }))} placeholder="https://yourcompany.halopsa.com/api" className="mt-1" />
                         </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                           <Label className="text-xs">Client ID</Label>
                           <Input value={formData.halopsa_client_id} onChange={e => setFormData(p => ({ ...p, halopsa_client_id: e.target.value }))} placeholder="Your Client ID" className="mt-1" />
@@ -2795,7 +2795,7 @@ function IntegrationsSection({ queryClient }) {
                         <div className="w-1.5 h-1.5 rounded-full bg-[#0069AF]" />
                         Sync Options
                       </h3>
-                      <div className="flex flex-wrap gap-6">
+                      <div className="flex flex-wrap gap-3 sm:gap-6">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <Checkbox checked={formData.halopsa_sync_customers} onCheckedChange={v => setFormData(p => ({ ...p, halopsa_sync_customers: v }))} />
                           <span className="text-sm">Sync Customers</span>
@@ -2818,7 +2818,7 @@ function IntegrationsSection({ queryClient }) {
                         <span className="font-medium">Field Mapping</span>
                       </button>
                       {showFieldMapping && (
-                        <div className="mt-3 grid grid-cols-2 gap-3">
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {Object.entries(formData.halopsa_field_mapping).map(([key, value]) => (
                             <div key={key} className="flex items-center gap-2">
                               <span className="text-xs font-medium text-slate-500 w-16 capitalize">{key}</span>
@@ -3058,7 +3058,7 @@ function QuoteITIntegrationCard({ expandedIntegration, toggleIntegration }) {
       </button>
 
       {expandedIntegration === 'quoteit' && (
-        <div className="border-t p-6 space-y-5">
+        <div className="border-t p-3 sm:p-6 space-y-5">
           {/* How it works */}
           <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-100">
             <h4 className="text-sm font-semibold text-slate-700 mb-2">What this does</h4>
@@ -3205,7 +3205,7 @@ function PortalITIntegrationCard({ expandedIntegration, toggleIntegration }) {
       </button>
 
       {expandedIntegration === 'portalit' && (
-        <div className="border-t p-6 space-y-5">
+        <div className="border-t p-3 sm:p-6 space-y-5">
           {/* How it works */}
           <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
             <h4 className="text-sm font-semibold text-slate-700 mb-2">What this does</h4>
@@ -3385,7 +3385,7 @@ function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
       </button>
 
       {expandedIntegration === 'gammaai' && (
-        <div className="border-t p-6 space-y-5">
+        <div className="border-t p-3 sm:p-6 space-y-5">
           {/* How it works */}
           <div className="p-4 bg-teal-50 rounded-xl border border-teal-100">
             <div className="flex items-start gap-3">
@@ -3535,7 +3535,7 @@ function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
             </div>
 
             {/* Toggles */}
-            <div className="flex items-center gap-6 pt-2">
+            <div className="flex items-center gap-3 sm:gap-6 pt-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox
                   checked={formData.gammaai_enabled}
@@ -3707,7 +3707,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
       </button>
 
       {expandedIntegration === 'resend' && (
-        <div className="border-t p-6 space-y-5">
+        <div className="border-t p-3 sm:p-6 space-y-5">
           {/* API Key — env var only */}
           <div>
             <Label className="text-xs">Resend API Key</Label>
@@ -3726,7 +3726,7 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
           </div>
 
           {/* From settings */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label className="text-xs">From Name</Label>
               <Input value={fromName} onChange={e => setFromName(e.target.value)} placeholder="ProjectIT" className="mt-1" />
@@ -4192,7 +4192,7 @@ function AIAgentsSection({ queryClient }) {
         </button>
 
         {expandedCard === 'connection' && (
-          <div className="border-t border-slate-200 dark:border-slate-700 p-6 space-y-5">
+          <div className="border-t border-slate-200 dark:border-slate-700 p-3 sm:p-6 space-y-5">
             {/* Info banner */}
             <div className="p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800">
               <div className="flex items-start gap-3">
@@ -4279,7 +4279,7 @@ function AIAgentsSection({ queryClient }) {
               </div>
 
               {/* Toggles */}
-              <div className="flex items-center gap-6 pt-2">
+              <div className="flex items-center gap-3 sm:gap-6 pt-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <Checkbox
                     checked={formData.gammaai_enabled}
@@ -4346,7 +4346,7 @@ function AIAgentsSection({ queryClient }) {
           </button>
 
           {expandedCard === 'agents' && (
-            <div className="border-t border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div className="border-t border-slate-200 dark:border-slate-700 p-3 sm:p-6 space-y-4">
               {loadingAgents ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
@@ -4553,7 +4553,7 @@ function GiphyIntegrationCard({ expandedIntegration, toggleIntegration }) {
       </button>
 
       {expandedIntegration === 'giphy' && (
-        <div className="border-t p-6 space-y-5">
+        <div className="border-t p-3 sm:p-6 space-y-5">
           {/* How it works */}
           <div className="p-4 bg-gradient-to-br from-purple-50/50 to-pink-50/30 rounded-xl border border-purple-100">
             <h4 className="text-sm font-semibold text-slate-700 mb-2">What this does</h4>
@@ -4591,7 +4591,7 @@ function GiphyIntegrationCard({ expandedIntegration, toggleIntegration }) {
           </div>
 
           {/* Settings */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label className="text-xs">Content Rating</Label>
               <select
@@ -4655,7 +4655,7 @@ function GiphyIntegrationCard({ expandedIntegration, toggleIntegration }) {
                 </Button>
               </div>
               {previewGifs.length > 0 && (
-                <div className="grid grid-cols-3 gap-2 mt-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
                   {previewGifs.map(gif => (
                     <div key={gif.id} className="relative rounded-lg overflow-hidden bg-slate-100 aspect-square group">
                       <img

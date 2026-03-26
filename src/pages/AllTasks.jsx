@@ -600,7 +600,7 @@ export default function AllTasks() {
   if (loadingTasks) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="animate-pulse space-y-6">
             <div>
               <div className="h-8 w-48 bg-slate-200 rounded-lg" />
@@ -641,14 +641,14 @@ export default function AllTasks() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tasks & Parts</h1>
+          <h1 className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tasks & Parts</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">View and filter all tasks and parts across projects</p>
 
           {/* Main Tabs */}

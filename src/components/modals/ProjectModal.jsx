@@ -261,11 +261,11 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden max-h-[90vh] gap-0 dark:bg-[#1e2a3a]">
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden max-h-[90vh] gap-0 h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl dark:bg-[#1e2a3a]">
 
         {/* ── Colored Header ── */}
         <div
-          className="px-6 pt-6 pb-4 transition-colors duration-300"
+          className="px-4 sm:px-6 pt-6 pb-4 transition-colors duration-300"
           style={{ background: `linear-gradient(135deg, ${selectedColor}18, ${selectedColor}08)` }}
         >
           <div className="flex items-center justify-between mb-4">
@@ -336,7 +336,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
         {/* ── Scrollable Body ── */}
         <form onSubmit={handleSubmit} className="overflow-y-auto max-h-[calc(90vh-200px)]">
-          <div className="px-6 py-5 space-y-5">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
 
             {/* Client + Description row */}
             <div className="space-y-4">
@@ -651,7 +651,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
             </div>
 
             {/* ── Options Row — Dates, Budget, Template ── */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Start Date */}
               <div>
                 <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 block">
@@ -831,7 +831,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
           </div>
 
           {/* ── Footer ── */}
-          <div className="px-6 py-4 bg-slate-50 dark:bg-[#151d2b] border-t border-slate-200 dark:border-slate-600 flex items-center justify-between">
+          <div className="px-4 sm:px-6 py-4 bg-slate-50 dark:bg-[#151d2b] border-t border-slate-200 dark:border-slate-600 flex items-center justify-between">
             <button
               type="button"
               onClick={onClose}

@@ -229,9 +229,9 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 max-h-[90vh] sm:max-h-[90vh] h-[100dvh] sm:h-auto overflow-hidden flex flex-col rounded-none sm:rounded-2xl">
         {/* Header */}
-        <div className="p-6 border-b border-slate-100">
+        <div className="p-4 sm:p-6 border-b border-slate-100">
           <div className="flex items-start gap-3">
             <div className="p-2.5 rounded-xl bg-amber-100 flex-shrink-0">
               <Package className="w-5 h-5 text-amber-600" />
@@ -423,8 +423,8 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           {/* Details Grid */}
-          <div className="p-6 border-b border-slate-100">
-            <div className="grid grid-cols-3 gap-4">
+          <div className="p-4 sm:p-6 border-b border-slate-100">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {/* Quantity */}
               <div>
                 <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 block">Quantity</label>
@@ -476,7 +476,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-4">
               {/* Supplier */}
               <div>
                 <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
@@ -698,7 +698,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
           </div>
 
           {/* Notes */}
-          <div className="p-6 border-b border-slate-100">
+          <div className="p-4 sm:p-6 border-b border-slate-100">
             <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">Notes</label>
             {isEditing ? (
               <Textarea
@@ -716,7 +716,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
           </div>
 
           {/* Comments Section */}
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="flex items-center gap-2 mb-4">
               <MessageSquare className="w-4 h-4 text-slate-500" />
               <label className="text-sm font-medium text-slate-700">Comments ({comments.length})</label>

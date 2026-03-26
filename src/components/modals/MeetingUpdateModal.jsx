@@ -201,7 +201,7 @@ ${formData.additionalNotes || 'None'}`;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -268,7 +268,7 @@ ${formData.additionalNotes || 'None'}`;
                     placeholder="What needs to be done..."
                     className="font-medium"
                   />
-                  <div className="flex gap-2 items-center">
+                  <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
                     <Select value={step.assigned_to} onValueChange={(v) => handleAssigneeChange(idx, v)}>
                       <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Assign to...">

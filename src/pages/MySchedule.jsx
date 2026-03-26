@@ -150,7 +150,7 @@ export default function MySchedule() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 py-4 sm:py-8">
         {/* Header with Avatar */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -167,7 +167,7 @@ export default function MySchedule() {
               getInitials(currentUser?.full_name)
             )}
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Your Schedule</h1>
+          <h1 className="text-lg sm:text-2xl font-bold text-slate-900">Your Schedule</h1>
         </motion.div>
 
         {/* Calendar Navigation */}
@@ -190,9 +190,9 @@ export default function MySchedule() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8"
+          className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 sm:p-6 mb-4 sm:mb-8"
         >
-          <div className="flex gap-8">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
             {renderCalendar(currentMonth)}
             {renderCalendar(nextMonth)}
           </div>

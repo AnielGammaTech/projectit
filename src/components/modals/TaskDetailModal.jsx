@@ -158,16 +158,16 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl p-0 gap-0 max-h-[90vh] overflow-hidden flex flex-col rounded-2xl dark:bg-[#1e2a3a]">
+      <DialogContent className="sm:max-w-4xl p-0 gap-0 max-h-[90vh] sm:max-h-[90vh] h-[100dvh] sm:h-auto overflow-hidden flex flex-col rounded-none sm:rounded-2xl dark:bg-[#1e2a3a]">
         {/* Header */}
-        <div className="px-8 pt-6 pb-5 border-b border-slate-200/80 dark:border-slate-700/50 flex-shrink-0">
-          <div className="flex items-start gap-3">
-            <motion.button onClick={handleStatusToggle} whileTap={{ scale: 0.85 }} className={cn("w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 mt-1", isCompleted ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 hover:border-emerald-400")}>
+        <div className="px-4 sm:px-8 pt-4 sm:pt-6 pb-3 sm:pb-5 border-b border-slate-200/80 dark:border-slate-700/50 flex-shrink-0">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <motion.button onClick={handleStatusToggle} whileTap={{ scale: 0.85 }} className={cn("w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 mt-0.5", isCompleted ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 hover:border-emerald-400")}>
               <AnimatePresence>{isCompleted && (<motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }}><Check className="w-4 h-4" /></motion.div>)}</AnimatePresence>
             </motion.button>
             <div className="flex-1 min-w-0">
-              <h2 className={cn("text-lg font-semibold text-slate-900 dark:text-slate-100 leading-snug", isCompleted && "line-through text-slate-400")}>{task.title}</h2>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Created by {task.created_by || 'Unknown'} · {format(new Date(task.created_date), 'MMM d, yyyy')}</p>
+              <h2 className={cn("text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 leading-snug", isCompleted && "line-through text-slate-400")}>{task.title}</h2>
+              <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1">Created by {task.created_by || 'Unknown'} · {format(new Date(task.created_date), 'MMM d, yyyy')}</p>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               <Button variant="ghost" size="icon" onClick={() => onEdit(task)} className="h-8 w-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><Edit2 className="w-4 h-4" /></Button>
@@ -176,15 +176,15 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
           </div>
         </div>
 
-        {/* Two-column layout */}
-        <div className="flex-1 overflow-hidden flex min-h-0">
+        {/* Two-column layout (stacked on mobile) */}
+        <div className="flex-1 overflow-hidden flex flex-col sm:flex-row min-h-0">
 
           {/* LEFT — Main content */}
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden order-2 sm:order-1">
             <div className="flex-1 overflow-y-auto">
 
               {/* Description / Notes */}
-              <div className="px-8 pt-6 pb-5">
+              <div className="px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-5">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Description</span>
                   <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
               </div>
 
               {/* Activity / Comments */}
-              <div className="px-8 pb-4">
+              <div className="px-4 sm:px-8 pb-4">
                 <div className="border-t border-slate-200/80 dark:border-slate-700/50 pt-5">
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Activity</span>
                   <div className="mt-4 space-y-5">
@@ -226,9 +226,9 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
             </div>
 
             {/* Comment input — pinned at bottom of left column */}
-            <div className="px-6 py-4 border-t border-slate-200/80 dark:border-slate-700/50 bg-slate-50/60 dark:bg-[#151d2b] flex-shrink-0">
-              <div className="flex gap-3">
-                <UserAvatar email={currentUser?.email} name={currentUser?.full_name} avatarUrl={currentUser?.avatar_url} size="md" />
+            <div className="px-3 sm:px-6 py-3 sm:py-4 border-t border-slate-200/80 dark:border-slate-700/50 bg-slate-50/60 dark:bg-[#151d2b] flex-shrink-0">
+              <div className="flex gap-2 sm:gap-3">
+                <span className="hidden sm:inline-flex"><UserAvatar email={currentUser?.email} name={currentUser?.full_name} avatarUrl={currentUser?.avatar_url} size="md" /></span>
                 <div className="flex-1 relative">
                   <Textarea ref={textareaRef} value={comment} onChange={handleCommentChange} onPaste={handlePaste} placeholder="Write a comment... @ to mention" className="min-h-[52px] resize-none pr-10 bg-white dark:bg-[#1a2535] dark:border-slate-600 rounded-xl text-sm focus:ring-[#0069AF]/20 focus:border-[#0069AF]/40" />
                   <button type="button" onClick={() => commentFileInputRef.current?.click()} disabled={uploadingCommentFile} className="absolute bottom-2 right-2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">{uploadingCommentFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}</button>
@@ -241,16 +241,16 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
             </div>
           </div>
 
-          {/* RIGHT — Properties sidebar */}
-          <div className="w-[280px] border-l border-slate-200/80 dark:border-slate-700/50 bg-slate-50/40 dark:bg-[#162032] overflow-y-auto flex-shrink-0">
+          {/* RIGHT — Properties sidebar (horizontal strip on mobile, sidebar on desktop) */}
+          <div className="order-1 sm:order-2 sm:w-[280px] border-b sm:border-b-0 sm:border-l border-slate-200/80 dark:border-slate-700/50 bg-slate-50/40 dark:bg-[#162032] overflow-y-auto flex-shrink-0">
             {/* Properties */}
-            <div className="p-5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Details</span>
+            <div className="p-3 sm:p-5">
+              <span className="hidden sm:block text-xs font-semibold uppercase tracking-wider text-slate-400">Details</span>
 
-              <div className="mt-4 space-y-1">
+              <div className="sm:mt-4 flex flex-wrap gap-x-4 gap-y-1 sm:block sm:space-y-1">
                 {/* Status */}
-                <div className="flex items-center py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors -mx-2 relative">
-                  <span className="text-xs text-slate-500 w-20 flex-shrink-0">Status</span>
+                <div className="flex items-center py-1.5 sm:py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors sm:-mx-2 relative">
+                  <span className="text-[11px] sm:text-xs text-slate-500 w-16 sm:w-20 flex-shrink-0">Status</span>
                   <button onClick={() => setShowStatusDropdown(!showStatusDropdown)} className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all", currentStatus.classes)}>
                     <div className={cn("w-1.5 h-1.5 rounded-full", currentStatus.dot)} />{currentStatus.label}<ChevronDown className="w-3 h-3 ml-0.5 opacity-60" />
                   </button>
@@ -260,33 +260,33 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 </div>
 
                 {/* Assignee */}
-                <div className="flex items-center py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors -mx-2">
-                  <span className="text-xs text-slate-500 w-20 flex-shrink-0">Assignee</span>
+                <div className="flex items-center py-1.5 sm:py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors sm:-mx-2">
+                  <span className="text-[11px] sm:text-xs text-slate-500 w-16 sm:w-20 flex-shrink-0">Assignee</span>
                   <DropdownMenu><DropdownMenuTrigger asChild><button className="inline-flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 transition-colors">{task.assigned_name ? (<><UserAvatar email={task.assigned_to} name={task.assigned_name} avatarUrl={teamMembers.find(m => m.email === task.assigned_to)?.avatar_url} size="xs" /><span className="font-medium">{task.assigned_name}</span></>) : (<span className="text-slate-400">None</span>)}<ChevronDown className="w-3 h-3 text-slate-400" /></button></DropdownMenuTrigger><DropdownMenuContent align="start"><DropdownMenuItem onClick={() => handleAssign('unassigned')}><User className="w-4 h-4 mr-2 text-slate-400" />Unassigned</DropdownMenuItem><DropdownMenuSeparator />{teamMembers.map(m => (<DropdownMenuItem key={m.id} onClick={() => handleAssign(m.email)}><UserAvatar email={m.email} name={m.name} avatarUrl={m.avatar_url} size="xs" className="mr-2" />{m.name}{task.assigned_to === m.email && <Check className="w-4 h-4 ml-auto" />}</DropdownMenuItem>))}</DropdownMenuContent></DropdownMenu>
                 </div>
 
                 {/* Due Date */}
-                <div className="flex items-center py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors -mx-2">
-                  <span className="text-xs text-slate-500 w-20 flex-shrink-0">Due date</span>
+                <div className="flex items-center py-1.5 sm:py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors sm:-mx-2">
+                  <span className="text-[11px] sm:text-xs text-slate-500 w-16 sm:w-20 flex-shrink-0">Due date</span>
                   <Popover><PopoverTrigger asChild><button className="inline-flex items-center gap-1.5 text-xs transition-colors hover:text-slate-900"><CalendarIcon className="w-3.5 h-3.5 text-slate-400" />{localDueDate ? <span className="font-medium text-slate-700">{format(localDueDate, 'MMM d, yyyy')}</span> : <span className="text-slate-400">None</span>}</button></PopoverTrigger><PopoverContent className="w-auto p-0 z-[100]" align="start"><Calendar mode="single" selected={localDueDate} onSelect={handleDueDateChange} />{task.due_date && (<div className="p-2 border-t"><Button variant="ghost" size="sm" onClick={() => handleDueDateChange(null)} className="w-full text-red-600">Clear date</Button></div>)}</PopoverContent></Popover>
                 </div>
 
                 {/* Priority */}
-                <div className="flex items-center py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors -mx-2">
-                  <span className="text-xs text-slate-500 w-20 flex-shrink-0">Priority</span>
+                <div className="flex items-center py-1.5 sm:py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors sm:-mx-2">
+                  <span className="text-[11px] sm:text-xs text-slate-500 w-16 sm:w-20 flex-shrink-0">Priority</span>
                   <DropdownMenu><DropdownMenuTrigger asChild><button className="inline-flex items-center gap-1.5 text-xs transition-colors"><Flag className={cn("w-3.5 h-3.5", currentPriority.color)} /><span className={cn("font-medium", currentPriority.color)}>{currentPriority.label}</span><ChevronDown className="w-3 h-3 text-slate-400" /></button></DropdownMenuTrigger><DropdownMenuContent>{Object.entries(priorityConfig).map(([key, config]) => (<DropdownMenuItem key={key} onClick={() => handlePriorityChange(key)}><Flag className={cn("w-4 h-4 mr-2", config.color)} />{config.label}{task.priority === key && <Check className="w-4 h-4 ml-auto" />}</DropdownMenuItem>))}</DropdownMenuContent></DropdownMenu>
                 </div>
 
                 {/* Notify */}
-                <div className="flex items-center py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors -mx-2">
-                  <span className="text-xs text-slate-500 w-20 flex-shrink-0">Notify</span>
+                <div className="flex items-center py-1.5 sm:py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors sm:-mx-2">
+                  <span className="text-[11px] sm:text-xs text-slate-500 w-16 sm:w-20 flex-shrink-0">Notify</span>
                   <DropdownMenu><DropdownMenuTrigger asChild><button className="inline-flex items-center gap-1.5 text-xs transition-colors"><Bell className="w-3.5 h-3.5 text-slate-400" />{notifyOnComplete.length > 0 ? <span className="font-medium text-slate-700">{notifyOnComplete.length} people</span> : <span className="text-slate-400">None</span>}</button></DropdownMenuTrigger><DropdownMenuContent><p className="px-2 py-1.5 text-xs text-slate-500">Notify when completed:</p>{teamMembers.map(m => (<DropdownMenuItem key={m.id} onClick={() => handleToggleNotify(m.email)}><UserAvatar email={m.email} name={m.name} avatarUrl={m.avatar_url} size="xs" className="mr-2" />{m.name}{notifyOnComplete.includes(m.email) && <Check className="w-4 h-4 ml-auto text-emerald-600" />}</DropdownMenuItem>))}</DropdownMenuContent></DropdownMenu>
                 </div>
               </div>
             </div>
 
             {/* Checklist */}
-            <div className="border-t border-slate-200/80 dark:border-slate-700/50 p-5">
+            <div className="border-t border-slate-200/80 dark:border-slate-700/50 p-3 sm:p-5">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Checklist</span>

@@ -161,7 +161,7 @@ export default function Login() {
               <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
               <span className="text-white font-semibold text-xl tracking-tight">ProjectIT</span>
             </div>
-            <h2 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
+            <h2 className="text-2xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
               IT project delivery,{' '}
               <span className="text-[#74C7FF]">simplified.</span>
             </h2>
@@ -183,7 +183,7 @@ export default function Login() {
                 <ShieldCheck className="w-6 h-6 text-[#0069AF] dark:text-[#74C7FF]" />
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center mb-1">Two-Factor Authentication</h1>
+            <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100 text-center mb-1">Two-Factor Authentication</h1>
             <p className="text-slate-500 dark:text-slate-400 text-center mb-8 text-sm">
               Enter the 6-digit code from your authenticator app
             </p>
@@ -194,7 +194,7 @@ export default function Login() {
               </div>
             )}
 
-            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700/50 p-8">
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700/50 p-4 sm:p-8">
               <div className="flex justify-center mb-6">
                 <InputOTP
                   maxLength={6}
@@ -261,7 +261,7 @@ export default function Login() {
             <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
             <span className="text-white font-semibold text-xl tracking-tight">ProjectIT</span>
           </div>
-          <h2 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
+          <h2 className="text-2xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
             IT project delivery,{' '}
             <span className="text-[#74C7FF]">simplified.</span>
           </h2>
@@ -278,7 +278,7 @@ export default function Login() {
       {/* Right form panel */}
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-6 sm:px-12 bg-white dark:bg-[#151d2b]">
         <div className="w-full max-w-md">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1 text-center">Welcome back</h1>
+          <h1 className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1 text-center">Welcome back</h1>
           <p className="text-slate-500 dark:text-slate-400 mb-8 text-center">Sign in to your account to continue.</p>
 
           {error && (
@@ -288,7 +288,7 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700/50 p-8 space-y-5">
+            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700/50 p-4 sm:p-8 space-y-5">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Email address</label>
                 <div className="relative">

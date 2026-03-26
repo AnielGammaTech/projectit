@@ -300,7 +300,7 @@ export default function Templates() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-3">Project Templates</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-3">Project Templates</h1>
           <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
             Save yourself time by creating project templates with frequently-used tools, to-do lists, files, and more. 
             Anyone on your account who can create projects can use and edit these templates.

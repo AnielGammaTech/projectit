@@ -276,7 +276,7 @@ export default function Customers() {
   if (loadingCustomers) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="space-y-6">
             {/* Header skeleton */}
             <div className="flex items-center justify-between">
@@ -328,14 +328,14 @@ export default function Customers() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
         >
           <div>
-            <h1 className="text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Customers</h1>
+            <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Customers</h1>
             <p className="text-slate-500 mt-1">Manage your client relationships</p>
           </div>
           <div className="flex gap-2">
@@ -622,7 +622,7 @@ export default function Customers() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label>{formData.is_company ? 'Company Name *' : 'Name *'}</Label>
                 <Input value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} className="mt-1" />
@@ -632,7 +632,7 @@ export default function Customers() {
                 <Input type="email" value={formData.email} onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))} className="mt-1" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label>Phone</Label>
                 <Input value={formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} className="mt-1" />
@@ -666,7 +666,7 @@ export default function Customers() {
                   <Label>Address</Label>
                   <Input value={formData.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} className="mt-1" />
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div>
                     <Label>City</Label>
                     <Input value={formData.city} onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))} className="mt-1" />
@@ -769,7 +769,7 @@ export default function Customers() {
             return (
               <>
                 {/* Hero Header */}
-                <div className="bg-gradient-to-r from-[#0F2F44] to-[#133F5C] px-6 pt-6 pb-5 text-white relative overflow-hidden">
+                <div className="bg-gradient-to-r from-[#0F2F44] to-[#133F5C] px-4 sm:px-6 pt-4 sm:pt-6 pb-5 text-white relative overflow-hidden">
                   <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#74C7FF]/10 rounded-full" />
                   <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-[#0069AF]/10 rounded-full" />
                   <div className="relative z-10">
@@ -841,7 +841,7 @@ export default function Customers() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex items-center gap-1 px-6 pt-3 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a]">
+                <div className="flex items-center gap-1 px-4 sm:px-6 pt-3 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a]">
                   {[
                     { key: 'details', label: 'Details & Contacts' },
                     { key: 'proposals', label: `Proposals (${customerQuotes.length})` },
@@ -863,7 +863,7 @@ export default function Customers() {
                 </div>
 
                 {/* Tab content */}
-                <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 260px)' }}>
+                <div className="overflow-y-auto p-4 sm:p-6" style={{ maxHeight: 'calc(90vh - 260px)' }}>
                   {/* Details & Contacts Tab */}
                   {(companyTabs[selectedCustomer.id] || 'details') === 'details' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

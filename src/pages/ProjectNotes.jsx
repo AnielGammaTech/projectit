@@ -133,7 +133,7 @@ export default function ProjectNotes() {
               <MessageSquare className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Notes & Messages</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Notes & Messages</h1>
               <p className="text-slate-500 dark:text-slate-400">{notes.length} entries</p>
             </div>
           </div>

@@ -147,11 +147,11 @@ export default function AcceptInvite() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8">
           <div className="flex justify-center mb-3">
             <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 text-center mb-1">
+          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 text-center mb-1">
             Project<span className="text-[#0069AF]">IT</span>
           </h1>
 
@@ -211,7 +211,7 @@ export default function AcceptInvite() {
                   type="text"
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="w-full px-3 py-3 border border-slate-300 rounded-lg text-center text-2xl font-mono tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-3 border border-slate-300 rounded-lg text-center text-lg sm:text-2xl font-mono tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="000000"
                   maxLength={6}
                   required

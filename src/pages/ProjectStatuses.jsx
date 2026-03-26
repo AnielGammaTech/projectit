@@ -124,7 +124,7 @@ export default function ProjectStatuses() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -135,7 +135,7 @@ export default function ProjectStatuses() {
               <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
                 <Tag className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-3xl font-bold text-[#133F5C] tracking-tight">Project Statuses</h1>
+              <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] tracking-tight">Project Statuses</h1>
             </div>
             <p className="text-slate-500">Customize project statuses and their display</p>
           </div>

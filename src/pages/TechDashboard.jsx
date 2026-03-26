@@ -80,7 +80,7 @@ export default function TechDashboard() {
   if (!currentUser || loadingProjects) return <DashboardSkeleton />;
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-6">
+    <div className="min-h-screen bg-slate-900 text-white p-3 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
@@ -90,7 +90,7 @@ export default function TechDashboard() {
           <div className="flex items-center gap-3">
             <Monitor className="w-8 h-8 text-emerald-400" />
             <div>
-              <h1 className="text-2xl font-bold">Tech Dashboard</h1>
+              <h1 className="text-lg sm:text-2xl font-bold">Tech Dashboard</h1>
               <p className="text-slate-400 text-sm">
                 {format(currentTime, 'EEEE, MMMM d • h:mm a')} • Welcome, {currentUser?.full_name?.split(' ')[0] || 'Tech'}
               </p>
@@ -105,7 +105,7 @@ export default function TechDashboard() {
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
         {/* Stats Cards */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-800 rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-3">
@@ -114,7 +114,7 @@ export default function TechDashboard() {
             </div>
             <span className="text-slate-400 text-sm">My Tasks</span>
           </div>
-          <p className="text-4xl font-bold">{activeTasks.length}</p>
+          <p className="text-2xl sm:text-4xl font-bold">{activeTasks.length}</p>
           <p className="text-sm text-slate-400 mt-1">{completedToday.length} completed today</p>
         </motion.div>
 
@@ -125,7 +125,7 @@ export default function TechDashboard() {
             </div>
             <span className="text-slate-400 text-sm">Due Today</span>
           </div>
-          <p className="text-4xl font-bold text-amber-400">{dueTodayTasks.length}</p>
+          <p className="text-2xl sm:text-4xl font-bold text-amber-400">{dueTodayTasks.length}</p>
           <p className="text-sm text-slate-400 mt-1">{dueTomorrowTasks.length} due tomorrow</p>
         </motion.div>
 
@@ -136,7 +136,7 @@ export default function TechDashboard() {
             </div>
             <span className="text-slate-400 text-sm">Ready to Install</span>
           </div>
-          <p className="text-4xl font-bold text-purple-400">{readyToInstall.length}</p>
+          <p className="text-2xl sm:text-4xl font-bold text-purple-400">{readyToInstall.length}</p>
           <p className="text-sm text-slate-400 mt-1">parts assigned</p>
         </motion.div>
 
@@ -147,13 +147,13 @@ export default function TechDashboard() {
             </div>
             <span className="text-slate-400 text-sm">Hours Today</span>
           </div>
-          <p className="text-4xl font-bold text-emerald-400">{hoursToday.toFixed(1)}h</p>
+          <p className="text-2xl sm:text-4xl font-bold text-emerald-400">{hoursToday.toFixed(1)}h</p>
           <Progress value={Math.min((hoursToday / 8) * 100, 100)} className="h-1.5 mt-2 bg-slate-700" />
         </motion.div>
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mt-6">
         {/* Priority Tasks */}
         <div className="col-span-2">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-slate-800 rounded-2xl p-5 h-full">
@@ -246,7 +246,7 @@ export default function TechDashboard() {
         </div>
 
         {/* Right Column */}
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-6">
           {/* Parts to Install */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-slate-800 rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-4">
