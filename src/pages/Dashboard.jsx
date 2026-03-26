@@ -891,7 +891,7 @@ export default function Dashboard() {
             </Link>
             <Button
               onClick={() => setShowProjectModal(true)}
-              className="bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 shadow-lg px-5 py-2.5 h-10"
+              className="bg-[#0F2F44] hover:bg-[#1a4a6e] dark:bg-blue-600 dark:hover:bg-blue-700 shadow-lg px-5 py-2.5 h-10"
             >
               <Plus className="w-4 h-4 mr-2" />
               New Project
@@ -906,7 +906,7 @@ export default function Dashboard() {
             title="Active Projects"
             value={activeProjects.length}
             icon={Briefcase}
-            iconColor="bg-indigo-500"
+            iconColor="bg-[#0069AF]"
             href={createPageUrl('Dashboard')}
           />
           <StatsCard

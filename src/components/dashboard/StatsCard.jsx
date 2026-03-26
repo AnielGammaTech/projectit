@@ -20,14 +20,14 @@ export default function StatsCard({ title, value, icon: Icon, iconColor, subtitl
           "rounded-2xl px-4 py-3.5 border-l-4 bg-white dark:bg-card transition-all duration-200 h-full shadow-warm",
           highlight
             ? "border-l-amber-500 bg-gradient-to-br from-amber-50/80 to-orange-50/50 dark:from-amber-900/15 dark:to-orange-900/10 ring-1 ring-amber-200/60 dark:ring-amber-700/40"
-            : "border-l-indigo-400 dark:border-l-indigo-500",
+            : "border-l-[#0069AF] dark:border-l-blue-500",
           (href || onClick) && "hover:shadow-warm-hover cursor-pointer"
         )}
       >
         <div className="flex items-center gap-3">
           <div className={cn(
             "p-2 rounded-xl shrink-0",
-            iconColor || "bg-indigo-500",
+            iconColor || "bg-[#0F2F44]",
             highlight && "animate-pulse"
           )}>
             <Icon className="w-4 h-4 text-white" />
