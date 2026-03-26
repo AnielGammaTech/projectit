@@ -126,7 +126,7 @@ export default function Dashboard() {
   const { data: incomingQuotesRaw = [], refetch: refetchIncomingQuotes } = useQuery({
     queryKey: ['incomingQuotes'],
     queryFn: () => api.entities.IncomingQuote.filter({ status: 'pending' }),
-    staleTime: 300000,
+    staleTime: 30000,
     gcTime: 600000
   });
 
@@ -145,7 +145,7 @@ export default function Dashboard() {
     queryKey: ['dashboardViews', currentUser?.id],
     queryFn: () => api.entities.DashboardView.filter({ user_id: currentUser?.id }),
     enabled: !!currentUser?.id,
-    staleTime: 600000,
+    staleTime: 300000,
     gcTime: 900000
   });
 
@@ -198,7 +198,7 @@ export default function Dashboard() {
   const { data: projects = [], isLoading: loadingProjects, refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: () => api.entities.Project.list('-created_date'),
-    staleTime: 120000, // 2 minutes
+    staleTime: 300000, // 5 minutes
     gcTime: 300000
   });
 
@@ -211,27 +211,27 @@ export default function Dashboard() {
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks'],
     queryFn: () => api.entities.Task.list('-created_date'),
-    staleTime: 120000,
+    staleTime: 300000,
     gcTime: 300000
   });
 
   const { data: parts = [] } = useQuery({
     queryKey: ['parts'],
     queryFn: () => api.entities.Part.list('-created_date'),
-    staleTime: 180000, // 3 minutes
+    staleTime: 300000, // 5 minutes
     gcTime: 300000
   });
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
     queryFn: () => api.entities.ProjectTemplate.list(),
-    staleTime: 600000 // 10 minutes
+    staleTime: 300000 // 5 minutes
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: () => api.entities.TeamMember.list(),
-    staleTime: 600000
+    staleTime: 300000
   });
 
   const { data: quoteRequests = [] } = useQuery({
@@ -243,7 +243,7 @@ export default function Dashboard() {
   const { data: customStatuses = [] } = useQuery({
     queryKey: ['projectStatuses'],
     queryFn: () => api.entities.ProjectStatus.list('order'),
-    staleTime: 600000
+    staleTime: 300000
   });
 
   const { data: projectStacksData = [], refetch: refetchStacks } = useQuery({
