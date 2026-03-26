@@ -949,7 +949,7 @@ export default function Dashboard() {
           };
 
           return (
-          <div className="mb-6 max-w-2xl">
+          <div className="mb-6 max-w-2xl mx-auto">
             <div className="rounded-2xl border-2 border-[#0069AF]/20 dark:border-blue-500/20 bg-gradient-to-r from-[#0069AF]/5 via-blue-50/50 to-indigo-50/30 dark:from-blue-900/20 dark:via-[#1e2a3a] dark:to-[#1e2a3a] shadow-sm overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-2.5">
