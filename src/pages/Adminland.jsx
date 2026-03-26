@@ -56,6 +56,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
+import ApiDocsSection from '@/components/adminland/ApiDocsSection';
 
 const avatarColors = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
@@ -99,6 +100,7 @@ const adminMenuGroups = [
       { id: 'integrations', label: 'Integrations', icon: GitMerge, description: 'HaloPSA & external services' },
       { id: 'workflows', label: 'Workflows', icon: GitMerge, description: 'Automation triggers', page: 'Workflows' },
       { id: 'ai-agents', label: 'AI Agents', icon: Bot, description: 'GammaAi agent connection' },
+      { id: 'api-docs', label: 'API Docs & Keys', icon: Globe, description: 'External API documentation' },
     ]
   },
   {
@@ -199,6 +201,8 @@ export default function Adminland() {
         return <AIAgentsSection queryClient={queryClient} />;
       case 'inventory-settings':
         return <InventorySettingsSection queryClient={queryClient} />;
+      case 'api-docs':
+        return <ApiDocsSection queryClient={queryClient} />;
       case 'about':
         return <AboutSection />;
       default:

@@ -8,6 +8,7 @@ import entityRoutes from './routes/entities.js';
 import integrationRoutes from './routes/integrations.js';
 import functionRoutes from './routes/functions/index.js';
 import webhookRoutes from './routes/webhooks.js';
+import externalApiRoutes from './routes/externalApi.js';
 import authMiddleware from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
 import { runDueReminders } from './routes/functions/sendDueReminders.js';
@@ -39,6 +40,7 @@ app.use('/api/entities', authMiddleware, entityRoutes);
 app.use('/api/integrations', authMiddleware, integrationRoutes);
 app.use('/api/functions', functionRoutes); // Auth handled per-function inside router
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/external', externalApiRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

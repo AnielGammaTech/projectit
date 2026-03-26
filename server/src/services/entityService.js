@@ -11,7 +11,7 @@ const VALID_ENTITIES = new Set([
   'SavedReport', 'Service', 'ServiceBundle', 'Site', 'Task', 'TaskComment', 'Ticket',
   'TaskGroup', 'TeamMember', 'TimeEntry', 'Tool', 'ToolTransaction',
   'UserGroup', 'UserNotification',
-  'UserSecuritySettings', 'Workflow', 'WorkflowLog',
+  'UserSecuritySettings', 'UserSession', 'ApiKey', 'Workflow', 'WorkflowLog',
 ]);
 
 function validateEntity(entityType) {
