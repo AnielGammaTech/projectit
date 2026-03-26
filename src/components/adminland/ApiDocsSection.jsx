@@ -564,29 +564,24 @@ const data = await response.json();
             <FileText className="w-4 h-4 text-blue-500" />
             <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Integration Flow</h3>
           </div>
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-2 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
             {[
-              { label: 'Customer accepts quote', sub: 'In QuoteIT' },
-              null,
-              { label: 'QuoteIT sends webhook', sub: 'POST /quotes/accepted' },
-              null,
-              { label: 'Appears as Pending', sub: 'In ProjectIT dashboard' },
-              null,
-              { label: 'Team creates project', sub: 'From proposal data' },
-              null,
-              { label: 'QuoteIT pulls status', sub: 'GET /projects/by-quote/:id' },
-            ].map((step, i) =>
-              step ? (
-                <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-[#1e2a3a] border border-slate-200 dark:border-slate-700/50 text-center min-w-0">
-                  <div>
-                    <p className="font-medium text-slate-800 dark:text-slate-200 whitespace-nowrap">{step.label}</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">{step.sub}</p>
-                  </div>
+              { num: 1, label: 'Customer accepts quote', sub: 'In QuoteIT', color: 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30' },
+              { num: 2, label: 'QuoteIT sends webhook', sub: 'POST /quotes/accepted', color: 'text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30' },
+              { num: 3, label: 'Appears as Pending', sub: 'In ProjectIT dashboard', color: 'text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30' },
+              { num: 4, label: 'Team creates project', sub: 'From proposal data', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30' },
+              { num: 5, label: 'QuoteIT pulls status', sub: 'GET /projects/by-quote/:id', color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30' },
+            ].map((step) => (
+              <div key={step.num} className="flex items-start gap-2.5 p-3 rounded-lg bg-white dark:bg-[#1e2a3a] border border-slate-200 dark:border-slate-700/50">
+                <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0", step.color)}>
+                  {step.num}
                 </div>
-              ) : (
-                <ArrowRight key={i} className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 rotate-90 sm:rotate-0" />
-              )
-            )}
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-slate-800 dark:text-slate-200 leading-tight">{step.label}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 break-all">{step.sub}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
