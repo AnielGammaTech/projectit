@@ -113,7 +113,7 @@ export default function Workflows() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -122,14 +122,14 @@ export default function Workflows() {
         >
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 rounded-xl bg-[#0069AF] shadow-lg shadow-[#0069AF]/20">
+              <div className="p-2.5 rounded-xl bg-primary shadow-lg shadow-primary/20">
                 <Zap className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] tracking-tight">Workflows</h1>
+              <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Workflows</h1>
             </div>
             <p className="text-slate-500">Automate actions based on triggers</p>
           </div>
-          <Button onClick={() => { setEditingWorkflow(null); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#133F5C]">
+          <Button onClick={() => { setEditingWorkflow(null); setShowModal(true); }} className="bg-primary hover:bg-primary/80">
             <Plus className="w-4 h-4 mr-2" />
             Create Workflow
           </Button>
@@ -158,7 +158,7 @@ export default function Workflows() {
                   <Zap className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-slate-900 mb-2">No workflows yet</h3>
                   <p className="text-slate-500 mb-4">Create your first workflow to automate repetitive tasks</p>
-                  <Button onClick={() => setShowModal(true)} className="bg-[#0069AF] hover:bg-[#133F5C]">
+                  <Button onClick={() => setShowModal(true)} className="bg-primary hover:bg-primary/80">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Workflow
                   </Button>
@@ -404,7 +404,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
                 onClick={() => setStep(s)}
                 className={cn(
                   "flex-1 h-2 rounded-full transition-colors",
-                  step >= s ? "bg-[#0069AF]" : "bg-slate-200"
+                  step >= s ? "bg-primary" : "bg-slate-200"
                 )}
               />
             ))}
@@ -450,7 +450,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
                       className={cn(
                         "p-4 rounded-xl border-2 text-left transition-all hover:shadow-md",
                         formData.trigger_type === key
-                          ? "border-[#0069AF] bg-blue-50"
+                          ? "border-primary bg-blue-50"
                           : "border-slate-200 hover:border-slate-300"
                       )}
                     >
@@ -655,7 +655,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
               <Button
                 onClick={() => setStep(step + 1)}
                 disabled={step === 1 && !formData.name || step === 2 && !formData.trigger_type}
-                className="bg-[#0069AF] hover:bg-[#133F5C]"
+                className="bg-primary hover:bg-primary/80"
               >
                 Continue
               </Button>
@@ -663,7 +663,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
               <Button
                 onClick={handleSubmit}
                 disabled={formData.actions.length === 0}
-                className="bg-[#0069AF] hover:bg-[#133F5C]"
+                className="bg-primary hover:bg-primary/80"
               >
                 {workflow ? 'Update Workflow' : 'Create Workflow'}
               </Button>
