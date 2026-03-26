@@ -7,85 +7,85 @@
 /* ── Theme variables ── */
 @layer base {
   :root {
-    --primary: 200 65% 16%;
+    --primary: 234 89% 64%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 200 65% 20%;
+    --secondary: 234 70% 58%;
     --secondary-foreground: 0 0% 100%;
-    --accent: 200 65% 16%;
+    --accent: 234 89% 64%;
     --accent-foreground: 0 0% 100%;
-    --highlight: 202 100% 73%;
+    --highlight: 234 89% 74%;
 
-    --background: 210 20% 98%;
-    --foreground: 200 65% 16%;
+    --background: 220 20% 97%;
+    --foreground: 222 47% 20%;
     --card: 0 0% 100%;
-    --card-foreground: 200 65% 16%;
+    --card-foreground: 222 47% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 200 65% 16%;
-    --muted: 200 20% 96%;
-    --muted-foreground: 200 20% 40%;
-    --border: 200 20% 90%;
-    --input: 200 20% 90%;
-    --ring: 200 65% 16%;
-    --radius: 0.75rem;
+    --popover-foreground: 222 47% 20%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 8% 46%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 234 89% 64%;
+    --radius: 1rem;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
+    --chart-3: 234 60% 50%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary: 234 89% 64%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 234 89% 64%;
   }
 
   .dark {
-    --primary: 199 90% 70%;
-    --primary-foreground: 200 65% 10%;
-    --secondary: 199 80% 65%;
-    --secondary-foreground: 200 65% 10%;
-    --accent: 199 90% 70%;
-    --accent-foreground: 200 65% 10%;
-    --highlight: 202 100% 73%;
+    --primary: 234 89% 74%;
+    --primary-foreground: 234 89% 10%;
+    --secondary: 234 70% 68%;
+    --secondary-foreground: 234 89% 10%;
+    --accent: 234 89% 74%;
+    --accent-foreground: 234 89% 10%;
+    --highlight: 234 89% 74%;
 
-    --background: 220 20% 10%;
+    --background: 222 47% 11%;
     --foreground: 210 20% 90%;
-    --card: 220 18% 13%;
+    --card: 222 40% 14%;
     --card-foreground: 210 20% 90%;
-    --popover: 220 18% 13%;
+    --popover: 222 40% 14%;
     --popover-foreground: 210 20% 90%;
-    --muted: 220 15% 18%;
+    --muted: 222 30% 18%;
     --muted-foreground: 210 15% 60%;
-    --border: 220 15% 22%;
-    --input: 220 15% 22%;
-    --ring: 199 90% 60%;
-    --radius: 0.75rem;
+    --border: 222 20% 22%;
+    --input: 222 20% 22%;
+    --ring: 234 89% 64%;
+    --radius: 1rem;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 50%;
-    --chart-3: 197 60% 60%;
+    --chart-3: 234 60% 60%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
 
-    --sidebar-background: 220 18% 11%;
+    --sidebar-background: 222 40% 12%;
     --sidebar-foreground: 210 20% 85%;
-    --sidebar-primary: 199 90% 70%;
-    --sidebar-primary-foreground: 200 65% 10%;
-    --sidebar-accent: 220 15% 18%;
+    --sidebar-primary: 234 89% 74%;
+    --sidebar-primary-foreground: 234 89% 10%;
+    --sidebar-accent: 222 30% 18%;
     --sidebar-accent-foreground: 210 20% 85%;
-    --sidebar-border: 220 15% 22%;
-    --sidebar-ring: 199 90% 60%;
+    --sidebar-border: 222 20% 22%;
+    --sidebar-ring: 234 89% 64%;
   }
 
   * {
@@ -181,6 +181,12 @@ body[data-scroll-locked] {
   }
   .shadow-card-lg {
     box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+  }
+  .shadow-warm {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.02);
+  }
+  .shadow-warm-hover {
+    box-shadow: 0 8px 25px -5px rgb(0 0 0 / 0.08), 0 4px 10px -6px rgb(0 0 0 / 0.04);
   }
   /* Touch manipulation - prevents 300ms delay */
   .touch-manipulation {
@@ -386,7 +392,7 @@ html {
 
 /* ── Focus ring ── */
 .dark *:focus-visible {
-  outline-color: hsl(199 90% 60%);
+  outline-color: hsl(var(--ring));
 }
 
 /* ── Scrollbar for dark mode ── */
@@ -430,9 +436,9 @@ html {
 .dark .bg-\[\#0069AF\]\/20 { background-color: hsl(210 40% 25% / 0.4) !important; }
 
 /* Solid brand backgrounds — keep vibrant but adjust for dark context */
-.dark .bg-\[\#0F2F44\] { background-color: hsl(199 60% 72%) !important; }
-.dark .bg-\[\#0F2F44\].text-white { color: hsl(220 20% 10%) !important; }
-.dark .bg-\[\#133F5C\] { background-color: hsl(199 60% 68%) !important; }
+.dark .bg-\[\#0F2F44\] { background-color: hsl(var(--primary)) !important; }
+.dark .bg-\[\#0F2F44\].text-white { color: hsl(var(--primary-foreground)) !important; }
+.dark .bg-\[\#133F5C\] { background-color: hsl(var(--secondary)) !important; }
 
 /* Border overrides */
 .dark .border-\[\#0F2F44\]\/10 { border-color: hsl(var(--border)) !important; }
