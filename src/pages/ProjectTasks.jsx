@@ -898,8 +898,41 @@ export default function ProjectTasks() {
       <ProjectNavHeader project={project} currentPage="ProjectTasks" />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Phase 1: Rich Stats Header Card */}
-        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden mb-6">
+        {/* Mobile: Compact inline header */}
+        <div className="sm:hidden flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">Tasks</h1>
+            <span className="text-xs text-slate-400 dark:text-slate-500">{completedTasks}/{totalTasks}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Button
+              onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
+              size="sm"
+              className="bg-[#0069AF] hover:bg-[#005a96] text-white h-8 text-xs px-2.5"
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              Task
+            </Button>
+            <Button
+              onClick={() => setShowGroupModal(true)}
+              variant="outline"
+              size="sm"
+              className="border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 h-8 text-xs px-2.5"
+            >
+              <FolderPlus className="w-3.5 h-3.5 mr-1" />
+              Group
+            </Button>
+          </div>
+        </div>
+        {/* Mobile: slim progress bar */}
+        <div className="sm:hidden mb-4">
+          <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-full rounded-full bg-blue-500" style={{ width: `${progressPercent}%` }} />
+          </div>
+        </div>
+
+        {/* Desktop: Rich Stats Header Card */}
+        <div className="hidden sm:block bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden mb-6">
           {/* Gradient accent bar */}
           <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
           <div className="p-4 sm:p-6">
@@ -929,8 +962,7 @@ export default function ProjectTasks() {
                   className="border-[#0069AF]/30 text-[#0069AF] hover:bg-[#0069AF]/5 h-9 sm:h-10"
                 >
                   <FolderPlus className="w-4 h-4 mr-1.5" />
-                  <span className="hidden sm:inline">New Group</span>
-                  <span className="sm:hidden">Group</span>
+                  New Group
                 </Button>
               </div>
             </div>
