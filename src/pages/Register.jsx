@@ -51,14 +51,14 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-4 sm:p-8">
           <div className="flex justify-center mb-3">
             <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
           </div>
-          <h1 className="text-lg sm:text-2xl font-bold text-slate-900 text-center mb-1">Project<span className="text-[#0069AF]">IT</span></h1>
-          <p className="text-slate-500 text-center mb-6 text-sm">Create your account</p>
+          <h1 className="text-lg sm:text-2xl font-bold text-foreground text-center mb-1">Project<span className="text-primary">IT</span></h1>
+          <p className="text-muted-foreground text-center mb-6 text-sm">Create your account</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -68,36 +68,36 @@ export default function Register() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Full name</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Full name</label>
               <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                 placeholder="Your name"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                 placeholder="you@company.com"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                 placeholder="At least 8 characters"
                 minLength={8}
                 required
@@ -107,15 +107,15 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-900 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-primary text-white py-2.5 rounded-lg text-sm font-medium hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-slate-500 mt-6">
+          <p className="text-center text-sm text-muted-foreground mt-6">
             Already have an account?{' '}
-            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link to="/login" className="text-primary hover:text-primary/80 font-medium">
               Sign in
             </Link>
           </p>
