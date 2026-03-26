@@ -648,11 +648,11 @@ export default function AllTasks() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tasks & Parts</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">View and filter all tasks and parts across projects</p>
+          <h1 className="text-lg sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tasks & Parts</h1>
+          <p className="hidden sm:block text-slate-500 dark:text-slate-400 mt-1">View and filter all tasks and parts across projects</p>
 
           {/* Main Tabs */}
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-3 sm:mt-4">
             <button
               onClick={() => setActiveTab('tasks')}
               className={cn(
@@ -682,53 +682,53 @@ export default function AllTasks() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6"
+            className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-3 sm:p-4 mb-4 sm:mb-6"
           >
             {/* View Mode Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg w-fit mb-4">
+            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg w-full sm:w-fit mb-3 sm:mb-4 overflow-x-auto">
               <button
                 onClick={() => setViewMode('all')}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  "px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
                   viewMode === 'all'
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
-                All Tasks ({activeTasks.filter(t => t.status !== 'completed').length})
+                All ({activeTasks.filter(t => t.status !== 'completed').length})
               </button>
               <button
                 onClick={() => setViewMode('mine')}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  "px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
                   viewMode === 'mine'
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
-                My Tasks ({myTasksCount})
+                Mine ({myTasksCount})
               </button>
               <button
                 onClick={() => setViewMode('my_overdue')}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  "px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
                   viewMode === 'my_overdue'
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
-                My Overdue ({myOverdueCount})
+                Overdue ({myOverdueCount})
               </button>
               <button
                 onClick={() => setViewMode('mine_due')}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  "hidden sm:block px-3 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
                   viewMode === 'mine_due'
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
-                Overdue ({myTasksWithDueCount})
+                Due ({myTasksWithDueCount})
               </button>
             </div>
 
@@ -773,9 +773,9 @@ export default function AllTasks() {
                 })}
               </div>
 
-              <div className="flex items-center gap-2 sm:ml-auto">
+              <div className="hidden sm:flex items-center gap-2 sm:ml-auto">
                 <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                  <SelectTrigger className="flex-1 sm:w-32 h-10 sm:h-9">
+                  <SelectTrigger className="w-32 h-9">
                     <SelectValue placeholder="Priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -787,7 +787,7 @@ export default function AllTasks() {
                 </Select>
 
                 <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-                  <SelectTrigger className="flex-1 sm:w-36 h-10 sm:h-9">
+                  <SelectTrigger className="w-36 h-9">
                     <SelectValue placeholder="Assignee" />
                   </SelectTrigger>
                   <SelectContent>
@@ -811,11 +811,11 @@ export default function AllTasks() {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
               >
-                {/* Table header */}
-                <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-200 dark:border-slate-700/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                {/* Table header — hidden on mobile */}
+                <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-200 dark:border-slate-700/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   <div className="w-5 shrink-0" />
                   <div className="flex-1">Task</div>
-                  <div className="hidden sm:block w-[200px] shrink-0">Project</div>
+                  <div className="w-[200px] shrink-0">Project</div>
                   <div className="hidden md:block w-24 shrink-0">Status</div>
                   <div className="hidden lg:block w-16 shrink-0">Priority</div>
                   <div className="w-8 shrink-0">Owner</div>

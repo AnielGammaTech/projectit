@@ -184,7 +184,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
             <div className="flex-1 overflow-y-auto">
 
               {/* Description / Notes */}
-              <div className="px-4 sm:px-8 pt-4 sm:pt-6 pb-4 sm:pb-5">
+              <div className="px-4 sm:px-8 pt-3 sm:pt-6 pb-3 sm:pb-5">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Description</span>
                   <div className="flex items-center gap-2">
@@ -192,7 +192,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                     <input ref={taskFileInputRef} type="file" className="hidden" onChange={handleTaskFileUpload} />
                   </div>
                 </div>
-                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={handleNotesBlur} placeholder="Add notes or details..." className="min-h-[80px] resize-none border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50/50 dark:bg-[#151d2b] focus:bg-white dark:focus:bg-[#1a2535] focus:ring-[#0069AF]/20 focus:border-[#0069AF]/40 text-sm" />
+                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={handleNotesBlur} placeholder="Add notes or details..." className="min-h-[60px] sm:min-h-[80px] resize-none border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50/50 dark:bg-[#151d2b] focus:bg-white dark:focus:bg-[#1a2535] focus:ring-[#0069AF]/20 focus:border-[#0069AF]/40 text-sm" />
                 {task.attachments?.length > 0 && (
                   <div className="mt-3 space-y-1.5">
                     {task.attachments.filter(att => att.type?.startsWith('image/')).length > 0 && (<div className="flex flex-wrap gap-2 mb-2">{task.attachments.filter(att => att.type?.startsWith('image/')).map((att, idx) => (<a key={`img-${idx}`} href={att.url} target="_blank" rel="noopener noreferrer" className="relative group"><img src={att.url} alt={att.name} className="h-20 w-auto rounded-lg object-cover border border-slate-200 hover:opacity-90 transition-opacity" /><button onClick={(e) => { e.preventDefault(); handleRemoveAttachment(task.attachments.indexOf(att)); }} className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"><X className="w-3 h-3" /></button></a>))}</div>)}
@@ -241,13 +241,13 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
             </div>
           </div>
 
-          {/* RIGHT — Properties sidebar (horizontal strip on mobile, sidebar on desktop) */}
+          {/* RIGHT — Properties sidebar (compact grid on mobile, sidebar on desktop) */}
           <div className="order-1 sm:order-2 sm:w-[280px] border-b sm:border-b-0 sm:border-l border-slate-200/80 dark:border-slate-700/50 bg-slate-50/40 dark:bg-[#162032] overflow-y-auto flex-shrink-0">
             {/* Properties */}
             <div className="p-3 sm:p-5">
               <span className="hidden sm:block text-xs font-semibold uppercase tracking-wider text-slate-400">Details</span>
 
-              <div className="sm:mt-4 flex flex-wrap gap-x-4 gap-y-1 sm:block sm:space-y-1">
+              <div className="sm:mt-4 grid grid-cols-2 gap-x-2 gap-y-0.5 sm:grid-cols-1 sm:block sm:space-y-1">
                 {/* Status */}
                 <div className="flex items-center py-1.5 sm:py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors sm:-mx-2 relative">
                   <span className="text-[11px] sm:text-xs text-slate-500 w-16 sm:w-20 flex-shrink-0">Status</span>
