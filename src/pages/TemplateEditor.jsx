@@ -120,14 +120,14 @@ export default function TemplateEditor() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
+      <div className="min-h-screen bg-background  flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+    <div className="min-h-screen bg-background ">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-6">
 
         {/* Back link */}
@@ -143,7 +143,7 @@ export default function TemplateEditor() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-sm p-4 mb-5"
+          className="bg-card rounded-2xl border border-slate-100 dark:border-border shadow-sm p-4 mb-5"
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -432,16 +432,16 @@ function TasksView({ tasks, setTasks, groups, setGroups }) {
       return (
         <button
           onClick={() => { setInlineGroupId(groupId); setInlineTitle(''); }}
-          className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
+          className="flex items-center gap-2 text-sm text-primary hover:text-foreground py-2 pl-1 transition-colors"
         >
           <Plus className="w-4 h-4" /> Add a task
         </button>
       );
     }
     return (
-      <div className="rounded-xl border-2 border-[#0069AF]/30 bg-blue-50/30 p-3">
+      <div className="rounded-xl border-2 border-primary/30 bg-blue-50/30 p-3">
         <div className="flex items-center gap-2">
-          <Plus className="w-4 h-4 text-[#0069AF]" />
+          <Plus className="w-4 h-4 text-primary" />
           <Input
             value={inlineTitle}
             onChange={(e) => setInlineTitle(e.target.value)}
@@ -552,7 +552,7 @@ function TasksView({ tasks, setTasks, groups, setGroups }) {
             <Button variant="outline" onClick={() => openGroupModal()} className="h-9 gap-1.5">
               <Layers className="w-4 h-4" /> New Group
             </Button>
-            <Button onClick={() => { setInlineGroupId('__ungrouped__'); setInlineTitle(''); }} className="h-9 bg-[#0F2F44] hover:bg-[#1a4a6e] gap-1.5">
+            <Button onClick={() => { setInlineGroupId('__ungrouped__'); setInlineTitle(''); }} className="h-9 bg-primary hover:bg-primary/80 gap-1.5">
               <Plus className="w-4 h-4" /> Add Task
             </Button>
           </div>
@@ -913,7 +913,7 @@ function PartsView({ parts, setParts }) {
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search parts..." className="pl-9 h-9 w-52" />
             </div>
-            <Button onClick={() => setShowAddForm(true)} className="h-9 bg-[#0F2F44] hover:bg-[#1a4a6e] gap-1.5">
+            <Button onClick={() => setShowAddForm(true)} className="h-9 bg-primary hover:bg-primary/80 gap-1.5">
               <Plus className="w-4 h-4" /> Add Part
             </Button>
           </div>
