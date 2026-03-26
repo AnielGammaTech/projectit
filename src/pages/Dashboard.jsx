@@ -934,6 +934,44 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* ── OVERDUE ALERT BANNER ── */}
+        {(() => {
+          const overdueList = activeTasks.filter(t => {
+            if (t.status === 'completed' || t.status === 'archived') return false;
+            if (!t.due_date) return false;
+            const d = parseLocalDate(t.due_date);
+            return d && isPast(d) && !isToday(d);
+          });
+          if (overdueList.length === 0) return null;
+          return (
+            <div className="mb-6 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 p-4 shadow-lg shadow-red-500/20 text-white animate-pulse-slow">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-white/20 shrink-0">
+                  <AlertTriangle className="w-6 h-6 animate-bounce" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg">
+                    {overdueList.length} Overdue Task{overdueList.length > 1 ? 's' : ''}!
+                  </h3>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                    {overdueList.slice(0, 3).map(t => (
+                      <span key={t.id} className="text-sm text-white/90">{t.title}</span>
+                    ))}
+                    {overdueList.length > 3 && (
+                      <span className="text-sm text-white/70">+{overdueList.length - 3} more</span>
+                    )}
+                  </div>
+                </div>
+                <Link to={createPageUrl('AllTasks') + '?view=mine_due'}>
+                  <Button variant="secondary" size="sm" className="bg-white text-red-600 hover:bg-red-50 font-semibold shadow-lg shrink-0">
+                    View All
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* -- TOP ZONE: Incoming Quotes -- */}
         <div className="mb-6">
           <IncomingQuoteBanner
@@ -945,16 +983,8 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* -- TOP ZONE: Project Health -- */}
-        <div className="mb-6">
-          <ProjectHealthGrid
-            projects={activeProjects}
-            tasks={activeTasks}
-          />
-        </div>
-
         {/* -- BELOW FOLD: Collapsible Widgets -- */}
-        <div className="space-y-4 mb-6">
+        <div className="space-y-3 mb-4">
           <CollapsibleSection
             id="my-tasks"
             title="My Tasks"
@@ -982,6 +1012,19 @@ export default function Dashboard() {
             <ActivityTimeline
               projects={projects}
               proposals={quoteRequests}
+            />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            id="project-health"
+            title="Projects Needing Attention"
+            icon={AlertTriangle}
+            summary={(() => { const count = activeProjects.filter(p => p.status === 'on_hold').length + activeProjects.filter(p => { if (!p.due_date) return false; const d = parseLocalDate(p.due_date); return d && isPast(d) && !isToday(d); }).length; return count > 0 ? `${count} need attention` : 'All good'; })()}
+            defaultOpen={false}
+          >
+            <ProjectHealthGrid
+              projects={activeProjects}
+              tasks={activeTasks}
             />
           </CollapsibleSection>
         </div>
