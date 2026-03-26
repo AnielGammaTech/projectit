@@ -56,8 +56,8 @@ export default function CollapsibleSection({
         className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-muted/50 transition-colors"
       >
         {Icon && (
-          <div className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-900/30">
-            <Icon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+            <Icon className="w-4 h-4 text-[#0069AF] dark:text-blue-400" />
           </div>
         )}
         <span className="text-sm font-semibold text-foreground flex-1">{title}</span>

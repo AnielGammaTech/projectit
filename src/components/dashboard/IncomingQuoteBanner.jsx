@@ -61,7 +61,7 @@ export default function IncomingQuoteBanner({ quotes, onCreateProject, onDismiss
               <Button
                 size="sm"
                 onClick={() => onCreateProject(quote)}
-                className="h-7 text-xs bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700"
+                className="h-7 text-xs bg-[#0F2F44] hover:bg-[#1a4a6e] dark:bg-blue-600 dark:hover:bg-blue-700"
               >
                 Create Project
                 <ArrowRight className="w-3 h-3 ml-1" />
