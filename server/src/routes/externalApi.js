@@ -172,14 +172,26 @@ router.get('/projects', async (req, res) => {
       );
     }
 
-    // Return sanitized project data
+    // Resolve customer names from customer_id
+    const uniqueCustomerIds = [...new Set(projects.map(p => p.customer_id).filter(Boolean))];
+    const customerNameMap = new Map();
+    for (const cid of uniqueCustomerIds) {
+      try {
+        const customers = await entityService.filter('Customer', { id: cid });
+        if (customers[0]) {
+          customerNameMap.set(cid, customers[0].name || customers[0].company_name || '');
+        }
+      } catch { /* skip unresolvable */ }
+    }
+
+    // Return sanitized project data with resolved customer names
     const sanitized = projects.map(p => ({
       id: p.id,
       project_number: p.project_number,
       name: p.name,
       description: p.description || '',
       status: p.status,
-      customer_name: p.customer_name || p.customer || '',
+      customer_name: p.customer_name || p.customer || customerNameMap.get(p.customer_id) || '',
       customer_id: p.customer_id || '',
       quoteit_quote_id: p.quoteit_quote_id || null,
       created_date: p.created_date,
@@ -230,6 +242,15 @@ router.get('/projects/:id', async (req, res) => {
     const completedTasks = tasks.filter(t => t.status === 'completed').length;
     const installedParts = parts.filter(p => p.status === 'installed').length;
 
+    // Resolve customer name
+    let customerName = project.customer_name || project.customer || '';
+    if (!customerName && project.customer_id) {
+      try {
+        const customers = await entityService.filter('Customer', { id: project.customer_id });
+        customerName = customers[0]?.name || customers[0]?.company_name || '';
+      } catch { /* skip */ }
+    }
+
     return res.json({
       success: true,
       project: {
@@ -238,7 +259,7 @@ router.get('/projects/:id', async (req, res) => {
         name: project.name,
         description: project.description || '',
         status: project.status,
-        customer_name: project.customer_name || project.customer || '',
+        customer_name: customerName,
         customer_id: project.customer_id || '',
         quoteit_quote_id: project.quoteit_quote_id || null,
         created_date: project.created_date,
@@ -297,28 +318,31 @@ router.get('/projects/by-quote/:quoteId', async (req, res) => {
  */
 router.get('/customers', async (req, res) => {
   try {
+    // Pull customers directly from Customer entity
+    const allCustomers = await entityService.list('Customer');
     const projects = await entityService.list('Project');
 
-    const customerMap = new Map();
+    // Count projects per customer
+    const projectCounts = new Map();
+    const activeCounts = new Map();
     for (const p of projects) {
-      const name = p.customer_name || p.customer;
-      if (!name) continue;
-      if (!customerMap.has(name)) {
-        customerMap.set(name, {
-          name,
-          customer_id: p.customer_id || '',
-          project_count: 0,
-          active_projects: 0,
-        });
-      }
-      const entry = customerMap.get(name);
-      entry.project_count++;
+      if (!p.customer_id) continue;
+      projectCounts.set(p.customer_id, (projectCounts.get(p.customer_id) || 0) + 1);
       if (p.status !== 'archived' && p.status !== 'completed' && p.status !== 'deleted') {
-        entry.active_projects++;
+        activeCounts.set(p.customer_id, (activeCounts.get(p.customer_id) || 0) + 1);
       }
     }
 
-    const customers = Array.from(customerMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const customers = allCustomers
+      .filter(c => c.name || c.company_name)
+      .map(c => ({
+        name: c.name || c.company_name || '',
+        customer_id: c.id,
+        halo_id: c.halo_id || null,
+        project_count: projectCounts.get(c.id) || 0,
+        active_projects: activeCounts.get(c.id) || 0,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     return res.json({
       success: true,
