@@ -267,7 +267,7 @@ export default function FeedbackManagement() {
   if (isLoading) return <CardGridSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <div className="mb-6">
@@ -277,7 +277,7 @@ export default function FeedbackManagement() {
           </Link>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-[#0069AF] shadow-lg">
+              <div className="p-3 rounded-xl bg-primary shadow-lg">
                 <MessageSquare className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -826,7 +826,7 @@ export default function FeedbackManagement() {
                 {selectedFeedback.page_url && (
                   <div className="col-span-2">
                     <label className="text-slate-500">Page URL</label>
-                    <a href={selectedFeedback.page_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#0069AF] hover:underline">
+                    <a href={selectedFeedback.page_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
                       {selectedFeedback.page_url}
                       <ExternalLink className="w-3 h-3" />
                     </a>
