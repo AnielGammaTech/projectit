@@ -495,10 +495,7 @@ function LayoutContent({ children, currentPageName }) {
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-card/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-border z-40 pb-safe">
         <div className="flex items-center justify-around h-16">
-          {[
-            ...navItems.slice(0, 4),
-            { name: 'Reports', icon: PieChart, page: 'Reports' }
-          ].map((item) => {
+          {navItems.slice(0, 4).map((item) => {
             const Icon = item.icon;
             const isActive = currentPageName === item.page;
             return (

@@ -343,7 +343,50 @@ export default function ProductsTab() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        {/* ── Mobile: List view ── */}
+        <div className="sm:hidden space-y-2">
+          {filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              onClick={() => handleProductClick(product)}
+              className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-3 flex items-center gap-3 cursor-pointer active:bg-slate-50 transition-colors"
+            >
+              {/* Small thumbnail */}
+              <div className="w-12 h-12 rounded-lg bg-slate-50 dark:bg-[#151d2b] flex items-center justify-center shrink-0 overflow-hidden">
+                {product.image_url ? (
+                  <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-1" />
+                ) : (
+                  <Package className="w-5 h-5 text-slate-300" />
+                )}
+              </div>
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">{product.name}</h3>
+                <div className="flex items-center gap-2 mt-0.5">
+                  {product.manufacturer && (
+                    <span className="text-[11px] text-slate-400 truncate">{product.manufacturer}</span>
+                  )}
+                </div>
+              </div>
+              {/* Right: stock + price */}
+              <div className="text-right shrink-0">
+                <Badge
+                  variant={product.quantity_on_hand > 0 ? "default" : "destructive"}
+                  className={cn(
+                    "text-[10px] px-1.5 py-0 mb-1",
+                    product.quantity_on_hand > 0 ? "bg-emerald-500 text-white" : ""
+                  )}
+                >
+                  {product.quantity_on_hand || 0} in stock
+                </Badge>
+                <p className="text-xs font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Desktop: Grid tiles ── */}
+        <div className="hidden sm:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           {filteredProducts.map((product) => {
             const isQuickOpen = quickAction?.productId === product.id;
             return (
@@ -379,14 +422,14 @@ export default function ProductsTab() {
                   {/* Delete button overlay */}
                   <button
                     onClick={(e) => { e.stopPropagation(); setDeleteConfirm(product); }}
-                    className="absolute top-1.5 left-1.5 p-1.5 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                    className="absolute top-1.5 left-1.5 p-1.5 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
 
-                  {/* Action buttons - always visible on mobile, hover on desktop */}
+                  {/* Action buttons - hover on desktop */}
                   {!isQuickOpen && (
-                    <div className="absolute bottom-0 inset-x-0 flex gap-1 p-1.5 bg-gradient-to-t from-black/50 to-transparent opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                    <div className="absolute bottom-0 inset-x-0 flex gap-1 p-1.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => openQuickAction(e, product, 'take')}
                         disabled={(product.quantity_on_hand || 0) === 0}
