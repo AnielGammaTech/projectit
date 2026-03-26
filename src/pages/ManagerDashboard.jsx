@@ -139,7 +139,7 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
   if (loadingProjects) return <DashboardSkeleton />;
 
   return (
-    <div className="min-h-screen bg-slate-900 dark:bg-[#151d2b] text-white p-3 sm:p-6">
+    <div className="min-h-screen bg-background text-foreground p-3 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
