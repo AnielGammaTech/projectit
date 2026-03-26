@@ -148,7 +148,7 @@ export default function ChangeOrderEditor() {
   if (isLoading) return <FormPageSkeleton />;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-background">
       {/* Top Navigation */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -186,7 +186,7 @@ export default function ChangeOrderEditor() {
               <Save className="w-4 h-4 mr-1.5" />
               {saving ? 'Saving...' : 'Save'}
             </Button>
-            <Button size="sm" className="bg-[#0069AF] hover:bg-[#005a94]">
+            <Button size="sm" className="bg-primary hover:bg-primary/80">
               <Send className="w-4 h-4 mr-1.5" />
               Send
             </Button>
@@ -206,7 +206,7 @@ export default function ChangeOrderEditor() {
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Enter change order title..."
-                className="w-full text-xl font-bold border border-slate-200 rounded-lg h-12 px-4 focus:outline-none focus:ring-2 focus:ring-[#0069AF] placeholder:text-slate-300"
+                className="w-full text-xl font-bold border border-slate-200 rounded-lg h-12 px-4 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-300"
               />
             </motion.div>
 
