@@ -643,39 +643,36 @@ export default function AllTasks() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-lg sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tasks & Parts</h1>
-          <p className="hidden sm:block text-slate-500 dark:text-slate-400 mt-1">View and filter all tasks and parts across projects</p>
-
+        <div className="flex items-center justify-between mb-4 sm:mb-8">
+          <div>
+            <h1 className="text-lg sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tasks & Parts</h1>
+            <p className="hidden sm:block text-slate-500 dark:text-slate-400 mt-1">View and filter all tasks and parts across projects</p>
+          </div>
           {/* Main Tabs */}
-          <div className="flex gap-2 mt-3 sm:mt-4">
+          <div className="flex gap-1.5 sm:gap-2">
             <button
               onClick={() => setActiveTab('tasks')}
               className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                activeTab === 'tasks' ? "bg-[#0069AF] text-white" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2",
+                activeTab === 'tasks' ? "bg-[#0069AF] text-white" : "bg-white dark:bg-[#1e2a3a] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
               )}
             >
-              <ListTodo className="w-4 h-4" />
+              <ListTodo className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Tasks
             </button>
             <button
               onClick={() => setActiveTab('parts')}
               className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                activeTab === 'parts' ? "bg-[#0F2F44] text-white" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2",
+                activeTab === 'parts' ? "bg-[#0F2F44] text-white" : "bg-white dark:bg-[#1e2a3a] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
               )}
             >
-              <Package className="w-4 h-4" />
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Parts
-              <span className={cn("text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-[#133F5C]" : "bg-[#0069AF]/10 text-[#0069AF]")}>{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
+              <span className={cn("text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-[#133F5C]" : "bg-[#0069AF]/10 text-[#0069AF]")}>{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
             </button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Unified Toolbar - Tasks */}
         {activeTab === 'tasks' && (
@@ -832,14 +829,15 @@ export default function AllTasks() {
                   });
 
                   return Object.entries(grouped).map(([projectId, projectTasks]) => {
-                    const isCollapsed = expandedGroups[projectId] === false;
+                    // Default collapsed on mobile — only expand when explicitly toggled
+                    const isCollapsed = expandedGroups[projectId] !== true;
 
                     return (
                       <div key={projectId}>
                         {/* Project group header */}
                         <div
                           className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-[#1a2535] border-b border-slate-100 dark:border-slate-700/30 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors"
-                          onClick={() => setExpandedGroups(prev => ({ ...prev, [projectId]: prev[projectId] === false ? true : false }))}
+                          onClick={() => setExpandedGroups(prev => ({ ...prev, [projectId]: prev[projectId] === true ? false : true }))}
                         >
                           <ChevronRight className={cn("w-3.5 h-3.5 text-slate-400 transition-transform", !isCollapsed && "rotate-90")} />
                           <FolderKanban className="w-3.5 h-3.5 text-[#0069AF]" />

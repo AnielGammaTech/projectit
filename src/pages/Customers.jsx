@@ -332,22 +332,23 @@ export default function Customers() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
+          className="flex items-center justify-between gap-3 mb-3 sm:mb-6"
         >
-          <div>
-            <h1 className="text-xl sm:text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Customers</h1>
-            <p className="hidden sm:block text-slate-500 mt-1">Manage your client relationships</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg sm:text-3xl font-bold text-[#133F5C] dark:text-slate-100 tracking-tight">Customers</h1>
+            <span className="text-xs text-slate-400 sm:hidden">{companies.length + standaloneContacts.length}</span>
+            <p className="hidden sm:block text-slate-500 text-sm">Manage your client relationships</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Button variant="outline" size="sm" onClick={handleHaloPSASync} disabled={syncing} className="hidden sm:inline-flex">
               <RefreshCw className={cn("w-4 h-4 mr-2", syncing && "animate-spin")} />
               Sync from HaloPSA
             </Button>
-            <Button variant="outline" size="icon" onClick={handleHaloPSASync} disabled={syncing} className="sm:hidden h-9 w-9">
+            <Button variant="ghost" size="sm" onClick={handleHaloPSASync} disabled={syncing} className="sm:hidden h-8 w-8 p-0">
               <RefreshCw className={cn("w-4 h-4", syncing && "animate-spin")} />
             </Button>
-            <Button size="sm" onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#0F2F44] h-9">
-              <Plus className="w-4 h-4 sm:mr-2" />
+            <Button size="sm" onClick={() => { setEditingCustomer(null); setFormData(p => ({ ...p, is_company: true })); setShowModal(true); }} className="bg-[#0069AF] hover:bg-[#0F2F44] h-8 sm:h-9 text-xs sm:text-sm px-2.5 sm:px-3">
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-2" />
               <span className="hidden sm:inline">Add Customer</span>
             </Button>
           </div>
@@ -381,8 +382,51 @@ export default function Customers() {
           </motion.div>
         )}
 
-        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-3">
+        {/* Mobile: compact search + inline filter tabs */}
+        <div className="sm:hidden space-y-2 mb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              placeholder="Search customers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10 text-sm rounded-xl bg-white dark:bg-[#1e2a3a] border-slate-200 dark:border-slate-700/50"
+            />
+          </div>
+          <div className="flex gap-1 bg-slate-100 dark:bg-slate-700/50 p-0.5 rounded-lg">
+            <button
+              onClick={() => setViewFilter('all')}
+              className={cn(
+                "flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors text-center",
+                viewFilter === 'all' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-500"
+              )}
+            >
+              All ({companies.length + standaloneContacts.length})
+            </button>
+            <button
+              onClick={() => setViewFilter('companies')}
+              className={cn(
+                "flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors text-center",
+                viewFilter === 'companies' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-500"
+              )}
+            >
+              Companies ({companies.length})
+            </button>
+            <button
+              onClick={() => setViewFilter('contacts')}
+              className={cn(
+                "flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors text-center",
+                viewFilter === 'contacts' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-500"
+              )}
+            >
+              People ({standaloneContacts.length})
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop: search + filter toolbar in card */}
+        <div className="hidden sm:block bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6">
+          <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
@@ -396,7 +440,7 @@ export default function Customers() {
               variant={selectionMode ? "default" : "outline"}
               size="sm"
               onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
-              className={cn("hidden sm:inline-flex h-10", selectionMode && "bg-red-600 hover:bg-red-700")}
+              className={cn("h-10", selectionMode && "bg-red-600 hover:bg-red-700")}
             >
               <CheckSquare className="w-4 h-4 mr-2" />
               {selectionMode ? 'Done' : 'Select'}
@@ -405,7 +449,7 @@ export default function Customers() {
               <button
                 onClick={() => setViewFilter('all')}
                 className={cn(
-                  "px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors",
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
                   viewFilter === 'all' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
@@ -414,33 +458,81 @@ export default function Customers() {
               <button
                 onClick={() => setViewFilter('companies')}
                 className={cn(
-                  "px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center gap-1",
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
                   viewFilter === 'companies' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
-                <Building2 className="w-3.5 h-3.5 hidden sm:block" />
-                <span className="sm:hidden">Co.</span>
-                <span className="hidden sm:inline">Companies</span> ({companies.length})
+                <Building2 className="w-3.5 h-3.5" />
+                Companies ({companies.length})
               </button>
               <button
                 onClick={() => setViewFilter('contacts')}
                 className={cn(
-                  "px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center gap-1",
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
                   viewFilter === 'contacts' ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 )}
               >
-                <Users className="w-3.5 h-3.5 hidden sm:block" />
-                <span className="sm:hidden">Ppl</span>
-                <span className="hidden sm:inline">Contacts</span> ({standaloneContacts.length})
+                <Users className="w-3.5 h-3.5" />
+                Contacts ({standaloneContacts.length})
               </button>
             </div>
           </div>
         </div>
 
-        <div className="space-y-4">
-          {/* Companies Grid */}
+        <div className="space-y-2 sm:space-y-4">
+          {/* Companies — mobile list view */}
           {(viewFilter === 'all' || viewFilter === 'companies') && filteredCompanies.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <>
+              {/* Mobile compact list */}
+              <div className="sm:hidden bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/30">
+                {filteredCompanies.map((company) => {
+                  const contacts = getContactsForCompany(company.id);
+                  const companySites = getSitesForCompany(company.id);
+                  const companyProjects = getProjectCount(company.id);
+                  const displayAddress = (company.address || company.city)
+                    ? [company.city, company.state].filter(Boolean).join(', ')
+                    : companySites.length > 0
+                      ? [companySites[0].city, companySites[0].state].filter(Boolean).join(', ')
+                      : null;
+                  return (
+                    <div
+                      key={company.id}
+                      className="flex items-center gap-3 px-3 py-2.5 active:bg-slate-50 dark:active:bg-slate-700/30 cursor-pointer"
+                      onClick={() => setSelectedCustomer(company)}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 shrink-0">
+                        <Building2 className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <h3 className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">{company.name}</h3>
+                          {company.source === 'halo_psa' && (
+                            <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-600 border-blue-200 px-1 py-0 shrink-0">Halo</Badge>
+                          )}
+                        </div>
+                        {displayAddress && (
+                          <p className="text-[11px] text-slate-400 truncate">{displayAddress}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 text-[10px] text-slate-400">
+                        {companySites.length > 0 && (
+                          <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{companySites.length}</span>
+                        )}
+                        {contacts.length > 0 && (
+                          <span className="flex items-center gap-0.5"><Users className="w-3 h-3" />{contacts.length}</span>
+                        )}
+                        {companyProjects > 0 && (
+                          <span className="flex items-center gap-0.5"><FolderKanban className="w-3 h-3" />{companyProjects}</span>
+                        )}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop card grid */}
+              <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 gap-3">
               {filteredCompanies.map((company) => {
                 const contacts = getContactsForCompany(company.id);
                 const companySites = getSitesForCompany(company.id);
@@ -462,7 +554,7 @@ export default function Customers() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
                         {selectionMode && (
-                          <button 
+                          <button
                             onClick={(e) => { e.stopPropagation(); toggleSelection(company.id); }}
                             className="mt-0.5 p-0.5"
                           >
@@ -484,7 +576,7 @@ export default function Customers() {
                             )}
                           </div>
                           {displayAddress ? (
-                            <a 
+                            <a
                               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayAddress)}`}
                               target="_blank"
                               rel="noopener noreferrer"
@@ -531,69 +623,98 @@ export default function Customers() {
                   </div>
                 );
               })}
-            </div>
+              </div>
+            </>
           )}
 
 
           {/* Standalone Contacts */}
           {(viewFilter === 'all' || viewFilter === 'contacts') && filteredStandaloneContacts.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-              {filteredStandaloneContacts.map((customer) => (
-                <div
-                  key={customer.id}
-                  className={cn(
-                    "bg-white dark:bg-[#1e2a3a] rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
-                    selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
-                  )}
-                  onClick={() => setSelectedCustomer(customer)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      {selectionMode && (
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); toggleSelection(customer.id); }}
-                          className="mt-0.5 p-0.5"
-                        >
-                          {selectedIds.has(customer.id) ? (
-                            <CheckSquare className="w-4 h-4 text-red-600" />
-                          ) : (
-                            <Square className="w-4 h-4 text-slate-300" />
-                          )}
-                        </button>
-                      )}
-                      <div className="w-9 h-9 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm flex-shrink-0">
-                        {customer.name?.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-slate-900 truncate text-sm">{customer.name}</h3>
-                        {customer.company && <p className="text-xs text-slate-500 truncate">{customer.company}</p>}
-                      </div>
+            <>
+              {/* Mobile compact list */}
+              <div className="sm:hidden bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/30 mt-2">
+                {filteredStandaloneContacts.map((customer) => (
+                  <div
+                    key={customer.id}
+                    className="flex items-center gap-3 px-3 py-2.5 active:bg-slate-50 dark:active:bg-slate-700/30 cursor-pointer"
+                    onClick={() => setSelectedCustomer(customer)}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-xs shrink-0">
+                      {customer.name?.charAt(0).toUpperCase()}
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0 ml-2" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">{customer.name}</h3>
+                      {customer.company && <p className="text-[11px] text-slate-400 truncate">{customer.company}</p>}
+                    </div>
+                    {getProjectCount(customer.id) > 0 && (
+                      <span className="flex items-center gap-0.5 text-[10px] text-slate-400 shrink-0">
+                        <FolderKanban className="w-3 h-3" />{getProjectCount(customer.id)}
+                      </span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
                   </div>
-                  
-                  {/* Stats Row */}
-                  <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100">
-                    <button 
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
-                      title="Contacts"
-                    >
-                      <Users className="w-3.5 h-3.5 text-blue-600" />
-                      <span className="text-xs font-medium text-slate-700">0</span>
-                    </button>
-                    <button 
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-orange-50 transition-colors"
-                      title="Projects"
-                    >
-                      <FolderKanban className="w-3.5 h-3.5 text-orange-600" />
-                      <span className="text-xs font-medium text-slate-700">{getProjectCount(customer.id)}</span>
-                    </button>
+                ))}
+              </div>
+
+              {/* Desktop card grid */}
+              <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                {filteredStandaloneContacts.map((customer) => (
+                  <div
+                    key={customer.id}
+                    className={cn(
+                      "bg-white dark:bg-[#1e2a3a] rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
+                      selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
+                    )}
+                    onClick={() => setSelectedCustomer(customer)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {selectionMode && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleSelection(customer.id); }}
+                            className="mt-0.5 p-0.5"
+                          >
+                            {selectedIds.has(customer.id) ? (
+                              <CheckSquare className="w-4 h-4 text-red-600" />
+                            ) : (
+                              <Square className="w-4 h-4 text-slate-300" />
+                            )}
+                          </button>
+                        )}
+                        <div className="w-9 h-9 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-[#0069AF] font-medium text-sm flex-shrink-0">
+                          {customer.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-slate-900 truncate text-sm">{customer.name}</h3>
+                          {customer.company && <p className="text-xs text-slate-500 truncate">{customer.company}</p>}
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0 ml-2" />
+                    </div>
+
+                    {/* Stats Row */}
+                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100">
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
+                        title="Contacts"
+                      >
+                        <Users className="w-3.5 h-3.5 text-blue-600" />
+                        <span className="text-xs font-medium text-slate-700">0</span>
+                      </button>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-orange-50 transition-colors"
+                        title="Projects"
+                      >
+                        <FolderKanban className="w-3.5 h-3.5 text-orange-600" />
+                        <span className="text-xs font-medium text-slate-700">{getProjectCount(customer.id)}</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
 
           {((viewFilter === 'all' && filteredCompanies.length === 0 && filteredStandaloneContacts.length === 0) ||
