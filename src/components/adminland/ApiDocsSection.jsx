@@ -33,9 +33,16 @@ function generateApiKey() {
   return key;
 }
 
-function hashKey(key) {
-  // Simple hash for display — actual hashing done server-side
+function hashKeyForDisplay(key) {
   return key.slice(0, 8) + '...' + key.slice(-4);
+}
+
+async function sha256Hash(text) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 // ─── API Keys Management ───────────────────────────────────────────
@@ -54,12 +61,11 @@ function ApiKeysManager() {
   const createKey = useMutation({
     mutationFn: async (name) => {
       const rawKey = generateApiKey();
-      // Store key with hash for server-side validation
-      // In production, you'd hash this server-side. For now we store it.
+      const hashedKey = await sha256Hash(rawKey);
       await api.entities.ApiKey.create({
         name,
         key_prefix: rawKey.slice(0, 12),
-        key_hash: rawKey, // The external API route hashes this for comparison
+        key_hash: hashedKey,
         is_active: true,
         usage_count: 0,
         created_by: 'admin',

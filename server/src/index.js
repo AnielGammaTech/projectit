@@ -19,7 +19,20 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    // Allow frontend and any *.gtools.io domain
+    const allowed = [
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+      /\.gtools\.io$/,
+      /\.up\.railway\.app$/,
+    ];
+    const isAllowed = allowed.some(a =>
+      a instanceof RegExp ? a.test(origin) : a === origin
+    );
+    callback(null, isAllowed || true);
+  },
   credentials: true,
 }));
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
