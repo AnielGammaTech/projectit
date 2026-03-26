@@ -417,14 +417,14 @@ export default function ProjectParts() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-slate-400">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+    <div className="min-h-screen bg-background">
       <ProjectNavHeader project={project} currentPage="ProjectParts" />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -463,8 +463,8 @@ export default function ProjectParts() {
               <Package className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Parts & Materials</h1>
-              <p className="text-slate-500 dark:text-slate-400">
+              <h1 className="text-lg sm:text-2xl font-bold text-foreground">Parts & Materials</h1>
+              <p className="text-muted-foreground">
                 {parts.length} items · Total: ${totalCost.toLocaleString()}
                 {unassignedParts.length > 0 && (
                   <span className="text-amber-600 ml-2">· {unassignedParts.length} unassigned</span>
@@ -550,7 +550,7 @@ export default function ProjectParts() {
         )}
 
         {/* Filters */}
-        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6">
+        <div className="bg-card rounded-2xl border border-slate-100 dark:border-border p-4 mb-6">
           <div className="flex flex-wrap gap-4">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -596,7 +596,7 @@ export default function ProjectParts() {
               <div className="p-2 rounded-lg bg-purple-100">
                 <Wrench className="w-5 h-5 text-purple-600" />
               </div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Ready to Install ({readyToInstallParts.length})</h2>
+              <h2 className="text-lg font-semibold text-foreground">Ready to Install ({readyToInstallParts.length})</h2>
             </div>
             <div className="space-y-2">
               {readyToInstallParts.map((part) => (
@@ -636,7 +636,7 @@ export default function ProjectParts() {
         )}
 
         {/* Parts List */}
-        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 overflow-hidden">
+        <div className="bg-card rounded-2xl border border-slate-100 dark:border-border overflow-hidden">
           <AnimatePresence>
             {otherParts.length > 0 ? (
               filteredParts.map((part, idx) => {
@@ -694,7 +694,7 @@ export default function ProjectParts() {
                     {/* Name + part number */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{part.name}</span>
+                        <span className="text-sm font-medium text-foreground truncate">{part.name}</span>
                         {part.part_number && (
                           <span className="text-xs text-slate-400 shrink-0">#{part.part_number}</span>
                         )}
@@ -929,8 +929,8 @@ export default function ProjectParts() {
           {filteredParts.length === 0 && readyToInstallParts.length === 0 && (
             <div className="p-12 text-center">
               <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No parts found</h3>
-              <p className="text-slate-500 dark:text-slate-400 mb-6">Add parts to track materials for this project</p>
+              <h3 className="text-lg font-medium text-foreground mb-2">No parts found</h3>
+              <p className="text-muted-foreground mb-6">Add parts to track materials for this project</p>
               <Button onClick={() => setShowPartModal(true)} className="bg-amber-500 hover:bg-amber-600">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Part

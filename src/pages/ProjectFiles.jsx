@@ -231,7 +231,7 @@ export default function ProjectFiles() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]"
+      className="min-h-screen bg-background"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -247,9 +247,9 @@ export default function ProjectFiles() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-teal-600/10 backdrop-blur-sm flex items-center justify-center pointer-events-none"
           >
-            <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl p-8 shadow-2xl border-2 border-dashed border-teal-500 text-center">
+            <div className="bg-card rounded-2xl p-8 shadow-2xl border-2 border-dashed border-teal-500 text-center">
               <Upload className="w-12 h-12 text-teal-500 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Drop files to upload</h3>
+              <h3 className="text-lg font-semibold text-foreground">Drop files to upload</h3>
               <p className="text-sm text-slate-500 mt-1">Files will be added to {currentFolder?.name || 'root'}</p>
             </div>
           </motion.div>
@@ -264,8 +264,8 @@ export default function ProjectFiles() {
               <FileText className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Documents & Files</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <h1 className="text-lg sm:text-2xl font-bold text-foreground">Documents & Files</h1>
+              <p className="text-sm text-muted-foreground">
                 {files.length} file{files.length !== 1 ? 's' : ''}{folders.length > 0 ? ` · ${folders.length} folder${folders.length !== 1 ? 's' : ''}` : ''}
               </p>
             </div>
@@ -308,7 +308,7 @@ export default function ProjectFiles() {
         </AnimatePresence>
 
         {/* Search & Breadcrumb */}
-        <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6">
+        <div className="bg-card rounded-2xl border border-slate-100 dark:border-border p-4 mb-6">
           <div className="flex flex-wrap items-center gap-4">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -325,7 +325,7 @@ export default function ProjectFiles() {
                 onClick={() => setCurrentFolderId(null)}
                 className={cn(
                   "hover:text-teal-600 transition-colors",
-                  currentFolderId ? "text-slate-500 dark:text-slate-400" : "text-slate-900 dark:text-slate-100 font-medium"
+                  currentFolderId ? "text-muted-foreground" : "text-foreground font-medium"
                 )}
               >
                 All Files
@@ -333,7 +333,7 @@ export default function ProjectFiles() {
               {currentFolder && (
                 <>
                   <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600" />
-                  <span className="text-slate-900 dark:text-slate-100 font-medium flex items-center gap-1.5">
+                  <span className="text-foreground font-medium flex items-center gap-1.5">
                     <Folder className={cn("w-3.5 h-3.5", getFolderColor(currentFolder.color).text)} />
                     {currentFolder.name}
                   </span>
@@ -350,7 +350,7 @@ export default function ProjectFiles() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 p-4 mb-6"
+              className="bg-card rounded-2xl border border-slate-200 dark:border-border p-4 mb-6"
             >
               <div className="flex items-center gap-3">
                 <Input
@@ -394,7 +394,7 @@ export default function ProjectFiles() {
                     key={folder.id}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="group bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-4 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all cursor-pointer"
+                    className="group bg-card rounded-xl border border-slate-200 dark:border-border p-4 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all cursor-pointer"
                     onClick={() => setCurrentFolderId(folder.id)}
                   >
                     <div className="flex items-center justify-between">
@@ -410,8 +410,8 @@ export default function ProjectFiles() {
                         <Trash2 className="w-3.5 h-3.5 text-red-500" />
                       </Button>
                     </div>
-                    <h4 className="font-medium text-slate-900 dark:text-slate-100 mt-2 truncate">{folder.name}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{folderFileCount} file{folderFileCount !== 1 ? 's' : ''}</p>
+                    <h4 className="font-medium text-foreground mt-2 truncate">{folder.name}</h4>
+                    <p className="text-xs text-muted-foreground">{folderFileCount} file{folderFileCount !== 1 ? 's' : ''}</p>
                   </motion.div>
                 );
               })}
@@ -441,7 +441,7 @@ export default function ProjectFiles() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     transition={{ delay: idx * 0.02 }}
-                    className="group bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 p-3.5 hover:shadow-md hover:border-slate-200 dark:hover:border-slate-600 transition-all cursor-pointer"
+                    className="group bg-card rounded-xl border border-slate-100 dark:border-border p-3.5 hover:shadow-md hover:border-slate-200 dark:hover:border-slate-600 transition-all cursor-pointer"
                     onClick={() => setSelectedFile(file)}
                   >
                     <div className="flex items-center gap-4">
@@ -461,8 +461,8 @@ export default function ProjectFiles() {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-slate-900 dark:text-slate-100 truncate text-sm">{file.name}</h4>
-                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        <h4 className="font-medium text-foreground truncate text-sm">{file.name}</h4>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                           <span>{formatFileSize(file.size)}</span>
                           <span>·</span>
                           <span>{file.uploaded_by_name}</span>
@@ -510,15 +510,15 @@ export default function ProjectFiles() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white dark:bg-[#1e2a3a] rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700/50 p-16 text-center"
+                className="bg-card rounded-2xl border-2 border-dashed border-slate-200 dark:border-border p-16 text-center"
               >
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 inline-block mb-4">
                   <Upload className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                   {searchQuery ? 'No files match your search' : currentFolderId ? 'This folder is empty' : 'No files yet'}
                 </h3>
-                <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto">
+                <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
                   {searchQuery ? 'Try a different search term' : 'Drag and drop files here or click the button below to upload'}
                 </p>
                 {!searchQuery && (

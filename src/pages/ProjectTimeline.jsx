@@ -94,9 +94,9 @@ export default function ProjectTimeline() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Project not found</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Project not found</h2>
           <Link to={createPageUrl('Dashboard')}>
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -116,8 +116,8 @@ export default function ProjectTimeline() {
     : 'Not set';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
@@ -128,8 +128,8 @@ export default function ProjectTimeline() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">{project.name} - Timeline</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <h1 className="text-lg sm:text-2xl font-bold text-foreground">{project.name} - Timeline</h1>
+              <p className="text-sm text-muted-foreground">
                 Drag tasks to reschedule • Drag edges to resize
               </p>
             </div>
@@ -143,7 +143,7 @@ export default function ProjectTimeline() {
             </Link>
             <Button 
               onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
-              className="bg-[#0069AF] hover:bg-[#133F5C] dark:bg-blue-600 dark:hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/80"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Task
@@ -153,22 +153,22 @@ export default function ProjectTimeline() {
 
         {/* Project Summary */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-          <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-4">
-            <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Project Start</div>
-            <div className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <div className="bg-card rounded-xl border border-border p-4">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Project Start</div>
+            <div className="text-lg font-semibold text-foreground">
               {project.start_date ? format(parseISO(project.start_date), 'MMM d, yyyy') : 'Not set'}
             </div>
           </div>
-          <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-4">
-            <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Calculated End Date</div>
-            <div className="text-lg font-semibold text-slate-900 dark:text-slate-100">{estimatedEndDate}</div>
+          <div className="bg-card rounded-xl border border-border p-4">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Calculated End Date</div>
+            <div className="text-lg font-semibold text-foreground">{estimatedEndDate}</div>
           </div>
-          <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-4">
-            <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Tasks</div>
-            <div className="text-lg font-semibold text-slate-900 dark:text-slate-100">{tasks.length}</div>
+          <div className="bg-card rounded-xl border border-border p-4">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Tasks</div>
+            <div className="text-lg font-semibold text-foreground">{tasks.length}</div>
           </div>
-          <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-4">
-            <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Completed</div>
+          <div className="bg-card rounded-xl border border-border p-4">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Completed</div>
             <div className="text-lg font-semibold text-emerald-600">
               {completedTasks} / {tasks.length}
             </div>
@@ -185,13 +185,13 @@ export default function ProjectTimeline() {
             onTaskClick={setSelectedTask}
           />
         ) : (
-          <div className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-12 text-center">
-            <Calendar className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No tasks yet</h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6">Add tasks to see them on the timeline</p>
-            <Button 
+          <div className="bg-card rounded-xl border border-border p-12 text-center">
+            <Calendar className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No tasks yet</h3>
+            <p className="text-muted-foreground mb-6">Add tasks to see them on the timeline</p>
+            <Button
               onClick={() => setShowTaskModal(true)}
-              className="bg-[#0069AF] hover:bg-[#133F5C] dark:bg-blue-600 dark:hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/80"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add First Task

@@ -551,7 +551,7 @@ export default function ProjectTasks() {
       return (
         <button
           onClick={() => { setInlineTaskGroupId(groupId); setInlineExpanded(false); }}
-          className="flex items-center gap-2 text-sm text-[#0069AF] hover:text-[#133F5C] py-2 pl-1 transition-colors"
+          className="flex items-center gap-2 text-sm text-primary hover:text-foreground py-2 pl-1 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add a task
@@ -560,9 +560,9 @@ export default function ProjectTasks() {
     }
 
     return (
-      <div className="rounded-xl border-2 border-[#0069AF]/30 bg-blue-50/30 p-3 space-y-2">
+      <div className="rounded-xl border-2 border-primary/20 bg-blue-50/30 p-3 space-y-2">
         <div className="flex items-center gap-2">
-          <div className="p-1 text-[#0069AF]">
+          <div className="p-1 text-primary">
             <Plus className="w-4 h-4" />
           </div>
           <Input
@@ -643,9 +643,9 @@ export default function ProjectTasks() {
           className={cn(
             "sm:hidden group flex flex-col gap-1.5 px-3 py-2.5 rounded-xl border transition-all cursor-pointer",
             isCompleted || task.status === 'archived'
-              ? "opacity-50 bg-slate-50/30 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700/50"
-              : "border-slate-200/80 dark:border-slate-700/50 active:bg-slate-50",
-            isSelected && "ring-2 ring-[#0069AF] bg-blue-50/50"
+              ? "opacity-50 bg-slate-50/30 dark:bg-slate-800/30 border-slate-100 dark:border-border"
+              : "border-slate-200/80 dark:border-border active:bg-slate-50",
+            isSelected && "ring-2 ring-primary bg-blue-50/50"
           )}
           onClick={() => selectionMode ? toggleTaskSelection(task.id) : setSelectedTask(task)}
         >
@@ -676,7 +676,7 @@ export default function ProjectTasks() {
             </button>
             <span className={cn(
               "flex-1 font-medium text-sm truncate min-w-0",
-              isCompleted ? "line-through text-slate-400" : "text-slate-900 dark:text-slate-100"
+              isCompleted ? "line-through text-slate-400" : "text-foreground"
             )}>
               {task.title}
             </span>
@@ -732,10 +732,10 @@ export default function ProjectTasks() {
           className={cn(
             "hidden sm:flex group items-center gap-2.5 px-3 py-2 rounded-lg border transition-all cursor-pointer",
             isCompleted || task.status === 'archived'
-              ? "opacity-50 bg-slate-50/30 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700/50"
-              : "border-slate-200/80 dark:border-slate-700/50 hover:shadow-sm hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50/50",
-            isSelected && "ring-2 ring-[#0069AF] bg-blue-50/50",
-            isDragging && "shadow-lg ring-2 ring-[#0069AF]"
+              ? "opacity-50 bg-slate-50/30 dark:bg-slate-800/30 border-slate-100 dark:border-border"
+              : "border-slate-200/80 dark:border-border hover:shadow-sm hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50/50",
+            isSelected && "ring-2 ring-primary bg-blue-50/50",
+            isDragging && "shadow-lg ring-2 ring-primary"
           )}
           onClick={() => selectionMode ? toggleTaskSelection(task.id) : setSelectedTask(task)}
         >
@@ -751,7 +751,7 @@ export default function ProjectTasks() {
               className="p-1.5 touch-manipulation"
             >
               {isSelected ? (
-                <CheckSquare className="w-5 h-5 text-[#0069AF]" />
+                <CheckSquare className="w-5 h-5 text-primary" />
               ) : (
                 <Square className="w-5 h-5 text-slate-300" />
               )}
@@ -893,7 +893,7 @@ export default function ProjectTasks() {
                 {task.assigned_name ? (
                   <button
                     onClick={(e) => e.stopPropagation()}
-                    className="hover:ring-2 hover:ring-offset-1 hover:ring-[#0069AF]/30 rounded-full touch-manipulation shrink-0"
+                    className="hover:ring-2 hover:ring-offset-1 hover:ring-primary/30 rounded-full touch-manipulation shrink-0"
                     title={task.assigned_name}
                   >
                     <UserAvatar email={task.assigned_to} name={task.assigned_name} size="sm" />
@@ -901,7 +901,7 @@ export default function ProjectTasks() {
                 ) : (
                   <button
                     onClick={(e) => e.stopPropagation()}
-                    className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-[#0069AF]/40 touch-manipulation shrink-0"
+                    className="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-primary/40 touch-manipulation shrink-0"
                   >
                     <UserPlus className="w-2.5 h-2.5 text-slate-400" />
                   </button>
@@ -986,21 +986,21 @@ export default function ProjectTasks() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+    <div className="min-h-screen bg-background">
       <ProjectNavHeader project={project} currentPage="ProjectTasks" />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Mobile: Compact inline header */}
         <div className="sm:hidden flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">Tasks</h1>
+            <h1 className="text-lg font-bold text-foreground">Tasks</h1>
             <span className="text-xs text-slate-400 dark:text-slate-500">{completedTasks}/{totalTasks}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Button
               onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
               size="sm"
-              className="bg-[#0069AF] hover:bg-[#005a96] text-white h-8 text-xs px-2.5"
+              className="bg-primary hover:bg-primary/80 text-white h-8 text-xs px-2.5"
             >
               <Plus className="w-3.5 h-3.5 mr-1" />
               Task
@@ -1009,7 +1009,7 @@ export default function ProjectTasks() {
               onClick={() => setShowGroupModal(true)}
               variant="outline"
               size="sm"
-              className="border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 h-8 text-xs px-2.5"
+              className="border-slate-200 dark:border-border text-slate-600 dark:text-slate-400 h-8 text-xs px-2.5"
             >
               <FolderPlus className="w-3.5 h-3.5 mr-1" />
               Group
@@ -1024,7 +1024,7 @@ export default function ProjectTasks() {
         </div>
 
         {/* Desktop: Rich Stats Header Card */}
-        <div className="hidden sm:block bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden mb-6">
+        <div className="hidden sm:block bg-card rounded-2xl border border-slate-200 dark:border-border shadow-sm overflow-hidden mb-6">
           {/* Gradient accent bar */}
           <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
           <div className="p-4 sm:p-6">
@@ -1034,15 +1034,15 @@ export default function ProjectTasks() {
                   <ListTodo className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Tasks</h1>
-                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{completedTasks}/{totalTasks} completed</p>
+                  <h1 className="text-xl sm:text-2xl font-bold text-foreground">Tasks</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{completedTasks}/{totalTasks} completed</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
                   size="sm"
-                  className="bg-[#0069AF] hover:bg-[#005a96] text-white h-9 sm:h-10"
+                  className="bg-primary hover:bg-primary/80 text-white h-9 sm:h-10"
                 >
                   <Plus className="w-4 h-4 mr-1.5" />
                   Add Task
@@ -1051,7 +1051,7 @@ export default function ProjectTasks() {
                   onClick={() => setShowGroupModal(true)}
                   variant="outline"
                   size="sm"
-                  className="border-[#0069AF]/30 text-[#0069AF] hover:bg-[#0069AF]/5 h-9 sm:h-10"
+                  className="border-primary/20 text-primary hover:bg-primary/5 h-9 sm:h-10"
                 >
                   <FolderPlus className="w-4 h-4 mr-1.5" />
                   New Group
@@ -1105,7 +1105,7 @@ export default function ProjectTasks() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-[#0F2F44] to-[#133F5C] text-white rounded-xl p-3 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-lg"
+            className="bg-primary text-white rounded-xl p-3 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-lg"
           >
             <div className="flex items-center gap-3">
               <button onClick={clearSelection} className="p-1.5 hover:bg-white/10 rounded touch-manipulation">
@@ -1196,7 +1196,7 @@ export default function ProjectTasks() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tasks..."
-              className="pl-9 h-10 sm:h-9 rounded-xl focus-visible:ring-[#0069AF]"
+              className="pl-9 h-10 sm:h-9 rounded-xl focus-visible:ring-primary"
             />
           </div>
           <div className="flex items-center gap-2 overflow-x-auto">
@@ -1207,7 +1207,7 @@ export default function ProjectTasks() {
                   onClick={() => setViewFilter(key)}
                   className={cn(
                     "text-xs font-medium py-2 px-3 rounded-lg transition-all whitespace-nowrap touch-manipulation relative",
-                    viewFilter === key ? "bg-white dark:bg-slate-600 text-[#0069AF] dark:text-blue-400 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                    viewFilter === key ? "bg-white dark:bg-slate-600 text-primary dark:text-blue-400 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   )}
                 >
                   {label}
@@ -1223,7 +1223,7 @@ export default function ProjectTasks() {
                 onClick={() => setViewMode('list')}
                 className={cn(
                   "text-xs font-medium py-2 px-3 rounded-lg transition-all touch-manipulation",
-                  viewMode === 'list' ? "bg-white dark:bg-slate-600 text-[#0069AF] dark:text-blue-400 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  viewMode === 'list' ? "bg-white dark:bg-slate-600 text-primary dark:text-blue-400 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                 )}
               >
                 List
@@ -1232,7 +1232,7 @@ export default function ProjectTasks() {
                 onClick={() => setViewMode('cards')}
                 className={cn(
                   "text-xs font-medium py-2 px-3 rounded-lg transition-all touch-manipulation",
-                  viewMode === 'cards' ? "bg-white dark:bg-slate-600 text-[#0069AF] dark:text-blue-400 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  viewMode === 'cards' ? "bg-white dark:bg-slate-600 text-primary dark:text-blue-400 shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                 )}
               >
                 Cards
@@ -1242,7 +1242,7 @@ export default function ProjectTasks() {
               variant={selectionMode ? "default" : "outline"}
               size="sm"
               onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
-              className={cn("hidden sm:inline-flex h-9 shrink-0 touch-manipulation", selectionMode && "bg-[#0069AF] hover:bg-[#005a96]")}
+              className={cn("hidden sm:inline-flex h-9 shrink-0 touch-manipulation", selectionMode && "bg-primary hover:bg-primary/80")}
             >
               <CheckSquare className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">{selectionMode ? 'Done' : 'Select'}</span>
@@ -1291,21 +1291,21 @@ export default function ProjectTasks() {
             const accentColor = groupAccentColors[group.color] || groupAccentColors.slate;
 
             return (
-              <div key={group.id} className={cn("bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-sm border-l-4", accentColor)}>
+              <div key={group.id} className={cn("bg-card rounded-2xl border border-slate-200 dark:border-border overflow-hidden shadow-sm border-l-4", accentColor)}>
                 {/* Phase 4: Monday.com Group Header */}
                 <div
                   className="group/header flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                   onClick={() => toggleGroup(group.id)}
                 >
                   {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                  <span className="font-bold text-base text-slate-900 dark:text-slate-100 flex-1">{group.name}</span>
+                  <span className="font-bold text-base text-foreground flex-1">{group.name}</span>
                   <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-sm text-slate-600 font-medium">
                     {completedCount}/{groupTasks.length}
                   </span>
                   {/* Inline +Add on hover */}
                   <button
                     onClick={(e) => { e.stopPropagation(); setInlineTaskGroupId(group.id); }}
-                    className="opacity-0 group-hover/header:opacity-100 transition-opacity text-xs text-[#0069AF] hover:text-[#005a96] font-medium flex items-center gap-1"
+                    className="opacity-0 group-hover/header:opacity-100 transition-opacity text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add
                   </button>
@@ -1367,19 +1367,19 @@ export default function ProjectTasks() {
           })}
 
           {/* Ungrouped */}
-          <div className={cn("bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-sm border-l-4", groupAccentColors.slate)}>
+          <div className={cn("bg-card rounded-2xl border border-slate-200 dark:border-border overflow-hidden shadow-sm border-l-4", groupAccentColors.slate)}>
             <div
               className="group/header flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               onClick={() => toggleGroup('ungrouped')}
             >
               {!collapsedGroups.has('ungrouped') ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-              <span className="font-bold text-base text-slate-500 dark:text-slate-400 flex-1">Ungrouped</span>
+              <span className="font-bold text-base text-muted-foreground flex-1">Ungrouped</span>
               <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-sm text-slate-600 font-medium">
                 {ungroupedTasks.filter(t => t.status === 'completed').length}/{ungroupedTasks.length}
               </span>
               <button
                 onClick={(e) => { e.stopPropagation(); setInlineTaskGroupId('ungrouped'); }}
-                className="opacity-0 group-hover/header:opacity-100 transition-opacity text-xs text-[#0069AF] hover:text-[#005a96] font-medium flex items-center gap-1"
+                className="opacity-0 group-hover/header:opacity-100 transition-opacity text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1"
               >
                 <Plus className="w-3.5 h-3.5" /> Add
               </button>
@@ -1429,22 +1429,22 @@ export default function ProjectTasks() {
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <ListTodo className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-1">No tasks yet</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto">
+              <h3 className="text-lg font-semibold text-foreground mb-1">No tasks yet</h3>
+              <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
                 Get started by creating a task group to organize your work, or add your first task directly.
               </p>
               <div className="flex items-center justify-center gap-3">
                 <Button
                   onClick={() => setShowGroupModal(true)}
                   variant="outline"
-                  className="border-[#0069AF]/30 text-[#0069AF] hover:bg-[#0069AF]/5"
+                  className="border-primary/20 text-primary hover:bg-primary/5"
                 >
                   <FolderPlus className="w-4 h-4 mr-2" />
                   Create Group
                 </Button>
                 <Button
                   onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
-                  className="bg-[#0069AF] hover:bg-[#005a96] text-white"
+                  className="bg-primary hover:bg-primary/80 text-white"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Task

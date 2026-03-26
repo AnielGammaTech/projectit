@@ -13,8 +13,8 @@ export default function ProjectBilling() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#151d2b] flex items-center justify-center">
-      <div className="animate-pulse text-slate-400">Redirecting...</div>
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="animate-pulse text-muted-foreground">Redirecting...</div>
     </div>
   );
 }

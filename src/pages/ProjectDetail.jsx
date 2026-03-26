@@ -146,7 +146,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-blue-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-blue-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-blue-100/60 dark:border-border bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 dark:bg-card hover:shadow-lg hover:shadow-blue-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
         <div className="p-3.5 pb-2">
@@ -383,7 +383,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-emerald-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-emerald-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-emerald-100/60 dark:border-border bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 dark:bg-card hover:shadow-lg hover:shadow-emerald-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
         <div className="p-3.5 pb-2">
@@ -1245,9 +1245,9 @@ export default function ProjectDetail() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Project not found</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Project not found</h2>
           <Link to={createPageUrl('Dashboard')}>
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -1261,7 +1261,7 @@ export default function ProjectDetail() {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-slate-400">Loading project...</div>
       </div>
     );
@@ -1269,13 +1269,13 @@ export default function ProjectDetail() {
 
   if (!hasAccess()) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-red-600" />
           </div>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">Access Denied</h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-4">You don't have access to this project.</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Access Denied</h2>
+          <p className="text-muted-foreground mb-4">You don't have access to this project.</p>
           <Link to={createPageUrl('Dashboard')}>
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -1290,7 +1290,7 @@ export default function ProjectDetail() {
     // Block access to archived or deleted projects
     if (project.status === 'archived' || project.status === 'deleted') {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+        <div className="min-h-screen bg-background">
           <ProcessingOverlay isVisible={isProcessing} type={processingType} />
           <ProjectNavHeader project={project} currentPage="ProjectDetail" />
           <motion.div
@@ -1363,11 +1363,11 @@ export default function ProjectDetail() {
     const completedTasks = tasks.filter(t => t.status === 'completed').length;
     const taskProgress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
     return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+    <div className="min-h-screen bg-background">
       <ProcessingOverlay isVisible={isProcessing} type={processingType} />
       <ProjectNavHeader project={project} currentPage="ProjectDetail" />
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         {/* On Hold Banner */}
         {project.status === 'on_hold' && (
@@ -1400,7 +1400,7 @@ export default function ProjectDetail() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-sm p-4 mb-5"
+          className="bg-card rounded-2xl border border-slate-100 dark:border-border shadow-sm p-4 mb-5"
         >
           {/* Row 1: Title + Actions */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
@@ -1413,7 +1413,7 @@ export default function ProjectDetail() {
                       #{project.project_number}
                     </span>
                   )}
-                  <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 break-words">{project.name}</h1>
+                  <h1 className="text-base sm:text-lg font-bold text-foreground break-words">{project.name}</h1>
                 </div>
                 {/* Mobile-only: edit + more inline with title */}
                 <div className="flex items-center gap-1 sm:hidden shrink-0">
@@ -1475,7 +1475,7 @@ export default function ProjectDetail() {
                 {project.client && (
                   <Link
                     to={createPageUrl('Customers') + (project.customer_id ? `?view=${project.customer_id}` : '')}
-                    className="text-[#0069AF] hover:underline text-sm"
+                    className="text-primary hover:underline text-sm"
                   >
                     {project.client}{project.client_company ? ` — ${project.client_company}` : ''} →
                   </Link>
@@ -1580,10 +1580,10 @@ export default function ProjectDetail() {
             </div>
           </div>
 
-          {project.description && <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 line-clamp-2">{project.description}</p>}
+          {project.description && <p className="text-muted-foreground text-sm mt-2 line-clamp-2">{project.description}</p>}
 
           {/* Mobile: Prominent Timer + Quick Actions */}
-          <div className="sm:hidden mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+          <div className="sm:hidden mt-3 pt-3 border-t border-slate-100 dark:border-border">
             <TimeTracker
               projectId={projectId}
               currentUser={currentUser}
@@ -1593,7 +1593,7 @@ export default function ProjectDetail() {
           </div>
 
           {/* Row 2: Progress bar + status actions */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-border">
             <div className="flex-1 min-w-0 w-full">
               <ProgressNeedle
                 projectId={projectId}
@@ -1646,7 +1646,7 @@ export default function ProjectDetail() {
         <div className="sm:hidden grid grid-cols-2 gap-2 pb-3">
           {/* Tasks */}
           <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`}>
-            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-border bg-card p-3 flex flex-col justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-blue-500/10 dark:bg-blue-500/20">
                   <ListTodo className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
@@ -1657,52 +1657,52 @@ export default function ProjectDetail() {
                 <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div className="h-full bg-blue-500 rounded-full" style={{ width: `${taskProgress}%` }} />
                 </div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">{completedTasks}/{tasks.filter(t => t.project_id === projectId).length}</span>
+                <span className="text-[10px] text-muted-foreground whitespace-nowrap">{completedTasks}/{tasks.filter(t => t.project_id === projectId).length}</span>
               </div>
             </div>
           </Link>
 
           {/* Messages */}
           <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`}>
-            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-border bg-card p-3 flex flex-col justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-violet-500/10 dark:bg-violet-500/20">
                   <MessageSquare className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
                 </div>
                 <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Messages</span>
               </div>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">{projectNotes.length} total</span>
+              <span className="text-[11px] text-muted-foreground">{projectNotes.length} total</span>
             </div>
           </Link>
 
           {/* Parts */}
           <Link to={createPageUrl('ProjectParts') + `?id=${projectId}`}>
-            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-border bg-card p-3 flex flex-col justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20">
                   <Package className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Parts</span>
               </div>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">{parts.filter(p => p.project_id === projectId).length} total</span>
+              <span className="text-[11px] text-muted-foreground">{parts.filter(p => p.project_id === projectId).length} total</span>
             </div>
           </Link>
 
           {/* Files */}
           <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`}>
-            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3 flex flex-col justify-between">
+            <div className="h-[76px] rounded-xl border border-slate-200 dark:border-border bg-card p-3 flex flex-col justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-amber-500/10 dark:bg-amber-500/20">
                   <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <span className="font-semibold text-xs text-slate-800 dark:text-slate-100">Files</span>
               </div>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">{projectFiles.length} file{projectFiles.length !== 1 ? 's' : ''}</span>
+              <span className="text-[11px] text-muted-foreground">{projectFiles.length} file{projectFiles.length !== 1 ? 's' : ''}</span>
             </div>
           </Link>
 
           {/* Due Dates — full width */}
-          <div className="col-span-2 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-[#1e2a3a] p-3">
+          <div className="col-span-2 rounded-xl border border-slate-200 dark:border-border bg-card p-3">
             <div className="flex items-center gap-2 mb-1.5">
               <div className="p-1.5 rounded-lg bg-red-500/10 dark:bg-red-500/20">
                 <Clock className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
@@ -1758,7 +1758,7 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-violet-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-violet-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-violet-100/60 dark:border-border bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 dark:bg-card hover:shadow-lg hover:shadow-violet-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-400" />
                 <div className="p-3.5 pb-2">
@@ -1812,7 +1812,7 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-amber-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] hover:shadow-lg hover:shadow-amber-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-amber-100/60 dark:border-border bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 dark:bg-card hover:shadow-lg hover:shadow-amber-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-400" />
                 <div className="p-3.5">
@@ -1836,7 +1836,7 @@ export default function ProjectDetail() {
                         const fc = getFolderColor(folder.color);
                         const count = projectFiles.filter(f => f.folder_id === folder.id).length;
                         return (
-                          <div key={folder.id} className="flex items-center justify-between px-2 py-1 rounded-lg bg-white/60 dark:bg-slate-800/40 border border-slate-100/60 dark:border-slate-700/30">
+                          <div key={folder.id} className="flex items-center justify-between px-2 py-1 rounded-lg bg-white/60 dark:bg-slate-800/40 border border-slate-100/60 dark:border-border">
                             <div className="flex items-center gap-1.5 min-w-0">
                               <Folder className={cn("w-3 h-3 flex-shrink-0", fc.text)} />
                               <span className="text-[11px] font-medium text-slate-700 dark:text-slate-200 truncate">{folder.name}</span>
@@ -1850,7 +1850,7 @@ export default function ProjectDetail() {
                       )}
                     </div>
                   ) : projectFiles.length > 0 ? (
-                    <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/40 border border-slate-100/60 dark:border-slate-700/30">
+                    <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/40 border border-slate-100/60 dark:border-border">
                       <File className="w-3.5 h-3.5 text-slate-400" />
                       <span className="text-[11px] text-slate-500">{projectFiles.length} files (no folders)</span>
                     </div>
@@ -1868,7 +1868,7 @@ export default function ProjectDetail() {
             >
               <button
                 onClick={() => setShowActivity(!showActivity)}
-                className="w-full flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-slate-50 to-white dark:from-[#1e2a3a] dark:to-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 hover:border-slate-200 dark:hover:border-slate-600 hover:shadow-sm transition-all duration-200"
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-card rounded-2xl border border-slate-100 dark:border-border hover:border-slate-200 dark:hover:border-slate-600 hover:shadow-sm transition-all duration-200"
               >
                 <div className="flex items-center gap-2.5">
                   <div className="p-1.5 rounded-lg bg-slate-100">
@@ -1885,7 +1885,7 @@ export default function ProjectDetail() {
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="bg-white dark:bg-[#1e2a3a] rounded-b-2xl border border-t-0 border-slate-100 dark:border-slate-700/50 p-4 max-h-[250px] overflow-y-auto -mt-1"
+                  className="bg-card rounded-b-2xl border border-t-0 border-slate-100 dark:border-border p-4 max-h-[250px] overflow-y-auto -mt-1"
                 >
                   <ProjectActivityFeed projectId={projectId} progressUpdates={progressUpdates} compact />
                 </motion.div>
