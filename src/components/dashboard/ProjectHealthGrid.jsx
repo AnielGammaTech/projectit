@@ -39,7 +39,7 @@ function HealthCard({ project, type, detail }) {
   const Icon = c.icon;
 
   return (
-    <Link to={createPageUrl('Project') + `?id=${project.id}`}>
+    <Link to={createPageUrl('ProjectDetail') + `?id=${project.id}`}>
       <motion.div
         whileHover={{ y: -2, scale: 1.01 }}
         className={cn(
