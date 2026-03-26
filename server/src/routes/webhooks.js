@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import entityService from '../services/entityService.js';
 import { webhookLimiter } from '../middleware/rateLimiter.js';
 
@@ -19,7 +20,7 @@ router.post('/gammaai', webhookLimiter, async (req, res) => {
     if (!config || !config.gammaai_webhook_secret) {
       return res.status(401).json({ error: 'Webhook not configured' });
     }
-    if (webhookSecret !== config.gammaai_webhook_secret) {
+    if (!webhookSecret || !crypto.timingSafeEqual(Buffer.from(webhookSecret), Buffer.from(config.gammaai_webhook_secret || ''))) {
       return res.status(401).json({ error: 'Invalid webhook secret' });
     }
 

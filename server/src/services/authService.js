@@ -26,7 +26,7 @@ const authService = {
     }
 
     // Generate 6-digit code
-    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const code = String(crypto.randomInt(100000, 999999));
     const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
     otpStore.set(lowerEmail, { code, expiresAt });
 

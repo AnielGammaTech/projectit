@@ -12,8 +12,7 @@ async function getToken() {
   if (supabase) {
     return getAccessToken();
   }
-  // Fallback to legacy localStorage token
-  return localStorage.getItem('projectit_token');
+  return null;
 }
 
 async function authHeaders() {
