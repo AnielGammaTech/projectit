@@ -114,15 +114,15 @@ export default function NotificationSettings() {
   if (isLoading) return <FormPageSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <h1 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">Notification Settings</h1>
-          <p className="text-slate-500 mt-1">Manage your email notification preferences</p>
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Notification Settings</h1>
+          <p className="text-muted-foreground mt-1">Manage your email notification preferences</p>
         </motion.div>
 
 
@@ -405,7 +405,7 @@ export default function NotificationSettings() {
               <Button 
                 onClick={handleSave} 
                 disabled={!hasChanges || saveMutation.isPending}
-                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                className="w-full bg-primary hover:bg-primary/80"
               >
                 {saveMutation.isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
