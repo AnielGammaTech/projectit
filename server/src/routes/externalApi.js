@@ -120,11 +120,66 @@ router.post('/quotes/accepted', async (req, res) => {
       user_name: 'QuoteIT API',
     });
 
+    // Auto-create project from accepted quote
+    let project = null;
+    try {
+      // Get next project number
+      const allProjects = await entityService.list('Project', '-project_number', 1);
+      const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
+
+      // Find or resolve customer_id
+      let resolvedCustomerId = customer_id || '';
+      if (!resolvedCustomerId && customer_name) {
+        const customers = await entityService.list('Customer');
+        const match = customers.find(c =>
+          (c.company || c.name || '').toLowerCase().trim() === customer_name.toLowerCase().trim()
+        );
+        if (match) resolvedCustomerId = match.id;
+      }
+
+      // Create the project
+      project = await entityService.create('Project', {
+        name: title,
+        description: `Auto-created from accepted QuoteIT quote #${quote_id}`,
+        status: 'planning',
+        project_number: nextNumber,
+        customer_id: resolvedCustomerId,
+        customer_name: customer_name || '',
+        quoteit_quote_id: String(quote_id),
+        budget: amount || 0,
+        start_date: null,
+        due_date: null,
+        progress: 0,
+      });
+
+      // Update incoming quote status
+      await entityService.update('IncomingQuote', incomingQuote.id, {
+        status: 'converted',
+        project_id: project.id,
+      });
+
+      // Log project creation
+      await entityService.create('AuditLog', {
+        action: 'project_auto_created',
+        entity_type: 'Project',
+        entity_id: project.id,
+        details: `Project #${nextNumber} auto-created from QuoteIT quote "${title}"`,
+        user_email: 'api@quoteit',
+        user_name: 'QuoteIT API',
+      });
+    } catch (projErr) {
+      console.error('Auto-create project failed (non-blocking):', projErr.message);
+    }
+
     return res.status(201).json({
       success: true,
       incoming_quote_id: incomingQuote.id,
-      status: 'pending',
-      message: 'Quote received and pending project creation',
+      status: project ? 'converted' : 'pending',
+      project_id: project?.id || null,
+      project_number: project?.project_number || null,
+      message: project
+        ? `Quote received and project #${project.project_number} auto-created`
+        : 'Quote received and pending project creation',
     });
   } catch (err) {
     console.error('Quote accepted endpoint error:', err);
