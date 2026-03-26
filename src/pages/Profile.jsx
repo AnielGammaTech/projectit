@@ -158,19 +158,19 @@ export default function Profile() {
 
         {/* Profile Hero */}
         <div className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm overflow-hidden mb-6">
-          <div className="h-20 bg-gradient-to-r from-[#0F2F44] via-[#133F5C] to-[#0069AF]" />
-          <div className="px-6 pb-5 -mt-10">
-            <div className="flex items-end gap-4">
-              <div className="relative">
+          <div className="h-16 bg-gradient-to-r from-[#0F2F44] via-[#133F5C] to-[#0069AF]" />
+          <div className="px-6 py-5">
+            <div className="flex items-center gap-4">
+              <div className="relative shrink-0">
                 {formData.avatar_url ? (
                   <img
                     src={resolveUploadUrl(formData.avatar_url)}
                     alt="Avatar"
-                    className="w-20 h-20 rounded-xl object-cover border-4 border-white dark:border-[#1e2a3a] shadow-lg"
+                    className="w-16 h-16 rounded-xl object-cover border-2 border-slate-200 dark:border-slate-700 shadow-sm"
                   />
                 ) : (
                   <div className={cn(
-                    "w-20 h-20 rounded-xl flex items-center justify-center text-white text-xl font-bold border-4 border-white dark:border-[#1e2a3a] shadow-lg",
+                    "w-16 h-16 rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-sm",
                     formData.avatar_color
                   )}>
                     {getInitials(formData.full_name || currentUser?.email)}
@@ -178,14 +178,14 @@ export default function Profile() {
                 )}
                 <label className="absolute -bottom-1 -right-1 p-1.5 bg-white dark:bg-slate-700 rounded-lg shadow-md cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
                   {uploading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0069AF]" />
+                    <Loader2 className="w-3 h-3 animate-spin text-[#0069AF]" />
                   ) : (
-                    <Camera className="w-3.5 h-3.5 text-[#0069AF]" />
+                    <Camera className="w-3 h-3 text-[#0069AF]" />
                   )}
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>
               </div>
-              <div className="flex-1 min-w-0 pb-1">
+              <div className="flex-1 min-w-0">
                 <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 truncate">{currentUser?.full_name || 'User'}</h1>
                 <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{currentUser?.email}</p>
               </div>
