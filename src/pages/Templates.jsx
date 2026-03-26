@@ -182,7 +182,7 @@ export default function Templates() {
         className={cn(
           "relative group rounded-2xl border-2 border-dashed p-5 transition-all cursor-pointer hover:shadow-lg",
           isProject
-            ? "border-[#0F2F44]/30 bg-[#0F2F44]/5 hover:border-[#0F2F44] hover:bg-[#0F2F44]/10 dark:bg-slate-700/30 dark:border-slate-600/50 dark:hover:border-slate-500 dark:hover:bg-slate-700/50"
+            ? "border-primary/30 bg-muted/50 hover:border-primary hover:bg-muted dark:bg-slate-700/30 dark:border-slate-600/50 dark:hover:border-slate-500 dark:hover:bg-slate-700/50"
             : "border-emerald-400/30 bg-emerald-50/50 hover:border-emerald-500 hover:bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-700/50 dark:hover:border-emerald-500 dark:hover:bg-emerald-900/30"
         )}
         onClick={() => handleOpenCreateModal(template)}
@@ -212,7 +212,7 @@ export default function Templates() {
         {/* Template Icon */}
         <div className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center mb-3",
-          isProject ? "bg-[#0F2F44]" : "bg-emerald-500"
+          isProject ? "bg-primary" : "bg-emerald-500"
         )}>
           {isProject ? (
             <FolderKanban className="w-5 h-5 text-white" />
@@ -224,21 +224,21 @@ export default function Templates() {
         {/* Template Name */}
         <h3 className={cn(
           "font-semibold text-base mb-1 line-clamp-2",
-          isProject ? "text-[#0F2F44] dark:text-slate-100" : "text-emerald-700 dark:text-emerald-300"
+          isProject ? "text-foreground" : "text-emerald-700 dark:text-emerald-300"
         )}>
           {template.name}
         </h3>
 
         {/* Description */}
         {template.description && (
-          <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">{template.description}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{template.description}</p>
         )}
 
         {/* Stats */}
         <div className="flex items-center gap-2 mt-auto">
           <div className={cn(
             "flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium",
-            isProject ? "bg-[#0F2F44]/10 text-[#0F2F44] dark:bg-slate-700/50 dark:text-slate-300" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+            isProject ? "bg-muted text-foreground dark:bg-slate-700/50 dark:text-slate-300" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
           )}>
             <ListTodo className="w-3 h-3" />
             {template.default_tasks?.length || 0}
@@ -272,17 +272,17 @@ export default function Templates() {
         className={cn(
           "relative rounded-2xl border-2 border-dashed p-5 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[180px]",
           isProject
-            ? "border-[#0F2F44]/20 hover:border-[#0F2F44] hover:bg-[#0F2F44]/5 dark:border-slate-600/50 dark:hover:border-slate-500 dark:hover:bg-slate-700/30"
+            ? "border-primary/20 hover:border-primary hover:bg-muted/50 dark:border-slate-600/50 dark:hover:border-slate-500 dark:hover:bg-slate-700/30"
             : "border-emerald-300/50 hover:border-emerald-500 hover:bg-emerald-50/50 dark:border-emerald-700/50 dark:hover:border-emerald-500 dark:hover:bg-emerald-900/20"
         )}
       >
         <div className={cn(
           "w-12 h-12 rounded-xl flex items-center justify-center mb-3",
-          isProject ? "bg-[#0F2F44]/10" : "bg-emerald-100"
+          isProject ? "bg-muted" : "bg-emerald-100"
         )}>
-          <Plus className={cn("w-6 h-6", isProject ? "text-[#0F2F44]" : "text-emerald-600")} />
+          <Plus className={cn("w-6 h-6", isProject ? "text-foreground" : "text-emerald-600")} />
         </div>
-        <span className={cn("font-medium", isProject ? "text-[#0F2F44] dark:text-slate-200" : "text-emerald-700 dark:text-emerald-300")}>
+        <span className={cn("font-medium", isProject ? "text-foreground" : "text-emerald-700 dark:text-emerald-300")}>
           New Template
         </span>
       </motion.div>
@@ -292,7 +292,7 @@ export default function Templates() {
   if (loadingTemplates) return <CardGridSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <motion.div
@@ -300,8 +300,8 @@ export default function Templates() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-3">Project Templates</h1>
-          <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground tracking-tight mb-3">Project Templates</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             Save yourself time by creating project templates with frequently-used tools, to-do lists, files, and more. 
             Anyone on your account who can create projects can use and edit these templates.
           </p>
@@ -313,7 +313,7 @@ export default function Templates() {
             <TabsList className="bg-slate-100 dark:bg-slate-700/50 p-1">
               <TabsTrigger 
                 value="project" 
-                className="data-[state=active]:bg-[#0F2F44] data-[state=active]:text-white text-slate-600 px-6"
+                className="data-[state=active]:bg-primary data-[state=active]:text-white text-slate-600 px-6"
               >
                 <Briefcase className="w-4 h-4 mr-2" />
                 Project Templates
@@ -503,7 +503,7 @@ export default function Templates() {
             <Button 
               onClick={handleCreateProject} 
               disabled={!projectName.trim() || creating}
-              className="bg-[#0F2F44] hover:bg-[#1a4a6e]"
+              className="bg-primary hover:bg-primary/80"
             >
               {creating ? (
                 <>
