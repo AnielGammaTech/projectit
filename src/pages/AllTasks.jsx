@@ -18,6 +18,8 @@ import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '
 import { parseLocalDate } from '@/utils/dateUtils';
 import UserAvatar from '@/components/UserAvatar';
 import { TablePageSkeleton } from '@/components/ui/PageSkeletons';
+import PageShell from '@/components/ui/PageShell';
+import EmptyState from '@/components/ui/EmptyState';
 
 const statusConfig = {
   todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
@@ -42,7 +44,7 @@ function TaskTableRow({ task, teamMembers, currentUser, statusConfig, priorityCo
   return (
     <div
       onClick={() => onNavigate(task)}
-      className="group flex items-center gap-2 px-3 py-3.5 sm:py-2.5 border-b border-slate-100 dark:border-slate-700/30 hover:bg-blue-50/50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer active:bg-blue-50/50"
+      className="group flex items-center gap-2 px-3 py-3.5 sm:py-2.5 border-b border-border hover:bg-primary/5 dark:hover:bg-muted/30 transition-all duration-200 cursor-pointer active:bg-primary/5"
     >
       {/* Complete checkbox */}
       <button
@@ -65,15 +67,15 @@ function TaskTableRow({ task, teamMembers, currentUser, statusConfig, priorityCo
       {/* Task title + project name */}
       <div className="flex-1 min-w-0 flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate block">{task.title}</span>
+          <span className="text-sm font-medium text-foreground truncate block">{task.title}</span>
         </div>
       </div>
 
       {/* Project badge */}
       <div className="hidden sm:flex items-center gap-1.5 shrink-0 max-w-[200px]">
-        <FolderKanban className="w-3 h-3 text-slate-400 shrink-0" />
-        <span className="text-xs text-slate-500 truncate">{projectName}</span>
-        {projectNumber && <span className="px-1 py-0 bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded text-[9px] font-mono shrink-0">#{projectNumber}</span>}
+        <FolderKanban className="w-3 h-3 text-muted-foreground shrink-0" />
+        <span className="text-xs text-muted-foreground truncate">{projectName}</span>
+        {projectNumber && <span className="px-1 py-0 bg-muted text-muted-foreground rounded text-[9px] font-mono shrink-0">#{projectNumber}</span>}
       </div>
 
       {/* Status badge */}
@@ -152,7 +154,7 @@ function TaskTableRow({ task, teamMembers, currentUser, statusConfig, priorityCo
             ) : (
               <button
                 onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="p-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
                 title="Set due date"
               >
                 <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
@@ -199,7 +201,7 @@ function PartTableRow({ part, teamMembers, projectName, projectNumber, getDueDat
   return (
     <div
       onClick={() => onNavigate(part)}
-      className="group flex items-center gap-2 px-3 py-2.5 border-b border-slate-100 dark:border-slate-700/30 hover:bg-amber-50/50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer"
+      className="group flex items-center gap-2 px-3 py-2.5 border-b border-border hover:bg-primary/5 dark:hover:bg-muted/30 transition-all duration-200 cursor-pointer"
     >
       {/* Part icon */}
       <Package className="w-4 h-4 text-amber-500 shrink-0" />
@@ -207,7 +209,7 @@ function PartTableRow({ part, teamMembers, projectName, projectNumber, getDueDat
       {/* Part name + number */}
       <div className="flex-1 min-w-0 flex items-center gap-2">
         <div className="flex-1 min-w-0">
-          <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate block">{part.name}</span>
+          <span className="text-sm font-medium text-foreground truncate block">{part.name}</span>
         </div>
         {part.part_number && (
           <span className="hidden sm:inline text-[10px] text-slate-400 font-mono shrink-0">#{part.part_number}</span>
@@ -216,9 +218,9 @@ function PartTableRow({ part, teamMembers, projectName, projectNumber, getDueDat
 
       {/* Project badge */}
       <div className="hidden sm:flex items-center gap-1.5 shrink-0 max-w-[180px]">
-        <FolderKanban className="w-3 h-3 text-slate-400 shrink-0" />
-        <span className="text-xs text-slate-500 truncate">{projectName}</span>
-        {projectNumber && <span className="px-1 py-0 bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded text-[9px] font-mono shrink-0">#{projectNumber}</span>}
+        <FolderKanban className="w-3 h-3 text-muted-foreground shrink-0" />
+        <span className="text-xs text-muted-foreground truncate">{projectName}</span>
+        {projectNumber && <span className="px-1 py-0 bg-muted text-muted-foreground rounded text-[9px] font-mono shrink-0">#{projectNumber}</span>}
       </div>
 
       {/* Status dropdown */}
@@ -304,7 +306,7 @@ function PartTableRow({ part, teamMembers, projectName, projectNumber, getDueDat
             ) : (
               <button
                 onClick={(e) => { e.stopPropagation(); setEtaOpen(true); }}
-                className="p-1 rounded hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="p-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
                 title="Set ETA"
               >
                 <Truck className="w-3.5 h-3.5 text-slate-400" />
@@ -597,64 +599,19 @@ export default function AllTasks() {
     completed: completedTasks
   };
 
-  if (loadingTasks) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="animate-pulse space-y-6">
-            <div>
-              <div className="h-8 w-48 bg-slate-200 rounded-lg" />
-              <div className="h-4 w-64 bg-slate-100 rounded mt-2" />
-              <div className="flex gap-2 mt-4">
-                <div className="h-10 w-24 bg-slate-200 rounded-lg" />
-                <div className="h-10 w-24 bg-slate-200 rounded-lg" />
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-100 p-4">
-              <div className="h-10 bg-slate-100 rounded-lg mb-4" />
-              <div className="flex gap-2">
-                <div className="h-8 w-24 bg-slate-100 rounded-lg" />
-                <div className="h-8 w-24 bg-slate-100 rounded-lg" />
-                <div className="h-8 w-24 bg-slate-100 rounded-lg" />
-              </div>
-            </div>
-            {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="bg-white rounded-xl border border-slate-100 p-4 flex gap-4">
-                <div className="w-8 h-8 rounded-lg bg-slate-200" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-5 bg-slate-200 rounded w-1/2" />
-                  <div className="h-3 bg-slate-100 rounded w-1/3" />
-                  <div className="flex gap-3">
-                    <div className="h-5 w-16 bg-slate-100 rounded" />
-                    <div className="h-5 w-20 bg-slate-100 rounded" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (loadingTasks) return <TablePageSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10 dark:from-[#151d2b] dark:via-[#1a2332] dark:to-[#151d2b]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4 sm:mb-8">
-          <div>
-            <h1 className="text-lg sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tasks & Parts</h1>
-            <p className="hidden sm:block text-slate-500 dark:text-slate-400 mt-1">View and filter all tasks and parts across projects</p>
-          </div>
-          {/* Main Tabs */}
+    <PageShell
+      title="Tasks & Parts"
+      subtitle="View and filter all tasks and parts across projects"
+      actions={
           <div className="flex gap-1.5 sm:gap-2">
             <button
               onClick={() => setActiveTab('tasks')}
               className={cn(
                 "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2",
-                activeTab === 'tasks' ? "bg-[#0069AF] text-white" : "bg-white dark:bg-[#1e2a3a] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+                activeTab === 'tasks' ? "bg-primary text-white" : "bg-card text-muted-foreground border border-border"
               )}
             >
               <ListTodo className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -664,32 +621,33 @@ export default function AllTasks() {
               onClick={() => setActiveTab('parts')}
               className={cn(
                 "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2",
-                activeTab === 'parts' ? "bg-[#0F2F44] text-white" : "bg-white dark:bg-[#1e2a3a] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+                activeTab === 'parts' ? "bg-primary text-white" : "bg-card text-muted-foreground border border-border"
               )}
             >
               <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Parts
-              <span className={cn("text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-[#133F5C]" : "bg-[#0069AF]/10 text-[#0069AF]")}>{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
+              <span className={cn("text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-primary/80" : "bg-primary/10 text-primary")}>{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
             </button>
           </div>
-        </div>
+      }
+    >
 
         {/* Unified Toolbar - Tasks */}
         {activeTab === 'tasks' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-3 sm:p-4 mb-4 sm:mb-6"
+            className="bg-card rounded-2xl border border-border p-3 sm:p-4 mb-4 sm:mb-6"
           >
             {/* View Mode Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-xl w-full sm:w-fit mb-3 sm:mb-4 overflow-x-auto">
+            <div className="flex items-center gap-1 p-1 bg-muted rounded-xl w-full sm:w-fit mb-3 sm:mb-4 overflow-x-auto">
               <button
                 onClick={() => setViewMode('all')}
                 className={cn(
                   "px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
                   viewMode === 'all'
-                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 All ({activeTasks.filter(t => t.status !== 'completed').length})
@@ -699,8 +657,8 @@ export default function AllTasks() {
                 className={cn(
                   "px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
                   viewMode === 'mine'
-                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 Mine ({myTasksCount})
@@ -710,8 +668,8 @@ export default function AllTasks() {
                 className={cn(
                   "px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
                   viewMode === 'my_overdue'
-                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 Overdue ({myOverdueCount})
@@ -721,8 +679,8 @@ export default function AllTasks() {
                 className={cn(
                   "hidden sm:block px-3 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
                   viewMode === 'mine_due'
-                    ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 Due ({myTasksWithDueCount})
@@ -753,8 +711,8 @@ export default function AllTasks() {
                       className={cn(
                         "flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
                         statusFilter === key
-                          ? "bg-[#0069AF] text-white"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          ? "bg-primary text-white"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
                       )}
                     >
                       <Icon className="w-3.5 h-3.5" />
@@ -806,10 +764,10 @@ export default function AllTasks() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
+                className="bg-card rounded-2xl border border-border overflow-hidden"
               >
                 {/* Table header — hidden on mobile */}
-                <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-200 dark:border-slate-700/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-muted/50 dark:bg-background border-b border-border text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                   <div className="w-5 shrink-0" />
                   <div className="flex-1">Task</div>
                   <div className="w-[200px] shrink-0">Project</div>
@@ -836,18 +794,18 @@ export default function AllTasks() {
                       <div key={projectId}>
                         {/* Project group header */}
                         <div
-                          className="flex items-center gap-2 px-3 py-3 sm:py-1.5 bg-slate-50/50 dark:bg-[#1a2535] border-b border-slate-100 dark:border-slate-700/30 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors active:bg-slate-100"
+                          className="flex items-center gap-2 px-3 py-3 sm:py-1.5 bg-muted/30 dark:bg-card border-b border-border cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors active:bg-muted/50"
                           onClick={() => setExpandedGroups(prev => ({ ...prev, [projectId]: prev[projectId] === true ? false : true }))}
                         >
-                          <ChevronRight className={cn("w-4 h-4 sm:w-3.5 sm:h-3.5 text-slate-400 transition-transform shrink-0", !isCollapsed && "rotate-90")} />
-                          <FolderKanban className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-[#0069AF] shrink-0" />
-                          <span className="font-semibold text-sm sm:text-xs text-slate-700 dark:text-slate-200 truncate flex-1 min-w-0">
+                          <ChevronRight className={cn("w-4 h-4 sm:w-3.5 sm:h-3.5 text-muted-foreground transition-transform shrink-0", !isCollapsed && "rotate-90")} />
+                          <FolderKanban className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-primary shrink-0" />
+                          <span className="font-semibold text-sm sm:text-xs text-foreground truncate flex-1 min-w-0">
                             {getProjectName(projectId)}
                           </span>
                           {getProjectNumber(projectId) && (
                             <span className="px-1.5 py-0.5 bg-slate-700 text-white rounded text-[9px] font-mono shrink-0">#{getProjectNumber(projectId)}</span>
                           )}
-                          <span className="text-[11px] sm:text-[10px] text-slate-400 shrink-0">{projectTasks.length}</span>
+                          <span className="text-[11px] sm:text-[10px] text-muted-foreground shrink-0">{projectTasks.length}</span>
                         </div>
 
                         {/* Tasks in this project */}
@@ -878,11 +836,13 @@ export default function AllTasks() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-12 text-center"
+                className="bg-card rounded-2xl border border-border"
               >
-                <ListTodo className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No active tasks found</h3>
-                <p className="text-slate-500 dark:text-slate-400">Try adjusting your filters or create a new task in a project</p>
+                <EmptyState
+                  icon={ListTodo}
+                  title="No active tasks found"
+                  description="Try adjusting your filters or create a new task in a project"
+                />
               </motion.div>
             )}
 
@@ -891,7 +851,7 @@ export default function AllTasks() {
               <div>
                 <button
                   onClick={() => setShowCompletedTasks(!showCompletedTasks)}
-                  className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-700 mb-2 transition-colors"
+                  className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mb-2 transition-colors"
                 >
                   {showCompletedTasks ? (
                     <ChevronDown className="w-4 h-4" />
@@ -908,13 +868,13 @@ export default function AllTasks() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
+                      className="bg-card rounded-2xl border border-border overflow-hidden"
                     >
                       {completedTasks.map((task) => (
                         <div
                           key={task.id}
                           onClick={() => navigate(createPageUrl('ProjectTasks') + `?id=${task.project_id}`)}
-                          className="flex items-center gap-2 px-3 py-2 border-b border-slate-50 dark:border-slate-700/30 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer group"
+                          className="flex items-center gap-2 px-3 py-2 border-b border-border hover:bg-muted/50 dark:hover:bg-muted/30 transition-all duration-200 cursor-pointer group"
                         >
                           <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                           <span className="text-sm text-slate-400 line-through truncate flex-1">{task.title}</span>
@@ -946,7 +906,7 @@ export default function AllTasks() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-4 mb-6"
+            className="bg-card rounded-2xl border border-border p-4 mb-6"
           >
             {/* Status Pills Row */}
             <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
@@ -976,8 +936,8 @@ export default function AllTasks() {
                       className={cn(
                         "flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
                         statusFilter === s.key
-                          ? "bg-[#0F2F44] text-white"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          ? "bg-primary text-white"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
                       )}
                     >
                       <Package className="w-3.5 h-3.5" />
@@ -1017,10 +977,10 @@ export default function AllTasks() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden"
+                className="bg-card rounded-2xl border border-border overflow-hidden"
               >
                 {/* Table header */}
-                <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-[#151d2b] border-b border-slate-200 dark:border-slate-700/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 dark:bg-background border-b border-border text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                   <div className="w-4 shrink-0" />
                   <div className="flex-1">Part</div>
                   <div className="hidden sm:block w-[180px] shrink-0">Project</div>
@@ -1045,22 +1005,22 @@ export default function AllTasks() {
                       <div key={projectId}>
                         {/* Project group header */}
                         <div
-                          className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-[#1a2535] border-b border-slate-100 dark:border-slate-700/30 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-colors"
+                          className="flex items-center gap-2 px-3 py-1.5 bg-muted/30 dark:bg-card border-b border-border cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors"
                           onClick={() => setExpandedGroups(prev => ({ ...prev, [`parts_${projectId}`]: prev[`parts_${projectId}`] === false ? true : false }))}
                         >
-                          <ChevronRight className={cn("w-3.5 h-3.5 text-slate-400 transition-transform", !isCollapsed && "rotate-90")} />
-                          <FolderKanban className="w-3.5 h-3.5 text-[#0F2F44]" />
+                          <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", !isCollapsed && "rotate-90")} />
+                          <FolderKanban className="w-3.5 h-3.5 text-primary" />
                           <Link
                             to={createPageUrl('ProjectParts') + `?id=${projectId}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="font-semibold text-xs text-slate-700 dark:text-slate-200 hover:text-[#0069AF] truncate"
+                            className="font-semibold text-xs text-foreground hover:text-primary truncate"
                           >
                             {getProjectName(projectId)}
                           </Link>
                           {getProjectNumber(projectId) && (
                             <span className="px-1.5 py-0 bg-slate-700 text-white rounded text-[9px] font-mono shrink-0">#{getProjectNumber(projectId)}</span>
                           )}
-                          <span className="text-[10px] text-slate-400 ml-auto shrink-0">{projectParts.length} part{projectParts.length !== 1 ? 's' : ''}</span>
+                          <span className="text-[10px] text-muted-foreground ml-auto shrink-0">{projectParts.length} part{projectParts.length !== 1 ? 's' : ''}</span>
                         </div>
 
                         {/* Parts in this project */}
@@ -1089,17 +1049,17 @@ export default function AllTasks() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white dark:bg-[#1e2a3a] rounded-2xl border border-slate-100 dark:border-slate-700/50 p-12 text-center"
+                className="bg-card rounded-2xl border border-border"
               >
-                <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No parts found</h3>
-                <p className="text-slate-500 dark:text-slate-400">{statusFilter !== 'all' ? 'Try adjusting your filters' : 'Parts will appear here when added to active projects'}</p>
+                <EmptyState
+                  icon={Package}
+                  title="No parts found"
+                  description={statusFilter !== 'all' ? 'Try adjusting your filters' : 'Parts will appear here when added to active projects'}
+                />
               </motion.div>
             )}
           </div>
         )}
-      </div>
-
-    </div>
+    </PageShell>
   );
 }
