@@ -987,8 +987,19 @@ export default function Dashboard() {
         {/* -- BELOW FOLD: Tabbed Widget Card -- */}
         {(() => {
           const healthCount = activeProjects.filter(p => p.status === 'on_hold').length + activeProjects.filter(p => { if (!p.due_date) return false; const d = parseLocalDate(p.due_date); return d && isPast(d) && !isToday(d); }).length;
+          const myParts = activeParts.filter(p => p.assigned_to === currentUser?.email && p.status !== 'installed');
+          const upcomingDeadlines = [...activeTasks, ...activeProjects].filter(item => {
+            if (item.status === 'completed' || item.status === 'archived') return false;
+            if (!item.due_date) return false;
+            const d = parseLocalDate(item.due_date);
+            if (!d) return false;
+            const daysUntil = differenceInDays(d, new Date());
+            return daysUntil >= 0 && daysUntil <= 7;
+          }).sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
           const widgetTabs = [
             { id: 'tasks', label: 'My Tasks', icon: ListTodo, badge: myUrgentTasks.length > 0 ? myUrgentTasks.length : null },
+            { id: 'parts', label: 'My Parts', icon: Box, badge: myParts.length > 0 ? myParts.length : null },
+            { id: 'deadlines', label: 'Deadlines', icon: Clock, badge: upcomingDeadlines.length > 0 ? upcomingDeadlines.length : null },
             { id: 'activity', label: 'Activity', icon: ActivityIcon, badge: missedNotifications.length > 0 ? missedNotifications.length : null },
             { id: 'health', label: 'Attention', icon: AlertTriangle, badge: healthCount > 0 ? healthCount : null },
           ];
@@ -1036,6 +1047,63 @@ export default function Dashboard() {
                     onTaskComplete={handleTaskComplete}
                     inline
                   />
+                )}
+                {activeWidget === 'parts' && (
+                  <div className="space-y-2">
+                    {myParts.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-8">No parts assigned to you</p>
+                    ) : (
+                      myParts.slice(0, 10).map(part => {
+                        const proj = projects.find(p => p.id === part.project_id);
+                        return (
+                          <Link key={part.id} to={createPageUrl('ProjectParts') + `?id=${part.project_id}`} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors group">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-foreground truncate">{part.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{proj?.name || 'Unknown project'}</p>
+                            </div>
+                            <span className={cn(
+                              "text-xs font-semibold px-2 py-0.5 rounded-md capitalize",
+                              part.status === 'needed' ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" :
+                              part.status === 'ordered' ? "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400" :
+                              part.status === 'ready_to_install' ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400" :
+                              "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                            )}>
+                              {part.status?.replace(/_/g, ' ')}
+                            </span>
+                          </Link>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+                {activeWidget === 'deadlines' && (
+                  <div className="space-y-2">
+                    {upcomingDeadlines.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-8">No deadlines in the next 7 days</p>
+                    ) : (
+                      upcomingDeadlines.slice(0, 10).map((item, i) => {
+                        const dueDate = parseLocalDate(item.due_date);
+                        const daysUntil = differenceInDays(dueDate, new Date());
+                        const isProject = !!item.client;
+                        return (
+                          <div key={item.id + '-' + i} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-foreground truncate">{item.name || item.title}</p>
+                              <p className="text-xs text-muted-foreground">{isProject ? 'Project' : 'Task'}</p>
+                            </div>
+                            <span className={cn(
+                              "text-xs font-semibold px-2 py-0.5 rounded-md",
+                              daysUntil === 0 ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
+                              daysUntil <= 2 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                              "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                            )}>
+                              {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days`}
+                            </span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 )}
                 {activeWidget === 'activity' && (
                   <ActivityTimeline
