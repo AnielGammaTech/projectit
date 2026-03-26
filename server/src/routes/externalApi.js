@@ -179,7 +179,7 @@ router.get('/projects', async (req, res) => {
       try {
         const customers = await entityService.filter('Customer', { id: cid });
         if (customers[0]) {
-          customerNameMap.set(cid, customers[0].name || customers[0].company_name || '');
+          customerNameMap.set(cid, customers[0].company || customers[0].name || '');
         }
       } catch { /* skip unresolvable */ }
     }
@@ -247,7 +247,7 @@ router.get('/projects/:id', async (req, res) => {
     if (!customerName && project.customer_id) {
       try {
         const customers = await entityService.filter('Customer', { id: project.customer_id });
-        customerName = customers[0]?.name || customers[0]?.company_name || '';
+        customerName = customers[0]?.company || customers[0]?.name || '';
       } catch { /* skip */ }
     }
 
@@ -334,9 +334,9 @@ router.get('/customers', async (req, res) => {
     }
 
     const customers = allCustomers
-      .filter(c => c.name || c.company_name)
+      .filter(c => c.company || c.name)
       .map(c => ({
-        name: c.name || c.company_name || '',
+        name: c.company || c.name || '',
         customer_id: c.id,
         halo_id: c.halo_id || null,
         project_count: projectCounts.get(c.id) || 0,
