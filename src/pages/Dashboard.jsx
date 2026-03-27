@@ -932,6 +932,16 @@ export default function Dashboard() {
         </div>
 
 
+        {/* Greeting — mobile only */}
+        {isMobile && currentUser && (
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-foreground">
+              Hi, {currentUser.full_name?.split(' ')[0] || 'there'}
+            </h2>
+            <p className="text-xs text-muted-foreground">Here's your overview for today</p>
+          </div>
+        )}
+
         {/* -- TOP ZONE: KPIs -- */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
           <StatsCard
@@ -1004,16 +1014,18 @@ export default function Dashboard() {
           );
         })()}
 
-        {/* -- TOP ZONE: Incoming Quotes -- */}
-        <div className="mb-6">
-          <IncomingQuoteBanner
-            quotes={incomingQuotes}
-            onCreateProject={handleCreateProjectFromQuote}
-            onDismiss={handleDismissQuote}
-            onSync={handleSyncQuotes}
-            isSyncing={isSyncingQuotes}
-          />
-        </div>
+        {/* -- TOP ZONE: Incoming Quotes — desktop only -- */}
+        {!isMobile && (
+          <div className="mb-6">
+            <IncomingQuoteBanner
+              quotes={incomingQuotes}
+              onCreateProject={handleCreateProjectFromQuote}
+              onDismiss={handleDismissQuote}
+              onSync={handleSyncQuotes}
+              isSyncing={isSyncingQuotes}
+            />
+          </div>
+        )}
 
         {/* -- BELOW FOLD: Tabbed Widget Card -- */}
         {(() => {
@@ -1268,17 +1280,25 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Mobile filter pills */}
+            {/* Filter pills */}
             {!showArchived && (
-              <div className="flex items-center gap-2 mb-3 overflow-x-auto no-scrollbar -mx-1 px-1">
+              <div className="flex items-center gap-1.5 mb-3 overflow-x-auto no-scrollbar">
                 {/* Status filter */}
                 <select
                   value={projectStatusFilter}
                   onChange={(e) => setProjectStatusFilter(e.target.value)}
-                  className="text-xs font-medium px-3 py-1.5 rounded-lg bg-muted text-muted-foreground border-0 appearance-none cursor-pointer focus:ring-0"
+                  className={cn(
+                    "text-[11px] font-medium pl-2.5 pr-6 py-1.5 rounded-lg border-0 appearance-none cursor-pointer focus:ring-0 shrink-0 bg-[length:12px] bg-[right_6px_center] bg-no-repeat",
+                    projectStatusFilter !== 'all' ? "bg-[#0F2F44] text-white" : "bg-muted text-muted-foreground"
+                  )}
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${projectStatusFilter !== 'all' ? 'white' : '%23999'}' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
                 >
-                  <option value="all">All Status</option>
-                  {customStatuses.map(s => (
+                  <option value="all">Status</option>
+                  {(customStatuses.length > 0 ? customStatuses : [
+                    { key: 'planning', label: 'Planning' },
+                    { key: 'in_progress', label: 'In Progress' },
+                    { key: 'on_hold', label: 'On Hold' },
+                  ]).map(s => (
                     <option key={s.key} value={s.key}>{s.label}</option>
                   ))}
                 </select>
@@ -1286,17 +1306,33 @@ export default function Dashboard() {
                 <select
                   value={projectLeadFilter}
                   onChange={(e) => setProjectLeadFilter(e.target.value)}
-                  className="text-xs font-medium px-3 py-1.5 rounded-lg bg-muted text-muted-foreground border-0 appearance-none cursor-pointer focus:ring-0"
+                  className={cn(
+                    "text-[11px] font-medium pl-2.5 pr-6 py-1.5 rounded-lg border-0 appearance-none cursor-pointer focus:ring-0 shrink-0 bg-[length:12px] bg-[right_6px_center] bg-no-repeat",
+                    projectLeadFilter !== 'all' ? "bg-[#0F2F44] text-white" : "bg-muted text-muted-foreground"
+                  )}
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${projectLeadFilter !== 'all' ? 'white' : '%23999'}' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
                 >
-                  <option value="all">All Leads</option>
+                  <option value="all">Lead</option>
                   {teamMembers.filter(m => activeProjects.some(p => p.project_lead === m.email)).map(m => (
-                    <option key={m.id} value={m.email}>{m.name}</option>
+                    <option key={m.id} value={m.email}>{m.name?.split(' ')[0]}</option>
                   ))}
                 </select>
-                {(projectStatusFilter !== 'all' || projectLeadFilter !== 'all') && (
+                {/* Client filter */}
+                <select
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="text-[11px] font-medium pl-2.5 pr-6 py-1.5 rounded-lg bg-muted text-muted-foreground border-0 appearance-none cursor-pointer focus:ring-0 shrink-0 bg-[length:12px] bg-[right_6px_center] bg-no-repeat"
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
+                >
+                  <option value="">Client</option>
+                  {[...new Set(activeProjects.map(p => p.client).filter(Boolean))].sort().map(client => (
+                    <option key={client} value={client}>{client.length > 20 ? client.slice(0, 20) + '...' : client}</option>
+                  ))}
+                </select>
+                {(projectStatusFilter !== 'all' || projectLeadFilter !== 'all' || searchQuery) && (
                   <button
-                    onClick={() => { setProjectStatusFilter('all'); setProjectLeadFilter('all'); }}
-                    className="text-xs text-muted-foreground hover:text-foreground shrink-0 px-2 py-1.5"
+                    onClick={() => { setProjectStatusFilter('all'); setProjectLeadFilter('all'); setSearchQuery(''); }}
+                    className="text-xs text-muted-foreground hover:text-foreground shrink-0 p-1.5 rounded-lg hover:bg-muted"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
