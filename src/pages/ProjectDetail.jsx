@@ -183,7 +183,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
             const assigneeName = assignee?.name || (t.assigned_to ? t.assigned_to.split('@')[0] : null);
             const dueInfo = getDueDateLabel(t.due_date);
             return (
-              <div key={t.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-blue-50/60 dark:hover:bg-blue-900/20 transition-colors">
+              <Link key={t.id} to={createPageUrl('ProjectTasks') + `?id=${projectId}&task=${t.id}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-blue-50/60 dark:hover:bg-blue-900/20 transition-colors cursor-pointer">
                 <div className={cn("w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0",
                   t.status === 'in_progress' ? "border-blue-400" : t.status === 'review' ? "border-amber-400" : "border-slate-300")}>
                   {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
@@ -199,7 +199,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
                 {dueInfo && (
                   <span className={cn("text-[9px] font-semibold shrink-0", dueInfo.color)}>{dueInfo.text}</span>
                 )}
-              </div>
+              </Link>
             );
           }) : (
             <p className="text-xs text-muted-foreground text-center py-3">No active tasks</p>
