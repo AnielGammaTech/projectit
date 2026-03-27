@@ -14,11 +14,13 @@ import {
   Send, Calendar as CalendarIcon, Edit2, Trash2, Paperclip, X,
   FileText, Image, Loader2, Check, MoreHorizontal, Bell,
   User, Clock, Flag, MessageSquare, ChevronDown, ChevronUp,
-  ListChecks, Plus, GripVertical, Notebook, StickyNote
+  ListChecks, Plus, GripVertical, Notebook, StickyNote, Camera as CameraIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/UserAvatar';
 import { sendTaskAssignmentNotification } from '@/utils/notifications';
+import { useNativeCamera } from '@/hooks/useNativeCamera';
+import { useHaptics } from '@/hooks/useHaptics';
 
 const priorityConfig = {
   low: { label: 'Low', color: 'text-slate-500', bg: 'bg-slate-100', dot: 'bg-slate-400' },
@@ -55,6 +57,8 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   const commentFileInputRef = useRef(null);
   const taskFileInputRef = useRef(null);
   const queryClient = useQueryClient();
+  const { takePhoto, pickFromGallery, isNativeCamera } = useNativeCamera();
+  const { success: hapticSuccess, tapLight } = useHaptics();
 
   useEffect(() => { if (task) { setNotes(task.notes || ''); setNotifyOnComplete(task.notify_on_complete || []); setChecklistItems(task.checklist_items || []); } }, [task?.id]);
 
@@ -79,7 +83,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   });
 
   const handleUpdateTask = async (updates) => { await api.entities.Task.update(task.id, updates); queryClient.invalidateQueries({ queryKey: ['tasks'] }); };
-  const handleStatusToggle = async () => { const newStatus = task.status === 'completed' ? 'todo' : 'completed'; await handleUpdateTask({ status: newStatus }); };
+  const handleStatusToggle = async () => { const newStatus = task.status === 'completed' ? 'todo' : 'completed'; if (newStatus === 'completed') await hapticSuccess(); else await tapLight(); await handleUpdateTask({ status: newStatus }); };
   const handleStatusChange = async (status) => { await handleUpdateTask({ status }); setShowStatusDropdown(false); };
 
   const handleAssign = async (email) => {

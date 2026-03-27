@@ -6,6 +6,8 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { isNative } from '@/lib/capacitor';
 
 const Dialog = DialogPrimitive.Root
 
@@ -57,6 +59,10 @@ const DialogContent = React.forwardRef(({ className, children, hideCloseOnMobile
     if (!contentRef.current) return
     contentRef.current.style.transition = 'transform 0.2s ease-out'
     if (touchDeltaY.current > 100) {
+      // Haptic feedback on dismiss
+      if (isNative()) {
+        Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+      }
       // Dismiss — find and click the close button
       const closeBtn = contentRef.current.querySelector('[data-dialog-close]')
       if (closeBtn) closeBtn.click()
