@@ -307,27 +307,45 @@ function LayoutContent({ children, currentPageName }) {
               <Calendar className="w-5 h-5 text-white/70" />
             </Link>
 
-            {/* Notifications Bell */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  className={cn(
-                    "relative p-2 rounded-lg transition-colors",
-                    unreadCount > 0 ? "bg-white/15 hover:bg-white/25" : "hover:bg-white/10"
-                  )}
-                >
-                  <Bell className={cn("w-5 h-5", unreadCount > 0 ? "text-white" : "text-white/70")} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[20px] text-center ring-2 ring-[#133F5C] animate-pulse">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="end" sideOffset={8} className="w-auto p-0 border-slate-200 dark:border-border shadow-xl">
-                <NotificationPanel currentUser={currentUser} onClose={() => {}} />
-              </PopoverContent>
-            </Popover>
+            {/* Notifications Bell — mobile: navigate to page, desktop: popover */}
+            <div className="sm:hidden">
+              <Link
+                to={createPageUrl('MyNotifications')}
+                className={cn(
+                  "relative p-2 rounded-lg transition-colors block",
+                  unreadCount > 0 ? "bg-white/15" : "hover:bg-white/10"
+                )}
+              >
+                <Bell className={cn("w-5 h-5", unreadCount > 0 ? "text-white" : "text-white/70")} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[20px] text-center ring-2 ring-[#133F5C] animate-pulse">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            </div>
+            <div className="hidden sm:block">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className={cn(
+                      "relative p-2 rounded-lg transition-colors",
+                      unreadCount > 0 ? "bg-white/15 hover:bg-white/25" : "hover:bg-white/10"
+                    )}
+                  >
+                    <Bell className={cn("w-5 h-5", unreadCount > 0 ? "text-white" : "text-white/70")} />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[20px] text-center ring-2 ring-[#133F5C] animate-pulse">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" sideOffset={8} className="w-auto p-0 border-slate-200 dark:border-border shadow-xl">
+                  <NotificationPanel currentUser={currentUser} onClose={() => {}} />
+                </PopoverContent>
+              </Popover>
+            </div>
 
             {/* User Menu */}
             <DropdownMenu>
