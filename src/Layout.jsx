@@ -364,41 +364,44 @@ function LayoutContent({ children, currentPageName }) {
                   <>
                     <DropdownMenuSeparator />
                     <div className="py-1">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <div className="flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm">
-                            <div className="flex items-center">
-                              <TrendingUp className="w-4 h-4 mr-2 text-indigo-500" />
-                              TV Dashboards
+                      {/* TV Dashboards & Workflows — desktop only */}
+                      <div className="hidden sm:block">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <div className="flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm">
+                              <div className="flex items-center">
+                                <TrendingUp className="w-4 h-4 mr-2 text-indigo-500" />
+                                TV Dashboards
+                              </div>
+                              <ChevronDown className="w-3 h-3 ml-2" />
                             </div>
-                            <ChevronDown className="w-3 h-3 ml-2" />
-                          </div>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent side="left" align="start" className="rounded-xl">
-                          <DropdownMenuItem asChild>
-                            <Link to={createPageUrl('ManagerDashboard')} className="cursor-pointer">
-                              <Activity className="w-4 h-4 mr-2 text-indigo-500" />
-                              Manager Dashboard
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to={createPageUrl('TechDashboard')} className="cursor-pointer">
-                              <Clock className="w-4 h-4 mr-2 text-emerald-500" />
-                              Tech Dashboard
-                            </Link>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent side="left" align="start" className="rounded-xl">
+                            <DropdownMenuItem asChild>
+                              <Link to={createPageUrl('ManagerDashboard')} className="cursor-pointer">
+                                <Activity className="w-4 h-4 mr-2 text-indigo-500" />
+                                Manager Dashboard
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link to={createPageUrl('TechDashboard')} className="cursor-pointer">
+                                <Clock className="w-4 h-4 mr-2 text-emerald-500" />
+                                Tech Dashboard
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <DropdownMenuItem asChild>
+                          <Link to={createPageUrl('Workflows')} className="cursor-pointer">
+                            <Zap className="w-4 h-4 mr-2 text-amber-500" />
+                            Workflows
+                          </Link>
+                        </DropdownMenuItem>
+                      </div>
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl('Adminland')} className="cursor-pointer">
                           <Shield className="w-4 h-4 mr-2 text-[#0069AF]" />
                           Adminland
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to={createPageUrl('Workflows')} className="cursor-pointer">
-                          <Zap className="w-4 h-4 mr-2 text-amber-500" />
-                          Workflows
                         </Link>
                       </DropdownMenuItem>
                     </div>
@@ -518,8 +521,10 @@ function LayoutContent({ children, currentPageName }) {
                 )}
               </AnimatePresence>
 
-      {/* Floating Feedback Button */}
-      <FeedbackButton />
+      {/* Floating Feedback Button — desktop only */}
+      <div className="hidden lg:block">
+        <FeedbackButton />
+      </div>
 
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-card/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-border z-40 pb-safe rounded-t-2xl">
@@ -547,11 +552,11 @@ function LayoutContent({ children, currentPageName }) {
         </div>
       </nav>
 
-      {/* Floating Adminland Button - visible only to admins, hidden on Adminland page, adjusted for mobile */}
+      {/* Floating Adminland Button - desktop only, admins only */}
       {isAdmin && currentPageName !== 'Adminland' && (
         <Link
           to={createPageUrl('Adminland')}
-          className="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 z-50 w-11 h-11 lg:w-12 lg:h-12 bg-[#0069AF] hover:bg-[#0F2F44] text-white rounded-full shadow-lg shadow-[#0069AF]/30 flex items-center justify-center transition-all hover:scale-110 hover:shadow-xl"
+          className="hidden lg:flex fixed bottom-6 right-6 z-50 w-12 h-12 bg-[#0069AF] hover:bg-[#0F2F44] text-white rounded-full shadow-lg shadow-[#0069AF]/30 items-center justify-center transition-all hover:scale-110 hover:shadow-xl"
           title="Adminland"
         >
           <Shield className="w-5 h-5" />
