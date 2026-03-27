@@ -10,33 +10,29 @@ export function usePushNotifications({ userEmail, onNotificationReceived, onNoti
     if (!isNative() || !userEmail || registeredRef.current) return;
 
     let registrationListener;
+    let errorListener;
     let receivedListener;
     let actionListener;
 
     async function setup() {
-      // Listen for registration errors
-      await PushNotifications.addListener('registrationError', (error) => {
-        console.error('Push registration error:', JSON.stringify(error));
+      errorListener = await PushNotifications.addListener('registrationError', () => {
+        // Silent — push not available on this device
       });
 
       const permResult = await PushNotifications.requestPermissions();
-      console.log('Push permission result:', JSON.stringify(permResult));
       if (permResult.receive !== 'granted') return;
 
       await PushNotifications.register();
-      console.log('Push register called');
 
       registrationListener = await PushNotifications.addListener('registration', async (token) => {
-        console.log('Got device token:', token.value?.substring(0, 20) + '...');
         registeredRef.current = true;
         try {
-          const result = await api.integrations.Core.RegisterDeviceToken({
+          await api.integrations.Core.RegisterDeviceToken({
             token: token.value,
             platform: 'ios',
           });
-          console.log('Device token registered:', JSON.stringify(result));
-        } catch (err) {
-          console.error('Failed to register device token:', err);
+        } catch (_) {
+          // Non-critical — app works without push
         }
       });
 
@@ -57,6 +53,7 @@ export function usePushNotifications({ userEmail, onNotificationReceived, onNoti
 
     return () => {
       registrationListener?.remove();
+      errorListener?.remove();
       receivedListener?.remove();
       actionListener?.remove();
     };

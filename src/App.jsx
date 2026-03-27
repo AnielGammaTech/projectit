@@ -51,7 +51,8 @@ const AuthenticatedApp = () => {
     userEmail: user?.email,
     onNotificationTapped: (notification) => {
       const link = notification?.data?.link;
-      if (link) {
+      // Only allow relative paths — prevent open redirect attacks
+      if (link && link.startsWith('/')) {
         window.location.href = link;
       }
     },
