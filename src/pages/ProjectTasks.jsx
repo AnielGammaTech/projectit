@@ -1023,80 +1023,43 @@ export default function ProjectTasks() {
           </div>
         </div>
 
-        {/* Desktop: Rich Stats Header Card */}
-        <div className="hidden sm:block bg-card rounded-2xl border border-slate-200 dark:border-border shadow-sm overflow-hidden mb-6">
-          {/* Gradient accent bar */}
-          <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
-          <div className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
-                  <ListTodo className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-foreground">Tasks</h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground">{completedTasks}/{totalTasks} completed</p>
-                </div>
-              </div>
+        {/* Desktop: Compact Header */}
+        <div className="hidden sm:flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/50 dark:shadow-blue-900/30">
+              <ListTodo className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-foreground">Tasks</h2>
               <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
-                  size="sm"
-                  className="bg-primary hover:bg-primary/80 text-white h-9 sm:h-10"
-                >
-                  <Plus className="w-4 h-4 mr-1.5" />
-                  Add Task
-                </Button>
-                <Button
-                  onClick={() => setShowGroupModal(true)}
-                  variant="outline"
-                  size="sm"
-                  className="border-primary/20 text-primary hover:bg-primary/5 h-9 sm:h-10"
-                >
-                  <FolderPlus className="w-4 h-4 mr-1.5" />
-                  New Group
-                </Button>
+                <span className="text-xs text-muted-foreground">{completedTasks} of {totalTasks} completed</span>
+                {totalTasks > 0 && (
+                  <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all" style={{ width: `${progressPercent}%` }} />
+                  </div>
+                )}
+                <span className="text-xs font-semibold text-primary">{progressPercent}%</span>
               </div>
             </div>
-
-            {/* Progress bar */}
-            <div className="mt-4">
-              <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressPercent}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut' }}
-                />
-              </div>
-            </div>
-
-            {/* Stat chips */}
-            <div className="flex flex-wrap items-center gap-2 mt-3">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg">
-                <span className="text-xs text-slate-500">Total</span>
-                <span className="text-sm font-semibold text-slate-700">{totalTasks}</span>
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-lg">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                <span className="text-xs text-blue-600">In Progress</span>
-                <span className="text-sm font-semibold text-blue-700">{inProgressTasks}</span>
-              </div>
-              {overdueTasks > 0 && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 rounded-lg">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                  <span className="text-xs text-red-600">Overdue</span>
-                  <span className="text-sm font-semibold text-red-700">{overdueTasks}</span>
-                </div>
-              )}
-              {todayTasks > 0 && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-lg">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  <span className="text-xs text-amber-600">Due Today</span>
-                  <span className="text-sm font-semibold text-amber-700">{todayTasks}</span>
-                </div>
-              )}
-            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={() => { setEditingTask(null); setShowTaskModal(true); }}
+              className="bg-primary hover:bg-primary/80 text-white h-9 gap-1.5"
+            >
+              <Plus className="w-4 h-4" />
+              Add Task
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowGroupModal(true)}
+              className="h-9 gap-1.5"
+            >
+              <FolderPlus className="w-4 h-4" />
+              New Group
+            </Button>
           </div>
         </div>
 
