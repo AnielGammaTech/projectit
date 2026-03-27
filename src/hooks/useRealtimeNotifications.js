@@ -24,7 +24,7 @@ export function useRealtimeNotifications(userEmail) {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'user_notifications',
+          table: 'UserNotification',
           filter: `user_email=eq.${userEmail}`,
         },
         () => {
@@ -38,7 +38,7 @@ export function useRealtimeNotifications(userEmail) {
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'user_notifications',
+          table: 'UserNotification',
           filter: `user_email=eq.${userEmail}`,
         },
         () => {
