@@ -147,6 +147,13 @@ const integrations = {
       return res.json();
     },
 
+    async RegisterDeviceToken({ token, platform }) {
+      return apiFetch('/api/integrations/register-device-token', {
+        method: 'POST',
+        body: JSON.stringify({ token, platform }),
+      });
+    },
+
     async SendEmail(params) {
       return apiFetch('/api/integrations/send-email', {
         method: 'POST',
