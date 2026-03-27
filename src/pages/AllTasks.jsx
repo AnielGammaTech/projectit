@@ -827,12 +827,16 @@ export default function AllTasks() {
                               {project?.client && (
                                 <span className="truncate max-w-[120px]">{project.client}</span>
                               )}
-                              {project?.lead_name && (
-                                <span className="flex items-center gap-1">
-                                  <span className="w-3.5 h-3.5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px] font-bold">{project.lead_name[0]}</span>
-                                  {project.lead_name.split(' ')[0]}
-                                </span>
-                              )}
+                              {project?.project_lead && (() => {
+                                const leadMember = teamMembers.find(m => m.email === project.project_lead);
+                                const leadName = leadMember?.name || project.project_lead.split('@')[0];
+                                return (
+                                  <span className="flex items-center gap-1">
+                                    <span className="w-3.5 h-3.5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px] font-bold">{leadName[0]?.toUpperCase()}</span>
+                                    {leadName.split(' ')[0]}
+                                  </span>
+                                );
+                              })()}
                             </div>
                           </div>
                           {/* Task counts */}

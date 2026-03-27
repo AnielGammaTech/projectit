@@ -835,7 +835,7 @@ export default function Customers() {
             return (
               <>
                 {/* Hero Header */}
-                <div className="bg-primary px-4 sm:px-6 pt-3 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden rounded-t-2xl sm:rounded-t-2xl">
+                <div className="bg-[#0F2F44] dark:bg-[#0F2F44] px-4 sm:px-6 pt-3 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden rounded-t-2xl sm:rounded-t-2xl">
                   <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
                   <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-white/10 rounded-full" />
                   <div className="relative z-10">
