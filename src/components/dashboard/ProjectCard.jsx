@@ -331,7 +331,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
                 ) : null;
               })()}
               <span className="text-[10px] text-muted-foreground ml-auto">{completedTasks}/{totalTasks}</span>
-              {project.team_members?.length > 0 && <span className="text-[10px] text-muted-foreground">{project.team_members.length}👤</span>}
+              {project.team_members?.length > 0 && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">{project.team_members.length}<Users className="w-3 h-3" /></span>}
             </div>
             <h3 className="text-sm font-semibold text-foreground line-clamp-1">{project.name}</h3>
             <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
