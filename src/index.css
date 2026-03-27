@@ -239,16 +239,20 @@ html {
   overscroll-behavior-y: contain;
 }
 
-/* ── PWA standalone mode adjustments ── */
-@media (display-mode: standalone) {
-  /* Extra top padding for standalone PWA (no browser chrome) */
+/* ── Safe area adjustments for native app + PWA standalone ── */
+/* Always apply safe area insets — works in Capacitor native + PWA standalone */
+@supports (padding: env(safe-area-inset-top)) {
   header {
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  /* Make bottom nav respect home indicator */
   nav.pb-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+  }
+
+  /* Offset main content for taller header */
+  main.pt-safe-header {
+    padding-top: calc(3.5rem + env(safe-area-inset-top, 0px));
   }
 }
 
