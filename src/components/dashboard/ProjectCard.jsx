@@ -330,6 +330,8 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
                   </span>
                 ) : null;
               })()}
+              <span className="text-[10px] text-muted-foreground ml-auto">{completedTasks}/{totalTasks}</span>
+              {project.team_members?.length > 0 && <span className="text-[10px] text-muted-foreground">{project.team_members.length}👤</span>}
             </div>
             <h3 className="text-sm font-semibold text-foreground line-clamp-1">{project.name}</h3>
             <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
@@ -344,10 +346,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
             {project.description && (
               <p className="text-[11px] text-muted-foreground line-clamp-1 mt-1">{project.description}</p>
             )}
-            <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
-              <span>{completedTasks}/{totalTasks} tasks</span>
-              {project.team_members?.length > 0 && <span>{project.team_members.length} members</span>}
-            </div>
+            {/* Tasks/members shown in header row on mobile */}
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground mt-1 shrink-0" />
         </div>
