@@ -10,7 +10,7 @@ const VALID_ENTITIES = new Set([
   'ProjectTag', 'ProjectTemplate', 'Proposal', 'ProposalSettings', 'QuoteRequest',
   'SavedReport', 'Service', 'ServiceBundle', 'Site', 'Task', 'TaskComment', 'Ticket',
   'TaskGroup', 'TeamMember', 'TimeEntry', 'Tool', 'ToolTransaction',
-  'UserGroup', 'UserNotification',
+  'DeviceToken', 'UserGroup', 'UserNotification',
   'UserSecuritySettings', 'UserSession', 'ApiKey', 'Workflow', 'WorkflowLog',
 ]);
 

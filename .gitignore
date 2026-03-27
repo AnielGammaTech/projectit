@@ -32,3 +32,4 @@ dist-ssr
 ios/App/App/public
 ios/App/Pods
 ios/App/DerivedData
+*.p8

@@ -81,6 +81,19 @@ export default async function handler(req, res) {
     });
 
     console.log(`Notification email sent to ${to}: ${title}`);
+
+    // Also send push notification to mobile devices
+    try {
+      const { sendPushNotification } = await import('../../services/pushService.js');
+      await sendPushNotification(to, {
+        title: title,
+        body: message,
+        data: { link, type, projectId, projectName },
+      });
+    } catch (pushErr) {
+      console.warn('Push notification failed (non-blocking):', pushErr.message);
+    }
+
     return res.json({ success: true });
   } catch (error) {
     console.error('Notification email error:', error);
