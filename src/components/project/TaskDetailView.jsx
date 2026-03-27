@@ -149,11 +149,16 @@ export default function TaskDetailView({
   return (
     <div className="flex flex-col h-full -mt-2">
       {/* Header */}
-      <div className="pb-4 border-b border">
-        <h2 className="text-xl font-bold text-foreground mb-3">{task.title}</h2>
+      <div className="pb-4 sm:pb-4 pb-5 border-b border-border">
+        <h2 className="text-xl font-bold text-foreground mb-1 sm:mb-3">{task.title}</h2>
+        {task.created_date && (
+          <p className="text-xs text-muted-foreground mb-3 sm:mb-3">
+            Created {formatDistanceToNow(new Date(task.created_date), { addSuffix: true })}
+          </p>
+        )}
 
-        {/* Inline Editable Badges */}
-        <div className="flex flex-wrap gap-2">
+        {/* Desktop inline badges — hidden on mobile */}
+        <div className="hidden sm:flex flex-wrap gap-2">
           {/* Status */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -188,25 +193,118 @@ export default function TaskDetailView({
         </div>
       </div>
 
+      {/* Mobile details card — visible only on mobile */}
+      <div className="sm:hidden rounded-xl border border-border bg-muted/30 p-3 space-y-3 my-4">
+        {/* Status row */}
+        <div className="flex items-center justify-between min-h-[44px]">
+          <span className="text-xs font-medium text-muted-foreground">Status</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80 transition-opacity min-h-[44px] flex items-center", status.color)}>
+                {status.label}
+              </Badge>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {Object.entries(statusConfig).map(([key, config]) => (
+                <DropdownMenuItem key={key} onClick={() => onStatusChange(key)}>
+                  <Badge className={cn("mr-2", config.color)}>{config.label}</Badge>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="border-t border-border" />
+
+        {/* Assignee row */}
+        <div className="flex items-center justify-between min-h-[44px]">
+          <span className="text-xs font-medium text-muted-foreground">Assignee</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              {task.assigned_name ? (
+                <button className="flex items-center gap-2 hover:bg-muted rounded-lg px-2 py-1.5 transition-colors min-h-[44px]">
+                  <UserAvatar
+                    email={task.assigned_to}
+                    name={task.assigned_name}
+                    avatarUrl={teamMembers.find(m => m.email === task.assigned_to)?.avatar_url}
+                    size="sm"
+                  />
+                  <span className="font-medium text-foreground text-sm">{task.assigned_name}</span>
+                </button>
+              ) : (
+                <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg border border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 hover:bg-muted transition-all text-muted-foreground min-h-[44px]">
+                  <UserPlus className="w-4 h-4" />
+                  <span className="text-sm">Unassigned</span>
+                </button>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {task.assigned_to && (
+                <DropdownMenuItem onClick={handleUnassign} className="text-muted-foreground">
+                  <User className="w-4 h-4 mr-2" />
+                  Unassign
+                </DropdownMenuItem>
+              )}
+              {teamMembers.map((member) => (
+                <DropdownMenuItem key={member.id} onClick={() => handleAssign(member.email)}>
+                  <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="xs" className="mr-2" />
+                  {member.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="border-t border-border" />
+
+        {/* Due Date row */}
+        <div className="flex items-center justify-between min-h-[44px]">
+          <span className="text-xs font-medium text-muted-foreground">Due Date</span>
+          {task.due_date ? (
+            <span className="font-medium text-foreground text-sm">{format(parseLocalDate(task.due_date), 'MMM d, yyyy')}</span>
+          ) : (
+            <span className="text-sm text-muted-foreground">No due date</span>
+          )}
+        </div>
+        <div className="border-t border-border" />
+
+        {/* Priority row */}
+        <div className="flex items-center justify-between min-h-[44px]">
+          <span className="text-xs font-medium text-muted-foreground">Priority</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Badge variant="outline" className={cn("cursor-pointer hover:opacity-80 transition-opacity min-h-[44px] flex items-center", priority.color)}>
+                {priority.label}
+              </Badge>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {Object.entries(priorityConfig).map(([key, config]) => (
+                <DropdownMenuItem key={key} onClick={() => onPriorityChange?.(key)}>
+                  <Badge className={cn("mr-2", config.color)}>{config.label}</Badge>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
       {/* Content - flex-col on mobile, flex-row on sm+ */}
       <div className="flex-1 overflow-y-auto py-4 flex flex-col sm:flex-row gap-5">
         {/* Main content column */}
-        <div className="flex-1 space-y-5 min-w-0">
+        <div className="flex-1 space-y-0 sm:space-y-5 min-w-0">
           {/* Description */}
           {task.description && (
-            <div>
+            <div className="border-t border-border pt-4 mt-4 sm:border-t-0 sm:pt-0 sm:mt-0">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Description</h4>
-              <div className="bg-card border rounded-xl p-4">
-                <p className="text-foreground text-sm leading-relaxed">{task.description}</p>
+              <div className="bg-card border border-border rounded-xl p-4">
+                <p className="text-foreground text-sm leading-relaxed min-h-[100px] sm:min-h-0">{task.description}</p>
               </div>
             </div>
           )}
 
           {/* Comments Section */}
-          <div>
+          <div className="border-t border-border pt-4 mt-4 sm:border-t-0 sm:pt-0 sm:mt-0">
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Activity</h4>
-            <div className="bg-card rounded-xl border overflow-hidden">
-              <div className="px-4 py-3 border-b border bg-muted/50">
+            <div className="bg-card rounded-xl border border-border overflow-hidden">
+              <div className="px-4 py-3 border-b border-border bg-muted/50">
                 <h4 className="font-semibold text-foreground flex items-center gap-2">
                   <MessageCircle className="w-4 h-4 text-muted-foreground" />
                   Comments
@@ -262,15 +360,15 @@ export default function TaskDetailView({
                 )}
               </div>
 
-              {/* Comment Input */}
-              <div className="p-4 border-t border bg-muted/30">
+              {/* Comment Input — sticky on mobile */}
+              <div className="sticky bottom-0 bg-card border-t border-border p-3 -mx-0 sm:relative sm:border-t sm:p-4 sm:m-0 bg-muted/30">
                 <div className="flex gap-2 relative">
                   <Textarea
                     ref={textareaRef}
                     value={comment}
                     onChange={handleCommentChange}
                     placeholder="Add a comment... Use @ to mention"
-                    className="min-h-[60px] resize-none bg-card border text-sm"
+                    className="min-h-[100px] sm:min-h-[60px] resize-none bg-card border border-border text-sm"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -280,12 +378,12 @@ export default function TaskDetailView({
                   />
 
                   {showMentions && filteredMembers.length > 0 && (
-                    <div className="absolute bottom-full left-0 mb-1 w-56 bg-card border rounded-xl shadow-lg max-h-40 overflow-y-auto z-50">
+                    <div className="absolute bottom-full left-0 mb-1 w-56 bg-card border border-border rounded-xl shadow-lg max-h-40 overflow-y-auto z-50">
                       {filteredMembers.map((member) => (
                         <button
                           key={member.id}
                           onClick={() => insertMention(member)}
-                          className="w-full px-3 py-2 text-left hover:bg-muted flex items-center gap-2 text-sm text-foreground"
+                          className="w-full px-3 py-2 text-left hover:bg-muted flex items-center gap-2 text-sm text-foreground min-h-[44px]"
                         >
                           <UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="sm" />
                           {member.name}
@@ -308,12 +406,12 @@ export default function TaskDetailView({
           </div>
         </div>
 
-        {/* Details sidebar - stacks below on mobile */}
-        <div className="sm:w-56 space-y-3 shrink-0">
+        {/* Details sidebar - desktop only, hidden on mobile (mobile card is above) */}
+        <div className="hidden sm:block sm:w-56 space-y-3 shrink-0">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Details</h4>
 
           {/* Assignee */}
-          <div className="bg-card rounded-xl border p-4">
+          <div className="bg-card rounded-xl border border-border p-4">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-2">
               <User className="w-3.5 h-3.5" />
               Assigned to
@@ -355,7 +453,7 @@ export default function TaskDetailView({
           </div>
 
           {/* Due Date */}
-          <div className="bg-card rounded-xl border p-4">
+          <div className="bg-card rounded-xl border border-border p-4">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-2">
               <Calendar className="w-3.5 h-3.5" />
               Due Date
@@ -370,12 +468,12 @@ export default function TaskDetailView({
       </div>
 
       {/* Actions */}
-      <div className="pt-4 border-t border flex justify-between">
-        <Button variant="outline" onClick={onEdit} className="gap-2">
+      <div className="pt-4 border-t border-border flex justify-between">
+        <Button variant="outline" onClick={onEdit} className="gap-2 min-h-[44px] sm:min-h-0">
           <Edit2 className="w-4 h-4" />
           Edit Task
         </Button>
-        <Button variant="outline" onClick={onDelete} className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2">
+        <Button variant="outline" onClick={onDelete} className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2 min-h-[44px] sm:min-h-0">
           <Trash2 className="w-4 h-4" />
           Delete
         </Button>
