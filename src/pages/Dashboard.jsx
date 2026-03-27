@@ -962,10 +962,10 @@ export default function Dashboard() {
           />
           <StatsCard
             title="Overdue Tasks"
-            value={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived'; }).length}
+            value={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived' && t.assigned_to === currentUser?.email; }).length}
             icon={AlertTriangle}
             iconColor="bg-red-500"
-            highlight={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived'; }).length > 0}
+            highlight={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived' && t.assigned_to === currentUser?.email; }).length > 0}
             href={createPageUrl('AllTasks') + '?view=mine_due'}
           />
           <StatsCard
@@ -981,6 +981,7 @@ export default function Dashboard() {
         {(() => {
           const overdueList = activeTasks.filter(t => {
             if (t.status === 'completed' || t.status === 'archived') return false;
+            if (t.assigned_to !== currentUser?.email) return false;
             if (!t.due_date) return false;
             const d = parseLocalDate(t.due_date);
             return d && isPast(d) && !isToday(d);
