@@ -887,7 +887,6 @@ export default function Dashboard() {
   if (loadingProjects) return <DashboardSkeleton />;
 
   return (
-    <div>
     <div className="min-h-screen bg-background">
       <ProcessingOverlay isVisible={isProcessing} type={processingType} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -1889,7 +1888,6 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
     </div>
   );
 }
