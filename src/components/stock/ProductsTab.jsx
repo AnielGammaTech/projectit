@@ -194,7 +194,7 @@ export default function ProductsTab() {
       <div className="space-y-3 mb-4">
         {/* Search Row */}
         <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search products..."
             value={searchQuery}
@@ -292,7 +292,7 @@ export default function ProductsTab() {
           )}
 
           {activeFiltersCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-slate-500 hover:text-slate-700">
+            <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-muted-foreground hover:text-foreground">
               <X className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">Clear filters</span>
             </Button>
@@ -300,7 +300,7 @@ export default function ProductsTab() {
 
           <div className="flex-1" />
 
-          <span className="text-xs sm:text-sm text-slate-500 shrink-0">{filteredProducts.length} products</span>
+          <span className="text-xs sm:text-sm text-muted-foreground shrink-0">{filteredProducts.length} products</span>
 
           <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e]" size="sm">
             <Plus className="w-4 h-4 sm:mr-2" />
@@ -309,26 +309,26 @@ export default function ProductsTab() {
         </div>
       </div>
 
-      {/* Products Grid - Compact Tiles */}
+      {/* Products List — Compact rows */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          {[...Array(12)].map((_, i) => (
-            <div key={i} className="bg-card rounded-lg border overflow-hidden animate-pulse">
-              <div className="aspect-square bg-muted" />
-              <div className="p-2 space-y-1.5">
-                <div className="h-4 bg-muted rounded w-3/4" />
-                <div className="h-3 bg-muted rounded w-1/2" />
+        <div className="rounded-2xl border bg-card overflow-hidden">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3 border-b border-border animate-pulse">
+              <div className="w-9 h-9 rounded-lg bg-muted" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-4 bg-muted rounded w-1/3" />
+                <div className="h-3 bg-muted rounded w-1/5" />
               </div>
             </div>
           ))}
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="text-center py-16 bg-[#0F2F44]/5 rounded-2xl border border-[#0F2F44]/10">
-          <Package className="w-12 h-12 mx-auto text-[#0F2F44]/30 mb-4" />
-          <h3 className="text-lg font-medium text-[#0F2F44] mb-2">
+        <div className="rounded-2xl border bg-card py-16 text-center">
+          <Package className="w-8 h-8 mx-auto text-muted-foreground mb-3" />
+          <h3 className="text-base font-medium text-foreground mb-1">
             {products.length === 0 ? 'No products yet' : 'No products match filters'}
           </h3>
-          <p className="text-[#0F2F44]/60 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             {products.length === 0 ? 'Add your first product to get started' : 'Try adjusting your filters'}
           </p>
           {products.length === 0 ? (
@@ -343,194 +343,106 @@ export default function ProductsTab() {
           )}
         </div>
       ) : (
-        <>
-        {/* ── Mobile: List view ── */}
-        <div className="sm:hidden space-y-2">
-          {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              onClick={() => handleProductClick(product)}
-              className="bg-white dark:bg-[#1e2a3a] rounded-xl border border-slate-200 dark:border-slate-700/50 p-3 flex items-center gap-3 cursor-pointer active:bg-slate-50 transition-colors min-h-[44px]"
-            >
-              {/* Small thumbnail */}
-              <div className="w-12 h-12 rounded-lg bg-slate-50 dark:bg-[#151d2b] flex items-center justify-center shrink-0 overflow-hidden">
-                {product.image_url ? (
-                  <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-1" />
-                ) : (
-                  <Package className="w-5 h-5 text-slate-300" />
-                )}
-              </div>
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">{product.name}</h3>
-                <div className="flex items-center gap-2 mt-0.5">
-                  {product.manufacturer && (
-                    <span className="text-[11px] text-slate-400 truncate">{product.manufacturer}</span>
-                  )}
-                </div>
-              </div>
-              {/* Right: stock + price */}
-              <div className="text-right shrink-0">
-                <Badge
-                  variant={product.quantity_on_hand > 0 ? "default" : "destructive"}
-                  className={cn(
-                    "text-[10px] px-1.5 py-0 mb-1",
-                    product.quantity_on_hand > 0 ? "bg-emerald-500 text-white" : ""
-                  )}
-                >
-                  {product.quantity_on_hand || 0} in stock
-                </Badge>
-                <p className="text-xs font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <div className="rounded-2xl border bg-card shadow-warm overflow-hidden">
+          {/* List header */}
+          <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b bg-muted/30">
+            <div className="col-span-4">Product</div>
+            <div className="col-span-2">SKU</div>
+            <div className="col-span-1 text-center">Stock</div>
+            <div className="col-span-2">Price</div>
+            <div className="col-span-2">Manufacturer</div>
+            <div className="col-span-1"></div>
+          </div>
 
-        {/* ── Desktop: Grid tiles ── */}
-        <div className="hidden sm:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          {/* Product rows */}
           {filteredProducts.map((product) => {
-            const isQuickOpen = quickAction?.productId === product.id;
+            const stockLevel = product.quantity_on_hand || 0;
+            const isLow = stockLevel > 0 && stockLevel <= 5;
+            const isOut = stockLevel === 0;
+
             return (
               <div
                 key={product.id}
                 onClick={() => handleProductClick(product)}
                 className={cn(
-                  "bg-white rounded-lg border overflow-hidden transition-all cursor-pointer group relative",
-                  isQuickOpen ? "border-[#0069AF] shadow-md ring-1 ring-[#0069AF]/20" : "border-slate-200 hover:shadow-md hover:border-[#0069AF]/30"
+                  "grid grid-cols-1 sm:grid-cols-12 gap-2 px-4 py-3 border-b border-border last:border-b-0 cursor-pointer hover:bg-muted/50 transition-colors items-center",
+                  isOut && "bg-red-50/50 dark:bg-red-900/10",
+                  isLow && "bg-amber-50/50 dark:bg-amber-900/10"
                 )}
               >
-                {/* Image - Square thumbnail */}
-                <div className="aspect-square bg-slate-50 relative">
+                {/* Product name + image */}
+                <div className="col-span-4 flex items-center gap-3 min-w-0">
                   {product.image_url ? (
-                    <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-2" />
+                    <img src={product.image_url} alt="" className="w-9 h-9 rounded-lg object-cover border flex-shrink-0" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package className="w-10 h-10 text-slate-200" />
+                    <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <Package className="w-4 h-4 text-muted-foreground" />
                     </div>
                   )}
-                  {/* Stock badge overlay */}
-                  <div className="absolute top-1.5 right-1.5">
-                    <Badge
-                      variant={product.quantity_on_hand > 0 ? "default" : "destructive"}
-                      className={cn(
-                        "text-[10px] px-1.5 py-0",
-                        product.quantity_on_hand > 0 ? "bg-emerald-500 text-white" : ""
-                      )}
-                    >
-                      {product.quantity_on_hand || 0}
-                    </Badge>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{product.name}</p>
+                    {product.tags?.length > 0 && (
+                      <div className="flex gap-1 mt-0.5">
+                        {product.tags.slice(0, 2).map(tag => (
+                          <span key={tag} className="text-[10px] px-1.5 py-0 rounded bg-muted text-muted-foreground">{tag}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {/* Delete button overlay */}
+                </div>
+
+                {/* SKU */}
+                <div className="hidden sm:block col-span-2">
+                  <span className="text-xs font-mono text-muted-foreground">{product.sku || '—'}</span>
+                </div>
+
+                {/* Stock level */}
+                <div className="hidden sm:flex col-span-1 justify-center">
+                  <span className={cn(
+                    "text-sm font-bold tabular-nums",
+                    isOut ? "text-red-600 dark:text-red-400" :
+                    isLow ? "text-amber-600 dark:text-amber-400" :
+                    "text-foreground"
+                  )}>
+                    {stockLevel}
+                  </span>
+                </div>
+
+                {/* Price */}
+                <div className="hidden sm:block col-span-2">
+                  <span className="text-sm text-foreground">${(product.selling_price || 0).toFixed(2)}</span>
+                  {product.cost > 0 && (
+                    <span className="text-[10px] text-muted-foreground ml-1">cost: ${product.cost.toFixed(2)}</span>
+                  )}
+                </div>
+
+                {/* Manufacturer */}
+                <div className="hidden sm:block col-span-2">
+                  <span className="text-xs text-muted-foreground truncate">{product.manufacturer || '—'}</span>
+                </div>
+
+                {/* Mobile: show key info inline */}
+                <div className="sm:hidden flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className={cn("font-bold", isOut ? "text-red-600" : isLow ? "text-amber-600" : "text-foreground")}>
+                    Qty: {stockLevel}
+                  </span>
+                  <span>${(product.selling_price || 0).toFixed(2)}</span>
+                  {product.sku && <span className="font-mono">{product.sku}</span>}
+                </div>
+
+                {/* Actions column */}
+                <div className="hidden sm:flex col-span-1 justify-end gap-1">
                   <button
                     onClick={(e) => { e.stopPropagation(); setDeleteConfirm(product); }}
-                    className="absolute top-1.5 left-1.5 p-1.5 rounded bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-muted-foreground hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
-
-                  {/* Action buttons - hover on desktop */}
-                  {!isQuickOpen && (
-                    <div className="absolute bottom-0 inset-x-0 flex gap-1 p-1.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => openQuickAction(e, product, 'take')}
-                        disabled={(product.quantity_on_hand || 0) === 0}
-                        className="flex-1 flex items-center justify-center gap-1 text-[11px] font-medium text-white bg-[#0069AF]/90 hover:bg-[#0069AF] rounded py-1 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <Minus className="w-3 h-3" />Take
-                      </button>
-                      <button
-                        onClick={(e) => openQuickAction(e, product, 'restock')}
-                        className="flex-1 flex items-center justify-center gap-1 text-[11px] font-medium text-white bg-emerald-600/90 hover:bg-emerald-600 rounded py-1 transition-colors"
-                      >
-                        <RotateCcw className="w-3 h-3" />Restock
-                      </button>
-                    </div>
-                  )}
                 </div>
-
-                {/* Details - Compact */}
-                <div className="p-2">
-                  <h3 className="font-medium text-slate-900 text-sm truncate" title={product.name}>{product.name}</h3>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs text-slate-500">${product.cost?.toFixed(2) || '0.00'}</span>
-                    <span className="text-xs font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</span>
-                  </div>
-                  {product.manufacturer && (
-                    <p className="text-[10px] text-slate-400 truncate mt-0.5">{product.manufacturer}</p>
-                  )}
-                </div>
-
-                {/* Quick action inline panel */}
-                {isQuickOpen && (
-                  <div
-                    className="border-t bg-slate-50 p-2.5 space-y-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <p className="text-xs font-semibold text-slate-700">
-                      {quickAction.type === 'take' ? '📦 Take from Stock' : '📦 Restock'}
-                    </p>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <label className="text-[10px] text-slate-500 font-medium">Qty</label>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={quickAction.type === 'take' ? (product.quantity_on_hand || 0) : 9999}
-                          value={quickData.quantity}
-                          onChange={(e) => setQuickData(p => ({ ...p, quantity: e.target.value }))}
-                          className="h-7 text-xs mt-0.5"
-                        />
-                      </div>
-                      <div className="flex-[2]">
-                        <label className="text-[10px] text-slate-500 font-medium">Project</label>
-                        <Select value={quickData.project_id} onValueChange={(v) => setQuickData(p => ({ ...p, project_id: v }))}>
-                          <SelectTrigger className="h-7 text-xs mt-0.5"><SelectValue placeholder="None" /></SelectTrigger>
-                          <SelectContent>{projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
-                        <MessageSquare className="w-3 h-3" />
-                        Comment <span className="text-red-500">*</span>
-                      </label>
-                      <Textarea
-                        value={quickData.notes}
-                        onChange={(e) => setQuickData(p => ({ ...p, notes: e.target.value }))}
-                        className="mt-0.5 h-14 text-xs resize-none"
-                        placeholder="Required — why are you taking/restocking?"
-                      />
-                    </div>
-                    <div className="flex gap-1.5">
-                      <Button size="sm" variant="ghost" onClick={cancelQuickAction} className="flex-1 h-7 text-xs">
-                        Cancel
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={submitQuickAction}
-                        disabled={quickSubmitting || !quickData.notes.trim() || !quickData.quantity}
-                        className={cn(
-                          "flex-1 h-7 text-xs",
-                          quickAction.type === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : 'bg-emerald-600 hover:bg-emerald-700'
-                        )}
-                      >
-                        {quickSubmitting && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
-                        Confirm
-                      </Button>
-                    </div>
-                    {!quickData.notes.trim() && (
-                      <p className="text-[10px] text-red-500 text-center">A comment is required</p>
-                    )}
-                    {quickError && (
-                      <p className="text-[10px] text-red-600 bg-red-50 rounded p-1.5 text-center">{quickError}</p>
-                    )}
-                  </div>
-                )}
               </div>
             );
           })}
         </div>
-        </>
       )}
 
       {/* View Modal */}
@@ -642,38 +554,38 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
             {product.image_url ? (
               <img src={product.image_url} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
             ) : (
-              <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                <Package className="w-6 h-6 text-slate-400" />
+              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                <Package className="w-6 h-6 text-muted-foreground" />
               </div>
             )}
             <div className="min-w-0">
               <p className="text-lg font-semibold truncate">{product.name}</p>
-              {product.manufacturer && <p className="text-sm font-normal text-slate-500">{product.manufacturer}</p>}
+              {product.manufacturer && <p className="text-sm font-normal text-muted-foreground">{product.manufacturer}</p>}
             </div>
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3 mt-1">
           <div className="grid grid-cols-2 gap-3">
-            {product.sku && <div><p className="text-xs text-slate-500">SKU</p><p className="text-sm font-medium">{product.sku}</p></div>}
+            {product.sku && <div><p className="text-xs text-muted-foreground">SKU</p><p className="text-sm font-medium">{product.sku}</p></div>}
             {product.tags?.length > 0 && (
-              <div className="col-span-2"><p className="text-xs text-slate-500 mb-1">Tags</p>
+              <div className="col-span-2"><p className="text-xs text-muted-foreground mb-1">Tags</p>
                 <div className="flex flex-wrap gap-1">{product.tags.map((t, i) => <Badge key={i} variant="secondary" className="text-[10px]">{t}</Badge>)}</div>
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-3 bg-slate-50 rounded-lg">
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">In Stock</p><p className={cn("text-base sm:text-lg font-bold", (product.quantity_on_hand || 0) === 0 ? "text-red-600" : "text-slate-900")}>{product.quantity_on_hand || 0}</p></div>
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">Cost</p><p className="text-xs sm:text-sm font-medium text-slate-900">${product.cost?.toFixed(2) || '0.00'}</p></div>
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500">Sell Price</p><p className="text-xs sm:text-sm font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</p></div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-3 bg-muted/50 rounded-lg">
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-muted-foreground">In Stock</p><p className={cn("text-base sm:text-lg font-bold", (product.quantity_on_hand || 0) === 0 ? "text-red-600 dark:text-red-400" : "text-foreground")}>{product.quantity_on_hand || 0}</p></div>
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-muted-foreground">Cost</p><p className="text-xs sm:text-sm font-medium text-foreground">${product.cost?.toFixed(2) || '0.00'}</p></div>
+            <div className="text-center"><p className="text-[10px] sm:text-xs text-muted-foreground">Sell Price</p><p className="text-xs sm:text-sm font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</p></div>
           </div>
 
-          {product.description && <div><p className="text-xs text-slate-500 mb-1">Description</p><p className="text-sm text-slate-700 line-clamp-3">{product.description}</p></div>}
+          {product.description && <div><p className="text-xs text-muted-foreground mb-1">Description</p><p className="text-sm text-foreground/80 line-clamp-3">{product.description}</p></div>}
 
           {/* Supplier / Where to Buy */}
           {(product.supplier_name || product.supplier_url) && (
-            <div className="flex items-center gap-2 p-2.5 bg-blue-50 rounded-lg border border-blue-100">
+            <div className="flex items-center gap-2 p-2.5 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-100 dark:border-blue-900/40">
               <ShoppingCart className="w-4 h-4 text-blue-600 shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="text-xs text-blue-600 font-medium">Where to Buy</p>
@@ -689,7 +601,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
                     <ExternalLink className="w-3 h-3 shrink-0" />
                   </a>
                 ) : (
-                  <p className="text-sm font-semibold text-slate-700">{product.supplier_name}</p>
+                  <p className="text-sm font-semibold text-foreground">{product.supplier_name}</p>
                 )}
               </div>
             </div>
@@ -713,8 +625,8 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
 
           {/* Inline Action Panel */}
           {activeAction && (
-            <div className="p-3 bg-slate-50 rounded-lg border space-y-3">
-              <p className="text-sm font-semibold text-slate-700">{activeAction === 'take' ? 'Take from Stock' : 'Restock'}</p>
+            <div className="p-3 bg-muted/50 rounded-lg border space-y-3">
+              <p className="text-sm font-semibold text-foreground">{activeAction === 'take' ? 'Take from Stock' : 'Restock'}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs">Quantity</Label>
@@ -751,24 +663,24 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
 
           {/* Transaction History */}
           <div className="border-t pt-3">
-            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 w-full">
+            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground w-full">
               <History className="w-4 h-4" />History ({transactions.length})
               {showHistory ? <X className="w-3.5 h-3.5 ml-auto" /> : <ChevronDown className="w-3.5 h-3.5 ml-auto" />}
             </button>
             {(showHistory || transactions.length > 0) && (
               <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
                 {displayedTx.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-2 text-center">No transactions yet</p>
+                  <p className="text-xs text-muted-foreground py-2 text-center">No transactions yet</p>
                 ) : displayedTx.map((tx) => {
                   const cfg = txConfig[tx.type] || txConfig.take;
                   const proj = projects.find(p => p.id === tx.project_id);
                   return (
-                    <div key={tx.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded hover:bg-slate-50">
+                    <div key={tx.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded hover:bg-muted/50">
                       <Badge className={cn("text-[10px] px-1.5 py-0", cfg.color)}>{cfg.label}</Badge>
-                      <span className="font-semibold text-slate-700">{cfg.sign}{tx.quantity}</span>
-                      {proj && <span className="text-slate-500 truncate">→ {proj.name}</span>}
-                      <span className="text-slate-400 ml-auto shrink-0">{tx.user_name?.split(' ')[0]}</span>
-                      <span className="text-slate-400 shrink-0">{tx.created_date ? format(new Date(tx.created_date), 'MMM d') : ''}</span>
+                      <span className="font-semibold text-foreground">{cfg.sign}{tx.quantity}</span>
+                      {proj && <span className="text-muted-foreground truncate">→ {proj.name}</span>}
+                      <span className="text-muted-foreground ml-auto shrink-0">{tx.user_name?.split(' ')[0]}</span>
+                      <span className="text-muted-foreground shrink-0">{tx.created_date ? format(new Date(tx.created_date), 'MMM d') : ''}</span>
                     </div>
                   );
                 })}
