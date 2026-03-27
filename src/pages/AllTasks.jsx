@@ -60,7 +60,7 @@ function TaskTableRow({ task, teamMembers, currentUser, statusConfig, priorityCo
         {task.status === 'completed' ? (
           <CheckCircle2 className="w-3 h-3" />
         ) : (
-          <CheckCircle2 className="w-3 h-3 opacity-0 group-hover:opacity-40" />
+          <CheckCircle2 className="w-3 h-3 opacity-30 sm:opacity-0 sm:group-hover:opacity-40" />
         )}
       </button>
 
@@ -267,7 +267,7 @@ function PartTableRow({ part, teamMembers, projectName, projectNumber, getDueDat
             ) : (
               <button
                 onClick={(e) => e.stopPropagation()}
-                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-blue-400"
+                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-blue-400"
                 title="Assign"
               >
                 <UserPlus className="w-3 h-3 text-slate-400" />
@@ -306,7 +306,7 @@ function PartTableRow({ part, teamMembers, projectName, projectNumber, getDueDat
             ) : (
               <button
                 onClick={(e) => { e.stopPropagation(); setEtaOpen(true); }}
-                className="p-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                className="p-1 rounded hover:bg-muted opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                 title="Set ETA"
               >
                 <Truck className="w-3.5 h-3.5 text-slate-400" />

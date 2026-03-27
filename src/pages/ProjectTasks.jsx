@@ -1338,8 +1338,8 @@ export default function ProjectTasks() {
             );
           })}
 
-          {/* Ungrouped */}
-          <div className={cn("bg-card rounded-2xl border border-slate-200 dark:border-border overflow-hidden shadow-sm border-l-4", groupAccentColors.slate)}>
+          {/* Ungrouped — hide if empty */}
+          {ungroupedTasks.length > 0 && <div className={cn("bg-card rounded-2xl border border-slate-200 dark:border-border overflow-hidden shadow-sm border-l-4", groupAccentColors.slate)}>
             <div
               className="group/header flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               onClick={() => toggleGroup('ungrouped')}
@@ -1393,7 +1393,7 @@ export default function ProjectTasks() {
             {!collapsedGroups.has('ungrouped') && (
               <GroupProgressFooter groupTasks={ungroupedTasks} color="slate" />
             )}
-          </div>
+          </div>}
 
           {/* Phase 6: Empty State */}
           {filteredTasks.length === 0 && taskGroups.length === 0 && (
