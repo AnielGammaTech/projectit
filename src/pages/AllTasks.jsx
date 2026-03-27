@@ -968,12 +968,12 @@ export default function AllTasks() {
               </div>
 
               {/* Status pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+              <div className="flex items-center justify-center sm:justify-start gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
                 {[
-                  { key: 'needed', label: 'Needed', bg: 'bg-red-100', color: 'text-red-700' },
-                  { key: 'ordered', label: 'Ordered', bg: 'bg-blue-100', color: 'text-blue-700' },
-                  { key: 'received', label: 'Received', bg: 'bg-amber-100', color: 'text-amber-700' },
-                  { key: 'installed', label: 'Installed', bg: 'bg-emerald-100', color: 'text-emerald-700' },
+                  { key: 'needed', label: 'Needed' },
+                  { key: 'ordered', label: 'Ordered' },
+                  { key: 'received', label: 'Received' },
+                  { key: 'installed', label: 'Installed' },
                 ].map((s) => {
                   const count = activeProjectParts.filter(p => p.status === s.key).length;
                   return (
@@ -981,17 +981,16 @@ export default function AllTasks() {
                       key={s.key}
                       onClick={() => setStatusFilter(statusFilter === s.key ? 'all' : s.key)}
                       className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
+                        "flex items-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
                         statusFilter === s.key
-                          ? "bg-primary text-white"
+                          ? "bg-[#0F2F44] text-white dark:bg-blue-600"
                           : "bg-muted text-muted-foreground hover:bg-muted/80"
                       )}
                     >
-                      <Package className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">{s.label}</span>
+                      {s.label}
                       <span className={cn(
                         "px-1.5 py-0.5 rounded-full text-[10px]",
-                        statusFilter === s.key ? "bg-white/20" : "bg-white"
+                        statusFilter === s.key ? "bg-white/20" : "bg-muted-foreground/10"
                       )}>
                         {count}
                       </span>
@@ -1026,11 +1025,11 @@ export default function AllTasks() {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-card rounded-2xl border border-border overflow-hidden"
               >
-                {/* Table header */}
-                <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 dark:bg-background border-b border-border text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {/* Table header — desktop only */}
+                <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-muted/50 dark:bg-background border-b border-border text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                   <div className="w-4 shrink-0" />
                   <div className="flex-1">Part</div>
-                  <div className="hidden sm:block w-[180px] shrink-0">Project</div>
+                  <div className="w-[180px] shrink-0">Project</div>
                   <div className="w-20 shrink-0">Status</div>
                   <div className="w-8 shrink-0">Owner</div>
                   <div className="w-24 shrink-0 text-right">ETA</div>

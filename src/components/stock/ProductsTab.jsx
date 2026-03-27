@@ -304,7 +304,7 @@ export default function ProductsTab() {
 
           <div className="flex-shrink-0 flex items-center gap-3">
             <span className="text-xs text-muted-foreground hidden sm:inline">{filteredProducts.length} products</span>
-            <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-primary hover:bg-primary/80 text-white" size="sm">
+            <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e] text-white" size="sm">
               <PackagePlus className="w-4 h-4 mr-1.5" />
               Add Product
             </Button>

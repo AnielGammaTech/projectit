@@ -99,7 +99,7 @@ export default function Stock() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="mb-4">
             <TabsList className="bg-card border p-1 rounded-xl">
-              <TabsTrigger value="inventory" className="gap-1.5 px-4 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+              <TabsTrigger value="inventory" className="gap-1.5 px-4 rounded-lg data-[state=active]:bg-[#0F2F44] data-[state=active]:text-white">
                 <Package className="w-4 h-4" />
                 Inventory
                 {(lowStockProducts.length + outOfStockProducts.length) > 0 && (
@@ -108,7 +108,7 @@ export default function Stock() {
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="tools" className="gap-1.5 px-4 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+              <TabsTrigger value="tools" className="gap-1.5 px-4 rounded-lg data-[state=active]:bg-[#0F2F44] data-[state=active]:text-white">
                 <HardDrive className="w-4 h-4" />
                 Tools
                 {checkedOutTools.length > 0 && (

@@ -201,7 +201,7 @@ export default function ToolsTab() {
             </Button>
             <Button
               onClick={() => { setEditingTool(null); setShowModal(true); }}
-              className="bg-primary hover:bg-primary/80 text-white shrink-0"
+              className="bg-[#0F2F44] hover:bg-[#1a4a6e] text-white shrink-0"
               size="sm"
             >
               <Plus className="w-4 h-4 mr-1.5" />
@@ -234,7 +234,7 @@ export default function ToolsTab() {
             {tools.length === 0 ? 'Add tools that can be checked out and returned' : 'Try adjusting your filters'}
           </p>
           {tools.length === 0 ? (
-            <Button onClick={() => setShowModal(true)} className="bg-primary hover:bg-primary/80 text-white">
+            <Button onClick={() => setShowModal(true)} className="bg-[#0F2F44] hover:bg-[#1a4a6e] text-white">
               <Plus className="w-4 h-4 mr-2" />
               Add Tool
             </Button>
@@ -790,7 +790,7 @@ function ToolModal({ open, onClose, tool, onSave }) {
           )}
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/80 text-white" disabled={saving}>
+            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e] text-white" disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {tool ? 'Save Changes' : 'Add Tool'}
             </Button>
