@@ -254,7 +254,7 @@ export default function Login() {
   // Standard Login Screen
   return (
     <div className="min-h-screen flex">
-      {/* Left branding panel */}
+      {/* Left branding panel — desktop only */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden">
         <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20">
           <div className="flex items-center gap-3 mb-10">
@@ -269,88 +269,106 @@ export default function Login() {
             Track projects from quote to completion. Assign tasks, manage stock, monitor timelines, and keep every client in the loop.
           </p>
         </div>
-        {/* Decorative elements */}
         <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-primary/10 rounded-full" />
         <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary-foreground/5 rounded-full" />
         <div className="absolute bottom-20 right-10 w-32 h-32 bg-primary/5 rounded-full" />
       </div>
 
-      {/* Right form panel */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-6 sm:px-12 bg-card">
-        <div className="w-full max-w-md">
-          <h1 className="text-xl sm:text-3xl font-bold text-foreground mb-1 text-center">Welcome back</h1>
-          <p className="text-muted-foreground mb-8 text-center">Sign in to your account to continue.</p>
-
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm rounded-lg px-4 py-3 border border-red-200 dark:border-red-800/50 mb-4">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            <div className="bg-card rounded-2xl shadow-sm border border-border p-4 sm:p-8 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Email address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2.5 border border-border rounded-xl text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
-                    placeholder="you@company.com"
-                    required
-                  />
-                </div>
+      {/* Form panel — full width on mobile */}
+      <div className="w-full lg:w-1/2 flex flex-col bg-card">
+        {/* Mobile hero header */}
+        <div className="lg:hidden bg-[#0F2F44] px-6 pt-16 pb-10 text-center relative overflow-hidden">
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/5 rounded-full" />
+          <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-white/5 rounded-full" />
+          <div className="relative z-10">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 border border-border rounded-xl text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
-                    placeholder="Enter your password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-primary text-white py-3 rounded-xl text-sm font-semibold hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/25"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    Sign In
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
             </div>
-          </form>
+            <h1 className="text-2xl font-bold text-white mb-1">ProjectIT</h1>
+            <p className="text-white/60 text-sm">Sign in to your account</p>
+          </div>
         </div>
 
-        <p className="text-xs text-muted-foreground mt-12">
-          Powered by <span className="font-medium text-muted-foreground">Gamma Tech Services</span>
-        </p>
+        {/* Form content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 sm:px-12 py-8 lg:py-0">
+          <div className="w-full max-w-md">
+            {/* Desktop-only heading */}
+            <h1 className="hidden lg:block text-3xl font-bold text-foreground mb-1 text-center">Welcome back</h1>
+            <p className="hidden lg:block text-muted-foreground mb-8 text-center">Sign in to your account to continue.</p>
+
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm rounded-lg px-4 py-3 border border-red-200 dark:border-red-800/50 mb-4">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              <div className="bg-card rounded-2xl shadow-sm border border-border p-4 sm:p-8 space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Email address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 border border-border rounded-xl text-[16px] sm:text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
+                      placeholder="you@company.com"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-10 py-2.5 border border-border rounded-xl text-[16px] sm:text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
+                      placeholder="Enter your password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#0F2F44] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#1a4a6e] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0F2F44]/25"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      Sign In
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-8 lg:mt-12">
+            Powered by <span className="font-medium text-muted-foreground">Gamma Tech Services</span>
+          </p>
+        </div>
       </div>
     </div>
   );
