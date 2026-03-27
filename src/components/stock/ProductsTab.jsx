@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Package, Edit2, Trash2, Filter, X, ChevronDown, Minus, RotateCcw, History, Loader2, MessageSquare, ExternalLink, ShoppingCart } from 'lucide-react';
+import { Plus, Search, Package, Edit2, Trash2, SlidersHorizontal, Building2, Tag, PackagePlus, X, ChevronDown, Minus, RotateCcw, History, Loader2, MessageSquare, ExternalLink, ShoppingCart, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import ProductModal from './ProductModal';
@@ -209,7 +209,7 @@ export default function ProductsTab() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5">
-                <Filter className="w-4 h-4" />
+                <SlidersHorizontal className="w-4 h-4" />
                 <span className="hidden sm:inline">Stock</span>
                 {stockFilter !== 'all' && <Badge className="h-5 w-5 p-0 justify-center bg-[#0069AF]">1</Badge>}
                 <ChevronDown className="w-3 h-3" />
@@ -236,6 +236,7 @@ export default function ProductsTab() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5 hidden sm:flex">
+                  <Building2 className="w-4 h-4" />
                   <span>Manufacturer</span>
                   {selectedManufacturers.length > 0 && (
                     <Badge className="h-5 w-5 p-0 justify-center bg-[#0069AF]">{selectedManufacturers.length}</Badge>
@@ -266,6 +267,7 @@ export default function ProductsTab() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5 hidden sm:flex">
+                  <Tag className="w-4 h-4" />
                   <span>Tags</span>
                   {selectedTags.length > 0 && (
                     <Badge className="h-5 w-5 p-0 justify-center bg-[#0069AF]">{selectedTags.length}</Badge>
@@ -303,7 +305,7 @@ export default function ProductsTab() {
           <div className="flex-shrink-0 flex items-center gap-3">
             <span className="text-xs text-muted-foreground hidden sm:inline">{filteredProducts.length} products</span>
             <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-primary hover:bg-primary/80 text-white" size="sm">
-              <Plus className="w-4 h-4 mr-1.5" />
+              <PackagePlus className="w-4 h-4 mr-1.5" />
               Add Product
             </Button>
           </div>
@@ -543,55 +545,100 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
   };
   const displayedTx = showHistory ? transactions : transactions.slice(0, 5);
 
+  const stockLevel = product.quantity_on_hand || 0;
+  const stockIsOut = stockLevel === 0;
+  const stockIsLow = stockLevel > 0 && stockLevel <= 5;
+  const stockColor = stockIsOut
+    ? 'text-red-500 bg-red-500/10 border-red-500/20'
+    : stockIsLow
+    ? 'text-amber-500 bg-amber-500/10 border-amber-500/20'
+    : 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+  const location = product.stock_location || product.location;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
-            ) : (
-              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                <Package className="w-6 h-6 text-muted-foreground" />
-              </div>
-            )}
-            <div className="min-w-0">
-              <p className="text-lg font-semibold truncate">{product.name}</p>
-              {product.manufacturer && <p className="text-sm font-normal text-muted-foreground">{product.manufacturer}</p>}
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-card border-border p-0">
+        {/* Header Section */}
+        <div className="flex items-start gap-4 p-6 pb-0">
+          {product.image_url ? (
+            <img
+              src={product.image_url}
+              alt={product.name}
+              className="w-16 h-16 rounded-2xl object-cover border border-border flex-shrink-0"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl bg-muted/50 border border-border flex items-center justify-center flex-shrink-0">
+              <Package className="w-7 h-7 text-muted-foreground" />
             </div>
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-3 mt-1">
-          <div className="grid grid-cols-2 gap-3">
-            {product.sku && <div><p className="text-xs text-muted-foreground">SKU</p><p className="text-sm font-medium">{product.sku}</p></div>}
+          )}
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h2 className="text-lg font-bold text-foreground truncate leading-tight">{product.name}</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {[product.manufacturer, product.sku].filter(Boolean).join(' \u00B7 ')}
+            </p>
             {product.tags?.length > 0 && (
-              <div className="col-span-2"><p className="text-xs text-muted-foreground mb-1">Tags</p>
-                <div className="flex flex-wrap gap-1">{product.tags.map((t, i) => <Badge key={i} variant="secondary" className="text-[10px]">{t}</Badge>)}</div>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {product.tags.map((t, i) => (
+                  <span
+                    key={i}
+                    className="text-[11px] px-2 py-0.5 rounded-full bg-muted/70 text-muted-foreground border border-border/50 font-medium"
+                  >
+                    {t}
+                  </span>
+                ))}
               </div>
             )}
           </div>
+        </div>
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-3 bg-muted/50 rounded-lg">
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-muted-foreground">In Stock</p><p className={cn("text-base sm:text-lg font-bold", (product.quantity_on_hand || 0) === 0 ? "text-red-600 dark:text-red-400" : "text-foreground")}>{product.quantity_on_hand || 0}</p></div>
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-muted-foreground">Cost</p><p className="text-xs sm:text-sm font-medium text-foreground">${product.cost?.toFixed(2) || '0.00'}</p></div>
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-muted-foreground">Sell Price</p><p className="text-xs sm:text-sm font-medium text-emerald-600">${product.selling_price?.toFixed(2) || '0.00'}</p></div>
+        <div className="px-6 pb-6 space-y-5 mt-5">
+          {/* Stats Row */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className={cn(
+              "rounded-xl border p-3 text-center transition-all duration-200",
+              stockColor
+            )}>
+              <p className="text-xs text-current/70 font-medium uppercase tracking-wide">In Stock</p>
+              <p className="text-xl font-bold mt-1 tabular-nums">{stockLevel}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/30 p-3 text-center">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Cost</p>
+              <p className="text-xl font-bold text-foreground mt-1 tabular-nums">${product.cost?.toFixed(2) || '0.00'}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/30 p-3 text-center">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Price</p>
+              <p className="text-xl font-bold text-emerald-500 mt-1 tabular-nums">${product.selling_price?.toFixed(2) || '0.00'}</p>
+            </div>
           </div>
 
-          {product.description && <div><p className="text-xs text-muted-foreground mb-1">Description</p><p className="text-sm text-foreground/80 line-clamp-3">{product.description}</p></div>}
+          {/* Location */}
+          {location && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <MapPin className="w-4 h-4 flex-shrink-0" />
+              <span>{location}</span>
+            </div>
+          )}
+
+          {/* Description */}
+          {product.description && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Description</p>
+              <p className="text-sm text-foreground/80 leading-relaxed">{product.description}</p>
+            </div>
+          )}
 
           {/* Supplier / Where to Buy */}
           {(product.supplier_name || product.supplier_url) && (
-            <div className="flex items-center gap-2 p-2.5 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-100 dark:border-blue-900/40">
-              <ShoppingCart className="w-4 h-4 text-blue-600 shrink-0" />
+            <div className="flex items-center gap-2.5 p-3 bg-blue-500/5 rounded-xl border border-blue-500/15">
+              <ShoppingCart className="w-4 h-4 text-blue-400 shrink-0" />
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-blue-600 font-medium">Where to Buy</p>
+                <p className="text-[11px] text-blue-400 font-medium uppercase tracking-wide">Where to Buy</p>
                 {product.supplier_url ? (
                   <a
                     href={product.supplier_url.startsWith('http') ? product.supplier_url : `https://${product.supplier_url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-semibold text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1 truncate"
+                    className="text-sm font-semibold text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1 truncate transition-colors duration-200"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {product.supplier_name || new URL(product.supplier_url.startsWith('http') ? product.supplier_url : `https://${product.supplier_url}`).hostname.replace('www.', '')}
@@ -605,52 +652,74 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-2 border-t">
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button size="sm" variant={activeAction === 'take' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'take' ? null : 'take')} disabled={(product.quantity_on_hand || 0) === 0} className={cn("w-full sm:w-auto min-h-[44px] sm:min-h-0", activeAction === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : '')}>
-                <Minus className="w-3.5 h-3.5 mr-1.5" />Take
-              </Button>
-              <Button size="sm" variant={activeAction === 'restock' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'restock' ? null : 'restock')} className={cn("w-full sm:w-auto min-h-[44px] sm:min-h-0", activeAction === 'restock' ? 'bg-emerald-600 hover:bg-emerald-700' : '')}>
-                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />Restock
-              </Button>
-            </div>
-            <div className="hidden sm:block flex-1" />
-            <Button size="sm" variant="outline" onClick={() => onEdit(product)} className="w-full sm:w-auto min-h-[44px] sm:min-h-0">
-              <Edit2 className="w-3.5 h-3.5 mr-1.5" />Edit
+          <div className="grid grid-cols-3 gap-3 pt-1">
+            <Button
+              size="sm"
+              variant={activeAction === 'take' ? 'default' : 'outline'}
+              onClick={() => setActiveAction(activeAction === 'take' ? null : 'take')}
+              disabled={stockIsOut}
+              className={cn(
+                "h-10 cursor-pointer transition-all duration-200",
+                activeAction === 'take'
+                  ? 'bg-red-600 hover:bg-red-700 text-white border-red-600'
+                  : 'hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30'
+              )}
+            >
+              <Minus className="w-4 h-4 mr-1.5" />Take
+            </Button>
+            <Button
+              size="sm"
+              variant={activeAction === 'restock' ? 'default' : 'outline'}
+              onClick={() => setActiveAction(activeAction === 'restock' ? null : 'restock')}
+              className={cn(
+                "h-10 cursor-pointer transition-all duration-200",
+                activeAction === 'restock'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
+                  : 'hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/30'
+              )}
+            >
+              <RotateCcw className="w-4 h-4 mr-1.5" />Restock
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => onEdit(product)}
+              className="h-10 cursor-pointer bg-[#0F2F44] hover:bg-[#1a4a6e] text-white transition-all duration-200"
+            >
+              <Edit2 className="w-4 h-4 mr-1.5" />Edit
             </Button>
           </div>
 
           {/* Inline Action Panel */}
           {activeAction && (
-            <div className="p-3 bg-muted/50 rounded-lg border space-y-3">
+            <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-3">
               <p className="text-sm font-semibold text-foreground">{activeAction === 'take' ? 'Take from Stock' : 'Restock'}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">Quantity</Label>
-                  <Input type="number" min={1} max={activeAction === 'take' ? (product.quantity_on_hand || 0) : 9999} value={actionData.quantity} onChange={(e) => setActionData(p => ({ ...p, quantity: e.target.value }))} className="mt-1 h-8" />
+                  <Label className="text-xs text-muted-foreground">Quantity</Label>
+                  <Input type="number" min={1} max={activeAction === 'take' ? stockLevel : 9999} value={actionData.quantity} onChange={(e) => setActionData(p => ({ ...p, quantity: e.target.value }))} className="mt-1 h-9 bg-background" />
                 </div>
                 <div>
-                  <Label className="text-xs">Project (optional)</Label>
+                  <Label className="text-xs text-muted-foreground">Project (optional)</Label>
                   <Select value={actionData.project_id} onValueChange={(v) => setActionData(p => ({ ...p, project_id: v }))}>
-                    <SelectTrigger className="mt-1 h-8"><SelectValue placeholder="None" /></SelectTrigger>
+                    <SelectTrigger className="mt-1 h-9 bg-background"><SelectValue placeholder="None" /></SelectTrigger>
                     <SelectContent>{projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
               <div>
-                <Label className="text-xs flex items-center gap-1">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1">
                   <MessageSquare className="w-3 h-3" />
                   Comment <span className="text-red-500">*</span>
                 </Label>
-                <Textarea value={actionData.notes} onChange={(e) => setActionData(p => ({ ...p, notes: e.target.value }))} className="mt-1 h-16 text-sm" placeholder="Required — why are you taking/restocking?" />
+                <Textarea value={actionData.notes} onChange={(e) => setActionData(p => ({ ...p, notes: e.target.value }))} className="mt-1 h-16 text-sm bg-background" placeholder="Required — why are you taking/restocking?" />
                 {!actionData.notes.trim() && <p className="text-[10px] text-red-500 mt-1">A comment is required</p>}
               </div>
               {actionError && (
-                <p className="text-xs text-red-600 bg-red-50 rounded p-2">{actionError}</p>
+                <p className="text-xs text-red-400 bg-red-500/10 rounded-lg p-2.5 border border-red-500/20">{actionError}</p>
               )}
               <div className="flex justify-end gap-2">
-                <Button size="sm" variant="outline" onClick={() => { setActiveAction(null); setActionError(null); }}>Cancel</Button>
-                <Button size="sm" onClick={handleAction} disabled={submitting || !actionData.quantity || !actionData.notes.trim()} className={activeAction === 'take' ? 'bg-[#0069AF] hover:bg-[#133F5C]' : 'bg-emerald-600 hover:bg-emerald-700'}>
+                <Button size="sm" variant="outline" onClick={() => { setActiveAction(null); setActionError(null); }} className="cursor-pointer">Cancel</Button>
+                <Button size="sm" onClick={handleAction} disabled={submitting || !actionData.quantity || !actionData.notes.trim()} className={cn("cursor-pointer", activeAction === 'take' ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700')}>
                   {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
                   Confirm {activeAction === 'take' ? 'Take' : 'Restock'}
                 </Button>
@@ -659,30 +728,34 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
           )}
 
           {/* Transaction History */}
-          <div className="border-t pt-3">
-            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground w-full">
-              <History className="w-4 h-4" />History ({transactions.length})
-              {showHistory ? <X className="w-3.5 h-3.5 ml-auto" /> : <ChevronDown className="w-3.5 h-3.5 ml-auto" />}
+          <div className="border-t border-border pt-4">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground w-full cursor-pointer transition-colors duration-200"
+            >
+              <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", showHistory && "rotate-180")} />
+              <History className="w-4 h-4" />
+              History ({transactions.length})
             </button>
             {(showHistory || transactions.length > 0) && (
-              <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
+              <div className="mt-3 space-y-1 max-h-52 overflow-y-auto">
                 {displayedTx.length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-2 text-center">No transactions yet</p>
+                  <p className="text-xs text-muted-foreground py-3 text-center">No transactions yet</p>
                 ) : displayedTx.map((tx) => {
                   const cfg = txConfig[tx.type] || txConfig.take;
                   const proj = projects.find(p => p.id === tx.project_id);
                   return (
-                    <div key={tx.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded hover:bg-muted/50">
-                      <Badge className={cn("text-[10px] px-1.5 py-0", cfg.color)}>{cfg.label}</Badge>
-                      <span className="font-semibold text-foreground">{cfg.sign}{tx.quantity}</span>
+                    <div key={tx.id} className="flex items-center gap-2.5 text-xs py-2 px-3 rounded-lg hover:bg-muted/40 transition-colors duration-150">
+                      <Badge className={cn("text-[10px] px-2 py-0.5 font-medium", cfg.color)}>{cfg.label}</Badge>
+                      <span className="font-bold text-foreground tabular-nums">{cfg.sign}{tx.quantity}</span>
                       {proj && <span className="text-muted-foreground truncate">→ {proj.name}</span>}
-                      <span className="text-muted-foreground ml-auto shrink-0">{tx.user_name?.split(' ')[0]}</span>
-                      <span className="text-muted-foreground shrink-0">{tx.created_date ? format(new Date(tx.created_date), 'MMM d') : ''}</span>
+                      <span className="text-muted-foreground ml-auto shrink-0">{tx.user_name?.split(' ')[0] || tx.user_email}</span>
+                      <span className="text-muted-foreground/60 shrink-0">{tx.created_date ? format(new Date(tx.created_date), 'MMM d') : ''}</span>
                     </div>
                   );
                 })}
                 {!showHistory && transactions.length > 5 && (
-                  <button onClick={() => setShowHistory(true)} className="text-xs text-[#0069AF] hover:underline w-full text-center py-1">Show all {transactions.length}</button>
+                  <button onClick={() => setShowHistory(true)} className="text-xs text-[#22C55E] hover:underline w-full text-center py-1.5 cursor-pointer transition-colors duration-200">Show all {transactions.length}</button>
                 )}
               </div>
             )}
