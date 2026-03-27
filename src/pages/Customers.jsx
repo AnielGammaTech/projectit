@@ -531,8 +531,8 @@ export default function Customers() {
                 })}
               </div>
 
-              {/* Desktop card grid */}
-              <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Desktop compact list */}
+              <div className="hidden sm:block rounded-2xl border bg-card shadow-warm overflow-hidden">
               {filteredCompanies.map((company) => {
                 const contacts = getContactsForCompany(company.id);
                 const companySites = getSitesForCompany(company.id);
@@ -546,80 +546,41 @@ export default function Customers() {
                   <div
                     key={company.id}
                     className={cn(
-                      "bg-card rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
-                      selectedIds.has(company.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-600"
+                      "flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-muted/50 transition-colors cursor-pointer",
+                      selectedIds.has(company.id) && "bg-red-50/30 dark:bg-red-900/10"
                     )}
                     onClick={() => setSelectedCustomer(company)}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        {selectionMode && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); toggleSelection(company.id); }}
-                            className="mt-0.5 p-0.5"
-                          >
-                            {selectedIds.has(company.id) ? (
-                              <CheckSquare className="w-4 h-4 text-red-600" />
-                            ) : (
-                              <Square className="w-4 h-4 text-slate-300" />
-                            )}
-                          </button>
+                    {selectionMode && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleSelection(company.id); }}
+                        className="p-0.5 shrink-0"
+                      >
+                        {selectedIds.has(company.id) ? (
+                          <CheckSquare className="w-4 h-4 text-red-600" />
+                        ) : (
+                          <Square className="w-4 h-4 text-slate-300" />
                         )}
-                        <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 flex-shrink-0">
-                          <Building2 className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-slate-900 truncate text-sm">{company.name}</h3>
-                            {company.source === 'halo_psa' && (
-                              <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-600 border-blue-200 px-1.5 py-0 flex-shrink-0">Halo</Badge>
-                            )}
-                          </div>
-                          {displayAddress ? (
-                            <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayAddress)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-xs text-slate-500 truncate mt-0.5 hover:text-primary hover:underline block"
-                            >
-                              {displayAddress}
-                            </a>
-                          ) : (
-                            <p className="text-xs text-slate-500 truncate mt-0.5">No address</p>
-                          )}
-                        </div>
+                      </button>
+                    )}
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <Building2 className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground truncate">{company.name}</span>
+                        {company.source === 'halo_psa' && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Halo</span>
+                        )}
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0 ml-2" />
+                      <span className="text-xs text-muted-foreground truncate block">{displayAddress || 'No address'}</span>
                     </div>
-                    
-                    {/* Stats Row */}
-                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setSelectedCustomer(company); }}
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-emerald-50 transition-colors"
-                        title="Sites/Locations"
-                      >
-                        <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-xs font-medium text-slate-700">{companySites.length}</span>
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setSelectedCustomer(company); }}
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
-                        title="Contacts"
-                      >
-                        <Users className="w-3.5 h-3.5 text-blue-600" />
-                        <span className="text-xs font-medium text-slate-700">{contacts.length}</span>
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setSelectedCustomer(company); }}
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-orange-50 transition-colors"
-                        title="Projects"
-                      >
-                        <FolderKanban className="w-3.5 h-3.5 text-orange-600" />
-                        <span className="text-xs font-medium text-slate-700">{companyProjects}</span>
-                      </button>
+                    <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground shrink-0">
+                      <span>{companySites.length} sites</span>
+                      <span>{contacts.length} contacts</span>
+                      <span>{companyProjects} projects</span>
                     </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                   </div>
                 );
               })}
@@ -656,61 +617,40 @@ export default function Customers() {
                 ))}
               </div>
 
-              {/* Desktop card grid */}
-              <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+              {/* Desktop compact list */}
+              <div className="hidden sm:block rounded-2xl border bg-card shadow-warm overflow-hidden mt-4">
                 {filteredStandaloneContacts.map((customer) => (
                   <div
                     key={customer.id}
                     className={cn(
-                      "bg-card rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
-                      selectedIds.has(customer.id) ? "border-red-300 bg-red-50/30 ring-2 ring-red-200" : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-600"
+                      "flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-muted/50 transition-colors cursor-pointer",
+                      selectedIds.has(customer.id) && "bg-red-50/30 dark:bg-red-900/10"
                     )}
                     onClick={() => setSelectedCustomer(customer)}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        {selectionMode && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); toggleSelection(customer.id); }}
-                            className="mt-0.5 p-0.5"
-                          >
-                            {selectedIds.has(customer.id) ? (
-                              <CheckSquare className="w-4 h-4 text-red-600" />
-                            ) : (
-                              <Square className="w-4 h-4 text-slate-300" />
-                            )}
-                          </button>
+                    {selectionMode && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleSelection(customer.id); }}
+                        className="p-0.5 shrink-0"
+                      >
+                        {selectedIds.has(customer.id) ? (
+                          <CheckSquare className="w-4 h-4 text-red-600" />
+                        ) : (
+                          <Square className="w-4 h-4 text-slate-300" />
                         )}
-                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm flex-shrink-0">
-                          {customer.name?.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-slate-900 truncate text-sm">{customer.name}</h3>
-                          {customer.company && <p className="text-xs text-slate-500 truncate">{customer.company}</p>}
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0 ml-2" />
-                    </div>
-
-                    {/* Stats Row */}
-                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100">
-                      <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
-                        title="Contacts"
-                      >
-                        <Users className="w-3.5 h-3.5 text-blue-600" />
-                        <span className="text-xs font-medium text-slate-700">0</span>
                       </button>
-                      <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-orange-50 transition-colors"
-                        title="Projects"
-                      >
-                        <FolderKanban className="w-3.5 h-3.5 text-orange-600" />
-                        <span className="text-xs font-medium text-slate-700">{getProjectCount(customer.id)}</span>
-                      </button>
+                    )}
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm shrink-0">
+                      {customer.name?.charAt(0).toUpperCase()}
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-semibold text-foreground truncate block">{customer.name}</span>
+                      <span className="text-xs text-muted-foreground truncate block">{customer.company || 'No company'}</span>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground shrink-0">
+                      <span>{getProjectCount(customer.id)} projects</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                   </div>
                 ))}
               </div>
@@ -942,7 +882,7 @@ export default function Customers() {
                             )}
                           </div>
                           {displayAddress && (
-                            <p className="flex items-center gap-1.5 mt-0.5 sm:mt-1 text-xs sm:text-sm text-white/60 truncate">
+                            <p className="flex items-center gap-1.5 mt-0.5 sm:mt-1 text-xs sm:text-sm text-white/80 truncate">
                               <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" /> {displayAddress}
                             </p>
                           )}
@@ -964,22 +904,22 @@ export default function Customers() {
                       <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
                         <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-300" />
                         <span className="font-medium">{customerSites.length}</span>
-                        <span className="text-white/60">sites</span>
+                        <span className="text-white/80">sites</span>
                       </div>
                       <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
                         <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-300" />
                         <span className="font-medium">{customerContacts.length}</span>
-                        <span className="text-white/60 hidden sm:inline">contacts</span>
+                        <span className="text-white/80 hidden sm:inline">contacts</span>
                       </div>
                       <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
                         <FolderKanban className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-300" />
                         <span className="font-medium">{customerProjects.length}</span>
-                        <span className="text-white/60 hidden sm:inline">projects</span>
+                        <span className="text-white/80 hidden sm:inline">projects</span>
                       </div>
                       <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
                         <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-violet-300" />
                         <span className="font-medium">{customerQuotes.length}</span>
-                        <span className="text-white/60 hidden sm:inline">proposals</span>
+                        <span className="text-white/80 hidden sm:inline">proposals</span>
                       </div>
                     </div>
                   </div>
@@ -1023,7 +963,7 @@ export default function Customers() {
                         </h4>
                         <div className="space-y-4 text-sm">
                           <div>
-                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Address</p>
+                            <p className="text-muted-foreground font-medium text-xs uppercase tracking-wider mb-1">Address</p>
                             {(selectedCustomer.address || selectedCustomer.city) ? (
                               <a
                                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
@@ -1036,30 +976,30 @@ export default function Customers() {
                               </a>
                             ) : customerSites.length > 0 && (customerSites[0].address || customerSites[0].city) ? (
                               <>
-                                <p className="text-slate-700 dark:text-slate-300">{customerSites[0].address || '--'}</p>
-                                <p className="text-slate-700 dark:text-slate-300">{[customerSites[0].city, customerSites[0].state, customerSites[0].zip].filter(Boolean).join(', ')}</p>
-                                <p className="text-xs text-slate-400 mt-1">(from site: {customerSites[0].name})</p>
+                                <p className="text-foreground">{customerSites[0].address || <span className="text-muted-foreground italic">Not set</span>}</p>
+                                <p className="text-foreground">{[customerSites[0].city, customerSites[0].state, customerSites[0].zip].filter(Boolean).join(', ')}</p>
+                                <p className="text-xs text-muted-foreground mt-1">(from site: {customerSites[0].name})</p>
                               </>
                             ) : (
-                              <p className="text-slate-400">--</p>
+                              <p className="text-muted-foreground italic">Not set</p>
                             )}
                           </div>
                           <div>
-                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Primary Contact</p>
-                            <p className="text-slate-700 dark:text-slate-300">{customerContacts[0]?.name || '--'}</p>
+                            <p className="text-muted-foreground font-medium text-xs uppercase tracking-wider mb-1">Primary Contact</p>
+                            <p className="text-foreground">{customerContacts[0]?.name || <span className="text-muted-foreground italic">Not set</span>}</p>
                           </div>
                           <div>
-                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Email</p>
-                            <p className="text-slate-700 dark:text-slate-300">{selectedCustomer.email || '--'}</p>
+                            <p className="text-muted-foreground font-medium text-xs uppercase tracking-wider mb-1">Email</p>
+                            <p className="text-foreground">{selectedCustomer.email || <span className="text-muted-foreground italic">Not set</span>}</p>
                           </div>
                           <div>
-                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-1">Phone</p>
-                            <p className="text-slate-700 dark:text-slate-300">{selectedCustomer.phone || '--'}</p>
+                            <p className="text-muted-foreground font-medium text-xs uppercase tracking-wider mb-1">Phone</p>
+                            <p className="text-foreground">{selectedCustomer.phone || <span className="text-muted-foreground italic">Not set</span>}</p>
                           </div>
 
                           {/* Sites/Locations */}
                           <div className="pt-3 border-t border-slate-200 dark:border-border">
-                            <p className="text-slate-400 dark:text-slate-500 text-xs uppercase tracking-wider mb-2">Sites / Locations ({customerSites.length})</p>
+                            <p className="text-muted-foreground font-medium text-xs uppercase tracking-wider mb-2">Sites / Locations ({customerSites.length})</p>
                             {customerSites.length > 0 ? (
                               <div className="space-y-2">
                                 {customerSites.map(site => (
@@ -1072,7 +1012,7 @@ export default function Customers() {
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-slate-400 text-sm">No sites</p>
+                              <p className="text-muted-foreground text-sm italic">No sites</p>
                             )}
                           </div>
                         </div>
