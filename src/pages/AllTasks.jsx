@@ -115,7 +115,7 @@ function TaskTableRow({ task, teamMembers, currentUser, statusConfig, priorityCo
             ) : (
               <button
                 onClick={(e) => e.stopPropagation()}
-                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-blue-400"
+                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-blue-400"
                 title="Assign"
               >
                 <UserPlus className="w-3 h-3 text-slate-400" />
@@ -154,7 +154,7 @@ function TaskTableRow({ task, teamMembers, currentUser, statusConfig, priorityCo
             ) : (
               <button
                 onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                className="p-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                className="p-1 rounded hover:bg-muted sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                 title="Set due date"
               >
                 <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
@@ -267,7 +267,7 @@ function PartTableRow({ part, teamMembers, projectName, projectNumber, getDueDat
             ) : (
               <button
                 onClick={(e) => e.stopPropagation()}
-                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-blue-400"
+                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-blue-400"
                 title="Assign"
               >
                 <UserPlus className="w-3 h-3 text-slate-400" />
@@ -606,27 +606,27 @@ export default function AllTasks() {
       title="Tasks & Parts"
       subtitle="View and filter all tasks and parts across projects"
       actions={
-          <div className="flex gap-1.5 sm:gap-2">
+          <div className="flex gap-1 p-1 bg-muted rounded-xl mx-auto sm:mx-0">
             <button
               onClick={() => setActiveTab('tasks')}
               className={cn(
-                "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2",
-                activeTab === 'tasks' ? "bg-primary text-white" : "bg-card text-muted-foreground border border-border"
+                "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5",
+                activeTab === 'tasks' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <ListTodo className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <ListTodo className="w-3.5 h-3.5" />
               Tasks
             </button>
             <button
               onClick={() => setActiveTab('parts')}
               className={cn(
-                "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2",
-                activeTab === 'parts' ? "bg-primary text-white" : "bg-card text-muted-foreground border border-border"
+                "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5",
+                activeTab === 'parts' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Package className="w-3.5 h-3.5" />
               Parts
-              <span className={cn("text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-primary/80" : "bg-primary/10 text-primary")}>{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted-foreground/10">{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
             </button>
           </div>
       }
@@ -700,7 +700,7 @@ export default function AllTasks() {
               </div>
 
               {/* Status Pills — horizontal scroll on mobile */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+              <div className="flex items-center justify-center sm:justify-start gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
                 {Object.entries(statusConfig).filter(([key]) => key !== 'completed').map(([key, config]) => {
                   const Icon = config.icon;
                   const count = tasksByStatus[key]?.length || 0;
@@ -709,17 +709,17 @@ export default function AllTasks() {
                       key={key}
                       onClick={() => setStatusFilter(statusFilter === key ? 'all' : key)}
                       className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
+                        "flex items-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
                         statusFilter === key
-                          ? "bg-primary text-white"
+                          ? "bg-[#0F2F44] text-white dark:bg-blue-600"
                           : "bg-muted text-muted-foreground hover:bg-muted/80"
                       )}
                     >
-                      <Icon className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">{config.label}</span>
+                      <Icon className="w-3 h-3" />
+                      {config.label}
                       <span className={cn(
                         "px-1.5 py-0.5 rounded-full text-[10px]",
-                        statusFilter === key ? "bg-white/20" : "bg-white"
+                        statusFilter === key ? "bg-white/20" : "bg-muted-foreground/10"
                       )}>
                         {count}
                       </span>

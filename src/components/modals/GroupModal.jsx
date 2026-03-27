@@ -38,41 +38,45 @@ export default function GroupModal({ open, onClose, group, projectId, onSave }) 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{group ? 'Edit Group' : 'New Group'}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div>
-            <Label>Group Name</Label>
-            <Input
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g., Phase 1"
-              required
-              className="mt-1.5"
-            />
-          </div>
-          <div>
-            <Label>Color</Label>
-            <div className="flex gap-2 mt-2">
-              {Object.keys(groupColors).map((color) => (
-                <button
-                  type="button"
-                  key={color}
-                  onClick={() => setFormData(prev => ({ ...prev, color }))}
-                  className={cn(
-                    "w-8 h-8 rounded-full transition-all",
-                    groupColors[color],
-                    formData.color === color ? "ring-2 ring-offset-2 ring-indigo-500" : ""
-                  )}
-                />
-              ))}
+      <DialogContent className="sm:max-w-md p-0 gap-0">
+        <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b border-border">
+          <DialogHeader>
+            <DialogTitle>{group ? 'Edit Group' : 'New Group'}</DialogTitle>
+          </DialogHeader>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4 px-4 sm:px-6 py-4">
+            <div>
+              <Label>Group Name</Label>
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g., Phase 1"
+                required
+                className="mt-1.5 text-[16px] sm:text-sm"
+              />
+            </div>
+            <div>
+              <Label>Color</Label>
+              <div className="flex gap-3 mt-2">
+                {Object.keys(groupColors).map((color) => (
+                  <button
+                    type="button"
+                    key={color}
+                    onClick={() => setFormData(prev => ({ ...prev, color }))}
+                    className={cn(
+                      "w-9 h-9 rounded-full transition-all",
+                      groupColors[color],
+                      formData.color === color ? "ring-2 ring-offset-2 ring-[#0069AF] dark:ring-offset-[#1e2a3a]" : ""
+                    )}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3 px-4 sm:px-6 py-4 border-t border-border">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={saving}>
+            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e]" disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {group ? 'Update' : 'Create'}
             </Button>
