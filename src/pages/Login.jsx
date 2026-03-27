@@ -155,7 +155,7 @@ export default function Login() {
     return (
       <div className="min-h-screen flex">
         {/* Left branding panel */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden">
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0F2F44] to-[#163D57] relative overflow-hidden">
           <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20">
             <div className="flex items-center gap-3 mb-10">
               <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
@@ -163,7 +163,7 @@ export default function Login() {
             </div>
             <h2 className="text-2xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
               IT project delivery,{' '}
-              <span className="text-primary-foreground/70">simplified.</span>
+              <span className="text-white/60">simplified.</span>
             </h2>
             <p className="text-slate-300 text-lg max-w-md">
               Track projects from quote to completion. Assign tasks, manage stock, monitor timelines, and keep every client in the loop.
@@ -221,7 +221,7 @@ export default function Login() {
               <button
                 onClick={() => handleMfaVerify()}
                 disabled={mfaVerifying || mfaCode.length !== 6}
-                className="w-full bg-primary text-white py-3 rounded-xl text-sm font-semibold hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/25"
+                className="w-full bg-[#0F2F44] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#1a4a6e] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0F2F44]/25"
               >
                 {mfaVerifying ? (
                   <>
@@ -255,7 +255,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Left branding panel — desktop only */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0F2F44] to-[#163D57] relative overflow-hidden">
         <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20">
           <div className="flex items-center gap-3 mb-10">
             <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
@@ -263,15 +263,15 @@ export default function Login() {
           </div>
           <h2 className="text-2xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
             IT project delivery,{' '}
-            <span className="text-primary-foreground/70">simplified.</span>
+            <span className="text-white/60">simplified.</span>
           </h2>
           <p className="text-slate-300 text-lg max-w-md">
             Track projects from quote to completion. Assign tasks, manage stock, monitor timelines, and keep every client in the loop.
           </p>
         </div>
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-primary/10 rounded-full" />
-        <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary-foreground/5 rounded-full" />
-        <div className="absolute bottom-20 right-10 w-32 h-32 bg-primary/5 rounded-full" />
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-white/5 rounded-full" />
+        <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/5 rounded-full" />
+        <div className="absolute bottom-20 right-10 w-32 h-32 bg-white/5 rounded-full" />
       </div>
 
       {/* Form panel — full width on mobile */}
