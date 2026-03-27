@@ -39,7 +39,10 @@ export default function Profile() {
     avatar_url: '',
     avatar_color: 'bg-blue-500',
     theme: 'light',
-    show_dashboard_widgets: true
+    show_dashboard_widgets: true,
+    job_title: '',
+    phone: '',
+    timezone: 'America/New_York'
   });
 
   useEffect(() => {
@@ -50,7 +53,10 @@ export default function Profile() {
         avatar_url: user.avatar_url || '',
         avatar_color: user.avatar_color || 'bg-blue-500',
         theme: user.theme || 'light',
-        show_dashboard_widgets: user.show_dashboard_widgets !== false
+        show_dashboard_widgets: user.show_dashboard_widgets !== false,
+        job_title: user.job_title || '',
+        phone: user.phone || '',
+        timezone: user.timezone || 'America/New_York'
       });
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -215,7 +221,7 @@ export default function Profile() {
 
         {/* Profile Hero */}
         <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden mb-6">
-          <div className="h-16 bg-primary" />
+          <div className="h-20 bg-gradient-to-r from-[#0F2F44] to-[#1a4a6e]" />
           <div className="px-4 sm:px-6 py-5">
             <div className="flex items-center gap-4">
               <div className="relative shrink-0">
@@ -265,8 +271,8 @@ export default function Profile() {
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-1 justify-center",
                   activeTab === tab.id
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-[#0F2F44] dark:bg-[#0F2F44] text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
                 <Icon className="w-4 h-4" />
@@ -290,25 +296,68 @@ export default function Profile() {
                 <Input
                   value={formData.full_name}
                   onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                  className="bg-muted/30 border"
                 />
+              </div>
+
+              {/* Job Title / Role */}
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Job Title</Label>
+                <Input
+                  value={formData.job_title || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, job_title: e.target.value }))}
+                  placeholder="e.g. Project Manager, Technician"
+                  className="bg-muted/30 border"
+                />
+              </div>
+
+              {/* Phone Number */}
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Phone</Label>
+                <Input
+                  value={formData.phone || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="(555) 123-4567"
+                  className="bg-muted/30 border"
+                />
+              </div>
+
+              {/* Time Zone */}
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Time Zone</Label>
+                <Select value={formData.timezone || 'America/New_York'} onValueChange={(v) => setFormData(prev => ({ ...prev, timezone: v }))}>
+                  <SelectTrigger className="bg-muted/30 border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="America/New_York">Eastern (ET)</SelectItem>
+                    <SelectItem value="America/Chicago">Central (CT)</SelectItem>
+                    <SelectItem value="America/Denver">Mountain (MT)</SelectItem>
+                    <SelectItem value="America/Los_Angeles">Pacific (PT)</SelectItem>
+                    <SelectItem value="America/Anchorage">Alaska (AKT)</SelectItem>
+                    <SelectItem value="Pacific/Honolulu">Hawaii (HT)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Avatar Color (if no image) */}
               {!formData.avatar_url && (
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Avatar Color</Label>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="grid grid-cols-6 gap-3">
                     {avatarColors.map(color => (
                       <button
                         key={color}
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, avatar_color: color }))}
                         className={cn(
-                          "w-7 h-7 rounded-full transition-all",
+                          "w-10 h-10 rounded-xl transition-all cursor-pointer flex items-center justify-center",
                           color,
-                          formData.avatar_color === color && "ring-2 ring-offset-2 ring-primary dark:ring-offset-card"
+                          formData.avatar_color === color ? "ring-2 ring-offset-2 ring-offset-card ring-white scale-110" : "hover:scale-105"
                         )}
-                      />
+                      >
+                        {formData.avatar_color === color && <CheckCircle2 className="w-5 h-5 text-white" />}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -339,7 +388,7 @@ export default function Profile() {
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full bg-primary hover:bg-primary/80"
+                className="w-full bg-[#0F2F44] dark:bg-[#0F2F44] hover:bg-[#1a4a6e] text-white"
               >
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -364,17 +413,17 @@ export default function Profile() {
                       className={cn(
                         "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
                         isActive
-                          ? "border-primary bg-primary/10 dark:bg-primary/20 dark:border-primary"
+                          ? "border-[#0F2F44] bg-[#0F2F44]/10 dark:bg-[#0F2F44]/20 dark:border-[#1a4a6e]"
                           : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                       )}
                     >
                       <div className={cn(
                         "p-2.5 rounded-xl",
-                        isActive ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-700 text-muted-foreground"
+                        isActive ? "bg-[#0F2F44] text-white" : "bg-slate-100 dark:bg-slate-700 text-muted-foreground"
                       )}>
                         <Icon className="w-5 h-5" />
                       </div>
-                      <span className={cn("text-sm font-medium", isActive ? "text-primary" : "text-slate-700 dark:text-slate-300")}>{option.label}</span>
+                      <span className={cn("text-sm font-medium", isActive ? "text-[#0F2F44] dark:text-white" : "text-slate-700 dark:text-slate-300")}>{option.label}</span>
                     </button>
                   );
                 })}
@@ -382,7 +431,7 @@ export default function Profile() {
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full bg-primary hover:bg-primary/80 mt-5"
+                className="w-full bg-[#0F2F44] dark:bg-[#0F2F44] hover:bg-[#1a4a6e] text-white mt-5"
               >
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 {saving ? 'Saving...' : 'Save Theme'}
@@ -462,7 +511,7 @@ export default function Profile() {
                     "w-full",
                     mfaEnabled
                       ? "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600"
-                      : "bg-primary hover:bg-primary/80 text-white"
+                      : "bg-[#0F2F44] dark:bg-[#0F2F44] hover:bg-[#1a4a6e] text-white"
                   )}>
                     <Shield className="w-4 h-4 mr-2" />
                     {mfaEnabled ? 'Manage 2FA Settings' : 'Set Up 2FA Now'}
@@ -614,7 +663,7 @@ export default function Profile() {
               <Button
                 onClick={handleSaveEmailPrefs}
                 disabled={!emailPrefsDirty || savingEmailPrefs}
-                className="w-full bg-primary hover:bg-primary/80 text-white"
+                className="w-full bg-[#0F2F44] dark:bg-[#0F2F44] hover:bg-[#1a4a6e] text-white"
               >
                 {savingEmailPrefs ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 {savingEmailPrefs ? 'Saving...' : 'Save Email Preferences'}
