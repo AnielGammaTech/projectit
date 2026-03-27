@@ -11,6 +11,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { parseLocalDate } from '@/utils/dateUtils';
 
+import { useIsMobile } from '@/hooks/use-mobile';
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import ProjectStackCard from '@/components/dashboard/ProjectStackCard';
@@ -49,6 +50,7 @@ import { fireTaskConfetti, fireSubtleConfetti } from '@/utils/confetti';
 import { DashboardSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function Dashboard() {
+    const isMobile = useIsMobile();
     const [showProjectModal, setShowProjectModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentUser, setCurrentUser] = useState(null);
@@ -69,6 +71,8 @@ export default function Dashboard() {
   const [showBulkArchiveConfirm, setShowBulkArchiveConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeLetter, setActiveLetter] = useState(null);
+  const [projectLeadFilter, setProjectLeadFilter] = useState('all');
+  const [projectStatusFilter, setProjectStatusFilter] = useState('all');
   const PROJECTS_PER_PAGE = 25;
 
   // Dashboard Views
@@ -126,7 +130,8 @@ export default function Dashboard() {
     queryKey: ['incomingQuotes'],
     queryFn: () => api.entities.IncomingQuote.filter({ status: 'pending' }),
     staleTime: 30000,
-    gcTime: 600000
+    gcTime: 600000,
+    enabled: !isMobile
   });
 
   const handleSyncQuotes = async () => {
@@ -218,7 +223,8 @@ export default function Dashboard() {
   const { data: quoteRequests = [] } = useQuery({
     queryKey: ['quoteRequests'],
     queryFn: () => api.entities.QuoteRequest.list(),
-    staleTime: 300000 // 5 minutes - synced by scheduled task
+    staleTime: 300000,
+    enabled: !isMobile
   });
 
   const { data: customStatuses = [] } = useQuery({
@@ -295,11 +301,13 @@ export default function Dashboard() {
   
   const filteredProjects = useMemo(() => {
     const query = searchQuery.toLowerCase();
-    return displayProjects.filter(p =>
-      p.name?.toLowerCase().includes(query) ||
-      p.client?.toLowerCase().includes(query)
-    );
-  }, [displayProjects, searchQuery]);
+    return displayProjects.filter(p => {
+      if (query && !p.name?.toLowerCase().includes(query) && !p.client?.toLowerCase().includes(query)) return false;
+      if (projectLeadFilter !== 'all' && p.project_lead !== projectLeadFilter) return false;
+      if (projectStatusFilter !== 'all' && p.status !== projectStatusFilter) return false;
+      return true;
+    });
+  }, [displayProjects, searchQuery, projectLeadFilter, projectStatusFilter]);
 
   const { pinnedProjects, unpinnedProjects } = useMemo(() => {
     const pinned = filteredProjects.filter(p => pinnedProjectIds.includes(p.id))
@@ -1259,6 +1267,42 @@ export default function Dashboard() {
                   </div>
               </div>
             </div>
+
+            {/* Mobile filter pills */}
+            {!showArchived && (
+              <div className="flex items-center gap-2 mb-3 overflow-x-auto no-scrollbar -mx-1 px-1">
+                {/* Status filter */}
+                <select
+                  value={projectStatusFilter}
+                  onChange={(e) => setProjectStatusFilter(e.target.value)}
+                  className="text-xs font-medium px-3 py-1.5 rounded-lg bg-muted text-muted-foreground border-0 appearance-none cursor-pointer focus:ring-0"
+                >
+                  <option value="all">All Status</option>
+                  {customStatuses.map(s => (
+                    <option key={s.key} value={s.key}>{s.label}</option>
+                  ))}
+                </select>
+                {/* Lead filter */}
+                <select
+                  value={projectLeadFilter}
+                  onChange={(e) => setProjectLeadFilter(e.target.value)}
+                  className="text-xs font-medium px-3 py-1.5 rounded-lg bg-muted text-muted-foreground border-0 appearance-none cursor-pointer focus:ring-0"
+                >
+                  <option value="all">All Leads</option>
+                  {teamMembers.filter(m => activeProjects.some(p => p.project_lead === m.email)).map(m => (
+                    <option key={m.id} value={m.email}>{m.name}</option>
+                  ))}
+                </select>
+                {(projectStatusFilter !== 'all' || projectLeadFilter !== 'all') && (
+                  <button
+                    onClick={() => { setProjectStatusFilter('all'); setProjectLeadFilter('all'); }}
+                    className="text-xs text-muted-foreground hover:text-foreground shrink-0 px-2 py-1.5"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Bulk Actions Bar */}
             {selectionMode && (
