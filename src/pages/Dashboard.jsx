@@ -1077,7 +1077,7 @@ export default function Dashboard() {
                   </div>
                 )}
                 {activeWidget === 'deadlines' && (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {upcomingDeadlines.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-8">No deadlines in the next 7 days</p>
                     ) : (
@@ -1085,21 +1085,42 @@ export default function Dashboard() {
                         const dueDate = parseLocalDate(item.due_date);
                         const daysUntil = differenceInDays(dueDate, new Date());
                         const isProject = !!item.client;
+                        const proj = isProject ? item : projects.find(p => p.id === item.project_id);
+                        const assignee = item.assigned_to ? (item.assigned_name || item.assigned_to?.split('@')[0]) : null;
+                        const linkUrl = isProject
+                          ? createPageUrl('ProjectDetail') + `?id=${item.id}`
+                          : createPageUrl('ProjectTasks') + `?id=${item.project_id}`;
                         return (
-                          <div key={item.id + '-' + i} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors">
+                          <Link key={item.id + '-' + i} to={linkUrl} className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group">
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-foreground truncate">{item.name || item.title}</p>
-                              <p className="text-xs text-muted-foreground">{isProject ? 'Project' : 'Task'}</p>
+                              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{item.name || item.title}</p>
+                              <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
+                                {proj?.project_number && (
+                                  <span className="px-1.5 py-0 rounded bg-muted font-mono">#{proj.project_number}</span>
+                                )}
+                                {proj?.client && (
+                                  <span className="truncate max-w-[120px]">{proj.client}</span>
+                                )}
+                                {proj?.name && !isProject && (
+                                  <span className="truncate max-w-[120px]">{proj.name}</span>
+                                )}
+                                {assignee && (
+                                  <span className="flex items-center gap-1">
+                                    <span className="w-3.5 h-3.5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px] font-bold">{assignee[0]?.toUpperCase()}</span>
+                                    {assignee}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             <span className={cn(
-                              "text-xs font-semibold px-2 py-0.5 rounded-md",
+                              "text-xs font-semibold px-2 py-0.5 rounded-md shrink-0",
                               daysUntil === 0 ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
                               daysUntil <= 2 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
                               "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                             )}>
                               {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days`}
                             </span>
-                          </div>
+                          </Link>
                         );
                       })
                     )}
