@@ -925,7 +925,7 @@ export default function Dashboard() {
 
 
         {/* -- TOP ZONE: KPIs -- */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
           <StatsCard
             title="Active Projects"
             value={activeProjects.length}

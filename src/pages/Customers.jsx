@@ -835,27 +835,18 @@ export default function Customers() {
             return (
               <>
                 {/* Hero Header */}
-                <div className="bg-[#0F2F44] dark:bg-[#0F2F44] px-4 sm:px-6 pt-3 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden">
+                <div className="bg-[#0F2F44] dark:bg-[#0F2F44] px-4 sm:px-6 -mt-[18px] pt-[18px] sm:mt-0 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden rounded-t-2xl sm:rounded-t-none">
                   <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
                   <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-white/10 rounded-full" />
                   <div className="relative z-10">
-                    {/* Mobile: drag handle + close/edit bar */}
-                    <div className="sm:hidden flex items-center justify-between mb-3">
+                    {/* Mobile: close bar */}
+                    <div className="sm:hidden flex items-center justify-center mb-3">
                       <button
                         onClick={() => setSelectedCustomer(null)}
-                        className="flex items-center gap-1 text-white/70 text-xs font-medium"
+                        className="flex items-center gap-1.5 text-white text-sm font-semibold bg-white/15 rounded-full px-4 py-1.5"
                       >
                         <X className="w-4 h-4" /> Close
                       </button>
-                      <div className="w-8 h-1 rounded-full bg-white/30 mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => { setEditingCustomer(selectedCustomer); setShowModal(true); }}
-                        className="text-white/80 hover:text-white hover:bg-white/15 h-7 text-xs px-2"
-                      >
-                        <Edit2 className="w-3 h-3 mr-1" /> Edit
-                      </Button>
                     </div>
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
