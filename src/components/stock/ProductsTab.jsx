@@ -300,13 +300,13 @@ export default function ProductsTab() {
             </Button>
           )}
 
-          <div className="flex-1" />
+          <div className="flex-1 hidden sm:block" />
 
-          <div className="flex-shrink-0 flex items-center gap-3">
+          <div className="flex-shrink-0 flex items-center gap-3 ml-auto">
             <span className="text-xs text-muted-foreground hidden sm:inline">{filteredProducts.length} products</span>
             <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e] text-white" size="sm">
-              <PackagePlus className="w-4 h-4 mr-1.5" />
-              Add Product
+              <PackagePlus className="w-4 h-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Add Product</span>
             </Button>
           </div>
         </div>

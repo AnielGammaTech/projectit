@@ -32,24 +32,18 @@ export default function Stock() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Compact Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/50 dark:shadow-blue-900/30">
+        {/* Header + Tabs inline */}
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200/50 dark:shadow-blue-900/30 shrink-0">
               <Package className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">Inventory & Tools</h1>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold text-foreground">Stock</h1>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>{products.length} products</span>
                 <span>·</span>
                 <span>{tools.length} tools</span>
-                {checkedOutTools.length > 0 && (
-                  <>
-                    <span>·</span>
-                    <span className="text-orange-600 dark:text-orange-400 font-medium">{checkedOutTools.length} checked out</span>
-                  </>
-                )}
               </div>
             </div>
           </div>
@@ -95,29 +89,39 @@ export default function Stock() {
           </div>
         )}
 
-        {/* Tabs — 2 tabs only: Inventory + Tools */}
+        {/* Tabs — matching AllTasks toggle style */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="mb-4">
-            <TabsList className="bg-card border p-1 rounded-xl">
-              <TabsTrigger value="inventory" className="gap-1.5 px-4 rounded-lg data-[state=active]:bg-[#0F2F44] data-[state=active]:text-white">
-                <Package className="w-4 h-4" />
-                Inventory
-                {(lowStockProducts.length + outOfStockProducts.length) > 0 && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                    {lowStockProducts.length + outOfStockProducts.length}
-                  </span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="tools" className="gap-1.5 px-4 rounded-lg data-[state=active]:bg-[#0F2F44] data-[state=active]:text-white">
-                <HardDrive className="w-4 h-4" />
-                Tools
-                {checkedOutTools.length > 0 && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
-                    {checkedOutTools.length}
-                  </span>
-                )}
-              </TabsTrigger>
-            </TabsList>
+          <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit mb-4">
+            <button
+              onClick={() => setActiveTab('inventory')}
+              className={cn(
+                "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5",
+                activeTab === 'inventory' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Package className="w-3.5 h-3.5" />
+              Inventory
+              {(lowStockProducts.length + outOfStockProducts.length) > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-bold">
+                  {lowStockProducts.length + outOfStockProducts.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('tools')}
+              className={cn(
+                "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5",
+                activeTab === 'tools' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <HardDrive className="w-3.5 h-3.5" />
+              Tools
+              {checkedOutTools.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 font-bold">
+                  {checkedOutTools.length}
+                </span>
+              )}
+            </button>
           </div>
 
           <TabsContent value="inventory">
