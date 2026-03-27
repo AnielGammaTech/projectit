@@ -30,6 +30,15 @@ export default function WhatsNewNotifier() {
     const lastSeen = localStorage.getItem(STORAGE_KEY);
     if (lastSeen === CURRENT_VERSION) return;
 
+    // Don't show on mobile
+    if (window.innerWidth < 640) {
+      localStorage.setItem(STORAGE_KEY, CURRENT_VERSION);
+      return;
+    }
+
+    // Mark as seen immediately — only show once per version
+    localStorage.setItem(STORAGE_KEY, CURRENT_VERSION);
+
     // Small delay so the app settles before showing
     const timer = setTimeout(() => {
       toast(
@@ -47,9 +56,6 @@ export default function WhatsNewNotifier() {
           duration: 8000,
           position: 'bottom-right',
           dismissible: true,
-          onDismiss: () => {
-            localStorage.setItem(STORAGE_KEY, CURRENT_VERSION);
-          },
         }
       );
     }, 2000);
