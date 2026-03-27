@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
+import { isNative } from '@/lib/capacitor'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   // <React.StrictMode>
@@ -9,8 +10,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   // </React.StrictMode>,
 )
 
-// Register Service Worker for PWA support
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// Register Service Worker for PWA support (web only — native uses Capacitor)
+if (!isNative() && 'serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
@@ -20,6 +21,13 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
       .catch((err) => {
         console.log('SW registration failed:', err);
       });
+  });
+}
+
+// Initialize native status bar styling
+if (isNative()) {
+  import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+    StatusBar.setStyle({ style: Style.Light });
   });
 }
 

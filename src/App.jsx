@@ -14,6 +14,7 @@ import MfaEnforcementGuard from '@/components/MfaEnforcementGuard';
 import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import Login from '@/pages/Login';
 import AcceptInvite from '@/pages/AcceptInvite';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -43,6 +44,19 @@ const ThemeSyncer = () => {
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } = useAuth();
+  const { user } = useAuth();
+
+  // Register for native push notifications
+  usePushNotifications({
+    userEmail: user?.email,
+    onNotificationTapped: (notification) => {
+      const link = notification?.data?.link;
+      if (link) {
+        window.location.href = link;
+      }
+    },
+  });
+
   const location = useLocation();
 
   // Show loading spinner while checking auth
