@@ -1028,7 +1028,29 @@ export default function Dashboard() {
           ];
           const handleWidgetTab = (id) => { setActiveWidget(id); localStorage.setItem('dashboard-active-widget', id); if (currentUser) api.auth.updateMe({ dashboard_widget_tab: id }).catch(() => {}); };
           return (
-            <div className="rounded-2xl border bg-card shadow-warm mb-4 overflow-hidden">
+            <>
+            {/* Mobile: Just My Tasks, collapsed */}
+            <div className="sm:hidden mb-4">
+              <CollapsibleSection
+                id="mobile-my-tasks"
+                title="My Tasks"
+                icon={ListTodo}
+                summary={`${myUrgentTasks.length} due soon`}
+                defaultOpen={false}
+              >
+                <MyTasksCard
+                  tasks={tasks}
+                  parts={parts}
+                  projects={projects}
+                  currentUserEmail={currentUser?.email}
+                  onTaskComplete={handleTaskComplete}
+                  inline
+                />
+              </CollapsibleSection>
+            </div>
+
+            {/* Desktop: Full tabbed widget */}
+            <div className="hidden sm:block rounded-2xl border bg-card shadow-warm mb-4 overflow-hidden">
               <div className="flex border-b">
                 {widgetTabs.map(tab => {
                   const Icon = tab.icon;
@@ -1163,6 +1185,7 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
+            </>
           );
         })()}
 
