@@ -90,12 +90,13 @@ function LayoutContent({ children, currentPageName }) {
     allProjects.filter(p => p.status === 'archived').map(p => p.id)
   );
 
-  // Fetch user notifications (no polling — realtime subscription handles updates)
+  // Fetch user notifications (polling as fallback + realtime for instant)
   const { data: rawUserNotifications = [] } = useQuery({
     queryKey: ['layoutNotifications', currentUser?.email],
     queryFn: () => api.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
     enabled: !!currentUser?.email,
-    staleTime: 30000
+    staleTime: 10000,
+    refetchInterval: 15000
   });
 
   // Subscribe to realtime notifications via Supabase
