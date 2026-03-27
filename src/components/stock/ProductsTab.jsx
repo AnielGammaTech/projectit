@@ -300,12 +300,13 @@ export default function ProductsTab() {
 
           <div className="flex-1" />
 
-          <span className="text-xs sm:text-sm text-muted-foreground shrink-0">{filteredProducts.length} products</span>
-
-          <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e]" size="sm">
-            <Plus className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Add Product</span>
-          </Button>
+          <div className="flex-shrink-0 flex items-center gap-3">
+            <span className="text-xs text-muted-foreground hidden sm:inline">{filteredProducts.length} products</span>
+            <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-primary hover:bg-primary/80 text-white" size="sm">
+              <Plus className="w-4 h-4 mr-1.5" />
+              Add Product
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -346,12 +347,12 @@ export default function ProductsTab() {
         <div className="rounded-2xl border bg-card shadow-warm overflow-hidden">
           {/* List header */}
           <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b bg-muted/30">
-            <div className="col-span-4">Product</div>
-            <div className="col-span-2">SKU</div>
+            <div className="col-span-3">Product</div>
+            <div className="col-span-2">Brand / Model</div>
+            <div className="col-span-2">Location</div>
             <div className="col-span-1 text-center">Stock</div>
             <div className="col-span-2">Price</div>
-            <div className="col-span-2">Manufacturer</div>
-            <div className="col-span-1"></div>
+            <div className="col-span-2">SKU</div>
           </div>
 
           {/* Product rows */}
@@ -371,7 +372,7 @@ export default function ProductsTab() {
                 )}
               >
                 {/* Product name + image */}
-                <div className="col-span-4 flex items-center gap-3 min-w-0">
+                <div className="col-span-3 flex items-center gap-3 min-w-0">
                   {product.image_url ? (
                     <img src={product.image_url} alt="" className="w-9 h-9 rounded-lg object-cover border flex-shrink-0" />
                   ) : (
@@ -391,17 +392,23 @@ export default function ProductsTab() {
                   </div>
                 </div>
 
-                {/* SKU */}
-                <div className="hidden sm:block col-span-2">
-                  <span className="text-xs font-mono text-muted-foreground">{product.sku || '—'}</span>
+                {/* Brand / Model */}
+                <div className="hidden sm:block col-span-2 min-w-0">
+                  <p className="text-xs font-medium text-foreground truncate">{product.manufacturer || '—'}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{product.model || product.sku || '—'}</p>
+                </div>
+
+                {/* Location */}
+                <div className="hidden sm:block col-span-2 min-w-0">
+                  <span className="text-xs text-muted-foreground truncate">{product.stock_location || product.location || '—'}</span>
                 </div>
 
                 {/* Stock level */}
                 <div className="hidden sm:flex col-span-1 justify-center">
                   <span className={cn(
-                    "text-sm font-bold tabular-nums",
-                    isOut ? "text-red-600 dark:text-red-400" :
-                    isLow ? "text-amber-600 dark:text-amber-400" :
+                    "text-sm font-bold tabular-nums px-2 py-0.5 rounded-md",
+                    isOut ? "text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/30" :
+                    isLow ? "text-amber-700 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30" :
                     "text-foreground"
                   )}>
                     {stockLevel}
@@ -410,34 +417,24 @@ export default function ProductsTab() {
 
                 {/* Price */}
                 <div className="hidden sm:block col-span-2">
-                  <span className="text-sm text-foreground">${(product.selling_price || 0).toFixed(2)}</span>
+                  <p className="text-sm font-medium text-foreground">${(product.selling_price || 0).toFixed(2)}</p>
                   {product.cost > 0 && (
-                    <span className="text-[10px] text-muted-foreground ml-1">cost: ${product.cost.toFixed(2)}</span>
+                    <p className="text-[10px] text-muted-foreground">cost: ${product.cost.toFixed(2)}</p>
                   )}
                 </div>
 
-                {/* Manufacturer */}
-                <div className="hidden sm:block col-span-2">
-                  <span className="text-xs text-muted-foreground truncate">{product.manufacturer || '—'}</span>
+                {/* SKU */}
+                <div className="hidden sm:block col-span-2 min-w-0">
+                  <span className="text-xs font-mono text-muted-foreground truncate">{product.sku || '—'}</span>
                 </div>
 
                 {/* Mobile: show key info inline */}
                 <div className="sm:hidden flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className={cn("font-bold", isOut ? "text-red-600" : isLow ? "text-amber-600" : "text-foreground")}>
+                  <span className={cn("font-bold px-1.5 py-0.5 rounded", isOut ? "text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/30" : isLow ? "text-amber-700 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30" : "text-foreground")}>
                     Qty: {stockLevel}
                   </span>
+                  {product.manufacturer && <span>{product.manufacturer}</span>}
                   <span>${(product.selling_price || 0).toFixed(2)}</span>
-                  {product.sku && <span className="font-mono">{product.sku}</span>}
-                </div>
-
-                {/* Actions column */}
-                <div className="hidden sm:flex col-span-1 justify-end gap-1">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setDeleteConfirm(product); }}
-                    className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-muted-foreground hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </div>
             );

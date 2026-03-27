@@ -74,7 +74,6 @@ export default function ToolsTab() {
       setEditingTool(null);
     } catch (err) {
       console.error('Tool save failed:', err);
-      // Re-throw so ToolModal can display the error
       throw err;
     }
   };
@@ -130,148 +129,211 @@ export default function ToolsTab() {
     setQuickActionQty(1);
   };
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-card rounded-2xl border p-4 animate-pulse">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-muted" />
-              <div className="flex-1 space-y-1.5">
-                <div className="h-4 bg-muted rounded w-3/4" />
-                <div className="h-3 bg-muted rounded w-1/2" />
-              </div>
-            </div>
-            <div className="h-3 bg-muted rounded w-full mt-2" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div>
       {/* Header */}
       <div className="space-y-3 mb-4">
         {/* Search Row */}
         <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <Input placeholder="Search tools..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search tools..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
         </div>
+
         {/* Filters + Actions Row */}
         <div className="flex items-center gap-2 overflow-x-auto flex-nowrap sm:flex-wrap pb-1 sm:pb-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5 min-h-[44px] sm:min-h-0 shrink-0">
+              <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
                 <Filter className="w-4 h-4" />
                 <span className="hidden sm:inline">Status</span>
-                {stockFilter !== 'all' && <Badge variant="default" className="h-5 w-5 p-0 justify-center bg-[#0069AF]">1</Badge>}
+                {stockFilter !== 'all' && (
+                  <Badge className="h-5 w-5 p-0 justify-center bg-[#0069AF]">1</Badge>
+                )}
                 <ChevronDown className="w-3 h-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuCheckboxItem checked={stockFilter === 'all'} onCheckedChange={() => setStockFilter('all')}>All Tools</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={stockFilter === 'available'} onCheckedChange={() => setStockFilter('available')}>Available</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={stockFilter === 'checked_out'} onCheckedChange={() => setStockFilter('checked_out')}>Checked Out</DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={stockFilter === 'all'} onCheckedChange={() => setStockFilter('all')}>
+                All Tools
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={stockFilter === 'available'} onCheckedChange={() => setStockFilter('available')}>
+                Available
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={stockFilter === 'checked_out'} onCheckedChange={() => setStockFilter('checked_out')}>
+                Checked Out
+              </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {stockFilter !== 'all' && (
+            <Button variant="ghost" size="sm" onClick={() => setStockFilter('all')} className="text-muted-foreground hover:text-foreground shrink-0">
+              <X className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Clear filters</span>
+            </Button>
+          )}
+
           <div className="flex-1" />
-          <span className="text-xs sm:text-sm text-slate-500 shrink-0">{filteredTools.length} tools</span>
-          <Button variant="outline" size="sm" onClick={() => { setQuickAction({ type: 'return' }); setQuickActionTool(''); setQuickActionQty(1); }} className="gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800 min-h-[44px] sm:min-h-0 shrink-0">
-            <LogIn className="w-4 h-4" />
-            <span className="hidden sm:inline">Check In</span>
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => { setQuickAction({ type: 'checkout' }); setQuickActionTool(''); setQuickActionQty(1); }} className="gap-1.5 border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-800 min-h-[44px] sm:min-h-0 shrink-0">
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Check Out</span>
-          </Button>
-          <Button onClick={() => { setEditingTool(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e] min-h-[44px] sm:min-h-0 shrink-0" size="sm">
-            <Plus className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Add Tool</span>
-          </Button>
+
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <span className="text-xs text-muted-foreground hidden sm:inline">{filteredTools.length} tools</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setQuickAction({ type: 'return' }); setQuickActionTool(''); setQuickActionQty(1); }}
+              className="gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800 shrink-0"
+            >
+              <LogIn className="w-4 h-4" />
+              <span className="hidden sm:inline">Check In</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setQuickAction({ type: 'checkout' }); setQuickActionTool(''); setQuickActionQty(1); }}
+              className="gap-1.5 border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-800 shrink-0"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Check Out</span>
+            </Button>
+            <Button
+              onClick={() => { setEditingTool(null); setShowModal(true); }}
+              className="bg-primary hover:bg-primary/80 text-white shrink-0"
+              size="sm"
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              Add Tool
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Tools Grid */}
+      {/* Tools List — Compact rows */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          {[...Array(12)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden animate-pulse">
-              <div className="aspect-square bg-slate-100 dark:bg-[#151d2b]" />
-              <div className="p-2 space-y-1.5">
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
-                <div className="h-3 bg-slate-100 dark:bg-slate-700/50 rounded w-1/2" />
+        <div className="rounded-2xl border bg-card overflow-hidden">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3 border-b border-border animate-pulse">
+              <div className="w-9 h-9 rounded-lg bg-muted" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-4 bg-muted rounded w-1/3" />
+                <div className="h-3 bg-muted rounded w-1/5" />
               </div>
             </div>
           ))}
         </div>
       ) : filteredTools.length === 0 ? (
-        <div className="text-center py-16 bg-slate-50 dark:bg-[#1e2a3a]/50 rounded-2xl border border-slate-200 dark:border-slate-700/50">
-          <HardDrive className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-          <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">
+        <div className="rounded-2xl border bg-card py-16 text-center">
+          <HardDrive className="w-8 h-8 mx-auto text-muted-foreground mb-3" />
+          <h3 className="text-base font-medium text-foreground mb-1">
             {tools.length === 0 ? 'No tools yet' : 'No tools match filters'}
           </h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             {tools.length === 0 ? 'Add tools that can be checked out and returned' : 'Try adjusting your filters'}
           </p>
-          {tools.length === 0 && (
-            <Button onClick={() => setShowModal(true)} className="bg-[#0F2F44] hover:bg-[#1a4a6e]">
-              <Plus className="w-4 h-4 mr-2" />Add Tool
+          {tools.length === 0 ? (
+            <Button onClick={() => setShowModal(true)} className="bg-primary hover:bg-primary/80 text-white">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Tool
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={() => setStockFilter('all')}>
+              Clear Filters
             </Button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        <div className="rounded-2xl border bg-card shadow-warm overflow-hidden">
+          {/* List header */}
+          <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b bg-muted/30">
+            <div className="col-span-3">Tool</div>
+            <div className="col-span-2">Serial Number</div>
+            <div className="col-span-2">Category</div>
+            <div className="col-span-1 text-center">Total</div>
+            <div className="col-span-2 text-center">Checked Out</div>
+            <div className="col-span-2">Status</div>
+          </div>
+
+          {/* Tool rows */}
           {filteredTools.map((tool) => (
             <div
               key={tool.id}
               onClick={() => setViewingTool(tool)}
-              className="bg-white dark:bg-[#1e2a3a] rounded-lg border border-slate-200 dark:border-slate-700/50 overflow-hidden hover:shadow-md hover:border-[#0069AF]/30 dark:hover:border-blue-500/30 transition-all cursor-pointer group"
+              className="grid grid-cols-1 sm:grid-cols-12 gap-2 px-4 py-3 border-b border-border last:border-b-0 cursor-pointer hover:bg-muted/50 transition-colors items-center"
             >
-              <div className="aspect-square bg-slate-50 dark:bg-[#151d2b] relative">
-                {tool.image_url ? (
-                  <img src={tool.image_url} alt={tool.name} className="w-full h-full object-contain p-2" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <HardDrive className="w-10 h-10 text-slate-200 dark:text-slate-700" />
-                  </div>
-                )}
-                <div className="absolute top-1.5 right-1.5">
-                  <Badge variant={tool.quantity_on_hand > 0 ? "default" : "destructive"} className={cn("text-[10px] px-1.5 py-0", tool.quantity_on_hand > 0 ? "bg-emerald-500 text-white" : "")}>
-                    {tool.quantity_on_hand || 0}
-                  </Badge>
+              {/* Tool name + icon */}
+              <div className="col-span-3 flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                  {tool.image_url ? (
+                    <img src={tool.image_url} alt={tool.name} className="w-9 h-9 rounded-lg object-cover" />
+                  ) : (
+                    <HardDrive className="w-4 h-4 text-muted-foreground" />
+                  )}
                 </div>
-                <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                <p className="text-sm font-medium text-foreground truncate">{tool.name}</p>
+              </div>
+
+              {/* Serial */}
+              <div className="hidden sm:block col-span-2">
+                <span className="text-xs font-mono text-muted-foreground">{tool.serial_number || '—'}</span>
+              </div>
+
+              {/* Category */}
+              <div className="hidden sm:block col-span-2">
+                <span className="text-xs text-muted-foreground">{tool.category || '—'}</span>
+              </div>
+
+              {/* Total qty */}
+              <div className="hidden sm:flex col-span-1 justify-center">
+                <span className="text-sm font-medium text-foreground">{tool.quantity_on_hand || 0}</span>
+              </div>
+
+              {/* Checked out count */}
+              <div className="hidden sm:flex col-span-2 justify-center">
+                <span className={cn(
+                  "text-sm font-bold tabular-nums px-2 py-0.5 rounded-md",
+                  (tool.checked_out_count || 0) > 0
+                    ? "text-orange-700 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30"
+                    : "text-foreground"
+                )}>
+                  {tool.checked_out_count || 0}
+                </span>
+              </div>
+
+              {/* Status */}
+              <div className="hidden sm:flex col-span-2 items-center justify-between">
+                <span className={cn(
+                  "text-xs font-semibold px-2 py-0.5 rounded-md",
+                  (tool.checked_out_count || 0) > 0
+                    ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                )}>
+                  {(tool.checked_out_count || 0) > 0 ? 'Checked Out' : 'Available'}
+                </span>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={(e) => { e.stopPropagation(); setDeleteConfirm(tool); }}
-                    className="p-1.5 rounded bg-white/80 dark:bg-slate-800/80 hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-600"
+                    className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-muted-foreground hover:text-red-600"
+                    title="Delete tool"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
-                  {(tool.quantity_on_hand || 0) > 0 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleQuickAction(tool, 'checkout'); }}
-                      className="p-1.5 rounded bg-white/80 dark:bg-slate-800/80 hover:bg-orange-50 dark:hover:bg-orange-900/30 text-slate-400 hover:text-orange-600"
-                      title="Quick checkout (1 unit)"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  {(tool.checked_out_count || 0) > 0 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleQuickAction(tool, 'return'); }}
-                      className="p-1.5 rounded bg-white/80 dark:bg-slate-800/80 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-slate-400 hover:text-purple-600"
-                      title="Quick check in (1 unit)"
-                    >
-                      <LogIn className="w-3.5 h-3.5" />
-                    </button>
-                  )}
                 </div>
               </div>
-              <div className="p-2">
-                <h3 className="font-medium text-slate-900 dark:text-slate-100 text-sm truncate" title={tool.name}>{tool.name}</h3>
-                {tool.serial_number && <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">SN: {tool.serial_number}</p>}
-                {tool.category && <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{tool.category}</p>}
+
+              {/* Mobile info */}
+              <div className="sm:hidden flex items-center gap-3 text-xs text-muted-foreground">
+                {tool.serial_number && <span className="font-mono">{tool.serial_number}</span>}
+                <span className={cn(
+                  "font-bold px-1.5 py-0.5 rounded",
+                  (tool.checked_out_count || 0) > 0
+                    ? "text-orange-700 bg-orange-100"
+                    : "text-emerald-700 bg-emerald-100"
+                )}>
+                  {(tool.checked_out_count || 0) > 0 ? `${tool.checked_out_count} out` : 'Available'}
+                </span>
               </div>
             </div>
           ))}
@@ -445,38 +507,76 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
             {tool.image_url ? (
               <img src={tool.image_url} alt={tool.name} className="w-12 h-12 rounded-lg object-cover" />
             ) : (
-              <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                <HardDrive className="w-6 h-6 text-slate-400" />
+              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                <HardDrive className="w-6 h-6 text-muted-foreground" />
               </div>
             )}
             <div className="min-w-0">
               <p className="text-lg font-semibold truncate">{tool.name}</p>
-              {tool.category && <p className="text-sm font-normal text-slate-500">{tool.category}</p>}
+              {tool.category && <p className="text-sm font-normal text-muted-foreground">{tool.category}</p>}
             </div>
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3 mt-1">
           <div className="grid grid-cols-2 gap-3">
-            {tool.serial_number && <div><p className="text-xs text-slate-500">Serial Number</p><p className="text-sm font-medium">{tool.serial_number}</p></div>}
-            {tool.manufacturer && <div><p className="text-xs text-slate-500">Manufacturer</p><p className="text-sm font-medium">{tool.manufacturer}</p></div>}
+            {tool.serial_number && (
+              <div>
+                <p className="text-xs text-muted-foreground">Serial Number</p>
+                <p className="text-sm font-medium">{tool.serial_number}</p>
+              </div>
+            )}
+            {tool.manufacturer && (
+              <div>
+                <p className="text-xs text-muted-foreground">Manufacturer</p>
+                <p className="text-sm font-medium">{tool.manufacturer}</p>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-3 bg-slate-50 dark:bg-[#151d2b] rounded-lg">
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Available</p><p className={cn("text-base sm:text-lg font-bold", tool.quantity_on_hand === 0 ? "text-red-600" : "text-slate-900 dark:text-slate-100")}>{tool.quantity_on_hand || 0}</p></div>
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Checked Out</p><p className="text-base sm:text-lg font-bold text-orange-600 dark:text-orange-400">{tool.checked_out_count || 0}</p></div>
-            <div className="text-center"><p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Total</p><p className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">{(tool.quantity_on_hand || 0) + (tool.checked_out_count || 0)}</p></div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 p-2 sm:p-3 bg-muted/50 rounded-lg">
+            <div className="text-center">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Available</p>
+              <p className={cn("text-base sm:text-lg font-bold", tool.quantity_on_hand === 0 ? "text-red-600" : "text-foreground")}>
+                {tool.quantity_on_hand || 0}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Checked Out</p>
+              <p className="text-base sm:text-lg font-bold text-orange-600 dark:text-orange-400">{tool.checked_out_count || 0}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Total</p>
+              <p className="text-base sm:text-lg font-bold text-foreground">{(tool.quantity_on_hand || 0) + (tool.checked_out_count || 0)}</p>
+            </div>
           </div>
 
-          {tool.description && <div><p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Description</p><p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-3">{tool.description}</p></div>}
+          {tool.description && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Description</p>
+              <p className="text-sm text-foreground line-clamp-3">{tool.description}</p>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-2 border-t">
             <div className="flex gap-2 w-full sm:w-auto">
-              <Button size="sm" variant={activeAction === 'checkout' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'checkout' ? null : 'checkout')} disabled={tool.quantity_on_hand === 0} className={cn("w-full sm:w-auto min-h-[44px] sm:min-h-0", activeAction === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : '')}>
+              <Button
+                size="sm"
+                variant={activeAction === 'checkout' ? 'default' : 'outline'}
+                onClick={() => setActiveAction(activeAction === 'checkout' ? null : 'checkout')}
+                disabled={tool.quantity_on_hand === 0}
+                className={cn("w-full sm:w-auto min-h-[44px] sm:min-h-0", activeAction === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : '')}
+              >
                 <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />Checkout
               </Button>
-              <Button size="sm" variant={activeAction === 'return' ? 'default' : 'outline'} onClick={() => setActiveAction(activeAction === 'return' ? null : 'return')} disabled={(tool.checked_out_count || 0) === 0} className={cn("w-full sm:w-auto min-h-[44px] sm:min-h-0", activeAction === 'return' ? 'bg-purple-600 hover:bg-purple-700' : '')}>
+              <Button
+                size="sm"
+                variant={activeAction === 'return' ? 'default' : 'outline'}
+                onClick={() => setActiveAction(activeAction === 'return' ? null : 'return')}
+                disabled={(tool.checked_out_count || 0) === 0}
+                className={cn("w-full sm:w-auto min-h-[44px] sm:min-h-0", activeAction === 'return' ? 'bg-purple-600 hover:bg-purple-700' : '')}
+              >
                 <RotateCcw className="w-3.5 h-3.5 mr-1.5" />Return
               </Button>
             </div>
@@ -488,12 +588,19 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
 
           {/* Inline Action Panel */}
           {activeAction && (
-            <div className="p-3 bg-slate-50 dark:bg-[#151d2b] rounded-lg border dark:border-slate-700/50 space-y-3">
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{activeAction === 'checkout' ? 'Checkout Tool' : 'Return Tool'}</p>
+            <div className="p-3 bg-muted/50 rounded-lg border space-y-3">
+              <p className="text-sm font-semibold text-foreground">{activeAction === 'checkout' ? 'Checkout Tool' : 'Return Tool'}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs">Quantity</Label>
-                  <Input type="number" min={1} max={activeAction === 'checkout' ? tool.quantity_on_hand : (tool.checked_out_count || 0)} value={actionData.quantity} onChange={(e) => setActionData(p => ({ ...p, quantity: e.target.value }))} className="mt-1 h-8" />
+                  <Input
+                    type="number"
+                    min={1}
+                    max={activeAction === 'checkout' ? tool.quantity_on_hand : (tool.checked_out_count || 0)}
+                    value={actionData.quantity}
+                    onChange={(e) => setActionData(p => ({ ...p, quantity: e.target.value }))}
+                    className="mt-1 h-8"
+                  />
                 </div>
                 <div>
                   <Label className="text-xs">Project (optional)</Label>
@@ -505,14 +612,24 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
               </div>
               <div>
                 <Label className="text-xs">Notes</Label>
-                <Textarea value={actionData.notes} onChange={(e) => setActionData(p => ({ ...p, notes: e.target.value }))} className="mt-1 h-16 text-sm" placeholder="Optional notes..." />
+                <Textarea
+                  value={actionData.notes}
+                  onChange={(e) => setActionData(p => ({ ...p, notes: e.target.value }))}
+                  className="mt-1 h-16 text-sm"
+                  placeholder="Optional notes..."
+                />
               </div>
               {actionError && (
                 <p className="text-xs text-red-600 bg-red-50 rounded p-2 text-center">{actionError}</p>
               )}
               <div className="flex justify-end gap-2">
                 <Button size="sm" variant="outline" onClick={() => setActiveAction(null)}>Cancel</Button>
-                <Button size="sm" onClick={handleAction} disabled={submitting || !actionData.quantity} className={activeAction === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-purple-600 hover:bg-purple-700'}>
+                <Button
+                  size="sm"
+                  onClick={handleAction}
+                  disabled={submitting || !actionData.quantity}
+                  className={activeAction === 'checkout' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-purple-600 hover:bg-purple-700'}
+                >
                   {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
                   Confirm {activeAction === 'checkout' ? 'Checkout' : 'Return'}
                 </Button>
@@ -522,29 +639,34 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
 
           {/* Transaction History */}
           <div className="border-t pt-3">
-            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 w-full">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground w-full"
+            >
               <History className="w-4 h-4" />History ({transactions.length})
               {showHistory ? <X className="w-3.5 h-3.5 ml-auto" /> : <ChevronDown className="w-3.5 h-3.5 ml-auto" />}
             </button>
             {(showHistory || transactions.length > 0) && (
               <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
                 {displayedTx.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-2 text-center">No transactions yet</p>
+                  <p className="text-xs text-muted-foreground py-2 text-center">No transactions yet</p>
                 ) : displayedTx.map((tx) => {
                   const cfg = txConfig[tx.type] || txConfig.checkout;
                   const proj = projects.find(p => p.id === tx.project_id);
                   return (
-                    <div key={tx.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                    <div key={tx.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded hover:bg-muted/50">
                       <Badge className={cn("text-[10px] px-1.5 py-0", cfg.color)}>{cfg.label}</Badge>
-                      <span className="font-semibold text-slate-700 dark:text-slate-200">{cfg.sign}{tx.quantity}</span>
-                      {proj && <span className="text-slate-500 dark:text-slate-400 truncate">→ {proj.name}</span>}
-                      <span className="text-slate-400 dark:text-slate-500 ml-auto shrink-0">{tx.user_name?.split(' ')[0]}</span>
-                      <span className="text-slate-400 dark:text-slate-500 shrink-0">{tx.created_date ? format(new Date(tx.created_date), 'MMM d') : ''}</span>
+                      <span className="font-semibold text-foreground">{cfg.sign}{tx.quantity}</span>
+                      {proj && <span className="text-muted-foreground truncate">→ {proj.name}</span>}
+                      <span className="text-muted-foreground ml-auto shrink-0">{tx.user_name?.split(' ')[0]}</span>
+                      <span className="text-muted-foreground shrink-0">{tx.created_date ? format(new Date(tx.created_date), 'MMM d') : ''}</span>
                     </div>
                   );
                 })}
                 {!showHistory && transactions.length > 5 && (
-                  <button onClick={() => setShowHistory(true)} className="text-xs text-[#0069AF] hover:underline w-full text-center py-1">Show all {transactions.length}</button>
+                  <button onClick={() => setShowHistory(true)} className="text-xs text-[#0069AF] hover:underline w-full text-center py-1">
+                    Show all {transactions.length}
+                  </button>
                 )}
               </div>
             )}
@@ -586,7 +708,9 @@ function ToolModal({ open, onClose, tool, onSave }) {
     try {
       const { file_url } = await api.integrations.Core.UploadFile({ file });
       setFormData(prev => ({ ...prev, image_url: file_url }));
-    } catch (err) { console.error('Upload failed:', err); }
+    } catch (err) {
+      console.error('Upload failed:', err);
+    }
     setUploading(false);
   };
 
@@ -611,32 +735,62 @@ function ToolModal({ open, onClose, tool, onSave }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label>Image</Label>
-            <div className="mt-1 border-2 border-dashed border-slate-200 rounded-xl p-4 text-center cursor-pointer hover:border-[#0F2F44]/50 transition-colors" onClick={() => document.getElementById('tool-image-input').click()}>
+            <div
+              className="mt-1 border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+              onClick={() => document.getElementById('tool-image-input').click()}
+            >
               {formData.image_url ? (
                 <div className="relative inline-block">
                   <img src={formData.image_url} alt="Tool" className="max-h-32 rounded-lg mx-auto" />
-                  <button type="button" onClick={(e) => { e.stopPropagation(); setFormData(p => ({ ...p, image_url: '' })); }} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full"><X className="w-3 h-3" /></button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setFormData(p => ({ ...p, image_url: '' })); }}
+                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
               ) : (
-                <div className="py-4"><ImagePlus className="w-8 h-8 mx-auto text-slate-400 mb-2" /><p className="text-sm text-slate-500">{uploading ? 'Uploading...' : 'Click to upload'}</p></div>
+                <div className="py-4">
+                  <ImagePlus className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">{uploading ? 'Uploading...' : 'Click to upload'}</p>
+                </div>
               )}
             </div>
             <input id="tool-image-input" type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2"><Label>Name *</Label><Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} required /></div>
-            <div><Label>Serial Number</Label><Input value={formData.serial_number} onChange={(e) => setFormData(p => ({ ...p, serial_number: e.target.value }))} /></div>
-            <div><Label>Category</Label><Input value={formData.category} onChange={(e) => setFormData(p => ({ ...p, category: e.target.value }))} /></div>
-            <div><Label>Manufacturer</Label><Input value={formData.manufacturer} onChange={(e) => setFormData(p => ({ ...p, manufacturer: e.target.value }))} /></div>
-            <div><Label>Quantity Available</Label><Input type="number" value={formData.quantity_on_hand} onChange={(e) => setFormData(p => ({ ...p, quantity_on_hand: e.target.value }))} /></div>
+            <div className="sm:col-span-2">
+              <Label>Name *</Label>
+              <Input value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} required />
+            </div>
+            <div>
+              <Label>Serial Number</Label>
+              <Input value={formData.serial_number} onChange={(e) => setFormData(p => ({ ...p, serial_number: e.target.value }))} />
+            </div>
+            <div>
+              <Label>Category</Label>
+              <Input value={formData.category} onChange={(e) => setFormData(p => ({ ...p, category: e.target.value }))} />
+            </div>
+            <div>
+              <Label>Manufacturer</Label>
+              <Input value={formData.manufacturer} onChange={(e) => setFormData(p => ({ ...p, manufacturer: e.target.value }))} />
+            </div>
+            <div>
+              <Label>Quantity Available</Label>
+              <Input type="number" value={formData.quantity_on_hand} onChange={(e) => setFormData(p => ({ ...p, quantity_on_hand: e.target.value }))} />
+            </div>
           </div>
-          <div><Label>Description</Label><Textarea value={formData.description} onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))} rows={2} /></div>
+          <div>
+            <Label>Description</Label>
+            <Textarea value={formData.description} onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))} rows={2} />
+          </div>
           {saveError && (
             <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3 text-center">{saveError}</p>
           )}
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
-            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e]" disabled={saving}>
+            <Button type="submit" className="bg-primary hover:bg-primary/80 text-white" disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {tool ? 'Save Changes' : 'Add Tool'}
             </Button>
