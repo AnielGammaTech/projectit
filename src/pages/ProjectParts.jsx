@@ -63,11 +63,11 @@ import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import PartsUploader from '@/components/parts/PartsUploader';
 
 const statusConfig = {
-  needed: { label: 'Needed', color: 'bg-slate-100 text-slate-700 border-slate-200' },
-  ordered: { label: 'Ordered', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  received: { label: 'Received', color: 'bg-amber-100 text-amber-700 border-amber-200' },
-  ready_to_install: { label: 'Ready to Install', color: 'bg-purple-100 text-purple-700 border-purple-200' },
-  installed: { label: 'Installed', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' }
+  needed: { label: 'Needed', color: 'bg-slate-100 text-slate-700 border-slate-200', borderColor: 'border-l-orange-400' },
+  ordered: { label: 'Ordered', color: 'bg-blue-100 text-blue-700 border-blue-200', borderColor: 'border-l-sky-400' },
+  received: { label: 'Received', color: 'bg-amber-100 text-amber-700 border-amber-200', borderColor: 'border-l-amber-400' },
+  ready_to_install: { label: 'Ready to Install', color: 'bg-purple-100 text-purple-700 border-purple-200', borderColor: 'border-l-teal-400' },
+  installed: { label: 'Installed', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', borderColor: 'border-l-emerald-400' }
 };
 
 const avatarColors = [
@@ -457,29 +457,27 @@ export default function ProjectParts() {
         )}
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-amber-500 shadow-lg shadow-amber-200">
-              <Package className="w-6 h-6 text-white" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30">
+              <Package className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg sm:text-2xl font-bold text-foreground">Parts & Materials</h1>
-              <p className="text-muted-foreground">
+              <h2 className="text-lg font-bold text-foreground">Parts & Materials</h2>
+              <span className="text-xs text-muted-foreground">
                 {parts.length} items · Total: ${totalCost.toLocaleString()}
                 {unassignedParts.length > 0 && (
-                  <span className="text-amber-600 ml-2">· {unassignedParts.length} unassigned</span>
+                  <span className="text-amber-600 dark:text-amber-400 ml-1">· {unassignedParts.length} unassigned</span>
                 )}
-              </p>
+              </span>
             </div>
           </div>
-          <div className="flex gap-2 items-start">
-            <div className="text-right">
-              <PartsUploader 
-                projectId={projectId} 
-                onPartsExtracted={refetchParts} 
-                compact={true}
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            <PartsUploader
+              projectId={projectId}
+              onPartsExtracted={refetchParts}
+              compact={true}
+            />
             <Button onClick={() => { setEditingPart(null); setShowPartModal(true); }} className="bg-amber-500 hover:bg-amber-600">
               <Plus className="w-4 h-4 mr-2" />
               Add Part
@@ -656,7 +654,8 @@ export default function ProjectParts() {
                   transition={{ delay: idx * 0.015 }}
                   onClick={() => selectionMode ? togglePartSelection(part.id) : setSelectedPartDetail(part)}
                   className={cn(
-                    "px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-all group cursor-pointer border-b border-slate-100 dark:border-slate-700/30 last:border-b-0",
+                    "px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-all group cursor-pointer border-b border-slate-100 dark:border-slate-700/30 last:border-b-0 border-l-4",
+                    statusConfig[part.status]?.borderColor || "border-l-transparent",
                     isSelected && "bg-amber-50/60 dark:bg-amber-900/10"
                   )}
                 >
