@@ -99,8 +99,8 @@ function LayoutContent({ children, currentPageName }) {
     refetchInterval: 15000
   });
 
-  // Realtime notifications — disabled temporarily
-  // useRealtimeNotifications(currentUser?.email);
+  // Subscribe to realtime notifications via Supabase
+  useRealtimeNotifications(currentUser?.email);
 
   // Filter out notifications from archived projects
   const userNotifications = rawUserNotifications.filter(n =>
