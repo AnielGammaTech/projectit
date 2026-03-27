@@ -47,5 +47,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>ProjectIT needs camera access to take photos for project files.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>ProjectIT needs photo library access to attach images to projects.</string>
 </dict>
 </plist>
