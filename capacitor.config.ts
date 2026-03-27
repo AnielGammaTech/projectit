@@ -10,7 +10,17 @@ const config: CapacitorConfig = {
     // Allow API requests to bypass CORS in native WebView
     allowNavigation: ['api-production-0eff.up.railway.app', '*.supabase.co'],
   },
+  ios: {
+    preferredContentMode: 'mobile',
+    // Hide the keyboard accessory bar (up/down arrows + checkmark)
+    scrollEnabled: true,
+  },
   plugins: {
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true,
+      style: 'dark',
+    },
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert'],
     },

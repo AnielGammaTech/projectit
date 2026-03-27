@@ -459,7 +459,7 @@ export default function ProjectParts() {
         )}
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className="flex items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30">
               <Package className="w-5 h-5 text-white" />
@@ -474,7 +474,7 @@ export default function ProjectParts() {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <div className="hidden sm:block">
               <PartsUploader
                 projectId={projectId}
@@ -482,7 +482,7 @@ export default function ProjectParts() {
                 compact={true}
               />
             </div>
-            <Button onClick={() => { setEditingPart(null); setShowPartModal(true); }} className="bg-amber-500 hover:bg-amber-600" size="sm">
+            <Button onClick={() => { setEditingPart(null); setShowPartModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e]" size="sm">
               <Plus className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Add Part</span>
             </Button>
@@ -587,10 +587,10 @@ export default function ProjectParts() {
               variant={selectionMode ? "default" : "outline"}
               size="sm"
               onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
-              className={cn("h-9 shrink-0", selectionMode && "bg-amber-600")}
+              className={cn("hidden sm:flex h-9 shrink-0", selectionMode && "bg-amber-600")}
             >
-              <CheckSquare className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">{selectionMode ? 'Done' : 'Select'}</span>
+              <CheckSquare className="w-4 h-4 mr-2" />
+              {selectionMode ? 'Done' : 'Select'}
             </Button>
           </div>
         </div>
