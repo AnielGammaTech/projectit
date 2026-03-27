@@ -298,9 +298,9 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-1.5">
               <HealthIcon className={cn("w-3.5 h-3.5", currentHealth.textColor)} />
-              <span className="text-xs font-medium text-slate-500 group-hover:text-slate-700 transition-colors">Progress</span>
+              <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">Progress</span>
               {hasUpdates && lastUpdateNote && (
-                <span className="text-[10px] text-slate-400 max-w-[140px] truncate hidden sm:inline">
+                <span className="text-[10px] text-muted-foreground max-w-[140px] truncate hidden sm:inline">
                   · {lastUpdateNote}
                 </span>
               )}
@@ -309,7 +309,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               {localValue}%
             </span>
           </div>
-          <div className="relative w-full h-2 bg-slate-100 rounded-full overflow-hidden group-hover:h-2.5 transition-all">
+          <div className="relative w-full h-2 bg-muted rounded-full overflow-hidden group-hover:h-2.5 transition-all">
             <motion.div
               className={cn("h-full rounded-full", color.bg)}
               initial={{ width: 0 }}
@@ -330,14 +330,14 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
       <Dialog open={showUpdateModal} onOpenChange={(open) => { if (!open) handleCancel(); else setShowUpdateModal(true); }}>
         <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
           {/* Header with large progress display */}
-          <div className={cn("px-6 pt-6 pb-4", currentHealth.bgColor)}>
+          <div className={cn("px-6 pt-6 pb-4 bg-card")}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <TrendingUp className={cn("w-5 h-5", currentHealth.textColor)} />
-                <h2 className="text-base font-semibold text-slate-900">Progress Update</h2>
+                <h2 className="text-base font-semibold text-foreground">Progress Update</h2>
               </div>
               {lastUpdate && (
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-muted-foreground">
                   Last: {formatDistanceToNow(new Date(lastUpdate.created_date), { addSuffix: true })}
                 </span>
               )}
@@ -347,7 +347,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
             <div className="flex items-center justify-center gap-4 mb-4">
               <button
                 onClick={() => adjustProgress(-5)}
-                className="w-9 h-9 rounded-full bg-white/80 hover:bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all shadow-sm"
+                className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-all shadow-sm"
               >
                 <Minus className="w-4 h-4" />
               </button>
@@ -359,7 +359,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               </div>
               <button
                 onClick={() => adjustProgress(5)}
-                className="w-9 h-9 rounded-full bg-white/80 hover:bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all shadow-sm"
+                className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-all shadow-sm"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -372,7 +372,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               onMouseDown={handleMouseDown}
               onTouchStart={handleTouchStart}
             >
-              <div className="w-full h-2.5 bg-white/60 rounded-full overflow-hidden backdrop-blur-sm border border-white/40">
+              <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden backdrop-blur-sm border border-border">
                 <motion.div
                   className={cn("h-full rounded-full", color.bg)}
                   animate={{ width: `${localValue}%` }}
@@ -386,7 +386,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                 transition={{ duration: isDragging ? 0 : 0.15 }}
               >
                 <div
-                  className={cn("w-5 h-5 -ml-2.5 rounded-full shadow-lg border-[3px] border-white", color.bg)}
+                  className={cn("w-5 h-5 -ml-2.5 rounded-full shadow-lg border-[3px] border-card", color.bg)}
                   style={{ boxShadow: isDragging ? `0 0 0 4px ${color.hex}30, 0 2px 8px rgba(0,0,0,0.2)` : '0 2px 8px rgba(0,0,0,0.15)' }}
                 />
               </motion.div>
@@ -397,7 +397,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
           <div className="px-6 py-5 space-y-5">
             {/* Health status — horizontal pills */}
             <div>
-              <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2.5 block">How's the project going?</label>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2.5 block">How's the project going?</label>
               <div className="flex gap-2">
                 {healthOptions.map((option) => {
                   const Icon = option.icon;
@@ -410,7 +410,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                         "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 transition-all text-sm font-medium",
                         isSelected
                           ? cn(option.bgColor, option.borderColor, option.textColor, "ring-2", option.ring)
-                          : "border-slate-200 hover:border-slate-300 bg-white text-slate-500 hover:text-slate-700"
+                          : "border hover:border-muted-foreground bg-card text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <Icon className="w-4 h-4" />
@@ -423,16 +423,16 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
 
             {/* Note — prominent, feels like a chat/post input */}
             <div className="relative">
-              <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
                 What's new?
-                <span className="text-slate-400 font-normal normal-case tracking-normal ml-1.5">@ to mention</span>
+                <span className="text-muted-foreground font-normal normal-case tracking-normal ml-1.5">@ to mention</span>
               </label>
               <Textarea
                 ref={textareaRef}
                 value={note}
                 onChange={handleNoteChange}
                 placeholder="Share a quick update with your team..."
-                className="min-h-[80px] text-sm resize-none rounded-xl border-slate-200 focus:border-[#0069AF] focus:ring-[#0069AF]/20"
+                className="min-h-[80px] text-sm resize-none rounded-xl border focus:border-primary focus:ring-primary/20"
               />
               {/* Mention dropdown */}
               <AnimatePresence>
@@ -441,20 +441,20 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 4 }}
-                    className="absolute z-50 bottom-full mb-1 left-0 w-full bg-white rounded-xl border border-slate-200 shadow-lg overflow-hidden"
+                    className="absolute z-50 bottom-full mb-1 left-0 w-full bg-card rounded-xl border border-border shadow-lg overflow-hidden"
                   >
                     {filteredMembers.map(member => (
                       <button
                         key={member.id}
                         onClick={() => insertMention(member)}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 text-left transition-colors"
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-muted/50 text-left transition-colors"
                       >
-                        <div className="w-7 h-7 rounded-full bg-[#0069AF]/10 flex items-center justify-center text-xs font-semibold text-[#0069AF]">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
                           {member.name?.[0] || member.email?.[0]}
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-slate-900">{member.name}</p>
-                          <p className="text-xs text-slate-400">{member.email}</p>
+                          <p className="text-sm font-medium text-foreground">{member.name}</p>
+                          <p className="text-xs text-muted-foreground">{member.email}</p>
                         </div>
                       </button>
                     ))}
@@ -475,7 +475,7 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
               <Button
                 onClick={handleSaveUpdate}
                 disabled={saveMutation.isPending}
-                className="flex-1 h-11 rounded-xl bg-[#0069AF] hover:bg-[#0F2F44] text-white gap-2"
+                className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary/80 text-white gap-2"
               >
                 <Send className="w-4 h-4" />
                 Post Update
@@ -486,9 +486,9 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
             {updates.length > 0 && (
               <div className="border-t pt-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <History className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Timeline</span>
-                  <span className="text-[10px] text-slate-400 bg-slate-100 rounded-full px-1.5 py-0.5">{updates.length}</span>
+                  <History className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Timeline</span>
+                  <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">{updates.length}</span>
                 </div>
                 <div className="max-h-56 overflow-y-auto -mx-1 px-1 space-y-0">
                   {updates.map((update, idx) => {
@@ -498,11 +498,11 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                       <div key={update.id} className="relative flex gap-3 pb-4 last:pb-0">
                         {/* Timeline line */}
                         {idx < updates.length - 1 && (
-                          <div className="absolute left-[13px] top-8 bottom-0 w-px bg-slate-200" />
+                          <div className="absolute left-[13px] top-8 bottom-0 w-px bg-border" />
                         )}
                         {/* Avatar dot */}
                         <div className={cn(
-                          "w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold border-2 border-white shadow-sm",
+                          "w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold border-2 border-card shadow-sm",
                           health.bgColor, health.textColor
                         )}>
                           {update.author_name?.[0]?.toUpperCase() || '?'}
@@ -510,18 +510,18 @@ export default function ProgressNeedle({ projectId, value = 0, onSave, currentUs
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-semibold text-slate-800">{update.author_name || 'Unknown'}</span>
+                            <span className="text-xs font-semibold text-foreground">{update.author_name || 'Unknown'}</span>
                             <span className={cn("inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full", health.bgColor, health.textColor)}>
                               <UpdateIcon className="w-2.5 h-2.5" />
                               {health.label}
                             </span>
                             <span className={cn("text-xs font-bold tabular-nums", health.textColor)}>{update.progress_value}%</span>
-                            <span className="text-[10px] text-slate-400 ml-auto flex-shrink-0">
+                            <span className="text-[10px] text-muted-foreground ml-auto flex-shrink-0">
                               {format(new Date(update.created_date), 'MMM d, h:mm a')}
                             </span>
                           </div>
                           {update.note && (
-                            <p className="text-sm text-slate-600 mt-1 break-words whitespace-pre-wrap leading-relaxed">{update.note}</p>
+                            <p className="text-sm text-muted-foreground mt-1 break-words whitespace-pre-wrap leading-relaxed">{update.note}</p>
                           )}
                         </div>
                       </div>

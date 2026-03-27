@@ -124,7 +124,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
     high: 'bg-red-100 text-red-600',
     urgent: 'bg-red-100 text-red-600',
     medium: 'bg-amber-100 text-amber-700',
-    low: 'bg-slate-100 text-slate-500',
+    low: 'bg-muted text-muted-foreground',
   };
 
   const getDueDateLabel = (dueDate) => {
@@ -137,7 +137,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
     if (diffDays === 0) return { text: 'Today', color: 'text-orange-500' };
     if (diffDays === 1) return { text: 'Tomorrow', color: 'text-amber-500' };
     if (diffDays <= 7) return { text: `${diffDays}d`, color: 'text-blue-500' };
-    return { text: format(due, 'MMM d'), color: 'text-slate-400' };
+    return { text: format(due, 'MMM d'), color: 'text-muted-foreground' };
   };
 
   return (
@@ -146,7 +146,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-blue-100/60 dark:border-border bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 dark:bg-card hover:shadow-lg hover:shadow-blue-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
         <div className="p-3.5 pb-2">
@@ -156,9 +156,9 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
                 <ListTodo className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Tasks</h3>
+                <h3 className="font-bold text-foreground text-sm leading-none">Tasks</h3>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[11px] text-slate-500 font-medium">{completedTasks} of {tasks.length}</span>
+                  <span className="text-[11px] text-muted-foreground font-medium">{completedTasks} of {tasks.length}</span>
                   {tasks.length > 0 && (
                     <div className="w-12 h-1.5 rounded-full bg-blue-100 overflow-hidden">
                       <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all" style={{ width: `${taskProgress}%` }} />
@@ -189,9 +189,9 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
                   {t.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
                   {t.status === 'review' && <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
                 </div>
-                <span className="text-xs text-slate-700 dark:text-slate-200 font-medium truncate flex-1 min-w-0">{t.title}</span>
+                <span className="text-xs text-foreground font-medium truncate flex-1 min-w-0">{t.title}</span>
                 {assigneeName && (
-                  <span className="text-[9px] text-slate-400 shrink-0">{assigneeName.split(' ')[0]}</span>
+                  <span className="text-[9px] text-muted-foreground shrink-0">{assigneeName.split(' ')[0]}</span>
                 )}
                 {t.priority && t.priority !== 'none' && (
                   <span className={cn("text-[8px] px-1 py-0 rounded font-semibold uppercase shrink-0 leading-tight", priorityColors[t.priority] || priorityColors.low)}>{t.priority}</span>
@@ -202,7 +202,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
               </div>
             );
           }) : (
-            <p className="text-xs text-slate-400 text-center py-3">No active tasks</p>
+            <p className="text-xs text-muted-foreground text-center py-3">No active tasks</p>
           )}
         </div>
         {totalPages > 1 && (
@@ -214,7 +214,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
             >
               Prev
             </button>
-            <span className="text-[10px] text-slate-400">{taskPage + 1}/{totalPages}</span>
+            <span className="text-[10px] text-muted-foreground">{taskPage + 1}/{totalPages}</span>
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTaskPage(p => Math.min(totalPages - 1, p + 1)); }}
               disabled={taskPage >= totalPages - 1}
@@ -230,7 +230,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
 }
 
 const partStatusConfig = {
-  needed: { label: 'Needed', color: 'bg-slate-100 text-slate-700 border-slate-200' },
+  needed: { label: 'Needed', color: 'bg-muted text-foreground border' },
   ordered: { label: 'Ordered', color: 'bg-blue-100 text-blue-700 border-blue-200' },
   received: { label: 'Received', color: 'bg-amber-100 text-amber-700 border-amber-200' },
   ready_to_install: { label: 'Ready', color: 'bg-purple-100 text-purple-700 border-purple-200' },
@@ -371,7 +371,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
     if (diffDays === 0) return { text: 'Today', color: 'text-orange-500' };
     if (diffDays === 1) return { text: 'Tomorrow', color: 'text-amber-500' };
     if (diffDays <= 7) return { text: `${diffDays}d`, color: 'text-blue-500' };
-    return { text: format(date, 'MMM d'), color: 'text-slate-400' };
+    return { text: format(date, 'MMM d'), color: 'text-muted-foreground' };
   };
 
   const partsProgress = parts.length > 0 ? Math.round((installedCount / parts.length) * 100) : 0;
@@ -383,7 +383,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-emerald-100/60 dark:border-border bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 dark:bg-card hover:shadow-lg hover:shadow-emerald-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
         <div className="p-3.5 pb-2">
@@ -393,9 +393,9 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
                 <Package className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Parts</h3>
+                <h3 className="font-bold text-foreground text-sm leading-none">Parts</h3>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[11px] text-slate-500 font-medium">{installedCount} of {parts.length}</span>
+                  <span className="text-[11px] text-muted-foreground font-medium">{installedCount} of {parts.length}</span>
                   {parts.length > 0 && (
                     <div className="w-12 h-1.5 rounded-full bg-emerald-100 overflow-hidden">
                       <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all" style={{ width: `${partsProgress}%` }} />
@@ -425,7 +425,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
                   {partStatusConfig[p.status]?.label || p.status}
                 </Badge>
                 {/* Name */}
-                <span className="text-xs text-slate-700 dark:text-slate-200 font-medium truncate flex-1 min-w-0">{p.name}</span>
+                <span className="text-xs text-foreground font-medium truncate flex-1 min-w-0">{p.name}</span>
                 {/* Assignee */}
                 {p.assigned_name && (
                   <div className="flex items-center gap-0.5 shrink-0" title={p.assigned_name}>
@@ -535,7 +535,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
               </div>
             );
           }) : (
-            <p className="text-xs text-slate-400 text-center py-3">No active parts</p>
+            <p className="text-xs text-muted-foreground text-center py-3">No active parts</p>
           )}
         </div>
         {totalPages > 1 && (
@@ -547,7 +547,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
             >
               Prev
             </button>
-            <span className="text-[10px] text-slate-400">{partPage + 1}/{totalPages}</span>
+            <span className="text-[10px] text-muted-foreground">{partPage + 1}/{totalPages}</span>
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPartPage(p => Math.min(totalPages - 1, p + 1)); }}
               disabled={partPage >= totalPages - 1}
@@ -1758,7 +1758,7 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-violet-100/60 dark:border-border bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 dark:bg-card hover:shadow-lg hover:shadow-violet-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-400" />
                 <div className="p-3.5 pb-2">
@@ -1768,8 +1768,8 @@ export default function ProjectDetail() {
                         <MessageSquare className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Messages</h3>
-                        <span className="text-[11px] text-slate-500 font-medium">{projectNotes.length} total</span>
+                        <h3 className="font-bold text-foreground text-sm leading-none">Messages</h3>
+                        <span className="text-[11px] text-muted-foreground font-medium">{projectNotes.length} total</span>
                       </div>
                     </div>
                   </div>
@@ -1780,17 +1780,17 @@ export default function ProjectDetail() {
                     [...projectNotes].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 5).map(note => {
                       const authorName = note.created_by_name || (note.author_email ? note.author_email.split('@')[0] : 'System');
                       const typeLabel = note.type === 'update' ? 'Update' : note.type === 'message' ? 'Message' : 'Note';
-                      const typeBg = note.type === 'update' ? 'bg-amber-100 text-amber-700' : note.type === 'message' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600';
+                      const typeBg = note.type === 'update' ? 'bg-amber-100 text-amber-700' : note.type === 'message' ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground';
                       return (
                         <div key={note.id} className="flex items-center gap-2 px-1.5 py-1.5 rounded-lg hover:bg-violet-50/60 transition-colors">
                           <span className={cn("text-[9px] font-semibold px-1.5 py-0.5 rounded shrink-0", typeBg)}>{typeLabel}</span>
-                          <p className="text-xs text-slate-600 truncate flex-1 min-w-0 leading-tight">{(note.title?.trim() || note.content)?.replace(/[#*_]/g, '').slice(0, 50)}</p>
+                          <p className="text-xs text-muted-foreground truncate flex-1 min-w-0 leading-tight">{(note.title?.trim() || note.content)?.replace(/[#*_]/g, '').slice(0, 50)}</p>
                           <span className="text-[10px] text-violet-500 font-medium shrink-0">{authorName.split(' ')[0]}</span>
                         </div>
                       );
                     })
                   ) : (
-                    <p className="text-xs text-slate-400 text-center py-3">No messages yet</p>
+                    <p className="text-xs text-muted-foreground text-center py-3">No messages yet</p>
                   )}
                 </div>
               </motion.div>
@@ -1812,7 +1812,7 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-amber-100/60 dark:border-border bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 dark:bg-card hover:shadow-lg hover:shadow-amber-100/50 dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-400" />
                 <div className="p-3.5">
@@ -1822,8 +1822,8 @@ export default function ProjectDetail() {
                         <FileText className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none">Files</h3>
-                        <span className="text-[11px] text-slate-500 font-medium">{projectFiles.length} file{projectFiles.length !== 1 ? 's' : ''}</span>
+                        <h3 className="font-bold text-foreground text-sm leading-none">Files</h3>
+                        <span className="text-[11px] text-muted-foreground font-medium">{projectFiles.length} file{projectFiles.length !== 1 ? 's' : ''}</span>
                       </div>
                     </div>
                     <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-600 font-semibold border border-orange-100 text-[11px]">
@@ -1836,23 +1836,23 @@ export default function ProjectDetail() {
                         const fc = getFolderColor(folder.color);
                         const count = projectFiles.filter(f => f.folder_id === folder.id).length;
                         return (
-                          <div key={folder.id} className="flex items-center justify-between px-2 py-1 rounded-lg bg-white/60 dark:bg-slate-800/40 border border-slate-100/60 dark:border-border">
+                          <div key={folder.id} className="flex items-center justify-between px-2 py-1 rounded-lg bg-card border border-border">
                             <div className="flex items-center gap-1.5 min-w-0">
                               <Folder className={cn("w-3 h-3 flex-shrink-0", fc.text)} />
-                              <span className="text-[11px] font-medium text-slate-700 dark:text-slate-200 truncate">{folder.name}</span>
+                              <span className="text-[11px] font-medium text-foreground truncate">{folder.name}</span>
                             </div>
-                            <span className="text-[10px] text-slate-400 flex-shrink-0 ml-2">{count}</span>
+                            <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2">{count}</span>
                           </div>
                         );
                       })}
                       {fileFolders.length > 4 && (
-                        <span className="text-[10px] text-slate-400 pl-1">+{fileFolders.length - 4} more</span>
+                        <span className="text-[10px] text-muted-foreground pl-1">+{fileFolders.length - 4} more</span>
                       )}
                     </div>
                   ) : projectFiles.length > 0 ? (
-                    <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/40 border border-slate-100/60 dark:border-border">
-                      <File className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-[11px] text-slate-500">{projectFiles.length} files (no folders)</span>
+                    <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-card border border-border">
+                      <File className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-[11px] text-muted-foreground">{projectFiles.length} files (no folders)</span>
                     </div>
                   ) : null}
                 </div>
