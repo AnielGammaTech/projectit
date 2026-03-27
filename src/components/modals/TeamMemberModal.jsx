@@ -51,7 +51,7 @@ export default function TeamMemberModal({ open, onClose, member, onSave }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{member ? 'Edit Team Member' : 'Add Team Member'}</DialogTitle>
         </DialogHeader>

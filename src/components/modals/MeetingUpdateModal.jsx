@@ -201,7 +201,7 @@ ${formData.additionalNotes || 'None'}`;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-600" />

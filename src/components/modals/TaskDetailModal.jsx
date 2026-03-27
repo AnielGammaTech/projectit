@@ -158,7 +158,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent hideCloseOnMobile className="sm:max-w-4xl p-0 gap-0 max-h-[95dvh] sm:max-h-[90vh] h-[95dvh] sm:h-auto overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl dark:bg-[#1e2a3a] top-auto sm:top-[50%] translate-y-0 sm:translate-y-[-50%] bottom-0 sm:bottom-auto">
+      <DialogContent hideCloseOnMobile className="sm:max-w-4xl p-0 gap-0 overflow-hidden flex flex-col dark:bg-[#1e2a3a]">
         {/* Mobile action bar */}
         <div className="sm:hidden flex items-center justify-between px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-700/50 flex-shrink-0">
           <button onClick={onClose} className="flex items-center gap-1 text-slate-500 text-xs font-medium">

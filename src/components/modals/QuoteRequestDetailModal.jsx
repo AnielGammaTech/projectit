@@ -69,7 +69,7 @@ export default function QuoteRequestDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>

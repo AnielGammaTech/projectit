@@ -146,7 +146,7 @@ export default function FilesViewModal({ open, onClose, projectId, currentUser }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
+      <DialogContent className="sm:max-w-2xl overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {currentFolder && (

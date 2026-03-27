@@ -125,7 +125,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
+      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
         {/* Header */}
         <div className="px-4 sm:px-6 pt-5 pb-4 border-b border-slate-200 dark:border-slate-700/50">
           <DialogHeader>

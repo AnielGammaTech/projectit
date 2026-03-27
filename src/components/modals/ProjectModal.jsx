@@ -296,7 +296,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden max-h-[90vh] gap-0 h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl dark:bg-[#1e2a3a]">
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden gap-0 dark:bg-[#1e2a3a]">
 
         {/* ── Colored Header ── */}
         <div

@@ -822,7 +822,7 @@ export default function Customers() {
 
       {/* Customer Detail Modal */}
       <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
-        <DialogContent hideCloseOnMobile className="h-[95dvh] sm:h-auto rounded-t-2xl sm:rounded-2xl sm:max-w-3xl max-h-[95dvh] sm:max-h-[90vh] overflow-hidden p-0 top-auto sm:top-[50%] translate-y-0 sm:translate-y-[-50%] bottom-0 sm:bottom-auto">
+        <DialogContent hideCloseOnMobile className="sm:max-w-3xl overflow-hidden p-0">
           {selectedCustomer && (() => {
             const customerSites = getSitesForCompany(selectedCustomer.id);
             const customerContacts = getContactsForCompany(selectedCustomer.id);
@@ -835,7 +835,7 @@ export default function Customers() {
             return (
               <>
                 {/* Hero Header */}
-                <div className="bg-[#0F2F44] dark:bg-[#0F2F44] px-4 sm:px-6 pt-3 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden rounded-t-2xl sm:rounded-t-2xl">
+                <div className="bg-[#0F2F44] dark:bg-[#0F2F44] px-4 sm:px-6 pt-3 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden">
                   <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
                   <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-white/10 rounded-full" />
                   <div className="relative z-10">
@@ -951,7 +951,7 @@ export default function Customers() {
                 </div>
 
                 {/* Tab content */}
-                <div className="overflow-y-auto p-3 sm:p-6 flex-1" style={{ maxHeight: 'calc(100dvh - 280px)' }}>
+                <div className="overflow-y-auto p-3 sm:p-6 flex-1">
                   {/* Details & Contacts Tab */}
                   {(companyTabs[selectedCustomer.id] || 'details') === 'details' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
