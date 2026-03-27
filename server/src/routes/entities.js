@@ -5,8 +5,40 @@ import { autoSendFeedback } from './functions/agentBridge.js';
 
 const router = Router();
 
+// Sensitive entities — admin-only access
+const ADMIN_ONLY_ENTITIES = new Set([
+  'IntegrationSettings', 'ApiKey', 'AppSettings', 'UserSecuritySettings',
+  'AuditLog', 'Workflow', 'WorkflowLog', 'CustomRole', 'EmailTemplate',
+  'ProposalSettings',
+]);
+
+// Read-only for non-admin (can list/filter but not create/update/delete)
+const ADMIN_WRITE_ENTITIES = new Set([
+  'ProjectTemplate', 'ProjectStatus', 'ProjectStack',
+]);
+
+// Admin guard middleware
+function adminGuard(req, res, next) {
+  const entityType = req.params.entityType;
+  const isAdmin = req.user?.role === 'admin';
+  const isWrite = ['POST', 'PUT', 'DELETE'].includes(req.method);
+
+  // Block all access to admin-only entities for non-admins
+  if (ADMIN_ONLY_ENTITIES.has(entityType) && !isAdmin) {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  // Block write access to admin-write entities for non-admins
+  if (ADMIN_WRITE_ENTITIES.has(entityType) && isWrite && !isAdmin) {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  next();
+}
+
 // Project-based access control — runs before all entity routes
 router.use(projectAccessMiddleware);
+router.use(adminGuard);
 
 // GET /api/entities/:entityType/list?sort=...&limit=...
 router.get('/:entityType/list', async (req, res, next) => {

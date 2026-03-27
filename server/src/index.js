@@ -26,8 +26,12 @@ app.use(cors({
     // Allow frontend and any *.gtools.io domain
     const allowed = [
       process.env.FRONTEND_URL || 'http://localhost:5173',
-      /\.gtools\.io$/,
-      /\.up\.railway\.app$/,
+      'https://projectit.gtools.io',
+      'https://projectit-staging.gtools.io',
+      'http://localhost:5173',
+      'http://localhost:4173',
+      'capacitor://localhost',
+      'https://localhost',
     ];
     const isAllowed = allowed.some(a =>
       a instanceof RegExp ? a.test(origin) : a === origin
@@ -37,6 +41,8 @@ app.use(cors({
   credentials: true,
 }));
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+import { globalLimiter } from './middleware/rateLimiter.js';
+app.use(globalLimiter);
 app.use(morgan('combined'));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));

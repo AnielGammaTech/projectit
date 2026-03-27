@@ -5,8 +5,15 @@ export default function errorHandler(err, req, res, _next) {
   }
 
   const status = err.status || 500;
+
+  // Only expose error messages for client errors (4xx)
+  // For server errors (5xx), return generic message to prevent info leaks
+  const message = status < 500
+    ? (err.message || 'Bad request')
+    : 'Internal server error';
+
   res.status(status).json({
-    error: err.message || 'Internal server error',
+    error: message,
     ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
   });
 }
