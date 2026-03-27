@@ -12,6 +12,7 @@ import externalApiRoutes from './routes/externalApi.js';
 import authMiddleware from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
 import { runDueReminders } from './routes/functions/sendDueReminders.js';
+import calendarFeed from './routes/functions/calendarFeed.js';
 // File uploads now go to Supabase Storage (no local UPLOAD_DIR needed)
 
 const app = express();
@@ -46,6 +47,9 @@ app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Public calendar feed (user ID in URL acts as token)
+app.get('/api/calendar-feed/:userId.ics', calendarFeed);
 
 // Routes
 app.use('/api/auth', authRoutes);
