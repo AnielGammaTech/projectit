@@ -95,118 +95,88 @@ export default function MyNotifications() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-4 sm:py-8">
-        <Link to={createPageUrl('Dashboard')} className="inline-flex items-center text-primary hover:text-foreground mb-6">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Link>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Link to={createPageUrl('Dashboard')} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground sm:hidden">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <Link to={createPageUrl('Dashboard')} className="hidden sm:inline-flex items-center text-primary hover:text-foreground text-sm">
+              <ArrowLeft className="w-4 h-4 mr-1.5" /> Back
+            </Link>
+            <h1 className="text-lg font-bold text-foreground">Notifications</h1>
+            {unreadCount > 0 && (
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">{unreadCount}</span>
+            )}
+          </div>
+          {unreadCount > 0 && (
+            <button
+              onClick={() => markAllAsRead.mutate()}
+              disabled={markAllAsRead.isPending}
+              className="text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Mark all read
+            </button>
+          )}
+        </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Inbox className="w-5 h-5 text-primary" />
-                  My Notifications
-                  {unreadCount > 0 && (
-                    <Badge className="bg-red-500 text-white">{unreadCount}</Badge>
+        {/* Notification list */}
+        {notifications.length > 0 ? (
+          <div className="space-y-0.5">
+            {notifications.map(notification => {
+              const config = notificationConfig[notification.type] || notificationConfig.mention;
+              const IconComponent = config.icon;
+              const isUnread = !notification.is_read;
+
+              return (
+                <Link
+                  key={notification.id}
+                  to={notification.link || '#'}
+                  onClick={() => { if (isUnread) markAsRead.mutate(notification.id); }}
+                  className={cn(
+                    "flex items-start gap-3 px-3 py-3 rounded-xl transition-colors",
+                    isUnread
+                      ? "bg-card border border-border"
+                      : "hover:bg-muted/50"
                   )}
-                </CardTitle>
-                {unreadCount > 0 && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => markAllAsRead.mutate()}
-                    disabled={markAllAsRead.isPending}
-                    className="text-xs text-slate-500"
-                  >
-                    Mark all as read
-                  </Button>
-                )}
-              </div>
-              <CardDescription>Mentions, assignments, and updates from your team</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {notifications.length > 0 ? (
-                <ScrollArea className="h-[500px]">
-                  <div className="space-y-1">
-                    {notifications.map(notification => {
-                      const config = notificationConfig[notification.type] || notificationConfig.mention;
-                      const IconComponent = config.icon;
-                      
-                      return (
-                        <div
-                          key={notification.id}
-                          className={cn(
-                            "px-3 py-2 rounded-lg border transition-all group flex items-center gap-3",
-                            notification.is_read 
-                              ? "bg-white border-slate-100" 
-                              : "bg-blue-50/50 border-blue-100"
-                          )}
-                        >
-                          {/* Unread indicator dot */}
-                          {!notification.is_read && (
-                            <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0" />
-                          )}
-                          
-                          <div className={cn("p-1.5 rounded-lg flex-shrink-0", config.bg, config.color)}>
-                            <IconComponent className="w-4 h-4" />
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-sm text-slate-900 truncate">{notification.title}</p>
-                              {notification.project_name && (
-                                <span className="text-xs text-primary truncate">• {notification.project_name}</span>
-                              )}
-                            </div>
-                            <p className="text-xs text-slate-500 truncate">{notification.message}</p>
-                          </div>
-                          
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <span className="text-xs text-slate-400 hidden sm:inline">
-                              {format(new Date(notification.created_date), 'MMM d')}
-                            </span>
-                            {notification.link && (
-                              <Link to={notification.link}>
-                                <Button variant="outline" size="sm" className="text-xs h-7 px-2">
-                                  View
-                                </Button>
-                              </Link>
-                            )}
-                            {!notification.is_read && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => markAsRead.mutate(notification.id)}
-                                className="text-xs h-7 px-2 text-slate-500"
-                              >
-                                <CheckCircle2 className="w-3 h-3" />
-                              </Button>
-                            )}
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => dismissNotification.mutate(notification.id)}
-                              className="h-7 w-7 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                >
+                  {/* Icon */}
+                  <div className={cn("p-1.5 rounded-lg shrink-0 mt-0.5", config.bg, config.color)}>
+                    <IconComponent className="w-3.5 h-3.5" />
                   </div>
-                </ScrollArea>
-              ) : (
-                <div className="text-center py-16">
-                  <Inbox className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-1">No notifications</h3>
-                  <p className="text-sm text-muted-foreground">You're all caught up! Notifications will appear here when someone mentions you or assigns you a task.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={cn("text-sm leading-snug", isUnread ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                        {notification.title}
+                      </p>
+                      <span className="text-[10px] text-muted-foreground shrink-0 mt-0.5">
+                        {format(new Date(notification.created_date), 'MMM d')}
+                      </span>
+                    </div>
+                    {notification.message && (
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{notification.message}</p>
+                    )}
+                    {notification.project_name && (
+                      <span className="text-[11px] text-primary mt-0.5 inline-block">{notification.project_name}</span>
+                    )}
+                  </div>
+
+                  {/* Unread dot */}
+                  {isUnread && (
+                    <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0 mt-2" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <Inbox className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">You're all caught up</p>
+          </div>
+        )}
       </div>
     </div>
   );
