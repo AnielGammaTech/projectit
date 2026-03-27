@@ -75,10 +75,14 @@ export default function SecuritySettings() {
     const loadMfaStatus = async () => {
       setLoadingMfa(true);
       try {
-        // Get enrolled factors from Supabase
+        // Get enrolled factors from Supabase (check both totp and all arrays)
         const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors();
         if (!factorsError && factorsData) {
-          setMfaFactors(factorsData.totp || []);
+          const totpFactors = factorsData.totp || [];
+          const allFactors = factorsData.all || [];
+          // Use totp array if it has verified factors, otherwise fall back to all
+          const hasVerifiedTotp = totpFactors.some(f => f.status === 'verified');
+          setMfaFactors(hasVerifiedTotp ? totpFactors : allFactors.length > 0 ? allFactors : totpFactors);
         }
 
         // Get our app-level security settings
@@ -181,7 +185,10 @@ export default function SecuritySettings() {
       // Refresh factors list
       const { data: factorsData } = await supabase.auth.mfa.listFactors();
       if (factorsData) {
-        setMfaFactors(factorsData.totp || []);
+        const totpFactors = factorsData.totp || [];
+        const allFactors = factorsData.all || [];
+        const hasVerifiedTotp = totpFactors.some(f => f.status === 'verified');
+        setMfaFactors(hasVerifiedTotp ? totpFactors : allFactors.length > 0 ? allFactors : totpFactors);
       }
 
       // Reload settings
