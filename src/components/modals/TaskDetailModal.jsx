@@ -123,6 +123,19 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   const handleCommentFileUpload = async (e) => { const file = e.target.files?.[0]; if (!file) return; setUploadingCommentFile(true); try { const { file_url } = await api.integrations.Core.UploadFile({ file }); setCommentAttachments(prev => [...prev, { name: file.name, url: file_url, type: file.type }]); } catch (err) { console.error('Failed to upload file:', err); } setUploadingCommentFile(false); };
 
+  const handleNativeCameraUpload = async (source) => {
+    const result = source === 'camera' ? await takePhoto() : await pickFromGallery();
+    if (!result) return;
+    setUploadingCommentFile(true);
+    try {
+      const { file_url } = await api.integrations.Core.UploadFile({ file: result.file });
+      setCommentAttachments(prev => [...prev, { name: result.file.name, url: file_url, type: result.file.type }]);
+    } catch (err) {
+      console.error('Failed to upload photo:', err);
+    }
+    setUploadingCommentFile(false);
+  };
+
   const handlePaste = async (e) => { const items = e.clipboardData?.items; if (!items) return; for (const item of items) { if (item.type.startsWith('image/')) { e.preventDefault(); const file = item.getAsFile(); if (!file) continue; setUploadingCommentFile(true); try { const { file_url } = await api.integrations.Core.UploadFile({ file }); setCommentAttachments(prev => [...prev, { name: `pasted-image-${Date.now()}.png`, url: file_url, type: file.type }]); } catch (err) { console.error('Failed to upload pasted image:', err); } setUploadingCommentFile(false); break; } } };
 
   const handleTaskFileUpload = async (e) => { const file = e.target.files?.[0]; if (!file) return; setUploadingTaskFile(true); try { const { file_url } = await api.integrations.Core.UploadFile({ file }); const currentAttachments = task.attachments || []; await handleUpdateTask({ attachments: [...currentAttachments, { name: file.name, url: file_url, type: file.type }] }); } catch (err) { console.error('Failed to upload file:', err); } setUploadingTaskFile(false); };
@@ -259,7 +272,30 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 <span className="hidden sm:inline-flex"><UserAvatar email={currentUser?.email} name={currentUser?.full_name} avatarUrl={currentUser?.avatar_url} size="md" /></span>
                 <div className="flex-1 relative">
                   <Textarea ref={textareaRef} value={comment} onChange={handleCommentChange} onPaste={handlePaste} placeholder="Write a comment... @ to mention" className="min-h-[52px] resize-none pr-10 bg-white dark:bg-[#1a2535] dark:border-slate-600 rounded-xl text-sm focus:ring-[#0069AF]/20 focus:border-[#0069AF]/40" />
-                  <button type="button" onClick={() => commentFileInputRef.current?.click()} disabled={uploadingCommentFile} className="absolute bottom-2 right-2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">{uploadingCommentFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}</button>
+                  {isNativeCamera ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button type="button" disabled={uploadingCommentFile} className="absolute bottom-2 right-2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                        {uploadingCommentFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleNativeCameraUpload('camera')}>
+                        <CameraIcon className="w-4 h-4 mr-2" />Take Photo
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleNativeCameraUpload('gallery')}>
+                        <Image className="w-4 h-4 mr-2" />Photo Library
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => commentFileInputRef.current?.click()}>
+                        <Paperclip className="w-4 h-4 mr-2" />Browse Files
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <button type="button" onClick={() => commentFileInputRef.current?.click()} disabled={uploadingCommentFile} className="absolute bottom-2 right-2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                    {uploadingCommentFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+                  </button>
+                )}
                   <input ref={commentFileInputRef} type="file" className="hidden" onChange={handleCommentFileUpload} />
                   {commentAttachments.length > 0 && (<div className="mt-2 flex flex-wrap gap-2">{commentAttachments.map((att, idx) => { const isImage = att.type?.startsWith('image/'); const FileIcon = getFileIcon(att.type); return (<div key={idx} className="relative group">{isImage ? (<div className="relative"><img src={att.url} alt={att.name} className="h-16 w-auto rounded-xl object-cover border border-slate-200" /><button onClick={() => setCommentAttachments(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button></div>) : (<div className="flex items-center gap-1 bg-slate-100 rounded-lg px-2 py-1 text-xs"><FileIcon className="w-3 h-3 text-slate-500" /><span className="truncate max-w-[100px]">{att.name}</span><button onClick={() => setCommentAttachments(prev => prev.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-red-500"><X className="w-3 h-3" /></button></div>)}</div>); })}</div>)}
                   {showMentions && filteredMembers.length > 0 && (<div className="absolute bottom-full left-0 mb-1 w-56 bg-white border rounded-xl shadow-lg max-h-40 overflow-y-auto z-50">{filteredMembers.map((member) => (<button key={member.id} onClick={() => insertMention(member)} className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2"><UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="sm" /><span className="text-sm">{member.name}</span></button>))}</div>)}
