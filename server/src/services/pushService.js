@@ -1,4 +1,4 @@
-import apn from 'apn';
+import apn from '@parse/node-apn';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import entityService from './entityService.js';
