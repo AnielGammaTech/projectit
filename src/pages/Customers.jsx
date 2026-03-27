@@ -951,7 +951,7 @@ export default function Customers() {
                 </div>
 
                 {/* Tab content */}
-                <div className="overflow-y-auto p-3 sm:p-6 flex-1">
+                <div className="overflow-y-auto no-scrollbar p-3 sm:p-6 flex-1">
                   {/* Details & Contacts Tab */}
                   {(companyTabs[selectedCustomer.id] || 'details') === 'details' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

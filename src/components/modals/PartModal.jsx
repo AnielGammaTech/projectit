@@ -138,7 +138,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
           </DialogHeader>
         </div>
 
-        <form onSubmit={handleSubmit} className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+        <form onSubmit={handleSubmit} className="overflow-y-auto no-scrollbar" style={{ maxHeight: 'calc(90vh - 140px)' }}>
           <div className="p-4 sm:p-6 space-y-5">
             {/* Link to Product */}
             <div className="relative">

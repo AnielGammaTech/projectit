@@ -378,7 +378,7 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
         </div>
 
         {/* ── Scrollable Body ── */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto max-h-[calc(90vh-200px)]">
+        <form onSubmit={handleSubmit} className="overflow-y-auto no-scrollbar max-h-[calc(90vh-200px)]">
           <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
 
             {/* Client + Description row */}

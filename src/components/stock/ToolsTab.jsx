@@ -501,7 +501,7 @@ function ToolViewModal({ open, onClose, tool, projects, currentUser, queryClient
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto no-scrollbar">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             {tool.image_url ? (
@@ -730,7 +730,7 @@ function ToolModal({ open, onClose, tool, onSave }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto no-scrollbar">
         <DialogHeader><DialogTitle>{tool ? 'Edit Tool' : 'Add Tool'}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

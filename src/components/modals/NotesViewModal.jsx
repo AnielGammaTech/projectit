@@ -130,7 +130,7 @@ export default function NotesViewModal({ open, onClose, projectId, currentUser, 
         </div>
 
         {/* Notes List */}
-        <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-3 mt-4">
+        <div className="flex-1 overflow-y-auto no-scrollbar pr-2 -mr-2 space-y-3 mt-4">
           {isLoading ? (
             <div className="text-center py-8 text-slate-400">Loading...</div>
           ) : notes.length === 0 ? (

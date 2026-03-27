@@ -108,7 +108,7 @@ export default function QuoteRequestModal({ open, onClose, quote, projects = [],
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto no-scrollbar">
         <DialogHeader>
           <DialogTitle>{quote ? 'Edit Quote Request' : 'New Quote Request'}</DialogTitle>
         </DialogHeader>

@@ -90,7 +90,7 @@ const DialogContent = React.forwardRef(({ className, children, hideCloseOnMobile
           <div className="flex justify-center pt-3 pb-1">
             <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
           </div>
-          <div className="overflow-y-auto overscroll-contain">
+          <div className="overflow-y-auto overscroll-contain no-scrollbar">
             {children}
           </div>
           <DialogPrimitive.Close

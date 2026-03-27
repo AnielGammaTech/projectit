@@ -205,7 +205,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
           {/* LEFT — Main content */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden order-2 sm:order-1">
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto no-scrollbar">
 
               {/* Description / Notes */}
               <div className="px-4 sm:px-8 pt-3 sm:pt-6 pb-3 sm:pb-5">
@@ -266,7 +266,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
           </div>
 
           {/* RIGHT — Properties sidebar (compact grid on mobile, sidebar on desktop) */}
-          <div className="order-1 sm:order-2 sm:w-[280px] border-b sm:border-b-0 sm:border-l border-slate-200/80 dark:border-slate-700/50 bg-slate-50/40 dark:bg-[#162032] overflow-y-auto flex-shrink-0">
+          <div className="order-1 sm:order-2 sm:w-[280px] border-b sm:border-b-0 sm:border-l border-slate-200/80 dark:border-slate-700/50 bg-slate-50/40 dark:bg-[#162032] overflow-y-auto no-scrollbar flex-shrink-0">
             {/* Properties */}
             <div className="p-3 sm:p-5">
               <span className="hidden sm:block text-xs font-semibold uppercase tracking-wider text-slate-400">Details</span>

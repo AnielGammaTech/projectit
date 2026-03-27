@@ -244,7 +244,7 @@ export default function FilesViewModal({ open, onClose, projectId, currentUser }
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-2">
+        <div className="flex-1 overflow-y-auto no-scrollbar pr-2 -mr-2 space-y-2">
           {/* Folders (only show at root) */}
           {!currentFolderId && folders.length > 0 && !searchQuery && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">

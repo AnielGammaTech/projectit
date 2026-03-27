@@ -117,7 +117,7 @@ export default function ProductModal({ open, onClose, product, onSave }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" onPaste={handlePaste}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto no-scrollbar" onPaste={handlePaste}>
         <DialogHeader>
           <DialogTitle>{product ? 'Edit Product' : 'Add Product'}</DialogTitle>
         </DialogHeader>

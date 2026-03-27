@@ -171,6 +171,15 @@ body[data-scroll-locked] {
   scrollbar-color: hsl(var(--ring) / 0.2) transparent;
 }
 
+/* Hide scrollbar but keep scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ── Utility tokens ── */
 @layer utilities {
   .shadow-card {
