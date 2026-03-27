@@ -154,6 +154,13 @@ export default function Dashboard() {
       if (mounted) {
         setCurrentUser(user);
         setIsAdmin(user?.role === 'admin');
+        if (user.pinned_projects) {
+          setPinnedProjectIds(user.pinned_projects);
+          localStorage.setItem('pinnedProjects', JSON.stringify(user.pinned_projects));
+        }
+        if (user.dashboard_widget_tab) {
+          setActiveWidget(user.dashboard_widget_tab);
+        }
       }
     }).catch(() => {});
     return () => { mounted = false; };
@@ -383,10 +390,11 @@ export default function Dashboard() {
 
   const handlePinToggle = (project) => {
     setPinnedProjectIds(prev => {
-      const newPinned = prev.includes(project.id) 
+      const newPinned = prev.includes(project.id)
         ? prev.filter(id => id !== project.id)
         : [project.id, ...prev];
       localStorage.setItem('pinnedProjects', JSON.stringify(newPinned));
+      api.auth.updateMe({ pinned_projects: newPinned }).catch(() => {});
       return newPinned;
     });
   };
@@ -532,12 +540,14 @@ export default function Dashboard() {
         const newPinned = [...withoutCurrent];
         newPinned.splice(destination.index, 0, draggableId);
         localStorage.setItem('pinnedProjects', JSON.stringify(newPinned));
+        api.auth.updateMe({ pinned_projects: newPinned }).catch(() => {});
         return newPinned;
       });
     } else if (source.droppableId === 'pinned') {
       setPinnedProjectIds(prev => {
         const newPinned = prev.filter(id => id !== draggableId);
         localStorage.setItem('pinnedProjects', JSON.stringify(newPinned));
+        api.auth.updateMe({ pinned_projects: newPinned }).catch(() => {});
         return newPinned;
       });
     }
@@ -1016,7 +1026,7 @@ export default function Dashboard() {
             { id: 'activity', label: 'Activity', icon: ActivityIcon, badge: missedNotifications.length > 0 ? missedNotifications.length : null },
             { id: 'health', label: 'Attention', icon: AlertTriangle, badge: healthCount > 0 ? healthCount : null },
           ];
-          const handleWidgetTab = (id) => { setActiveWidget(id); localStorage.setItem('dashboard-active-widget', id); };
+          const handleWidgetTab = (id) => { setActiveWidget(id); localStorage.setItem('dashboard-active-widget', id); if (currentUser) api.auth.updateMe({ dashboard_widget_tab: id }).catch(() => {}); };
           return (
             <div className="rounded-2xl border bg-card shadow-warm mb-4 overflow-hidden">
               <div className="flex border-b">

@@ -138,6 +138,15 @@ function LayoutContent({ children, currentPageName }) {
     api.auth.me().then(user => {
       setCurrentUser(user);
       setIsAdmin(user?.role === 'admin');
+      if (user.theme) {
+        const currentTheme = localStorage.getItem('theme');
+        if (user.theme !== currentTheme) {
+          localStorage.setItem('theme', user.theme);
+          const html = document.documentElement;
+          html.classList.remove('light', 'dark');
+          html.classList.add(user.theme);
+        }
+      }
     }).catch(() => {});
   }, []);
 
@@ -276,6 +285,7 @@ function LayoutContent({ children, currentPageName }) {
                 const isDark = html.classList.contains('dark');
                 html.classList.toggle('dark', !isDark);
                 localStorage.setItem('theme', isDark ? 'light' : 'dark');
+                api.auth.updateMe({ theme: isDark ? 'light' : 'dark' }).catch(() => {});
               }}
               className="hidden sm:flex p-2 hover:bg-white/10 rounded-lg transition-all"
               title="Toggle dark/light mode"
