@@ -146,7 +146,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] sm:max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
         <div className="p-3.5 pb-2">
@@ -383,7 +383,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] sm:max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
         <div className="p-3.5 pb-2">
@@ -1582,18 +1582,19 @@ export default function ProjectDetail() {
 
           {project.description && <p className="text-muted-foreground text-sm mt-2 line-clamp-2">{project.description}</p>}
 
-          {/* Mobile: Prominent Timer + Quick Actions */}
-          <div className="sm:hidden mt-3 pt-3 border-t border-slate-100 dark:border-border">
-            <TimeTracker
-              projectId={projectId}
-              currentUser={currentUser}
-              timeBudgetHours={project.time_budget_hours || 0}
-              variant="compact"
-            />
-          </div>
-
-          {/* Row 2: Progress bar + status actions */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-border">
+          {/* Row 2: Timer + Progress + Status — single row on mobile */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mt-3 pt-3 border-t border-border">
+            {/* Mobile: Timer inline */}
+            <div className="sm:hidden w-full">
+              <div className="flex items-center gap-2 mb-2">
+                <TimeTracker
+                  projectId={projectId}
+                  currentUser={currentUser}
+                  timeBudgetHours={project.time_budget_hours || 0}
+                  variant="compact"
+                />
+              </div>
+            </div>
             <div className="flex-1 min-w-0 w-full">
               <ProgressNeedle
                 projectId={projectId}
@@ -1758,7 +1759,7 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] sm:max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-400" />
                 <div className="p-3.5 pb-2">
@@ -1812,7 +1813,7 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full min-h-[220px] max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] sm:max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-400" />
                 <div className="p-3.5">
