@@ -33,6 +33,7 @@ import GlobalSearch from '@/components/GlobalSearch';
 import NotificationToast from '@/components/NotificationToast';
 import NotificationPanel from '@/components/NotificationPanel';
 import FeedbackButton from '@/components/FeedbackButton';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { api } from '@/api/apiClient';
@@ -89,13 +90,16 @@ function LayoutContent({ children, currentPageName }) {
     allProjects.filter(p => p.status === 'archived').map(p => p.id)
   );
 
-  // Fetch user notifications
+  // Fetch user notifications (no polling — realtime subscription handles updates)
   const { data: rawUserNotifications = [] } = useQuery({
     queryKey: ['layoutNotifications', currentUser?.email],
     queryFn: () => api.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
     enabled: !!currentUser?.email,
-    refetchInterval: 10000 // Check every 10 seconds for new notifications
+    staleTime: 30000
   });
+
+  // Subscribe to realtime notifications via Supabase
+  useRealtimeNotifications(currentUser?.email);
 
   // Filter out notifications from archived projects
   const userNotifications = rawUserNotifications.filter(n =>
