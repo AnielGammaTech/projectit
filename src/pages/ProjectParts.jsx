@@ -583,15 +583,17 @@ export default function ProjectParts() {
                 );
               })}
             </div>
-            <Button
-              variant={selectionMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
-              className={cn("hidden sm:flex h-9 shrink-0", selectionMode && "bg-amber-600")}
-            >
-              <CheckSquare className="w-4 h-4 mr-2" />
-              {selectionMode ? 'Done' : 'Select'}
-            </Button>
+            <div className="hidden sm:block">
+              <Button
+                variant={selectionMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
+                className={cn("h-9", selectionMode && "bg-amber-600")}
+              >
+                <CheckSquare className="w-4 h-4 mr-2" />
+                {selectionMode ? 'Done' : 'Select'}
+              </Button>
+            </div>
           </div>
         </div>
 
