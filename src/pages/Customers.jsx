@@ -382,8 +382,8 @@ export default function Customers() {
           </motion.div>
         )}
 
-        {/* Mobile: compact search + inline filter tabs */}
-        <div className="sm:hidden space-y-2 mb-3">
+        {/* Mobile: compact search only */}
+        <div className="sm:hidden mb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
@@ -392,35 +392,6 @@ export default function Customers() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 h-10 text-sm rounded-xl bg-card border-slate-200 dark:border-border"
             />
-          </div>
-          <div className="flex gap-0.5 bg-slate-100 dark:bg-slate-700/50 p-0.5 rounded-full">
-            <button
-              onClick={() => setViewFilter('all')}
-              className={cn(
-                "flex-1 px-3 py-1.5 text-xs font-medium rounded-full transition-colors text-center flex items-center justify-center gap-1",
-                viewFilter === 'all' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-slate-500"
-              )}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setViewFilter('companies')}
-              className={cn(
-                "flex-1 px-3 py-1.5 text-xs font-medium rounded-full transition-colors text-center flex items-center justify-center gap-1",
-                viewFilter === 'companies' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-slate-500"
-              )}
-            >
-              <Building2 className="w-3 h-3" /> Companies
-            </button>
-            <button
-              onClick={() => setViewFilter('contacts')}
-              className={cn(
-                "flex-1 px-3 py-1.5 text-xs font-medium rounded-full transition-colors text-center flex items-center justify-center gap-1",
-                viewFilter === 'contacts' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-slate-500"
-              )}
-            >
-              <Users className="w-3 h-3" /> People
-            </button>
           </div>
         </div>
 
