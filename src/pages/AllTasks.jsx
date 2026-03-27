@@ -790,21 +790,64 @@ export default function AllTasks() {
                     // Default collapsed on mobile — only expand when explicitly toggled
                     const isCollapsed = expandedGroups[projectId] !== true;
 
+                    const project = projects.find(p => p.id === projectId);
+                    const dueSoonTasks = projectTasks.filter(t => {
+                      if (t.status === 'completed' || t.status === 'archived' || !t.due_date) return false;
+                      const d = parseLocalDate(t.due_date);
+                      if (!d) return false;
+                      const days = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+                      return days >= 0 && days <= 3;
+                    });
+                    const overdueTasks = projectTasks.filter(t => {
+                      if (t.status === 'completed' || t.status === 'archived' || !t.due_date) return false;
+                      const d = parseLocalDate(t.due_date);
+                      return d && d < new Date() && !isToday(d);
+                    });
+
                     return (
                       <div key={projectId}>
-                        {/* Project group header */}
+                        {/* Project group header with quick info */}
                         <div
-                          className="flex items-center gap-2 px-3 py-3 sm:py-1.5 bg-muted/30 dark:bg-card border-b border-border cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors active:bg-muted/50"
+                          className="flex items-center gap-2 px-3 py-2.5 sm:py-2 bg-muted/30 dark:bg-card border-b border-border cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors active:bg-muted/50"
                           onClick={() => setExpandedGroups(prev => ({ ...prev, [projectId]: prev[projectId] === true ? false : true }))}
                         >
                           <ChevronRight className={cn("w-4 h-4 sm:w-3.5 sm:h-3.5 text-muted-foreground transition-transform shrink-0", !isCollapsed && "rotate-90")} />
                           <FolderKanban className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-primary shrink-0" />
-                          <span className="font-semibold text-sm sm:text-xs text-foreground truncate flex-1 min-w-0">
-                            {getProjectName(projectId)}
-                          </span>
-                          {getProjectNumber(projectId) && (
-                            <span className="px-1.5 py-0.5 bg-slate-700 text-white rounded text-[9px] font-mono shrink-0">#{getProjectNumber(projectId)}</span>
-                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-sm sm:text-xs text-foreground truncate">
+                                {getProjectName(projectId)}
+                              </span>
+                              {getProjectNumber(projectId) && (
+                                <span className="px-1.5 py-0.5 bg-slate-700 text-white rounded text-[9px] font-mono shrink-0">#{getProjectNumber(projectId)}</span>
+                              )}
+                            </div>
+                            {/* Quick info widgets */}
+                            <div className="hidden sm:flex items-center gap-3 mt-0.5 text-[10px] text-muted-foreground">
+                              {project?.client && (
+                                <span className="truncate max-w-[120px]">{project.client}</span>
+                              )}
+                              {project?.lead_name && (
+                                <span className="flex items-center gap-1">
+                                  <span className="w-3.5 h-3.5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px] font-bold">{project.lead_name[0]}</span>
+                                  {project.lead_name.split(' ')[0]}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {/* Task counts */}
+                          <div className="hidden sm:flex items-center gap-2 shrink-0">
+                            {overdueTasks.length > 0 && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                {overdueTasks.length} overdue
+                              </span>
+                            )}
+                            {dueSoonTasks.length > 0 && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                {dueSoonTasks.length} due soon
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[11px] sm:text-[10px] text-muted-foreground shrink-0">{projectTasks.length}</span>
                         </div>
 
