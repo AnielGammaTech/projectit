@@ -884,11 +884,11 @@ export default function Dashboard() {
     );
   }
 
-  if (loadingProjects) return <DashboardSkeleton />;
-
   const handlePullRefresh = useCallback(async () => {
     await Promise.all([refetchProjects(), refetchTasks()]);
   }, [refetchProjects, refetchTasks]);
+
+  if (loadingProjects) return <DashboardSkeleton />;
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
