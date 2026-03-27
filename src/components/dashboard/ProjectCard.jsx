@@ -1,5 +1,5 @@
 import { useState, memo, useMemo } from 'react';
-import { Calendar, CheckCircle2, ArrowRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Users, Clock, MessageCircle, CheckSquare, Square, Crown } from 'lucide-react';
+import { Calendar, CheckCircle2, ArrowRight, ChevronRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Users, Clock, MessageCircle, CheckSquare, Square, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -13,6 +13,7 @@ import { parseLocalDate } from '@/utils/dateUtils';
 import { format } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 
 // Fallback status colors for built-in statuses
 const fallbackStatusColors = {
@@ -295,6 +296,64 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
         </Popover>
       </div>
 
+      {/* Mobile compact row */}
+      <div
+        className="sm:hidden"
+        onClick={() => {
+          if (selectionMode) {
+            onSelectionToggle?.(project.id);
+          } else {
+            navigate(createPageUrl('ProjectDetail') + `?id=${project.id}`);
+          }
+        }}
+      >
+        <div className={cn(
+          "flex items-start gap-3 px-3 py-3 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors border-l-4",
+          colorClass,
+          selectionMode && isSelected && "bg-primary/5 ring-1 ring-primary"
+        )}>
+          {selectionMode && (
+            <Checkbox checked={isSelected} className="mt-1 shrink-0" onClick={(e) => e.stopPropagation()} />
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              {project.project_number && (
+                <span className="text-[10px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">#{project.project_number}</span>
+              )}
+              {(() => {
+                const cs = customStatuses?.find(s => s.key === (project.status || 'planning'));
+                const label = cs?.label || project.status?.replace(/_/g, ' ');
+                const colorCls = cs ? (statusColorMap[cs.color] || fallbackStatusColors[project.status]) : fallbackStatusColors[project.status];
+                return label ? (
+                  <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize", colorCls)}>
+                    {label}
+                  </span>
+                ) : null;
+              })()}
+            </div>
+            <h3 className="text-sm font-semibold text-foreground line-clamp-1">{project.name}</h3>
+            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
+              {project.client && <span className="truncate max-w-[140px]">{project.client}</span>}
+              {projectLead && (
+                <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                  <Crown className="w-2.5 h-2.5" />
+                  {projectLead.name?.split(' ')[0]}
+                </span>
+              )}
+            </div>
+            {project.description && (
+              <p className="text-[11px] text-muted-foreground line-clamp-1 mt-1">{project.description}</p>
+            )}
+            <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+              <span>{completedTasks}/{totalTasks} tasks</span>
+              {project.team_members?.length > 0 && <span>{project.team_members.length} members</span>}
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground mt-1 shrink-0" />
+        </div>
+      </div>
+
+      {/* Desktop card */}
       <div
         {...dragHandleProps}
         onClick={() => {
@@ -305,7 +364,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
           }
         }}
         className={cn(
-          "bg-white dark:bg-card rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/50 shadow-card hover:shadow-card-hover hover:border-slate-300/80 dark:hover:border-slate-600 transition-all duration-300 border-l-4 cursor-pointer h-full flex flex-col",
+          "hidden sm:flex bg-card rounded-2xl p-4 border shadow-warm hover:shadow-warm-hover transition-all duration-300 border-l-4 cursor-pointer h-full flex-col",
           colorClass,
           isPinned && "ring-2 ring-amber-200 dark:ring-amber-700 bg-amber-50/30 dark:bg-amber-900/10",
           isSelected && "ring-2 ring-primary dark:ring-blue-500 bg-primary/5 dark:bg-blue-900/20"
