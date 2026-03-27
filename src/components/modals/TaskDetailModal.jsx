@@ -82,13 +82,25 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     onSuccess: () => { refetchComments(); setComment(''); setCommentAttachments([]); }
   });
 
-  const handleUpdateTask = async (updates) => { await api.entities.Task.update(task.id, updates); queryClient.invalidateQueries({ queryKey: ['tasks'] }); };
-  const handleStatusToggle = async () => { const newStatus = task.status === 'completed' ? 'todo' : 'completed'; if (newStatus === 'completed') await hapticSuccess(); else await tapLight(); await handleUpdateTask({ status: newStatus }); };
+  const [localUpdates, setLocalUpdates] = useState({});
+  const liveTask = { ...task, ...localUpdates };
+
+  // Reset local updates when task changes
+  useEffect(() => { setLocalUpdates({}); }, [task?.id]);
+
+  const handleUpdateTask = async (updates) => {
+    // Optimistic update for immediate UI feedback
+    setLocalUpdates(prev => ({ ...prev, ...updates }));
+    await api.entities.Task.update(task.id, updates);
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
+  };
+  const handleStatusToggle = async () => { const newStatus = liveTask.status === 'completed' ? 'todo' : 'completed'; if (newStatus === 'completed') await hapticSuccess(); else await tapLight(); await handleUpdateTask({ status: newStatus }); };
   const handleStatusChange = async (status) => { await handleUpdateTask({ status }); setShowStatusDropdown(false); };
 
   const handleAssign = async (email) => {
     const member = teamMembers.find(m => m.email === email);
-    const wasAssigned = task.assigned_to;
+    const wasAssigned = liveTask.assigned_to;
     const newEmail = email === 'unassigned' ? '' : email;
     await handleUpdateTask({ assigned_to: newEmail, assigned_name: email === 'unassigned' ? '' : (member?.name || email) });
     if (newEmail && newEmail !== wasAssigned) { await sendTaskAssignmentNotification({ assigneeEmail: newEmail, taskTitle: task.title, projectId: task.project_id, projectName: project?.name || '', currentUser }); }
@@ -165,8 +177,8 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   if (!task) return null;
 
   const currentPriority = priorityConfig[localPriority] || priorityConfig.medium;
-  const isCompleted = task.status === 'completed';
-  const currentStatus = statusPillConfig[task.status] || statusPillConfig.todo;
+  const isCompleted = liveTask.status === 'completed';
+  const currentStatus = statusPillConfig[liveTask.status] || statusPillConfig.todo;
   const completedChecklistCount = checklistItems.filter(i => i.completed).length;
   const checklistProgress = checklistItems.length > 0 ? Math.round((completedChecklistCount / checklistItems.length) * 100) : 0;
   const activeChecklistItems = checklistItems.filter(i => !i.completed);
@@ -326,7 +338,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 {/* Assignee */}
                 <div className="flex items-center py-1.5 sm:py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors sm:-mx-2">
                   <span className="text-[11px] sm:text-xs text-slate-500 w-16 sm:w-20 flex-shrink-0">Assignee</span>
-                  <DropdownMenu><DropdownMenuTrigger asChild><button className="inline-flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 transition-colors">{task.assigned_name ? (<><UserAvatar email={task.assigned_to} name={task.assigned_name} avatarUrl={teamMembers.find(m => m.email === task.assigned_to)?.avatar_url} size="xs" /><span className="font-medium">{task.assigned_name}</span></>) : (<span className="text-slate-400">None</span>)}<ChevronDown className="w-3 h-3 text-slate-400" /></button></DropdownMenuTrigger><DropdownMenuContent align="start"><DropdownMenuItem onClick={() => handleAssign('unassigned')}><User className="w-4 h-4 mr-2 text-slate-400" />Unassigned</DropdownMenuItem><DropdownMenuSeparator />{teamMembers.map(m => (<DropdownMenuItem key={m.id} onClick={() => handleAssign(m.email)}><UserAvatar email={m.email} name={m.name} avatarUrl={m.avatar_url} size="xs" className="mr-2" />{m.name}{task.assigned_to === m.email && <Check className="w-4 h-4 ml-auto" />}</DropdownMenuItem>))}</DropdownMenuContent></DropdownMenu>
+                  <DropdownMenu><DropdownMenuTrigger asChild><button className="inline-flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 transition-colors">{liveTask.assigned_name ? (<><UserAvatar email={liveTask.assigned_to} name={liveTask.assigned_name} avatarUrl={teamMembers.find(m => m.email === liveTask.assigned_to)?.avatar_url} size="xs" /><span className="font-medium">{liveTask.assigned_name}</span></>) : (<span className="text-slate-400">None</span>)}<ChevronDown className="w-3 h-3 text-slate-400" /></button></DropdownMenuTrigger><DropdownMenuContent align="start"><DropdownMenuItem onClick={() => handleAssign('unassigned')}><User className="w-4 h-4 mr-2 text-slate-400" />Unassigned</DropdownMenuItem><DropdownMenuSeparator />{teamMembers.map(m => (<DropdownMenuItem key={m.id} onClick={() => handleAssign(m.email)}><UserAvatar email={m.email} name={m.name} avatarUrl={m.avatar_url} size="xs" className="mr-2" />{m.name}{liveTask.assigned_to === m.email && <Check className="w-4 h-4 ml-auto" />}</DropdownMenuItem>))}</DropdownMenuContent></DropdownMenu>
                 </div>
 
                 {/* Due Date */}
