@@ -159,8 +159,8 @@ function LayoutContent({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-background">
       {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 h-14 bg-gradient-to-r from-[#0F2F44] to-[#133F5C] dark:from-[#0a1e2e] dark:to-[#0e2d40] z-40 px-4 shadow-lg shadow-[#0F2F44]/10">
-        <div className="max-w-[1800px] mx-auto h-full flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-[#0F2F44] to-[#133F5C] dark:from-[#0a1e2e] dark:to-[#0e2d40] z-40 px-4 shadow-lg shadow-[#0F2F44]/10">
+        <div className="max-w-[1800px] mx-auto h-14 flex items-center justify-between">
           {/* Left: Logo */}
           <div className="flex items-center gap-4 flex-shrink-0">
             {/* Mobile Menu Button — hidden on mobile (bottom nav used instead) */}
@@ -501,7 +501,7 @@ function LayoutContent({ children, currentPageName }) {
       </div>
 
       {/* Main Content */}
-      <main className="pt-14 pt-safe-header pb-20 lg:pb-0">
+      <main className="pt-safe-header pb-20 lg:pb-0">
         {children}
       </main>
 
