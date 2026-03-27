@@ -478,9 +478,9 @@ export default function ProjectParts() {
               onPartsExtracted={refetchParts}
               compact={true}
             />
-            <Button onClick={() => { setEditingPart(null); setShowPartModal(true); }} className="bg-amber-500 hover:bg-amber-600">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Part
+            <Button onClick={() => { setEditingPart(null); setShowPartModal(true); }} className="bg-amber-500 hover:bg-amber-600" size="sm">
+              <Plus className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Part</span>
             </Button>
           </div>
         </div>
@@ -549,40 +549,44 @@ export default function ProjectParts() {
 
         {/* Filters */}
         <div className="bg-card rounded-2xl border border-slate-100 dark:border-border p-4 mb-6">
-          <div className="flex flex-wrap gap-4">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4">
+            <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search parts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full"
               />
             </div>
-            <div className="flex gap-2">
-              {['all', ...Object.keys(statusConfig)].map(status => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-                    statusFilter === status 
-                      ? "bg-amber-100 text-amber-700" 
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  )}
-                >
-                  {status === 'all' ? 'All' : statusConfig[status].label}
-                </button>
-              ))}
+            <div className="flex gap-2 overflow-x-auto flex-nowrap pb-1 -mb-1 scrollbar-hide">
+              {['all', ...Object.keys(statusConfig)].map(status => {
+                const shortLabels = { ready_to_install: 'Ready', installed: 'Done' };
+                const label = status === 'all' ? 'All' : (shortLabels[status] || statusConfig[status].label);
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setStatusFilter(status)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shrink-0",
+                      statusFilter === status
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
-            <Button 
-              variant={selectionMode ? "default" : "outline"} 
-              size="sm" 
+            <Button
+              variant={selectionMode ? "default" : "outline"}
+              size="sm"
               onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
-              className={cn("h-9", selectionMode && "bg-amber-600")}
+              className={cn("h-9 shrink-0", selectionMode && "bg-amber-600")}
             >
-              <CheckSquare className="w-4 h-4 mr-2" />
-              {selectionMode ? 'Done' : 'Select'}
+              <CheckSquare className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">{selectionMode ? 'Done' : 'Select'}</span>
             </Button>
           </div>
         </div>
@@ -653,12 +657,40 @@ export default function ProjectParts() {
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ delay: idx * 0.015 }}
                   onClick={() => selectionMode ? togglePartSelection(part.id) : setSelectedPartDetail(part)}
-                  className={cn(
-                    "px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-all group cursor-pointer border-b border-slate-100 dark:border-slate-700/30 last:border-b-0 border-l-4",
+                  className="cursor-pointer"
+                >
+                  {/* Mobile part row */}
+                  <div className={cn(
+                    "sm:hidden p-3 border-b border-border border-l-4",
                     statusConfig[part.status]?.borderColor || "border-l-transparent",
                     isSelected && "bg-amber-50/60 dark:bg-amber-900/10"
-                  )}
-                >
+                  )}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className={cn("text-xs font-semibold px-2 py-0.5 rounded capitalize", statusConfig[part.status]?.color)}>
+                        {statusConfig[part.status]?.label || part.status}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{part.part_number ? `#${part.part_number}` : ''}</span>
+                    </div>
+                    <p className="text-sm font-medium text-foreground mb-1">{part.name}</p>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      {part.assigned_name && <span>{part.assigned_name}</span>}
+                      {hasDueDate && <span>Due: {format(dueDateParsed, 'MMM d')}</span>}
+                      {estDeliveryDateValid && <span className={isDeliveryDue ? "text-orange-600 font-semibold" : ""}>ETA: {format(estDeliveryDate, 'MMM d')}</span>}
+                      <span>Qty: {part.quantity || 1}</span>
+                    </div>
+                    {part.tracking_number && (
+                      <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">
+                        <span className="font-mono">{part.tracking_number}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Desktop part row */}
+                  <div className={cn(
+                    "hidden sm:block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-all group border-b border-slate-100 dark:border-slate-700/30 last:border-b-0 border-l-4",
+                    statusConfig[part.status]?.borderColor || "border-l-transparent",
+                    isSelected && "bg-amber-50/60 dark:bg-amber-900/10"
+                  )}>
                   <div className="flex items-center gap-3">
                     {/* Selection checkbox */}
                     {selectionMode && (
@@ -736,7 +768,7 @@ export default function ProjectParts() {
                           <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold", getColorForEmail(part.assigned_to))}>
                             {getInitials(part.assigned_name)}
                           </div>
-                          <span className="text-[11px] text-slate-500 max-w-[60px] truncate hidden sm:inline">{part.assigned_name.split(' ')[0]}</span>
+                          <span className="text-[11px] text-slate-500 max-w-[60px] truncate">{part.assigned_name.split(' ')[0]}</span>
                         </div>
                       ) : (
                         <DropdownMenu>
@@ -747,7 +779,7 @@ export default function ProjectParts() {
                               title="Assign"
                             >
                               <UserPlus className="w-3 h-3 text-amber-600" />
-                              <span className="text-[10px] font-medium text-amber-700 hidden sm:inline">Assign</span>
+                              <span className="text-[10px] font-medium text-amber-700">Assign</span>
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
@@ -920,6 +952,7 @@ export default function ProjectParts() {
                         </Button>
                       </div>
                     </div>
+                  </div>
                   </div>
                 </motion.div>
               );})

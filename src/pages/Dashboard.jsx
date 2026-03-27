@@ -1536,7 +1536,8 @@ export default function Dashboard() {
               ) : (
               <DragDropContext onDragEnd={handleDragEnd}>
                 <div className="space-y-4">
-                  {/* Pinned Projects Section */}
+                  {/* Pinned Projects Section — hidden on mobile */}
+                  <div className="hidden sm:block">
                   {pinnedProjects.length > 0 && (
                     <Droppable droppableId="pinned" direction="horizontal">
                       {(provided, snapshot) => (
@@ -1613,6 +1614,7 @@ export default function Dashboard() {
                       )}
                     </Droppable>
                   )}
+                  </div>
 
                   {/* Stacks Section */}
                   {projectStacks.length > 0 && (
