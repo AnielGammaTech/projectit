@@ -273,6 +273,11 @@ function LayoutContent({ children, currentPageName }) {
               })}
             </nav>
 
+            {/* Center: My Schedule link (mobile only) */}
+            <Link to={createPageUrl('AllTasks') + '?view=soon'} className="sm:hidden text-sm font-semibold text-white/90">
+              My Schedule
+            </Link>
+
             {/* Right: Search, Notifications & User */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
