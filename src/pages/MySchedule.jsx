@@ -270,7 +270,9 @@ export default function MySchedule() {
                         </button>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
-                          <p className="text-[11px] text-muted-foreground truncate">{project.name}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            {project.project_number ? `#${project.project_number} · ` : ''}{project.name}
+                          </p>
                         </div>
                         {isPastDate && <span className="text-[10px] font-semibold text-red-500 shrink-0">Overdue</span>}
                       </Link>
