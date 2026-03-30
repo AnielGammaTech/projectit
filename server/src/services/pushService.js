@@ -14,10 +14,12 @@ function getProvider() {
   const teamId = process.env.APNS_TEAM_ID || '98K2QQUBAS';
   const production = process.env.NODE_ENV === 'production' || process.env.APNS_PRODUCTION === 'true';
 
-  // Support key as env var (for Railway) or file path (for local dev)
+  // Support key as base64 env var (for Railway) or file path (for local dev)
   let keyOption;
-  if (process.env.APNS_KEY_CONTENT) {
-    keyOption = Buffer.from(process.env.APNS_KEY_CONTENT);
+  if (process.env.APNS_KEY_BASE64) {
+    keyOption = Buffer.from(process.env.APNS_KEY_BASE64, 'base64');
+  } else if (process.env.APNS_KEY_CONTENT) {
+    keyOption = Buffer.from(process.env.APNS_KEY_CONTENT.replace(/\\n/g, '\n'));
   } else {
     keyOption = process.env.APNS_KEY_PATH || path.join(__dirname, '../../AuthKey_KC49B6DQLT.p8');
   }
