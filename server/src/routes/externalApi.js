@@ -122,71 +122,12 @@ router.post('/quotes/accepted', async (req, res) => {
       user_name: 'QuoteIT API',
     });
 
-    // Auto-create project from accepted quote
-    let project = null;
-    try {
-      // Get next project number
-      const allProjects = await entityService.list('Project', '-project_number', 1);
-      const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
-
-      // Find ProjectIT customer by name match (QuoteIT customer_id won't match ProjectIT IDs)
-      let resolvedCustomerId = '';
-      if (customer_name) {
-        const customers = await entityService.list('Customer');
-        const normalizedName = customer_name.toLowerCase().trim();
-        const match = customers.find(c =>
-          (c.company || c.name || '').toLowerCase().trim() === normalizedName
-        );
-        if (match) resolvedCustomerId = match.id;
-      }
-
-      // Create the project with quote number and sender info
-      const projectName = quote_number
-        ? `${title} - Proposal# ${quote_number}`
-        : title;
-
-      project = await entityService.create('Project', {
-        name: projectName,
-        description: sent_by
-          ? `Auto-created from accepted QuoteIT quote. Sent by: ${sent_by}`
-          : `Auto-created from accepted QuoteIT quote`,
-        status: 'planning',
-        project_number: nextNumber,
-        customer_id: resolvedCustomerId,
-        customer_name: customer_name || '',
-        quoteit_quote_id: String(quote_id),
-        quoteit_quote_number: quote_number || '',
-        sent_by: sent_by || '',
-        budget: amount || 0,
-        start_date: null,
-        due_date: null,
-        progress: 0,
-      });
-
-      // Update incoming quote status
-      await entityService.update('IncomingQuote', incomingQuote.id, {
-        status: 'converted',
-        project_id: project.id,
-      });
-
-      // Log project creation
-      await entityService.create('AuditLog', {
-        action: 'project_auto_created',
-        entity_type: 'Project',
-        entity_id: project.id,
-        details: `Project #${nextNumber} auto-created from QuoteIT quote "${title}"`,
-        user_email: 'api@quoteit',
-        user_name: 'QuoteIT API',
-      });
-    } catch (projErr) {
-      console.error('Auto-create project failed (non-blocking):', projErr.message);
-    }
-
+    // Quote stays as pending — user creates project manually from Dashboard
     return res.status(201).json({
       success: true,
       incoming_quote_id: incomingQuote.id,
-      status: project ? 'converted' : 'pending',
-      project_id: project?.id || null,
+      status: 'pending',
+      project_id: null,
       project_number: project?.project_number || null,
       message: project
         ? `Quote received and project #${project.project_number} auto-created`
