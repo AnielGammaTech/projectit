@@ -902,14 +902,9 @@ export default function Dashboard() {
     );
   }
 
-  const handlePullRefresh = useCallback(async () => {
-    await Promise.all([refetchProjects(), refetchTasks()]);
-  }, [refetchProjects, refetchTasks]);
-
   if (loadingProjects) return <DashboardSkeleton />;
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh}>
     <div className="min-h-screen bg-background">
       <ProcessingOverlay isVisible={isProcessing} type={processingType} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -1898,6 +1893,5 @@ export default function Dashboard() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-    </PullToRefresh>
   );
 }
