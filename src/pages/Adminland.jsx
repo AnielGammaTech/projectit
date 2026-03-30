@@ -3605,6 +3605,40 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
   const [sendingTest, setSendingTest] = useState(false);
   const [result, setResult] = useState(null);
   const [hasEnvApiKey, setHasEnvApiKey] = useState(false);
+  const [testNotifEmail, setTestNotifEmail] = useState('');
+  const [sendingTestNotif, setSendingTestNotif] = useState(false);
+  const [testNotifResult, setTestNotifResult] = useState(null);
+
+  const handleSendTestNotification = async () => {
+    if (!testNotifEmail) return;
+    setSendingTestNotif(true);
+    setTestNotifResult(null);
+    try {
+      // 1. Create in-app notification
+      await api.entities.UserNotification.create({
+        user_email: testNotifEmail,
+        type: 'project_update',
+        title: 'Test Notification',
+        message: 'This is a test notification from Adminland. If you received this, notifications are working!',
+        is_read: false,
+        link: '/',
+      });
+      // 2. Send email + push via the notification handler
+      await api.functions.invoke('sendNotificationEmail', {
+        to: testNotifEmail,
+        type: 'project_update',
+        title: 'Test Notification',
+        message: 'This is a test notification from Adminland.',
+        projectName: 'Test',
+        fromUserName: 'Admin',
+        link: '/',
+      });
+      setTestNotifResult({ success: true, message: `Test notification sent to ${testNotifEmail} (in-app + email + push)` });
+    } catch (err) {
+      setTestNotifResult({ success: false, message: err.message || 'Failed to send test notification' });
+    }
+    setSendingTestNotif(false);
+  };
 
   // Check if RESEND_API_KEY env var is set on the server
   useEffect(() => {
@@ -3757,6 +3791,35 @@ function ResendIntegrationCard({ expandedIntegration, toggleIntegration }) {
               </div>
             </div>
           )}
+
+          {/* Test notification (email + push) */}
+          <div className="pt-4 border-t space-y-3">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              Send Test Notification
+            </h3>
+            <p className="text-xs text-muted-foreground">Sends an in-app notification + email + push to the specified user.</p>
+            <div className="flex gap-2">
+              <Input
+                value={testNotifEmail}
+                onChange={e => setTestNotifEmail(e.target.value)}
+                placeholder="user@example.com"
+                className="flex-1"
+              />
+              <Button onClick={handleSendTestNotification} disabled={sendingTestNotif} variant="outline" size="sm">
+                {sendingTestNotif ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : 'Send Test'}
+              </Button>
+            </div>
+            {testNotifResult && (
+              <div className={cn(
+                "p-3 rounded-lg text-sm flex items-center gap-2",
+                testNotifResult.success ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400" : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+              )}>
+                {testNotifResult.success ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+                {testNotifResult.message}
+              </div>
+            )}
+          </div>
 
           {/* Result message */}
           {result && (
