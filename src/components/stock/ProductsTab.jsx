@@ -373,27 +373,28 @@ export default function ProductsTab() {
                   isLow && "bg-amber-50/50 dark:bg-amber-900/10"
                 )}
               >
-                {/* Mobile: single compact row */}
+                {/* Mobile: full-width row */}
                 <div className="sm:hidden flex items-center gap-3">
                   {product.image_url ? (
-                    <img src={product.image_url} alt="" className="w-8 h-8 rounded-lg object-cover border flex-shrink-0" />
+                    <img src={product.image_url} alt="" className="w-11 h-11 rounded-xl object-cover border border-border flex-shrink-0" />
                   ) : (
-                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                      <Package className="w-3.5 h-3.5 text-muted-foreground" />
+                    <div className="w-11 h-11 rounded-xl bg-muted/50 border border-border flex items-center justify-center flex-shrink-0">
+                      <Package className="w-4.5 h-4.5 text-muted-foreground" />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium text-foreground truncate">{product.name}</p>
-                      <span className={cn("text-xs font-bold tabular-nums px-1.5 py-0.5 rounded shrink-0", isOut ? "text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/30" : isLow ? "text-amber-700 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30" : "text-foreground bg-muted/50")}>
-                        {stockLevel}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
-                      {product.manufacturer && <span className="truncate">{product.manufacturer}</span>}
-                      {product.manufacturer && product.selling_price > 0 && <span className="text-border">·</span>}
-                      {product.selling_price > 0 && <span className="font-medium text-foreground/70">${(product.selling_price).toFixed(2)}</span>}
-                    </div>
+                    <p className="text-sm font-semibold text-foreground truncate">{product.name}</p>
+                    {product.manufacturer && (
+                      <p className="text-[11px] text-muted-foreground truncate mt-0.5">{product.manufacturer}{product.sku ? ` · ${product.sku}` : ''}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={cn("text-xs font-bold tabular-nums px-2 py-0.5 rounded-lg", isOut ? "text-red-600 bg-red-500/10 dark:text-red-400 dark:bg-red-900/30" : isLow ? "text-amber-600 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-900/30" : "text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-900/20")}>
+                      {stockLevel}
+                    </span>
+                    {product.selling_price > 0 && (
+                      <span className="text-[11px] font-medium text-muted-foreground tabular-nums">${(product.selling_price).toFixed(2)}</span>
+                    )}
                   </div>
                 </div>
 
