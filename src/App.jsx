@@ -60,6 +60,11 @@ const AuthenticatedApp = () => {
 
   const location = useLocation();
 
+  // Scroll to top on navigation
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   // Show loading spinner while checking auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -78,16 +83,10 @@ const AuthenticatedApp = () => {
     }
   }
 
-  // Redirect to login if not authenticated (uses React Router, preserves history)
+  // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to={`/login?returnUrl=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
-
-  // Scroll to top on navigation
-  const { pathname } = useLocation();
-  React.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
 
   // Render the main app
   return (
