@@ -62,5 +62,14 @@ export function usePushNotifications({ userEmail, onNotificationReceived, onNoti
 
 export async function setBadgeCount(count) {
   if (!isNative()) return;
-  await PushNotifications.removeAllDeliveredNotifications();
+  try {
+    const { Badge } = await import('@capawesome/capacitor-badge');
+    await Badge.set({ count });
+    if (count === 0) {
+      await PushNotifications.removeAllDeliveredNotifications();
+    }
+  } catch (_) {
+    // Badge plugin not available — fallback to clearing delivered notifications
+    await PushNotifications.removeAllDeliveredNotifications();
+  }
 }

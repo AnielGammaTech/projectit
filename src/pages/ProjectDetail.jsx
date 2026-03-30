@@ -1363,7 +1363,7 @@ export default function ProjectDetail() {
     const completedTasks = tasks.filter(t => t.status === 'completed').length;
     const taskProgress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
     return (
-    <div className="min-h-screen bg-background">
+    <div className="sm:min-h-screen bg-background">
       <ProcessingOverlay isVisible={isProcessing} type={processingType} />
       <ProjectNavHeader project={project} currentPage="ProjectDetail" />
 

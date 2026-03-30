@@ -34,6 +34,7 @@ import NotificationToast from '@/components/NotificationToast';
 import NotificationPanel from '@/components/NotificationPanel';
 import FeedbackButton from '@/components/FeedbackButton';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
+import { setBadgeCount } from '@/hooks/usePushNotifications';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { api } from '@/api/apiClient';
@@ -110,6 +111,11 @@ function LayoutContent({ children, currentPageName }) {
 
   const unreadNotifications = userNotifications.filter(n => !n.is_read);
   const unreadCount = unreadNotifications.length;
+
+  // Sync app icon badge with unread count
+  useEffect(() => {
+    setBadgeCount(unreadCount);
+  }, [unreadCount]);
 
   // Show toast for new notifications
   useEffect(() => {

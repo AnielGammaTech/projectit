@@ -93,9 +93,18 @@ export async function sendPushNotification(userEmail, { title, body, data = {} }
 
   if (tokens.length === 0) return { sent: 0 };
 
+  // Count unread notifications to set accurate badge number
+  let badgeCount = 1;
+  try {
+    const unread = await entityService.filter('UserNotification', { user_email: userEmail, is_read: false });
+    badgeCount = unread.length || 1;
+  } catch (_) {
+    // Fall back to 1 if we can't count
+  }
+
   const notification = new apn.Notification();
   notification.expiry = Math.floor(Date.now() / 1000) + 3600; // 1 hour
-  notification.badge = 1;
+  notification.badge = badgeCount;
   notification.sound = 'default';
   notification.alert = { title, body };
   notification.payload = data;
