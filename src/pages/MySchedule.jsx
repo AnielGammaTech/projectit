@@ -121,7 +121,7 @@ export default function MySchedule() {
 
     return (
       <div className="flex-1">
-        <div className="text-center font-semibold text-foreground mb-4">
+        <div className="hidden sm:block text-center font-semibold text-foreground mb-4">
           {format(month, 'MMMM yyyy')}
         </div>
         <div className="grid grid-cols-7 gap-1">
