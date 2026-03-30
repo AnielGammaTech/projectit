@@ -280,7 +280,7 @@ function LayoutContent({ children, currentPageName }) {
             </Link>
 
             {/* Right: Search, Notifications & User */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <button
               onClick={() => setShowSearch(true)}
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white/70 text-sm"
