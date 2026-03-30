@@ -85,7 +85,7 @@ const DialogContent = React.forwardRef(({ className, children, hideCloseOnMobile
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 grid w-full max-h-[92vh] border-t shadow-lg rounded-t-2xl bg-background",
+            "fixed inset-x-0 bottom-0 z-50 grid w-full max-h-[92vh] border-t shadow-lg rounded-t-2xl bg-white dark:bg-[#0a1e2e]",
             "duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
