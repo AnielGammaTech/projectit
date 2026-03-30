@@ -12,8 +12,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { startTimerLiveActivity, stopTimerLiveActivity } from '@/hooks/useLiveActivity';
 
-export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 0, variant = 'inline' }) {
+export default function TimeTracker({ projectId, projectName = '', currentUser, timeBudgetHours = 0, variant = 'inline' }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showStopModal, setShowStopModal] = useState(false);
   const [stopDescription, setStopDescription] = useState('');
@@ -48,15 +49,19 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
   }, [activeEntry]);
 
   const startMutation = useMutation({
-    mutationFn: () => api.entities.TimeEntry.create({
-      project_id: projectId,
-      user_email: currentUser.email,
-      user_name: currentUser.full_name || currentUser.email,
-      start_time: new Date().toISOString(),
-      is_running: true
-    }),
-    onSuccess: () => {
+    mutationFn: () => {
+      const now = new Date().toISOString();
+      return api.entities.TimeEntry.create({
+        project_id: projectId,
+        user_email: currentUser.email,
+        user_name: currentUser.full_name || currentUser.email,
+        start_time: now,
+        is_running: true
+      });
+    },
+    onSuccess: (_, __, context) => {
       queryClient.invalidateQueries({ queryKey: ['timeEntries', projectId] });
+      startTimerLiveActivity(projectName || 'Project Timer', new Date().toISOString());
     }
   });
 
@@ -77,6 +82,7 @@ export default function TimeTracker({ projectId, currentUser, timeBudgetHours = 
       queryClient.invalidateQueries({ queryKey: ['timeEntries', projectId] });
       setShowStopModal(false);
       setStopDescription('');
+      stopTimerLiveActivity();
     }
   });
 

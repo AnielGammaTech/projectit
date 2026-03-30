@@ -1534,6 +1534,7 @@ export default function ProjectDetail() {
               <span className="hidden sm:inline-flex">
                 <TimeTracker
                   projectId={projectId}
+                  projectName={project.name}
                   currentUser={currentUser}
                   timeBudgetHours={project.time_budget_hours || 0}
                 />
