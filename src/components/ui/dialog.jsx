@@ -21,59 +21,86 @@ const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props} />
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
-const DialogContent = React.forwardRef(({ className, children, hideCloseOnMobile, mobileSheetClassName, ...props }, ref) => {
+const DialogContent = React.forwardRef(({ className, children, hideCloseOnMobile, ...props }, ref) => {
   const isMobile = useIsMobile()
   const contentRef = React.useRef(null)
+  const [isDragging, setIsDragging] = React.useState(false)
+  const touchStartY = React.useRef(0)
+  const touchDeltaY = React.useRef(0)
+  const scrollTopAtStart = React.useRef(0)
+
   const combinedRef = React.useCallback((node) => {
     contentRef.current = node
     if (typeof ref === 'function') ref(node)
     else if (ref) ref.current = node
   }, [ref])
 
-  // Swipe-to-dismiss on mobile
-  const touchStartY = React.useRef(0)
-  const touchDeltaY = React.useRef(0)
+  // Find the scrollable container inside the dialog
+  const getScrollContainer = React.useCallback(() => {
+    if (!contentRef.current) return null
+    return contentRef.current.querySelector('[data-dialog-scroll]') || contentRef.current
+  }, [])
 
   const handleTouchStart = React.useCallback((e) => {
+    const scrollContainer = getScrollContainer()
+    scrollTopAtStart.current = scrollContainer?.scrollTop || 0
     touchStartY.current = e.touches[0].clientY
     touchDeltaY.current = 0
-  }, [])
+    setIsDragging(false)
+  }, [getScrollContainer])
 
   const handleTouchMove = React.useCallback((e) => {
     const delta = e.touches[0].clientY - touchStartY.current
     touchDeltaY.current = delta
-    if (delta > 0 && contentRef.current) {
-      contentRef.current.style.transform = `translateY(${delta}px)`
-      contentRef.current.style.transition = 'none'
+
+    // Only allow swipe-down when scrolled to top
+    if (delta > 0 && scrollTopAtStart.current <= 0) {
+      setIsDragging(true)
+      if (contentRef.current) {
+        contentRef.current.style.transform = `translateY(${delta}px)`
+        contentRef.current.style.transition = 'none'
+      }
     }
   }, [])
 
-  const handleTouchEnd = React.useCallback((e) => {
+  const handleTouchEnd = React.useCallback(() => {
     if (!contentRef.current) return
-    contentRef.current.style.transition = 'transform 0.2s ease-out'
-    if (touchDeltaY.current > 100) {
-      // Haptic feedback on dismiss
+
+    if (isDragging && touchDeltaY.current > 80) {
+      // Dismiss: slide fully off screen, then close via Radix
       if (isNative()) {
         Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
       }
-      // Dismiss — find and click the close button
-      const closeBtn = contentRef.current.querySelector('[data-dialog-close]')
-      if (closeBtn) closeBtn.click()
-      else {
-        // Fallback: trigger Escape key
-        contentRef.current.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
-      }
+      contentRef.current.style.transition = 'transform 0.2s ease-out'
+      contentRef.current.style.transform = 'translateY(100%)'
+
+      // After animation, trigger Radix close via the overlay
+      setTimeout(() => {
+        // Use Radix's built-in escape mechanism
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }))
+      }, 180)
     } else {
+      // Snap back
+      contentRef.current.style.transition = 'transform 0.2s ease-out'
       contentRef.current.style.transform = 'translateY(0)'
     }
-  }, [])
+    setIsDragging(false)
+  }, [isDragging])
+
+  // Clean up inline styles when dialog opens/closes
+  React.useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.style.transform = ''
+      contentRef.current.style.transition = ''
+    }
+  })
 
   if (isMobile) {
     return (
@@ -84,10 +111,15 @@ const DialogContent = React.forwardRef(({ className, children, hideCloseOnMobile
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
+          // Prevent pointer events on overlay from conflicting during swipe
+          onPointerDownOutside={(e) => {
+            if (isDragging) e.preventDefault()
+          }}
           className={cn(
             "fixed inset-x-0 bottom-0 z-50 grid w-full max-h-[92vh] border-t shadow-2xl rounded-t-2xl bg-white dark:bg-[#0a1e2e]",
-            "duration-300 ease-out data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+            // Simple slide animation — no zoom, no conflicting transforms
+            "data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=open]:duration-300",
+            "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=closed]:duration-200",
             className
           )}
           {...props}>
@@ -95,7 +127,7 @@ const DialogContent = React.forwardRef(({ className, children, hideCloseOnMobile
           <div className="flex justify-center pt-3 pb-1">
             <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
           </div>
-          <div className="overflow-y-auto overscroll-contain no-scrollbar">
+          <div data-dialog-scroll className="overflow-y-auto overscroll-contain no-scrollbar">
             {children}
           </div>
           {!hideCloseOnMobile && (

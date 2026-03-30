@@ -574,7 +574,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent hideCloseOnMobile className="h-[95dvh] sm:h-auto rounded-t-2xl sm:rounded-2xl sm:max-w-lg max-h-[95dvh] sm:max-h-[90vh] overflow-y-auto no-scrollbar !bg-white dark:!bg-[#0a1e2e] border-border p-0 top-auto sm:top-[50%] translate-y-0 sm:translate-y-[-50%] bottom-0 sm:bottom-auto pb-[env(safe-area-inset-bottom)]">
+      <DialogContent hideCloseOnMobile className="sm:max-w-lg sm:max-h-[90vh] overflow-y-auto no-scrollbar !bg-white dark:!bg-[#0a1e2e] border-border p-0 pb-[env(safe-area-inset-bottom)]">
         {/* Mobile close bar */}
         <div className="sm:hidden flex items-center justify-between px-4 pt-3">
           <button onClick={() => onClose(false)} className="flex items-center gap-1 text-muted-foreground text-xs font-medium">

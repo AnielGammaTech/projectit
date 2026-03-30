@@ -806,7 +806,7 @@ export default function Customers() {
             return (
               <>
                 {/* Hero Header */}
-                <div className="bg-[#0a1e2e] dark:bg-[#0a1e2e] px-4 sm:px-6 -mt-[100px] pt-[104px] sm:mt-0 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden rounded-t-2xl sm:rounded-t-none">
+                <div className="bg-[#0a1e2e] dark:bg-[#0a1e2e] px-4 sm:px-6 pt-2 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden">
                   <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
                   <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-white/10 rounded-full" />
                   <div className="relative z-10">
