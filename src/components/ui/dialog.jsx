@@ -123,11 +123,11 @@ const DialogContent = React.forwardRef(({ className, children, hideCloseOnMobile
             className
           )}
           {...props}>
-          {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-1">
-            <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+          {/* Drag handle — floats over content */}
+          <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-2 pb-1 pointer-events-none">
+            <div className="w-10 h-1 rounded-full bg-white/30" />
           </div>
-          <div data-dialog-scroll className="overflow-y-auto overscroll-contain no-scrollbar">
+          <div data-dialog-scroll className="overflow-y-auto overscroll-contain no-scrollbar rounded-t-2xl">
             {children}
           </div>
           {!hideCloseOnMobile && (
