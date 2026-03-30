@@ -353,19 +353,21 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.03 }}
                       >
-                        <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}>
+                        <Link to={createPageUrl('ProjectTasks') + `?id=${item.project_id}&task=${item.id}`} className="block">
+                        <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer", getRowBg(dueStatus))}>
                           <button
                             onClick={(e) => {
                               e.preventDefault();
+                              e.stopPropagation();
                               handleTaskCompleteWithSync(item);
                             }}
                             className={cn("p-1 rounded-md hover:scale-110 transition-transform shrink-0", status.bg)}
                           >
                             <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
                           </button>
-                          <Link to={createPageUrl('ProjectTasks') + `?id=${item.project_id}&task=${item.id}`} className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0">
                             <p className="font-medium text-slate-900 dark:text-slate-100 text-sm truncate">{item.title}</p>
-                          </Link>
+                          </div>
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span className="text-[10px] text-muted-foreground truncate max-w-[160px]">
                               {getProjectNumber(item.project_id) && <span className="font-mono mr-1">#{getProjectNumber(item.project_id)}</span>}
@@ -379,6 +381,7 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                             )}
                           </div>
                         </div>
+                        </Link>
                       </motion.div>
                     );
                   } else {
