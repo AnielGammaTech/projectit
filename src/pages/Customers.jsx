@@ -806,7 +806,7 @@ export default function Customers() {
             return (
               <>
                 {/* Hero Header */}
-                <div className="bg-[#0a1e2e] dark:bg-[#0a1e2e] px-4 sm:px-6 -mt-[40px] pt-[44px] sm:mt-0 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden rounded-t-2xl sm:rounded-t-none">
+                <div className="bg-[#0a1e2e] dark:bg-[#0a1e2e] px-4 sm:px-6 -mt-[60px] pt-[64px] sm:mt-0 sm:pt-6 pb-4 sm:pb-5 text-white relative overflow-hidden rounded-t-2xl sm:rounded-t-none">
                   <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
                   <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-white/10 rounded-full" />
                   <div className="relative z-10">
@@ -862,26 +862,26 @@ export default function Customers() {
                     </div>
 
                     {/* Quick stats */}
-                    <div className="flex items-center gap-2 sm:gap-4 mt-3 sm:mt-4 flex-wrap">
-                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
-                        <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-300" />
-                        <span className="font-medium">{customerSites.length}</span>
-                        <span className="text-white/80">sites</span>
+                    <div className="grid grid-cols-4 gap-2 mt-3 sm:mt-4">
+                      <div className="flex flex-col items-center gap-0.5 px-2 py-2 bg-white/10 rounded-xl">
+                        <MapPin className="w-4 h-4 text-emerald-300" />
+                        <span className="text-sm font-bold">{customerSites.length}</span>
+                        <span className="text-[10px] text-white/60">Sites</span>
                       </div>
-                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
-                        <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-300" />
-                        <span className="font-medium">{customerContacts.length}</span>
-                        <span className="text-white/80 hidden sm:inline">contacts</span>
+                      <div className="flex flex-col items-center gap-0.5 px-2 py-2 bg-white/10 rounded-xl">
+                        <Users className="w-4 h-4 text-blue-300" />
+                        <span className="text-sm font-bold">{customerContacts.length}</span>
+                        <span className="text-[10px] text-white/60">Contacts</span>
                       </div>
-                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
-                        <FolderKanban className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-300" />
-                        <span className="font-medium">{customerProjects.length}</span>
-                        <span className="text-white/80 hidden sm:inline">projects</span>
+                      <div className="flex flex-col items-center gap-0.5 px-2 py-2 bg-white/10 rounded-xl">
+                        <FolderKanban className="w-4 h-4 text-orange-300" />
+                        <span className="text-sm font-bold">{customerProjects.length}</span>
+                        <span className="text-[10px] text-white/60">Projects</span>
                       </div>
-                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 rounded-lg text-xs sm:text-sm">
-                        <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-violet-300" />
-                        <span className="font-medium">{customerQuotes.length}</span>
-                        <span className="text-white/80 hidden sm:inline">proposals</span>
+                      <div className="flex flex-col items-center gap-0.5 px-2 py-2 bg-white/10 rounded-xl">
+                        <FileText className="w-4 h-4 text-violet-300" />
+                        <span className="text-sm font-bold">{customerQuotes.length}</span>
+                        <span className="text-[10px] text-white/60">Proposals</span>
                       </div>
                     </div>
                   </div>
