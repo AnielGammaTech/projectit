@@ -89,21 +89,33 @@ export default function Dashboard() {
   const [permanentDeleteConfirm, setPermanentDeleteConfirm] = useState({ open: false, project: null });
   const [showProposalsModal, setShowProposalsModal] = useState(false);
 
+  // Accept quote — marks as accepted, does NOT create project yet
+  const handleAcceptQuote = async (quote) => {
+    queryClient.setQueryData(['incomingQuotes'], (old) =>
+      (old || []).map(q => q.id === quote.id ? { ...q, status: 'accepted' } : q)
+    );
+    await api.entities.IncomingQuote.update(quote.id, { status: 'accepted' });
+    refetchIncomingQuotes();
+  };
+
+  // Create project from an accepted quote — opens modal pre-filled
   const handleCreateProjectFromQuote = (quote) => {
-    // Use matched_items if available (includes product matching from sync),
-    // otherwise fall back to raw items
     const items = quote.matched_items?.length > 0
       ? quote.matched_items
       : (quote.raw_data?.items || []);
 
+    const quoteNumber = quote.quoteit_id || quote.raw_data?.quote_number || '';
+    const quoteTitle = quote.title || '';
+    const projectName = quoteNumber ? `${quoteTitle} - ${quoteNumber}` : quoteTitle;
+
     setPrefillData({
-      name: quote.title,
+      name: projectName,
       client: quote.customer_name,
       customer_id: quote.customer_id || '',
       budget: quote.amount || quote.raw_data?.total_amount || 0,
       quoteit_quote_id: quote.quoteit_id,
       incoming_quote_id: quote.id,
-      description: quote.raw_data?.other_relevant_details || '',
+      description: quote.raw_data?.other_relevant_details || quote.raw_data?.description || '',
       proposalItems: items,
     });
     setShowProjectModal(true);
@@ -129,7 +141,13 @@ export default function Dashboard() {
 
   const { data: incomingQuotesRaw = [], refetch: refetchIncomingQuotes } = useQuery({
     queryKey: ['incomingQuotes'],
-    queryFn: () => api.entities.IncomingQuote.filter({ status: 'pending' }),
+    queryFn: async () => {
+      const [pending, accepted] = await Promise.all([
+        api.entities.IncomingQuote.filter({ status: 'pending' }),
+        api.entities.IncomingQuote.filter({ status: 'accepted' }),
+      ]);
+      return [...pending, ...accepted];
+    },
     staleTime: 30000,
     gcTime: 600000,
     enabled: !isMobile
@@ -1005,6 +1023,7 @@ export default function Dashboard() {
           <div className="mb-6">
             <IncomingQuoteBanner
               quotes={incomingQuotes}
+              onAcceptQuote={handleAcceptQuote}
               onCreateProject={handleCreateProjectFromQuote}
               onDismiss={handleDismissQuote}
               onSync={handleSyncQuotes}
