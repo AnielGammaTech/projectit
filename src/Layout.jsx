@@ -26,8 +26,9 @@ import {
   Globe,
   Inbox,
   Calendar,
+  AlertTriangle,
 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import GlobalSearch from '@/components/GlobalSearch';
 import NotificationToast from '@/components/NotificationToast';
@@ -91,6 +92,30 @@ function LayoutContent({ children, currentPageName }) {
   const archivedProjectIds = new Set(
     allProjects.filter(p => p.status === 'archived').map(p => p.id)
   );
+
+  const activeProjectIds = new Set(
+    allProjects.filter(p => p.status !== 'archived').map(p => p.id)
+  );
+
+  // Fetch tasks for overdue banner
+  const { data: allTasks = [] } = useQuery({
+    queryKey: ['layoutTasks', currentUser?.email],
+    queryFn: () => api.entities.Task.filter({ assigned_to: currentUser.email }),
+    enabled: !!currentUser?.email,
+    staleTime: 30000,
+    refetchInterval: 30000
+  });
+
+  const overdueCount = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return allTasks.filter(t => {
+      if (t.status === 'completed' || t.status === 'archived') return false;
+      if (!t.due_date || !activeProjectIds.has(t.project_id)) return false;
+      const due = new Date(t.due_date + 'T00:00:00');
+      return due < today;
+    }).length;
+  }, [allTasks, activeProjectIds]);
 
   // Fetch user notifications (polling as fallback + realtime for instant)
   const { data: rawUserNotifications = [] } = useQuery({
@@ -280,11 +305,16 @@ function LayoutContent({ children, currentPageName }) {
               })}
             </nav>
 
-            {/* Center: My Schedule link (mobile only) */}
-            <Link to={createPageUrl('MySchedule')} className="sm:hidden flex items-center gap-1.5 text-xs font-semibold text-white/80 absolute left-1/2 -translate-x-1/2">
-              <Calendar className="w-3.5 h-3.5" />
-              Schedule
-            </Link>
+            {/* Center: Overdue banner (mobile only) */}
+            {overdueCount > 0 && (
+              <Link
+                to={createPageUrl('AllTasks')}
+                className="sm:hidden flex items-center gap-1.5 text-[11px] font-bold absolute left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-3 py-1 rounded-full"
+              >
+                <AlertTriangle className="w-3 h-3" />
+                {overdueCount} overdue
+              </Link>
+            )}
 
             {/* Right: Search, Notifications & User */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
