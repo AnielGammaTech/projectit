@@ -13,7 +13,6 @@ import { parseLocalDate } from '@/utils/dateUtils';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import StatsCard from '@/components/dashboard/StatsCard';
-import PullToRefresh from '@/components/PullToRefresh';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import ProjectStackCard from '@/components/dashboard/ProjectStackCard';
 
