@@ -6,8 +6,6 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { isNative } from '@/lib/capacitor';
 
 const Dialog = DialogPrimitive.Root
 
@@ -30,96 +28,16 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const DialogContent = React.forwardRef(({ className, children, hideCloseOnMobile, ...props }, ref) => {
   const isMobile = useIsMobile()
-  const contentRef = React.useRef(null)
-  const [isDragging, setIsDragging] = React.useState(false)
-  const touchStartY = React.useRef(0)
-  const touchDeltaY = React.useRef(0)
-  const scrollTopAtStart = React.useRef(0)
-
-  const combinedRef = React.useCallback((node) => {
-    contentRef.current = node
-    if (typeof ref === 'function') ref(node)
-    else if (ref) ref.current = node
-  }, [ref])
-
-  // Find the scrollable container inside the dialog
-  const getScrollContainer = React.useCallback(() => {
-    if (!contentRef.current) return null
-    return contentRef.current.querySelector('[data-dialog-scroll]') || contentRef.current
-  }, [])
-
-  const handleTouchStart = React.useCallback((e) => {
-    const scrollContainer = getScrollContainer()
-    scrollTopAtStart.current = scrollContainer?.scrollTop || 0
-    touchStartY.current = e.touches[0].clientY
-    touchDeltaY.current = 0
-    setIsDragging(false)
-  }, [getScrollContainer])
-
-  const handleTouchMove = React.useCallback((e) => {
-    const delta = e.touches[0].clientY - touchStartY.current
-    touchDeltaY.current = delta
-
-    // Only allow swipe-down when scrolled to top
-    if (delta > 0 && scrollTopAtStart.current <= 0) {
-      setIsDragging(true)
-      if (contentRef.current) {
-        contentRef.current.style.transform = `translateY(${delta}px)`
-        contentRef.current.style.transition = 'none'
-      }
-    }
-  }, [])
-
-  const handleTouchEnd = React.useCallback(() => {
-    if (!contentRef.current) return
-
-    if (isDragging && touchDeltaY.current > 80) {
-      // Dismiss: slide fully off screen, then close via Radix
-      if (isNative()) {
-        Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-      }
-      contentRef.current.style.transition = 'transform 0.2s ease-out'
-      contentRef.current.style.transform = 'translateY(100%)'
-
-      // After animation, trigger Radix close via the overlay
-      setTimeout(() => {
-        // Use Radix's built-in escape mechanism
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }))
-      }, 180)
-    } else {
-      // Snap back
-      contentRef.current.style.transition = 'transform 0.2s ease-out'
-      contentRef.current.style.transform = 'translateY(0)'
-    }
-    setIsDragging(false)
-  }, [isDragging])
-
-  // Clean up inline styles when dialog opens/closes
-  React.useEffect(() => {
-    if (contentRef.current) {
-      contentRef.current.style.transform = ''
-      contentRef.current.style.transition = ''
-    }
-  })
 
   if (isMobile) {
     return (
       <DialogPortal>
         <DialogOverlay />
         <DialogPrimitive.Content
-          ref={combinedRef}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          // Prevent pointer events on overlay from conflicting during swipe
-          onPointerDownOutside={(e) => {
-            if (isDragging) e.preventDefault()
-          }}
+          ref={ref}
           className={cn(
             "fixed inset-x-0 bottom-0 z-50 flex flex-col w-full max-h-[92vh] shadow-2xl rounded-t-2xl overflow-hidden",
             "bg-white dark:bg-[#0a1e2e]",
-            "data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=open]:duration-300",
-            "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=closed]:duration-200",
             className
           )}
           {...props}>
@@ -128,8 +46,7 @@ const DialogContent = React.forwardRef(({ className, children, hideCloseOnMobile
           </div>
           {!hideCloseOnMobile && (
             <DialogPrimitive.Close
-              data-dialog-close
-              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none">
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </DialogPrimitive.Close>
