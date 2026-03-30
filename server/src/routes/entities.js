@@ -5,17 +5,20 @@ import { autoSendFeedback } from './functions/agentBridge.js';
 
 const router = Router();
 
-// Sensitive entities — admin-only access
+// Fully admin-only (no access for non-admins)
 const ADMIN_ONLY_ENTITIES = new Set([
-  'IntegrationSettings', 'ApiKey', 'AppSettings', 'UserSecuritySettings',
-  'AuditLog', 'Workflow', 'WorkflowLog', 'CustomRole', 'EmailTemplate',
-  'ProposalSettings',
+  'IntegrationSettings', 'ApiKey', 'UserSecuritySettings',
+  'AuditLog', 'CustomRole', 'EmailTemplate',
 ]);
 
 // Read-only for non-admin (can list/filter but not create/update/delete)
 const ADMIN_WRITE_ENTITIES = new Set([
-  'ProjectTemplate', 'ProjectStatus', 'ProjectStack',
+  'AppSettings', 'ProjectTemplate', 'ProjectStatus', 'ProjectStack',
+  'Workflow', 'WorkflowLog', 'ProposalSettings',
 ]);
+
+// Users can read + write their own, but admin guard not needed
+// (NotificationSettings — users manage their own prefs)
 
 // Admin guard middleware
 function adminGuard(req, res, next) {
