@@ -12,7 +12,9 @@ function getProvider() {
 
   const keyId = process.env.APNS_KEY_ID || 'KC49B6DQLT';
   const teamId = process.env.APNS_TEAM_ID || '98K2QQUBAS';
-  const production = process.env.NODE_ENV === 'production' || process.env.APNS_PRODUCTION === 'true';
+  // APNS_PRODUCTION explicitly controls sandbox vs production APNs
+  // Default to false (sandbox) since Xcode debug builds use development entitlement
+  const production = process.env.APNS_PRODUCTION === 'true';
 
   // Support key as base64 env var (for Railway) or file path (for local dev)
   let keyOption;
