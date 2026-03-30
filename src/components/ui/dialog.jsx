@@ -116,18 +116,14 @@ const DialogContent = React.forwardRef(({ className, children, hideCloseOnMobile
             if (isDragging) e.preventDefault()
           }}
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 grid w-full max-h-[92vh] border-t shadow-2xl rounded-t-2xl bg-white dark:bg-[#0a1e2e]",
-            // Simple slide animation — no zoom, no conflicting transforms
+            "fixed inset-x-0 bottom-0 z-50 flex flex-col w-full max-h-[92vh] shadow-2xl rounded-t-2xl overflow-hidden",
+            "bg-white dark:bg-[#0a1e2e]",
             "data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=open]:duration-300",
             "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=closed]:duration-200",
             className
           )}
           {...props}>
-          {/* Drag handle — floats over content */}
-          <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-2 pb-1 pointer-events-none">
-            <div className="w-10 h-1 rounded-full bg-white/30" />
-          </div>
-          <div data-dialog-scroll className="overflow-y-auto overscroll-contain no-scrollbar rounded-t-2xl">
+          <div data-dialog-scroll className="flex-1 overflow-y-auto overscroll-contain no-scrollbar">
             {children}
           </div>
           {!hideCloseOnMobile && (
