@@ -793,7 +793,7 @@ export default function Customers() {
 
       {/* Customer Detail Modal */}
       <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
-        <DialogContent hideCloseOnMobile className="sm:max-w-3xl overflow-hidden p-0 bg-[#0F2F44] sm:bg-background min-h-[85vh] sm:min-h-0">
+        <DialogContent hideCloseOnMobile className="sm:max-w-3xl overflow-hidden p-0 min-h-[85vh] sm:min-h-0">
           {selectedCustomer && (() => {
             const customerSites = getSitesForCompany(selectedCustomer.id);
             const customerContacts = getContactsForCompany(selectedCustomer.id);

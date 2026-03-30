@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import { format, isPast, isToday, isTomorrow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
@@ -353,6 +354,7 @@ export default function AllTasks() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({});
+  const [selectedTask, setSelectedTask] = useState(null);
   const TASKS_PER_GROUP = 5;
   const queryClient = useQueryClient();
 
@@ -903,7 +905,7 @@ export default function AllTasks() {
                             onAssign={handleTaskAssign}
                             onUnassign={handleTaskUnassign}
                             onDueDateChange={handleTaskDueDateChange}
-                            onNavigate={(t) => navigate(createPageUrl('ProjectTasks') + `?id=${t.project_id}`)}
+                            onNavigate={(t) => setSelectedTask(t)}
                           />
                         ))}
                       </div>
@@ -1138,6 +1140,16 @@ export default function AllTasks() {
             )}
           </div>
         )}
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        open={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        task={selectedTask}
+        teamMembers={teamMembers}
+        onEdit={() => {}}
+        currentUser={currentUser}
+        project={projects.find(p => p.id === selectedTask?.project_id)}
+      />
     </PageShell>
   );
 }
