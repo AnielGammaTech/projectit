@@ -95,8 +95,8 @@ function LayoutContent({ children, currentPageName }) {
     queryKey: ['layoutNotifications', currentUser?.email],
     queryFn: () => api.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
     enabled: !!currentUser?.email,
-    staleTime: 10000,
-    refetchInterval: 15000
+    staleTime: 5000,
+    refetchInterval: 5000
   });
 
   // Subscribe to realtime notifications via Supabase
