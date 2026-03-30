@@ -304,9 +304,9 @@ export default function ProductsTab() {
 
           <div className="flex-shrink-0 flex items-center gap-3 ml-auto">
             <span className="text-xs text-muted-foreground hidden sm:inline">{filteredProducts.length} products</span>
-            <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e] text-white" size="sm">
-              <PackagePlus className="w-4 h-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Add Product</span>
+            <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="hidden sm:flex bg-[#0F2F44] hover:bg-[#1a4a6e] text-white" size="sm">
+              <PackagePlus className="w-4 h-4 mr-1.5" />
+              Add Product
             </Button>
           </div>
         </div>
@@ -335,7 +335,7 @@ export default function ProductsTab() {
             {products.length === 0 ? 'Add your first product to get started' : 'Try adjusting your filters'}
           </p>
           {products.length === 0 ? (
-            <Button onClick={() => setShowModal(true)} className="bg-[#0F2F44] hover:bg-[#1a4a6e]">
+            <Button onClick={() => setShowModal(true)} className="hidden sm:flex bg-[#0F2F44] hover:bg-[#1a4a6e]">
               <Plus className="w-4 h-4 mr-2" />
               Add Product
             </Button>
@@ -576,12 +576,9 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent hideCloseOnMobile className="sm:max-w-lg sm:max-h-[90vh] overflow-y-auto no-scrollbar !bg-white dark:!bg-[#0a1e2e] border-border p-0 pb-[env(safe-area-inset-bottom)]">
         {/* Mobile close bar */}
-        <div className="sm:hidden flex items-center justify-between px-4 pt-3">
+        <div className="sm:hidden flex items-center px-4 pt-3">
           <button onClick={() => onClose(false)} className="flex items-center gap-1 text-muted-foreground text-xs font-medium">
             <X className="w-4 h-4" /> Close
-          </button>
-          <button onClick={() => onEdit(product)} className="flex items-center gap-1 text-muted-foreground text-xs font-medium">
-            <Edit2 className="w-3 h-3" /> Edit
           </button>
         </div>
         {/* Header Section */}
@@ -678,7 +675,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
           )}
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-3 gap-3 pt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
             <Button
               size="sm"
               variant={activeAction === 'take' ? 'default' : 'outline'}
@@ -709,7 +706,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
             <Button
               size="sm"
               onClick={() => onEdit(product)}
-              className="h-10 cursor-pointer bg-[#0F2F44] hover:bg-[#1a4a6e] text-white transition-all duration-200"
+              className="hidden sm:flex h-10 cursor-pointer bg-[#0F2F44] hover:bg-[#1a4a6e] text-white transition-all duration-200"
             >
               <Edit2 className="w-4 h-4 mr-1.5" />Edit
             </Button>
