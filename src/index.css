@@ -207,10 +207,16 @@ header {
   .shadow-warm-hover {
     box-shadow: 0 8px 25px -5px rgb(0 0 0 / 0.08), 0 4px 10px -6px rgb(0 0 0 / 0.04);
   }
-  /* Touch manipulation - prevents 300ms delay */
+  /* Touch manipulation - prevents 300ms delay on ALL elements */
   .touch-manipulation {
     touch-action: manipulation;
   }
+}
+
+/* Global: eliminate 300ms tap delay on all interactive elements */
+* {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ── Smooth transitions ── */
@@ -237,8 +243,43 @@ a, button {
 
 /* ── Touch targets: ensure min 44px on touch devices ── */
 @media (pointer: coarse) {
-  /* Only apply min-height to specific interactive elements, not all buttons */
   .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* All buttons, links, and interactive elements get minimum touch targets */
+  button, a, [role="button"], [role="tab"], [role="menuitem"],
+  select, input[type="checkbox"], input[type="radio"],
+  [data-radix-collection-item] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Inputs and textareas need comfortable height */
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea, select {
+    min-height: 44px;
+    font-size: 16px !important; /* prevent iOS zoom */
+  }
+
+  /* Dropdown menu items */
+  [role="menuitem"], [role="option"],
+  [data-radix-collection-item] {
+    min-height: 44px;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  /* Calendar day cells */
+  .rdp-day, .rdp-button {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  /* Popover triggers and close buttons */
+  [data-state] > button,
+  [aria-label="Close"] {
     min-height: 44px;
     min-width: 44px;
   }
