@@ -274,7 +274,7 @@ function LayoutContent({ children, currentPageName }) {
             </nav>
 
             {/* Center: My Schedule link (mobile only) */}
-            <Link to={createPageUrl('AllTasks') + '?view=soon'} className="sm:hidden text-sm font-semibold text-white/90">
+            <Link to={createPageUrl('MySchedule')} className="sm:hidden text-sm font-semibold text-white/90">
               My Schedule
             </Link>
 
