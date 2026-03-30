@@ -557,7 +557,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto no-scrollbar bg-card border-border p-0">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto no-scrollbar !bg-white dark:!bg-[#0a1e2e] border-border p-0">
         {/* Header Section */}
         <div className="flex items-start gap-4 p-6 pb-0">
           {product.image_url ? (
