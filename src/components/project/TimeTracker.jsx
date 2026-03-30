@@ -163,34 +163,25 @@ export default function TimeTracker({ projectId, projectName = '', currentUser, 
 
         {/* Stop Timer Modal */}
         <Dialog open={showStopModal} onOpenChange={setShowStopModal}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>What did you work on?</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Time logged</p>
-                <p className="text-2xl font-mono font-bold text-slate-900 dark:text-slate-100">{formatTime(elapsedSeconds)}</p>
-              </div>
+          <DialogContent className="sm:max-w-sm p-0">
+            <div className="px-5 pt-5 pb-4">
+              <p className="text-lg font-bold text-foreground text-center">Stop Timer</p>
+              <p className="text-3xl font-mono font-bold text-center text-[#0069AF] mt-2 tabular-nums">{formatTime(elapsedSeconds)}</p>
               <Textarea
                 value={stopDescription}
                 onChange={(e) => setStopDescription(e.target.value)}
-                placeholder="Describe what you worked on..."
-                className="min-h-[100px]"
+                placeholder="What did you work on?"
+                className="mt-4 min-h-[80px] bg-muted/30 border-border rounded-xl text-sm"
                 autoFocus
               />
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowStopModal(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleConfirmStop}
-                  className="bg-[#0069AF] hover:bg-[#133F5C] dark:bg-blue-600 dark:hover:bg-blue-700"
-                  disabled={stopMutation.isPending}
-                >
-                  Save & Stop
-                </Button>
-              </div>
+            </div>
+            <div className="flex border-t border-border">
+              <button onClick={() => setShowStopModal(false)} className="flex-1 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors border-r border-border">
+                Cancel
+              </button>
+              <button onClick={handleConfirmStop} disabled={stopMutation.isPending} className="flex-1 py-3 text-sm font-bold text-[#0069AF] hover:bg-blue-500/10 transition-colors">
+                Save & Stop
+              </button>
             </div>
           </DialogContent>
         </Dialog>
@@ -270,34 +261,25 @@ export default function TimeTracker({ projectId, projectName = '', currentUser, 
 
         {/* Stop Timer Modal */}
         <Dialog open={showStopModal} onOpenChange={setShowStopModal}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>What did you work on?</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Time logged</p>
-                <p className="text-2xl font-mono font-bold text-slate-900 dark:text-slate-100">{formatTime(elapsedSeconds)}</p>
-              </div>
+          <DialogContent className="sm:max-w-sm p-0">
+            <div className="px-5 pt-5 pb-4">
+              <p className="text-lg font-bold text-foreground text-center">Stop Timer</p>
+              <p className="text-3xl font-mono font-bold text-center text-[#0069AF] mt-2 tabular-nums">{formatTime(elapsedSeconds)}</p>
               <Textarea
                 value={stopDescription}
                 onChange={(e) => setStopDescription(e.target.value)}
-                placeholder="Describe what you worked on..."
-                className="min-h-[100px]"
+                placeholder="What did you work on?"
+                className="mt-4 min-h-[80px] bg-muted/30 border-border rounded-xl text-sm"
                 autoFocus
               />
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowStopModal(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleConfirmStop}
-                  className="bg-[#0069AF] hover:bg-[#133F5C] dark:bg-blue-600 dark:hover:bg-blue-700"
-                  disabled={stopMutation.isPending}
-                >
-                  Save & Stop
-                </Button>
-              </div>
+            </div>
+            <div className="flex border-t border-border">
+              <button onClick={() => setShowStopModal(false)} className="flex-1 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors border-r border-border">
+                Cancel
+              </button>
+              <button onClick={handleConfirmStop} disabled={stopMutation.isPending} className="flex-1 py-3 text-sm font-bold text-[#0069AF] hover:bg-blue-500/10 transition-colors">
+                Save & Stop
+              </button>
             </div>
           </DialogContent>
         </Dialog>
@@ -356,36 +338,27 @@ export default function TimeTracker({ projectId, projectName = '', currentUser, 
 
       {/* Stop Timer Modal */}
       <Dialog open={showStopModal} onOpenChange={setShowStopModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>What did you work on?</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <p className="text-sm text-slate-500 mb-1">Time logged</p>
-              <p className="text-2xl font-mono font-bold text-slate-900">{formatTime(elapsedSeconds)}</p>
+          <DialogContent className="sm:max-w-sm p-0">
+            <div className="px-5 pt-5 pb-4">
+              <p className="text-lg font-bold text-foreground text-center">Stop Timer</p>
+              <p className="text-3xl font-mono font-bold text-center text-[#0069AF] mt-2 tabular-nums">{formatTime(elapsedSeconds)}</p>
+              <Textarea
+                value={stopDescription}
+                onChange={(e) => setStopDescription(e.target.value)}
+                placeholder="What did you work on?"
+                className="mt-4 min-h-[80px] bg-muted/30 border-border rounded-xl text-sm"
+                autoFocus
+              />
             </div>
-            <Textarea
-              value={stopDescription}
-              onChange={(e) => setStopDescription(e.target.value)}
-              placeholder="Describe what you worked on..."
-              className="min-h-[100px]"
-              autoFocus
-            />
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowStopModal(false)}>
+            <div className="flex border-t border-border">
+              <button onClick={() => setShowStopModal(false)} className="flex-1 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors border-r border-border">
                 Cancel
-              </Button>
-              <Button 
-                onClick={handleConfirmStop}
-                className="bg-[#0069AF] hover:bg-[#133F5C]"
-                disabled={stopMutation.isPending}
-              >
+              </button>
+              <button onClick={handleConfirmStop} disabled={stopMutation.isPending} className="flex-1 py-3 text-sm font-bold text-[#0069AF] hover:bg-blue-500/10 transition-colors">
                 Save & Stop
-              </Button>
+              </button>
             </div>
-          </div>
-        </DialogContent>
+          </DialogContent>
       </Dialog>
     </>
   );
