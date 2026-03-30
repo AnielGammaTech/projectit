@@ -179,8 +179,8 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
       <div className="bg-white dark:bg-card rounded-xl border border-slate-200/80 dark:border-slate-700/50 overflow-hidden">
         {/* Summary bar — always visible */}
         <button
-          onClick={() => setInlineOpen(prev => !prev)}
-          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors text-left"
+          onClick={() => !inline && setInlineOpen(prev => !prev)}
+          className={cn("w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors text-left", inline && "hidden")}
         >
           <div className="p-1.5 rounded-lg bg-primary/10 dark:bg-blue-900/30 shrink-0">
             <ListTodo className="w-3.5 h-3.5 text-primary dark:text-blue-400" />

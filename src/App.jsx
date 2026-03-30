@@ -83,6 +83,12 @@ const AuthenticatedApp = () => {
     return <Navigate to={`/login?returnUrl=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
 
+  // Scroll to top on navigation
+  const { pathname } = useLocation();
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   // Render the main app
   return (
     <>
