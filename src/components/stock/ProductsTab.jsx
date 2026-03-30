@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Package, Edit2, Trash2, SlidersHorizontal, Building2, Tag, PackagePlus, X, ChevronDown, Minus, RotateCcw, History, Loader2, MessageSquare, ExternalLink, ShoppingCart, MapPin } from 'lucide-react';
+import { Plus, Search, Package, Edit2, Trash2, SlidersHorizontal, Building2, Tag, PackagePlus, X, ChevronDown, Minus, RotateCcw, History, Loader2, MessageSquare, ExternalLink, ShoppingCart, MapPin, ScanLine } from 'lucide-react';
+import { isNative } from '@/lib/capacitor';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import ProductModal from './ProductModal';
@@ -105,6 +106,36 @@ export default function ProductsTab() {
   const handleProductClick = (product) => {
     if (quickAction?.productId === product.id) return; // don't open view while quick-action is open
     setViewingProduct(product);
+  };
+
+  const handleBarcodeScan = async () => {
+    if (!isNative()) return;
+    try {
+      const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+      const { supported } = await BarcodeScanner.isSupported();
+      if (!supported) return alert('Barcode scanning not supported on this device');
+
+      const { camera } = await BarcodeScanner.requestPermissions();
+      if (camera !== 'granted') return alert('Camera permission required for scanning');
+
+      const { barcodes } = await BarcodeScanner.scan();
+      if (barcodes.length > 0) {
+        const scannedValue = barcodes[0].rawValue;
+        // Try to find a matching product by SKU or barcode
+        const match = products.find(p =>
+          p.sku?.toLowerCase() === scannedValue.toLowerCase() ||
+          p.barcode?.toLowerCase() === scannedValue.toLowerCase() ||
+          p.name?.toLowerCase().includes(scannedValue.toLowerCase())
+        );
+        if (match) {
+          setViewingProduct(match);
+        } else {
+          setSearchQuery(scannedValue);
+        }
+      }
+    } catch (err) {
+      console.error('Scan failed:', err);
+    }
   };
 
   const openQuickAction = (e, product, type) => {
@@ -297,6 +328,13 @@ export default function ProductsTab() {
             <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-muted-foreground hover:text-foreground">
               <X className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">Clear filters</span>
+            </Button>
+          )}
+
+          {/* Scan button — mobile only */}
+          {isNative() && (
+            <Button variant="outline" size="sm" onClick={handleBarcodeScan} className="sm:hidden gap-1.5 ml-auto">
+              <ScanLine className="w-4 h-4" />
             </Button>
           )}
 
