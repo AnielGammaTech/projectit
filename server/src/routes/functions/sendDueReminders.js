@@ -1,7 +1,7 @@
 import entityService from '../../services/entityService.js';
 import sendNotificationEmail from './sendNotificationEmail.js';
 
-const DEDUP_HOURS = 4; // Don't send duplicate notifications within this window
+const DEDUP_HOURS = 1; // Don't send duplicate notifications within this window
 
 /**
  * Core logic for sending due reminders. Exported so the scheduler can call it directly.
@@ -152,6 +152,39 @@ export async function runDueReminders() {
         await sendNotificationEmail(mockReq, mockRes);
       }
       remindersSent++;
+    }
+  }
+
+  // Send consolidated push per user (one push summarizing all overdue/due)
+  if (remindersSent > 0 || overduesSent > 0) {
+    try {
+      const { sendPushNotification } = await import('../../services/pushService.js');
+      // Group counts by user
+      const userCounts = {};
+      for (const task of activeTasks) {
+        if (task.project_id && archivedProjectIds.has(task.project_id)) continue;
+        const dueDate = new Date(task.due_date);
+        dueDate.setHours(0, 0, 0, 0);
+        const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+        if (daysUntilDue < 0 || (daysUntilDue >= 0 && daysUntilDue <= 1)) {
+          if (!userCounts[task.assigned_to]) userCounts[task.assigned_to] = { overdue: 0, dueSoon: 0 };
+          if (daysUntilDue < 0) userCounts[task.assigned_to].overdue++;
+          else userCounts[task.assigned_to].dueSoon++;
+        }
+      }
+      for (const [email, counts] of Object.entries(userCounts)) {
+        const parts = [];
+        if (counts.overdue > 0) parts.push(`${counts.overdue} overdue`);
+        if (counts.dueSoon > 0) parts.push(`${counts.dueSoon} due soon`);
+        const total = counts.overdue + counts.dueSoon;
+        await sendPushNotification(email, {
+          title: `${total} task${total > 1 ? 's' : ''} need attention`,
+          body: `You have ${parts.join(' and ')}`,
+          data: { link: '/alltasks?view=mine_due' },
+        });
+      }
+    } catch (pushErr) {
+      console.warn('[DueReminders] Push notification failed:', pushErr.message);
     }
   }
 

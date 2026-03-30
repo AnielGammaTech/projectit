@@ -71,8 +71,8 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`ProjectIT API server running on port ${PORT}`);
 
-  // --- Overdue email reminder scheduler (every 4 hours) ---
-  const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
+  // --- Overdue reminder scheduler (every 1 hour) ---
+  const REMINDER_INTERVAL_MS = 1 * 60 * 60 * 1000;
 
   // Run first check 60 seconds after startup (let DB connections settle)
   setTimeout(async () => {
@@ -94,7 +94,7 @@ app.listen(PORT, () => {
     } catch (err) {
       console.error('[Scheduler] Scheduled due reminder check failed:', err.message);
     }
-  }, FOUR_HOURS_MS);
+  }, REMINDER_INTERVAL_MS);
 
-  console.log('[Scheduler] Due reminder checks scheduled every 4 hours');
+  console.log('[Scheduler] Due reminder checks scheduled every 1 hour');
 });
