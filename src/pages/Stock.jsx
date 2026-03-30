@@ -2,14 +2,37 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, AlertTriangle, ArrowDownUp, HardDrive } from 'lucide-react';
+import { Package, AlertTriangle, ArrowDownUp, HardDrive, ScanLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isNative } from '@/lib/capacitor';
+import { Button } from '@/components/ui/button';
 import ProductsTab from '@/components/stock/ProductsTab';
 import ToolsTab from '@/components/stock/ToolsTab';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function Stock() {
   const [activeTab, setActiveTab] = useState('inventory');
+  const [scanResult, setScanResult] = useState(null);
+
+  const handleBarcodeScan = async () => {
+    if (!isNative()) return;
+    try {
+      const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+      const { supported } = await BarcodeScanner.isSupported();
+      if (!supported) return alert('Barcode scanning not supported');
+
+      const { camera } = await BarcodeScanner.requestPermissions();
+      if (camera !== 'granted') return alert('Camera permission required');
+
+      const { barcodes } = await BarcodeScanner.scan();
+      if (barcodes.length > 0) {
+        setActiveTab('inventory');
+        setScanResult(barcodes[0].rawValue);
+      }
+    } catch (err) {
+      console.error('Scan failed:', err);
+    }
+  };
 
   const { data: products = [], isLoading: loadingProducts } = useQuery({
     queryKey: ['products'],
@@ -47,6 +70,12 @@ export default function Stock() {
               </div>
             </div>
           </div>
+          {isNative() && (
+            <Button variant="outline" size="sm" onClick={handleBarcodeScan} className="sm:hidden gap-1.5">
+              <ScanLine className="w-4 h-4" />
+              <span className="text-xs">Scan</span>
+            </Button>
+          )}
         </div>
 
         {/* Low Stock Alert */}
@@ -139,7 +168,7 @@ export default function Stock() {
           </div>
 
           <TabsContent value="inventory">
-            <ProductsTab />
+            <ProductsTab scanResult={scanResult} onScanConsumed={() => setScanResult(null)} />
           </TabsContent>
 
           <TabsContent value="tools">

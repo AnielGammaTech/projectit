@@ -34,7 +34,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 
-export default function ProductsTab() {
+export default function ProductsTab({ scanResult, onScanConsumed }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -60,6 +60,21 @@ export default function ProductsTab() {
     queryFn: () => api.entities.Product.list('-created_date'),
     staleTime: 300000
   });
+
+  // Handle barcode scan result from parent
+  useEffect(() => {
+    if (!scanResult || products.length === 0) return;
+    const match = products.find(p =>
+      p.sku?.toLowerCase() === scanResult.toLowerCase() ||
+      p.barcode?.toLowerCase() === scanResult.toLowerCase()
+    );
+    if (match) {
+      setViewingProduct(match);
+    } else {
+      setSearchQuery(scanResult);
+    }
+    onScanConsumed?.();
+  }, [scanResult, products]);
 
   // Get unique manufacturers and tags for filters
   const allManufacturers = [...new Set(products.map(p => p.manufacturer).filter(Boolean))].sort();
@@ -108,35 +123,6 @@ export default function ProductsTab() {
     setViewingProduct(product);
   };
 
-  const handleBarcodeScan = async () => {
-    if (!isNative()) return;
-    try {
-      const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
-      const { supported } = await BarcodeScanner.isSupported();
-      if (!supported) return alert('Barcode scanning not supported on this device');
-
-      const { camera } = await BarcodeScanner.requestPermissions();
-      if (camera !== 'granted') return alert('Camera permission required for scanning');
-
-      const { barcodes } = await BarcodeScanner.scan();
-      if (barcodes.length > 0) {
-        const scannedValue = barcodes[0].rawValue;
-        // Try to find a matching product by SKU or barcode
-        const match = products.find(p =>
-          p.sku?.toLowerCase() === scannedValue.toLowerCase() ||
-          p.barcode?.toLowerCase() === scannedValue.toLowerCase() ||
-          p.name?.toLowerCase().includes(scannedValue.toLowerCase())
-        );
-        if (match) {
-          setViewingProduct(match);
-        } else {
-          setSearchQuery(scannedValue);
-        }
-      }
-    } catch (err) {
-      console.error('Scan failed:', err);
-    }
-  };
 
   const openQuickAction = (e, product, type) => {
     e.stopPropagation();
@@ -235,32 +221,27 @@ export default function ProductsTab() {
         </div>
 
         {/* Filters + Actions Row */}
-        <div className="flex items-center gap-2 overflow-x-auto flex-nowrap sm:flex-wrap pb-1 sm:pb-0">
-          {/* Stock Filter */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <SlidersHorizontal className="w-4 h-4" />
-                <span className="hidden sm:inline">Stock</span>
-                {stockFilter !== 'all' && <Badge className="h-5 w-5 p-0 justify-center bg-[#0069AF]">1</Badge>}
-                <ChevronDown className="w-3 h-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuCheckboxItem checked={stockFilter === 'all'} onCheckedChange={() => setStockFilter('all')}>
-                All Products
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={stockFilter === 'in_stock'} onCheckedChange={() => setStockFilter('in_stock')}>
-                In Stock
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={stockFilter === 'low_stock'} onCheckedChange={() => setStockFilter('low_stock')}>
-                Low Stock (≤5)
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={stockFilter === 'out_of_stock'} onCheckedChange={() => setStockFilter('out_of_stock')}>
-                Out of Stock
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex items-center gap-2 overflow-x-auto flex-nowrap sm:flex-wrap pb-1 sm:pb-0 no-scrollbar">
+          {/* Stock Filter — inline pills on mobile, dropdown on desktop */}
+          {[
+            { key: 'all', label: 'All' },
+            { key: 'in_stock', label: 'In Stock' },
+            { key: 'low_stock', label: 'Low' },
+            { key: 'out_of_stock', label: 'Out' },
+          ].map(f => (
+            <button
+              key={f.key}
+              onClick={() => setStockFilter(f.key)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0",
+                stockFilter === f.key
+                  ? "bg-[#0069AF] text-white"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted"
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
 
           {/* Manufacturer Filter */}
           {allManufacturers.length > 0 && (
@@ -328,13 +309,6 @@ export default function ProductsTab() {
             <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-muted-foreground hover:text-foreground">
               <X className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">Clear filters</span>
-            </Button>
-          )}
-
-          {/* Scan button — mobile only */}
-          {isNative() && (
-            <Button variant="outline" size="sm" onClick={handleBarcodeScan} className="sm:hidden gap-1.5 ml-auto">
-              <ScanLine className="w-4 h-4" />
             </Button>
           )}
 
