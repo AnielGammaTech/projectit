@@ -145,37 +145,25 @@ export default function ToolsTab() {
         </div>
 
         {/* Filters + Actions Row */}
-        <div className="flex items-center gap-2 overflow-x-auto flex-nowrap sm:flex-wrap pb-1 sm:pb-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
-                <Filter className="w-4 h-4" />
-                <span className="hidden sm:inline">Status</span>
-                {stockFilter !== 'all' && (
-                  <Badge className="h-5 w-5 p-0 justify-center bg-[#0069AF]">1</Badge>
-                )}
-                <ChevronDown className="w-3 h-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuCheckboxItem checked={stockFilter === 'all'} onCheckedChange={() => setStockFilter('all')}>
-                All Tools
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={stockFilter === 'available'} onCheckedChange={() => setStockFilter('available')}>
-                Available
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={stockFilter === 'checked_out'} onCheckedChange={() => setStockFilter('checked_out')}>
-                Checked Out
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {stockFilter !== 'all' && (
-            <Button variant="ghost" size="sm" onClick={() => setStockFilter('all')} className="text-muted-foreground hover:text-foreground shrink-0">
-              <X className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Clear filters</span>
-            </Button>
-          )}
+        <div className="flex items-center gap-2 overflow-x-auto flex-nowrap sm:flex-wrap pb-1 sm:pb-0 no-scrollbar">
+          {[
+            { key: 'all', label: 'All' },
+            { key: 'available', label: 'Available' },
+            { key: 'checked_out', label: 'Checked Out' },
+          ].map(f => (
+            <button
+              key={f.key}
+              onClick={() => setStockFilter(f.key)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0",
+                stockFilter === f.key
+                  ? "bg-[#0069AF] text-white"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted"
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
 
           <div className="flex-1" />
 
