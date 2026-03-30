@@ -274,8 +274,9 @@ function LayoutContent({ children, currentPageName }) {
             </nav>
 
             {/* Center: My Schedule link (mobile only) */}
-            <Link to={createPageUrl('MySchedule')} className="sm:hidden text-sm font-semibold text-white/90">
-              My Schedule
+            <Link to={createPageUrl('MySchedule')} className="sm:hidden flex items-center gap-1.5 text-xs font-semibold text-white/80 absolute left-1/2 -translate-x-1/2">
+              <Calendar className="w-3.5 h-3.5" />
+              Schedule
             </Link>
 
             {/* Right: Search, Notifications & User */}

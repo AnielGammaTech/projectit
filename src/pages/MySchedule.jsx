@@ -166,19 +166,15 @@ export default function MySchedule() {
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 py-4 sm:py-8">
         {/* Compact Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-lg sm:text-xl font-bold text-foreground">My Schedule</h1>
-            <p className="text-xs text-muted-foreground">Tasks and deadlines synced to your calendar</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1.5">
-                  <CalendarIcon className="w-4 h-4" />
-                  Sync to Calendar
-                </Button>
-              </PopoverTrigger>
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-base font-bold text-foreground">My Schedule</h1>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground">
+                <CalendarIcon className="w-3 h-3" />
+                Sync
+              </button>
+            </PopoverTrigger>
               <PopoverContent className="w-80 rounded-xl p-4" align="end">
                 <h3 className="text-sm font-semibold text-foreground mb-1">Add to your calendar</h3>
                 <p className="text-xs text-muted-foreground mb-3">
@@ -206,128 +202,87 @@ export default function MySchedule() {
                 </p>
               </PopoverContent>
             </Popover>
-          </div>
         </div>
 
-        {/* Calendar Navigation */}
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-          </button>
-          <button
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-          >
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </button>
-        </div>
-
-        {/* Two-Month Calendar */}
+        {/* Calendar — 1 month on mobile, 2 on desktop */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl border shadow-sm p-3 sm:p-6 mb-4 sm:mb-8"
+          className="bg-card rounded-2xl border shadow-sm p-3 sm:p-6 mb-4"
         >
+          {/* Nav arrows */}
+          <div className="flex items-center justify-between mb-2">
+            <button
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+            </button>
+            <span className="text-sm font-semibold text-foreground">{format(currentMonth, 'MMMM yyyy')}</span>
+            <button
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+            >
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
             {renderCalendar(currentMonth)}
-            {renderCalendar(nextMonth)}
+            <div className="hidden sm:block">
+              {renderCalendar(nextMonth)}
+            </div>
           </div>
         </motion.div>
 
-        {/* Task List by Date */}
-        <div className="bg-card rounded-2xl border shadow-sm overflow-hidden">
+        {/* Task List — compact */}
+        <div className="space-y-0.5">
           {datesWithTasks.length > 0 ? (
             datesWithTasks.map(date => {
               const dateTasks = getTasksForDate(parseISO(date));
               if (dateTasks.length === 0) return null;
+              const isPastDate = parseISO(date) < new Date() && !isToday(parseISO(date));
 
               return (
-                <div key={date} className="border-b border-border last:border-b-0">
+                <div key={date}>
+                  <div className="px-1 py-1.5">
+                    <span className={cn("text-[10px] font-semibold uppercase tracking-wider", isPastDate ? "text-red-500" : "text-muted-foreground")}>
+                      {format(parseISO(date), 'EEE, MMM d')}
+                      {isPastDate && ' · Overdue'}
+                      {isToday(parseISO(date)) && ' · Today'}
+                    </span>
+                  </div>
                   {dateTasks.map(task => {
                     const project = getProjectInfo(task.project_id);
-                    const assignees = [];
-                    if (task.assigned_name) {
-                      assignees.push({ name: task.assigned_name, email: task.assigned_to });
-                    }
-                    // Add any additional assignees if you have notify_on_complete
-                    if (task.notify_on_complete?.length > 0) {
-                      task.notify_on_complete.forEach(email => {
-                        const member = teamMembers.find(m => m.email === email);
-                        if (member && !assignees.find(a => a.email === email)) {
-                          assignees.push({ name: member.name, email });
-                        }
-                      });
-                    }
-
                     return (
-                      <div key={task.id} className="flex items-start gap-4 p-4 hover:bg-muted/50 transition-colors">
-                        <div className="w-24 shrink-0">
-                          <div className="flex items-center gap-2">
-                            <CalendarIcon className="w-4 h-4 text-blue-500" />
-                            <span className="text-xs font-medium text-muted-foreground uppercase">
-                              {format(parseISO(date), 'EEE, MMM d')}
-                            </span>
-                          </div>
-                          {task.start_date && task.start_date !== task.due_date && (
-                            <div className="text-xs text-muted-foreground/60 mt-0.5">
-                              {format(parseISO(task.start_date), 'MMM d')} - {format(parseISO(task.due_date), 'MMM d')}
-                            </div>
+                      <Link
+                        key={task.id}
+                        to={createPageUrl('ProjectTasks') + `?id=${task.project_id}&task=${task.id}`}
+                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-card transition-colors"
+                      >
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleComplete(task); }}
+                          className={cn(
+                            "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0",
+                            task.status === 'completed' ? "bg-emerald-500 border-emerald-500 text-white" : "border-muted-foreground/30"
                           )}
-                        </div>
-
+                        >
+                          {task.status === 'completed' && <CheckSquare className="w-3 h-3" />}
+                        </button>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start gap-3">
-                            <button
-                              onClick={() => handleToggleComplete(task)}
-                              className={cn(
-                                "mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0",
-                                task.status === 'completed'
-                                  ? "bg-emerald-500 border-emerald-500 text-white"
-                                  : "border-muted-foreground/30 hover:border-emerald-400"
-                              )}
-                            >
-                              {task.status === 'completed' && <CheckSquare className="w-3 h-3" />}
-                            </button>
-                            
-                            <div className="flex-1">
-                              <Link 
-                                to={createPageUrl('ProjectTasks') + `?id=${task.project_id}`}
-                                className="font-medium text-foreground hover:text-primary transition-colors flex items-center gap-2"
-                              >
-                                {task.title}
-                                {assignees.slice(0, 3).map((assignee, idx) => (
-                                  <span
-                                    key={idx}
-                                    className={cn(
-                                      "w-5 h-5 rounded-full flex items-center justify-center text-white text-[8px] font-medium",
-                                      getColorForEmail(assignee.email)
-                                    )}
-                                    title={assignee.name}
-                                  >
-                                    {getInitials(assignee.name)}
-                                  </span>
-                                ))}
-                              </Link>
-                              <div className="text-xs text-muted-foreground mt-0.5">
-                                {project.client && `${project.client} - `}{project.name}
-                              </div>
-                            </div>
-                          </div>
+                          <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{project.name}</p>
                         </div>
-                      </div>
+                        {isPastDate && <span className="text-[10px] font-semibold text-red-500 shrink-0">Overdue</span>}
+                      </Link>
                     );
                   })}
                 </div>
               );
             })
           ) : (
-            <div className="p-12 text-center">
-              <CalendarIcon className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">No scheduled tasks</h3>
-              <p className="text-muted-foreground">Tasks with due dates will appear here</p>
+            <div className="py-12 text-center">
+              <CalendarIcon className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-sm text-muted-foreground">No scheduled tasks</p>
             </div>
           )}
         </div>

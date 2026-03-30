@@ -248,40 +248,25 @@ a, button {
     min-width: 44px;
   }
 
-  /* All buttons, links, and interactive elements get minimum touch targets */
-  button, a, [role="button"], [role="tab"], [role="menuitem"],
-  select, input[type="checkbox"], input[type="radio"],
-  [data-radix-collection-item] {
+  /* Standalone buttons and nav links get minimum touch targets */
+  nav a, nav button,
+  [role="tab"],
+  .touch-target {
     min-height: 44px;
-    min-width: 44px;
   }
 
-  /* Inputs and textareas need comfortable height */
+  /* Form inputs need comfortable height */
   input:not([type="checkbox"]):not([type="radio"]),
   textarea, select {
     min-height: 44px;
-    font-size: 16px !important; /* prevent iOS zoom */
+    font-size: 16px !important;
   }
 
   /* Dropdown menu items */
-  [role="menuitem"], [role="option"],
-  [data-radix-collection-item] {
+  [role="menuitem"], [role="option"] {
     min-height: 44px;
     padding-top: 10px !important;
     padding-bottom: 10px !important;
-  }
-
-  /* Calendar day cells */
-  .rdp-day, .rdp-button {
-    min-height: 40px;
-    min-width: 40px;
-  }
-
-  /* Popover triggers and close buttons */
-  [data-state] > button,
-  [aria-label="Close"] {
-    min-height: 44px;
-    min-width: 44px;
   }
 }
 
