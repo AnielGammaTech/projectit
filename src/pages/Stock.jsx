@@ -91,18 +91,25 @@ export default function Stock() {
 
         {/* Tabs — matching AllTasks toggle style */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit mb-4">
+          <div className="grid grid-cols-2 gap-2 mb-4">
             <button
               onClick={() => setActiveTab('inventory')}
               className={cn(
-                "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5",
-                activeTab === 'inventory' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                "flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all",
+                activeTab === 'inventory'
+                  ? "bg-card border-primary/30 shadow-sm"
+                  : "border-border hover:bg-card/50"
               )}
             >
-              <Package className="w-3.5 h-3.5" />
-              Inventory
+              <div className={cn("p-2 rounded-xl", activeTab === 'inventory' ? "bg-blue-500/10" : "bg-muted")}>
+                <Package className={cn("w-5 h-5", activeTab === 'inventory' ? "text-blue-500" : "text-muted-foreground")} />
+              </div>
+              <div className="text-left">
+                <p className={cn("text-sm font-semibold", activeTab === 'inventory' ? "text-foreground" : "text-muted-foreground")}>Inventory</p>
+                <p className="text-[11px] text-muted-foreground">{products.length} products</p>
+              </div>
               {(lowStockProducts.length + outOfStockProducts.length) > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-bold">
+                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-bold">
                   {lowStockProducts.length + outOfStockProducts.length}
                 </span>
               )}
@@ -110,14 +117,21 @@ export default function Stock() {
             <button
               onClick={() => setActiveTab('tools')}
               className={cn(
-                "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5",
-                activeTab === 'tools' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                "flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all",
+                activeTab === 'tools'
+                  ? "bg-card border-primary/30 shadow-sm"
+                  : "border-border hover:bg-card/50"
               )}
             >
-              <HardDrive className="w-3.5 h-3.5" />
-              Tools
+              <div className={cn("p-2 rounded-xl", activeTab === 'tools' ? "bg-emerald-500/10" : "bg-muted")}>
+                <HardDrive className={cn("w-5 h-5", activeTab === 'tools' ? "text-emerald-500" : "text-muted-foreground")} />
+              </div>
+              <div className="text-left">
+                <p className={cn("text-sm font-semibold", activeTab === 'tools' ? "text-foreground" : "text-muted-foreground")}>Tools</p>
+                <p className="text-[11px] text-muted-foreground">{tools.length} tools</p>
+              </div>
               {checkedOutTools.length > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 font-bold">
+                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 font-bold">
                   {checkedOutTools.length}
                 </span>
               )}
