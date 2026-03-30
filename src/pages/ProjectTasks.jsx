@@ -104,6 +104,7 @@ const getDueDateInfo = (dueDate, status) => {
 export default function ProjectTasks() {
   const urlParams = new URLSearchParams(window.location.search);
   const projectId = urlParams.get('id');
+  const autoOpenTaskId = urlParams.get('task');
   const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -169,6 +170,14 @@ export default function ProjectTasks() {
       setInitialCollapseApplied(true);
     }
   }, [taskGroups, initialCollapseApplied]);
+
+  // Auto-open task detail if ?task= param is in URL
+  useEffect(() => {
+    if (autoOpenTaskId && tasks.length > 0 && !selectedTask) {
+      const task = tasks.find(t => t.id === autoOpenTaskId);
+      if (task) setSelectedTask(task);
+    }
+  }, [autoOpenTaskId, tasks, selectedTask]);
 
   // Filter to only project members for assignment dropdowns
   const projectMembers = useMemo(() => {

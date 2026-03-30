@@ -53,9 +53,9 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
   const [activeTab, setActiveTab] = useState('tasks');
 
   // ─── Tasks logic ───
-  const getProjectName = (projectId) => {
-    return projects.find(p => p.id === projectId)?.name || 'Unknown';
-  };
+  const getProject = (projectId) => projects.find(p => p.id === projectId);
+  const getProjectName = (projectId) => getProject(projectId)?.name || 'Unknown';
+  const getProjectNumber = (projectId) => getProject(projectId)?.project_number;
 
   const activeProjectIds = projects.filter(p => p.status !== 'archived' && p.status !== 'completed').map(p => p.id);
 
@@ -363,11 +363,12 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                           >
                             <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
                           </button>
-                          <Link to={createPageUrl('ProjectTasks') + `?id=${item.project_id}`} className="flex-1 min-w-0 flex items-center gap-2">
+                          <Link to={createPageUrl('ProjectTasks') + `?id=${item.project_id}&task=${item.id}`} className="flex-1 min-w-0">
                             <p className="font-medium text-slate-900 dark:text-slate-100 text-sm truncate">{item.title}</p>
                           </Link>
                           <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
+                            <span className="text-[10px] text-muted-foreground truncate max-w-[160px]">
+                              {getProjectNumber(item.project_id) && <span className="font-mono mr-1">#{getProjectNumber(item.project_id)}</span>}
                               {getProjectName(item.project_id)}
                             </span>
                             {dueBadge && (
@@ -390,14 +391,15 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.03 }}
                       >
-                        <Link to={createPageUrl('ProjectParts') + `?id=${item.project_id}`}>
+                        <Link to={createPageUrl('ProjectParts') + `?id=${item.project_id}&part=${item.id}`}>
                           <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}>
                             <div className="p-1 rounded-md bg-amber-100 shrink-0">
                               <Package className="w-3.5 h-3.5 text-amber-600" />
                             </div>
                             <p className="font-medium text-slate-900 dark:text-slate-100 text-sm truncate flex-1 min-w-0">{item.name}</p>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
+                              <span className="text-[10px] text-muted-foreground truncate max-w-[160px]">
+                                {getProjectNumber(item.project_id) && <span className="font-mono mr-1">#{getProjectNumber(item.project_id)}</span>}
                                 {getProjectName(item.project_id)}
                               </span>
                               {dueBadge && (

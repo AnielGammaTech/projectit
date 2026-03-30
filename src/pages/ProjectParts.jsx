@@ -96,6 +96,7 @@ const getInitials = (name) => {
 export default function ProjectParts() {
   const urlParams = new URLSearchParams(window.location.search);
   const projectId = urlParams.get('id');
+  const autoOpenPartId = urlParams.get('part');
   const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -144,6 +145,14 @@ export default function ProjectParts() {
     queryKey: ['teamMembers'],
     queryFn: () => api.entities.TeamMember.list()
   });
+
+  // Auto-open part detail if ?part= param is in URL
+  useEffect(() => {
+    if (autoOpenPartId && parts.length > 0 && !selectedPartDetail) {
+      const part = parts.find(p => p.id === autoOpenPartId);
+      if (part) setSelectedPartDetail(part);
+    }
+  }, [autoOpenPartId, parts, selectedPartDetail]);
 
   // Filter to only project members for assignment dropdowns
   const projectMembers = useMemo(() => {
