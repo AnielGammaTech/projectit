@@ -90,6 +90,18 @@ export default function MyNotifications() {
     }
   });
 
+  const clearAll = useMutation({
+    mutationFn: async () => {
+      for (const n of notifications) {
+        await api.entities.UserNotification.delete(n.id);
+      }
+    },
+    onSuccess: () => {
+      refetchNotifications();
+      queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
+    }
+  });
+
   if (loading) return <CardGridSkeleton />;
 
   return (
@@ -109,15 +121,27 @@ export default function MyNotifications() {
               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">{unreadCount}</span>
             )}
           </div>
-          {unreadCount > 0 && (
-            <button
-              onClick={() => markAllAsRead.mutate()}
-              disabled={markAllAsRead.isPending}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground"
-            >
-              Mark all read
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {unreadCount > 0 && (
+              <button
+                onClick={() => markAllAsRead.mutate()}
+                disabled={markAllAsRead.isPending}
+                className="text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                Mark all read
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button
+                onClick={() => clearAll.mutate()}
+                disabled={clearAll.isPending}
+                className="text-xs font-medium text-red-400 hover:text-red-500 flex items-center gap-1"
+              >
+                <Trash2 className="w-3 h-3" />
+                Clear all
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Notification list */}

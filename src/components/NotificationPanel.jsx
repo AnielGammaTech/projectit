@@ -150,6 +150,18 @@ export default function NotificationPanel({ currentUser, onClose }) {
     }
   });
 
+  const clearAll = useMutation({
+    mutationFn: async () => {
+      for (const n of notifications) {
+        await api.entities.UserNotification.delete(n.id);
+      }
+    },
+    onSuccess: () => {
+      refetchNotifications();
+      queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
+    }
+  });
+
   return (
     <div className="w-[380px] max-h-[520px] flex flex-col bg-white dark:bg-[#1e2a3a]">
       <Tabs defaultValue="notifications" className="flex flex-col h-full">
@@ -171,16 +183,28 @@ export default function NotificationPanel({ currentUser, onClose }) {
 
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="flex-1 m-0 overflow-hidden">
-          {unreadCount > 0 && (
+          {notifications.length > 0 && (
             <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
-              <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} unread</span>
-              <button
-                onClick={() => markAllAsRead.mutate()}
-                disabled={markAllAsRead.isPending}
-                className="text-xs text-[#0069AF] hover:text-[#0F2F44] font-medium"
-              >
-                Mark all as read
-              </button>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount > 0 ? `${unreadCount} unread` : `${notifications.length} notifications`}</span>
+              <div className="flex items-center gap-3">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={() => markAllAsRead.mutate()}
+                    disabled={markAllAsRead.isPending}
+                    className="text-xs text-[#0069AF] hover:text-[#0F2F44] font-medium"
+                  >
+                    Mark all read
+                  </button>
+                )}
+                <button
+                  onClick={() => clearAll.mutate()}
+                  disabled={clearAll.isPending}
+                  className="text-xs text-red-400 hover:text-red-500 font-medium flex items-center gap-1"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Clear all
+                </button>
+              </div>
             </div>
           )}
 

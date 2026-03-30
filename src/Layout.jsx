@@ -54,6 +54,7 @@ import UserAvatar from '@/components/UserAvatar';
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
   { name: 'Activity', icon: ListTodo, page: 'AllTasks' },
+  { name: 'Schedule', icon: Calendar, page: 'MySchedule' },
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Stock', icon: Package, page: 'Stock' },
   { name: 'Reports', icon: PieChart, page: 'Reports' },
@@ -558,7 +559,7 @@ function LayoutContent({ children, currentPageName }) {
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-card/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-border z-40 pb-safe rounded-t-2xl">
         <div className="flex items-center justify-around h-16">
-          {navItems.slice(0, 4).map((item) => {
+          {navItems.slice(0, 5).map((item) => {
             const Icon = item.icon;
             const isActive = currentPageName === item.page;
             return (
