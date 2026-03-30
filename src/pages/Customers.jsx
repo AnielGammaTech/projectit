@@ -810,14 +810,22 @@ export default function Customers() {
                   <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
                   <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-white/10 rounded-full" />
                   <div className="relative z-10">
-                    {/* Mobile: close bar */}
-                    <div className="sm:hidden flex items-center justify-center mb-3">
+                    {/* Mobile: close/edit bar */}
+                    <div className="sm:hidden flex items-center justify-between mb-2">
                       <button
                         onClick={() => setSelectedCustomer(null)}
                         className="flex items-center gap-1.5 text-white text-sm font-semibold bg-white/15 rounded-full px-4 py-1.5"
                       >
                         <X className="w-4 h-4" /> Close
                       </button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setEditingCustomer(selectedCustomer); setShowModal(true); }}
+                        className="text-white/80 hover:text-white hover:bg-white/15 h-7 text-xs px-2"
+                      >
+                        <Edit2 className="w-3 h-3 mr-1" /> Edit
+                      </Button>
                     </div>
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">

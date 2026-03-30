@@ -368,13 +368,38 @@ export default function ProductsTab() {
                 key={product.id}
                 onClick={() => handleProductClick(product)}
                 className={cn(
-                  "grid grid-cols-1 sm:grid-cols-12 gap-2 px-4 py-3 border-b border-border last:border-b-0 cursor-pointer hover:bg-muted/50 transition-colors items-center",
+                  "sm:grid sm:grid-cols-12 gap-2 px-4 py-2.5 sm:py-3 border-b border-border last:border-b-0 cursor-pointer hover:bg-muted/50 transition-colors items-center",
                   isOut && "bg-red-50/50 dark:bg-red-900/10",
                   isLow && "bg-amber-50/50 dark:bg-amber-900/10"
                 )}
               >
+                {/* Mobile: single compact row */}
+                <div className="sm:hidden flex items-center gap-3">
+                  {product.image_url ? (
+                    <img src={product.image_url} alt="" className="w-8 h-8 rounded-lg object-cover border flex-shrink-0" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <Package className="w-3.5 h-3.5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-foreground truncate">{product.name}</p>
+                      <span className={cn("text-xs font-bold tabular-nums px-1.5 py-0.5 rounded shrink-0", isOut ? "text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/30" : isLow ? "text-amber-700 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30" : "text-foreground bg-muted/50")}>
+                        {stockLevel}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+                      {product.manufacturer && <span className="truncate">{product.manufacturer}</span>}
+                      {product.manufacturer && product.selling_price > 0 && <span className="text-border">·</span>}
+                      {product.selling_price > 0 && <span className="font-medium text-foreground/70">${(product.selling_price).toFixed(2)}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop: grid columns */}
                 {/* Product name + image */}
-                <div className="col-span-3 flex items-center gap-3 min-w-0">
+                <div className="hidden sm:flex col-span-3 items-center gap-3 min-w-0">
                   {product.image_url ? (
                     <img src={product.image_url} alt="" className="w-9 h-9 rounded-lg object-cover border flex-shrink-0" />
                   ) : (
@@ -428,15 +453,6 @@ export default function ProductsTab() {
                 {/* SKU */}
                 <div className="hidden sm:block col-span-2 min-w-0">
                   <span className="text-xs font-mono text-muted-foreground truncate">{product.sku || '—'}</span>
-                </div>
-
-                {/* Mobile: show key info inline */}
-                <div className="sm:hidden flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className={cn("font-bold px-1.5 py-0.5 rounded", isOut ? "text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/30" : isLow ? "text-amber-700 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30" : "text-foreground")}>
-                    Qty: {stockLevel}
-                  </span>
-                  {product.manufacturer && <span>{product.manufacturer}</span>}
-                  <span>${(product.selling_price || 0).toFixed(2)}</span>
                 </div>
               </div>
             );
@@ -557,9 +573,18 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto no-scrollbar !bg-white dark:!bg-[#0a1e2e] border-border p-0">
+      <DialogContent hideCloseOnMobile className="h-[95dvh] sm:h-auto rounded-t-2xl sm:rounded-2xl sm:max-w-lg max-h-[95dvh] sm:max-h-[90vh] overflow-y-auto no-scrollbar !bg-white dark:!bg-[#0a1e2e] border-border p-0 top-auto sm:top-[50%] translate-y-0 sm:translate-y-[-50%] bottom-0 sm:bottom-auto pb-[env(safe-area-inset-bottom)]">
+        {/* Mobile close bar */}
+        <div className="sm:hidden flex items-center justify-between px-4 pt-3">
+          <button onClick={() => onClose(false)} className="flex items-center gap-1 text-muted-foreground text-xs font-medium">
+            <X className="w-4 h-4" /> Close
+          </button>
+          <button onClick={() => onEdit(product)} className="flex items-center gap-1 text-muted-foreground text-xs font-medium">
+            <Edit2 className="w-3 h-3" /> Edit
+          </button>
+        </div>
         {/* Header Section */}
-        <div className="flex items-start gap-4 p-6 pb-0">
+        <div className="flex items-start gap-4 p-6 pt-3 sm:pt-6 pb-0">
           {product.image_url ? (
             <img
               src={product.image_url}
@@ -591,7 +616,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
           </div>
         </div>
 
-        <div className="px-6 pb-6 space-y-5 mt-5">
+        <div className="px-6 pb-8 sm:pb-6 space-y-5 mt-5">
           {/* Stats Row */}
           <div className="grid grid-cols-3 gap-3">
             <div className={cn(
