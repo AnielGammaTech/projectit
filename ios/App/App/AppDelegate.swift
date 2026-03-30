@@ -1,15 +1,33 @@
 import UIKit
 import Capacitor
+import UserNotifications
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Register for push notifications
-        UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
+        UNUserNotificationCenter.current().delegate = self
         return true
+    }
+
+    // Suppress push banners when app is in the foreground
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // Don't show banner/sound/badge when app is active — the in-app UI handles it
+        completionHandler([])
+    }
+
+    // Handle notification tap (when app is in background/closed)
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        // Forward to Capacitor push plugin so JS listener fires
+        NotificationCenter.default.post(name: Notification.Name("capacitorDidReceiveRemoteNotification"), object: response.notification.request.content.userInfo)
+        completionHandler()
     }
 
     // REQUIRED: Forward device token to Capacitor push plugin
