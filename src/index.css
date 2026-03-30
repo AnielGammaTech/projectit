@@ -213,11 +213,10 @@ header {
   }
 }
 
-/* Global: eliminate 300ms tap delay and iOS long-press previews */
+/* Global: eliminate 300ms tap delay */
 * {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
 }
 
 /* ── Smooth transitions ── */
