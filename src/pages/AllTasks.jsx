@@ -439,7 +439,6 @@ export default function AllTasks() {
         matchesViewMode = dueDate <= today;
       }
     } else if (viewMode === 'mine_due') {
-      // Show only overdue tasks and tasks due today
       if (!task.due_date) {
         matchesViewMode = false;
       } else {
@@ -447,6 +446,18 @@ export default function AllTasks() {
         const today = new Date();
         today.setHours(23, 59, 59, 999);
         matchesViewMode = dueDate <= today;
+      }
+    } else if (viewMode === 'soon') {
+      // Tasks assigned to current user due within next 3 days
+      if (!task.due_date || task.assigned_to !== currentUser?.email) {
+        matchesViewMode = false;
+      } else {
+        const dueDate = parseLocalDate(task.due_date);
+        const now = new Date();
+        const threeDaysOut = new Date();
+        threeDaysOut.setDate(threeDaysOut.getDate() + 3);
+        threeDaysOut.setHours(23, 59, 59, 999);
+        matchesViewMode = dueDate >= now && dueDate <= threeDaysOut;
       }
     }
 
@@ -501,6 +512,15 @@ export default function AllTasks() {
     const today = new Date();
     today.setHours(23, 59, 59, 999);
     return dueDate <= today;
+  }).length;
+  const mySoonCount = activeTasks.filter(t => {
+    if (!t.due_date || t.status === 'completed' || t.assigned_to !== currentUser?.email) return false;
+    const dueDate = parseLocalDate(t.due_date);
+    const now = new Date();
+    const threeDays = new Date();
+    threeDays.setDate(threeDays.getDate() + 3);
+    threeDays.setHours(23, 59, 59, 999);
+    return dueDate >= now && dueDate <= threeDays;
   }).length;
 
   const handleQuickComplete = async (e, taskId) => {
@@ -675,6 +695,17 @@ export default function AllTasks() {
                 Overdue ({myOverdueCount})
               </button>
               <button
+                onClick={() => setViewMode('soon')}
+                className={cn(
+                  "px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
+                  viewMode === 'soon'
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Soon ({mySoonCount})
+              </button>
+              <button
                 onClick={() => setViewMode('mine_due')}
                 className={cn(
                   "hidden sm:block px-3 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
@@ -787,8 +818,9 @@ export default function AllTasks() {
                   });
 
                   return Object.entries(grouped).map(([projectId, projectTasks]) => {
-                    // Default collapsed on mobile — only expand when explicitly toggled
-                    const isCollapsed = expandedGroups[projectId] !== true;
+                    // Default expanded for filtered views (mine, soon, overdue), collapsed for all
+                    const defaultExpanded = viewMode !== 'all';
+                    const isCollapsed = defaultExpanded ? expandedGroups[projectId] === false : expandedGroups[projectId] !== true;
 
                     const project = projects.find(p => p.id === projectId);
                     const dueSoonTasks = projectTasks.filter(t => {
