@@ -53,12 +53,16 @@ const getInitials = (name) => {
   return name.slice(0, 2).toUpperCase();
 };
 
-export default function PartDetailModal({ open, onClose, part, teamMembers = [], currentUser, onStatusChange, onDelete }) {
+export default function PartDetailModal({ open, onClose, part: partProp, teamMembers = [], currentUser, onStatusChange, onDelete }) {
   const queryClient = useQueryClient();
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Local optimistic copy of the part — updates instantly on user actions
+  const [localPart, setLocalPart] = useState(null);
+  const part = localPart || partProp;
 
   // Editable fields - local state
   const [name, setName] = useState('');
@@ -71,17 +75,18 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
 
   // Sync state from part prop and reset to view mode on open
   useEffect(() => {
-    if (part) {
-      setName(part.name || '');
-      setPartNumber(part.part_number || '');
-      setQuantity(part.quantity || 1);
-      setUnitCost(part.unit_cost || 0);
-      setSupplier(part.supplier || '');
-      setPurchaseLink(part.purchase_link || '');
-      setNotes(part.notes || '');
+    if (partProp) {
+      setLocalPart(partProp);
+      setName(partProp.name || '');
+      setPartNumber(partProp.part_number || '');
+      setQuantity(partProp.quantity || 1);
+      setUnitCost(partProp.unit_cost || 0);
+      setSupplier(partProp.supplier || '');
+      setPurchaseLink(partProp.purchase_link || '');
+      setNotes(partProp.notes || '');
     }
     setIsEditing(false);
-  }, [part?.id, open]);
+  }, [partProp?.id, open]);
 
   const { data: comments = [], refetch: refetchComments } = useQuery({
     queryKey: ['partComments', part?.id],
@@ -89,9 +94,11 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
     enabled: !!part?.id && open
   });
 
-  // Auto-save handler
+  // Auto-save handler with optimistic local update
   const autoSave = async (updates) => {
     if (!part) return;
+    // Optimistic: update local state immediately so UI reflects changes
+    setLocalPart(prev => ({ ...prev, ...updates }));
     setSaving(true);
     try {
       await api.entities.Part.update(part.id, updates);
@@ -99,6 +106,8 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
       queryClient.invalidateQueries({ queryKey: ['projectParts'] });
     } catch (err) {
       console.error('Auto-save failed:', err);
+      // Revert on error
+      setLocalPart(partProp);
     }
     setSaving(false);
   };
