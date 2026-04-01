@@ -89,7 +89,18 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
   const allItems = [
     ...myTasks.map(t => ({ ...t, _type: 'task' })),
     ...myParts.map(p => ({ ...p, _type: 'part' })),
-  ];
+  ].sort((a, b) => {
+    const aStatus = getDueStatus(a.due_date);
+    const bStatus = getDueStatus(b.due_date);
+    const order = { overdue: 0, soon: 1 };
+    const aOrder = aStatus ? order[aStatus] ?? 2 : 3;
+    const bOrder = bStatus ? order[bStatus] ?? 2 : 3;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    if (a.due_date && b.due_date) return parseLocalDate(a.due_date) - parseLocalDate(b.due_date);
+    if (a.due_date) return -1;
+    if (b.due_date) return 1;
+    return 0;
+  });
   const ITEMS_PER_PAGE = 10;
   const totalPages = Math.max(1, Math.ceil(allItems.length / ITEMS_PER_PAGE));
   const [page, setPage] = useState(0);
@@ -176,63 +187,45 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
     return (
       <div className="space-y-0.5">
         {topItems.map((item, idx) => {
-          if (item._type === 'task') {
-            const status = statusConfig[item.status] || statusConfig.todo;
-            const StatusIcon = status.icon;
-            const dueStatus = getDueStatus(item.due_date);
-            const dueBadge = getDueBadge(item.due_date);
-            return (
-              <div
-                key={item.id}
-                className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}
-              >
-                <button
-                  onClick={() => handleTaskCompleteWithSync(item)}
-                  className={cn("p-0.5 rounded-md hover:scale-110 transition-transform shrink-0", status.bg)}
-                >
-                  <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
-                </button>
-                <Link to={createPageUrl('ProjectTasks') + `?id=${item.project_id}&task=${item.id}`} className="flex-1 min-w-0 flex items-center gap-2">
-                  <p className="font-medium text-slate-900 dark:text-slate-100 text-xs truncate">{item.title}</p>
-                </Link>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
-                    {getProjectName(item.project_id)}
-                  </span>
-                  {dueBadge && (
-                    <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", dueBadge.className)}>
-                      <Calendar className="w-2.5 h-2.5 mr-0.5" />
-                      {dueBadge.label}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            );
-          } else {
-            const dueStatus = getDueStatus(item.due_date);
-            const dueBadge = getDueBadge(item.due_date);
-            return (
-              <Link key={item.id} to={createPageUrl('ProjectParts') + `?id=${item.project_id}&part=${item.id}`}>
-                <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}>
+          const isTask = item._type === 'task';
+          const status = isTask ? (statusConfig[item.status] || statusConfig.todo) : null;
+          const StatusIcon = status?.icon;
+          const dueStatus = getDueStatus(item.due_date);
+          const dueBadge = getDueBadge(item.due_date);
+          const projectNum = getProjectNumber(item.project_id);
+          const linkUrl = isTask
+            ? createPageUrl('ProjectTasks') + `?id=${item.project_id}&task=${item.id}`
+            : createPageUrl('ProjectParts') + `?id=${item.project_id}&part=${item.id}`;
+
+          return (
+            <Link key={item.id} to={linkUrl} className="block">
+              <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}>
+                {isTask ? (
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleTaskCompleteWithSync(item); }}
+                    className={cn("p-0.5 rounded-md hover:scale-110 transition-transform shrink-0", status.bg)}
+                  >
+                    <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
+                  </button>
+                ) : (
                   <div className="p-0.5 rounded-md bg-amber-100 shrink-0">
                     <Package className="w-3.5 h-3.5 text-amber-600" />
                   </div>
-                  <p className="font-medium text-slate-900 dark:text-slate-100 text-xs truncate flex-1 min-w-0">{item.name}</p>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
-                      {getProjectName(item.project_id)}
-                    </span>
-                    {dueBadge && (
-                      <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", dueBadge.className)}>
-                        <Calendar className="w-2.5 h-2.5 mr-0.5" />
-                        {dueBadge.label}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            );
-          }
+                )}
+                <p className="font-medium text-slate-900 dark:text-slate-100 text-xs truncate min-w-0">{isTask ? item.title : item.name}</p>
+                <span className="text-[10px] text-muted-foreground truncate hidden sm:inline shrink-0">
+                  {projectNum && <span className="font-mono">#{projectNum}</span>}
+                  {projectNum ? ' ' : ''}{getProjectName(item.project_id)}
+                </span>
+                {dueBadge && (
+                  <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 shrink-0 ml-auto", dueBadge.className)}>
+                    <Calendar className="w-2.5 h-2.5 mr-0.5" />
+                    {dueBadge.label}
+                  </Badge>
+                )}
+              </div>
+            </Link>
+          );
         })}
         {totalItems > 8 && (
           <div className="text-center py-1">

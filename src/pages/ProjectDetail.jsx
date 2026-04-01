@@ -1730,7 +1730,7 @@ export default function ProjectDetail() {
         {/* ── Desktop: Tool Cards Grid + Sidebar ── */}
         <div className="hidden sm:grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
           {/* Main Cards — 2x2 grid + Due Dates right column */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_240px] gap-3 sm:[grid-auto-rows:220px] sm:[grid-template-rows:repeat(2,220px)_auto]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_240px] gap-3 auto-rows-min">
 
             {/* Upcoming Due Dates — spans right column */}
             <motion.div

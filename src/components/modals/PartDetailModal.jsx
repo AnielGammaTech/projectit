@@ -228,8 +228,8 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
   const totalCost = (unitCost || 0) * (quantity || 1);
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col" hideCloseOnMobile>
+    <Dialog open={open} onOpenChange={(val) => { if (!val) onClose(); }}>
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col" hideCloseOnMobile onPointerDownOutside={() => onClose()} onEscapeKeyDown={() => onClose()}>
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-slate-100">
           <div className="flex items-start gap-3">
