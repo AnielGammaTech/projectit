@@ -570,36 +570,36 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div>
-                <span className="font-medium text-slate-900">{orderDialog.part?.name}</span>
-                {orderDialog.part?.part_number && <span className="text-slate-500"> (#{orderDialog.part?.part_number})</span>}
-                {orderDialog.part?.supplier && <span className="text-slate-500"> · {orderDialog.part?.supplier}</span>}
+                <span className="font-medium text-foreground">{orderDialog.part?.name}</span>
+                {orderDialog.part?.part_number && <span className="text-muted-foreground"> (#{orderDialog.part?.part_number})</span>}
+                {orderDialog.part?.supplier && <span className="text-muted-foreground"> · {orderDialog.part?.supplier}</span>}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4 space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                 <ImagePlus className="w-4 h-4" />
                 Order Screenshot (optional)
               </label>
               {orderScreenshotPreview ? (
-                <div className="relative rounded-lg border border-blue-200 overflow-hidden bg-slate-50">
+                <div className="relative rounded-lg border border-blue-200 dark:border-blue-800 overflow-hidden bg-muted/50">
                   <img src={orderScreenshotPreview} alt="Order proof" className="w-full max-h-48 object-contain" />
                   <button onClick={() => { setOrderScreenshotPreview(null); setOrderDialog(prev => ({ ...prev, screenshot: null })); }} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50/50 hover:bg-blue-50 cursor-pointer transition-colors">
-                  <ImagePlus className="w-6 h-6 text-blue-400 mb-1.5" />
-                  <span className="text-xs text-blue-600 font-medium">Click to upload or paste</span>
-                  <span className="text-[10px] text-blue-400 mt-0.5">Ctrl+V to paste</span>
+                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-lg bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors">
+                  <ImagePlus className="w-6 h-6 text-muted-foreground mb-1.5" />
+                  <span className="text-xs text-primary font-medium">Click to upload or paste</span>
+                  <span className="text-[10px] text-muted-foreground mt-0.5">Ctrl+V to paste</span>
                   <input type="file" accept="image/*" onChange={handleOrderScreenshot} className="hidden" />
                 </label>
               )}
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                 <Truck className="w-4 h-4" />
                 Estimated Delivery (optional)
               </label>
@@ -616,8 +616,8 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
               </Popover>
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-2 block">Order Notes (optional)</label>
-              <Textarea value={orderDialog.notes} onChange={(e) => setOrderDialog(prev => ({ ...prev, notes: e.target.value }))} placeholder="Order #, tracking info..." className="h-16" />
+              <label className="text-sm font-medium text-foreground mb-2 block">Order Notes (optional)</label>
+              <Textarea value={orderDialog.notes} onChange={(e) => setOrderDialog(prev => ({ ...prev, notes: e.target.value }))} placeholder="Order #, tracking info..." className="h-16 bg-transparent" />
             </div>
           </div>
           <AlertDialogFooter>

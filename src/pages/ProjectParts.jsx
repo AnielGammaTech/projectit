@@ -1077,13 +1077,13 @@ export default function ProjectParts() {
               Receive Part
             </AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="font-medium text-slate-900">{receiveDialog.part?.name}</span>
-              {receiveDialog.part?.part_number && <span className="text-slate-500"> (#{receiveDialog.part?.part_number})</span>}
+              <span className="font-medium text-foreground">{receiveDialog.part?.name}</span>
+              {receiveDialog.part?.part_number && <span className="text-muted-foreground"> (#{receiveDialog.part?.part_number})</span>}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4 space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                 <MapPin className="w-4 h-4" />
                 Where is the item stored? (optional)
               </label>
@@ -1094,13 +1094,13 @@ export default function ProjectParts() {
                 className="h-20"
               />
             </div>
-            <div className="flex items-center space-x-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+            <div className="flex items-center space-x-2 p-3 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
               <Checkbox
                 id="createTask"
                 checked={receiveDialog.createTask}
                 onCheckedChange={(checked) => setReceiveDialog(prev => ({ ...prev, createTask: checked }))}
               />
-              <Label htmlFor="createTask" className="text-sm font-medium text-indigo-900 cursor-pointer">
+              <Label htmlFor="createTask" className="text-sm font-medium text-indigo-900 dark:text-indigo-300 cursor-pointer">
                 Create installation task for installer
               </Label>
             </div>
@@ -1125,22 +1125,22 @@ export default function ProjectParts() {
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div>
-                <span className="font-medium text-slate-900">{orderDialog.part?.name}</span>
-                {orderDialog.part?.part_number && <span className="text-slate-500"> (#{orderDialog.part?.part_number})</span>}
-                {orderDialog.part?.quantity > 1 && <span className="text-slate-500"> · Qty: {orderDialog.part?.quantity}</span>}
-                {orderDialog.part?.supplier && <span className="text-slate-500"> · {orderDialog.part?.supplier}</span>}
+                <span className="font-medium text-foreground">{orderDialog.part?.name}</span>
+                {orderDialog.part?.part_number && <span className="text-muted-foreground"> (#{orderDialog.part?.part_number})</span>}
+                {orderDialog.part?.quantity > 1 && <span className="text-muted-foreground"> · Qty: {orderDialog.part?.quantity}</span>}
+                {orderDialog.part?.supplier && <span className="text-muted-foreground"> · {orderDialog.part?.supplier}</span>}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4 space-y-4">
             {/* Screenshot upload */}
             <div>
-              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                 <ImagePlus className="w-4 h-4" />
                 Order Confirmation Screenshot (optional)
               </label>
               {orderScreenshotPreview ? (
-                <div className="relative rounded-lg border border-blue-200 overflow-hidden bg-slate-50">
+                <div className="relative rounded-lg border border-blue-200 dark:border-blue-800 overflow-hidden bg-muted/50">
                   <img src={orderScreenshotPreview} alt="Order proof" className="w-full max-h-48 object-contain" />
                   <button
                     onClick={() => { setOrderScreenshotPreview(null); setOrderDialog(prev => ({ ...prev, screenshot: null })); }}
@@ -1150,10 +1150,10 @@ export default function ProjectParts() {
                   </button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50/50 hover:bg-blue-50 cursor-pointer transition-colors">
-                  <ImagePlus className="w-6 h-6 text-blue-400 mb-1.5" />
-                  <span className="text-xs text-blue-600 font-medium">Click to upload or paste screenshot</span>
-                  <span className="text-[10px] text-blue-400 mt-0.5">Ctrl+V to paste from clipboard</span>
+                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-lg bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors">
+                  <ImagePlus className="w-6 h-6 text-muted-foreground mb-1.5" />
+                  <span className="text-xs text-primary font-medium">Click to upload or paste screenshot</span>
+                  <span className="text-[10px] text-muted-foreground mt-0.5">Ctrl+V to paste from clipboard</span>
                   <input type="file" accept="image/*" onChange={handleOrderScreenshot} className="hidden" />
                 </label>
               )}
@@ -1161,7 +1161,7 @@ export default function ProjectParts() {
 
             {/* ETA Date Picker */}
             <div>
-              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                 <Truck className="w-4 h-4" />
                 Estimated Delivery Date (optional)
               </label>
@@ -1184,12 +1184,12 @@ export default function ProjectParts() {
 
             {/* Order notes */}
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-2 block">Order Notes (optional)</label>
+              <label className="text-sm font-medium text-foreground mb-2 block">Order Notes (optional)</label>
               <Textarea
                 value={orderDialog.notes}
                 onChange={(e) => setOrderDialog(prev => ({ ...prev, notes: e.target.value }))}
                 placeholder="Order #, tracking info, vendor details..."
-                className="h-16"
+                className="h-16 bg-transparent"
               />
             </div>
           </div>
