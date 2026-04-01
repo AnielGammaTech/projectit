@@ -226,11 +226,8 @@ export default function MySchedule() {
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
+          <div>
             {renderCalendar(currentMonth)}
-            <div className="hidden sm:block">
-              {renderCalendar(nextMonth)}
-            </div>
           </div>
         </motion.div>
 
