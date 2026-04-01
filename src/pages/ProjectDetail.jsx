@@ -1730,7 +1730,7 @@ export default function ProjectDetail() {
         {/* ── Desktop: Tool Cards Grid + Sidebar ── */}
         <div className="hidden sm:grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
           {/* Main Cards — 2x2 grid + Due Dates right column */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_240px] gap-3 auto-rows-min">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_240px] gap-3 sm:auto-rows-[220px]">
 
             {/* Upcoming Due Dates — spans right column */}
             <motion.div
@@ -1860,40 +1860,40 @@ export default function ProjectDetail() {
               </motion.div>
             </Link>
 
-            {/* ─── Recent Activity ─── */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="sm:col-span-2 lg:col-span-3"
-            >
-              <button
-                onClick={() => setShowActivity(!showActivity)}
-                className="w-full flex items-center justify-between px-4 py-2.5 bg-card rounded-2xl border border-slate-100 dark:border-border hover:border-slate-200 dark:hover:border-slate-600 hover:shadow-sm transition-all duration-200"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-slate-100">
-                    <Activity className="w-3.5 h-3.5 text-slate-500" />
-                  </div>
-                  <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">Recent Activity</span>
-                </div>
-                <ChevronDown className={cn(
-                  "w-4 h-4 text-slate-400 transition-transform duration-200",
-                  showActivity && "rotate-180"
-                )} />
-              </button>
-              {showActivity && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="bg-card rounded-b-2xl border border-t-0 border-slate-100 dark:border-border p-4 max-h-[250px] overflow-y-auto -mt-1"
-                >
-                  <ProjectActivityFeed projectId={projectId} progressUpdates={progressUpdates} compact />
-                </motion.div>
-              )}
-            </motion.div>
-
           </div>
+
+          {/* ─── Recent Activity ─── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="col-span-full mt-1"
+          >
+            <button
+              onClick={() => setShowActivity(!showActivity)}
+              className="w-full flex items-center justify-between px-4 py-2.5 bg-card rounded-2xl border border-slate-100 dark:border-border hover:border-slate-200 dark:hover:border-slate-600 hover:shadow-sm transition-all duration-200"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-slate-100">
+                  <Activity className="w-3.5 h-3.5 text-slate-500" />
+                </div>
+                <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">Recent Activity</span>
+              </div>
+              <ChevronDown className={cn(
+                "w-4 h-4 text-slate-400 transition-transform duration-200",
+                showActivity && "rotate-180"
+              )} />
+            </button>
+            {showActivity && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="bg-card rounded-b-2xl border border-t-0 border-slate-100 dark:border-border p-4 max-h-[250px] overflow-y-auto -mt-1"
+              >
+                <ProjectActivityFeed projectId={projectId} progressUpdates={progressUpdates} compact />
+              </motion.div>
+            )}
+          </motion.div>
 
           {/* Sidebar — Calendar */}
           <motion.div
