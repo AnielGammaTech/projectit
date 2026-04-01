@@ -229,7 +229,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
 
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onClose(); }}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col" onPointerDownOutside={() => onClose()} onEscapeKeyDown={() => onClose()}>
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col [&>button.absolute]:hidden" onPointerDownOutside={() => onClose()} onEscapeKeyDown={() => onClose()}>
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-border">
           <div className="flex items-start gap-3">
@@ -287,6 +287,9 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
                   <Trash2 className="w-4 h-4" />
                 </Button>
               )}
+              <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                <X className="w-4 h-4" />
+              </Button>
             </div>
           </div>
 
