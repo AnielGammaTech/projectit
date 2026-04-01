@@ -422,359 +422,249 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto no-scrollbar">
-          {/* Details Grid */}
-          <div className="p-4 sm:p-6 border-b border-slate-100">
-            <div className="grid grid-cols-3 gap-2 sm:gap-4">
-              {/* Quantity */}
-              <div>
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 block">Quantity</label>
-                {isEditing ? (
-                  <input
-                    type="number"
-                    min="1"
-                    value={quantity}
-                    onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                    onBlur={handleQuantityBlur}
-                    className="w-full text-sm font-medium text-slate-900 bg-transparent outline-none border border-slate-200 hover:border-slate-300 focus:border-indigo-300 rounded-lg px-3 py-2 transition-colors"
-                  />
-                ) : (
-                  <p className="text-sm font-medium text-slate-900 px-3 py-2">{part.quantity || 1}</p>
-                )}
-              </div>
-
-              {/* Unit Cost */}
-              <div>
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 block">Unit Cost</label>
-                {isEditing ? (
-                  <div className="relative">
-                    <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={unitCost}
-                      onChange={(e) => setUnitCost(parseFloat(e.target.value) || 0)}
-                      onBlur={handleUnitCostBlur}
-                      className="w-full text-sm font-medium text-slate-900 bg-transparent outline-none border border-slate-200 hover:border-slate-300 focus:border-indigo-300 rounded-lg pl-7 pr-3 py-2 transition-colors"
-                    />
-                  </div>
-                ) : (
-                  <p className="text-sm font-medium text-slate-900 px-3 py-2 flex items-center gap-0.5">
-                    <DollarSign className="w-3.5 h-3.5 text-slate-400" />
-                    {(part.unit_cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
-                )}
-              </div>
-
-              {/* Total Cost (calculated) */}
-              <div>
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 block">Total</label>
-                <div className="flex items-center gap-1 px-3 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50 rounded-lg">
-                  <DollarSign className="w-3.5 h-3.5" />
-                  {totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {/* Cost Summary Bar */}
+          <div className="px-4 sm:px-6 py-3 bg-slate-50/80 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-700/50">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div>
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Qty</span>
+                  {isEditing ? (
+                    <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} onBlur={handleQuantityBlur}
+                      className="block w-16 text-sm font-semibold text-foreground bg-transparent outline-none border border-slate-200 focus:border-primary rounded px-1.5 py-0.5 mt-0.5" />
+                  ) : (
+                    <p className="text-sm font-semibold text-foreground">{part.quantity || 1}</p>
+                  )}
                 </div>
+                <span className="text-slate-300 text-lg font-light">&times;</span>
+                <div>
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Unit Cost</span>
+                  {isEditing ? (
+                    <div className="relative mt-0.5">
+                      <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                      <input type="number" min="0" step="0.01" value={unitCost} onChange={(e) => setUnitCost(parseFloat(e.target.value) || 0)} onBlur={handleUnitCostBlur}
+                        className="block w-24 text-sm font-semibold text-foreground bg-transparent outline-none border border-slate-200 focus:border-primary rounded pl-5 pr-1.5 py-0.5" />
+                    </div>
+                  ) : (
+                    <p className="text-sm font-semibold text-foreground">${(part.unit_cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  )}
+                </div>
+                <span className="text-slate-300 text-lg font-light">=</span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Total</span>
+                <p className="text-lg font-bold text-emerald-600">${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-4">
+          {/* Details Grid — compact 2-col key-value */}
+          <div className="px-4 sm:px-6 py-4">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
               {/* Supplier */}
               <div>
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-                  <Truck className="w-3 h-3" /> Supplier
-                </label>
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1"><Truck className="w-2.5 h-2.5" /> Supplier</span>
                 {isEditing ? (
-                  <input
-                    value={supplier}
-                    onChange={(e) => setSupplier(e.target.value)}
-                    onBlur={handleSupplierBlur}
-                    placeholder="e.g., Amazon, CDW..."
-                    className="w-full text-sm text-slate-900 bg-transparent outline-none border border-slate-200 hover:border-slate-300 focus:border-indigo-300 rounded-lg px-3 py-2 transition-colors placeholder-slate-300"
-                  />
+                  <input value={supplier} onChange={(e) => setSupplier(e.target.value)} onBlur={handleSupplierBlur} placeholder="e.g., Amazon, CDW..."
+                    className="w-full text-sm text-foreground bg-transparent outline-none border border-slate-200 focus:border-primary rounded px-2 py-1 mt-0.5 placeholder-slate-300" />
                 ) : (
-                  <p className="text-sm text-slate-900 px-3 py-2">{part.supplier || <span className="text-slate-400">--</span>}</p>
+                  <p className="text-sm font-medium text-foreground mt-0.5">{part.supplier || <span className="text-muted-foreground font-normal">Not set</span>}</p>
                 )}
               </div>
 
               {/* Est. Delivery */}
               <div>
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-                  <Truck className="w-3 h-3" /> Est. Delivery
-                </label>
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1"><CalendarIcon className="w-2.5 h-2.5" /> Est. Delivery</span>
                 {isEditing ? (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button className="w-full text-left text-sm border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-2 transition-colors">
+                      <button className="w-full text-left text-sm border border-slate-200 hover:border-slate-300 rounded px-2 py-1 mt-0.5 transition-colors">
                         {part.est_delivery_date ? (
-                          <span className="text-slate-900">{format(parseLocalDate(part.est_delivery_date), 'MMM d, yyyy')}</span>
+                          <span className="text-foreground font-medium">{format(parseLocalDate(part.est_delivery_date), 'MMM d, yyyy')}</span>
                         ) : (
-                          <span className="text-slate-300">Set delivery date...</span>
+                          <span className="text-slate-300">Set date...</span>
                         )}
                       </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 z-[100]" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={part.est_delivery_date ? parseLocalDate(part.est_delivery_date) : undefined}
-                        onSelect={handleEstDeliveryChange}
-                      />
+                      <Calendar mode="single" selected={part.est_delivery_date ? parseLocalDate(part.est_delivery_date) : undefined} onSelect={handleEstDeliveryChange} />
                       {part.est_delivery_date && (
                         <div className="p-2 border-t">
-                          <Button variant="ghost" size="sm" onClick={() => handleEstDeliveryChange(null)} className="w-full text-red-600 text-xs">
-                            Clear date
-                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleEstDeliveryChange(null)} className="w-full text-red-600 text-xs">Clear date</Button>
                         </div>
                       )}
                     </PopoverContent>
                   </Popover>
                 ) : (
-                  <p className="text-sm text-slate-900 px-3 py-2">
-                    {part.est_delivery_date ? format(parseLocalDate(part.est_delivery_date), 'MMM d, yyyy') : <span className="text-slate-400">--</span>}
+                  <p className="text-sm font-medium text-foreground mt-0.5">
+                    {part.est_delivery_date ? format(parseLocalDate(part.est_delivery_date), 'MMM d, yyyy') : <span className="text-muted-foreground font-normal">Not set</span>}
                   </p>
                 )}
               </div>
-            </div>
 
-            {/* Purchase Link */}
-            <div className="mt-4">
-              <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-                <Link className="w-3 h-3" /> Purchase Link
-              </label>
-              {isEditing ? (
-                <input
-                  value={purchaseLink}
-                  onChange={(e) => setPurchaseLink(e.target.value)}
-                  onBlur={handlePurchaseLinkBlur}
-                  placeholder="https://..."
-                  className="w-full text-sm text-slate-900 bg-transparent outline-none border border-slate-200 hover:border-slate-300 focus:border-indigo-300 rounded-lg px-3 py-2 transition-colors placeholder-slate-300"
-                />
-              ) : (
-                <div className="px-3 py-2">
-                  {part.purchase_link ? (
-                    <a
-                      href={part.purchase_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1.5 break-all"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
-                      {(() => {
-                        try { return new URL(part.purchase_link).hostname; } catch { return part.purchase_link; }
-                      })()}
-                    </a>
+              {/* Purchase Link */}
+              <div>
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1"><Link className="w-2.5 h-2.5" /> Purchase Link</span>
+                {isEditing ? (
+                  <input value={purchaseLink} onChange={(e) => setPurchaseLink(e.target.value)} onBlur={handlePurchaseLinkBlur} placeholder="https://..."
+                    className="w-full text-sm text-foreground bg-transparent outline-none border border-slate-200 focus:border-primary rounded px-2 py-1 mt-0.5 placeholder-slate-300" />
+                ) : (
+                  <div className="mt-0.5">
+                    {part.purchase_link ? (
+                      <a href={part.purchase_link} target="_blank" rel="noopener noreferrer"
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1 break-all">
+                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                        {(() => { try { return new URL(part.purchase_link).hostname; } catch { return part.purchase_link; } })()}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Not set</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Receiver (show if ordered or later) */}
+              {(part.status === 'ordered' || part.status === 'received' || part.status === 'ready_to_install' || part.status === 'installed') && (
+                <div>
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1"><PackageCheck className="w-2.5 h-2.5" /> Receiver</span>
+                  {isEditing ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="inline-flex items-center gap-1.5 text-sm border border-slate-200 hover:border-slate-300 rounded px-2 py-1 mt-0.5 transition-colors">
+                          {part.receiver_name ? (
+                            <><div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px]", getColorForEmail(part.receiver_email))}>{getInitials(part.receiver_name)}</div>
+                            <span className="text-foreground">{part.receiver_name}</span></>
+                          ) : (<span className="text-slate-300">Assign...</span>)}
+                          <ChevronDown className="w-3 h-3 text-slate-400" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleReceiverAssign('unassigned')}><User className="w-4 h-4 mr-2 text-slate-400" />Unassigned</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {teamMembers.map(m => (
+                          <DropdownMenuItem key={m.id} onClick={() => handleReceiverAssign(m.email)}>
+                            <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(m.email))}>{getInitials(m.name)}</div>
+                            {m.name}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   ) : (
-                    <span className="text-sm text-slate-400">--</span>
+                    <p className="text-sm font-medium text-foreground mt-0.5 inline-flex items-center gap-1.5">
+                      {part.receiver_name ? (
+                        <><div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px]", getColorForEmail(part.receiver_email))}>{getInitials(part.receiver_name)}</div>{part.receiver_name}</>
+                      ) : (<span className="text-muted-foreground font-normal">Not set</span>)}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Installer (show if received or later) */}
+              {(part.status === 'received' || part.status === 'ready_to_install' || part.status === 'installed') && (
+                <div>
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1"><Wrench className="w-2.5 h-2.5" /> Installer</span>
+                  {isEditing ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="inline-flex items-center gap-1.5 text-sm border border-slate-200 hover:border-slate-300 rounded px-2 py-1 mt-0.5 transition-colors">
+                          {part.installer_name ? (
+                            <><div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px]", getColorForEmail(part.installer_email))}>{getInitials(part.installer_name)}</div>
+                            <span className="text-foreground">{part.installer_name}</span></>
+                          ) : (<span className="text-slate-300">Assign...</span>)}
+                          <ChevronDown className="w-3 h-3 text-slate-400" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleInstallerAssign('unassigned')}><User className="w-4 h-4 mr-2 text-slate-400" />Unassigned</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {teamMembers.map(m => (
+                          <DropdownMenuItem key={m.id} onClick={() => handleInstallerAssign(m.email)}>
+                            <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(m.email))}>{getInitials(m.name)}</div>
+                            {m.name}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <p className="text-sm font-medium text-foreground mt-0.5 inline-flex items-center gap-1.5">
+                      {part.installer_name ? (
+                        <><div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px]", getColorForEmail(part.installer_email))}>{getInitials(part.installer_name)}</div>{part.installer_name}</>
+                      ) : (<span className="text-muted-foreground font-normal">Not set</span>)}
+                    </p>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Receiver (show if ordered or later) */}
-            {(part.status === 'ordered' || part.status === 'received' || part.status === 'ready_to_install' || part.status === 'installed') && (
-              <div className="mt-4">
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-                  <PackageCheck className="w-3 h-3" /> Receiver
-                </label>
-                {isEditing ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="inline-flex items-center gap-2 text-sm border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-2 transition-colors">
-                        {part.receiver_name ? (
-                          <>
-                            <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(part.receiver_email))}>
-                              {getInitials(part.receiver_name)}
-                            </div>
-                            <span className="text-slate-900">{part.receiver_name}</span>
-                          </>
-                        ) : (
-                          <span className="text-slate-300">Assign receiver...</span>
-                        )}
-                        <ChevronDown className="w-3 h-3 text-slate-400" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleReceiverAssign('unassigned')}>
-                        <User className="w-4 h-4 mr-2 text-slate-400" />
-                        Unassigned
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {teamMembers.map(m => (
-                        <DropdownMenuItem key={m.id} onClick={() => handleReceiverAssign(m.email)}>
-                          <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(m.email))}>
-                            {getInitials(m.name)}
-                          </div>
-                          {m.name}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <p className="text-sm text-slate-900 px-3 py-2 inline-flex items-center gap-2">
-                    {part.receiver_name ? (
-                      <>
-                        <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(part.receiver_email))}>
-                          {getInitials(part.receiver_name)}
-                        </div>
-                        {part.receiver_name}
-                      </>
-                    ) : (
-                      <span className="text-slate-400">--</span>
-                    )}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Installer (show if received or later) */}
-            {(part.status === 'received' || part.status === 'ready_to_install' || part.status === 'installed') && (
-              <div className="mt-4">
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-                  <Wrench className="w-3 h-3" /> Installer
-                </label>
-                {isEditing ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="inline-flex items-center gap-2 text-sm border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-2 transition-colors">
-                        {part.installer_name ? (
-                          <>
-                            <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(part.installer_email))}>
-                              {getInitials(part.installer_name)}
-                            </div>
-                            <span className="text-slate-900">{part.installer_name}</span>
-                          </>
-                        ) : (
-                          <span className="text-slate-300">Assign installer...</span>
-                        )}
-                        <ChevronDown className="w-3 h-3 text-slate-400" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleInstallerAssign('unassigned')}>
-                        <User className="w-4 h-4 mr-2 text-slate-400" />
-                        Unassigned
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {teamMembers.map(m => (
-                        <DropdownMenuItem key={m.id} onClick={() => handleInstallerAssign(m.email)}>
-                          <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] mr-2", getColorForEmail(m.email))}>
-                            {getInitials(m.name)}
-                          </div>
-                          {m.name}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <p className="text-sm text-slate-900 px-3 py-2 inline-flex items-center gap-2">
-                    {part.installer_name ? (
-                      <>
-                        <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]", getColorForEmail(part.installer_email))}>
-                          {getInitials(part.installer_name)}
-                        </div>
-                        {part.installer_name}
-                      </>
-                    ) : (
-                      <span className="text-slate-400">--</span>
-                    )}
-                  </p>
-                )}
-              </div>
-            )}
-
             {/* Date stamps */}
             {(part.received_date || part.installed_date) && (
-              <div className="flex gap-4 mt-4 pt-3 border-t border-slate-100">
+              <div className="flex gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
                 {part.received_date && (
-                  <div className="text-xs text-slate-500">
-                    <span className="font-medium">Received:</span> {format(parseLocalDate(part.received_date), 'MMM d, yyyy')}
-                  </div>
+                  <span className="text-xs text-muted-foreground"><span className="font-medium">Received:</span> {format(parseLocalDate(part.received_date), 'MMM d, yyyy')}</span>
                 )}
                 {part.installed_date && (
-                  <div className="text-xs text-slate-500">
-                    <span className="font-medium">Installed:</span> {format(parseLocalDate(part.installed_date), 'MMM d, yyyy')}
-                  </div>
+                  <span className="text-xs text-muted-foreground"><span className="font-medium">Installed:</span> {format(parseLocalDate(part.installed_date), 'MMM d, yyyy')}</span>
                 )}
               </div>
             )}
+
+            {/* Notes — inline, compact */}
+            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Notes</span>
+              {isEditing ? (
+                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={handleNotesBlur} placeholder="Add notes..."
+                  className="min-h-[50px] resize-none border-slate-200 text-sm mt-1" />
+              ) : (
+                <p className="text-sm text-foreground whitespace-pre-wrap mt-0.5">
+                  {part.notes || <span className="text-muted-foreground">No notes</span>}
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Notes */}
-          <div className="p-4 sm:p-6 border-b border-slate-100">
-            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">Notes</label>
-            {isEditing ? (
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                onBlur={handleNotesBlur}
-                placeholder="Add notes..."
-                className="min-h-[70px] resize-none border-slate-200 text-sm"
-              />
-            ) : (
-              <p className="text-sm text-slate-700 whitespace-pre-wrap min-h-[40px] px-1">
-                {part.notes || <span className="text-slate-400">No notes</span>}
-              </p>
-            )}
-          </div>
-
-          {/* Comments Section */}
-          <div className="p-4 sm:p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <MessageSquare className="w-4 h-4 text-slate-500" />
-              <label className="text-sm font-medium text-slate-700">Comments ({comments.length})</label>
+          {/* Comments Section — compact */}
+          <div className="px-4 sm:px-6 py-3 border-t border-slate-100 dark:border-slate-700/50">
+            <div className="flex items-center gap-2 mb-3">
+              <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Comments ({comments.length})</span>
             </div>
 
-            {/* Comment Input */}
-            <div className="flex gap-2 mb-4">
-              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-xs shrink-0", getColorForEmail(currentUser?.email))}>
+            <div className="flex gap-2 mb-3">
+              <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] shrink-0", getColorForEmail(currentUser?.email))}>
                 {getInitials(currentUser?.full_name)}
               </div>
-              <div className="flex-1 flex gap-2">
-                <Input
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleAddComment()}
-                  className="text-sm"
-                />
-                <Button
-                  size="icon"
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim() || submitting}
-                  className="bg-amber-500 hover:bg-amber-600 shrink-0"
-                >
-                  <Send className="w-4 h-4" />
+              <div className="flex-1 flex gap-1.5">
+                <Input value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Add a comment..."
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleAddComment()} className="text-sm h-8" />
+                <Button size="icon" onClick={handleAddComment} disabled={!newComment.trim() || submitting}
+                  className="bg-amber-500 hover:bg-amber-600 shrink-0 h-8 w-8">
+                  <Send className="w-3.5 h-3.5" />
                 </Button>
               </div>
             </div>
 
-            {/* Comments List */}
-            <div className="space-y-3 max-h-60 overflow-y-auto">
+            <div className="space-y-2.5 max-h-48 overflow-y-auto">
               {comments.length > 0 ? (
                 comments.map(comment => (
-                  <div key={comment.id} className="flex gap-3 group">
-                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-xs shrink-0", getColorForEmail(comment.author_email))}>
+                  <div key={comment.id} className="flex gap-2 group">
+                    <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] shrink-0 mt-0.5", getColorForEmail(comment.author_email))}>
                       {getInitials(comment.author_name)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{comment.author_name}</span>
-                        <span className="text-xs text-slate-400">
-                          {format(new Date(comment.created_date), 'MMM d, h:mm a')}
-                        </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-xs text-foreground">{comment.author_name}</span>
+                        <span className="text-[10px] text-muted-foreground">{format(new Date(comment.created_date), 'MMM d, h:mm a')}</span>
                         {comment.author_email === currentUser?.email && (
-                          <button
-                            onClick={() => handleDeleteComment(comment.id)}
-                            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-600 transition-opacity"
-                          >
-                            <Trash2 className="w-3 h-3" />
+                          <button onClick={() => handleDeleteComment(comment.id)} className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-600 transition-opacity ml-auto">
+                            <Trash2 className="w-2.5 h-2.5" />
                           </button>
                         )}
                       </div>
-                      <p className="text-sm text-slate-600 mt-0.5">{comment.content}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{comment.content}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-slate-400 text-center py-4">No comments yet</p>
+                <p className="text-xs text-muted-foreground text-center py-2">No comments yet</p>
               )}
             </div>
           </div>
