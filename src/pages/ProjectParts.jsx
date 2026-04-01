@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
@@ -146,13 +146,21 @@ export default function ProjectParts() {
     queryFn: () => api.entities.TeamMember.list()
   });
 
-  // Auto-open part detail if ?part= param is in URL
+  // Auto-open part detail if ?part= param is in URL (once only)
+  const autoOpenedRef = useRef(false);
   useEffect(() => {
-    if (autoOpenPartId && parts.length > 0 && !selectedPartDetail) {
+    if (autoOpenPartId && parts.length > 0 && !autoOpenedRef.current) {
       const part = parts.find(p => p.id === autoOpenPartId);
-      if (part) setSelectedPartDetail(part);
+      if (part) {
+        setSelectedPartDetail(part);
+        autoOpenedRef.current = true;
+        // Clean the URL param so it doesn't block closing
+        const url = new URL(window.location);
+        url.searchParams.delete('part');
+        window.history.replaceState({}, '', url);
+      }
     }
-  }, [autoOpenPartId, parts, selectedPartDetail]);
+  }, [autoOpenPartId, parts]);
 
   // Filter to only project members for assignment dropdowns
   const projectMembers = useMemo(() => {

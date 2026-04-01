@@ -1,24 +1,12 @@
-// ProjectIT Service Worker — Cache-first for assets, network-first for API
-const CACHE_NAME = 'projectit-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/favicon.svg',
-  '/favicon.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
-];
+// ProjectIT Service Worker — network-first for pages & assets, offline fallback
+const CACHE_NAME = 'projectit-v2';
 
-// Install: cache shell assets
+// Install: skip waiting to activate immediately
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
   self.skipWaiting();
 });
 
-// Activate: clean old caches
+// Activate: clean ALL old caches, take control immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -32,7 +20,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first for API, cache-first for static assets
+// Fetch: network-first for everything, cache as fallback for offline
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -40,37 +28,22 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Skip API requests (don't cache dynamic data)
-  if (url.pathname.startsWith('/api/') || url.hostname.includes('api-production')) {
+  // Skip API requests and third-party requests
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('api-production') || url.origin !== self.location.origin) {
     return;
   }
 
-  // For navigation requests (HTML pages), try network first then cache
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(request).then((r) => r || caches.match('/')))
-    );
-    return;
-  }
-
-  // For static assets: cache-first strategy
+  // Network-first: always try fresh content, fall back to cache for offline
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        // Cache successful responses for static assets
-        if (response.ok && (url.pathname.match(/\.(js|css|png|svg|jpg|woff2?)$/))) {
+    fetch(request)
+      .then((response) => {
+        // Cache successful responses for offline fallback
+        if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(request).then((r) => r || (request.mode === 'navigate' ? caches.match('/') : undefined)))
   );
 });
