@@ -75,7 +75,7 @@ export default function UpcomingDueDates({ tasks = [], parts = [], projectId, te
   const firstUpcomingIdx = orderedItems.findIndex(item => !isBefore(item.date, today));
 
   return (
-    <div className="relative rounded-2xl overflow-hidden flex flex-col border border-rose-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-rose-50/30 to-pink-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] h-full">
+    <div className="relative rounded-2xl overflow-hidden flex flex-col border border-rose-100/60 dark:border-slate-700/50 bg-gradient-to-br from-white via-rose-50/30 to-pink-50/40 dark:from-[#1e2a3a] dark:via-[#1e2a3a] dark:to-[#1e2a3a] h-full" style={{ maxHeight: '452px' }}>
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400" />
       <div className="p-3.5 pb-2 flex-shrink-0">
         <div className="flex items-center justify-between">
