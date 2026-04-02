@@ -32,19 +32,19 @@ export default function ManageITShell({ children }) {
       {/* ManageIT branded sub-header */}
       <div className="border-b border-emerald-200/60 dark:border-emerald-900/40 bg-white/80 dark:bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 h-12">
+          <div className="flex items-center gap-4 h-14">
             {/* Brand */}
-            <Link to={createPageUrl('AssetDashboard')} className="flex items-center gap-2 shrink-0">
-              <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600">
-                <HardDrive className="w-3.5 h-3.5 text-white" />
+            <Link to={createPageUrl('AssetDashboard')} className="flex items-center gap-2.5 shrink-0">
+              <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 shadow-md shadow-emerald-300/40 dark:shadow-emerald-900/40">
+                <HardDrive className="w-4 h-4 text-white" />
               </div>
-              <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">ManageIT</span>
+              <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tracking-tight">ManageIT</span>
             </Link>
 
-            <div className="h-5 w-px bg-emerald-200 dark:bg-emerald-800 shrink-0" />
+            <div className="h-6 w-px bg-emerald-200/80 dark:bg-emerald-800/60 shrink-0" />
 
-            {/* Tab navigation */}
-            <nav className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide">
+            {/* Tab navigation — pill buttons matching main nav style */}
+            <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
               {MANAGEIT_TABS.map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.page;
@@ -53,13 +53,16 @@ export default function ManageITShell({ children }) {
                     key={tab.page}
                     to={createPageUrl(tab.page)}
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all",
+                      "flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm transition-all relative group",
                       isActive
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                        : "text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:bg-emerald-900/20"
+                        ? "bg-emerald-600 text-white font-medium shadow-md shadow-emerald-300/40 dark:shadow-emerald-900/40"
+                        : "text-slate-500 dark:text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:text-emerald-300 dark:hover:bg-emerald-900/20"
                     )}
                   >
-                    <Icon className={cn("w-3.5 h-3.5", isActive ? "text-emerald-600 dark:text-emerald-400" : "")} />
+                    <Icon className={cn(
+                      "w-4 h-4",
+                      isActive ? "text-white/90" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400"
+                    )} />
                     {tab.name}
                   </Link>
                 );
@@ -69,8 +72,10 @@ export default function ManageITShell({ children }) {
         </div>
       </div>
 
-      {/* Page content */}
-      {children}
+      {/* Page content — all cards inside get green shadows via CSS */}
+      <div className="manageit-content">
+        {children}
+      </div>
     </div>
   );
 }

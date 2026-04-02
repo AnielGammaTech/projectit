@@ -207,6 +207,25 @@ header {
   .shadow-warm-hover {
     box-shadow: 0 8px 25px -5px rgb(0 0 0 / 0.08), 0 4px 10px -6px rgb(0 0 0 / 0.04);
   }
+
+  /* ManageIT green shadows — all cards/containers get green-tinted shadows */
+  .manageit-content .rounded-2xl,
+  .manageit-content .shadow-warm,
+  .manageit-content .border {
+    box-shadow: 0 2px 8px -2px rgb(16 185 129 / 0.10), 0 1px 3px -1px rgb(16 185 129 / 0.06);
+  }
+  .manageit-content .rounded-2xl:hover {
+    box-shadow: 0 6px 20px -4px rgb(16 185 129 / 0.18), 0 2px 8px -2px rgb(16 185 129 / 0.10);
+  }
+  .dark .manageit-content .rounded-2xl,
+  .dark .manageit-content .shadow-warm,
+  .dark .manageit-content .border {
+    box-shadow: 0 2px 8px -2px rgb(16 185 129 / 0.15), 0 1px 3px -1px rgb(16 185 129 / 0.08);
+  }
+  .dark .manageit-content .rounded-2xl:hover {
+    box-shadow: 0 6px 20px -4px rgb(16 185 129 / 0.25), 0 2px 8px -2px rgb(16 185 129 / 0.12);
+  }
+
   /* Touch manipulation - prevents 300ms delay on ALL elements */
   .touch-manipulation {
     touch-action: manipulation;
