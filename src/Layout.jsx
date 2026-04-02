@@ -26,6 +26,9 @@ import {
   Globe,
   Inbox,
   Calendar,
+  HardDrive,
+  ArrowDownUp,
+  Key,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
@@ -57,6 +60,13 @@ const navItems = [
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Stock', icon: Package, page: 'Stock' },
   { name: 'Reports', icon: PieChart, page: 'Reports' },
+  { type: 'separator', label: 'ManageIT' },
+  { name: 'Assets', icon: HardDrive, page: 'AssetDashboard' },
+  { name: 'Inventory', icon: Package, page: 'AssetInventory' },
+  { name: 'Assign / Return', icon: ArrowDownUp, page: 'AssetAssign' },
+  { name: 'Employees', icon: Users, page: 'AssetEmployees' },
+  { name: 'Licenses', icon: Key, page: 'AssetLicenses' },
+  { name: 'Asset Reports', icon: TrendingUp, page: 'AssetReports' },
 ];
 
 function LayoutContent({ children, currentPageName }) {
@@ -191,7 +201,13 @@ function LayoutContent({ children, currentPageName }) {
 
           {/* Center: Desktop Nav Items */}
           <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
-              {navItems.map((item) => {
+              {navItems.map((item, index) => {
+                if (item.type === 'separator') {
+                  return (
+                    <div key={index} className="mx-1.5 h-5 w-px bg-white/20" />
+                  );
+                }
+
                 const Icon = item.icon;
 
                 if (item.submenu) {
@@ -388,6 +404,12 @@ function LayoutContent({ children, currentPageName }) {
                       Notifications
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl('MyAssets')} className="cursor-pointer">
+                      <Package className="w-4 h-4 mr-2 text-slate-500" />
+                      My Assets
+                    </Link>
+                  </DropdownMenuItem>
                 </div>
                 {isAdmin && (
                   <>
@@ -478,7 +500,15 @@ function LayoutContent({ children, currentPageName }) {
           </Button>
         </div>
         <nav className="flex-1 overflow-y-auto p-3">
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
+            if (item.type === 'separator') {
+              return (
+                <div key={index} className="pt-4 pb-1 px-3">
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">{item.label}</p>
+                </div>
+              );
+            }
+
             const Icon = item.icon;
 
             if (item.submenu) {
