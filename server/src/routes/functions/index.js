@@ -33,6 +33,7 @@ import claudeAI from './claudeAI.js';
 import agentBridge from './agentBridge.js';
 import giphy from './giphy.js';
 import sendMfaReminders from './sendMfaReminders.js';
+import syncJumpCloudEmployees from './syncJumpCloudEmployees.js';
 
 const router = Router();
 
@@ -71,6 +72,7 @@ const authHandlers = {
   agentBridge,
   giphy,
   sendMfaReminders,
+  syncJumpCloudEmployees,
 };
 
 // POST /api/functions/:name
