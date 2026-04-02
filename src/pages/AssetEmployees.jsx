@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
+import ManageITShell from '@/components/assets/ManageITShell';
 
 function getStatusBadge(employee) {
   if (employee.suspended) {
@@ -104,21 +105,13 @@ export default function AssetEmployees() {
   const hasResults = filtered.length > 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <ManageITShell>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30 shrink-0">
-              <Users className="w-5 h-5 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold text-foreground">Employees</h1>
-              <p className="text-xs text-muted-foreground">
-                {employees.length} employee{employees.length !== 1 ? 's' : ''} from JumpCloud
-              </p>
-            </div>
-          </div>
+        {/* Sync button */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs text-muted-foreground">
+            {employees.length} employee{employees.length !== 1 ? 's' : ''} from JumpCloud
+          </p>
           <Button
             variant="outline"
             size="sm"
@@ -215,6 +208,6 @@ export default function AssetEmployees() {
           </div>
         )}
       </div>
-    </div>
+    </ManageITShell>
   );
 }

@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 import AssetModal from '@/components/assets/AssetModal';
+import ManageITShell from '@/components/assets/ManageITShell';
 
 const TYPE_ICONS = {
   'IT Equipment': Monitor,
@@ -170,7 +171,7 @@ export default function AssetDetail() {
 
   if (!asset) {
     return (
-      <div className="min-h-screen bg-background">
+      <ManageITShell>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Box className="w-12 h-12 mb-3 opacity-40" />
@@ -187,7 +188,7 @@ export default function AssetDetail() {
             </Link>
           </div>
         </div>
-      </div>
+      </ManageITShell>
     );
   }
 
@@ -209,7 +210,7 @@ export default function AssetDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <ManageITShell>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Back link */}
         <Link
@@ -336,6 +337,6 @@ export default function AssetDetail() {
         asset={asset}
         onSave={invalidateAll}
       />
-    </div>
+    </ManageITShell>
   );
 }

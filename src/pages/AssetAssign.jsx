@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Send, RotateCcw, Loader2 } from 'lucide-react';
 import SignatureCanvas from '@/components/assets/SignatureCanvas';
+import ManageITShell from '@/components/assets/ManageITShell';
 
 const CONDITION_OPTIONS = ['New', 'Good', 'Fair', 'Damaged'];
 
@@ -171,10 +172,8 @@ export default function AssetAssign() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <ManageITShell>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <h1 className="text-2xl font-bold mb-6">Assign / Return Assets</h1>
-
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full">
             <TabsTrigger value="assign" className="flex-1">
@@ -343,6 +342,6 @@ export default function AssetAssign() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </ManageITShell>
   );
 }

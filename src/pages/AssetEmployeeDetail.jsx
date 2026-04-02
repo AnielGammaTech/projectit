@@ -20,6 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
+import ManageITShell from '@/components/assets/ManageITShell';
 
 const ASSET_TYPE_ICONS = {
   'IT Equipment': Monitor,
@@ -131,7 +132,7 @@ export default function AssetEmployeeDetail() {
 
   if (!employee) {
     return (
-      <div className="min-h-screen bg-background">
+      <ManageITShell>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <Link
             to={createPageUrl('AssetEmployees')}
@@ -145,7 +146,7 @@ export default function AssetEmployeeDetail() {
             <p className="text-sm font-medium text-muted-foreground">Employee not found</p>
           </div>
         </div>
-      </div>
+      </ManageITShell>
     );
   }
 
@@ -156,7 +157,7 @@ export default function AssetEmployeeDetail() {
   const pastAssignments = employeeAssignments.filter(a => a.returned_date);
 
   return (
-    <div className="min-h-screen bg-background">
+    <ManageITShell>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Back Link */}
         <Link
@@ -248,6 +249,6 @@ export default function AssetEmployeeDetail() {
           </div>
         )}
       </div>
-    </div>
+    </ManageITShell>
   );
 }

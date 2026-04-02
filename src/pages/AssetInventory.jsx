@@ -39,6 +39,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import AssetModal from '@/components/assets/AssetModal';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 import { cn } from '@/lib/utils';
+import ManageITShell from '@/components/assets/ManageITShell';
 
 const ASSET_TYPES = [
   'IT Equipment',
@@ -168,19 +169,11 @@ export default function AssetInventory() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <ManageITShell>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30 shrink-0">
-              <HardDrive className="w-5 h-5 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold text-foreground">Asset Inventory</h1>
-              <p className="text-xs text-muted-foreground">{assets.length} assets</p>
-            </div>
-          </div>
+        {/* Add Asset button */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs text-muted-foreground">{assets.length} assets</p>
           <Button onClick={openCreate} size="sm" className="shrink-0">
             <Plus className="w-4 h-4 mr-1" />
             Add Asset
@@ -338,6 +331,6 @@ export default function AssetInventory() {
         variant="destructive"
         onConfirm={handleDelete}
       />
-    </div>
+    </ManageITShell>
   );
 }
