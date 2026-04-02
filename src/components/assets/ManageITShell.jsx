@@ -2,22 +2,23 @@ import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import {
-  HardDrive, Package, ArrowDownUp, Users, Key, TrendingUp,
+  HardDrive, Package, Users, TrendingUp,
 } from 'lucide-react';
 
 const MANAGEIT_TABS = [
   { name: 'Dashboard', icon: HardDrive, page: 'AssetDashboard' },
-  { name: 'Inventory', icon: Package, page: 'AssetInventory' },
-  { name: 'Assign / Return', icon: ArrowDownUp, page: 'AssetAssign' },
+  { name: 'Assets', icon: Package, page: 'AssetInventory' },
   { name: 'Employees', icon: Users, page: 'AssetEmployees' },
-  { name: 'Licenses', icon: Key, page: 'AssetLicenses' },
   { name: 'Reports', icon: TrendingUp, page: 'AssetReports' },
 ];
 
 // Pages that should highlight a tab but aren't tabs themselves
 const PAGE_TO_TAB = {
   AssetDetail: 'AssetInventory',
+  AssetAssign: 'AssetInventory',
+  AssetLicenses: 'AssetInventory',
   AssetEmployeeDetail: 'AssetEmployees',
+  MyAssets: 'AssetInventory',
 };
 
 export default function ManageITShell({ children }) {
