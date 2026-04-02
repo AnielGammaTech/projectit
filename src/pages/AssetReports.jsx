@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 import AssetStatsCard from '@/components/assets/AssetStatsCard';
+import ManageITShell from '@/components/assets/ManageITShell';
 
 const TYPE_CONFIG = {
   'IT Equipment': { icon: Monitor, color: 'bg-blue-500', barColor: 'bg-blue-500' },
@@ -208,26 +209,8 @@ export default function AssetReports() {
   );
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-3"
-      >
-        <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600">
-          <PieChart className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-            Asset Reports
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {totalAssets} total asset{totalAssets !== 1 ? 's' : ''}
-          </p>
-        </div>
-      </motion.div>
-
+    <ManageITShell>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6">
       {/* Summary Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <AssetStatsCard
@@ -315,6 +298,7 @@ export default function AssetReports() {
           )}
         </ReportCard>
       </div>
-    </div>
+      </div>
+    </ManageITShell>
   );
 }

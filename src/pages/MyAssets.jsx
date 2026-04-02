@@ -16,6 +16,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 import { cn } from '@/lib/utils';
+import ManageITShell from '@/components/assets/ManageITShell';
 
 const TYPE_ICONS = {
   'IT Equipment': Monitor,
@@ -85,25 +86,8 @@ export default function MyAssets() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <ManageITShell>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30 shrink-0">
-          <Package className="h-6 w-6 text-white" />
-        </div>
-        <div>
-          <h1 className="text-lg font-bold text-foreground">
-            My Assets
-          </h1>
-          {!isLoading && currentEmployee && (
-            <p className="text-xs text-muted-foreground">
-              {assignedAssets.length} asset{assignedAssets.length !== 1 ? 's' : ''} assigned to you
-            </p>
-          )}
-        </div>
-      </div>
-
       {/* Loading */}
       {isLoading && <CardGridSkeleton />}
 
@@ -207,6 +191,6 @@ export default function MyAssets() {
         </div>
       )}
       </div>
-    </div>
+    </ManageITShell>
   );
 }
