@@ -215,7 +215,7 @@ export default function AssetReports() {
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center gap-3"
       >
-        <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600">
+        <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600">
           <PieChart className="w-5 h-5 text-white" />
         </div>
         <div>
