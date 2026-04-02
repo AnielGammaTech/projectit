@@ -223,7 +223,7 @@ export default function AssetDetail() {
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-6">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 shadow-lg shadow-teal-200/50 dark:shadow-teal-900/30 shrink-0">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30 shrink-0">
               <TypeIcon className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">

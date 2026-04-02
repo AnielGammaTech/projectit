@@ -169,7 +169,7 @@ export default function AssetEmployeeDetail() {
 
         {/* Header */}
         <div className="flex items-start gap-4 mb-8">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-200/50 dark:shadow-teal-900/30 shrink-0">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30 shrink-0">
             <User className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1 min-w-0">

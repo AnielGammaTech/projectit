@@ -112,7 +112,7 @@ export default function AssetDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-200/50 dark:shadow-teal-900/30 shrink-0">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30 shrink-0">
             <Monitor className="w-5 h-5 text-white" />
           </div>
           <div className="min-w-0">
@@ -127,7 +127,7 @@ export default function AssetDashboard() {
             title="Total Assets"
             value={assets.length}
             icon={Box}
-            iconColor="bg-gradient-to-br from-teal-500 to-cyan-600"
+            iconColor="bg-gradient-to-br from-emerald-500 to-green-600"
             delay={0}
           />
           <AssetStatsCard
@@ -229,8 +229,8 @@ export default function AssetDashboard() {
             ) : (
               recentAssignments.map(a => (
                 <div key={a.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className="p-1.5 rounded-lg bg-teal-100 dark:bg-teal-900/40 shrink-0">
-                    <Clock className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                  <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 shrink-0">
+                    <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{a.asset_name}</p>
