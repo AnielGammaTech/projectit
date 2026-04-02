@@ -12,6 +12,7 @@ const VALID_ENTITIES = new Set([
   'TaskGroup', 'TeamMember', 'TimeEntry', 'Tool', 'ToolTransaction',
   'DeviceToken', 'UserGroup', 'UserNotification',
   'UserSecuritySettings', 'UserSession', 'ApiKey', 'Workflow', 'WorkflowLog',
+  'Asset', 'AssetAssignment', 'Employee',
 ]);
 
 function validateEntity(entityType) {
@@ -247,6 +248,12 @@ const CASCADE_MAP = {
   ],
   Tool: [
     { entity: 'ToolTransaction', foreignKey: 'tool_id' },
+  ],
+  Asset: [
+    { entity: 'AssetAssignment', foreignKey: 'asset_id' },
+  ],
+  Employee: [
+    { entity: 'AssetAssignment', foreignKey: 'employee_id' },
   ],
 };
 
