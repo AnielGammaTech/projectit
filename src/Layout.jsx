@@ -60,7 +60,16 @@ const navItems = [
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Stock', icon: Package, page: 'Stock' },
   { name: 'Reports', icon: PieChart, page: 'Reports' },
-  { name: 'ManageIT', icon: HardDrive, page: 'AssetDashboard', submenu: [
+  { name: 'ManageIT', icon: HardDrive, page: 'AssetDashboard', brand: {
+    activeText: 'text-emerald-300',
+    activeIcon: 'text-emerald-400',
+    activeBg: 'bg-emerald-500/15',
+    hoverText: 'hover:text-emerald-300',
+    hoverBg: 'hover:bg-emerald-500/10',
+    dropdownActive: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    dropdownIcon: 'text-emerald-600 dark:text-emerald-400',
+    iconGradient: 'bg-gradient-to-br from-emerald-500 to-green-600',
+  }, submenu: [
     { name: 'Dashboard', icon: HardDrive, page: 'AssetDashboard' },
     { name: 'Inventory', icon: Package, page: 'AssetInventory' },
     { name: 'Assign / Return', icon: ArrowDownUp, page: 'AssetAssign' },
@@ -212,28 +221,46 @@ function LayoutContent({ children, currentPageName }) {
                 const Icon = item.icon;
 
                 if (item.submenu) {
-                  const isSubmenuActive = item.submenu.some(sub => 
+                  const isSubmenuActive = item.submenu.some(sub =>
                     (sub.page === currentPageName) ||
                     (sub.page === 'ReportBuilder' && currentPageName === 'ReportBuilder')
                   );
+                  // Also match detail pages to their parent module
+                  const isManageITPage = item.name === 'ManageIT' && (
+                    isSubmenuActive ||
+                    ['AssetDetail', 'AssetEmployeeDetail', 'MyAssets'].includes(currentPageName)
+                  );
+                  const isActive = isSubmenuActive || isManageITPage;
+                  const brand = item.brand;
 
                   return (
                     <DropdownMenu key={item.name}>
                       <DropdownMenuTrigger asChild>
                         <button className={cn(
                           "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group relative",
-                          isSubmenuActive 
-                            ? "text-[#B4E1FF] bg-white/10 font-medium" 
+                          brand && isActive
+                            ? `${brand.activeText} ${brand.activeBg} font-medium`
+                            : brand && !isActive
+                            ? `text-white/80 ${brand.hoverText} ${brand.hoverBg}`
+                            : isActive
+                            ? "text-[#B4E1FF] bg-white/10 font-medium"
                             : "text-white/80 hover:text-white hover:bg-white/10"
                         )}>
-                          <Icon className={cn(
-                            "w-4 h-4 transition-colors",
-                            isSubmenuActive ? "text-[#B4E1FF]" : "text-white/60 group-hover:text-white"
-                          )} />
+                          {brand?.iconGradient ? (
+                            <div className={cn("p-1 rounded-md", brand.iconGradient)}>
+                              <Icon className="w-3 h-3 text-white" />
+                            </div>
+                          ) : (
+                            <Icon className={cn(
+                              "w-4 h-4 transition-colors",
+                              isActive ? "text-[#B4E1FF]" : "text-white/60 group-hover:text-white"
+                            )} />
+                          )}
                           {item.name}
                           <ChevronDown className={cn(
                             "w-3.5 h-3.5 transition-colors",
-                            isSubmenuActive ? "text-[#B4E1FF]" : "text-white/60"
+                            brand && isActive ? brand.activeIcon
+                              : isActive ? "text-[#B4E1FF]" : "text-white/60"
                           )} />
                         </button>
                       </DropdownMenuTrigger>
@@ -246,14 +273,14 @@ function LayoutContent({ children, currentPageName }) {
                             (subItem.page === 'ReportBuilder' && currentPageName === 'ReportBuilder');
                           return (
                             <DropdownMenuItem key={subItem.name} asChild>
-                              <Link 
-                                to={createPageUrl(subItem.page) + (subItem.params || '')} 
+                              <Link
+                                to={createPageUrl(subItem.page) + (subItem.params || '')}
                                 className={cn(
                                   "cursor-pointer flex items-center gap-2 px-3 py-2 rounded-md",
-                                  isSubActive && "bg-[#0069AF]/10 text-[#0069AF]"
+                                  isSubActive && (brand ? brand.dropdownActive : "bg-[#0069AF]/10 text-[#0069AF]")
                                 )}
                               >
-                                <SubIcon className={cn("w-4 h-4", isSubActive ? "text-[#0069AF]" : "text-slate-400")} />
+                                <SubIcon className={cn("w-4 h-4", isSubActive ? (brand ? brand.dropdownIcon : "text-[#0069AF]") : "text-slate-400")} />
                                 {subItem.name}
                               </Link>
                             </DropdownMenuItem>
@@ -514,15 +541,27 @@ function LayoutContent({ children, currentPageName }) {
 
             if (item.submenu) {
               const isExpanded = expandedMenus[item.name];
+              const brand = item.brand;
               return (
                 <div key={item.name}>
                   <button
                     onClick={() => setExpandedMenus(prev => ({ ...prev, [item.name]: !prev[item.name] }))}
-                    className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-muted text-sm touch-manipulation"
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm touch-manipulation",
+                      brand
+                        ? "text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-muted"
+                    )}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className="w-4 h-4" />
-                      {item.name}
+                      {brand?.iconGradient ? (
+                        <div className={cn("p-1 rounded-md", brand.iconGradient)}>
+                          <Icon className="w-3 h-3 text-white" />
+                        </div>
+                      ) : (
+                        <Icon className="w-4 h-4" />
+                      )}
+                      <span className="font-medium">{item.name}</span>
                     </div>
                     <ChevronDown className={cn("w-4 h-4 transition-transform", isExpanded && "rotate-180")} />
                   </button>
@@ -530,14 +569,20 @@ function LayoutContent({ children, currentPageName }) {
                     <div className="ml-7 space-y-0.5">
                       {item.submenu.map((subItem) => {
                         const SubIcon = subItem.icon;
+                        const isSubActive = subItem.page === currentPageName;
                         return (
                           <Link
                             key={subItem.name}
                             to={createPageUrl(subItem.page) + (subItem.params || '')}
                             onClick={() => setMobileMenuOpen(false)}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-slate-50 dark:hover:bg-muted touch-manipulation"
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm touch-manipulation",
+                              brand && isSubActive
+                                ? "text-emerald-700 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20"
+                                : "text-muted-foreground hover:text-foreground hover:bg-slate-50 dark:hover:bg-muted"
+                            )}
                           >
-                            <SubIcon className="w-4 h-4" />
+                            <SubIcon className={cn("w-4 h-4", brand && isSubActive ? "text-emerald-600 dark:text-emerald-400" : "")} />
                             {subItem.name}
                           </Link>
                         );
