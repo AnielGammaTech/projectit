@@ -60,13 +60,14 @@ const navItems = [
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Stock', icon: Package, page: 'Stock' },
   { name: 'Reports', icon: PieChart, page: 'Reports' },
-  { type: 'separator', label: 'ManageIT' },
-  { name: 'Assets', icon: HardDrive, page: 'AssetDashboard' },
-  { name: 'Inventory', icon: Package, page: 'AssetInventory' },
-  { name: 'Assign / Return', icon: ArrowDownUp, page: 'AssetAssign' },
-  { name: 'Employees', icon: Users, page: 'AssetEmployees' },
-  { name: 'Licenses', icon: Key, page: 'AssetLicenses' },
-  { name: 'Asset Reports', icon: TrendingUp, page: 'AssetReports' },
+  { name: 'ManageIT', icon: HardDrive, page: 'AssetDashboard', submenu: [
+    { name: 'Dashboard', icon: HardDrive, page: 'AssetDashboard' },
+    { name: 'Inventory', icon: Package, page: 'AssetInventory' },
+    { name: 'Assign / Return', icon: ArrowDownUp, page: 'AssetAssign' },
+    { name: 'Employees', icon: Users, page: 'AssetEmployees' },
+    { name: 'Licenses', icon: Key, page: 'AssetLicenses' },
+    { name: 'Reports', icon: TrendingUp, page: 'AssetReports' },
+  ]},
 ];
 
 function LayoutContent({ children, currentPageName }) {
