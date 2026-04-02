@@ -18,6 +18,8 @@ import {
   Trash2,
   Package,
   HardDrive,
+  UserPlus,
+  RotateCcw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +39,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import AssetModal from '@/components/assets/AssetModal';
+import AssignReturnModal from '@/components/assets/AssignReturnModal';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 import { cn } from '@/lib/utils';
 import ManageITShell from '@/components/assets/ManageITShell';
@@ -94,6 +97,7 @@ export default function AssetInventory() {
   const [showModal, setShowModal] = useState(false);
   const [editingAsset, setEditingAsset] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, asset: null });
+  const [assignReturnAsset, setAssignReturnAsset] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -292,6 +296,16 @@ export default function AssetInventory() {
                           <Eye className="w-4 h-4 mr-2" /> View
                         </Link>
                       </DropdownMenuItem>
+                      {asset.status === 'Available' && (
+                        <DropdownMenuItem onClick={() => setAssignReturnAsset(asset)}>
+                          <UserPlus className="w-4 h-4 mr-2" /> Assign
+                        </DropdownMenuItem>
+                      )}
+                      {asset.status === 'Assigned' && (
+                        <DropdownMenuItem onClick={() => setAssignReturnAsset(asset)}>
+                          <RotateCcw className="w-4 h-4 mr-2" /> Return
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => openEdit(asset)}>
                         <Edit2 className="w-4 h-4 mr-2" /> Edit
                       </DropdownMenuItem>
@@ -318,6 +332,16 @@ export default function AssetInventory() {
           setEditingAsset(null);
         }}
         asset={editingAsset}
+        onSave={invalidateAll}
+      />
+
+      {/* Assign / Return modal */}
+      <AssignReturnModal
+        open={!!assignReturnAsset}
+        onClose={() => setAssignReturnAsset(null)}
+        asset={assignReturnAsset}
+        employees={employees}
+        assignments={assignments}
         onSave={invalidateAll}
       />
 
