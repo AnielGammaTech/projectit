@@ -38,6 +38,15 @@ import TimeReport from './pages/TimeReport';
 import UserGroups from './pages/UserGroups';
 import WeeklyMeetingUpdate from './pages/WeeklyMeetingUpdate';
 import Workflows from './pages/Workflows';
+import AssetDashboard from './pages/AssetDashboard';
+import AssetInventory from './pages/AssetInventory';
+import AssetDetail from './pages/AssetDetail';
+import AssetAssign from './pages/AssetAssign';
+import AssetEmployees from './pages/AssetEmployees';
+import AssetEmployeeDetail from './pages/AssetEmployeeDetail';
+import AssetLicenses from './pages/AssetLicenses';
+import AssetReports from './pages/AssetReports';
+import MyAssets from './pages/MyAssets';
 import __Layout from './Layout.jsx';
 
 
@@ -82,6 +91,15 @@ export const PAGES = {
     "UserGroups": UserGroups,
     "WeeklyMeetingUpdate": WeeklyMeetingUpdate,
     "Workflows": Workflows,
+    "AssetDashboard": AssetDashboard,
+    "AssetInventory": AssetInventory,
+    "AssetDetail": AssetDetail,
+    "AssetAssign": AssetAssign,
+    "AssetEmployees": AssetEmployees,
+    "AssetEmployeeDetail": AssetEmployeeDetail,
+    "AssetLicenses": AssetLicenses,
+    "AssetReports": AssetReports,
+    "MyAssets": MyAssets,
 }
 
 export const pagesConfig = {

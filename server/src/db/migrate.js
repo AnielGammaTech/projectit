@@ -21,6 +21,8 @@ const migrations = [
   '005_create_file_comment_table.sql',
   '006_create_stock_tables.sql',
   '007_create_apikey_table.sql',
+  '008_create_device_token_table.sql',
+  '009_create_asset_tables.sql',
 ];
 
 async function migrate() {
