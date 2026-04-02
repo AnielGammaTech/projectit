@@ -54,7 +54,7 @@ export default function NotificationPanel({ currentUser, onClose }) {
       { user_email: currentUser.email }, '-created_date', 50
     ),
     enabled: !!currentUser?.email,
-    refetchInterval: 10000
+    staleTime: 30000
   });
 
   // Filter out notifications from archived projects

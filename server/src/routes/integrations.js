@@ -35,6 +35,25 @@ router.post('/upload-file', uploadLimiter, upload.single('file'), async (req, re
   }
 });
 
+// POST /api/integrations/register-device-token
+router.post('/register-device-token', async (req, res, next) => {
+  try {
+    const { token, platform } = req.body;
+    if (!token) {
+      return res.status(400).json({ error: 'token is required' });
+    }
+    const userEmail = req.user?.email;
+    if (!userEmail) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    const { registerDeviceToken } = await import('../services/pushService.js');
+    const result = await registerDeviceToken(userEmail, token, platform || 'ios');
+    res.json({ success: true, id: result.id });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/integrations/send-email
 router.post('/send-email', costlyApiLimiter, async (req, res, next) => {
   try {

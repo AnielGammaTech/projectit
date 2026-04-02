@@ -1582,20 +1582,19 @@ export default function ProjectDetail() {
 
           {project.description && <p className="text-muted-foreground text-sm mt-2 line-clamp-2">{project.description}</p>}
 
-          {/* Row 2: Timer + Progress + Status — single row on mobile */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mt-3 pt-3 border-t border-border">
-            {/* Mobile: Timer inline */}
-            <div className="sm:hidden w-full">
-              <div className="flex items-center gap-2 mb-2">
-                <TimeTracker
-                  projectId={projectId}
-                  currentUser={currentUser}
-                  timeBudgetHours={project.time_budget_hours || 0}
-                  variant="compact"
-                />
-              </div>
+          {/* Row 2: Timer + Progress — compact on mobile */}
+          <div className="mt-3 pt-3 border-t border-border space-y-3">
+            {/* Timer — mobile only inline */}
+            <div className="sm:hidden">
+              <TimeTracker
+                projectId={projectId}
+                currentUser={currentUser}
+                timeBudgetHours={project.time_budget_hours || 0}
+                variant="compact"
+              />
             </div>
-            <div className="flex-1 min-w-0 w-full">
+            {/* Progress bar */}
+            <div className="w-full">
               <ProgressNeedle
                 projectId={projectId}
                 value={project.progress || 0}
@@ -1607,17 +1606,17 @@ export default function ProjectDetail() {
                 lastUpdateNote={progressUpdates[0]?.note}
               />
             </div>
-
+            {/* Action buttons — full width equal sizing on mobile */}
             {project.status !== 'archived' && project.status !== 'completed' && (
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 {project.status === 'on_hold' ? (
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={handleResumeProject}
-                    className="text-blue-600 border-blue-200 hover:bg-blue-50 h-7 text-xs"
+                    className="flex-1 sm:flex-initial text-blue-600 border-blue-200 hover:bg-blue-50 h-9 text-xs rounded-xl"
                   >
-                    <RotateCcw className="w-3 h-3 mr-1" />
+                    <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
                     Resume
                   </Button>
                 ) : (
@@ -1625,7 +1624,7 @@ export default function ProjectDetail() {
                     size="sm"
                     variant="outline"
                     onClick={() => setShowOnHoldModal(true)}
-                    className="text-amber-600 border-amber-200 hover:bg-amber-50 h-7 text-xs"
+                    className="flex-1 sm:flex-initial text-amber-600 border-amber-200 hover:bg-amber-50 dark:border-amber-700/50 dark:hover:bg-amber-900/20 h-9 text-xs rounded-xl"
                   >
                     On Hold
                   </Button>
@@ -1633,9 +1632,9 @@ export default function ProjectDetail() {
                 <Button
                   size="sm"
                   onClick={() => setShowCompleteModal(true)}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white h-7 text-xs"
+                  className="flex-1 sm:flex-initial bg-emerald-500 hover:bg-emerald-600 text-white h-9 text-xs rounded-xl"
                 >
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
                   Complete
                 </Button>
               </div>

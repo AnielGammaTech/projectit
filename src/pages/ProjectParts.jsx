@@ -28,7 +28,8 @@ import {
   ShoppingCart,
   ImagePlus,
   Eye,
-  ClipboardCheck
+  ClipboardCheck,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -95,6 +96,7 @@ const getInitials = (name) => {
 export default function ProjectParts() {
   const urlParams = new URLSearchParams(window.location.search);
   const projectId = urlParams.get('id');
+  const autoOpenPartId = urlParams.get('part');
   const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -108,6 +110,7 @@ export default function ProjectParts() {
   // Multi-select state
   const [selectedParts, setSelectedParts] = useState(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
+  const [collapsedStatuses, setCollapsedStatuses] = useState(new Set());
   
   // Receive dialog state
   const [receiveDialog, setReceiveDialog] = useState({ open: false, part: null, installer: '', location: '', createTask: false });
@@ -142,6 +145,14 @@ export default function ProjectParts() {
     queryKey: ['teamMembers'],
     queryFn: () => api.entities.TeamMember.list()
   });
+
+  // Auto-open part detail if ?part= param is in URL
+  useEffect(() => {
+    if (autoOpenPartId && parts.length > 0 && !selectedPartDetail) {
+      const part = parts.find(p => p.id === autoOpenPartId);
+      if (part) setSelectedPartDetail(part);
+    }
+  }, [autoOpenPartId, parts, selectedPartDetail]);
 
   // Filter to only project members for assignment dropdowns
   const projectMembers = useMemo(() => {
@@ -457,7 +468,7 @@ export default function ProjectParts() {
         )}
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className="flex items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30">
               <Package className="w-5 h-5 text-white" />
@@ -472,13 +483,15 @@ export default function ProjectParts() {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <PartsUploader
-              projectId={projectId}
-              onPartsExtracted={refetchParts}
-              compact={true}
-            />
-            <Button onClick={() => { setEditingPart(null); setShowPartModal(true); }} className="bg-amber-500 hover:bg-amber-600" size="sm">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="hidden sm:block">
+              <PartsUploader
+                projectId={projectId}
+                onPartsExtracted={refetchParts}
+                compact={true}
+              />
+            </div>
+            <Button onClick={() => { setEditingPart(null); setShowPartModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e]" size="sm">
               <Plus className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Add Part</span>
             </Button>
@@ -579,15 +592,17 @@ export default function ProjectParts() {
                 );
               })}
             </div>
-            <Button
-              variant={selectionMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
-              className={cn("h-9 shrink-0", selectionMode && "bg-amber-600")}
-            >
-              <CheckSquare className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">{selectionMode ? 'Done' : 'Select'}</span>
-            </Button>
+            <div className="hidden sm:block">
+              <Button
+                variant={selectionMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => { setSelectionMode(!selectionMode); if (selectionMode) clearSelection(); }}
+                className={cn("h-9", selectionMode && "bg-amber-600")}
+              >
+                <CheckSquare className="w-4 h-4 mr-2" />
+                {selectionMode ? 'Done' : 'Select'}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -637,8 +652,80 @@ export default function ProjectParts() {
           </div>
         )}
 
-        {/* Parts List */}
-        <div className="bg-card rounded-2xl border border-slate-100 dark:border-border overflow-hidden">
+        {/* Mobile: Grouped parts by status */}
+        <div className="sm:hidden space-y-3">
+          {(() => {
+            const statusOrder = ['needed', 'ordered', 'received', 'ready_to_install', 'installed'];
+            const grouped = {};
+            filteredParts.forEach(p => {
+              const s = p.status || 'needed';
+              if (!grouped[s]) grouped[s] = [];
+              grouped[s].push(p);
+            });
+            return statusOrder.filter(s => grouped[s]?.length > 0).map(status => {
+              const config = statusConfig[status];
+              const groupParts = grouped[status];
+              const isCollapsed = collapsedStatuses.has(status);
+              return (
+                <div key={status} className="bg-card rounded-2xl border border-border overflow-hidden">
+                  <button
+                    onClick={() => setCollapsedStatuses(prev => {
+                      const next = new Set(prev);
+                      next.has(status) ? next.delete(status) : next.add(status);
+                      return next;
+                    })}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={cn("text-xs font-semibold px-2 py-0.5 rounded", config?.color)}>{config?.label || status}</span>
+                      <span className="text-xs text-muted-foreground">{groupParts.length}</span>
+                    </div>
+                    <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", isCollapsed && "-rotate-90")} />
+                  </button>
+                  {!isCollapsed && (
+                    <div>
+                      {groupParts.map(part => {
+                        const estDeliveryDate = parseLocalDate(part.est_delivery_date);
+                        const estDeliveryDateValid = !!estDeliveryDate;
+                        const isDeliveryDue = estDeliveryDateValid && (isToday(estDeliveryDate) || isPast(estDeliveryDate));
+                        const dueDateParsed = parseLocalDate(part.due_date);
+                        const hasDueDate = !!dueDateParsed;
+                        return (
+                          <div
+                            key={part.id}
+                            onClick={() => setSelectedPartDetail(part)}
+                            className="px-4 py-3 border-t border-border cursor-pointer active:bg-muted/50"
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-sm font-medium text-foreground truncate">{part.name}</p>
+                              {part.part_number && <span className="text-[10px] text-muted-foreground font-mono shrink-0 ml-2">#{part.part_number}</span>}
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
+                              {part.assigned_name && <span className="flex items-center gap-1"><User className="w-3 h-3" />{part.assigned_name.split(' ')[0]}</span>}
+                              {hasDueDate && <span>Due {format(dueDateParsed, 'MMM d')}</span>}
+                              {estDeliveryDateValid && <span className={isDeliveryDue ? "text-orange-500 font-semibold" : ""}>ETA {format(estDeliveryDate, 'MMM d')}</span>}
+                              <span>Qty {part.quantity || 1}</span>
+                              {part.unit_cost > 0 && <span>${(part.unit_cost * (part.quantity || 1)).toFixed(0)}</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            });
+          })()}
+          {filteredParts.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <Package className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              <p className="text-sm">No parts found</p>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop: Parts List Table */}
+        <div className="hidden sm:block bg-card rounded-2xl border border-slate-100 dark:border-border overflow-hidden">
           <AnimatePresence>
             {otherParts.length > 0 ? (
               filteredParts.map((part, idx) => {
@@ -659,31 +746,8 @@ export default function ProjectParts() {
                   onClick={() => selectionMode ? togglePartSelection(part.id) : setSelectedPartDetail(part)}
                   className="cursor-pointer"
                 >
-                  {/* Mobile part row */}
-                  <div className={cn(
-                    "sm:hidden p-3 border-b border-border border-l-4",
-                    statusConfig[part.status]?.borderColor || "border-l-transparent",
-                    isSelected && "bg-amber-50/60 dark:bg-amber-900/10"
-                  )}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className={cn("text-xs font-semibold px-2 py-0.5 rounded capitalize", statusConfig[part.status]?.color)}>
-                        {statusConfig[part.status]?.label || part.status}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{part.part_number ? `#${part.part_number}` : ''}</span>
-                    </div>
-                    <p className="text-sm font-medium text-foreground mb-1">{part.name}</p>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      {part.assigned_name && <span>{part.assigned_name}</span>}
-                      {hasDueDate && <span>Due: {format(dueDateParsed, 'MMM d')}</span>}
-                      {estDeliveryDateValid && <span className={isDeliveryDue ? "text-orange-600 font-semibold" : ""}>ETA: {format(estDeliveryDate, 'MMM d')}</span>}
-                      <span>Qty: {part.quantity || 1}</span>
-                    </div>
-                    {part.tracking_number && (
-                      <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">
-                        <span className="font-mono">{part.tracking_number}</span>
-                      </div>
-                    )}
-                  </div>
+                  {/* Mobile part row — hidden, rendered in grouped sections below */}
+                  <div className="sm:hidden hidden" />
 
                   {/* Desktop part row */}
                   <div className={cn(

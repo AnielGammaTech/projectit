@@ -26,6 +26,9 @@ import {
   Globe,
   Inbox,
   Calendar,
+  HardDrive,
+  ArrowDownUp,
+  Key,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
@@ -33,6 +36,7 @@ import GlobalSearch from '@/components/GlobalSearch';
 import NotificationToast from '@/components/NotificationToast';
 import NotificationPanel from '@/components/NotificationPanel';
 import FeedbackButton from '@/components/FeedbackButton';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { api } from '@/api/apiClient';
@@ -56,6 +60,13 @@ const navItems = [
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Stock', icon: Package, page: 'Stock' },
   { name: 'Reports', icon: PieChart, page: 'Reports' },
+  { type: 'separator', label: 'ManageIT' },
+  { name: 'Assets', icon: HardDrive, page: 'AssetDashboard' },
+  { name: 'Inventory', icon: Package, page: 'AssetInventory' },
+  { name: 'Assign / Return', icon: ArrowDownUp, page: 'AssetAssign' },
+  { name: 'Employees', icon: Users, page: 'AssetEmployees' },
+  { name: 'Licenses', icon: Key, page: 'AssetLicenses' },
+  { name: 'Asset Reports', icon: TrendingUp, page: 'AssetReports' },
 ];
 
 function LayoutContent({ children, currentPageName }) {
@@ -89,13 +100,17 @@ function LayoutContent({ children, currentPageName }) {
     allProjects.filter(p => p.status === 'archived').map(p => p.id)
   );
 
-  // Fetch user notifications
+  // Fetch user notifications (polling as fallback + realtime for instant)
   const { data: rawUserNotifications = [] } = useQuery({
     queryKey: ['layoutNotifications', currentUser?.email],
     queryFn: () => api.entities.UserNotification.filter({ user_email: currentUser.email }, '-created_date', 50),
     enabled: !!currentUser?.email,
-    refetchInterval: 10000 // Check every 10 seconds for new notifications
+    staleTime: 5000,
+    refetchInterval: 5000
   });
+
+  // Subscribe to realtime notifications via Supabase
+  useRealtimeNotifications(currentUser?.email);
 
   // Filter out notifications from archived projects
   const userNotifications = rawUserNotifications.filter(n =>
@@ -159,8 +174,8 @@ function LayoutContent({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-background">
       {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 h-14 bg-gradient-to-r from-[#0F2F44] to-[#133F5C] dark:from-[#0a1e2e] dark:to-[#0e2d40] z-40 px-4 shadow-lg shadow-[#0F2F44]/10">
-        <div className="max-w-[1800px] mx-auto h-full flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 bg-gradient-to-r from-[#0F2F44] to-[#133F5C] dark:from-[#0a1e2e] dark:to-[#0e2d40] z-40 px-4 shadow-lg shadow-[#0F2F44]/10">
+        <div className="max-w-[1800px] mx-auto h-14 flex items-center justify-between">
           {/* Left: Logo */}
           <div className="flex items-center gap-4 flex-shrink-0">
             {/* Mobile Menu Button — hidden on mobile (bottom nav used instead) */}
@@ -186,7 +201,13 @@ function LayoutContent({ children, currentPageName }) {
 
           {/* Center: Desktop Nav Items */}
           <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
-              {navItems.map((item) => {
+              {navItems.map((item, index) => {
+                if (item.type === 'separator') {
+                  return (
+                    <div key={index} className="mx-1.5 h-5 w-px bg-white/20" />
+                  );
+                }
+
                 const Icon = item.icon;
 
                 if (item.submenu) {
@@ -268,8 +289,14 @@ function LayoutContent({ children, currentPageName }) {
               })}
             </nav>
 
+            {/* Center: My Schedule link (mobile only) */}
+            <Link to={createPageUrl('MySchedule')} className="sm:hidden flex items-center gap-1.5 text-xs font-semibold text-white/80 absolute left-1/2 -translate-x-1/2">
+              <Calendar className="w-3.5 h-3.5" />
+              Schedule
+            </Link>
+
             {/* Right: Search, Notifications & User */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <button
               onClick={() => setShowSearch(true)}
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white/70 text-sm"
@@ -307,27 +334,45 @@ function LayoutContent({ children, currentPageName }) {
               <Calendar className="w-5 h-5 text-white/70" />
             </Link>
 
-            {/* Notifications Bell */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  className={cn(
-                    "relative p-2 rounded-lg transition-colors",
-                    unreadCount > 0 ? "bg-white/15 hover:bg-white/25" : "hover:bg-white/10"
-                  )}
-                >
-                  <Bell className={cn("w-5 h-5", unreadCount > 0 ? "text-white" : "text-white/70")} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[20px] text-center ring-2 ring-[#133F5C] animate-pulse">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="end" sideOffset={8} className="w-auto p-0 border-slate-200 dark:border-border shadow-xl">
-                <NotificationPanel currentUser={currentUser} onClose={() => {}} />
-              </PopoverContent>
-            </Popover>
+            {/* Notifications Bell — mobile: navigate to page, desktop: popover */}
+            <div className="sm:hidden">
+              <Link
+                to={createPageUrl('MyNotifications')}
+                className={cn(
+                  "relative p-2 rounded-lg transition-colors block",
+                  unreadCount > 0 ? "bg-white/15" : "hover:bg-white/10"
+                )}
+              >
+                <Bell className={cn("w-5 h-5", unreadCount > 0 ? "text-white" : "text-white/70")} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[20px] text-center ring-2 ring-[#133F5C] animate-pulse">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            </div>
+            <div className="hidden sm:block">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className={cn(
+                      "relative p-2 rounded-lg transition-colors",
+                      unreadCount > 0 ? "bg-white/15 hover:bg-white/25" : "hover:bg-white/10"
+                    )}
+                  >
+                    <Bell className={cn("w-5 h-5", unreadCount > 0 ? "text-white" : "text-white/70")} />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[20px] text-center ring-2 ring-[#133F5C] animate-pulse">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" sideOffset={8} className="w-auto p-0 border-slate-200 dark:border-border shadow-xl">
+                  <NotificationPanel currentUser={currentUser} onClose={() => {}} />
+                </PopoverContent>
+              </Popover>
+            </div>
 
             {/* User Menu */}
             <DropdownMenu>
@@ -359,46 +404,55 @@ function LayoutContent({ children, currentPageName }) {
                       Notifications
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl('MyAssets')} className="cursor-pointer">
+                      <Package className="w-4 h-4 mr-2 text-slate-500" />
+                      My Assets
+                    </Link>
+                  </DropdownMenuItem>
                 </div>
                 {isAdmin && (
                   <>
                     <DropdownMenuSeparator />
                     <div className="py-1">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <div className="flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm">
-                            <div className="flex items-center">
-                              <TrendingUp className="w-4 h-4 mr-2 text-indigo-500" />
-                              TV Dashboards
+                      {/* TV Dashboards & Workflows — desktop only */}
+                      <div className="hidden sm:block">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <div className="flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm">
+                              <div className="flex items-center">
+                                <TrendingUp className="w-4 h-4 mr-2 text-indigo-500" />
+                                TV Dashboards
+                              </div>
+                              <ChevronDown className="w-3 h-3 ml-2" />
                             </div>
-                            <ChevronDown className="w-3 h-3 ml-2" />
-                          </div>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent side="left" align="start" className="rounded-xl">
-                          <DropdownMenuItem asChild>
-                            <Link to={createPageUrl('ManagerDashboard')} className="cursor-pointer">
-                              <Activity className="w-4 h-4 mr-2 text-indigo-500" />
-                              Manager Dashboard
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to={createPageUrl('TechDashboard')} className="cursor-pointer">
-                              <Clock className="w-4 h-4 mr-2 text-emerald-500" />
-                              Tech Dashboard
-                            </Link>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent side="left" align="start" className="rounded-xl">
+                            <DropdownMenuItem asChild>
+                              <Link to={createPageUrl('ManagerDashboard')} className="cursor-pointer">
+                                <Activity className="w-4 h-4 mr-2 text-indigo-500" />
+                                Manager Dashboard
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link to={createPageUrl('TechDashboard')} className="cursor-pointer">
+                                <Clock className="w-4 h-4 mr-2 text-emerald-500" />
+                                Tech Dashboard
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <DropdownMenuItem asChild>
+                          <Link to={createPageUrl('Workflows')} className="cursor-pointer">
+                            <Zap className="w-4 h-4 mr-2 text-amber-500" />
+                            Workflows
+                          </Link>
+                        </DropdownMenuItem>
+                      </div>
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl('Adminland')} className="cursor-pointer">
                           <Shield className="w-4 h-4 mr-2 text-[#0069AF]" />
                           Adminland
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to={createPageUrl('Workflows')} className="cursor-pointer">
-                          <Zap className="w-4 h-4 mr-2 text-amber-500" />
-                          Workflows
                         </Link>
                       </DropdownMenuItem>
                     </div>
@@ -446,7 +500,15 @@ function LayoutContent({ children, currentPageName }) {
           </Button>
         </div>
         <nav className="flex-1 overflow-y-auto p-3">
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
+            if (item.type === 'separator') {
+              return (
+                <div key={index} className="pt-4 pb-1 px-3">
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">{item.label}</p>
+                </div>
+              );
+            }
+
             const Icon = item.icon;
 
             if (item.submenu) {
@@ -501,7 +563,7 @@ function LayoutContent({ children, currentPageName }) {
       </div>
 
       {/* Main Content */}
-      <main className="pt-14 pb-20 lg:pb-0">
+      <main className="pt-safe-header pb-20 lg:pb-0">
         {children}
       </main>
 
@@ -518,8 +580,10 @@ function LayoutContent({ children, currentPageName }) {
                 )}
               </AnimatePresence>
 
-      {/* Floating Feedback Button */}
-      <FeedbackButton />
+      {/* Floating Feedback Button — desktop only */}
+      <div className="hidden lg:block">
+        <FeedbackButton />
+      </div>
 
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-card/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-border z-40 pb-safe rounded-t-2xl">
@@ -547,11 +611,11 @@ function LayoutContent({ children, currentPageName }) {
         </div>
       </nav>
 
-      {/* Floating Adminland Button - visible only to admins, hidden on Adminland page, adjusted for mobile */}
+      {/* Floating Adminland Button - desktop only, admins only */}
       {isAdmin && currentPageName !== 'Adminland' && (
         <Link
           to={createPageUrl('Adminland')}
-          className="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 z-50 w-11 h-11 lg:w-12 lg:h-12 bg-[#0069AF] hover:bg-[#0F2F44] text-white rounded-full shadow-lg shadow-[#0069AF]/30 flex items-center justify-center transition-all hover:scale-110 hover:shadow-xl"
+          className="hidden lg:flex fixed bottom-6 right-6 z-50 w-12 h-12 bg-[#0069AF] hover:bg-[#0F2F44] text-white rounded-full shadow-lg shadow-[#0069AF]/30 items-center justify-center transition-all hover:scale-110 hover:shadow-xl"
           title="Adminland"
         >
           <Shield className="w-5 h-5" />

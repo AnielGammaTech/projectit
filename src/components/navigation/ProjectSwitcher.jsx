@@ -91,7 +91,8 @@ function ProjectList({ projects, pinnedProjects, unpinnedProjects, currentProjec
 
 export default function ProjectSwitcher({ currentProject, currentPage = 'ProjectDetail' }) {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
 
   const { data: projects = [] } = useQuery({
@@ -114,7 +115,8 @@ export default function ProjectSwitcher({ currentProject, currentPage = 'Project
       ? createPageUrl('ProjectDetail') + `?id=${project.id}`
       : createPageUrl(currentPage) + `?id=${project.id}`;
     navigate(pageUrl);
-    setOpen(false);
+    setDesktopOpen(false);
+    setMobileOpen(false);
     setSearch('');
   };
 
@@ -132,7 +134,7 @@ export default function ProjectSwitcher({ currentProject, currentPage = 'Project
     <>
       {/* ── Desktop: Popover ── */}
       <div className="hidden sm:block">
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={desktopOpen} onOpenChange={setDesktopOpen}>
           <PopoverTrigger asChild>
             {triggerButton}
           </PopoverTrigger>
@@ -169,7 +171,7 @@ export default function ProjectSwitcher({ currentProject, currentPage = 'Project
         <Button
           variant="outline"
           className="gap-2 h-9 px-3 bg-white dark:bg-[#1e2a3a] dark:border-slate-600"
-          onClick={() => setOpen(true)}
+          onClick={() => setMobileOpen(true)}
         >
           <FolderKanban className="w-4 h-4 text-slate-500" />
           <span className="max-w-[120px] truncate font-medium text-xs">
@@ -179,7 +181,7 @@ export default function ProjectSwitcher({ currentProject, currentPage = 'Project
         </Button>
 
         <AnimatePresence>
-          {open && (
+          {mobileOpen && (
             <>
               {/* Backdrop */}
               <motion.div
@@ -187,7 +189,7 @@ export default function ProjectSwitcher({ currentProject, currentPage = 'Project
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 bg-black/40 z-50"
-                onClick={() => { setOpen(false); setSearch(''); }}
+                onClick={() => { setMobileOpen(false); setSearch(''); }}
               />
               {/* Sheet */}
               <motion.div
@@ -206,7 +208,7 @@ export default function ProjectSwitcher({ currentProject, currentPage = 'Project
                 <div className="flex items-center justify-between px-4 pb-3">
                   <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Switch Project</h2>
                   <button
-                    onClick={() => { setOpen(false); setSearch(''); }}
+                    onClick={() => { setMobileOpen(false); setSearch(''); }}
                     className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                   >
                     <X className="w-5 h-5 text-slate-500" />

@@ -123,7 +123,7 @@ export default function ServiceModal({ open, onClose, service, onSave }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" onPaste={handlePaste}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto no-scrollbar" onPaste={handlePaste}>
         <DialogHeader>
           <DialogTitle>{service ? 'Edit Service' : 'Add Service'}</DialogTitle>
         </DialogHeader>

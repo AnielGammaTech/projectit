@@ -300,13 +300,13 @@ export default function ProductsTab() {
             </Button>
           )}
 
-          <div className="flex-1" />
+          <div className="flex-1 hidden sm:block" />
 
-          <div className="flex-shrink-0 flex items-center gap-3">
+          <div className="flex-shrink-0 flex items-center gap-3 ml-auto">
             <span className="text-xs text-muted-foreground hidden sm:inline">{filteredProducts.length} products</span>
-            <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-primary hover:bg-primary/80 text-white" size="sm">
-              <PackagePlus className="w-4 h-4 mr-1.5" />
-              Add Product
+            <Button onClick={() => { setEditingProduct(null); setShowModal(true); }} className="bg-[#0F2F44] hover:bg-[#1a4a6e] text-white" size="sm">
+              <PackagePlus className="w-4 h-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Add Product</span>
             </Button>
           </div>
         </div>
@@ -557,7 +557,7 @@ function ProductViewModal({ open, onClose, product, projects, currentUser, query
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-card border-border p-0">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto no-scrollbar !bg-white dark:!bg-[#0a1e2e] border-border p-0">
         {/* Header Section */}
         <div className="flex items-start gap-4 p-6 pb-0">
           {product.image_url ? (

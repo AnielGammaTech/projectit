@@ -237,7 +237,7 @@ export default function TasksViewModal({
           </div>
         </form>
 
-        <div className="flex-1 overflow-y-auto pr-2 -mr-2 pt-3">
+        <div className="flex-1 overflow-y-auto no-scrollbar pr-2 -mr-2 pt-3">
           <GroupedTaskList
             tasks={tasks}
             groups={groups}

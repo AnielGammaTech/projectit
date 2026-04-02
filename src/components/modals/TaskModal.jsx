@@ -133,11 +133,14 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
-        <DialogHeader>
-          <DialogTitle>{task ? 'Edit Task' : 'New Task'}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden flex flex-col">
+        <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b border-border flex-shrink-0">
+          <DialogHeader>
+            <DialogTitle>{task ? 'Edit Task' : 'New Task'}</DialogTitle>
+          </DialogHeader>
+        </div>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="space-y-4 px-4 sm:px-6 py-4 overflow-y-auto no-scrollbar flex-1">
           {/* Template Picker - only when creating new task */}
           {!task && (
             <div className="flex items-center gap-2">
@@ -371,12 +374,13 @@ export default function TaskModal({ open, onClose, task, projectId, teamMembers 
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4">
+          </div>
+          <div className="flex justify-end gap-3 px-4 sm:px-6 py-4 border-t border-border flex-shrink-0 bg-card">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={saving || (!selectedTemplate && !formData.title)}>
+            <Button type="submit" className="bg-[#0F2F44] hover:bg-[#1a4a6e]" disabled={saving || (!selectedTemplate && !formData.title)}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {selectedTemplate 
-                ? `Add ${selectedTemplate.default_tasks?.length || 0} Tasks` 
+              {selectedTemplate
+                ? `Add ${selectedTemplate.default_tasks?.length || 0} Tasks`
                 : (task ? 'Update Task' : 'Create Task')}
             </Button>
           </div>

@@ -1,5 +1,15 @@
 import rateLimit from 'express-rate-limit';
 
+// Global rate limiter — 300 requests per IP per minute
+export const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  keyGenerator: (req) => req.user?.email || req.ip,
+  message: { error: 'Too many requests. Please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Strict limiter for costly external API calls (LLM, email, SMS)
 // 20 requests per user per 15-minute window
 export const costlyApiLimiter = rateLimit({

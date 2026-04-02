@@ -125,7 +125,7 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden h-[100dvh] sm:h-auto rounded-none sm:rounded-2xl">
+      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-4 sm:px-6 pt-5 pb-4 border-b border-slate-200 dark:border-slate-700/50">
           <DialogHeader>
@@ -138,8 +138,8 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
           </DialogHeader>
         </div>
 
-        <form onSubmit={handleSubmit} className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 140px)' }}>
-          <div className="p-4 sm:p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-4 sm:p-6 space-y-5 overflow-y-auto no-scrollbar flex-1">
             {/* Link to Product */}
             <div className="relative">
               <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mb-2">

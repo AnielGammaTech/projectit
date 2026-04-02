@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import { format, isPast, isToday, isTomorrow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
@@ -60,7 +61,7 @@ function TaskTableRow({ task, teamMembers, currentUser, statusConfig, priorityCo
         {task.status === 'completed' ? (
           <CheckCircle2 className="w-3 h-3" />
         ) : (
-          <CheckCircle2 className="w-3 h-3 opacity-0 group-hover:opacity-40" />
+          <CheckCircle2 className="w-3 h-3 opacity-30 sm:opacity-0 sm:group-hover:opacity-40" />
         )}
       </button>
 
@@ -115,7 +116,7 @@ function TaskTableRow({ task, teamMembers, currentUser, statusConfig, priorityCo
             ) : (
               <button
                 onClick={(e) => e.stopPropagation()}
-                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-blue-400"
+                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-blue-400"
                 title="Assign"
               >
                 <UserPlus className="w-3 h-3 text-slate-400" />
@@ -154,7 +155,7 @@ function TaskTableRow({ task, teamMembers, currentUser, statusConfig, priorityCo
             ) : (
               <button
                 onClick={(e) => { e.stopPropagation(); setDateOpen(true); }}
-                className="p-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                className="p-1 rounded hover:bg-muted sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                 title="Set due date"
               >
                 <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
@@ -267,7 +268,7 @@ function PartTableRow({ part, teamMembers, projectName, projectNumber, getDueDat
             ) : (
               <button
                 onClick={(e) => e.stopPropagation()}
-                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:border-blue-400"
+                className="w-7 h-7 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:border-blue-400"
                 title="Assign"
               >
                 <UserPlus className="w-3 h-3 text-slate-400" />
@@ -306,7 +307,7 @@ function PartTableRow({ part, teamMembers, projectName, projectNumber, getDueDat
             ) : (
               <button
                 onClick={(e) => { e.stopPropagation(); setEtaOpen(true); }}
-                className="p-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                className="p-1 rounded hover:bg-muted opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                 title="Set ETA"
               >
                 <Truck className="w-3.5 h-3.5 text-slate-400" />
@@ -353,6 +354,7 @@ export default function AllTasks() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({});
+  const [selectedTask, setSelectedTask] = useState(null);
   const TASKS_PER_GROUP = 5;
   const queryClient = useQueryClient();
 
@@ -439,7 +441,6 @@ export default function AllTasks() {
         matchesViewMode = dueDate <= today;
       }
     } else if (viewMode === 'mine_due') {
-      // Show only overdue tasks and tasks due today
       if (!task.due_date) {
         matchesViewMode = false;
       } else {
@@ -447,6 +448,18 @@ export default function AllTasks() {
         const today = new Date();
         today.setHours(23, 59, 59, 999);
         matchesViewMode = dueDate <= today;
+      }
+    } else if (viewMode === 'soon') {
+      // Tasks assigned to current user due within next 3 days
+      if (!task.due_date || task.assigned_to !== currentUser?.email) {
+        matchesViewMode = false;
+      } else {
+        const dueDate = parseLocalDate(task.due_date);
+        const now = new Date();
+        const threeDaysOut = new Date();
+        threeDaysOut.setDate(threeDaysOut.getDate() + 3);
+        threeDaysOut.setHours(23, 59, 59, 999);
+        matchesViewMode = dueDate >= now && dueDate <= threeDaysOut;
       }
     }
 
@@ -501,6 +514,15 @@ export default function AllTasks() {
     const today = new Date();
     today.setHours(23, 59, 59, 999);
     return dueDate <= today;
+  }).length;
+  const mySoonCount = activeTasks.filter(t => {
+    if (!t.due_date || t.status === 'completed' || t.assigned_to !== currentUser?.email) return false;
+    const dueDate = parseLocalDate(t.due_date);
+    const now = new Date();
+    const threeDays = new Date();
+    threeDays.setDate(threeDays.getDate() + 3);
+    threeDays.setHours(23, 59, 59, 999);
+    return dueDate >= now && dueDate <= threeDays;
   }).length;
 
   const handleQuickComplete = async (e, taskId) => {
@@ -606,27 +628,27 @@ export default function AllTasks() {
       title="Tasks & Parts"
       subtitle="View and filter all tasks and parts across projects"
       actions={
-          <div className="flex gap-1.5 sm:gap-2">
+          <div className="flex gap-1 p-1 bg-muted rounded-xl mx-auto sm:mx-0">
             <button
               onClick={() => setActiveTab('tasks')}
               className={cn(
-                "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2",
-                activeTab === 'tasks' ? "bg-primary text-white" : "bg-card text-muted-foreground border border-border"
+                "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5",
+                activeTab === 'tasks' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <ListTodo className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <ListTodo className="w-3.5 h-3.5" />
               Tasks
             </button>
             <button
               onClick={() => setActiveTab('parts')}
               className={cn(
-                "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2",
-                activeTab === 'parts' ? "bg-primary text-white" : "bg-card text-muted-foreground border border-border"
+                "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5",
+                activeTab === 'parts' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Package className="w-3.5 h-3.5" />
               Parts
-              <span className={cn("text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full", activeTab === 'parts' ? "bg-primary/80" : "bg-primary/10 text-primary")}>{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted-foreground/10">{parts.filter(p => activeProjectIds.includes(p.project_id)).length}</span>
             </button>
           </div>
       }
@@ -675,6 +697,17 @@ export default function AllTasks() {
                 Overdue ({myOverdueCount})
               </button>
               <button
+                onClick={() => setViewMode('soon')}
+                className={cn(
+                  "px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-1 sm:flex-initial",
+                  viewMode === 'soon'
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Soon ({mySoonCount})
+              </button>
+              <button
                 onClick={() => setViewMode('mine_due')}
                 className={cn(
                   "hidden sm:block px-3 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
@@ -700,7 +733,7 @@ export default function AllTasks() {
               </div>
 
               {/* Status Pills — horizontal scroll on mobile */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+              <div className="flex items-center justify-center sm:justify-start gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
                 {Object.entries(statusConfig).filter(([key]) => key !== 'completed').map(([key, config]) => {
                   const Icon = config.icon;
                   const count = tasksByStatus[key]?.length || 0;
@@ -709,17 +742,17 @@ export default function AllTasks() {
                       key={key}
                       onClick={() => setStatusFilter(statusFilter === key ? 'all' : key)}
                       className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
+                        "flex items-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
                         statusFilter === key
-                          ? "bg-primary text-white"
+                          ? "bg-[#0F2F44] text-white dark:bg-blue-600"
                           : "bg-muted text-muted-foreground hover:bg-muted/80"
                       )}
                     >
-                      <Icon className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">{config.label}</span>
+                      <Icon className="w-3 h-3" />
+                      {config.label}
                       <span className={cn(
                         "px-1.5 py-0.5 rounded-full text-[10px]",
-                        statusFilter === key ? "bg-white/20" : "bg-white"
+                        statusFilter === key ? "bg-white/20" : "bg-muted-foreground/10"
                       )}>
                         {count}
                       </span>
@@ -787,8 +820,9 @@ export default function AllTasks() {
                   });
 
                   return Object.entries(grouped).map(([projectId, projectTasks]) => {
-                    // Default collapsed on mobile — only expand when explicitly toggled
-                    const isCollapsed = expandedGroups[projectId] !== true;
+                    // Default expanded for filtered views (mine, soon, overdue), collapsed for all
+                    const defaultExpanded = viewMode !== 'all';
+                    const isCollapsed = defaultExpanded ? expandedGroups[projectId] === false : expandedGroups[projectId] !== true;
 
                     const project = projects.find(p => p.id === projectId);
                     const dueSoonTasks = projectTasks.filter(t => {
@@ -871,7 +905,7 @@ export default function AllTasks() {
                             onAssign={handleTaskAssign}
                             onUnassign={handleTaskUnassign}
                             onDueDateChange={handleTaskDueDateChange}
-                            onNavigate={(t) => navigate(createPageUrl('ProjectTasks') + `?id=${t.project_id}`)}
+                            onNavigate={(t) => setSelectedTask(t)}
                           />
                         ))}
                       </div>
@@ -968,12 +1002,12 @@ export default function AllTasks() {
               </div>
 
               {/* Status pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+              <div className="flex items-center justify-center sm:justify-start gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
                 {[
-                  { key: 'needed', label: 'Needed', bg: 'bg-red-100', color: 'text-red-700' },
-                  { key: 'ordered', label: 'Ordered', bg: 'bg-blue-100', color: 'text-blue-700' },
-                  { key: 'received', label: 'Received', bg: 'bg-amber-100', color: 'text-amber-700' },
-                  { key: 'installed', label: 'Installed', bg: 'bg-emerald-100', color: 'text-emerald-700' },
+                  { key: 'needed', label: 'Needed' },
+                  { key: 'ordered', label: 'Ordered' },
+                  { key: 'received', label: 'Received' },
+                  { key: 'installed', label: 'Installed' },
                 ].map((s) => {
                   const count = activeProjectParts.filter(p => p.status === s.key).length;
                   return (
@@ -981,17 +1015,16 @@ export default function AllTasks() {
                       key={s.key}
                       onClick={() => setStatusFilter(statusFilter === s.key ? 'all' : s.key)}
                       className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
+                        "flex items-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
                         statusFilter === s.key
-                          ? "bg-primary text-white"
+                          ? "bg-[#0F2F44] text-white dark:bg-blue-600"
                           : "bg-muted text-muted-foreground hover:bg-muted/80"
                       )}
                     >
-                      <Package className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">{s.label}</span>
+                      {s.label}
                       <span className={cn(
                         "px-1.5 py-0.5 rounded-full text-[10px]",
-                        statusFilter === s.key ? "bg-white/20" : "bg-white"
+                        statusFilter === s.key ? "bg-white/20" : "bg-muted-foreground/10"
                       )}>
                         {count}
                       </span>
@@ -1026,11 +1059,11 @@ export default function AllTasks() {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-card rounded-2xl border border-border overflow-hidden"
               >
-                {/* Table header */}
-                <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 dark:bg-background border-b border-border text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {/* Table header — desktop only */}
+                <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-muted/50 dark:bg-background border-b border-border text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                   <div className="w-4 shrink-0" />
                   <div className="flex-1">Part</div>
-                  <div className="hidden sm:block w-[180px] shrink-0">Project</div>
+                  <div className="w-[180px] shrink-0">Project</div>
                   <div className="w-20 shrink-0">Status</div>
                   <div className="w-8 shrink-0">Owner</div>
                   <div className="w-24 shrink-0 text-right">ETA</div>
@@ -1107,6 +1140,16 @@ export default function AllTasks() {
             )}
           </div>
         )}
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        open={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        task={selectedTask}
+        teamMembers={teamMembers}
+        onEdit={() => {}}
+        currentUser={currentUser}
+        project={projects.find(p => p.id === selectedTask?.project_id)}
+      />
     </PageShell>
   );
 }

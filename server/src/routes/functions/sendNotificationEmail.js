@@ -73,18 +73,35 @@ export default async function handler(req, res) {
       link,
     });
 
-    // Send email via resendService (reads API key from database IntegrationSettings)
-    await sendEmail({
-      to,
-      subject: `${appName}: ${title}`,
-      html: emailBody,
-    });
+    // Send push notification FIRST (don't let email failure block push)
+    try {
+      const { sendPushNotification } = await import('../../services/pushService.js');
+      const pushResult = await sendPushNotification(to, {
+        title: title,
+        body: message,
+        data: { link, type, projectId, projectName },
+      });
+      if (pushResult.sent > 0) console.log(`Push sent to ${to}: ${pushResult.sent} device(s)`);
+    } catch (pushErr) {
+      console.warn('Push notification failed (non-blocking):', pushErr.message);
+    }
 
-    console.log(`Notification email sent to ${to}: ${title}`);
+    // Send email (non-blocking — don't fail the whole request if email fails)
+    try {
+      await sendEmail({
+        to,
+        subject: `${appName}: ${title}`,
+        html: emailBody,
+      });
+      console.log(`Notification email sent to ${to}: ${title}`);
+    } catch (emailErr) {
+      console.warn('Email notification failed (non-blocking):', emailErr.message);
+    }
+
     return res.json({ success: true });
   } catch (error) {
-    console.error('Notification email error:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    console.error('Notification handler error:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }
 

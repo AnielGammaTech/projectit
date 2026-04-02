@@ -119,7 +119,7 @@ export default function TemplateModal({ open, onClose, template, onSave }) {
         </div>
 
         {/* Project-style cards grid */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto no-scrollbar px-6 py-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             {/* ─── Tasks Card ─── */}

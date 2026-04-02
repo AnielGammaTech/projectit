@@ -104,11 +104,13 @@ const getDueDateInfo = (dueDate, status) => {
 export default function ProjectTasks() {
   const urlParams = new URLSearchParams(window.location.search);
   const projectId = urlParams.get('id');
+  const autoOpenTaskId = urlParams.get('task');
   const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewFilter, setViewFilter] = useState('all');
-  const [collapsedGroups, setCollapsedGroups] = useState(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState(new Set(['ungrouped']));
+  const [initialCollapseApplied, setInitialCollapseApplied] = useState(false);
 
   // Inline task creation state
   const [inlineTaskGroupId, setInlineTaskGroupId] = useState(null);
@@ -160,6 +162,22 @@ export default function ProjectTasks() {
     queryKey: ['teamMembers'],
     queryFn: () => api.entities.TeamMember.list()
   });
+
+  // Collapse all groups by default on first load
+  useEffect(() => {
+    if (taskGroups.length > 0 && !initialCollapseApplied) {
+      setCollapsedGroups(new Set(['ungrouped', ...taskGroups.map(g => g.id)]));
+      setInitialCollapseApplied(true);
+    }
+  }, [taskGroups, initialCollapseApplied]);
+
+  // Auto-open task detail if ?task= param is in URL
+  useEffect(() => {
+    if (autoOpenTaskId && tasks.length > 0 && !selectedTask) {
+      const task = tasks.find(t => t.id === autoOpenTaskId);
+      if (task) setSelectedTask(task);
+    }
+  }, [autoOpenTaskId, tasks, selectedTask]);
 
   // Filter to only project members for assignment dropdowns
   const projectMembers = useMemo(() => {
@@ -1162,7 +1180,7 @@ export default function ProjectTasks() {
               className="pl-9 h-10 sm:h-9 rounded-xl focus-visible:ring-primary"
             />
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto">
+          <div className="flex items-center justify-center sm:justify-start gap-2 overflow-x-auto">
             <div className="flex gap-1 p-1 bg-slate-100/80 dark:bg-slate-700/50 rounded-xl shrink-0">
               {[['all', 'All'], ['my_tasks', 'Mine'], ['overdue', 'Overdue'], ['archived', 'Archived']].map(([key, label]) => (
                 <button
@@ -1329,8 +1347,8 @@ export default function ProjectTasks() {
             );
           })}
 
-          {/* Ungrouped */}
-          <div className={cn("bg-card rounded-2xl border border-slate-200 dark:border-border overflow-hidden shadow-sm border-l-4", groupAccentColors.slate)}>
+          {/* Ungrouped — hide if empty */}
+          {ungroupedTasks.length > 0 && <div className={cn("bg-card rounded-2xl border border-slate-200 dark:border-border overflow-hidden shadow-sm border-l-4", groupAccentColors.slate)}>
             <div
               className="group/header flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               onClick={() => toggleGroup('ungrouped')}
@@ -1384,7 +1402,7 @@ export default function ProjectTasks() {
             {!collapsedGroups.has('ungrouped') && (
               <GroupProgressFooter groupTasks={ungroupedTasks} color="slate" />
             )}
-          </div>
+          </div>}
 
           {/* Phase 6: Empty State */}
           {filteredTasks.length === 0 && taskGroups.length === 0 && (

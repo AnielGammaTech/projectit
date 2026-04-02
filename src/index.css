@@ -122,6 +122,16 @@ body[data-scroll-locked] {
   margin-right: 0px !important;
 }
 
+/* Keep fixed header locked in place when dialogs/modals open */
+header {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+  margin: 0 !important;
+}
+
 /* Prevent Radix remove-scroll style tags from hiding scrollbar */
 [data-radix-scroll-body-lock] {
   overflow-y: scroll !important;
@@ -171,6 +181,15 @@ body[data-scroll-locked] {
   scrollbar-color: hsl(var(--ring) / 0.2) transparent;
 }
 
+/* Hide scrollbar but keep scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ── Utility tokens ── */
 @layer utilities {
   .shadow-card {
@@ -188,10 +207,16 @@ body[data-scroll-locked] {
   .shadow-warm-hover {
     box-shadow: 0 8px 25px -5px rgb(0 0 0 / 0.08), 0 4px 10px -6px rgb(0 0 0 / 0.04);
   }
-  /* Touch manipulation - prevents 300ms delay */
+  /* Touch manipulation - prevents 300ms delay on ALL elements */
   .touch-manipulation {
     touch-action: manipulation;
   }
+}
+
+/* Global: eliminate 300ms tap delay */
+* {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ── Smooth transitions ── */
@@ -218,10 +243,30 @@ a, button {
 
 /* ── Touch targets: ensure min 44px on touch devices ── */
 @media (pointer: coarse) {
-  /* Only apply min-height to specific interactive elements, not all buttons */
   .touch-target {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  /* Standalone buttons and nav links get minimum touch targets */
+  nav a, nav button,
+  [role="tab"],
+  .touch-target {
+    min-height: 44px;
+  }
+
+  /* Form inputs need comfortable height */
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea, select {
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  /* Dropdown menu items */
+  [role="menuitem"], [role="option"] {
+    min-height: 44px;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
   }
 }
 
@@ -230,16 +275,20 @@ html {
   overscroll-behavior-y: contain;
 }
 
-/* ── PWA standalone mode adjustments ── */
-@media (display-mode: standalone) {
-  /* Extra top padding for standalone PWA (no browser chrome) */
+/* ── Safe area adjustments for native app + PWA standalone ── */
+/* Always apply safe area insets — works in Capacitor native + PWA standalone */
+@supports (padding: env(safe-area-inset-top)) {
   header {
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  /* Make bottom nav respect home indicator */
   nav.pb-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+  }
+
+  /* Offset main content for taller header */
+  main.pt-safe-header {
+    padding-top: calc(3.5rem + env(safe-area-inset-top, 0px));
   }
 }
 

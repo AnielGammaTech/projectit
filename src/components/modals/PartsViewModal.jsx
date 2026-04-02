@@ -221,7 +221,7 @@ export default function PartsViewModal({
             </div>
           </DialogTitle>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-2">
+        <div className="flex-1 overflow-y-auto no-scrollbar pr-2 -mr-2 space-y-2">
           {parts.length === 0 ? (
             <div className="text-center py-12 text-slate-500">
               <Package className="w-10 h-10 mx-auto mb-3 text-slate-300" />

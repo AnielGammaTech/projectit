@@ -53,9 +53,9 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
   const [activeTab, setActiveTab] = useState('tasks');
 
   // ─── Tasks logic ───
-  const getProjectName = (projectId) => {
-    return projects.find(p => p.id === projectId)?.name || 'Unknown';
-  };
+  const getProject = (projectId) => projects.find(p => p.id === projectId);
+  const getProjectName = (projectId) => getProject(projectId)?.name || 'Unknown';
+  const getProjectNumber = (projectId) => getProject(projectId)?.project_number;
 
   const activeProjectIds = projects.filter(p => p.status !== 'archived' && p.status !== 'completed').map(p => p.id);
 
@@ -179,8 +179,8 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
       <div className="bg-white dark:bg-card rounded-xl border border-slate-200/80 dark:border-slate-700/50 overflow-hidden">
         {/* Summary bar — always visible */}
         <button
-          onClick={() => setInlineOpen(prev => !prev)}
-          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors text-left"
+          onClick={() => !inline && setInlineOpen(prev => !prev)}
+          className={cn("w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors text-left", inline && "hidden")}
         >
           <div className="p-1.5 rounded-lg bg-primary/10 dark:bg-blue-900/30 shrink-0">
             <ListTodo className="w-3.5 h-3.5 text-primary dark:text-blue-400" />
@@ -353,21 +353,24 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.03 }}
                       >
-                        <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}>
+                        <Link to={createPageUrl('ProjectTasks') + `?id=${item.project_id}&task=${item.id}`} className="block">
+                        <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer", getRowBg(dueStatus))}>
                           <button
                             onClick={(e) => {
                               e.preventDefault();
+                              e.stopPropagation();
                               handleTaskCompleteWithSync(item);
                             }}
                             className={cn("p-1 rounded-md hover:scale-110 transition-transform shrink-0", status.bg)}
                           >
                             <StatusIcon className={cn("w-3.5 h-3.5", status.color)} />
                           </button>
-                          <Link to={createPageUrl('ProjectTasks') + `?id=${item.project_id}`} className="flex-1 min-w-0 flex items-center gap-2">
+                          <div className="flex-1 min-w-0">
                             <p className="font-medium text-slate-900 dark:text-slate-100 text-sm truncate">{item.title}</p>
-                          </Link>
+                          </div>
                           <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
+                            <span className="text-[10px] text-muted-foreground truncate max-w-[160px]">
+                              {getProjectNumber(item.project_id) && <span className="font-mono mr-1">#{getProjectNumber(item.project_id)}</span>}
                               {getProjectName(item.project_id)}
                             </span>
                             {dueBadge && (
@@ -378,6 +381,7 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                             )}
                           </div>
                         </div>
+                        </Link>
                       </motion.div>
                     );
                   } else {
@@ -390,14 +394,15 @@ export default function MyTasksCard({ tasks = [], parts = [], projects = [], cur
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.03 }}
                       >
-                        <Link to={createPageUrl('ProjectParts') + `?id=${item.project_id}`}>
+                        <Link to={createPageUrl('ProjectParts') + `?id=${item.project_id}&part=${item.id}`}>
                           <div className={cn("flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all", getRowBg(dueStatus))}>
                             <div className="p-1 rounded-md bg-amber-100 shrink-0">
                               <Package className="w-3.5 h-3.5 text-amber-600" />
                             </div>
                             <p className="font-medium text-slate-900 dark:text-slate-100 text-sm truncate flex-1 min-w-0">{item.name}</p>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="text-[10px] text-slate-400 hidden sm:inline truncate max-w-[120px]">
+                              <span className="text-[10px] text-muted-foreground truncate max-w-[160px]">
+                                {getProjectNumber(item.project_id) && <span className="font-mono mr-1">#{getProjectNumber(item.project_id)}</span>}
                                 {getProjectName(item.project_id)}
                               </span>
                               {dueBadge && (

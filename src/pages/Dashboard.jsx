@@ -11,6 +11,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { parseLocalDate } from '@/utils/dateUtils';
 
+import { useIsMobile } from '@/hooks/use-mobile';
 import StatsCard from '@/components/dashboard/StatsCard';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import ProjectStackCard from '@/components/dashboard/ProjectStackCard';
@@ -49,6 +50,7 @@ import { fireTaskConfetti, fireSubtleConfetti } from '@/utils/confetti';
 import { DashboardSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function Dashboard() {
+    const isMobile = useIsMobile();
     const [showProjectModal, setShowProjectModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentUser, setCurrentUser] = useState(null);
@@ -69,6 +71,8 @@ export default function Dashboard() {
   const [showBulkArchiveConfirm, setShowBulkArchiveConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeLetter, setActiveLetter] = useState(null);
+  const [projectLeadFilter, setProjectLeadFilter] = useState('all');
+  const [projectStatusFilter, setProjectStatusFilter] = useState('all');
   const PROJECTS_PER_PAGE = 25;
 
   // Dashboard Views
@@ -84,21 +88,33 @@ export default function Dashboard() {
   const [permanentDeleteConfirm, setPermanentDeleteConfirm] = useState({ open: false, project: null });
   const [showProposalsModal, setShowProposalsModal] = useState(false);
 
+  // Accept quote — marks as accepted, does NOT create project yet
+  const handleAcceptQuote = async (quote) => {
+    queryClient.setQueryData(['incomingQuotes'], (old) =>
+      (old || []).map(q => q.id === quote.id ? { ...q, status: 'accepted' } : q)
+    );
+    await api.entities.IncomingQuote.update(quote.id, { status: 'accepted' });
+    refetchIncomingQuotes();
+  };
+
+  // Create project from an accepted quote — opens modal pre-filled
   const handleCreateProjectFromQuote = (quote) => {
-    // Use matched_items if available (includes product matching from sync),
-    // otherwise fall back to raw items
     const items = quote.matched_items?.length > 0
       ? quote.matched_items
       : (quote.raw_data?.items || []);
 
+    const quoteNumber = quote.quoteit_id || quote.raw_data?.quote_number || '';
+    const quoteTitle = quote.title || '';
+    const projectName = quoteNumber ? `${quoteTitle} - ${quoteNumber}` : quoteTitle;
+
     setPrefillData({
-      name: quote.title,
+      name: projectName,
       client: quote.customer_name,
       customer_id: quote.customer_id || '',
       budget: quote.amount || quote.raw_data?.total_amount || 0,
       quoteit_quote_id: quote.quoteit_id,
       incoming_quote_id: quote.id,
-      description: quote.raw_data?.other_relevant_details || '',
+      description: quote.raw_data?.other_relevant_details || quote.raw_data?.description || '',
       proposalItems: items,
     });
     setShowProjectModal(true);
@@ -124,9 +140,16 @@ export default function Dashboard() {
 
   const { data: incomingQuotesRaw = [], refetch: refetchIncomingQuotes } = useQuery({
     queryKey: ['incomingQuotes'],
-    queryFn: () => api.entities.IncomingQuote.filter({ status: 'pending' }),
+    queryFn: async () => {
+      const [pending, accepted] = await Promise.all([
+        api.entities.IncomingQuote.filter({ status: 'pending' }),
+        api.entities.IncomingQuote.filter({ status: 'accepted' }),
+      ]);
+      return [...pending, ...accepted];
+    },
     staleTime: 30000,
-    gcTime: 600000
+    gcTime: 600000,
+    enabled: !isMobile
   });
 
   const handleSyncQuotes = async () => {
@@ -218,7 +241,8 @@ export default function Dashboard() {
   const { data: quoteRequests = [] } = useQuery({
     queryKey: ['quoteRequests'],
     queryFn: () => api.entities.QuoteRequest.list(),
-    staleTime: 300000 // 5 minutes - synced by scheduled task
+    staleTime: 300000,
+    enabled: !isMobile
   });
 
   const { data: customStatuses = [] } = useQuery({
@@ -295,11 +319,13 @@ export default function Dashboard() {
   
   const filteredProjects = useMemo(() => {
     const query = searchQuery.toLowerCase();
-    return displayProjects.filter(p =>
-      p.name?.toLowerCase().includes(query) ||
-      p.client?.toLowerCase().includes(query)
-    );
-  }, [displayProjects, searchQuery]);
+    return displayProjects.filter(p => {
+      if (query && !p.name?.toLowerCase().includes(query) && !p.client?.toLowerCase().includes(query)) return false;
+      if (projectLeadFilter !== 'all' && p.project_lead !== projectLeadFilter) return false;
+      if (projectStatusFilter !== 'all' && p.status !== projectStatusFilter) return false;
+      return true;
+    });
+  }, [displayProjects, searchQuery, projectLeadFilter, projectStatusFilter]);
 
   const { pinnedProjects, unpinnedProjects } = useMemo(() => {
     const pinned = filteredProjects.filter(p => pinnedProjectIds.includes(p.id))
@@ -924,8 +950,18 @@ export default function Dashboard() {
         </div>
 
 
+        {/* Greeting — mobile only */}
+        {isMobile && currentUser && (
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-foreground">
+              Hi, {currentUser.full_name?.split(' ')[0] || 'there'}
+            </h2>
+            <p className="text-xs text-muted-foreground">Here's your overview for today</p>
+          </div>
+        )}
+
         {/* -- TOP ZONE: KPIs -- */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
           <StatsCard
             title="Active Projects"
             value={activeProjects.length}
@@ -943,10 +979,10 @@ export default function Dashboard() {
           />
           <StatsCard
             title="Overdue Tasks"
-            value={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived'; }).length}
+            value={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived' && t.assigned_to === currentUser?.email; }).length}
             icon={AlertTriangle}
             iconColor="bg-red-500"
-            highlight={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived'; }).length > 0}
+            highlight={activeTasks.filter(t => { const d = parseLocalDate(t.due_date); return d && isPast(d) && !isToday(d) && t.status !== 'completed' && t.status !== 'archived' && t.assigned_to === currentUser?.email; }).length > 0}
             href={createPageUrl('AllTasks') + '?view=mine_due'}
           />
           <StatsCard
@@ -962,50 +998,38 @@ export default function Dashboard() {
         {(() => {
           const overdueList = activeTasks.filter(t => {
             if (t.status === 'completed' || t.status === 'archived') return false;
+            if (t.assigned_to !== currentUser?.email) return false;
             if (!t.due_date) return false;
             const d = parseLocalDate(t.due_date);
             return d && isPast(d) && !isToday(d);
           });
           if (overdueList.length === 0) return null;
           return (
-            <div className="mb-6 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 p-4 shadow-lg shadow-red-500/20 text-white animate-pulse-slow">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-white/20 shrink-0">
-                  <AlertTriangle className="w-6 h-6 animate-bounce" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-lg">
-                    {overdueList.length} Overdue Task{overdueList.length > 1 ? 's' : ''}!
-                  </h3>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                    {overdueList.slice(0, 3).map(t => (
-                      <span key={t.id} className="text-sm text-white/90">{t.title}</span>
-                    ))}
-                    {overdueList.length > 3 && (
-                      <span className="text-sm text-white/70">+{overdueList.length - 3} more</span>
-                    )}
-                  </div>
-                </div>
-                <Link to={createPageUrl('AllTasks') + '?view=mine_due'}>
-                  <Button variant="secondary" size="sm" className="bg-white text-red-600 hover:bg-red-50 font-semibold shadow-lg shrink-0">
-                    View All
-                  </Button>
-                </Link>
+            <Link to={createPageUrl('AllTasks') + '?view=mine_due'} className="block mb-6">
+              <div className="rounded-2xl bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 shadow-lg shadow-red-500/20 text-white flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <span className="font-bold text-sm flex-1">
+                  {overdueList.length} Overdue Task{overdueList.length > 1 ? 's' : ''}
+                </span>
+                <ChevronRight className="w-4 h-4 text-white/70 shrink-0" />
               </div>
-            </div>
+            </Link>
           );
         })()}
 
-        {/* -- TOP ZONE: Incoming Quotes -- */}
-        <div className="mb-6">
-          <IncomingQuoteBanner
-            quotes={incomingQuotes}
-            onCreateProject={handleCreateProjectFromQuote}
-            onDismiss={handleDismissQuote}
-            onSync={handleSyncQuotes}
-            isSyncing={isSyncingQuotes}
-          />
-        </div>
+        {/* -- TOP ZONE: Incoming Quotes — desktop only -- */}
+        {!isMobile && (
+          <div className="mb-6">
+            <IncomingQuoteBanner
+              quotes={incomingQuotes}
+              onAcceptQuote={handleAcceptQuote}
+              onCreateProject={handleCreateProjectFromQuote}
+              onDismiss={handleDismissQuote}
+              onSync={handleSyncQuotes}
+              isSyncing={isSyncingQuotes}
+            />
+          </div>
+        )}
 
         {/* -- BELOW FOLD: Tabbed Widget Card -- */}
         {(() => {
@@ -1257,6 +1281,19 @@ export default function Dashboard() {
                       className="pl-9 w-full sm:w-48 bg-muted/50 border h-9"
                     />
                   </div>
+              </div>
+            </div>
+
+            {/* Mobile: simple search */}
+            <div className="sm:hidden mb-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search projects..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 text-sm rounded-xl bg-muted/50 border"
+                />
               </div>
             </div>
 

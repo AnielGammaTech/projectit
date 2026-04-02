@@ -24,7 +24,7 @@ export default function ProjectNavHeader({ project, currentPage }) {
         <div className="flex items-center justify-between py-2 sm:py-3 gap-2">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <Link
-              to={createPageUrl('Dashboard')}
+              to={currentPage === 'ProjectDetail' ? createPageUrl('Dashboard') : createPageUrl('ProjectDetail') + `?id=${project.id}`}
               className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />

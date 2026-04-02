@@ -14,11 +14,13 @@ import {
   Send, Calendar as CalendarIcon, Edit2, Trash2, Paperclip, X,
   FileText, Image, Loader2, Check, MoreHorizontal, Bell,
   User, Clock, Flag, MessageSquare, ChevronDown, ChevronUp,
-  ListChecks, Plus, GripVertical, Notebook, StickyNote
+  ListChecks, Plus, GripVertical, Notebook, StickyNote, Camera as CameraIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/UserAvatar';
 import { sendTaskAssignmentNotification } from '@/utils/notifications';
+import { useNativeCamera } from '@/hooks/useNativeCamera';
+import { useHaptics } from '@/hooks/useHaptics';
 
 const priorityConfig = {
   low: { label: 'Low', color: 'text-slate-500', bg: 'bg-slate-100', dot: 'bg-slate-400' },
@@ -55,6 +57,8 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   const commentFileInputRef = useRef(null);
   const taskFileInputRef = useRef(null);
   const queryClient = useQueryClient();
+  const { takePhoto, pickFromGallery, isNativeCamera } = useNativeCamera();
+  const { success: hapticSuccess, tapLight } = useHaptics();
 
   useEffect(() => { if (task) { setNotes(task.notes || ''); setNotifyOnComplete(task.notify_on_complete || []); setChecklistItems(task.checklist_items || []); } }, [task?.id]);
 
@@ -78,13 +82,25 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     onSuccess: () => { refetchComments(); setComment(''); setCommentAttachments([]); }
   });
 
-  const handleUpdateTask = async (updates) => { await api.entities.Task.update(task.id, updates); queryClient.invalidateQueries({ queryKey: ['tasks'] }); };
-  const handleStatusToggle = async () => { const newStatus = task.status === 'completed' ? 'todo' : 'completed'; await handleUpdateTask({ status: newStatus }); };
+  const [localUpdates, setLocalUpdates] = useState({});
+  const liveTask = { ...task, ...localUpdates };
+
+  // Reset local updates when task changes
+  useEffect(() => { setLocalUpdates({}); }, [task?.id]);
+
+  const handleUpdateTask = async (updates) => {
+    // Optimistic update for immediate UI feedback
+    setLocalUpdates(prev => ({ ...prev, ...updates }));
+    await api.entities.Task.update(task.id, updates);
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
+  };
+  const handleStatusToggle = async () => { const newStatus = liveTask.status === 'completed' ? 'todo' : 'completed'; if (newStatus === 'completed') await hapticSuccess(); else await tapLight(); await handleUpdateTask({ status: newStatus }); };
   const handleStatusChange = async (status) => { await handleUpdateTask({ status }); setShowStatusDropdown(false); };
 
   const handleAssign = async (email) => {
     const member = teamMembers.find(m => m.email === email);
-    const wasAssigned = task.assigned_to;
+    const wasAssigned = liveTask.assigned_to;
     const newEmail = email === 'unassigned' ? '' : email;
     await handleUpdateTask({ assigned_to: newEmail, assigned_name: email === 'unassigned' ? '' : (member?.name || email) });
     if (newEmail && newEmail !== wasAssigned) { await sendTaskAssignmentNotification({ assigneeEmail: newEmail, taskTitle: task.title, projectId: task.project_id, projectName: project?.name || '', currentUser }); }
@@ -119,6 +135,19 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   const handleCommentFileUpload = async (e) => { const file = e.target.files?.[0]; if (!file) return; setUploadingCommentFile(true); try { const { file_url } = await api.integrations.Core.UploadFile({ file }); setCommentAttachments(prev => [...prev, { name: file.name, url: file_url, type: file.type }]); } catch (err) { console.error('Failed to upload file:', err); } setUploadingCommentFile(false); };
 
+  const handleNativeCameraUpload = async (source) => {
+    const result = source === 'camera' ? await takePhoto() : await pickFromGallery();
+    if (!result) return;
+    setUploadingCommentFile(true);
+    try {
+      const { file_url } = await api.integrations.Core.UploadFile({ file: result.file });
+      setCommentAttachments(prev => [...prev, { name: result.file.name, url: file_url, type: result.file.type }]);
+    } catch (err) {
+      console.error('Failed to upload photo:', err);
+    }
+    setUploadingCommentFile(false);
+  };
+
   const handlePaste = async (e) => { const items = e.clipboardData?.items; if (!items) return; for (const item of items) { if (item.type.startsWith('image/')) { e.preventDefault(); const file = item.getAsFile(); if (!file) continue; setUploadingCommentFile(true); try { const { file_url } = await api.integrations.Core.UploadFile({ file }); setCommentAttachments(prev => [...prev, { name: `pasted-image-${Date.now()}.png`, url: file_url, type: file.type }]); } catch (err) { console.error('Failed to upload pasted image:', err); } setUploadingCommentFile(false); break; } } };
 
   const handleTaskFileUpload = async (e) => { const file = e.target.files?.[0]; if (!file) return; setUploadingTaskFile(true); try { const { file_url } = await api.integrations.Core.UploadFile({ file }); const currentAttachments = task.attachments || []; await handleUpdateTask({ attachments: [...currentAttachments, { name: file.name, url: file_url, type: file.type }] }); } catch (err) { console.error('Failed to upload file:', err); } setUploadingTaskFile(false); };
@@ -148,8 +177,8 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   if (!task) return null;
 
   const currentPriority = priorityConfig[localPriority] || priorityConfig.medium;
-  const isCompleted = task.status === 'completed';
-  const currentStatus = statusPillConfig[task.status] || statusPillConfig.todo;
+  const isCompleted = liveTask.status === 'completed';
+  const currentStatus = statusPillConfig[liveTask.status] || statusPillConfig.todo;
   const completedChecklistCount = checklistItems.filter(i => i.completed).length;
   const checklistProgress = checklistItems.length > 0 ? Math.round((completedChecklistCount / checklistItems.length) * 100) : 0;
   const activeChecklistItems = checklistItems.filter(i => !i.completed);
@@ -158,7 +187,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent hideCloseOnMobile className="sm:max-w-4xl p-0 gap-0 max-h-[95dvh] sm:max-h-[90vh] h-[95dvh] sm:h-auto overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl dark:bg-[#1e2a3a] top-auto sm:top-[50%] translate-y-0 sm:translate-y-[-50%] bottom-0 sm:bottom-auto">
+      <DialogContent hideCloseOnMobile className="sm:max-w-4xl p-0 gap-0 overflow-hidden flex flex-col dark:bg-[#1e2a3a]">
         {/* Mobile action bar */}
         <div className="sm:hidden flex items-center justify-between px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-700/50 flex-shrink-0">
           <button onClick={onClose} className="flex items-center gap-1 text-slate-500 text-xs font-medium">
@@ -205,7 +234,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
           {/* LEFT — Main content */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden order-2 sm:order-1">
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto no-scrollbar">
 
               {/* Description / Notes */}
               <div className="px-4 sm:px-8 pt-3 sm:pt-6 pb-3 sm:pb-5">
@@ -255,7 +284,30 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 <span className="hidden sm:inline-flex"><UserAvatar email={currentUser?.email} name={currentUser?.full_name} avatarUrl={currentUser?.avatar_url} size="md" /></span>
                 <div className="flex-1 relative">
                   <Textarea ref={textareaRef} value={comment} onChange={handleCommentChange} onPaste={handlePaste} placeholder="Write a comment... @ to mention" className="min-h-[52px] resize-none pr-10 bg-white dark:bg-[#1a2535] dark:border-slate-600 rounded-xl text-sm focus:ring-[#0069AF]/20 focus:border-[#0069AF]/40" />
-                  <button type="button" onClick={() => commentFileInputRef.current?.click()} disabled={uploadingCommentFile} className="absolute bottom-2 right-2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">{uploadingCommentFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}</button>
+                  {isNativeCamera ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button type="button" disabled={uploadingCommentFile} className="absolute bottom-2 right-2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                        {uploadingCommentFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleNativeCameraUpload('camera')}>
+                        <CameraIcon className="w-4 h-4 mr-2" />Take Photo
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleNativeCameraUpload('gallery')}>
+                        <Image className="w-4 h-4 mr-2" />Photo Library
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => commentFileInputRef.current?.click()}>
+                        <Paperclip className="w-4 h-4 mr-2" />Browse Files
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <button type="button" onClick={() => commentFileInputRef.current?.click()} disabled={uploadingCommentFile} className="absolute bottom-2 right-2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                    {uploadingCommentFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+                  </button>
+                )}
                   <input ref={commentFileInputRef} type="file" className="hidden" onChange={handleCommentFileUpload} />
                   {commentAttachments.length > 0 && (<div className="mt-2 flex flex-wrap gap-2">{commentAttachments.map((att, idx) => { const isImage = att.type?.startsWith('image/'); const FileIcon = getFileIcon(att.type); return (<div key={idx} className="relative group">{isImage ? (<div className="relative"><img src={att.url} alt={att.name} className="h-16 w-auto rounded-xl object-cover border border-slate-200" /><button onClick={() => setCommentAttachments(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button></div>) : (<div className="flex items-center gap-1 bg-slate-100 rounded-lg px-2 py-1 text-xs"><FileIcon className="w-3 h-3 text-slate-500" /><span className="truncate max-w-[100px]">{att.name}</span><button onClick={() => setCommentAttachments(prev => prev.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-red-500"><X className="w-3 h-3" /></button></div>)}</div>); })}</div>)}
                   {showMentions && filteredMembers.length > 0 && (<div className="absolute bottom-full left-0 mb-1 w-56 bg-white border rounded-xl shadow-lg max-h-40 overflow-y-auto z-50">{filteredMembers.map((member) => (<button key={member.id} onClick={() => insertMention(member)} className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-center gap-2"><UserAvatar email={member.email} name={member.name} avatarUrl={member.avatar_url} size="sm" /><span className="text-sm">{member.name}</span></button>))}</div>)}
@@ -266,7 +318,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
           </div>
 
           {/* RIGHT — Properties sidebar (compact grid on mobile, sidebar on desktop) */}
-          <div className="order-1 sm:order-2 sm:w-[280px] border-b sm:border-b-0 sm:border-l border-slate-200/80 dark:border-slate-700/50 bg-slate-50/40 dark:bg-[#162032] overflow-y-auto flex-shrink-0">
+          <div className="order-1 sm:order-2 sm:w-[280px] border-b sm:border-b-0 sm:border-l border-slate-200/80 dark:border-slate-700/50 bg-slate-50/40 dark:bg-[#162032] overflow-y-auto no-scrollbar flex-shrink-0">
             {/* Properties */}
             <div className="p-3 sm:p-5">
               <span className="hidden sm:block text-xs font-semibold uppercase tracking-wider text-slate-400">Details</span>
@@ -286,7 +338,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                 {/* Assignee */}
                 <div className="flex items-center py-1.5 sm:py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors sm:-mx-2">
                   <span className="text-[11px] sm:text-xs text-slate-500 w-16 sm:w-20 flex-shrink-0">Assignee</span>
-                  <DropdownMenu><DropdownMenuTrigger asChild><button className="inline-flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 transition-colors">{task.assigned_name ? (<><UserAvatar email={task.assigned_to} name={task.assigned_name} avatarUrl={teamMembers.find(m => m.email === task.assigned_to)?.avatar_url} size="xs" /><span className="font-medium">{task.assigned_name}</span></>) : (<span className="text-slate-400">None</span>)}<ChevronDown className="w-3 h-3 text-slate-400" /></button></DropdownMenuTrigger><DropdownMenuContent align="start"><DropdownMenuItem onClick={() => handleAssign('unassigned')}><User className="w-4 h-4 mr-2 text-slate-400" />Unassigned</DropdownMenuItem><DropdownMenuSeparator />{teamMembers.map(m => (<DropdownMenuItem key={m.id} onClick={() => handleAssign(m.email)}><UserAvatar email={m.email} name={m.name} avatarUrl={m.avatar_url} size="xs" className="mr-2" />{m.name}{task.assigned_to === m.email && <Check className="w-4 h-4 ml-auto" />}</DropdownMenuItem>))}</DropdownMenuContent></DropdownMenu>
+                  <DropdownMenu><DropdownMenuTrigger asChild><button className="inline-flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 transition-colors">{liveTask.assigned_name ? (<><UserAvatar email={liveTask.assigned_to} name={liveTask.assigned_name} avatarUrl={teamMembers.find(m => m.email === liveTask.assigned_to)?.avatar_url} size="xs" /><span className="font-medium">{liveTask.assigned_name}</span></>) : (<span className="text-slate-400">None</span>)}<ChevronDown className="w-3 h-3 text-slate-400" /></button></DropdownMenuTrigger><DropdownMenuContent align="start"><DropdownMenuItem onClick={() => handleAssign('unassigned')}><User className="w-4 h-4 mr-2 text-slate-400" />Unassigned</DropdownMenuItem><DropdownMenuSeparator />{teamMembers.map(m => (<DropdownMenuItem key={m.id} onClick={() => handleAssign(m.email)}><UserAvatar email={m.email} name={m.name} avatarUrl={m.avatar_url} size="xs" className="mr-2" />{m.name}{liveTask.assigned_to === m.email && <Check className="w-4 h-4 ml-auto" />}</DropdownMenuItem>))}</DropdownMenuContent></DropdownMenu>
                 </div>
 
                 {/* Due Date */}

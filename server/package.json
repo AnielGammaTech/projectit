@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@parse/node-apn": "^7.1.0",
     "@supabase/supabase-js": "^2.97.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

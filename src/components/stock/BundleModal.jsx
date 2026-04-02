@@ -176,7 +176,7 @@ export default function BundleModal({ open, onClose, bundle, products, services,
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onPaste={handlePaste}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar" onPaste={handlePaste}>
         <DialogHeader>
           <DialogTitle>{bundle ? 'Edit Bundle' : 'Create Bundle'}</DialogTitle>
         </DialogHeader>

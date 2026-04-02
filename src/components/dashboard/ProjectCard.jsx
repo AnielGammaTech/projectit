@@ -1,4 +1,6 @@
-import { useState, memo, useMemo } from 'react';
+import { useState, memo, useMemo, useCallback } from 'react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { isNative } from '@/lib/capacitor';
 import { Calendar, CheckCircle2, ArrowRight, ChevronRight, Palette, Pin, Ticket, ListTodo, Package, CircleDot, Users, Clock, MessageCircle, CheckSquare, Square, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -227,7 +229,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
       )}
 
       {/* Hover actions */}
-      <div className={cn("absolute top-2 right-2 z-10 flex gap-1 transition-opacity", selectionMode ? "opacity-0" : "opacity-0 group-hover:opacity-100")}>
+      <div className={cn("absolute top-2 right-2 z-10 flex gap-1 transition-opacity", selectionMode ? "opacity-0" : "hidden sm:flex opacity-0 group-hover:opacity-100")}>
         {/* Pin button */}
         <button 
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPinToggle?.(project); }}
@@ -303,6 +305,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
           if (selectionMode) {
             onSelectionToggle?.(project.id);
           } else {
+            if (isNative()) Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
             navigate(createPageUrl('ProjectDetail') + `?id=${project.id}`);
           }
         }}
@@ -331,7 +334,7 @@ function ProjectCard({ project, tasks = [], parts = [], index, onColorChange, on
                 ) : null;
               })()}
               <span className="text-[10px] text-muted-foreground ml-auto">{completedTasks}/{totalTasks}</span>
-              {project.team_members?.length > 0 && <span className="text-[10px] text-muted-foreground">{project.team_members.length}👤</span>}
+              {project.team_members?.length > 0 && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">{project.team_members.length}<Users className="w-3 h-3" /></span>}
             </div>
             <h3 className="text-sm font-semibold text-foreground line-clamp-1">{project.name}</h3>
             <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">

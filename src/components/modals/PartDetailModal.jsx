@@ -229,7 +229,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 max-h-[90vh] sm:max-h-[90vh] h-[100dvh] sm:h-auto overflow-hidden flex flex-col rounded-none sm:rounded-2xl">
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col" hideCloseOnMobile>
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-slate-100">
           <div className="flex items-start gap-3">
@@ -421,7 +421,7 @@ export default function PartDetailModal({ open, onClose, part, teamMembers = [],
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto no-scrollbar">
           {/* Details Grid */}
           <div className="p-4 sm:p-6 border-b border-slate-100">
             <div className="grid grid-cols-3 gap-2 sm:gap-4">

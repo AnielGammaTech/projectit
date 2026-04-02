@@ -28,3 +28,8 @@ dist-ssr
 *.sw?
 
 .env
+# Capacitor iOS build artifacts
+ios/App/App/public
+ios/App/Pods
+ios/App/DerivedData
+*.p8
