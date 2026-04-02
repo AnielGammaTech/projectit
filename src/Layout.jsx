@@ -69,17 +69,9 @@ const navItems = [
     activeBg: 'bg-emerald-500/15',
     hoverText: 'hover:text-emerald-300',
     hoverBg: 'hover:bg-emerald-500/10',
-    dropdownActive: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-    dropdownIcon: 'text-emerald-600 dark:text-emerald-400',
     iconGradient: 'bg-gradient-to-br from-emerald-500 to-green-600',
-  }, submenu: [
-    { name: 'Dashboard', icon: HardDrive, page: 'AssetDashboard' },
-    { name: 'Inventory', icon: Package, page: 'AssetInventory' },
-    { name: 'Assign / Return', icon: ArrowDownUp, page: 'AssetAssign' },
-    { name: 'Employees', icon: Users, page: 'AssetEmployees' },
-    { name: 'Licenses', icon: Key, page: 'AssetLicenses' },
-    { name: 'Reports', icon: TrendingUp, page: 'AssetReports' },
-  ]},
+    matchPages: ['AssetDashboard', 'AssetInventory', 'AssetDetail', 'AssetAssign', 'AssetEmployees', 'AssetEmployeeDetail', 'AssetLicenses', 'AssetReports', 'MyAssets'],
+  }},
 ];
 
 function LayoutContent({ children, currentPageName }) {
@@ -323,7 +315,10 @@ function LayoutContent({ children, currentPageName }) {
                   );
                 }
 
-                const isActive = currentPageName === item.page;
+                const brand = item.brand;
+                const isActive = brand?.matchPages
+                  ? brand.matchPages.includes(currentPageName)
+                  : currentPageName === item.page;
 
                 return (
                   <Link
@@ -331,17 +326,27 @@ function LayoutContent({ children, currentPageName }) {
                     to={createPageUrl(item.page) + (item.params || '')}
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group relative",
-                      isActive
+                      brand && isActive
+                        ? `${brand.activeText} ${brand.activeBg} font-medium`
+                        : brand && !isActive
+                        ? `text-white/80 ${brand.hoverText} ${brand.hoverBg}`
+                        : isActive
                         ? "text-white font-medium bg-white/15 shadow-sm"
                         : "text-white/70 hover:text-white hover:bg-white/5"
                     )}
                     >
-                    <Icon className={cn(
-                      "w-4 h-4 transition-colors",
-                      isActive ? "text-[#74C7FF]" : "text-white/50 group-hover:text-white/80"
-                    )} />
+                    {brand?.iconGradient ? (
+                      <div className={cn("p-1 rounded-md", brand.iconGradient)}>
+                        <Icon className="w-3 h-3 text-white" />
+                      </div>
+                    ) : (
+                      <Icon className={cn(
+                        "w-4 h-4 transition-colors",
+                        isActive ? "text-[#74C7FF]" : "text-white/50 group-hover:text-white/80"
+                      )} />
+                    )}
                     {item.name}
-                    {isActive && (
+                    {isActive && !brand && (
                       <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#74C7FF] rounded-full" />
                     )}
                   </Link>
@@ -630,14 +635,30 @@ function LayoutContent({ children, currentPageName }) {
               );
             }
 
+            const brand = item.brand;
+            const isBrandActive = brand?.matchPages?.includes(currentPageName);
+
             return (
               <Link
                 key={item.name}
                 to={createPageUrl(item.page) + (item.params || '')}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-muted text-sm touch-manipulation active:bg-slate-100 dark:active:bg-muted"
+                className={cn(
+                  "flex items-center gap-3 px-3 py-3 rounded-lg text-sm touch-manipulation",
+                  brand
+                    ? isBrandActive
+                      ? "text-emerald-700 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20 font-medium"
+                      : "text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-muted active:bg-slate-100 dark:active:bg-muted"
+                )}
               >
-                <Icon className="w-5 h-5" />
+                {brand?.iconGradient ? (
+                  <div className={cn("p-1 rounded-md", brand.iconGradient)}>
+                    <Icon className="w-3.5 h-3.5 text-white" />
+                  </div>
+                ) : (
+                  <Icon className="w-5 h-5" />
+                )}
                 {item.name}
               </Link>
             );
