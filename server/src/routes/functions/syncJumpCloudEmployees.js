@@ -16,21 +16,46 @@ export default async function syncJumpCloudEmployees(req, res) {
     const headers = {
       'x-api-key': apiKey,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     };
     if (orgId) {
       headers['x-org-id'] = orgId;
     }
 
-    const response = await fetch('https://console.jumpcloud.com/api/systemusers', {
-      headers,
-    });
+    // JumpCloud API v1 — paginate through all system users
+    let allUsers = [];
+    let skip = 0;
+    const limit = 100;
+    let hasMore = true;
 
-    if (!response.ok) {
-      const text = await response.text();
-      return res.status(response.status).json({ error: `JumpCloud API error: ${text}` });
+    while (hasMore) {
+      const url = `https://console.jumpcloud.com/api/systemusers?limit=${limit}&skip=${skip}`;
+      const response = await fetch(url, { headers });
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('[JumpCloud] API error:', response.status, text);
+        return res.status(response.status).json({ error: `JumpCloud API error: ${text}` });
+      }
+
+      const json = await response.json();
+
+      // JumpCloud returns { results: [...], totalCount: N } or just an array
+      const users = json.results || json;
+      const total = json.totalCount || 0;
+
+      if (!Array.isArray(users)) {
+        console.error('[JumpCloud] Unexpected response format:', JSON.stringify(json).slice(0, 500));
+        return res.status(500).json({ error: 'Unexpected JumpCloud API response format' });
+      }
+
+      allUsers = [...allUsers, ...users];
+      skip += limit;
+      hasMore = json.results ? allUsers.length < total : users.length === limit;
     }
 
-    const { results: jcUsers } = await response.json();
+    console.log(`[JumpCloud] Fetched ${allUsers.length} users`);
+
     const existingEmployees = await entityService.list('Employee');
     const existingByJcId = new Map(
       existingEmployees.map(e => [e.jumpcloud_id, e])
@@ -42,21 +67,24 @@ export default async function syncJumpCloudEmployees(req, res) {
 
     const seenJcIds = new Set();
 
-    for (const jcUser of jcUsers) {
-      seenJcIds.add(jcUser._id);
+    for (const jcUser of allUsers) {
+      const userId = jcUser._id || jcUser.id;
+      if (!userId) continue;
+
+      seenJcIds.add(userId);
       const employeeData = {
-        jumpcloud_id: jcUser._id,
-        first_name: jcUser.firstname || '',
-        last_name: jcUser.lastname || '',
+        jumpcloud_id: userId,
+        first_name: jcUser.firstname || jcUser.firstName || '',
+        last_name: jcUser.lastname || jcUser.lastName || '',
         email: jcUser.email || '',
         department: jcUser.department || '',
-        job_title: jcUser.jobTitle || '',
+        job_title: jcUser.jobTitle || jcUser.job_title || '',
         location: jcUser.location || '',
-        status: jcUser.suspended ? 'Suspended' : 'Active',
+        status: jcUser.suspended ? 'Suspended' : (jcUser.activated === false ? 'Inactive' : 'Active'),
         last_synced: new Date().toISOString(),
       };
 
-      const existing = existingByJcId.get(jcUser._id);
+      const existing = existingByJcId.get(userId);
       if (existing) {
         await entityService.update('Employee', existing.id, employeeData);
         updated++;
@@ -80,10 +108,10 @@ export default async function syncJumpCloudEmployees(req, res) {
 
     return res.json({
       success: true,
-      summary: { created, updated, deactivated, total: jcUsers.length },
+      summary: { created, updated, deactivated, total: allUsers.length },
     });
   } catch (error) {
-    console.error('JumpCloud sync error:', error);
-    return res.status(500).json({ error: 'JumpCloud sync failed' });
+    console.error('[JumpCloud] Sync error:', error);
+    return res.status(500).json({ error: `JumpCloud sync failed: ${error.message}` });
   }
 }
