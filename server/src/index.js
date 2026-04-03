@@ -41,7 +41,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-import { globalLimiter } from './middleware/rateLimiter.js';
+import { globalLimiter, perUserLimiter } from './middleware/rateLimiter.js';
 app.use(globalLimiter);
 app.use(morgan('combined'));
 app.use(express.json({ limit: '5mb' }));
@@ -59,8 +59,8 @@ app.get('/api/calendar-feed/:userId.ics', calendarFeed);
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/entities', authMiddleware, entityRoutes);
-app.use('/api/integrations', authMiddleware, integrationRoutes);
+app.use('/api/entities', authMiddleware, perUserLimiter, entityRoutes);
+app.use('/api/integrations', authMiddleware, perUserLimiter, integrationRoutes);
 app.use('/api/functions', functionRoutes); // Auth handled per-function inside router
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/external', externalApiRoutes);

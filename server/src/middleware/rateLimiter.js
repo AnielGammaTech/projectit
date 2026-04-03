@@ -53,3 +53,15 @@ export const webhookLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Per-user limiter for authenticated routes — applied after auth middleware
+// 120 requests per user per minute (keyed by email, not IP)
+export const perUserLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  keyGenerator: (req) => req.user?.email || 'anonymous',
+  message: { error: 'Too many requests from your account. Please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => !req.user, // Only apply to authenticated requests
+});
