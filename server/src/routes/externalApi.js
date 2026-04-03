@@ -4,6 +4,17 @@ import crypto from 'crypto';
 
 const router = Router();
 
+const INTERNAL_ERROR_MESSAGE = 'Internal server error';
+const MAX_PAGE_LIMIT = 100;
+const DEFAULT_PAGE_LIMIT = 50;
+
+function clampLimit(limitParam) {
+  if (!limitParam) return DEFAULT_PAGE_LIMIT;
+  const parsed = parseInt(limitParam, 10);
+  if (isNaN(parsed) || parsed < 1) return DEFAULT_PAGE_LIMIT;
+  return Math.min(parsed, MAX_PAGE_LIMIT);
+}
+
 /**
  * Middleware: Validate external API key from x-projectit-api-key header.
  * Keys are stored in the ApiKey entity.
@@ -135,7 +146,7 @@ router.post('/quotes/accepted', async (req, res) => {
     });
   } catch (err) {
     console.error('Quote accepted endpoint error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: INTERNAL_ERROR_MESSAGE });
   }
 });
 
@@ -165,9 +176,9 @@ router.get('/projects', async (req, res) => {
     if (quote_id) filter.quoteit_quote_id = String(quote_id);
 
     if (Object.keys(filter).length > 0) {
-      projects = await entityService.filter('Project', filter, sort || '-created_date', limit ? parseInt(limit) : 50);
+      projects = await entityService.filter('Project', filter, sort || '-created_date', clampLimit(limit));
     } else {
-      projects = await entityService.list('Project', sort || '-created_date', limit ? parseInt(limit) : 50);
+      projects = await entityService.list('Project', sort || '-created_date', clampLimit(limit));
     }
 
     // Filter by customer_name client-side (partial match)
@@ -215,7 +226,7 @@ router.get('/projects', async (req, res) => {
     });
   } catch (err) {
     console.error('Projects list endpoint error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: INTERNAL_ERROR_MESSAGE });
   }
 });
 
@@ -282,7 +293,7 @@ router.get('/projects/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Project detail endpoint error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: INTERNAL_ERROR_MESSAGE });
   }
 });
 
@@ -315,7 +326,7 @@ router.get('/projects/by-quote/:quoteId', async (req, res) => {
     });
   } catch (err) {
     console.error('Project by quote endpoint error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: INTERNAL_ERROR_MESSAGE });
   }
 });
 
@@ -358,7 +369,7 @@ router.get('/customers', async (req, res) => {
     });
   } catch (err) {
     console.error('Customers list endpoint error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: INTERNAL_ERROR_MESSAGE });
   }
 });
 
@@ -385,7 +396,7 @@ router.get('/quotes/pending', async (req, res) => {
     });
   } catch (err) {
     console.error('Pending quotes endpoint error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: INTERNAL_ERROR_MESSAGE });
   }
 });
 
