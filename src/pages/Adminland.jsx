@@ -16,7 +16,7 @@ import {
   FileText, Layers, MessageSquare, Database, Activity,
   HardDrive, AlertTriangle, CheckCircle2, Save, Sparkles, Bot, Send, Copy, Check, Globe, KeyRound,
   Image, Search, Info, Rocket, Bug, Star, Wrench, Package, MapPin, Bell, Clock,
-  Monitor, Smartphone, Wifi, Palette, Server
+  Monitor, Smartphone, Wifi, Palette, Server, Zap
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -2970,6 +2970,9 @@ function IntegrationsSection({ queryClient }) {
       {/* PortalIT Integration Card */}
       <PortalITIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
 
+      {/* JumpCloud Integration Card */}
+      <JumpCloudIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
+
       {/* Resend Integration Card */}
       <ResendIntegrationCard expandedIntegration={expandedIntegration} toggleIntegration={toggleIntegration} />
 
@@ -3262,6 +3265,212 @@ function PortalITIntegrationCard({ expandedIntegration, toggleIntegration }) {
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Save Settings
             </Button>
+          </div>
+
+          {/* Result */}
+          {result && (
+            <div className={cn(
+              "p-3 rounded-lg text-xs font-medium",
+              result.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+            )}>
+              {result.message}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function JumpCloudIntegrationCard({ expandedIntegration, toggleIntegration }) {
+  const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [result, setResult] = useState(null);
+  const queryClient = useQueryClient();
+
+  const [formData, setFormData] = useState({
+    jumpcloud_enabled: false,
+    jumpcloud_api_key: '',
+    jumpcloud_org_id: '',
+  });
+
+  const { data: settings = [], refetch } = useQuery({
+    queryKey: ['integrationSettings'],
+    queryFn: () => api.entities.IntegrationSettings.filter({ setting_key: 'main' })
+  });
+
+  useEffect(() => {
+    if (settings[0]) {
+      setFormData(prev => ({
+        ...prev,
+        jumpcloud_enabled: settings[0].jumpcloud_enabled || false,
+        jumpcloud_api_key: settings[0].jumpcloud_api_key || '',
+        jumpcloud_org_id: settings[0].jumpcloud_org_id || '',
+      }));
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setResult(null);
+    try {
+      const payload = { setting_key: 'main', ...formData };
+      if (settings[0]) {
+        await api.entities.IntegrationSettings.update(settings[0].id, payload);
+      } else {
+        await api.entities.IntegrationSettings.create(payload);
+      }
+      refetch();
+      setResult({ success: true, message: 'JumpCloud settings saved' });
+    } catch (err) {
+      setResult({ success: false, message: err.message || 'Failed to save' });
+    }
+    setSaving(false);
+  };
+
+  const handleTestConnection = async () => {
+    if (!formData.jumpcloud_api_key) {
+      setResult({ success: false, message: 'Enter your JumpCloud API key first' });
+      return;
+    }
+    setTesting(true);
+    setResult(null);
+    try {
+      await handleSave();
+      const response = await api.functions.invoke('syncJumpCloudEmployees', { test: true });
+      if (response.success) {
+        setResult({ success: true, message: `Connected! Found ${response.summary.total} employees.` });
+      } else {
+        setResult({ success: false, message: response.error || 'Connection failed' });
+      }
+    } catch (error) {
+      setResult({ success: false, message: error.data?.error || error.message || 'Connection failed' });
+    }
+    setTesting(false);
+  };
+
+  const handleSync = async () => {
+    if (!formData.jumpcloud_api_key) {
+      setResult({ success: false, message: 'Configure JumpCloud credentials first' });
+      return;
+    }
+    setSyncing(true);
+    setResult(null);
+    try {
+      await handleSave();
+      const response = await api.functions.invoke('syncJumpCloudEmployees');
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['employees'] });
+        setResult({ success: true, message: `Synced: ${response.summary.created} new, ${response.summary.updated} updated, ${response.summary.deactivated} deactivated` });
+      } else {
+        setResult({ success: false, message: response.error || 'Sync failed' });
+      }
+    } catch (error) {
+      setResult({ success: false, message: error.data?.error || error.message || 'Sync failed' });
+    }
+    setSyncing(false);
+  };
+
+  return (
+    <div className="bg-white dark:bg-card rounded-2xl shadow-sm border border-slate-200 dark:border-border overflow-hidden">
+      <button
+        onClick={() => toggleIntegration('jumpcloud')}
+        className="w-full flex items-center justify-between p-5 hover:bg-slate-50/50 dark:hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-sm">
+            <Users className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-left">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-foreground">JumpCloud</h3>
+            <p className="text-xs text-slate-500 dark:text-muted-foreground mt-0.5">Employee directory sync for ManageIT</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {formData.jumpcloud_enabled && formData.jumpcloud_api_key ? (
+            <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Connected</Badge>
+          ) : (
+            <Badge variant="outline" className="text-slate-400 border-slate-200 text-xs">Not configured</Badge>
+          )}
+          <ChevronDown className={cn(
+            "w-5 h-5 text-slate-400 transition-transform duration-200",
+            expandedIntegration === 'jumpcloud' && "rotate-180"
+          )} />
+        </div>
+      </button>
+
+      {expandedIntegration === 'jumpcloud' && (
+        <div className="border-t p-3 sm:p-6 space-y-5">
+          {/* Description */}
+          <div className="p-4 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+            <h4 className="text-sm font-semibold text-slate-700 dark:text-foreground mb-2">What this does</h4>
+            <ul className="text-xs text-slate-600 dark:text-muted-foreground space-y-1.5">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Syncs employee directory from JumpCloud into ManageIT
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Automatically creates and updates employee records
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Marks removed employees as Inactive (preserves assignment history)
+              </li>
+            </ul>
+          </div>
+
+          {/* Enable toggle */}
+          <label className="flex items-center gap-3 cursor-pointer">
+            <Checkbox checked={formData.jumpcloud_enabled} onCheckedChange={(v) => setFormData(p => ({ ...p, jumpcloud_enabled: v }))} />
+            <span className="font-medium text-sm">Enable JumpCloud Integration</span>
+          </label>
+
+          {formData.jumpcloud_enabled && (
+            <>
+              <div>
+                <Label className="text-xs">API Key</Label>
+                <Input
+                  value={formData.jumpcloud_api_key}
+                  onChange={e => setFormData(p => ({ ...p, jumpcloud_api_key: e.target.value }))}
+                  placeholder="Enter your JumpCloud API key"
+                  type="password"
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-400 dark:text-muted-foreground mt-1">Found in JumpCloud Admin Console → Profile → API Settings</p>
+              </div>
+              <div>
+                <Label className="text-xs">Organization ID</Label>
+                <Input
+                  value={formData.jumpcloud_org_id}
+                  onChange={e => setFormData(p => ({ ...p, jumpcloud_org_id: e.target.value }))}
+                  placeholder="Enter your JumpCloud Org ID (for multi-tenant)"
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-400 dark:text-muted-foreground mt-1">Required for multi-organization accounts. Found in JumpCloud → Organizations.</p>
+              </div>
+            </>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button onClick={handleSave} disabled={saving} size="sm">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Save Settings
+            </Button>
+            {formData.jumpcloud_enabled && formData.jumpcloud_api_key && (
+              <>
+                <Button onClick={handleTestConnection} disabled={testing} size="sm" variant="outline">
+                  {testing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
+                  Test Connection
+                </Button>
+                <Button onClick={handleSync} disabled={syncing} size="sm" variant="outline">
+                  {syncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                  Sync Now
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Result */}

@@ -1,17 +1,28 @@
 import entityService from '../../services/entityService.js';
 
 export default async function syncJumpCloudEmployees(req, res) {
-  const apiKey = process.env.JUMPCLOUD_API_KEY;
+  // Load settings from IntegrationSettings entity
+  const settingsList = await entityService.list('IntegrationSettings');
+  const settings = settingsList.find(s => s.setting_key === 'main') || {};
+
+  const apiKey = settings.jumpcloud_api_key || process.env.JUMPCLOUD_API_KEY;
+  const orgId = settings.jumpcloud_org_id || process.env.JUMPCLOUD_ORG_ID || '';
+
   if (!apiKey) {
-    return res.status(400).json({ error: 'JUMPCLOUD_API_KEY not configured' });
+    return res.status(400).json({ error: 'JumpCloud API key not configured. Go to Adminland → Integrations → JumpCloud to set it up.' });
   }
 
   try {
+    const headers = {
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+    };
+    if (orgId) {
+      headers['x-org-id'] = orgId;
+    }
+
     const response = await fetch('https://console.jumpcloud.com/api/systemusers', {
-      headers: {
-        'x-api-key': apiKey,
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (!response.ok) {
