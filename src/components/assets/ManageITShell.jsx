@@ -30,9 +30,9 @@ export default function ManageITShell({ children }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50/60 via-background to-background dark:from-emerald-950/20 dark:via-background dark:to-background">
       {/* ManageIT branded sub-header */}
-      <div className="border-b border-emerald-200/60 dark:border-emerald-900/40 bg-white/80 dark:bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-emerald-200/60 dark:border-emerald-900/40 bg-white/80 dark:bg-card/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 h-14">
+          <div className="flex items-center gap-4 h-16">
             {/* Brand */}
             <Link to={createPageUrl('AssetDashboard')} className="flex items-center gap-2.5 shrink-0">
               <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 shadow-md shadow-emerald-300/40 dark:shadow-emerald-900/40">

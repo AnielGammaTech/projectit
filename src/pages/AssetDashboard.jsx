@@ -190,6 +190,7 @@ export default function AssetDashboard() {
             {Object.entries(assetsByType).map(([type, count]) => {
               const config = getTypeConfig(type);
               const TypeIcon = config.icon;
+              const percentage = assets.length > 0 ? Math.round((count / assets.length) * 100) : 0;
               return (
                 <div
                   key={type}
@@ -201,7 +202,14 @@ export default function AssetDashboard() {
                     </div>
                     <p className="text-xs font-medium text-muted-foreground truncate">{type}</p>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">{count}</p>
+                  <p className="text-2xl font-bold text-foreground mb-2">{count}</p>
+                  <div className="w-full bg-muted rounded-full h-1.5">
+                    <div
+                      className={cn("h-1.5 rounded-full transition-all duration-500", config.color)}
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">{percentage}% of total</p>
                 </div>
               );
             })}
@@ -211,26 +219,52 @@ export default function AssetDashboard() {
         {/* Recent Assignments */}
         <div>
           <h2 className="text-sm font-semibold text-foreground mb-3">Recent Assignments</h2>
-          <div className="rounded-2xl bg-white dark:bg-card border border-border divide-y divide-border">
+          <div className="rounded-2xl bg-white dark:bg-card border border-border overflow-hidden">
             {recentAssignments.length === 0 ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                No assignments yet
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="p-3 rounded-xl bg-muted mb-3">
+                  <ClipboardCheck className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium text-foreground">No assignments yet</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Assignments will appear here once assets are assigned to employees.
+                </p>
               </div>
             ) : (
-              recentAssignments.map(a => (
-                <div key={a.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 shrink-0">
-                    <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{a.asset_name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{a.employee_name}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground shrink-0">
-                    {a.assigned_date ? new Date(a.assigned_date).toLocaleDateString() : ''}
-                  </p>
+              <div className="divide-y divide-border">
+                {/* Table header */}
+                <div className="hidden sm:grid grid-cols-[1fr_1fr_auto_auto] gap-3 px-4 py-2 bg-muted/50">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Asset</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Employee</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Date</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</p>
                 </div>
-              ))
+                {recentAssignments.map(a => {
+                  const isReturned = !!a.returned_date;
+                  return (
+                    <div key={a.id} className="flex items-center gap-3 px-4 py-3 sm:grid sm:grid-cols-[1fr_1fr_auto_auto]">
+                      <div className="flex items-center gap-2 flex-1 min-w-0 sm:flex-none">
+                        <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 shrink-0 sm:hidden">
+                          <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <p className="text-sm font-medium text-foreground truncate">{a.asset_name}</p>
+                      </div>
+                      <p className="hidden sm:block text-sm text-muted-foreground truncate">{a.employee_name}</p>
+                      <p className="text-xs text-muted-foreground shrink-0">
+                        {a.assigned_date ? new Date(a.assigned_date).toLocaleDateString() : ''}
+                      </p>
+                      <span className={cn(
+                        "text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0",
+                        isReturned
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                          : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                      )}>
+                        {isReturned ? 'Returned' : 'Active'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>

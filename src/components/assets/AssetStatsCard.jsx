@@ -8,8 +8,7 @@ export default function AssetStatsCard({ title, value, icon: Icon, iconColor, de
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
       className={cn(
-        "rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3.5 border-l-4 bg-white dark:bg-card transition-all duration-200 h-full shadow-warm",
-        "border-l-[#0F2F44] dark:border-l-slate-600"
+        "rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3.5 border-l-4 border-l-emerald-500 bg-white dark:bg-card transition-all duration-200 h-full shadow-warm"
       )}
     >
       <div className="flex items-center gap-2 sm:gap-3">

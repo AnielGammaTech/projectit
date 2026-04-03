@@ -175,148 +175,186 @@ export default function AssetInventory() {
   return (
     <ManageITShell>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Add Asset button */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-muted-foreground">{assets.length} assets</p>
-          <Button onClick={openCreate} size="sm" className="shrink-0">
+          <div>
+            <p className="text-lg font-semibold text-foreground">
+              {assets.length} {assets.length === 1 ? 'asset' : 'assets'}
+            </p>
+            <p className="text-xs text-muted-foreground">Manage your organization's inventory</p>
+          </div>
+          <Button
+            onClick={openCreate}
+            size="sm"
+            className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
             <Plus className="w-4 h-4 mr-1" />
             Add Asset
           </Button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-2 mb-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, serial, or model..."
-              className="pl-9"
-            />
+        <div className="rounded-2xl bg-card border border-border p-3 mb-4">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name, serial, or model..."
+                className="pl-9"
+              />
+            </div>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {ASSET_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="Available">Available</SelectItem>
+                <SelectItem value="Assigned">Assigned</SelectItem>
+                <SelectItem value="Returned">Returned</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full sm:w-44">
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              {ASSET_TYPES.map((t) => (
-                <SelectItem key={t} value={t}>{t}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="Available">Available</SelectItem>
-              <SelectItem value="Assigned">Assigned</SelectItem>
-              <SelectItem value="Returned">Returned</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Asset list */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-            <Package className="w-12 h-12 mb-3 opacity-40" />
-            <p className="font-medium">No assets found</p>
-            <p className="text-sm mt-1">Try adjusting your filters or add a new asset.</p>
+          <div className="rounded-2xl border border-dashed border-muted-foreground/25 bg-muted/30 flex flex-col items-center justify-center py-16">
+            <div className="p-4 rounded-2xl bg-muted mb-4">
+              <Package className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium text-foreground">No assets found</p>
+            <p className="text-xs text-muted-foreground mt-1 mb-4">Try adjusting your filters or add a new asset.</p>
+            <Button
+              onClick={openCreate}
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add Asset
+            </Button>
           </div>
         ) : (
-          <div className="rounded-2xl border divide-y bg-card">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered.map((asset) => {
               const TypeIcon = TYPE_ICONS[asset.type] || HardDrive;
+              const typeColor = {
+                'IT Equipment': 'bg-blue-500',
+                'Mobile Device': 'bg-violet-500',
+                'Software License': 'bg-amber-500',
+                'Vehicle': 'bg-emerald-500',
+                'Physical Tool': 'bg-orange-500',
+              }[asset.type] || 'bg-slate-500';
+
               return (
                 <div
                   key={asset.id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+                  className="rounded-2xl bg-card border border-border p-4 hover:shadow-md transition-all duration-200"
                 >
-                  {/* Type icon */}
-                  <div className="p-2 rounded-lg bg-muted shrink-0">
-                    <TypeIcon className="w-4 h-4 text-muted-foreground" />
+                  {/* Top row: icon + name + actions */}
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className={cn("p-2 rounded-xl shrink-0", typeColor)}>
+                      <TypeIcon className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Link
+                        to={createPageUrl('AssetDetail') + `?id=${asset.id}`}
+                        className="font-semibold text-sm text-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate block"
+                      >
+                        {asset.name}
+                      </Link>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        {[asset.manufacturer, asset.model, asset.serial_number]
+                          .filter(Boolean)
+                          .join(' / ') || 'No details'}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      to={createPageUrl('AssetDetail') + `?id=${asset.id}`}
-                      className="font-medium text-sm text-foreground hover:underline truncate block"
+                  {/* Badges row */}
+                  <div className="flex items-center gap-1.5 flex-wrap mb-3">
+                    <Badge
+                      variant="secondary"
+                      className={cn('text-[10px]', STATUS_STYLES[asset.status])}
                     >
-                      {asset.name}
-                    </Link>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {[asset.manufacturer, asset.model, asset.serial_number]
-                        .filter(Boolean)
-                        .join(' - ') || 'No details'}
-                    </p>
+                      {asset.status}
+                    </Badge>
+                    {asset.condition && (
+                      <Badge
+                        variant="secondary"
+                        className={cn('text-[10px]', CONDITION_STYLES[asset.condition])}
+                      >
+                        {asset.condition}
+                      </Badge>
+                    )}
                   </div>
 
                   {/* Assigned employee */}
                   {asset.assignedEmployee && (
-                    <span className="hidden sm:inline-flex text-xs text-muted-foreground truncate max-w-[120px]">
-                      {asset.assignedEmployee.full_name || asset.assignedEmployee.name}
-                    </span>
+                    <p className="text-xs text-muted-foreground mb-3 truncate">
+                      Assigned to{' '}
+                      <span className="font-medium text-foreground">
+                        {asset.assignedEmployee.full_name || asset.assignedEmployee.name}
+                      </span>
+                    </p>
                   )}
 
-                  {/* Status badge */}
-                  <Badge
-                    variant="secondary"
-                    className={cn('text-[10px] shrink-0', STATUS_STYLES[asset.status])}
-                  >
-                    {asset.status}
-                  </Badge>
-
-                  {/* Condition badge */}
-                  {asset.condition && (
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        'text-[10px] shrink-0 hidden sm:inline-flex',
-                        CONDITION_STYLES[asset.condition]
-                      )}
+                  {/* Actions row */}
+                  <div className="flex items-center gap-1.5 pt-2 border-t border-border">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="h-7 text-xs px-2"
                     >
-                      {asset.condition}
-                    </Badge>
-                  )}
-
-                  {/* Actions */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link to={createPageUrl('AssetDetail') + `?id=${asset.id}`}>
-                          <Eye className="w-4 h-4 mr-2" /> View
-                        </Link>
-                      </DropdownMenuItem>
-                      {asset.status === 'Available' && (
-                        <DropdownMenuItem onClick={() => setAssignReturnAsset(asset)}>
-                          <UserPlus className="w-4 h-4 mr-2" /> Assign
+                      <Link to={createPageUrl('AssetDetail') + `?id=${asset.id}`}>
+                        <Eye className="w-3.5 h-3.5 mr-1" />
+                        View
+                      </Link>
+                    </Button>
+                    <div className="flex-1" />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <MoreHorizontal className="w-3.5 h-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {asset.status === 'Available' && (
+                          <DropdownMenuItem onClick={() => setAssignReturnAsset(asset)}>
+                            <UserPlus className="w-4 h-4 mr-2" /> Assign
+                          </DropdownMenuItem>
+                        )}
+                        {asset.status === 'Assigned' && (
+                          <DropdownMenuItem onClick={() => setAssignReturnAsset(asset)}>
+                            <RotateCcw className="w-4 h-4 mr-2" /> Return
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => openEdit(asset)}>
+                          <Edit2 className="w-4 h-4 mr-2" /> Edit
                         </DropdownMenuItem>
-                      )}
-                      {asset.status === 'Assigned' && (
-                        <DropdownMenuItem onClick={() => setAssignReturnAsset(asset)}>
-                          <RotateCcw className="w-4 h-4 mr-2" /> Return
+                        <DropdownMenuItem
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => setDeleteConfirm({ open: true, asset })}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" /> Delete
                         </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem onClick={() => openEdit(asset)}>
-                        <Edit2 className="w-4 h-4 mr-2" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-red-600 focus:text-red-600"
-                        onClick={() => setDeleteConfirm({ open: true, asset })}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               );
             })}
