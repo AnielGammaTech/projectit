@@ -23,6 +23,7 @@ const migrations = [
   '007_create_apikey_table.sql',
   '008_create_device_token_table.sql',
   '009_create_asset_tables.sql',
+  '010_create_otp_challenges.sql',
 ];
 
 async function migrate() {
