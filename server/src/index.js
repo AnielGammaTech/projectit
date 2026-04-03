@@ -68,6 +68,17 @@ app.use('/api/external', externalApiRoutes);
 // Error handler (must be last)
 app.use(errorHandler);
 
+// Production env guards — fail fast if required secrets are missing
+if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production') {
+  const requiredSecrets = ['INCOMING_WEBHOOK_SECRET'];
+  const missing = requiredSecrets.filter(s => !process.env[s]);
+  if (missing.length > 0) {
+    console.error(`[FATAL] Missing required production secrets: ${missing.join(', ')}`);
+    console.error('Set these environment variables before starting in production.');
+    process.exit(1);
+  }
+}
+
 app.listen(PORT, () => {
   console.log(`ProjectIT API server running on port ${PORT}`);
 
