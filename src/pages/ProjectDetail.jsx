@@ -146,7 +146,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] sm:max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
         <div className="p-3.5 pb-2">
@@ -383,7 +383,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] sm:max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
         <div className="p-3.5 pb-2">
@@ -1730,7 +1730,7 @@ export default function ProjectDetail() {
         {/* ── Desktop: Tool Cards Grid + Sidebar ── */}
         <div className="hidden sm:grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
           {/* Main Cards — 2x2 grid + Due Dates right column */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_240px] gap-3 auto-rows-min">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_240px] gap-3">
 
             {/* Upcoming Due Dates — spans right column */}
             <motion.div
@@ -1759,7 +1759,7 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] sm:max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-400" />
                 <div className="p-3.5 pb-2">
@@ -1813,7 +1813,7 @@ export default function ProjectDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] sm:max-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
+                className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 h-full sm:min-h-[220px] border border-border bg-card hover:shadow-lg dark:hover:shadow-slate-900/30 hover:-translate-y-0.5"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-400" />
                 <div className="p-3.5">
