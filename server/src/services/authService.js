@@ -5,9 +5,6 @@ import emailService from './emailService.js';
 import crypto from 'crypto';
 import { UAParser } from 'ua-parser-js';
 
-// In-memory OTP store (codes expire after 10 minutes)
-const otpStore = new Map(); // email → { code, expiresAt }
-
 const authService = {
   /**
    * Generate and send a 6-digit OTP code via Resend (not Supabase).
@@ -22,18 +19,26 @@ const authService = {
       [lowerEmail]
     );
     if (rows.length === 0) {
-      throw Object.assign(new Error('No account found with this email'), { status: 404 });
+      // Return success-style response to prevent account enumeration
+      console.warn(`OTP requested for non-existent email: ${lowerEmail}`);
+      return { success: true, message: 'If an account exists with this email, a verification code has been sent.' };
     }
 
     // Generate 6-digit code
     const code = String(crypto.randomInt(100000, 999999));
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-    otpStore.set(lowerEmail, { code, expiresAt });
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Clean up expired codes periodically
-    for (const [key, val] of otpStore) {
-      if (val.expiresAt < Date.now()) otpStore.delete(key);
-    }
+    // Invalidate any existing challenges for this email
+    await pool.query('DELETE FROM otp_challenges WHERE email = $1', [lowerEmail]);
+
+    // Store new challenge
+    await pool.query(
+      'INSERT INTO otp_challenges (email, code, expires_at) VALUES ($1, $2, $3)',
+      [lowerEmail, code, expiresAt.toISOString()]
+    );
+
+    // Clean up expired challenges
+    await pool.query('DELETE FROM otp_challenges WHERE expires_at < NOW()');
 
     const firstName = rows[0].full_name?.split(' ')[0] || 'there';
 
@@ -69,7 +74,7 @@ const authService = {
       from_email: process.env.RESEND_FROM_EMAIL || 'noreply@gamma.tech',
     });
 
-    return { success: true, email: lowerEmail };
+    return { success: true, message: 'If an account exists with this email, a verification code has been sent.' };
   },
 
   /**
@@ -79,22 +84,34 @@ const authService = {
   async verifyOtpCode(email, code) {
     const lowerEmail = email.toLowerCase();
 
-    const stored = otpStore.get(lowerEmail);
-    if (!stored) {
+    const { rows: challenges } = await pool.query(
+      'SELECT * FROM otp_challenges WHERE email = $1 AND consumed = FALSE ORDER BY created_at DESC LIMIT 1',
+      [lowerEmail]
+    );
+
+    if (challenges.length === 0) {
       throw Object.assign(new Error('No verification code found. Please request a new one.'), { status: 400 });
     }
 
-    if (Date.now() > stored.expiresAt) {
-      otpStore.delete(lowerEmail);
+    const challenge = challenges[0];
+
+    if (new Date() > new Date(challenge.expires_at)) {
+      await pool.query('DELETE FROM otp_challenges WHERE id = $1', [challenge.id]);
       throw Object.assign(new Error('Code has expired. Please request a new one.'), { status: 400 });
     }
 
-    if (stored.code !== code.trim()) {
+    if (challenge.attempts >= challenge.max_attempts) {
+      await pool.query('DELETE FROM otp_challenges WHERE id = $1', [challenge.id]);
+      throw Object.assign(new Error('Too many attempts. Please request a new code.'), { status: 429 });
+    }
+
+    if (challenge.code !== code.trim()) {
+      await pool.query('UPDATE otp_challenges SET attempts = attempts + 1 WHERE id = $1', [challenge.id]);
       throw Object.assign(new Error('Invalid code. Please check and try again.'), { status: 400 });
     }
 
     // Code is valid — consume it
-    otpStore.delete(lowerEmail);
+    await pool.query('DELETE FROM otp_challenges WHERE email = $1', [lowerEmail]);
 
     // Get the user's Supabase UID
     const { rows } = await pool.query(
