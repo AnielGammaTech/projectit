@@ -68,14 +68,13 @@ app.use('/api/external', externalApiRoutes);
 // Error handler (must be last)
 app.use(errorHandler);
 
-// Production env guards — fail fast if required secrets are missing
+// Production env guards — warn if required secrets are missing
 if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production') {
-  const requiredSecrets = ['INCOMING_WEBHOOK_SECRET'];
-  const missing = requiredSecrets.filter(s => !process.env[s]);
+  const recommendedSecrets = ['INCOMING_WEBHOOK_SECRET'];
+  const missing = recommendedSecrets.filter(s => !process.env[s]);
   if (missing.length > 0) {
-    console.error(`[FATAL] Missing required production secrets: ${missing.join(', ')}`);
-    console.error('Set these environment variables before starting in production.');
-    process.exit(1);
+    console.warn(`[SECURITY WARNING] Missing recommended production secrets: ${missing.join(', ')}`);
+    console.warn('Webhook endpoints will reject requests until these are configured.');
   }
 }
 
