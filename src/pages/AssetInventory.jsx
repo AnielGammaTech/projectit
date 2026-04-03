@@ -307,7 +307,7 @@ export default function AssetInventory() {
                     <p className="text-xs text-muted-foreground mb-3 truncate">
                       Assigned to{' '}
                       <span className="font-medium text-foreground">
-                        {asset.assignedEmployee.full_name || asset.assignedEmployee.name}
+                        {`${asset.assignedEmployee.first_name || ''} ${asset.assignedEmployee.last_name || ''}`.trim() || asset.assignedEmployee.email || 'Unknown'}
                       </span>
                     </p>
                   )}

@@ -149,7 +149,7 @@ export default function AssetLicenses() {
                   {/* Assigned employee */}
                   {license.assignedEmployee && (
                     <span className="hidden sm:inline-flex text-xs text-muted-foreground truncate max-w-[120px]">
-                      {license.assignedEmployee.full_name || license.assignedEmployee.name}
+                      {`${license.assignedEmployee.first_name || ''} ${license.assignedEmployee.last_name || ''}`.trim() || license.assignedEmployee.email || 'Unknown'}
                     </span>
                   )}
 

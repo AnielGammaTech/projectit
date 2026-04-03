@@ -201,7 +201,7 @@ export default function AssetDetail() {
     .sort((a, b) => new Date(b.assigned_date) - new Date(a.assigned_date));
 
   const employeeMap = new Map(
-    employees.map((e) => [e.id, e.full_name || e.name || 'Unknown'])
+    employees.map((e) => [e.id, `${e.first_name || ''} ${e.last_name || ''}`.trim() || e.email || 'Unknown'])
   );
 
   const invalidateAll = () => {
