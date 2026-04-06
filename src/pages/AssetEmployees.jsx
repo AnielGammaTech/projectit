@@ -119,7 +119,7 @@ export default function AssetEmployees() {
             size="sm"
             onClick={handleSync}
             disabled={syncing}
-            className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white"
           >
             <RefreshCw className={cn('w-4 h-4 mr-2', syncing && 'animate-spin')} />
             Sync JumpCloud
@@ -153,7 +153,7 @@ export default function AssetEmployees() {
               size="sm"
               onClick={handleSync}
               disabled={syncing}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white"
             >
               <RefreshCw className={cn('w-4 h-4 mr-1', syncing && 'animate-spin')} />
               Sync JumpCloud

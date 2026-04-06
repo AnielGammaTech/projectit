@@ -186,7 +186,7 @@ export default function AssetInventory() {
           <Button
             onClick={openCreate}
             size="sm"
-            className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white"
           >
             <Plus className="w-4 h-4 mr-1" />
             Add Asset
@@ -241,7 +241,7 @@ export default function AssetInventory() {
             <Button
               onClick={openCreate}
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white"
             >
               <Plus className="w-4 h-4 mr-1" />
               Add Asset
@@ -272,7 +272,7 @@ export default function AssetInventory() {
                     <div className="flex-1 min-w-0">
                       <Link
                         to={createPageUrl('AssetDetail') + `?id=${asset.id}`}
-                        className="font-semibold text-sm text-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate block"
+                        className="font-semibold text-sm text-foreground hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors truncate block"
                       >
                         {asset.name}
                       </Link>
@@ -325,6 +325,28 @@ export default function AssetInventory() {
                         View
                       </Link>
                     </Button>
+                    {asset.status === 'Available' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs px-2 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:text-emerald-300 dark:hover:bg-emerald-900/20"
+                        onClick={() => setAssignReturnAsset(asset)}
+                      >
+                        <UserPlus className="w-3.5 h-3.5 mr-1" />
+                        Assign
+                      </Button>
+                    )}
+                    {asset.status === 'Assigned' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs px-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-900/20"
+                        onClick={() => setAssignReturnAsset(asset)}
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                        Return
+                      </Button>
+                    )}
                     <div className="flex-1" />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -333,16 +355,6 @@ export default function AssetInventory() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {asset.status === 'Available' && (
-                          <DropdownMenuItem onClick={() => setAssignReturnAsset(asset)}>
-                            <UserPlus className="w-4 h-4 mr-2" /> Assign
-                          </DropdownMenuItem>
-                        )}
-                        {asset.status === 'Assigned' && (
-                          <DropdownMenuItem onClick={() => setAssignReturnAsset(asset)}>
-                            <RotateCcw className="w-4 h-4 mr-2" /> Return
-                          </DropdownMenuItem>
-                        )}
                         <DropdownMenuItem onClick={() => openEdit(asset)}>
                           <Edit2 className="w-4 h-4 mr-2" /> Edit
                         </DropdownMenuItem>

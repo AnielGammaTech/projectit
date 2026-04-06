@@ -1,9 +1,20 @@
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/AuthContext';
+import { Button } from '@/components/ui/button';
 import {
-  HardDrive, Package, Users, TrendingUp,
+  HardDrive, Package, Users, TrendingUp, Shield, ArrowLeft,
 } from 'lucide-react';
+
+function ManageITLogo({ className = "w-5 h-5" }) {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" className={className}>
+      <text x="4" y="26" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="28" fill="white">M</text>
+      <circle cx="26" cy="6" r="3.5" fill="#4ade80" />
+    </svg>
+  );
+}
 
 const MANAGEIT_TABS = [
   { name: 'Dashboard', icon: HardDrive, page: 'AssetDashboard' },
@@ -24,24 +35,59 @@ const PAGE_TO_TAB = {
 export default function ManageITShell({ children }) {
   const location = useLocation();
   const currentPath = location.pathname.replace('/', '');
+  const { user: currentUser, isLoadingAuth } = useAuth();
 
   const activeTab = PAGE_TO_TAB[currentPath] || currentPath;
+
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="max-w-4xl w-full mx-auto px-4 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+              <div className="h-4 w-48 bg-slate-100 dark:bg-slate-700/50 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentUser?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-16 h-16 mx-auto text-red-400 mb-4" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">Access Denied</h2>
+          <p className="text-muted-foreground mb-4">You need administrator privileges to access ManageIT.</p>
+          <Link to={createPageUrl('Dashboard')}>
+            <Button variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50/60 via-background to-background dark:from-emerald-950/20 dark:via-background dark:to-background">
       {/* ManageIT branded sub-header */}
-      <div className="border-b border-emerald-200/60 dark:border-emerald-900/40 bg-white/80 dark:bg-card/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
+      <div className="border-b border-emerald-300/60 dark:border-emerald-900/40 bg-white/80 dark:bg-card/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 h-16">
+          <div className="flex items-center gap-4 h-14">
             {/* Brand */}
             <Link to={createPageUrl('AssetDashboard')} className="flex items-center gap-2.5 shrink-0">
-              <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 shadow-md shadow-emerald-300/40 dark:shadow-emerald-900/40">
-                <HardDrive className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-700 to-green-800 shadow-md shadow-emerald-400/30 dark:shadow-emerald-900/40 flex items-center justify-center">
+                <ManageITLogo className="w-5 h-5" />
               </div>
-              <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tracking-tight">ManageIT</span>
+              <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300 tracking-tight">ManageIT</span>
             </Link>
 
-            <div className="h-6 w-px bg-emerald-200/80 dark:bg-emerald-800/60 shrink-0" />
+            <div className="h-6 w-px bg-emerald-300/80 dark:bg-emerald-800/60 shrink-0" />
 
             {/* Tab navigation — pill buttons matching main nav style */}
             <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
@@ -53,15 +99,15 @@ export default function ManageITShell({ children }) {
                     key={tab.page}
                     to={createPageUrl(tab.page)}
                     className={cn(
-                      "flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm transition-all relative group",
+                      "inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-sm transition-all relative group",
                       isActive
-                        ? "bg-emerald-600 text-white font-medium shadow-md shadow-emerald-300/40 dark:shadow-emerald-900/40"
-                        : "text-slate-500 dark:text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:text-emerald-300 dark:hover:bg-emerald-900/20"
+                        ? "bg-emerald-700 text-white font-medium shadow-md shadow-emerald-400/30 dark:shadow-emerald-900/40"
+                        : "text-slate-500 dark:text-slate-400 hover:text-emerald-800 hover:bg-emerald-50 dark:hover:text-emerald-300 dark:hover:bg-emerald-900/20"
                     )}
                   >
                     <Icon className={cn(
-                      "w-4 h-4",
-                      isActive ? "text-white/90" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400"
+                      "w-4 h-4 shrink-0",
+                      isActive ? "text-white/90" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400"
                     )} />
                     {tab.name}
                   </Link>

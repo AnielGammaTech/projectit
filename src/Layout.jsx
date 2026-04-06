@@ -63,13 +63,13 @@ const navItems = [
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Stock', icon: Package, page: 'Stock' },
   { name: 'Reports', icon: PieChart, page: 'Reports' },
-  { name: 'ManageIT', icon: HardDrive, page: 'AssetDashboard', brand: {
-    activeText: 'text-emerald-300',
-    activeIcon: 'text-emerald-400',
-    activeBg: 'bg-emerald-500/15',
-    hoverText: 'hover:text-emerald-300',
-    hoverBg: 'hover:bg-emerald-500/10',
-    iconGradient: 'bg-gradient-to-br from-emerald-500 to-green-600',
+  { name: 'ManageIT', icon: HardDrive, page: 'AssetDashboard', adminOnly: true, brand: {
+    activeText: 'text-emerald-200',
+    activeIcon: 'text-emerald-300',
+    activeBg: 'bg-emerald-700/20',
+    hoverText: 'hover:text-emerald-200',
+    hoverBg: 'hover:bg-emerald-700/10',
+    iconGradient: 'bg-gradient-to-br from-emerald-700 to-green-800',
     matchPages: ['AssetDashboard', 'AssetInventory', 'AssetDetail', 'AssetAssign', 'AssetEmployees', 'AssetEmployeeDetail', 'AssetLicenses', 'AssetReports', 'MyAssets'],
   }},
 ];
@@ -235,7 +235,7 @@ function LayoutContent({ children, currentPageName }) {
 
           {/* Center: Desktop Nav Items */}
           <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
-              {navItems.map((item, index) => {
+              {navItems.filter(item => !item.adminOnly || isAdmin).map((item, index) => {
                 if (item.type === 'separator') {
                   return (
                     <div key={index} className="mx-1.5 h-5 w-px bg-white/20" />
@@ -570,7 +570,7 @@ function LayoutContent({ children, currentPageName }) {
           </Button>
         </div>
         <nav className="flex-1 overflow-y-auto p-3">
-          {navItems.map((item, index) => {
+          {navItems.filter(item => !item.adminOnly || isAdmin).map((item, index) => {
             if (item.type === 'separator') {
               return (
                 <div key={index} className="pt-4 pb-1 px-3">

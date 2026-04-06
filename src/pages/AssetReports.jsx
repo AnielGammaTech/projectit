@@ -224,7 +224,7 @@ export default function AssetReports() {
           title="Total Value"
           value={formattedValue}
           icon={DollarSign}
-          iconColor="bg-emerald-600"
+          iconColor="bg-emerald-700"
           delay={0.05}
         />
         <AssetStatsCard
