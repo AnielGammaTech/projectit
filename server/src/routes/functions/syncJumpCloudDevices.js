@@ -137,9 +137,10 @@ export default async function syncJumpCloudDevices(req, res) {
         created++;
       }
 
-      // 4. Auto-assign if JumpCloud has a user binding and no active assignment exists
+      // 4. Auto-assign if JumpCloud has a user binding, asset not locked, and no active assignment
+      const isLocked = existing?.sync_locked || assetData.sync_locked;
       const boundUserId = systemUserMap.get(sysId);
-      if (boundUserId) {
+      if (boundUserId && !isLocked) {
         const employee = employeeByJcId.get(boundUserId);
         if (employee) {
           const hasActive = existingAssignments.some(

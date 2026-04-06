@@ -21,6 +21,8 @@ import {
   UserPlus,
   RotateCcw,
   RefreshCw,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -161,6 +163,17 @@ export default function AssetInventory() {
   const openCreate = () => {
     setEditingAsset(null);
     setShowModal(true);
+  };
+
+  const toggleSyncLock = async (asset) => {
+    const locked = !asset.sync_locked;
+    try {
+      await api.entities.Asset.update(asset.id, { sync_locked: locked });
+      toast.success(locked ? 'Asset locked — sync will skip auto-assignment' : 'Asset unlocked — sync can auto-assign');
+      invalidateAll();
+    } catch {
+      toast.error('Failed to update asset');
+    }
   };
 
   if (loadingAssets) return <CardGridSkeleton />;
@@ -328,6 +341,9 @@ export default function AssetInventory() {
                         {asset.condition}
                       </Badge>
                     )}
+                    {asset.sync_locked && (
+                      <Lock className="w-3 h-3 text-muted-foreground" title="Sync locked" />
+                    )}
                   </div>
 
                   {/* Assigned employee */}
@@ -383,6 +399,12 @@ export default function AssetInventory() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => toggleSyncLock(asset)}>
+                          {asset.sync_locked
+                            ? <><Unlock className="w-4 h-4 mr-2" /> Unlock Sync</>
+                            : <><Lock className="w-4 h-4 mr-2" /> Lock Sync</>
+                          }
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => openEdit(asset)}>
                           <Edit2 className="w-4 h-4 mr-2" /> Edit
                         </DropdownMenuItem>
