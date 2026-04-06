@@ -313,15 +313,15 @@ export default function AssetInventory() {
                   )}
 
                   {/* Actions row */}
-                  <div className="flex items-center gap-1.5 pt-2 border-t border-border">
+                  <div className="flex items-center gap-2 pt-3 border-t border-border">
                     <Button
                       variant="ghost"
                       size="sm"
                       asChild
-                      className="h-7 text-xs px-2"
+                      className="h-8 text-sm px-3"
                     >
                       <Link to={createPageUrl('AssetDetail') + `?id=${asset.id}`}>
-                        <Eye className="w-3.5 h-3.5 mr-1" />
+                        <Eye className="w-4 h-4 mr-1.5" />
                         View
                       </Link>
                     </Button>
@@ -329,10 +329,10 @@ export default function AssetInventory() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs px-2 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:text-emerald-300 dark:hover:bg-emerald-900/20"
+                        className="h-8 text-sm px-3 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:text-emerald-300 dark:hover:bg-emerald-900/20"
                         onClick={() => setAssignReturnAsset(asset)}
                       >
-                        <UserPlus className="w-3.5 h-3.5 mr-1" />
+                        <UserPlus className="w-4 h-4 mr-1.5" />
                         Assign
                       </Button>
                     )}
@@ -340,18 +340,18 @@ export default function AssetInventory() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs px-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-900/20"
+                        className="h-8 text-sm px-3 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-900/20"
                         onClick={() => setAssignReturnAsset(asset)}
                       >
-                        <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                        <RotateCcw className="w-4 h-4 mr-1.5" />
                         Return
                       </Button>
                     )}
                     <div className="flex-1" />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7">
-                          <MoreHorizontal className="w-3.5 h-3.5" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">

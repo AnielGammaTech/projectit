@@ -34,9 +34,12 @@ const PAGE_TO_TAB = {
 
 export default function ManageITShell({ children }) {
   const location = useLocation();
-  const currentPath = location.pathname.replace('/', '');
+  const rawPath = location.pathname.replace('/', '');
   const { user: currentUser, isLoadingAuth } = useAuth();
 
+  // Match case-insensitively: URL is lowercase but tab pages are PascalCase
+  const allPages = [...MANAGEIT_TABS.map(t => t.page), ...Object.keys(PAGE_TO_TAB)];
+  const currentPath = allPages.find(p => p.toLowerCase() === rawPath.toLowerCase()) || rawPath;
   const activeTab = PAGE_TO_TAB[currentPath] || currentPath;
 
   if (isLoadingAuth) {
