@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Shield, Wifi, ShoppingBag } from 'lucide-react';
 
 const ASSET_TYPES = [
   'IT Equipment',
@@ -44,6 +44,13 @@ const INITIAL_FORM = {
   license_key: '',
   expiry_date: '',
   notes: '',
+  warranty_start: '',
+  warranty_end: '',
+  mac_address: '',
+  hostname: '',
+  ip_address: '',
+  accessories: '',
+  supplier: '',
 };
 
 function buildFormData(asset) {
@@ -61,6 +68,13 @@ function buildFormData(asset) {
     license_key: asset.license_key || '',
     expiry_date: asset.expiry_date || '',
     notes: asset.notes || '',
+    warranty_start: asset.warranty_start || '',
+    warranty_end: asset.warranty_end || '',
+    mac_address: asset.mac_address || '',
+    hostname: asset.hostname || '',
+    ip_address: asset.ip_address || '',
+    accessories: asset.accessories || '',
+    supplier: asset.supplier || '',
   };
 }
 
@@ -108,6 +122,7 @@ export default function AssetModal({ open, onClose, asset, onSave }) {
   };
 
   const isSoftware = formData.type === 'Software License';
+  const isNetworkDevice = formData.type === 'IT Equipment' || formData.type === 'Mobile Device';
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
@@ -255,6 +270,103 @@ export default function AssetModal({ open, onClose, asset, onSave }) {
               rows={3}
               placeholder="Additional notes..."
             />
+          </div>
+
+          {/* Additional Details */}
+          <div className="pt-2 border-t">
+            <p className="text-sm font-medium text-muted-foreground mb-3">Additional Details</p>
+
+            {/* Warranty section — hidden for Software License */}
+            {!isSoftware && (
+              <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-muted/50 border mb-3">
+                <div className="col-span-2 flex items-center gap-1.5 text-sm font-medium">
+                  <Shield className="w-4 h-4" />
+                  Warranty
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="warranty-start">Warranty Start</Label>
+                  <Input
+                    id="warranty-start"
+                    type="date"
+                    value={formData.warranty_start}
+                    onChange={(e) => updateField('warranty_start', e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="warranty-end">Warranty End</Label>
+                  <Input
+                    id="warranty-end"
+                    type="date"
+                    value={formData.warranty_end}
+                    onChange={(e) => updateField('warranty_end', e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Network section — only for IT Equipment or Mobile Device */}
+            {isNetworkDevice && (
+              <div className="grid gap-3 p-3 rounded-xl bg-muted/50 border mb-3">
+                <div className="flex items-center gap-1.5 text-sm font-medium">
+                  <Wifi className="w-4 h-4" />
+                  Network
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="mac-address">MAC Address</Label>
+                    <Input
+                      id="mac-address"
+                      value={formData.mac_address}
+                      onChange={(e) => updateField('mac_address', e.target.value)}
+                      placeholder="AA:BB:CC:DD:EE:FF"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="hostname">Hostname</Label>
+                    <Input
+                      id="hostname"
+                      value={formData.hostname}
+                      onChange={(e) => updateField('hostname', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="ip-address">IP Address</Label>
+                  <Input
+                    id="ip-address"
+                    value={formData.ip_address}
+                    onChange={(e) => updateField('ip_address', e.target.value)}
+                    placeholder="192.168.1.x"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* General section — always visible */}
+            <div className="grid gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="accessories">Accessories</Label>
+                <Input
+                  id="accessories"
+                  value={formData.accessories}
+                  onChange={(e) => updateField('accessories', e.target.value)}
+                  placeholder="Charger, dock, carrying bag..."
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="supplier">
+                  <span className="flex items-center gap-1.5">
+                    <ShoppingBag className="w-4 h-4" />
+                    Supplier/Vendor
+                  </span>
+                </Label>
+                <Input
+                  id="supplier"
+                  value={formData.supplier}
+                  onChange={(e) => updateField('supplier', e.target.value)}
+                />
+              </div>
+            </div>
           </div>
         </div>
 

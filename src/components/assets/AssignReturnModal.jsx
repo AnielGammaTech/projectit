@@ -19,9 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { UserPlus, RotateCcw, Search, User, Briefcase } from 'lucide-react';
+import { UserPlus, RotateCcw, Search, User, Briefcase, Copy, Check, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import SignatureCanvas from '@/components/assets/SignatureCanvas';
 
 const CONDITIONS = ['New', 'Good', 'Fair', 'Damaged'];
 
@@ -36,13 +35,20 @@ function getActiveAssignment(assetId, assignments) {
   return assignments.find((a) => a.asset_id === assetId && !a.returned_date) ?? null;
 }
 
+function generateToken() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export default function AssignReturnModal({ open, onClose, asset, employees, assignments, onSave }) {
   const [employeeId, setEmployeeId] = useState('');
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [condition, setCondition] = useState('Good');
   const [notes, setNotes] = useState('');
-  const [signature, setSignature] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [acceptanceLink, setAcceptanceLink] = useState(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const activeAssignment = getActiveAssignment(asset?.id, assignments);
   const isReturn = !!activeAssignment;
@@ -53,8 +59,9 @@ export default function AssignReturnModal({ open, onClose, asset, employees, ass
       setEmployeeSearch('');
       setCondition('Good');
       setNotes('');
-      setSignature(null);
       setSaving(false);
+      setAcceptanceLink(null);
+      setLinkCopied(false);
     }
   }, [open]);
 
@@ -86,21 +93,42 @@ export default function AssignReturnModal({ open, onClose, asset, employees, ass
     }
     setSaving(true);
     try {
-      await api.entities.AssetAssignment.create({
+      // Create the assignment
+      const assignment = await api.entities.AssetAssignment.create({
         asset_id: asset.id,
         employee_id: employeeId,
         assigned_date: new Date().toISOString().split('T')[0],
         condition_at_checkout: condition,
         notes,
-        signature_data: signature,
       });
       await api.entities.Asset.update(asset.id, { ...asset, status: 'Assigned' });
+
+      // Generate acceptance token
+      const rawToken = generateToken();
+      const tokenHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawToken))
+        .then(buf => Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join(''));
+
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      await api.entities.AssetAcceptance.create({
+        token_hash: tokenHash,
+        assignment_id: assignment.id,
+        asset_id: asset.id,
+        employee_id: employeeId,
+        status: 'pending',
+        expires_at: expiresAt,
+        assigned_date: new Date().toISOString().split('T')[0],
+        condition_at_checkout: condition,
+        terms_text: 'I acknowledge receipt of this company asset in the condition described above. I agree to use it responsibly, report any damage or issues promptly, and return it upon request or when my employment ends.',
+      });
+
+      const link = `${window.location.origin}/accept/${rawToken}`;
+      setAcceptanceLink(link);
+
       toast.success(`Assigned to ${getEmployeeName(selectedEmployee)}`);
       onSave?.();
-      onClose();
     } catch (error) {
       toast.error('Failed to assign asset');
-    } finally {
       setSaving(false);
     }
   };
@@ -250,28 +278,63 @@ export default function AssignReturnModal({ open, onClose, asset, employees, ass
                 <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Assignment notes..." rows={2} />
               </div>
 
-              <div className="space-y-1.5">
-                <Label>Acknowledgment Signature</Label>
-                <SignatureCanvas onSignatureChange={setSignature} />
+              <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-3">
+                <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300">
+                  <Link2 className="w-3.5 h-3.5" />
+                  <span>An acknowledgment link will be generated after assignment for the employee to sign.</span>
+                </div>
               </div>
             </>
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
-          {isReturn ? (
-            <Button onClick={handleReturn} disabled={saving} className="bg-amber-600 hover:bg-amber-700 text-white">
-              <RotateCcw className="w-4 h-4 mr-1" />
-              {saving ? 'Returning...' : 'Return Asset'}
-            </Button>
-          ) : (
-            <Button onClick={handleAssign} disabled={saving || !employeeId} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-              <UserPlus className="w-4 h-4 mr-1" />
-              {saving ? 'Assigning...' : 'Assign Asset'}
-            </Button>
-          )}
-        </DialogFooter>
+        {acceptanceLink ? (
+          <div className="space-y-3 pt-2">
+            <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-4">
+              <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-2">Acknowledgment Link Ready</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-3">Send this link to the employee to sign. It expires in 7 days.</p>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={acceptanceLink}
+                  readOnly
+                  className="text-xs font-mono bg-white dark:bg-slate-900"
+                  onClick={e => e.target.select()}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0"
+                  onClick={() => {
+                    navigator.clipboard.writeText(acceptanceLink);
+                    setLinkCopied(true);
+                    toast.success('Link copied to clipboard');
+                    setTimeout(() => setLinkCopied(false), 2000);
+                  }}
+                >
+                  {linkCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={onClose}>Done</Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+            {isReturn ? (
+              <Button onClick={handleReturn} disabled={saving} className="bg-amber-600 hover:bg-amber-700 text-white">
+                <RotateCcw className="w-4 h-4 mr-1" />
+                {saving ? 'Returning...' : 'Return Asset'}
+              </Button>
+            ) : (
+              <Button onClick={handleAssign} disabled={saving || !employeeId} className="bg-emerald-700 hover:bg-emerald-800 text-white">
+                <UserPlus className="w-4 h-4 mr-1" />
+                {saving ? 'Assigning...' : 'Assign Asset'}
+              </Button>
+            )}
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

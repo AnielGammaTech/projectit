@@ -14,6 +14,7 @@ import MfaEnforcementGuard from '@/components/MfaEnforcementGuard';
 import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import Login from '@/pages/Login';
 import AcceptInvite from '@/pages/AcceptInvite';
+import AcceptAsset from '@/pages/AcceptAsset';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -129,6 +130,7 @@ function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/accept-invite" element={<AcceptInvite />} />
+              <Route path="/accept/:token" element={<AcceptAsset />} />
               <Route path="/*" element={<AuthenticatedApp />} />
             </Routes>
           </Router>

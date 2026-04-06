@@ -9,6 +9,7 @@ import integrationRoutes from './routes/integrations.js';
 import functionRoutes from './routes/functions/index.js';
 import webhookRoutes from './routes/webhooks.js';
 import externalApiRoutes from './routes/externalApi.js';
+import acceptanceRoutes from './routes/acceptance.js';
 import authMiddleware from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
 import { runDueReminders } from './routes/functions/sendDueReminders.js';
@@ -56,6 +57,9 @@ app.get('/health', (req, res) => {
 
 // Public calendar feed (user ID in URL acts as token)
 app.get('/api/calendar-feed/:userId.ics', calendarFeed);
+
+// Public asset acceptance (token-based, no auth)
+app.use('/api/accept', acceptanceRoutes);
 
 // Routes
 app.use('/api/auth', authRoutes);

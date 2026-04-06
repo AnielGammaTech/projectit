@@ -15,7 +15,7 @@ const ADMIN_ONLY_ENTITIES = new Set([
 const ADMIN_WRITE_ENTITIES = new Set([
   'AppSettings', 'ProjectTemplate', 'ProjectStatus', 'ProjectStack',
   'Workflow', 'WorkflowLog', 'ProposalSettings',
-  'Asset', 'AssetAssignment', 'Employee',
+  'Asset', 'AssetAssignment', 'AssetAcceptance', 'AssetNote', 'Employee',
 ]);
 
 // Users can read + write their own, but admin guard not needed
