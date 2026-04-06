@@ -110,9 +110,9 @@ export default function AssetDashboard() {
 
   return (
     <ManageITShell>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <AssetStatsCard
             title="Total Assets"
             value={assets.length}
@@ -184,9 +184,9 @@ export default function AssetDashboard() {
         )}
 
         {/* Assets by Type */}
-        <div className="mb-5">
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Assets by Type</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold text-foreground mb-3">Assets by Type</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {Object.entries(assetsByType).map(([type, count]) => {
               const config = getTypeConfig(type);
               const TypeIcon = config.icon;
@@ -194,18 +194,18 @@ export default function AssetDashboard() {
               return (
                 <div
                   key={type}
-                  className="rounded-xl bg-white dark:bg-card border border-border p-3"
+                  className="rounded-2xl bg-white dark:bg-card border border-border p-4"
                 >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <div className={cn("p-1 rounded-md shrink-0", config.color)}>
-                      <TypeIcon className="w-3 h-3 text-white" />
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={cn("p-1.5 rounded-lg shrink-0", config.color)}>
+                      <TypeIcon className="w-3.5 h-3.5 text-white" />
                     </div>
-                    <p className="text-[10px] font-medium text-muted-foreground truncate">{type}</p>
+                    <p className="text-xs font-medium text-muted-foreground truncate">{type}</p>
                   </div>
-                  <p className="text-lg font-bold text-foreground mb-1.5">{count}</p>
-                  <div className="w-full bg-muted rounded-full h-1">
+                  <p className="text-2xl font-bold text-foreground mb-2">{count}</p>
+                  <div className="w-full bg-muted rounded-full h-1.5">
                     <div
-                      className={cn("h-1 rounded-full transition-all duration-500", config.color)}
+                      className={cn("h-1.5 rounded-full transition-all duration-500", config.color)}
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
@@ -218,8 +218,8 @@ export default function AssetDashboard() {
 
         {/* Recent Assignments */}
         <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Recent Assignments</h2>
-          <div className="rounded-xl bg-white dark:bg-card border border-border overflow-hidden">
+          <h2 className="text-sm font-semibold text-foreground mb-3">Recent Assignments</h2>
+          <div className="rounded-2xl bg-white dark:bg-card border border-border overflow-hidden">
             {recentAssignments.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="p-3 rounded-xl bg-muted mb-3">
