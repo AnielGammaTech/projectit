@@ -584,6 +584,21 @@ const authService = {
   },
 
   /**
+   * Update a user's role in the users table by email.
+   */
+  async updateUserRole(email, role) {
+    const { rows } = await pool.query(
+      `UPDATE users SET role = $1, updated_date = NOW() WHERE email = $2
+       RETURNING id, email, full_name, role`,
+      [role, email]
+    );
+    if (rows.length === 0) {
+      throw Object.assign(new Error('User not found'), { status: 404 });
+    }
+    return rows[0];
+  },
+
+  /**
    * Change password — delegates to Supabase Auth.
    */
   async changePassword(supabaseUserId, newPassword) {

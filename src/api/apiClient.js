@@ -106,6 +106,13 @@ const auth = {
     });
   },
 
+  async updateRole(email, role) {
+    return apiFetch('/api/auth/update-role', {
+      method: 'POST',
+      body: JSON.stringify({ email, role }),
+    });
+  },
+
   async logout() {
     if (supabase) {
       await supabase.auth.signOut();

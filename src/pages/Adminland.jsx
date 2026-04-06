@@ -414,9 +414,19 @@ function PeopleSection({ queryClient }) {
   };
 
   const toggleAdmin = async (member) => {
-    const newRole = member.role === 'Admin' ? '' : 'Admin';
-    await api.entities.TeamMember.update(member.id, { ...member, role: newRole });
-    queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+    const isCurrentlyAdmin = member.role === 'Admin';
+    const newTeamRole = isCurrentlyAdmin ? '' : 'Admin';
+    const newUserRole = isCurrentlyAdmin ? 'member' : 'admin';
+    try {
+      // Update TeamMember entity
+      await api.entities.TeamMember.update(member.id, { ...member, role: newTeamRole });
+      // Update users table (controls actual auth permissions)
+      await api.auth.updateRole(member.email, newUserRole);
+      queryClient.invalidateQueries({ queryKey: ['teamMembers'] });
+      toast.success(`${member.name || member.email} is now ${isCurrentlyAdmin ? 'a member' : 'an admin'}`);
+    } catch (err) {
+      toast.error(err?.message || 'Failed to update role');
+    }
   };
 
   const admins = members.filter(m => m.role === 'Admin');

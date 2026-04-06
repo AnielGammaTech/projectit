@@ -147,6 +147,31 @@ router.post('/change-password', authMiddleware, async (req, res, next) => {
   }
 });
 
+// Admin-only: update a user's role in the users table
+router.post('/update-role', authMiddleware, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can change user roles' });
+    }
+
+    const { email, role } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const validRoles = ['admin', 'member'];
+    const normalizedRole = (role || '').toLowerCase();
+    if (!validRoles.includes(normalizedRole)) {
+      return res.status(400).json({ error: `Invalid role. Must be one of: ${validRoles.join(', ')}` });
+    }
+
+    const result = await authService.updateUserRole(email, normalizedRole);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Admin-only: reset a team member's password
 router.post('/admin-reset-password', authMiddleware, async (req, res, next) => {
   try {
