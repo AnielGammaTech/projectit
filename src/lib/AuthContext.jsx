@@ -128,9 +128,18 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
+    // Re-fetch user when tab becomes visible (catches role changes made by another admin)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && initializedRef.current) {
+        fetchAppUser();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [fetchAppUser]);
 

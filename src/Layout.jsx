@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/lib/AuthContext';
 
 import { 
   LayoutDashboard, 
@@ -76,8 +77,9 @@ const navItems = [
 ];
 
 function LayoutContent({ children, currentPageName }) {
+    const { user: authUser } = useAuth();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [isAdmin, setIsAdmin] = useState(false);
+    const isAdmin = authUser?.role === 'admin';
     const [currentUser, setCurrentUser] = useState(null);
     const [showSearch, setShowSearch] = useState(false);
     const [expandedMenus, setExpandedMenus] = useState({});
@@ -187,7 +189,6 @@ function LayoutContent({ children, currentPageName }) {
   useEffect(() => {
     api.auth.me().then(user => {
       setCurrentUser(user);
-      setIsAdmin(user?.role === 'admin');
       if (user.theme) {
         const currentTheme = localStorage.getItem('theme');
         if (user.theme !== currentTheme) {
