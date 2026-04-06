@@ -34,6 +34,7 @@ import agentBridge from './agentBridge.js';
 import giphy from './giphy.js';
 import sendMfaReminders from './sendMfaReminders.js';
 import syncJumpCloudEmployees from './syncJumpCloudEmployees.js';
+import syncJumpCloudDevices from './syncJumpCloudDevices.js';
 
 const router = Router();
 
@@ -73,6 +74,7 @@ const authHandlers = {
   giphy,
   sendMfaReminders,
   syncJumpCloudEmployees,
+  syncJumpCloudDevices,
 };
 
 // POST /api/functions/:name

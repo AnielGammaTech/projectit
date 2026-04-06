@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { createPageUrl } from '@/utils';
@@ -20,6 +20,7 @@ import {
   HardDrive,
   UserPlus,
   RotateCcw,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,6 +99,7 @@ export default function AssetInventory() {
   const [editingAsset, setEditingAsset] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, asset: null });
   const [assignReturnAsset, setAssignReturnAsset] = useState(null);
+  const [syncing, setSyncing] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -123,6 +125,20 @@ export default function AssetInventory() {
     queryClient.invalidateQueries({ queryKey: ['assets'] });
     queryClient.invalidateQueries({ queryKey: ['assetAssignments'] });
   };
+
+  const handleSyncDevices = useCallback(async () => {
+    setSyncing(true);
+    try {
+      const result = await api.functions.invoke('syncJumpCloudDevices');
+      const s = result.summary;
+      toast.success(`Synced ${s.total} devices: ${s.created} new, ${s.updated} updated, ${s.autoAssigned} auto-assigned`);
+      invalidateAll();
+    } catch (error) {
+      toast.error(error?.message || 'Failed to sync JumpCloud devices');
+    } finally {
+      setSyncing(false);
+    }
+  }, [queryClient]);
 
   const handleDelete = async () => {
     if (!deleteConfirm.asset) return;
@@ -183,14 +199,26 @@ export default function AssetInventory() {
             </p>
             <p className="text-xs text-muted-foreground">Manage your organization's inventory</p>
           </div>
-          <Button
-            onClick={openCreate}
-            size="sm"
-            className="shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white"
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            Add Asset
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleSyncDevices}
+              disabled={syncing}
+              size="sm"
+              variant="outline"
+              className="shrink-0"
+            >
+              <RefreshCw className={cn('w-4 h-4 mr-1', syncing && 'animate-spin')} />
+              {syncing ? 'Syncing...' : 'Sync JumpCloud'}
+            </Button>
+            <Button
+              onClick={openCreate}
+              size="sm"
+              className="shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add Asset
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
