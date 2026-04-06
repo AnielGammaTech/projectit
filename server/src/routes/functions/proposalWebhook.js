@@ -113,6 +113,6 @@ export default async function handler(req, res) {
     return res.json({ success: true, message: `Event "${event}" acknowledged` });
   } catch (error) {
     console.error('Proposal webhook error:', error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

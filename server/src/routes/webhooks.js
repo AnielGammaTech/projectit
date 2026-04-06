@@ -20,7 +20,9 @@ router.post('/gammaai', webhookLimiter, async (req, res) => {
     if (!config || !config.gammaai_webhook_secret) {
       return res.status(401).json({ error: 'Webhook not configured' });
     }
-    if (!webhookSecret || !crypto.timingSafeEqual(Buffer.from(webhookSecret), Buffer.from(config.gammaai_webhook_secret || ''))) {
+    const expected = Buffer.from(config.gammaai_webhook_secret || '');
+    const received = Buffer.from(String(webhookSecret || ''));
+    if (!webhookSecret || expected.length !== received.length || !crypto.timingSafeEqual(received, expected)) {
       return res.status(401).json({ error: 'Invalid webhook secret' });
     }
 

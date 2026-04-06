@@ -87,7 +87,7 @@ router.post('/:name', (req, res, next) => {
     } catch (error) {
       console.error(`Function "${name}" error:`, error);
       if (!res.headersSent) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
       }
     }
   };
