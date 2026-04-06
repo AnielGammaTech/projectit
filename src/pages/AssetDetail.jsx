@@ -432,6 +432,14 @@ export default function AssetDetail() {
                 {asset.condition && (
                   <Badge variant="secondary" className={cn('text-[10px]', CONDITION_STYLES[asset.condition])}>{asset.condition}</Badge>
                 )}
+                {asset.device_active != null && (
+                  <span className="inline-flex items-center gap-1 text-[10px]">
+                    <span className={cn("w-1.5 h-1.5 rounded-full", asset.device_active ? "bg-emerald-500" : "bg-slate-400")} />
+                    <span className={asset.device_active ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}>
+                      {asset.device_active ? 'Online' : 'Offline'}
+                    </span>
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -454,6 +462,8 @@ export default function AssetDetail() {
           <DetailField icon={DollarSign} label="Purchase Cost" value={formatCurrency(asset.purchase_cost)} />
           <DetailField icon={ShoppingBag} label="Supplier" value={asset.supplier} />
           <DetailField icon={Package} label="Accessories" value={asset.accessories} />
+          {asset.os && <DetailField icon={Monitor} label="Operating System" value={[asset.os, asset.os_version].filter(Boolean).join(' ')} />}
+          {asset.last_contact && <DetailField icon={Clock} label="Last Contact" value={new Date(asset.last_contact).toLocaleString()} />}
           {isSoftware && (
             <>
               <DetailField icon={Key} label="License Key" value={asset.license_key} />

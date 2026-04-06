@@ -341,6 +341,14 @@ export default function AssetInventory() {
                         {asset.condition}
                       </Badge>
                     )}
+                    {asset.device_active != null && (
+                      <span className="inline-flex items-center gap-1 text-[10px]" title={asset.last_contact ? `Last seen: ${new Date(asset.last_contact).toLocaleString()}` : ''}>
+                        <span className={cn("w-1.5 h-1.5 rounded-full", asset.device_active ? "bg-emerald-500" : "bg-slate-400")} />
+                        <span className={asset.device_active ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}>
+                          {asset.device_active ? 'Online' : 'Offline'}
+                        </span>
+                      </span>
+                    )}
                     {asset.sync_locked && (
                       <Lock className="w-3 h-3 text-muted-foreground" title="Sync locked" />
                     )}

@@ -123,8 +123,12 @@ export default async function syncJumpCloudDevices(req, res) {
         hostname: system.hostname || '',
         mac_address: system.macAddress || '',
         ip_address: ipv4,
+        os: os || '',
+        os_version: system.version || '',
+        agent_version: system.agentVersion || '',
+        last_contact: system.lastContact || null,
+        device_active: system.active ?? null,
         condition: 'Good',
-        notes: [os, system.version].filter(Boolean).join(' '),
         last_synced: new Date().toISOString(),
       };
 
