@@ -63,14 +63,14 @@ const navItems = [
   { name: 'Customers', icon: Users, page: 'Customers' },
   { name: 'Stock', icon: Package, page: 'Stock' },
   { name: 'Reports', icon: PieChart, page: 'Reports' },
-  { name: 'ManageIT', icon: HardDrive, page: 'AssetDashboard', adminOnly: true, brand: {
-    activeText: 'text-emerald-300',
+  { name: 'ManageIT', icon: null, page: 'AssetDashboard', adminOnly: true, brand: {
+    activeText: 'text-emerald-400',
     activeIcon: 'text-emerald-400',
-    activeBg: 'bg-emerald-700/15',
-    hoverText: 'hover:text-emerald-300',
-    hoverBg: 'hover:bg-emerald-700/10',
-    iconGradient: 'bg-gradient-to-br from-emerald-600 to-green-700',
-    glow: { color: '#34d399', shadow: '0 0 12px rgba(52,211,153,0.5), 0 0 24px rgba(52,211,153,0.2)' },
+    activeBg: '',
+    hoverText: 'hover:text-emerald-400',
+    hoverBg: '',
+    customLogo: true,
+    glow: { color: '#10b981', shadow: '0 0 10px rgba(16,185,129,0.6), 0 0 20px rgba(16,185,129,0.25)' },
     matchPages: ['AssetDashboard', 'AssetInventory', 'AssetDetail', 'AssetAssign', 'AssetEmployees', 'AssetEmployeeDetail', 'AssetLicenses', 'AssetReports', 'MyAssets'],
   }},
 ];
@@ -341,21 +341,23 @@ function LayoutContent({ children, currentPageName }) {
                     )}
                     style={brand?.glow ? glowStyle : undefined}
                     >
-                    {brand?.iconGradient ? (
-                      <div className={cn(
-                        "p-1 rounded-md",
-                        brand.iconGradient,
-                      )}
+                    {brand?.customLogo ? (
+                      <svg viewBox="0 0 32 32" fill="none" className="w-4 h-4" style={brand.glow ? { filter: `drop-shadow(0 0 4px ${brand.glow.color})` } : undefined}>
+                        <text x="4" y="26" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="28" fill="currentColor">M</text>
+                        <circle cx="26" cy="6" r="3.5" fill="#4ade80" />
+                      </svg>
+                    ) : brand?.iconGradient ? (
+                      <div className={cn("p-1 rounded-md", brand.iconGradient)}
                         style={brand?.glow ? { boxShadow: brand.glow.shadow } : undefined}
                       >
                         <Icon className="w-3 h-3 text-white" />
                       </div>
-                    ) : (
+                    ) : Icon ? (
                       <Icon className={cn(
                         "w-4 h-4 transition-colors",
                         isActive ? "text-[#74C7FF]" : "text-white/50 group-hover:text-white/80"
                       )} />
-                    )}
+                    ) : null}
                     {item.name}
                     {isActive && !brand && (
                       <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#74C7FF] rounded-full" />
@@ -663,13 +665,18 @@ function LayoutContent({ children, currentPageName }) {
                     : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-muted active:bg-slate-100 dark:active:bg-muted"
                 )}
               >
-                {brand?.iconGradient ? (
+                {brand?.customLogo ? (
+                  <svg viewBox="0 0 32 32" fill="none" className="w-5 h-5" style={brand.glow ? { filter: `drop-shadow(0 0 4px ${brand.glow.color})` } : undefined}>
+                    <text x="4" y="26" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="28" fill="currentColor">M</text>
+                    <circle cx="26" cy="6" r="3.5" fill="#4ade80" />
+                  </svg>
+                ) : brand?.iconGradient ? (
                   <div className={cn("p-1 rounded-md", brand.iconGradient)}>
                     <Icon className="w-3.5 h-3.5 text-white" />
                   </div>
-                ) : (
+                ) : Icon ? (
                   <Icon className="w-5 h-5" />
-                )}
+                ) : null}
                 {item.name}
               </Link>
             );
