@@ -78,19 +78,19 @@ export default function ManageITShell({ children }) {
       {/* ManageIT branded sub-header */}
       <div className="border-b border-emerald-300/60 dark:border-emerald-900/40 bg-white/80 dark:bg-card/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 h-14">
+          <div className="flex items-center justify-center gap-4 h-12">
             {/* Brand */}
-            <Link to={createPageUrl('AssetDashboard')} className="flex items-center gap-2.5 shrink-0">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-700 to-green-800 shadow-md shadow-emerald-400/30 dark:shadow-emerald-900/40 flex items-center justify-center">
-                <ManageITLogo className="w-5 h-5" />
+            <Link to={createPageUrl('AssetDashboard')} className="flex items-center gap-2 shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-700 to-green-800 shadow-sm shadow-emerald-400/30 dark:shadow-emerald-900/40 flex items-center justify-center">
+                <ManageITLogo className="w-4 h-4" />
               </div>
               <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300 tracking-tight">ManageIT</span>
             </Link>
 
-            <div className="h-6 w-px bg-emerald-300/80 dark:bg-emerald-800/60 shrink-0" />
+            <div className="h-5 w-px bg-emerald-300/80 dark:bg-emerald-800/60 shrink-0" />
 
-            {/* Tab navigation — pill buttons matching main nav style */}
-            <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+            {/* Tab navigation — centered */}
+            <nav className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide">
               {MANAGEIT_TABS.map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.page;
@@ -99,14 +99,14 @@ export default function ManageITShell({ children }) {
                     key={tab.page}
                     to={createPageUrl(tab.page)}
                     className={cn(
-                      "inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg text-sm transition-all relative group",
+                      "inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-all relative group",
                       isActive
-                        ? "bg-emerald-700 text-white font-medium shadow-md shadow-emerald-400/30 dark:shadow-emerald-900/40"
+                        ? "bg-emerald-700 text-white font-medium shadow-sm shadow-emerald-400/30 dark:shadow-emerald-900/40"
                         : "text-slate-500 dark:text-slate-400 hover:text-emerald-800 hover:bg-emerald-50 dark:hover:text-emerald-300 dark:hover:bg-emerald-900/20"
                     )}
                   >
                     <Icon className={cn(
-                      "w-4 h-4 shrink-0",
+                      "w-3.5 h-3.5 shrink-0",
                       isActive ? "text-white/90" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400"
                     )} />
                     {tab.name}
