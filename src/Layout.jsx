@@ -64,12 +64,13 @@ const navItems = [
   { name: 'Stock', icon: Package, page: 'Stock' },
   { name: 'Reports', icon: PieChart, page: 'Reports' },
   { name: 'ManageIT', icon: HardDrive, page: 'AssetDashboard', adminOnly: true, brand: {
-    activeText: 'text-emerald-200',
-    activeIcon: 'text-emerald-300',
-    activeBg: 'bg-emerald-700/20',
-    hoverText: 'hover:text-emerald-200',
+    activeText: 'text-emerald-300',
+    activeIcon: 'text-emerald-400',
+    activeBg: 'bg-emerald-700/15',
+    hoverText: 'hover:text-emerald-300',
     hoverBg: 'hover:bg-emerald-700/10',
-    iconGradient: 'bg-gradient-to-br from-emerald-700 to-green-800',
+    iconGradient: 'bg-gradient-to-br from-emerald-600 to-green-700',
+    glow: { color: '#34d399', shadow: '0 0 12px rgba(52,211,153,0.5), 0 0 24px rgba(52,211,153,0.2)' },
     matchPages: ['AssetDashboard', 'AssetInventory', 'AssetDetail', 'AssetAssign', 'AssetEmployees', 'AssetEmployeeDetail', 'AssetLicenses', 'AssetReports', 'MyAssets'],
   }},
 ];
@@ -320,6 +321,10 @@ function LayoutContent({ children, currentPageName }) {
                   ? brand.matchPages.includes(currentPageName)
                   : currentPageName === item.page;
 
+                const glowStyle = brand?.glow
+                  ? { textShadow: brand.glow.shadow }
+                  : undefined;
+
                 return (
                   <Link
                     key={item.name}
@@ -334,9 +339,15 @@ function LayoutContent({ children, currentPageName }) {
                         ? "text-white font-medium bg-white/15 shadow-sm"
                         : "text-white/70 hover:text-white hover:bg-white/5"
                     )}
+                    style={brand?.glow ? glowStyle : undefined}
                     >
                     {brand?.iconGradient ? (
-                      <div className={cn("p-1 rounded-md", brand.iconGradient)}>
+                      <div className={cn(
+                        "p-1 rounded-md",
+                        brand.iconGradient,
+                      )}
+                        style={brand?.glow ? { boxShadow: brand.glow.shadow } : undefined}
+                      >
                         <Icon className="w-3 h-3 text-white" />
                       </div>
                     ) : (
