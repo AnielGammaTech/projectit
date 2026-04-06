@@ -511,6 +511,41 @@ export default function AssetDetail() {
           </div>
         )}
 
+        {/* JumpCloud / Device Info */}
+        {asset.jumpcloud_system_id && (
+          <div className="mb-6 p-4 rounded-xl border bg-card">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Monitor className="w-4 h-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold text-foreground">Device Info</h2>
+              </div>
+              <a
+                href={`https://console.jumpcloud.com/#/devices/${asset.jumpcloud_system_id}/details`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400 hover:underline"
+              >
+                Open in JumpCloud
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z" clipRule="evenodd" /></svg>
+              </a>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+              {asset.os && (
+                <div><p className="text-xs text-muted-foreground">Operating System</p><p className="font-medium">{[asset.os, asset.os_version].filter(Boolean).join(' ')}</p></div>
+              )}
+              {asset.agent_version && (
+                <div><p className="text-xs text-muted-foreground">Agent Version</p><p className="font-medium font-mono text-xs">{asset.agent_version}</p></div>
+              )}
+              {asset.last_contact && (
+                <div><p className="text-xs text-muted-foreground">Last Contact</p><p className="font-medium">{new Date(asset.last_contact).toLocaleString()}</p></div>
+              )}
+              {asset.last_synced && (
+                <div><p className="text-xs text-muted-foreground">Last Synced</p><p className="font-medium">{new Date(asset.last_synced).toLocaleString()}</p></div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Notes */}
         {asset.notes && (
           <div className="mb-6 p-4 rounded-xl border bg-card">

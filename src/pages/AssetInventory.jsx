@@ -63,6 +63,36 @@ const TYPE_ICONS = {
   'Physical Tool': Wrench,
 };
 
+function AppleLogo({ className = "w-4 h-4" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+    </svg>
+  );
+}
+
+function WindowsLogo({ className = "w-4 h-4" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M3 12V6.5l8-1.1V12H3zm10 0V5.2l8-1.2V12h-8zM3 13h8v6.6l-8-1.1V13zm10 0h8v6l-8 1.2V13z"/>
+    </svg>
+  );
+}
+
+function getOsIcon(asset) {
+  const os = (asset.os || '').toLowerCase();
+  const manufacturer = (asset.manufacturer || '').toLowerCase();
+  const model = (asset.model || '').toLowerCase();
+
+  const isApple = os.includes('mac') || os.includes('ios') || os.includes('darwin')
+    || manufacturer.includes('apple') || model.includes('mac') || model.includes('iphone') || model.includes('ipad');
+  const isWindows = os.includes('windows') || os.includes('win');
+
+  if (isApple) return { Icon: AppleLogo, color: 'bg-slate-700 dark:bg-slate-600' };
+  if (isWindows) return { Icon: WindowsLogo, color: 'bg-blue-600' };
+  return null;
+}
+
 const STATUS_STYLES = {
   Available: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
   Assigned: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -289,102 +319,75 @@ export default function AssetInventory() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
             {filtered.map((asset) => {
-              const TypeIcon = TYPE_ICONS[asset.type] || HardDrive;
-              const typeColor = {
+              const osInfo = getOsIcon(asset);
+              const FallbackIcon = TYPE_ICONS[asset.type] || HardDrive;
+              const fallbackColor = {
                 'IT Equipment': 'bg-blue-500',
                 'Mobile Device': 'bg-violet-500',
                 'Software License': 'bg-amber-500',
                 'Vehicle': 'bg-emerald-500',
                 'Physical Tool': 'bg-orange-500',
               }[asset.type] || 'bg-slate-500';
+              const employeeName = asset.assignedEmployee
+                ? `${asset.assignedEmployee.first_name || ''} ${asset.assignedEmployee.last_name || ''}`.trim() || asset.assignedEmployee.email || 'Unknown'
+                : null;
 
               return (
                 <div
                   key={asset.id}
-                  className="rounded-2xl bg-card border border-border p-4 hover:shadow-md transition-all duration-200"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
                 >
-                  {/* Top row: icon + name + actions */}
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className={cn("p-2 rounded-xl shrink-0", typeColor)}>
-                      <TypeIcon className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <Link
-                        to={createPageUrl('AssetDetail') + `?id=${asset.id}`}
-                        className="font-semibold text-sm text-foreground hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors truncate block"
-                      >
-                        {asset.name}
-                      </Link>
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        {[asset.manufacturer, asset.model, asset.serial_number]
-                          .filter(Boolean)
-                          .join(' / ') || 'No details'}
-                      </p>
-                    </div>
+                  {/* OS icon */}
+                  <div className={cn("w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-white", osInfo?.color || fallbackColor)}>
+                    {osInfo ? <osInfo.Icon className="w-4 h-4" /> : <FallbackIcon className="w-4 h-4" />}
                   </div>
 
-                  {/* Badges row */}
-                  <div className="flex items-center gap-1.5 flex-wrap mb-3">
-                    <Badge
-                      variant="secondary"
-                      className={cn('text-[10px]', STATUS_STYLES[asset.status])}
+                  {/* Name + details */}
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      to={createPageUrl('AssetDetail') + `?id=${asset.id}`}
+                      className="text-sm font-medium text-foreground hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors truncate block"
                     >
-                      {asset.status}
-                    </Badge>
-                    {asset.condition && (
-                      <Badge
-                        variant="secondary"
-                        className={cn('text-[10px]', CONDITION_STYLES[asset.condition])}
-                      >
-                        {asset.condition}
-                      </Badge>
-                    )}
-                    {asset.device_active != null && (
-                      <span className="inline-flex items-center gap-1 text-[10px]" title={asset.last_contact ? `Last seen: ${new Date(asset.last_contact).toLocaleString()}` : ''}>
-                        <span className={cn("w-1.5 h-1.5 rounded-full", asset.device_active ? "bg-emerald-500" : "bg-slate-400")} />
-                        <span className={asset.device_active ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}>
-                          {asset.device_active ? 'Online' : 'Offline'}
-                        </span>
-                      </span>
-                    )}
-                    {asset.sync_locked && (
-                      <Lock className="w-3 h-3 text-muted-foreground" title="Sync locked" />
-                    )}
+                      {asset.name}
+                    </Link>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {[asset.model, asset.serial_number].filter(Boolean).join(' · ') || asset.type}
+                    </p>
                   </div>
 
-                  {/* Assigned employee */}
-                  {asset.assignedEmployee && (
-                    <p className="text-xs text-muted-foreground mb-3 truncate">
-                      Assigned to{' '}
-                      <span className="font-medium text-foreground">
-                        {`${asset.assignedEmployee.first_name || ''} ${asset.assignedEmployee.last_name || ''}`.trim() || asset.assignedEmployee.email || 'Unknown'}
-                      </span>
-                    </p>
+                  {/* Online dot */}
+                  {asset.device_active != null && (
+                    <span
+                      className={cn("w-2 h-2 rounded-full shrink-0", asset.device_active ? "bg-emerald-500" : "bg-slate-400")}
+                      title={asset.device_active ? `Online${asset.last_contact ? ' · Last: ' + new Date(asset.last_contact).toLocaleString() : ''}` : `Offline${asset.last_contact ? ' · Last: ' + new Date(asset.last_contact).toLocaleString() : ''}`}
+                    />
                   )}
 
-                  {/* Actions row */}
-                  <div className="flex items-center gap-2 pt-3 border-t border-border">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                      className="h-8 text-sm px-3"
-                    >
-                      <Link to={createPageUrl('AssetDetail') + `?id=${asset.id}`}>
-                        <Eye className="w-4 h-4 mr-1.5" />
-                        View
-                      </Link>
-                    </Button>
+                  {/* Employee */}
+                  {employeeName && (
+                    <span className="text-xs text-muted-foreground truncate max-w-[120px] hidden sm:block">{employeeName}</span>
+                  )}
+
+                  {/* Status badge */}
+                  <Badge variant="secondary" className={cn('text-[10px] shrink-0', STATUS_STYLES[asset.status])}>
+                    {asset.status}
+                  </Badge>
+
+                  {/* Sync lock */}
+                  {asset.sync_locked && <Lock className="w-3 h-3 text-muted-foreground shrink-0" />}
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 shrink-0">
                     {asset.status === 'Available' && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 text-sm px-3 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:text-emerald-300 dark:hover:bg-emerald-900/20"
+                        className="h-7 text-xs px-2 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
                         onClick={() => setAssignReturnAsset(asset)}
                       >
-                        <UserPlus className="w-4 h-4 mr-1.5" />
+                        <UserPlus className="w-3.5 h-3.5 mr-1" />
                         Assign
                       </Button>
                     )}
@@ -392,21 +395,25 @@ export default function AssetInventory() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 text-sm px-3 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-900/20"
+                        className="h-7 text-xs px-2 text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20"
                         onClick={() => setAssignReturnAsset(asset)}
                       >
-                        <RotateCcw className="w-4 h-4 mr-1.5" />
+                        <RotateCcw className="w-3.5 h-3.5 mr-1" />
                         Return
                       </Button>
                     )}
-                    <div className="flex-1" />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <MoreHorizontal className="w-3.5 h-3.5" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link to={createPageUrl('AssetDetail') + `?id=${asset.id}`}>
+                            <Eye className="w-4 h-4 mr-2" /> View Details
+                          </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toggleSyncLock(asset)}>
                           {asset.sync_locked
                             ? <><Unlock className="w-4 h-4 mr-2" /> Unlock Sync</>
