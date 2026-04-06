@@ -74,8 +74,23 @@ router.get('/:token', async (req, res) => {
       [data.employee_id]
     );
 
-    const asset = assetRows[0] ? { id: assetRows[0].id, ...assetRows[0].data } : null;
-    const employee = employeeRows[0] ? { id: employeeRows[0].id, ...employeeRows[0].data } : null;
+    // Only expose fields needed for the acceptance page — no internal IDs, network info, or costs
+    const assetRaw = assetRows[0]?.data || {};
+    const asset = assetRows[0] ? {
+      name: assetRaw.name,
+      type: assetRaw.type,
+      serial_number: assetRaw.serial_number,
+      model: assetRaw.model,
+      manufacturer: assetRaw.manufacturer,
+      condition: assetRaw.condition,
+      accessories: assetRaw.accessories,
+    } : null;
+
+    const empRaw = employeeRows[0]?.data || {};
+    const employee = employeeRows[0] ? {
+      first_name: empRaw.first_name,
+      last_name: empRaw.last_name,
+    } : null;
 
     res.json({
       id: acceptance.id,

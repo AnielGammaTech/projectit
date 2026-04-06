@@ -1,6 +1,10 @@
 import entityService from '../../services/entityService.js';
 
 export default async function syncJumpCloudDevices(req, res) {
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
   const settingsList = await entityService.list('IntegrationSettings');
   const settings = settingsList.find(s => s.setting_key === 'main') || {};
 
