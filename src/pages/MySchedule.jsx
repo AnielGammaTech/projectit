@@ -121,12 +121,9 @@ export default function MySchedule() {
 
     return (
       <div className="flex-1">
-        <div className="hidden sm:block text-center font-semibold text-foreground mb-4">
-          {format(month, 'MMMM yyyy')}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => (
-            <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+        <div className="grid grid-cols-7 gap-0">
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+            <div key={day} className="text-center text-[10px] font-medium text-muted-foreground py-1.5">
               {day}
             </div>
           ))}
@@ -139,10 +136,10 @@ export default function MySchedule() {
               <div
                 key={idx}
                 className={cn(
-                  "text-center py-2 text-sm relative",
+                  "text-center py-1.5 text-xs relative",
                   !isCurrentMonth && "text-muted-foreground/40",
                   isCurrentMonth && "text-foreground",
-                  isTodayDate && "bg-primary text-primary-foreground rounded-lg font-semibold"
+                  isTodayDate && "bg-primary text-primary-foreground rounded-md font-semibold"
                 )}
               >
                 {format(day, 'd')}
@@ -208,7 +205,7 @@ export default function MySchedule() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl border shadow-sm p-3 sm:p-6 mb-4"
+          className="bg-card rounded-2xl border shadow-sm p-3 sm:p-4 mb-4 max-w-md"
         >
           {/* Nav arrows */}
           <div className="flex items-center justify-between mb-2">
