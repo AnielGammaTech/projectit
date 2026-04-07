@@ -1050,6 +1050,94 @@ export default function ProjectDetail() {
     };
     await logActivity(projectId, actionMap[status] || ActivityActions.PART_UPDATED, `changed part "${part.name}" status to ${status}`, currentUser, 'part', part.id);
 
+    // Auto-task workflow: ordering completes the order task, creates receive task
+    if (status === 'ordered') {
+      try {
+        // Complete any matching ordering task for this part
+        const partNameLower = (part.name || '').toLowerCase();
+        const matchingTasks = tasks.filter(t =>
+          t.project_id === projectId &&
+          t.status !== 'completed' &&
+          (t.title || '').toLowerCase().includes(partNameLower)
+        );
+        for (const t of matchingTasks) {
+          await api.entities.Task.update(t.id, { status: 'completed' });
+        }
+
+        // Create a receive task for the receiver
+        if (part.receiver_email) {
+          await api.entities.Task.create({
+            project_id: projectId,
+            title: `Receive: ${part.name}`,
+            status: 'todo',
+            priority: 'medium',
+            assigned_to: part.receiver_email,
+            assigned_name: part.receiver_name || part.receiver_email,
+            due_date: part.est_delivery_date || null,
+            notes: `Auto-created — receive and inspect "${part.name}"`,
+          });
+        }
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+        queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
+      } catch (err) {
+        console.error('Auto-task workflow (ordered) failed:', err);
+      }
+    }
+
+    // Auto-task workflow: receiving completes the receive task, creates install task
+    if (status === 'received') {
+      try {
+        const receiveTitle = `Receive: ${part.name}`.toLowerCase();
+        const receiveTasks = tasks.filter(t =>
+          t.project_id === projectId &&
+          t.status !== 'completed' &&
+          (t.title || '').toLowerCase() === receiveTitle
+        );
+        for (const t of receiveTasks) {
+          await api.entities.Task.update(t.id, { status: 'completed' });
+        }
+
+        // Create an install task if installer is assigned
+        if (part.installer_email) {
+          await api.entities.Task.create({
+            project_id: projectId,
+            title: `Install: ${part.name}`,
+            status: 'todo',
+            priority: 'medium',
+            assigned_to: part.installer_email,
+            assigned_name: part.installer_name || part.installer_email,
+            notes: `Auto-created — install "${part.name}"`,
+          });
+        }
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+        queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
+      } catch (err) {
+        console.error('Auto-task workflow (received) failed:', err);
+      }
+    }
+
+    // Auto-task workflow: installing completes the install task
+    if (status === 'installed') {
+      try {
+        const installTitle = `Install: ${part.name}`.toLowerCase();
+        const installTasks = tasks.filter(t =>
+          t.project_id === projectId &&
+          t.status !== 'completed' &&
+          (t.title || '').toLowerCase() === installTitle
+        );
+        for (const t of installTasks) {
+          await api.entities.Task.update(t.id, { status: 'completed' });
+        }
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+        queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
+      } catch (err) {
+        console.error('Auto-task workflow (installed) failed:', err);
+      }
+    }
+
     // Notify assigned installer when part is ready to install
     if (status === 'ready_to_install' && part.installer_email && part.installer_email !== currentUser?.email) {
       try {
