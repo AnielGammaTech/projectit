@@ -128,12 +128,7 @@ export default function Dashboard() {
     try {
       await api.entities.IncomingQuote.update(quote.id, { status: 'dismissed' });
     } catch (err) {
-      // If update fails, try delete as fallback
-      try {
-        await api.entities.IncomingQuote.delete(quote.id);
-      } catch (delErr) {
-        console.error('Failed to dismiss quote:', delErr);
-      }
+      console.error('Failed to dismiss quote:', err);
     }
     refetchIncomingQuotes();
   };

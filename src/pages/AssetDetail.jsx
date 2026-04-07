@@ -194,11 +194,12 @@ function AcknowledgmentBadge({ assignment, acceptances, onExpire }) {
   const handleExpire = async () => {
     setExpiring(true);
     try {
-      await api.entities.AssetAcceptance.update(acceptance.id, { status: 'expired' });
+      await api.entities.AssetAcceptance.update(acceptance.id, { status: 'expired', expires_at: new Date().toISOString() });
       onExpire?.();
       toast.success('Consent form expired');
-    } catch {
-      toast.error('Failed to expire');
+    } catch (err) {
+      console.error('Expire failed:', err);
+      toast.error(err?.message || 'Failed to expire consent form');
     } finally {
       setExpiring(false);
     }

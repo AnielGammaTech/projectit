@@ -42,7 +42,11 @@ export default async function handler(req, res) {
       entityService.list('Product'),
     ]);
 
+    // Track all known quote IDs: existing (pending/accepted), dismissed, and already-projectified
     const existingQuoteIds = new Set(existingQuotes.map(q => q.quoteit_id));
+    const dismissedQuoteIds = new Set(
+      existingQuotes.filter(q => q.status === 'dismissed').map(q => q.quoteit_id)
+    );
     const projectQuoteIds = new Set(
       existingProjects.filter(p => p.quoteit_quote_id).map(p => p.quoteit_quote_id)
     );
@@ -53,7 +57,7 @@ export default async function handler(req, res) {
     for (const quote of (Array.isArray(quotes) ? quotes : [])) {
       const quoteId = String(quote.id || quote.quote_id);
 
-      if (existingQuoteIds.has(quoteId) || projectQuoteIds.has(quoteId)) {
+      if (existingQuoteIds.has(quoteId) || projectQuoteIds.has(quoteId) || dismissedQuoteIds.has(quoteId)) {
         skipped++;
         continue;
       }
