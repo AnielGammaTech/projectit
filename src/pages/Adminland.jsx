@@ -112,6 +112,14 @@ const adminMenuGroups = [
     ]
   },
   {
+    title: 'ManageIT',
+    icon: HardDrive,
+    color: 'from-emerald-600 to-green-700',
+    items: [
+      { id: 'consent-form', label: 'Consent Form', icon: FileText, description: 'Edit terms & branding for device consent forms' },
+    ]
+  },
+  {
     title: 'System',
     icon: Wrench,
     color: 'from-slate-500 to-slate-700',
@@ -205,6 +213,8 @@ export default function Adminland() {
         return <ApiDocsSection queryClient={queryClient} />;
       case 'about':
         return <AboutSection />;
+      case 'consent-form':
+        return <ConsentFormSection queryClient={queryClient} />;
       default:
         return null;
     }
@@ -4990,6 +5000,96 @@ const changeTypeConfig = {
   improvement: { icon: Star, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300', label: 'Improved' },
   breaking: { icon: Wrench, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300', label: 'Breaking' },
 };
+
+function ConsentFormSection({ queryClient }) {
+  const { data: settingsList = [] } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: () => api.entities.AppSettings.list(),
+  });
+
+  const consentSettings = settingsList.find(s => s.setting_key === 'consent_form') || {};
+  const [termsText, setTermsText] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [initialized, setInitialized] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!initialized && consentSettings.setting_key) {
+      setTermsText(consentSettings.terms_text || 'I acknowledge receipt of this company asset in the condition described above. I agree to use it responsibly, report any damage or issues promptly, and return it upon request or when my employment ends.');
+      setCompanyName(consentSettings.company_name || '');
+      setInitialized(true);
+    }
+    if (!initialized && settingsList.length > 0 && !consentSettings.setting_key) {
+      setTermsText('I acknowledge receipt of this company asset in the condition described above. I agree to use it responsibly, report any damage or issues promptly, and return it upon request or when my employment ends.');
+      setInitialized(true);
+    }
+  }, [consentSettings, settingsList, initialized]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const data = { setting_key: 'consent_form', terms_text: termsText, company_name: companyName };
+      if (consentSettings.id) {
+        await api.entities.AppSettings.update(consentSettings.id, data);
+      } else {
+        await api.entities.AppSettings.create(data);
+      }
+      queryClient.invalidateQueries({ queryKey: ['appSettings'] });
+      toast.success('Consent form settings saved');
+    } catch {
+      toast.error('Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-sm font-semibold text-foreground mb-1">Consent Form Settings</h3>
+        <p className="text-xs text-muted-foreground">Customize the terms and branding shown when employees sign device consent forms.</p>
+      </div>
+
+      <div className="rounded-xl border bg-card p-4 space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-foreground">Company Name</label>
+          <Input
+            value={companyName}
+            onChange={e => setCompanyName(e.target.value)}
+            placeholder="Your company name (shown on consent form header)"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-foreground">Terms of Acceptance</label>
+          <textarea
+            value={termsText}
+            onChange={e => setTermsText(e.target.value)}
+            rows={6}
+            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            placeholder="Enter the terms employees must agree to when accepting a device..."
+          />
+          <p className="text-[10px] text-muted-foreground">This text is displayed on the public consent form page. Employees must sign to acknowledge these terms.</p>
+        </div>
+
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={saving} size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white">
+            <Save className="w-4 h-4 mr-1" />
+            {saving ? 'Saving...' : 'Save Settings'}
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border bg-muted/30 p-4">
+        <h4 className="text-xs font-semibold text-foreground mb-2">Preview</h4>
+        <div className="rounded-lg border bg-card p-4">
+          {companyName && <p className="text-sm font-semibold text-foreground mb-2">{companyName}</p>}
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{termsText || 'No terms configured'}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function AboutSection() {
   const [copied, setCopied] = useState(false);

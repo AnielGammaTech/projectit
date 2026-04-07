@@ -156,6 +156,14 @@ export default function AssetInventory() {
     staleTime: 300000,
   });
 
+  const { data: appSettings = [] } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: () => api.entities.AppSettings.list(),
+    staleTime: 300000,
+  });
+  const consentSettings = appSettings.find(s => s.setting_key === 'consent_form') || {};
+  const defaultTerms = 'I acknowledge receipt of this company asset in the condition described above. I agree to use it responsibly, report any damage or issues promptly, and return it upon request or when my employment ends.';
+
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['assets'] });
     queryClient.invalidateQueries({ queryKey: ['assetAssignments'] });
@@ -229,7 +237,7 @@ export default function AssetInventory() {
         status: 'pending',
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         condition_at_checkout: asset.condition || 'Good',
-        terms_text: 'I acknowledge receipt of this company asset in the condition described above. I agree to use it responsibly, report any damage or issues promptly, and return it upon request or when my employment ends.',
+        terms_text: consentSettings.terms_text || defaultTerms,
       });
 
       const link = `${window.location.origin}/accept/${rawToken}`;
@@ -374,25 +382,27 @@ export default function AssetInventory() {
               return (
                 <div
                   key={asset.id}
-                  className="rounded-xl bg-card border border-border p-3 hover:shadow-md transition-all duration-200"
+                  className="rounded-xl bg-card border border-border hover:shadow-md transition-all duration-200 overflow-hidden"
                 >
-                  {/* Top: icon + name */}
-                  <div className="flex items-center gap-2.5 mb-2">
-                    <div className={cn("w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-white", osInfo?.color || fallbackColor)}>
-                      {osInfo ? <osInfo.Icon className="w-4 h-4" /> : <FallbackIcon className="w-4 h-4" />}
+                  {/* Clickable area */}
+                  <Link
+                    to={createPageUrl('AssetDetail') + `?id=${asset.id}`}
+                    className="block p-3 pb-0"
+                  >
+                    {/* Top: icon + name */}
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <div className={cn("w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-white", osInfo?.color || fallbackColor)}>
+                        {osInfo ? <osInfo.Icon className="w-4 h-4" /> : <FallbackIcon className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-foreground truncate block">
+                          {asset.name}
+                        </span>
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {[asset.model, asset.serial_number].filter(Boolean).join(' · ') || asset.type}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <Link
-                        to={createPageUrl('AssetDetail') + `?id=${asset.id}`}
-                        className="text-sm font-medium text-foreground hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors truncate block"
-                      >
-                        {asset.name}
-                      </Link>
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        {[asset.model, asset.serial_number].filter(Boolean).join(' · ') || asset.type}
-                      </p>
-                    </div>
-                  </div>
 
                   {/* Badges */}
                   <div className="flex items-center gap-1.5 flex-wrap mb-2">
@@ -415,13 +425,10 @@ export default function AssetInventory() {
                     </p>
                   )}
 
+                  </Link>
+
                   {/* Actions */}
-                  <div className="flex items-center gap-1 pt-2 border-t border-border">
-                    <Button variant="ghost" size="sm" asChild className="h-7 text-xs px-2">
-                      <Link to={createPageUrl('AssetDetail') + `?id=${asset.id}`}>
-                        <Eye className="w-3.5 h-3.5 mr-1" /> View
-                      </Link>
-                    </Button>
+                  <div className="flex items-center gap-1 pt-2 mx-3 mb-3 border-t border-border">
                     {asset.status === 'Available' && (
                       <Button variant="ghost" size="sm" className="h-7 text-xs px-2 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20" onClick={() => setAssignReturnAsset(asset)}>
                         <UserPlus className="w-3.5 h-3.5 mr-1" /> Assign

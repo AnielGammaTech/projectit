@@ -5,7 +5,7 @@ import SignatureCanvas from '@/components/assets/SignatureCanvas';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-const TERMS_TEXT =
+const DEFAULT_TERMS =
   'I acknowledge receipt of this company asset in the condition described above. ' +
   'I agree to use it responsibly, report any damage or issues promptly, and return it ' +
   'upon request or when my employment ends.';
@@ -113,14 +113,14 @@ function AssetDetailsCard({ acceptance }) {
   ];
 
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
-      <div className="flex items-center gap-2 mb-4">
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-5">
+      <div className="flex items-center gap-2 mb-3">
         <Monitor className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
         <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
           Asset Details
         </h3>
       </div>
-      <dl className="space-y-3">
+      <dl className="space-y-2.5">
         {fields.map(({ label, value }) =>
           value ? (
             <div key={label}>
@@ -138,15 +138,15 @@ function AssetDetailsCard({ acceptance }) {
   );
 }
 
-function TermsBox() {
+function TermsBox({ termsText }) {
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-5">
       <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
         Terms of Acceptance
       </h3>
-      <div className="max-h-40 overflow-y-auto rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-4">
-        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-          {TERMS_TEXT}
+      <div className="max-h-48 overflow-y-auto rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 sm:p-4">
+        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300 whitespace-pre-wrap">
+          {termsText || DEFAULT_TERMS}
         </p>
       </div>
     </div>
@@ -282,9 +282,9 @@ export default function AcceptAsset() {
         {status === STATUS_SUCCESS && <SuccessState />}
 
         {(status === STATUS_READY || status === STATUS_SUBMITTING) && asset && (
-          <div className="space-y-5">
+          <div className="space-y-4">
             <AssetDetailsCard acceptance={asset} />
-            <TermsBox />
+            <TermsBox termsText={asset.terms_text} />
             <AcceptanceForm
               onSubmit={handleSubmit}
               isSubmitting={status === STATUS_SUBMITTING}
