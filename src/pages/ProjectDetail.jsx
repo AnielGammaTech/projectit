@@ -539,7 +539,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
           )}
         </div>
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 px-3 pb-3" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+          <div className="flex items-center justify-center gap-2 px-3 py-1.5" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPartPage(p => Math.max(0, p - 1)); }}
               disabled={partPage === 0}
@@ -1818,7 +1818,7 @@ export default function ProjectDetail() {
         {/* ── Desktop: Tool Cards Grid + Sidebar ── */}
         <div className="hidden sm:grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
           {/* Main content: 2x2 cards + Due Dates column */}
-          <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_240px] gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_240px] sm:grid-rows-[1fr_1fr] gap-3">
 
             {/* Upcoming Due Dates — right column spanning both rows */}
             <motion.div
