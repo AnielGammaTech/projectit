@@ -50,21 +50,29 @@ function BrandingHeader({ branding }) {
   const companyName = branding?.company_name;
   const formTitle = branding?.form_title || 'Employee Asset Consent Form';
 
+  // Resolve relative logo URLs to full API URL
+  const resolvedLogo = logoUrl && logoUrl.startsWith('/') ? `${API_URL}${logoUrl}` : logoUrl;
+
   return (
-    <div className="flex flex-col items-center gap-3 py-6">
-      {logoUrl ? (
-        <img src={logoUrl} alt={companyName || 'Logo'} className="h-12 w-auto object-contain" />
-      ) : (
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-700 text-white font-bold text-lg">
-          {(companyName || 'M').charAt(0)}
+    <div className="flex flex-col items-center gap-2 py-6">
+      {resolvedLogo ? (
+        <img
+          src={resolvedLogo}
+          alt={companyName || 'Logo'}
+          className="h-12 w-auto object-contain"
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+      ) : companyName ? (
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-800 dark:bg-slate-700 text-white font-bold text-lg">
+          {companyName.charAt(0)}
         </div>
-      )}
+      ) : null}
       {companyName && (
-        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+        <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
           {companyName}
         </span>
       )}
-      <h1 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100 text-center">
+      <h1 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100 text-center leading-tight">
         {formTitle}
       </h1>
     </div>
