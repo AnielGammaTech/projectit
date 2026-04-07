@@ -851,7 +851,29 @@ export default function Dashboard() {
 
         if (extractedParts?.length) {
           for (const part of extractedParts) {
-            await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
+            // Auto-create Product in inventory if it doesn't already exist
+            if (!part.matched_product_id && part.name) {
+              try {
+                const newProduct = await api.entities.Product.create({
+                  name: part.name,
+                  description: part.description || '',
+                  unit_cost: part.unit_cost || 0,
+                  quantity: 0,
+                  min_quantity: 0,
+                  category: 'Quote Import',
+                });
+                part.matched_product_id = newProduct.id;
+                part.matched_product_name = newProduct.name;
+              } catch (prodErr) {
+                console.error('Failed to auto-create product:', prodErr);
+              }
+            }
+            await api.entities.Part.create({
+              ...part,
+              project_id: newProject.id,
+              status: 'needed',
+              product_id: part.matched_product_id || null,
+            });
           }
         }
 
