@@ -167,7 +167,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search projects, proposals, customers, tasks..."
-            className="flex-1 text-lg outline-none placeholder:text-slate-400 dark:text-slate-100 dark:bg-transparent"
+            className="flex-1 text-lg outline-none bg-transparent placeholder:text-slate-400 text-slate-900 dark:text-slate-100"
             autoFocus
           />
           <Button
