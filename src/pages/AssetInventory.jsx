@@ -23,6 +23,9 @@ import {
   RefreshCw,
   Lock,
   Unlock,
+  FileSignature,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -206,6 +209,40 @@ export default function AssetInventory() {
     }
   };
 
+  const [consentLink, setConsentLink] = useState(null);
+  const [consentCopied, setConsentCopied] = useState(false);
+
+  const generateConsentForm = async (asset) => {
+    const activeAssignment = assignments.find(a => a.asset_id === asset.id && !a.returned_date);
+    const employeeId = activeAssignment?.employee_id || null;
+
+    const rawToken = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('');
+    const tokenHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawToken))
+      .then(buf => Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join(''));
+
+    try {
+      await api.entities.AssetAcceptance.create({
+        token_hash: tokenHash,
+        assignment_id: activeAssignment?.id || null,
+        asset_id: asset.id,
+        employee_id: employeeId,
+        status: 'pending',
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        condition_at_checkout: asset.condition || 'Good',
+        terms_text: 'I acknowledge receipt of this company asset in the condition described above. I agree to use it responsibly, report any damage or issues promptly, and return it upon request or when my employment ends.',
+      });
+
+      const link = `${window.location.origin}/accept/${rawToken}`;
+      setConsentLink(link);
+      navigator.clipboard.writeText(link);
+      setConsentCopied(true);
+      setTimeout(() => setConsentCopied(false), 2000);
+      toast.success('Consent form link copied to clipboard');
+    } catch {
+      toast.error('Failed to generate consent form');
+    }
+  };
+
   if (loadingAssets) return <CardGridSkeleton />;
 
   // Build enriched list with status
@@ -319,7 +356,7 @@ export default function AssetInventory() {
             </Button>
           </div>
         ) : (
-          <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered.map((asset) => {
               const osInfo = getOsIcon(asset);
               const FallbackIcon = TYPE_ICONS[asset.type] || HardDrive;
@@ -337,71 +374,65 @@ export default function AssetInventory() {
               return (
                 <div
                   key={asset.id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
+                  className="rounded-xl bg-card border border-border p-3 hover:shadow-md transition-all duration-200"
                 >
-                  {/* OS icon */}
-                  <div className={cn("w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-white", osInfo?.color || fallbackColor)}>
-                    {osInfo ? <osInfo.Icon className="w-4 h-4" /> : <FallbackIcon className="w-4 h-4" />}
+                  {/* Top: icon + name */}
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className={cn("w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-white", osInfo?.color || fallbackColor)}>
+                      {osInfo ? <osInfo.Icon className="w-4 h-4" /> : <FallbackIcon className="w-4 h-4" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Link
+                        to={createPageUrl('AssetDetail') + `?id=${asset.id}`}
+                        className="text-sm font-medium text-foreground hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors truncate block"
+                      >
+                        {asset.name}
+                      </Link>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {[asset.model, asset.serial_number].filter(Boolean).join(' · ') || asset.type}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Name + details */}
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      to={createPageUrl('AssetDetail') + `?id=${asset.id}`}
-                      className="text-sm font-medium text-foreground hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors truncate block"
-                    >
-                      {asset.name}
-                    </Link>
-                    <p className="text-[11px] text-muted-foreground truncate">
-                      {[asset.model, asset.serial_number].filter(Boolean).join(' · ') || asset.type}
-                    </p>
+                  {/* Badges */}
+                  <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                    <Badge variant="secondary" className={cn('text-[10px]', STATUS_STYLES[asset.status])}>{asset.status}</Badge>
+                    {asset.device_active != null && (
+                      <span className="inline-flex items-center gap-1 text-[10px]" title={asset.last_contact ? `Last: ${new Date(asset.last_contact).toLocaleString()}` : ''}>
+                        <span className={cn("w-1.5 h-1.5 rounded-full", asset.device_active ? "bg-emerald-500" : "bg-slate-400")} />
+                        <span className={asset.device_active ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}>
+                          {asset.device_active ? 'Online' : 'Offline'}
+                        </span>
+                      </span>
+                    )}
+                    {asset.sync_locked && <Lock className="w-3 h-3 text-muted-foreground" />}
                   </div>
-
-                  {/* Online dot */}
-                  {asset.device_active != null && (
-                    <span
-                      className={cn("w-2 h-2 rounded-full shrink-0", asset.device_active ? "bg-emerald-500" : "bg-slate-400")}
-                      title={asset.device_active ? `Online${asset.last_contact ? ' · Last: ' + new Date(asset.last_contact).toLocaleString() : ''}` : `Offline${asset.last_contact ? ' · Last: ' + new Date(asset.last_contact).toLocaleString() : ''}`}
-                    />
-                  )}
 
                   {/* Employee */}
                   {employeeName && (
-                    <span className="text-xs text-muted-foreground truncate max-w-[120px] hidden sm:block">{employeeName}</span>
+                    <p className="text-[11px] text-muted-foreground mb-2 truncate">
+                      Assigned to <span className="font-medium text-foreground">{employeeName}</span>
+                    </p>
                   )}
 
-                  {/* Status badge */}
-                  <Badge variant="secondary" className={cn('text-[10px] shrink-0', STATUS_STYLES[asset.status])}>
-                    {asset.status}
-                  </Badge>
-
-                  {/* Sync lock */}
-                  {asset.sync_locked && <Lock className="w-3 h-3 text-muted-foreground shrink-0" />}
-
                   {/* Actions */}
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 pt-2 border-t border-border">
+                    <Button variant="ghost" size="sm" asChild className="h-7 text-xs px-2">
+                      <Link to={createPageUrl('AssetDetail') + `?id=${asset.id}`}>
+                        <Eye className="w-3.5 h-3.5 mr-1" /> View
+                      </Link>
+                    </Button>
                     {asset.status === 'Available' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs px-2 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
-                        onClick={() => setAssignReturnAsset(asset)}
-                      >
-                        <UserPlus className="w-3.5 h-3.5 mr-1" />
-                        Assign
+                      <Button variant="ghost" size="sm" className="h-7 text-xs px-2 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20" onClick={() => setAssignReturnAsset(asset)}>
+                        <UserPlus className="w-3.5 h-3.5 mr-1" /> Assign
                       </Button>
                     )}
                     {asset.status === 'Assigned' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs px-2 text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20"
-                        onClick={() => setAssignReturnAsset(asset)}
-                      >
-                        <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                        Return
+                      <Button variant="ghost" size="sm" className="h-7 text-xs px-2 text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20" onClick={() => setAssignReturnAsset(asset)}>
+                        <RotateCcw className="w-3.5 h-3.5 mr-1" /> Return
                       </Button>
                     )}
+                    <div className="flex-1" />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -409,10 +440,8 @@ export default function AssetInventory() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link to={createPageUrl('AssetDetail') + `?id=${asset.id}`}>
-                            <Eye className="w-4 h-4 mr-2" /> View Details
-                          </Link>
+                        <DropdownMenuItem onClick={() => generateConsentForm(asset)}>
+                          <FileSignature className="w-4 h-4 mr-2" /> Generate Consent Form
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toggleSyncLock(asset)}>
                           {asset.sync_locked
@@ -423,10 +452,7 @@ export default function AssetInventory() {
                         <DropdownMenuItem onClick={() => openEdit(asset)}>
                           <Edit2 className="w-4 h-4 mr-2" /> Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600"
-                          onClick={() => setDeleteConfirm({ open: true, asset })}
-                        >
+                        <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setDeleteConfirm({ open: true, asset })}>
                           <Trash2 className="w-4 h-4 mr-2" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
