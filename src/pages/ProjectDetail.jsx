@@ -1817,15 +1817,15 @@ export default function ProjectDetail() {
 
         {/* ── Desktop: Tool Cards Grid + Sidebar ── */}
         <div className="hidden sm:grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
-          {/* Main Cards — 2x2 grid + Due Dates right column */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Main content: 2x2 cards + Due Dates column */}
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_240px] gap-3">
 
-            {/* Upcoming Due Dates — spans right column */}
+            {/* Upcoming Due Dates — right column spanning both rows */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="sm:col-start-2 sm:row-span-2"
+              className="sm:col-start-3 sm:row-start-1 sm:row-span-2"
             >
               <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} teamMembers={teamMembers} />
             </motion.div>
@@ -1953,7 +1953,7 @@ export default function ProjectDetail() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="sm:col-span-2"
+              className="sm:col-span-3"
             >
               <button
                 onClick={() => setShowActivity(!showActivity)}
