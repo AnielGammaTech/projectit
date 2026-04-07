@@ -138,10 +138,11 @@ function WarrantyBanner({ asset }) {
   return null;
 }
 
-function AcknowledgmentBadge({ assignment, acceptances }) {
+function AcknowledgmentBadge({ assignment, acceptances, onExpire }) {
   const acceptance = acceptances.find(a => a.assignment_id === assignment.id);
   const [expanded, setExpanded] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [expiring, setExpiring] = useState(false);
 
   if (!acceptance) {
     return (
@@ -190,15 +191,35 @@ function AcknowledgmentBadge({ assignment, acceptances }) {
   }
 
   // Pending
+  const handleExpire = async () => {
+    setExpiring(true);
+    try {
+      await api.entities.AssetAcceptance.update(acceptance.id, { status: 'expired' });
+      onExpire?.();
+      toast.success('Consent form expired');
+    } catch {
+      toast.error('Failed to expire');
+    } finally {
+      setExpiring(false);
+    }
+  };
+
   return (
     <div className="flex items-center gap-1.5">
       <Clock className="w-3.5 h-3.5 text-amber-500" />
-      <span className="text-xs text-amber-600 dark:text-amber-400">Pending signature</span>
+      <span className="text-xs text-amber-600 dark:text-amber-400">Pending</span>
+      <button
+        onClick={handleExpire}
+        disabled={expiring}
+        className="text-[10px] text-red-500 hover:text-red-700 dark:hover:text-red-300 underline ml-1"
+      >
+        {expiring ? 'Expiring...' : 'Expire'}
+      </button>
     </div>
   );
 }
 
-function AssignmentCard({ assignment, employeeName, acceptances }) {
+function AssignmentCard({ assignment, employeeName, acceptances, onExpire }) {
   const isActive = !assignment.returned_date;
 
   return (
@@ -221,7 +242,7 @@ function AssignmentCard({ assignment, employeeName, acceptances }) {
           </Badge>
         )}
         <div className="ml-auto">
-          <AcknowledgmentBadge assignment={assignment} acceptances={acceptances} />
+          <AcknowledgmentBadge assignment={assignment} acceptances={acceptances} onExpire={onExpire} />
         </div>
       </div>
 
@@ -589,6 +610,7 @@ export default function AssetDetail() {
                   assignment={assignment}
                   employeeName={employeeMap.get(assignment.employee_id)}
                   acceptances={acceptances}
+                  onExpire={invalidateAll}
                 />
               ))}
             </div>
