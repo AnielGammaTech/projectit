@@ -45,15 +45,28 @@ async function submitSignature(token, signerName, signatureData) {
   return res.json();
 }
 
-function BrandingHeader() {
+function BrandingHeader({ branding }) {
+  const logoUrl = branding?.logo_url;
+  const companyName = branding?.company_name;
+  const formTitle = branding?.form_title || 'Employee Asset Consent Form';
+
   return (
-    <div className="flex items-center justify-center gap-3 py-6">
-      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-700 text-white font-bold text-lg">
-        M
-      </div>
-      <span className="text-xl font-semibold text-slate-800 dark:text-slate-100">
-        ManageIT
-      </span>
+    <div className="flex flex-col items-center gap-3 py-6">
+      {logoUrl ? (
+        <img src={logoUrl} alt={companyName || 'Logo'} className="h-12 w-auto object-contain" />
+      ) : (
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-700 text-white font-bold text-lg">
+          {(companyName || 'M').charAt(0)}
+        </div>
+      )}
+      {companyName && (
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          {companyName}
+        </span>
+      )}
+      <h1 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100 text-center">
+        {formTitle}
+      </h1>
     </div>
   );
 }
@@ -275,7 +288,7 @@ export default function AcceptAsset() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="mx-auto max-w-lg px-4 pb-12">
-        <BrandingHeader />
+        <BrandingHeader branding={asset?.branding} />
 
         {status === STATUS_LOADING && <LoadingState />}
         {status === STATUS_ERROR && <ErrorState message={errorMessage} />}

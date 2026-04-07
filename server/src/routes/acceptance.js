@@ -92,6 +92,16 @@ router.get('/:token', async (req, res) => {
       last_name: empRaw.last_name,
     } : null;
 
+    // Fetch branding from AppSettings
+    const { rows: consentRows } = await pool.query(
+      `SELECT data FROM "AppSettings" WHERE data->>'setting_key' = 'consent_form'`
+    );
+    const { rows: appRows } = await pool.query(
+      `SELECT data FROM "AppSettings" WHERE data->>'setting_key' = 'main'`
+    );
+    const consentData = consentRows[0]?.data || {};
+    const appData = appRows[0]?.data || {};
+
     res.json({
       id: acceptance.id,
       asset,
@@ -100,6 +110,11 @@ router.get('/:token', async (req, res) => {
       assigned_date: data.assigned_date,
       condition_at_checkout: data.condition_at_checkout,
       expires_at: data.expires_at,
+      branding: {
+        company_name: consentData.company_name || appData.app_name || '',
+        logo_url: appData.app_logo_url || '',
+        form_title: consentData.form_title || 'Employee Asset Consent Form',
+      },
     });
   } catch (err) {
     console.error('[Acceptance GET] Error:', err.message);

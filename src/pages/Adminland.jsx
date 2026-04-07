@@ -5010,6 +5010,7 @@ function ConsentFormSection({ queryClient }) {
   const consentSettings = settingsList.find(s => s.setting_key === 'consent_form') || {};
   const [termsText, setTermsText] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [formTitle, setFormTitle] = useState('');
   const [initialized, setInitialized] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -5017,10 +5018,12 @@ function ConsentFormSection({ queryClient }) {
     if (!initialized && consentSettings.setting_key) {
       setTermsText(consentSettings.terms_text || 'I acknowledge receipt of this company asset in the condition described above. I agree to use it responsibly, report any damage or issues promptly, and return it upon request or when my employment ends.');
       setCompanyName(consentSettings.company_name || '');
+      setFormTitle(consentSettings.form_title || 'Employee Asset Consent Form');
       setInitialized(true);
     }
     if (!initialized && settingsList.length > 0 && !consentSettings.setting_key) {
       setTermsText('I acknowledge receipt of this company asset in the condition described above. I agree to use it responsibly, report any damage or issues promptly, and return it upon request or when my employment ends.');
+      setFormTitle('Employee Asset Consent Form');
       setInitialized(true);
     }
   }, [consentSettings, settingsList, initialized]);
@@ -5028,7 +5031,7 @@ function ConsentFormSection({ queryClient }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const data = { setting_key: 'consent_form', terms_text: termsText, company_name: companyName };
+      const data = { setting_key: 'consent_form', terms_text: termsText, company_name: companyName, form_title: formTitle };
       if (consentSettings.id) {
         await api.entities.AppSettings.update(consentSettings.id, data);
       } else {
@@ -5056,8 +5059,18 @@ function ConsentFormSection({ queryClient }) {
           <Input
             value={companyName}
             onChange={e => setCompanyName(e.target.value)}
-            placeholder="Your company name (shown on consent form header)"
+            placeholder="e.g. Gamma Tech Services"
           />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-foreground">Form Title</label>
+          <Input
+            value={formTitle}
+            onChange={e => setFormTitle(e.target.value)}
+            placeholder="e.g. Employee Asset Consent Form"
+          />
+          <p className="text-[10px] text-muted-foreground">Displayed as the main heading on the consent form page.</p>
         </div>
 
         <div className="space-y-1.5">
@@ -5082,9 +5095,12 @@ function ConsentFormSection({ queryClient }) {
 
       <div className="rounded-xl border bg-muted/30 p-4">
         <h4 className="text-xs font-semibold text-foreground mb-2">Preview</h4>
-        <div className="rounded-lg border bg-card p-4">
-          {companyName && <p className="text-sm font-semibold text-foreground mb-2">{companyName}</p>}
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{termsText || 'No terms configured'}</p>
+        <div className="rounded-lg border bg-card p-4 space-y-2">
+          {companyName && <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{companyName}</p>}
+          {formTitle && <p className="text-base font-bold text-foreground">{formTitle}</p>}
+          <div className="pt-2 border-t">
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{termsText || 'No terms configured'}</p>
+          </div>
         </div>
       </div>
     </div>
