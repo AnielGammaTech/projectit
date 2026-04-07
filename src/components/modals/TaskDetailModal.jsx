@@ -98,6 +98,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
     try {
       await api.entities.Task.update(task.id, updates);
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
       queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
     } catch (err) {
       console.error('Task update failed:', err);
