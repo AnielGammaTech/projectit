@@ -141,7 +141,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
   };
 
   return (
-    <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-1 lg:col-span-1 group">
+    <Link to={createPageUrl('ProjectTasks') + `?id=${projectId}`} className="group">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1730,14 +1730,14 @@ export default function ProjectDetail() {
         {/* ── Desktop: Tool Cards Grid + Sidebar ── */}
         <div className="hidden sm:grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
           {/* Main Cards — 2x2 grid + Due Dates right column */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_240px] gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
             {/* Upcoming Due Dates — spans right column */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="sm:col-start-2 sm:row-span-2 lg:col-start-3 lg:row-start-1 lg:row-span-2"
+              className="sm:col-start-2 sm:row-span-2"
             >
               <UpcomingDueDates tasks={tasks} parts={parts} projectId={projectId} teamMembers={teamMembers} />
             </motion.div>
@@ -1754,7 +1754,7 @@ export default function ProjectDetail() {
             />
 
             {/* ─── Messages Card ─── */}
-            <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`} className="sm:col-start-1 sm:row-start-2 lg:col-start-2 lg:row-start-1 group">
+            <Link to={createPageUrl('ProjectNotes') + `?id=${projectId}`} className="group">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1808,7 +1808,7 @@ export default function ProjectDetail() {
             />
 
             {/* ─── Files Card ─── */}
-            <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`} className="lg:col-start-2 lg:row-start-2 group">
+            <Link to={createPageUrl('ProjectFiles') + `?id=${projectId}`} className="group">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1865,7 +1865,7 @@ export default function ProjectDetail() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="sm:col-span-2 lg:col-span-3"
+              className="sm:col-span-2"
             >
               <button
                 onClick={() => setShowActivity(!showActivity)}
