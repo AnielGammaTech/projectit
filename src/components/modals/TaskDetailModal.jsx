@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,9 +16,11 @@ import {
   Send, Calendar as CalendarIcon, Edit2, Trash2, Paperclip, X,
   FileText, Image, Loader2, Check, MoreHorizontal, Bell,
   User, Clock, Flag, MessageSquare, ChevronDown, ChevronUp,
-  ListChecks, Plus, GripVertical, Notebook, StickyNote, Camera as CameraIcon
+  ListChecks, Plus, GripVertical, Notebook, StickyNote, Camera as CameraIcon,
+  FolderOpen, ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import UserAvatar from '@/components/UserAvatar';
 import { sendTaskAssignmentNotification } from '@/utils/notifications';
 import { useNativeCamera } from '@/hooks/useNativeCamera';
@@ -91,9 +95,15 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   const handleUpdateTask = async (updates) => {
     // Optimistic update for immediate UI feedback
     setLocalUpdates(prev => ({ ...prev, ...updates }));
-    await api.entities.Task.update(task.id, updates);
-    queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
+    try {
+      await api.entities.Task.update(task.id, updates);
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
+    } catch (err) {
+      console.error('Task update failed:', err);
+      toast.error('Failed to save changes');
+      setLocalUpdates({});
+    }
   };
   const handleStatusToggle = async () => { const newStatus = liveTask.status === 'completed' ? 'todo' : 'completed'; if (newStatus === 'completed') await hapticSuccess(); else await tapLight(); await handleUpdateTask({ status: newStatus }); };
   const handleStatusChange = async (status) => { await handleUpdateTask({ status }); setShowStatusDropdown(false); };
@@ -112,7 +122,11 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
 
   const [localDueDate, setLocalDueDate] = useState(null);
   useEffect(() => { if (task?.due_date) { setLocalDueDate(new Date(task.due_date.split('T')[0] + 'T12:00:00')); } else { setLocalDueDate(null); } }, [task?.due_date]);
-  const handleDueDateChange = (date) => { setLocalDueDate(date); handleUpdateTask({ due_date: date ? format(date, 'yyyy-MM-dd') : '' }); };
+  const handleDueDateChange = (date) => {
+    const newDate = date || null;
+    setLocalDueDate(newDate);
+    handleUpdateTask({ due_date: newDate ? format(newDate, 'yyyy-MM-dd') : null });
+  };
   const handleNotesBlur = async () => { if (notes !== task.notes) await handleUpdateTask({ notes }); };
 
   const handleToggleNotify = async (email) => {
@@ -358,6 +372,22 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
                   <span className="text-[11px] sm:text-xs text-slate-500 w-16 sm:w-20 flex-shrink-0">Notify</span>
                   <DropdownMenu><DropdownMenuTrigger asChild><button className="inline-flex items-center gap-1.5 text-xs transition-colors"><Bell className="w-3.5 h-3.5 text-slate-400" />{notifyOnComplete.length > 0 ? <span className="font-medium text-slate-700">{notifyOnComplete.length} people</span> : <span className="text-slate-400">None</span>}</button></DropdownMenuTrigger><DropdownMenuContent><p className="px-2 py-1.5 text-xs text-slate-500">Notify when completed:</p>{teamMembers.map(m => (<DropdownMenuItem key={m.id} onClick={() => handleToggleNotify(m.email)}><UserAvatar email={m.email} name={m.name} avatarUrl={m.avatar_url} size="xs" className="mr-2" />{m.name}{notifyOnComplete.includes(m.email) && <Check className="w-4 h-4 ml-auto text-emerald-600" />}</DropdownMenuItem>))}</DropdownMenuContent></DropdownMenu>
                 </div>
+
+                {/* Project link */}
+                {project && (
+                  <div className="flex items-center py-1 sm:py-2 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-700/40 transition-colors sm:-mx-2">
+                    <span className="text-[11px] sm:text-xs text-slate-500 w-16 sm:w-20 flex-shrink-0">Project</span>
+                    <Link
+                      to={createPageUrl('ProjectDetail') + `?id=${project.id}`}
+                      onClick={onClose}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline transition-colors"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5" />
+                      {project.name || 'Open Project'}
+                      <ExternalLink className="w-3 h-3 opacity-50" />
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
 
