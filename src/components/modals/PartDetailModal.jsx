@@ -183,7 +183,8 @@ export default function PartDetailModal({ open, onClose, part: partProp, teamMem
       autoSave({ receiver_email: '', receiver_name: '' });
     } else {
       const member = teamMembers.find(m => m.email === email);
-      autoSave({ receiver_email: email, receiver_name: member?.name || email });
+      const name = member?.name || email;
+      autoSave({ receiver_email: email, receiver_name: name, assigned_to: email, assigned_name: name });
     }
   };
 
