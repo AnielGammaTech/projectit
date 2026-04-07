@@ -141,19 +141,19 @@ export default function AssetInventory() {
   const { data: assets = [], isLoading: loadingAssets } = useQuery({
     queryKey: ['assets'],
     queryFn: () => api.entities.Asset.list(),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
     queryFn: () => api.entities.Employee.list(),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: assignments = [] } = useQuery({
     queryKey: ['assetAssignments'],
     queryFn: () => api.entities.AssetAssignment.list(),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: appSettings = [] } = useQuery({

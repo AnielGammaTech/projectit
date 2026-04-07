@@ -109,19 +109,19 @@ export default function AssetEmployeeDetail() {
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
     queryFn: () => api.entities.Employee.list(),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: assignments = [], isLoading: loadingAssignments } = useQuery({
     queryKey: ['assetAssignments'],
     queryFn: () => api.entities.AssetAssignment.list('-assigned_date'),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: assets = [], isLoading: loadingAssets } = useQuery({
     queryKey: ['assets'],
     queryFn: () => api.entities.Asset.list(),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   if (loadingEmployees || loadingAssignments || loadingAssets) {

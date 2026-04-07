@@ -353,25 +353,25 @@ export default function AssetDetail() {
   const { data: assets = [], isLoading: loadingAssets } = useQuery({
     queryKey: ['assets'],
     queryFn: () => api.entities.Asset.list(),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: assignments = [], isLoading: loadingAssignments } = useQuery({
     queryKey: ['assetAssignments'],
     queryFn: () => api.entities.AssetAssignment.list('-assigned_date'),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
     queryFn: () => api.entities.Employee.list(),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: acceptances = [] } = useQuery({
     queryKey: ['assetAcceptances'],
     queryFn: () => api.entities.AssetAcceptance.list('-created_date'),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: notes = [] } = useQuery({

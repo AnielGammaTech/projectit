@@ -95,19 +95,19 @@ export default function AssetReports() {
   const { data: assets = [], isLoading: loadingAssets } = useQuery({
     queryKey: ['assets'],
     queryFn: () => api.entities.Asset.list('-created_date'),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: assignments = [], isLoading: loadingAssignments } = useQuery({
     queryKey: ['assetAssignments'],
     queryFn: () => api.entities.AssetAssignment.list('-assigned_date'),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
     queryFn: () => api.entities.Employee.list('last_name'),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const totalAssets = assets.length;

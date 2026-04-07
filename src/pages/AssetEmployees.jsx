@@ -51,13 +51,13 @@ export default function AssetEmployees() {
   const { data: employees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ['employees'],
     queryFn: () => api.entities.Employee.list(),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: assignments = [], isLoading: loadingAssignments } = useQuery({
     queryKey: ['assetAssignments'],
     queryFn: () => api.entities.AssetAssignment.list('-assigned_date'),
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const activeAssignmentsByEmployee = assignments
