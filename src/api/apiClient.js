@@ -48,14 +48,16 @@ function createEntityProxy(entityType) {
       if (sort) params.set('sort', sort);
       if (limit) params.set('limit', String(limit));
       const qs = params.toString();
-      return apiFetch(`/api/entities/${entityType}/list${qs ? `?${qs}` : ''}`);
+      const result = await apiFetch(`/api/entities/${entityType}/list${qs ? `?${qs}` : ''}`);
+      return Array.isArray(result) ? result : [];
     },
 
     async filter(filterObj, sort, limit) {
-      return apiFetch(`/api/entities/${entityType}/filter`, {
+      const result = await apiFetch(`/api/entities/${entityType}/filter`, {
         method: 'POST',
         body: JSON.stringify({ filter: filterObj, sort, limit }),
       });
+      return Array.isArray(result) ? result : [];
     },
 
     async create(data) {

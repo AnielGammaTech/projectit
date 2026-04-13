@@ -17,6 +17,7 @@ import AcceptInvite from '@/pages/AcceptInvite';
 import AcceptAsset from '@/pages/AcceptAsset';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import OfflineBanner from '@/components/OfflineBanner';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -99,7 +100,7 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/" element={
           <LayoutWrapper currentPageName={mainPageKey}>
-            <MainPage />
+            <ErrorBoundary><MainPage /></ErrorBoundary>
           </LayoutWrapper>
         } />
         {Object.entries(Pages).map(([path, Page]) => (
@@ -108,7 +109,7 @@ const AuthenticatedApp = () => {
             path={`/${path}`}
             element={
               <LayoutWrapper currentPageName={path}>
-                <Page />
+                <ErrorBoundary><Page /></ErrorBoundary>
               </LayoutWrapper>
             }
           />
@@ -128,14 +129,13 @@ function App() {
       <AuthProvider>
         <QueryClientProvider client={queryClientInstance}>
           <Router>
-            <ErrorBoundary>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/accept-invite" element={<AcceptInvite />} />
-                <Route path="/accept/:token" element={<AcceptAsset />} />
-                <Route path="/*" element={<AuthenticatedApp />} />
-              </Routes>
-            </ErrorBoundary>
+            <OfflineBanner />
+            <Routes>
+              <Route path="/login" element={<ErrorBoundary><Login /></ErrorBoundary>} />
+              <Route path="/accept-invite" element={<ErrorBoundary><AcceptInvite /></ErrorBoundary>} />
+              <Route path="/accept/:token" element={<ErrorBoundary><AcceptAsset /></ErrorBoundary>} />
+              <Route path="/*" element={<AuthenticatedApp />} />
+            </Routes>
           </Router>
           <Toaster />
           <SonnerToaster />

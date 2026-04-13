@@ -138,32 +138,29 @@ export default function AssetInventory() {
 
   const queryClient = useQueryClient();
 
-  const safeList = async (fn) => { const r = await fn(); return Array.isArray(r) ? r : []; };
-
   const { data: assets = [], isLoading: loadingAssets } = useQuery({
     queryKey: ['assets'],
-    queryFn: () => safeList(() => api.entities.Asset.list()),
+    queryFn: () => api.entities.Asset.list(),
     staleTime: 0,
   });
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees'],
-    queryFn: () => safeList(() => api.entities.Employee.list()),
+    queryFn: () => api.entities.Employee.list(),
     staleTime: 0,
   });
 
   const { data: assignments = [] } = useQuery({
     queryKey: ['assetAssignments'],
-    queryFn: () => safeList(() => api.entities.AssetAssignment.list()),
+    queryFn: () => api.entities.AssetAssignment.list(),
     staleTime: 0,
   });
 
-  const { data: appSettingsRaw = [] } = useQuery({
+  const { data: appSettings = [] } = useQuery({
     queryKey: ['appSettings'],
     queryFn: () => api.entities.AppSettings.list(),
     staleTime: 0,
   });
-  const appSettings = Array.isArray(appSettingsRaw) ? appSettingsRaw : [];
   const consentSettings = appSettings.find(s => s.setting_key === 'consent_form') || {};
   const defaultTerms = 'I acknowledge receipt of this company asset in the condition described above. I agree to use it responsibly, report any damage or issues promptly, and return it upon request or when my employment ends.';
 
