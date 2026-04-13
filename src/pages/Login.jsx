@@ -155,24 +155,27 @@ export default function Login() {
     return (
       <div className="min-h-screen flex">
         {/* Left branding panel */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0F2F44] to-[#163D57] relative overflow-hidden">
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0B2231] via-[#0F2F44] to-[#163D57] relative overflow-hidden">
           <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20">
-            <div className="flex items-center gap-3 mb-10">
-              <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
-              <span className="text-white font-semibold text-xl tracking-tight">ProjectIT</span>
+            <div className="flex items-center gap-4 mb-12">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#163D57] to-[#1a4a6e] shadow-xl shadow-black/20 flex items-center justify-center relative border border-white/10">
+                <span className="text-white font-extrabold text-2xl tracking-tight">P</span>
+                <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#74C7FF] shadow-lg shadow-[#74C7FF]/40" />
+              </div>
+              <span className="text-white font-bold text-2xl tracking-tight">ProjectIT</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
+            <h2 className="text-3xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-5">
               IT project delivery,{' '}
-              <span className="text-white/60">simplified.</span>
+              <span className="text-[#74C7FF]">simplified.</span>
             </h2>
-            <p className="text-slate-300 text-lg max-w-md">
+            <p className="text-slate-300/90 text-lg max-w-md leading-relaxed">
               Track projects from quote to completion. Assign tasks, manage stock, monitor timelines, and keep every client in the loop.
             </p>
           </div>
-          {/* Decorative elements */}
-          <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-primary/10 rounded-full" />
-          <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary-foreground/5 rounded-full" />
-          <div className="absolute bottom-20 right-10 w-32 h-32 bg-primary/5 rounded-full" />
+          <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-[#74C7FF]/5 rounded-full blur-xl" />
+          <div className="absolute -top-16 -right-16 w-64 h-64 bg-[#74C7FF]/5 rounded-full blur-lg" />
+          <div className="absolute bottom-20 right-10 w-32 h-32 bg-[#74C7FF]/5 rounded-full blur-md" />
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
         </div>
 
         {/* Right form panel */}
@@ -221,7 +224,7 @@ export default function Login() {
               <button
                 onClick={() => handleMfaVerify()}
                 disabled={mfaVerifying || mfaCode.length !== 6}
-                className="w-full bg-[#0F2F44] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#1a4a6e] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0F2F44]/25"
+                className="w-full bg-gradient-to-r from-[#0F2F44] to-[#1a4a6e] text-white py-3 rounded-xl text-sm font-semibold hover:from-[#163D57] hover:to-[#1f5a80] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0F2F44]/30 border border-[#74C7FF]/20"
               >
                 {mfaVerifying ? (
                   <>
@@ -255,39 +258,47 @@ export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Left branding panel — desktop only */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0F2F44] to-[#163D57] relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0B2231] via-[#0F2F44] to-[#163D57] relative overflow-hidden">
         <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20">
-          <div className="flex items-center gap-3 mb-10">
-            <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
-            <span className="text-white font-semibold text-xl tracking-tight">ProjectIT</span>
+          {/* Logo — larger with visible accent colors */}
+          <div className="flex items-center gap-4 mb-12">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#163D57] to-[#1a4a6e] shadow-xl shadow-black/20 flex items-center justify-center relative border border-white/10">
+              <span className="text-white font-extrabold text-2xl tracking-tight">P</span>
+              <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#74C7FF] shadow-lg shadow-[#74C7FF]/40" />
+            </div>
+            <span className="text-white font-bold text-2xl tracking-tight">ProjectIT</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
+          <h2 className="text-3xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-5">
             IT project delivery,{' '}
-            <span className="text-white/60">simplified.</span>
+            <span className="text-[#74C7FF]">simplified.</span>
           </h2>
-          <p className="text-slate-300 text-lg max-w-md">
+          <p className="text-slate-300/90 text-lg max-w-md leading-relaxed">
             Track projects from quote to completion. Assign tasks, manage stock, monitor timelines, and keep every client in the loop.
           </p>
         </div>
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-white/5 rounded-full" />
-        <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/5 rounded-full" />
-        <div className="absolute bottom-20 right-10 w-32 h-32 bg-white/5 rounded-full" />
+        {/* Decorative elements with blue tint */}
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-[#74C7FF]/5 rounded-full blur-xl" />
+        <div className="absolute -top-16 -right-16 w-64 h-64 bg-[#74C7FF]/5 rounded-full blur-lg" />
+        <div className="absolute bottom-20 right-10 w-32 h-32 bg-[#74C7FF]/5 rounded-full blur-md" />
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       </div>
 
       {/* Form panel — full width on mobile */}
       <div className="w-full lg:w-1/2 flex flex-col bg-card">
         {/* Mobile hero header */}
-        <div className="lg:hidden bg-[#0F2F44] px-6 pt-16 pb-10 text-center relative overflow-hidden">
-          <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/5 rounded-full" />
-          <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-white/5 rounded-full" />
+        <div className="lg:hidden bg-gradient-to-br from-[#0B2231] to-[#163D57] px-6 pt-16 pb-10 text-center relative overflow-hidden">
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-[#74C7FF]/5 rounded-full blur-lg" />
+          <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-[#74C7FF]/5 rounded-full blur-md" />
           <div className="relative z-10">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                <img src="/favicon.svg" alt="ProjectIT" className="w-10 h-10" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#163D57] to-[#1a4a6e] flex items-center justify-center shadow-xl shadow-black/20 relative border border-white/10">
+                <span className="text-white font-extrabold text-3xl">P</span>
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#74C7FF] shadow-lg shadow-[#74C7FF]/40" />
               </div>
             </div>
             <h1 className="text-2xl font-bold text-white mb-1">ProjectIT</h1>
-            <p className="text-white/60 text-sm">Sign in to your account</p>
+            <p className="text-[#74C7FF]/70 text-sm">Sign in to your account</p>
           </div>
         </div>
 
@@ -347,7 +358,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#0F2F44] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#1a4a6e] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0F2F44]/25"
+                  className="w-full bg-gradient-to-r from-[#0F2F44] to-[#1a4a6e] text-white py-3 rounded-xl text-sm font-semibold hover:from-[#163D57] hover:to-[#1f5a80] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0F2F44]/30 border border-[#74C7FF]/20"
                 >
                   {loading ? (
                     <>
