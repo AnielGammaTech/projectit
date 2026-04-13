@@ -162,7 +162,7 @@ export default function Login() {
                 <span className="text-white font-extrabold text-2xl tracking-tight">P</span>
                 <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#74C7FF] shadow-lg shadow-[#74C7FF]/40" />
               </div>
-              <span className="text-white font-bold text-2xl tracking-tight">ProjectIT</span>
+              <span className="text-2xl tracking-tight"><span className="text-white font-bold">Project</span><span className="text-[#74C7FF] font-bold">IT</span></span>
             </div>
             <h2 className="text-3xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-5">
               IT project delivery,{' '}
@@ -262,11 +262,11 @@ export default function Login() {
         <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20">
           {/* Logo — larger with visible accent colors */}
           <div className="flex items-center gap-4 mb-12">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#163D57] to-[#1a4a6e] shadow-xl shadow-black/20 flex items-center justify-center relative border border-white/10">
+            <div className="w-14 h-14 rounded-[16px] bg-[#0F2F44] shadow-xl shadow-black/30 flex items-center justify-center relative border border-white/[0.08]">
               <span className="text-white font-extrabold text-2xl tracking-tight">P</span>
-              <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#74C7FF] shadow-lg shadow-[#74C7FF]/40" />
+              <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#74C7FF] shadow-lg shadow-[#74C7FF]/50" />
             </div>
-            <span className="text-white font-bold text-2xl tracking-tight">ProjectIT</span>
+            <span className="text-2xl tracking-tight"><span className="text-white font-bold">Project</span><span className="text-[#74C7FF] font-bold">IT</span></span>
           </div>
           <h2 className="text-3xl sm:text-4xl xl:text-5xl font-bold text-white leading-tight mb-5">
             IT project delivery,{' '}
@@ -292,12 +292,12 @@ export default function Login() {
           <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-[#74C7FF]/5 rounded-full blur-md" />
           <div className="relative z-10">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#163D57] to-[#1a4a6e] flex items-center justify-center shadow-xl shadow-black/20 relative border border-white/10">
+              <div className="w-16 h-16 rounded-[18px] bg-[#0F2F44] flex items-center justify-center shadow-xl shadow-black/30 relative border border-white/[0.08]">
                 <span className="text-white font-extrabold text-3xl">P</span>
-                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#74C7FF] shadow-lg shadow-[#74C7FF]/40" />
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#74C7FF] shadow-lg shadow-[#74C7FF]/50" />
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-1">ProjectIT</h1>
+            <h1 className="text-2xl font-bold mb-1"><span className="text-white">Project</span><span className="text-[#74C7FF]">IT</span></h1>
             <p className="text-[#74C7FF]/70 text-sm">Sign in to your account</p>
           </div>
         </div>
