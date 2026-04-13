@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 import {
   BarChart3, PieChart, TrendingUp, Users, Package,
   CheckCircle2, Clock, DollarSign, Activity, Truck,
-  ShoppingCart, Timer, ArrowUpRight, ArrowDownRight, Minus
+  ShoppingCart, Timer, ArrowUpRight, ArrowDownRight, Minus,
+  Download,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -17,6 +18,7 @@ import { format, subDays } from 'date-fns';
 import { parseLocalDate } from '@/utils/dateUtils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, AreaChart, Area } from 'recharts';
 import { cn } from '@/lib/utils';
+import { downloadCSV } from '@/utils/csvExport';
 
 const COLORS = ['#0069AF', '#22c55e', '#f59e0b', '#ef4444', '#0F2F44', '#74C7FF'];
 
@@ -137,6 +139,58 @@ export default function Reports() {
   const projTotalCost = selectedProjectParts.reduce((s, p) => s + ((p.quantity || 1) * (p.unit_cost || 0)), 0);
   const projTotalRetail = selectedProjectParts.reduce((s, p) => s + ((p.quantity || 1) * (p.sell_price || p.unit_cost || 0)), 0);
 
+  const handleExportOverview = () => {
+    const date = new Date().toISOString().slice(0, 10);
+    const completionRate = projectTasks.length > 0 ? Math.round((completedTasks.length / projectTasks.length) * 100) : 0;
+    const headers = ['Metric', 'Value'];
+    const rows = [
+      ['Active Projects', String(activeProjects.length)],
+      ['Task Completion Rate', `${completionRate}%`],
+      ['Tasks Completed', String(completedTasks.length)],
+      ['Active Tasks', String(activeTasks.length)],
+      ['Overdue Tasks', String(overdueTasks.length)],
+      ['Hours Logged', `${totalHours.toFixed(0)}h`],
+      ['Portfolio Value', `$${totalRetail.toLocaleString(undefined, { maximumFractionDigits: 0 })}`],
+      ['Margin %', `${marginPercent}%`],
+      ['', ''],
+      ['Project Health', 'Completion %'],
+      ...activeProjects.map((project) => {
+        const pTasks = projectTasks.filter((t) => t.project_id === project.id);
+        const pCompleted = pTasks.filter((t) => t.status === 'completed').length;
+        const pct = pTasks.length > 0 ? Math.round((pCompleted / pTasks.length) * 100) : 0;
+        return [project.name, `${pct}%`];
+      }),
+    ];
+    downloadCSV(`reports-overview-${date}.csv`, headers, rows);
+  };
+
+  const handleExportFinancial = () => {
+    const date = new Date().toISOString().slice(0, 10);
+    const headers = ['Category', 'Cost', 'Retail', 'Item Count'];
+    const rows = [
+      ['Project Items', `$${projectItemsCost.toFixed(0)}`, `$${projectItemsRetail.toFixed(0)}`, String(projectParts.length)],
+      ['Stocked Inventory', `$${stockedCost.toFixed(0)}`, `$${stockedRetail.toFixed(0)}`, String(inventory.length)],
+      ['In Transit', `$${transitCost.toFixed(0)}`, '', String(partsInTransit.length)],
+      ['To be Ordered', `$${neededCost.toFixed(0)}`, '', String(partsNeeded.length)],
+      ['Total', `$${totalCost.toFixed(0)}`, `$${totalRetail.toFixed(0)}`, ''],
+      ['Margin', `$${margin.toFixed(0)}`, `${marginPercent}%`, ''],
+    ];
+    downloadCSV(`reports-financial-${date}.csv`, headers, rows);
+  };
+
+  const handleExportTeam = () => {
+    const date = new Date().toISOString().slice(0, 10);
+    const headers = ['Team Member', 'Total Tasks', 'Completed Tasks', 'Completion Rate %', 'Hours Logged'];
+    const rows = tasksByMember.map((m) => [
+      m.fullName,
+      String(m.total),
+      String(m.completed),
+      `${m.rate}%`,
+      m.hours.toFixed(1),
+    ]);
+    downloadCSV(`reports-team-${date}.csv`, headers, rows);
+  };
+
   const tabs = [
     { key: 'overview', label: 'Overview', icon: BarChart3 },
     { key: 'financial', label: 'Financial', icon: DollarSign },
@@ -213,6 +267,12 @@ export default function Reports() {
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={handleExportOverview}>
+                <Download className="w-4 h-4 mr-1" />
+                Export CSV
+              </Button>
+            </div>
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard icon={Activity} label="Active Projects" value={activeProjects.length} sub={`${completedTasks.length} tasks completed`} iconBg="bg-primary/10" iconColor="text-primary" />
@@ -362,6 +422,12 @@ export default function Reports() {
         {/* Financial Tab */}
         {activeTab === 'financial' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={handleExportFinancial}>
+                <Download className="w-4 h-4 mr-1" />
+                Export CSV
+              </Button>
+            </div>
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard icon={Package} label="Project Items" value={`$${projectItemsCost.toLocaleString(undefined, {maximumFractionDigits: 0})}`} sub={`${projectParts.length} items | Retail: $${projectItemsRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}`} iconBg="bg-emerald-50" iconColor="text-emerald-600" />
@@ -454,6 +520,12 @@ export default function Reports() {
         {/* Team Tab */}
         {activeTab === 'team' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={handleExportTeam}>
+                <Download className="w-4 h-4 mr-1" />
+                Export CSV
+              </Button>
+            </div>
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard icon={Users} label="Team Size" value={teamMembers.length} sub="Active members" iconBg="bg-primary/10" iconColor="text-primary" />

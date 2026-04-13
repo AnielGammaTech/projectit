@@ -1,24 +1,28 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { AnimatePresence } from 'framer-motion';
-import { 
-  Search, X, FolderKanban, FileText, Users, Package, 
-  ListTodo, Filter, ChevronDown 
+import {
+  Search, X, FolderKanban, FileText, Users, Package,
+  ListTodo, Filter, ChevronDown, HardDrive, User, Clock
 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
+import { getRecentSearches, addRecentSearch, clearRecentSearches } from '@/lib/recentSearches';
 
 const RESULT_TYPES = {
   project: { label: 'Projects', icon: FolderKanban, color: 'text-indigo-600 bg-indigo-50' },
   proposal: { label: 'Proposals', icon: FileText, color: 'text-emerald-600 bg-emerald-50' },
   customer: { label: 'Customers', icon: Users, color: 'text-blue-600 bg-blue-50' },
   inventory: { label: 'Catalog', icon: Package, color: 'text-amber-600 bg-amber-50' },
-  task: { label: 'Tasks', icon: ListTodo, color: 'text-violet-600 bg-violet-50' }
+  task: { label: 'Tasks', icon: ListTodo, color: 'text-violet-600 bg-violet-50' },
+  asset: { label: 'Assets', icon: HardDrive, color: 'text-emerald-600 bg-emerald-50' },
+  employee: { label: 'Employees', icon: User, color: 'text-teal-600 bg-teal-50' },
+  part: { label: 'Parts', icon: Package, color: 'text-orange-600 bg-orange-50' },
+  file: { label: 'Files', icon: FileText, color: 'text-rose-600 bg-rose-50' },
 };
 
 export default function GlobalSearch({ isOpen, onClose }) {
@@ -28,27 +32,40 @@ export default function GlobalSearch({ isOpen, onClose }) {
     proposal: true,
     customer: true,
     inventory: true,
-    task: true
+    task: true,
+    asset: true,
+    employee: true,
+    part: true,
+    file: true,
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [recentSearches, setRecentSearches] = useState([]);
   const inputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
       setQuery('');
+      setActiveIndex(-1);
+      setRecentSearches(getRecentSearches());
       const timer = setTimeout(() => inputRef.current?.focus(), 100);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  // Escape key to close
+  // Reset activeIndex when query changes
   useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
+    setActiveIndex(-1);
+  }, [query]);
+
+  // Scroll active item into view
+  useEffect(() => {
+    if (activeIndex >= 0) {
+      document.querySelector(`[data-search-index="${activeIndex}"]`)?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [activeIndex]);
+
+  // --- Data queries ---
 
   const { data: projects = [] } = useQuery({
     queryKey: ['searchProjects'],
@@ -85,11 +102,45 @@ export default function GlobalSearch({ isOpen, onClose }) {
     staleTime: 60000
   });
 
-  // Get active project IDs (exclude archived, deleted, completed)
+  const { data: assets = [] } = useQuery({
+    queryKey: ['searchAssets'],
+    queryFn: () => api.entities.Asset.list('name', 100),
+    enabled: isOpen && filters.asset,
+    staleTime: 60000,
+  });
+
+  const { data: employees = [] } = useQuery({
+    queryKey: ['searchEmployees'],
+    queryFn: () => api.entities.Employee.list('first_name', 100),
+    enabled: isOpen && filters.employee,
+    staleTime: 60000,
+  });
+
+  const { data: parts = [] } = useQuery({
+    queryKey: ['searchParts'],
+    queryFn: () => api.entities.Part.list('-created_date', 100),
+    enabled: isOpen && filters.part,
+    staleTime: 60000,
+  });
+
+  const { data: projectFiles = [] } = useQuery({
+    queryKey: ['searchProjectFiles'],
+    queryFn: () => api.entities.ProjectFile.list('-created_date', 100),
+    enabled: isOpen && filters.file,
+    staleTime: 60000,
+  });
+
+  // --- Derived data ---
+
   const activeProjectIds = useMemo(() =>
     projects
       .filter(p => p.status !== 'archived' && p.status !== 'deleted' && p.status !== 'completed')
       .map(p => p.id),
+    [projects]
+  );
+
+  const projectMap = useMemo(() =>
+    Object.fromEntries(projects.map(p => [p.id, p.name])),
     [projects]
   );
 
@@ -141,12 +192,112 @@ export default function GlobalSearch({ isOpen, onClose }) {
       ).forEach(t => results.push({ type: 'task', item: t, url: createPageUrl('AllTasks') }));
     }
 
+    if (filters.asset) {
+      assets.filter(a =>
+        a.name?.toLowerCase().includes(lowerQuery) ||
+        a.serial_number?.toLowerCase().includes(lowerQuery) ||
+        a.model?.toLowerCase().includes(lowerQuery) ||
+        a.hostname?.toLowerCase().includes(lowerQuery)
+      ).forEach(a => results.push({
+        type: 'asset',
+        item: a,
+        url: createPageUrl('AssetDetail') + `?id=${a.id}`,
+      }));
+    }
+
+    if (filters.employee) {
+      employees.filter(e => {
+        const fullName = `${e.first_name || ''} ${e.last_name || ''}`.toLowerCase();
+        return fullName.includes(lowerQuery) ||
+          e.email?.toLowerCase().includes(lowerQuery) ||
+          e.department?.toLowerCase().includes(lowerQuery);
+      }).forEach(e => results.push({
+        type: 'employee',
+        item: { ...e, name: `${e.first_name || ''} ${e.last_name || ''}`.trim() },
+        url: createPageUrl('AssetEmployeeDetail') + `?id=${e.id}`,
+      }));
+    }
+
+    if (filters.part) {
+      parts.filter(p =>
+        p.name?.toLowerCase().includes(lowerQuery) ||
+        p.part_number?.toLowerCase().includes(lowerQuery)
+      ).forEach(p => results.push({
+        type: 'part',
+        item: p,
+        url: p.project_id
+          ? createPageUrl('ProjectParts') + `?id=${p.project_id}`
+          : createPageUrl('AllTasks'),
+      }));
+    }
+
+    if (filters.file) {
+      projectFiles.filter(f =>
+        f.name?.toLowerCase().includes(lowerQuery)
+      ).forEach(f => results.push({
+        type: 'file',
+        item: f,
+        url: f.project_id
+          ? createPageUrl('ProjectFiles') + `?id=${f.project_id}`
+          : '#',
+      }));
+    }
+
     return results;
-  }, [query, filters, projects, proposals, customers, inventory, tasks, activeProjectIds]);
+  }, [query, filters, projects, proposals, customers, inventory, tasks, activeProjectIds, assets, employees, parts, projectFiles]);
+
+  // --- Handlers ---
+
+  const handleResultClick = useCallback((resultQuery) => {
+    addRecentSearch(resultQuery);
+    setRecentSearches(getRecentSearches());
+    onClose();
+  }, [onClose]);
+
+  const handleClearRecent = useCallback(() => {
+    clearRecentSearches();
+    setRecentSearches([]);
+  }, []);
 
   const toggleFilter = (key) => {
     setFilters(prev => ({ ...prev, [key]: !prev[key] }));
   };
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      const visibleResults = searchResults.slice(0, 20);
+      const maxIndex = visibleResults.length - 1;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveIndex(prev => (prev < maxIndex ? prev + 1 : 0));
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveIndex(prev => (prev > 0 ? prev - 1 : maxIndex));
+      }
+      if (e.key === 'Enter' && activeIndex >= 0) {
+        e.preventDefault();
+        const result = visibleResults[activeIndex];
+        if (result) {
+          addRecentSearch(query);
+          setRecentSearches(getRecentSearches());
+          window.location.href = result.url;
+          onClose();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose, searchResults, activeIndex, query]);
 
   const activeFiltersCount = Object.values(filters).filter(Boolean).length;
 
@@ -156,7 +307,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      
+
       {/* Search Panel */}
       <div className="relative max-w-2xl mx-auto mt-20 bg-white dark:bg-[#1e2a3a] rounded-2xl shadow-2xl overflow-hidden">
         {/* Search Input */}
@@ -167,7 +318,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search projects, proposals, customers, tasks..."
+            placeholder="Search projects, proposals, customers, assets, employees..."
             className="flex-1 text-lg outline-none bg-transparent placeholder:text-slate-400 text-slate-900 dark:text-slate-100"
             autoFocus
           />
@@ -193,8 +344,8 @@ export default function GlobalSearch({ isOpen, onClose }) {
             <div className="p-3 flex flex-wrap gap-3">
               {Object.entries(RESULT_TYPES).map(([key, config]) => (
                 <label key={key} className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox 
-                    checked={filters[key]} 
+                  <Checkbox
+                    checked={filters[key]}
                     onCheckedChange={() => toggleFilter(key)}
                   />
                   <config.icon className={cn("w-4 h-4", config.color.split(' ')[0])} />
@@ -209,9 +360,30 @@ export default function GlobalSearch({ isOpen, onClose }) {
         {/* Results */}
         <div className="max-h-[60vh] overflow-y-auto">
           {query.trim() === '' ? (
-            <div className="p-8 text-center text-slate-400">
-              <Search className="w-10 h-10 mx-auto mb-3 opacity-50" />
-              <p>Start typing to search across everything</p>
+            <div className="p-4">
+              {recentSearches.length > 0 ? (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">Recent Searches</p>
+                    <button onClick={handleClearRecent} className="text-xs text-slate-400 hover:text-slate-600">Clear</button>
+                  </div>
+                  {recentSearches.map((term, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setQuery(term)}
+                      className="flex items-center gap-3 w-full p-2 hover:bg-slate-50 rounded-lg text-left"
+                    >
+                      <Clock className="w-4 h-4 text-slate-300" />
+                      <span className="text-sm text-slate-600">{term}</span>
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <div className="p-8 text-center text-slate-400">
+                  <Search className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                  <p>Start typing to search across everything</p>
+                </div>
+              )}
             </div>
           ) : searchResults.length === 0 ? (
             <div className="p-8 text-center text-slate-400">
@@ -222,13 +394,17 @@ export default function GlobalSearch({ isOpen, onClose }) {
               {searchResults.slice(0, 20).map((result, idx) => {
                 const config = RESULT_TYPES[result.type];
                 const Icon = config.icon;
-                
+
                 return (
                   <a
                     key={`${result.type}-${result.item.id}`}
                     href={result.url}
-                    className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors"
-                    onClick={onClose}
+                    data-search-index={idx}
+                    className={cn(
+                      "flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors",
+                      idx === activeIndex && "bg-slate-100 dark:bg-slate-700"
+                    )}
+                    onClick={() => handleResultClick(query)}
                   >
                     <div className={cn("p-2 rounded-lg", config.color)}>
                       <Icon className="w-4 h-4" />
@@ -242,13 +418,41 @@ export default function GlobalSearch({ isOpen, onClose }) {
                           <>
                             {result.item.project_number && <span className="font-mono text-slate-400 mr-2">#{result.item.project_number}</span>}
                             {result.item.client}
-                            {result.item.halopsa_ticket_id && <span className="ml-2 text-indigo-500">• Ticket #{result.item.halopsa_ticket_id}</span>}
+                            {result.item.halopsa_ticket_id && <span className="ml-2 text-indigo-500">Ticket #{result.item.halopsa_ticket_id}</span>}
                           </>
                         )}
                         {result.type === 'proposal' && result.item.customer_name}
                         {result.type === 'customer' && result.item.email}
                         {result.type === 'inventory' && (result.item.category || result.item.sku)}
                         {result.type === 'task' && result.item.description?.slice(0, 50)}
+                        {result.type === 'asset' && (
+                          <>
+                            {result.item.serial_number && <span className="font-mono text-slate-400 mr-2">{result.item.serial_number}</span>}
+                            {result.item.model}
+                          </>
+                        )}
+                        {result.type === 'employee' && (
+                          <>
+                            {result.item.email && <span className="text-slate-400 mr-2">{result.item.email}</span>}
+                            {result.item.department}
+                          </>
+                        )}
+                        {result.type === 'part' && (
+                          <>
+                            {result.item.part_number && <span className="font-mono text-slate-400 mr-2">#{result.item.part_number}</span>}
+                            {result.item.project_id && projectMap[result.item.project_id] &&
+                              <span className="text-orange-500">in {projectMap[result.item.project_id]}</span>
+                            }
+                          </>
+                        )}
+                        {result.type === 'file' && (
+                          <>
+                            {result.item.name?.split('.').pop()?.toUpperCase()}
+                            {result.item.project_id && projectMap[result.item.project_id] &&
+                              <span className="ml-2 text-rose-500">in {projectMap[result.item.project_id]}</span>
+                            }
+                          </>
+                        )}
                       </p>
                     </div>
                     <Badge variant="outline" className="text-xs shrink-0">
@@ -268,7 +472,8 @@ export default function GlobalSearch({ isOpen, onClose }) {
 
         {/* Keyboard hint */}
         <div className="p-3 border-t bg-slate-50 flex items-center justify-center gap-4 text-xs text-slate-400">
-          <span><kbd className="px-1.5 py-0.5 bg-white border rounded">↵</kbd> to select</span>
+          <span><kbd className="px-1.5 py-0.5 bg-white border rounded">&#8593;&#8595;</kbd> to navigate</span>
+          <span><kbd className="px-1.5 py-0.5 bg-white border rounded">&#8629;</kbd> to select</span>
           <span><kbd className="px-1.5 py-0.5 bg-white border rounded">esc</kbd> to close</span>
         </div>
       </div>

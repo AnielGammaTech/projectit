@@ -36,6 +36,7 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronUp,
+  Download,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +52,7 @@ import { cn } from '@/lib/utils';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 import AssetModal from '@/components/assets/AssetModal';
 import ManageITShell from '@/components/assets/ManageITShell';
+import { generateConsentPDF } from '@/utils/consentPdf';
 
 const TYPE_ICONS = {
   'IT Equipment': Monitor,
@@ -135,7 +137,7 @@ function WarrantyBanner({ asset }) {
   return null;
 }
 
-function AcknowledgmentBadge({ assignment, acceptances, onExpire }) {
+function AcknowledgmentBadge({ assignment, acceptances, onExpire, asset, employeeName }) {
   const acceptance = acceptances.find(a => a.assignment_id === assignment.id);
   const [expanded, setExpanded] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -172,6 +174,15 @@ function AcknowledgmentBadge({ assignment, acceptances, onExpire }) {
               <p>Date: {formatDate(acceptance.signed_at)}</p>
               {acceptance.signer_ip && <p>IP: {acceptance.signer_ip}</p>}
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => generateConsentPDF(acceptance, asset, employeeName)}
+            >
+              <Download className="w-3.5 h-3.5 mr-1" />
+              Download PDF
+            </Button>
           </div>
         )}
       </div>
@@ -217,7 +228,7 @@ function AcknowledgmentBadge({ assignment, acceptances, onExpire }) {
   );
 }
 
-function AssignmentCard({ assignment, employeeName, acceptances, onExpire }) {
+function AssignmentCard({ assignment, employeeName, acceptances, onExpire, asset }) {
   const isActive = !assignment.returned_date;
 
   return (
@@ -240,7 +251,7 @@ function AssignmentCard({ assignment, employeeName, acceptances, onExpire }) {
           </Badge>
         )}
         <div className="ml-auto">
-          <AcknowledgmentBadge assignment={assignment} acceptances={acceptances} onExpire={onExpire} />
+          <AcknowledgmentBadge assignment={assignment} acceptances={acceptances} onExpire={onExpire} asset={asset} employeeName={employeeName} />
         </div>
       </div>
 
@@ -609,6 +620,7 @@ export default function AssetDetail() {
                   employeeName={employeeMap.get(assignment.employee_id)}
                   acceptances={acceptances}
                   onExpire={invalidateAll}
+                  asset={asset}
                 />
               ))}
             </div>

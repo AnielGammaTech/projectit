@@ -11,6 +11,7 @@ import {
   ArrowUp,
   ArrowDown,
   Circle,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 import ManageITShell from '@/components/assets/ManageITShell';
+import { downloadCSV } from '@/utils/csvExport';
 
 const TABS = ['All Assets', 'By Employee', 'Consent Forms', 'Value & Cost'];
 
@@ -151,8 +153,37 @@ function TabAllAssets({ assets, employeeMap, assignments, search }) {
     });
   }, [assets, search, sortField, sortDir, activeAssignmentMap, employeeMap]);
 
+  const handleExportCsv = () => {
+    const headers = ['Name', 'Type', 'OS', 'Serial Number', 'Model', 'Employee', 'Status', 'Online', 'Last Contact', 'Condition'];
+    const csvRows = rows.map((asset) => {
+      const empId = activeAssignmentMap.get(asset.id);
+      const emp = empId ? employeeMap.get(empId) : null;
+      return [
+        asset.name || '',
+        asset.asset_type || '',
+        asset.os || '',
+        asset.serial_number || '',
+        asset.model || '',
+        emp ? `${emp.first_name} ${emp.last_name}` : '',
+        asset.status || '',
+        asset.device_active ? 'Yes' : 'No',
+        asset.last_contact || '',
+        asset.condition || '',
+      ];
+    });
+    const date = new Date().toISOString().slice(0, 10);
+    downloadCSV(`all-assets-${date}.csv`, headers, csvRows);
+  };
+
   return (
-    <div className="overflow-x-auto rounded-xl border bg-white dark:bg-card">
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={handleExportCsv}>
+          <Download className="w-4 h-4 mr-1" />
+          Download CSV
+        </Button>
+      </div>
+      <div className="overflow-x-auto rounded-xl border bg-white dark:bg-card">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-slate-50 dark:bg-slate-900/50">
@@ -211,6 +242,7 @@ function TabAllAssets({ assets, employeeMap, assignments, search }) {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -247,8 +279,26 @@ function TabByEmployee({ employees, assignments, assets }) {
       .sort((a, b) => b.deviceIds.length - a.deviceIds.length);
   }, [employees, assignments]);
 
+  const handleExportCsv = () => {
+    const headers = ['Employee Name', 'Department', 'Device Count', 'Device Names'];
+    const csvRows = employeeDevices.map((emp) => [
+      emp.fullName,
+      emp.department || '',
+      String(emp.deviceIds.length),
+      emp.deviceIds.map((id) => assetMap.get(id)?.name || '').filter(Boolean).join('; '),
+    ]);
+    const date = new Date().toISOString().slice(0, 10);
+    downloadCSV(`assets-by-employee-${date}.csv`, headers, csvRows);
+  };
+
   return (
     <div className="space-y-2">
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={handleExportCsv}>
+          <Download className="w-4 h-4 mr-1" />
+          Download CSV
+        </Button>
+      </div>
       {employeeDevices.map((emp) => {
         const isOpen = expanded.has(emp.id);
         return (
@@ -314,9 +364,22 @@ function TabConsentForms({ acceptances, assets, assignments, employeeMap }) {
     expired: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
   };
 
+  const handleExportCsv = () => {
+    const headers = ['Asset Name', 'Employee', 'Status', 'Signed Date', 'Signer Name'];
+    const csvRows = rows.map((r) => [
+      r.assetName,
+      r.empName,
+      r.status || '',
+      r.signed_at ? format(new Date(r.signed_at), 'MMM d, yyyy') : '',
+      r.signer_name || '',
+    ]);
+    const date = new Date().toISOString().slice(0, 10);
+    downloadCSV(`consent-forms-${date}.csv`, headers, csvRows);
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {['all', 'pending', 'signed', 'expired'].map((s) => (
           <Button
             key={s}
@@ -328,6 +391,10 @@ function TabConsentForms({ acceptances, assets, assignments, employeeMap }) {
             {s.charAt(0).toUpperCase() + s.slice(1)}
           </Button>
         ))}
+        <Button variant="outline" size="sm" onClick={handleExportCsv} className="ml-auto">
+          <Download className="w-4 h-4 mr-1" />
+          Download CSV
+        </Button>
       </div>
       <div className="overflow-x-auto rounded-xl border bg-white dark:bg-card">
         <table className="w-full text-sm">
