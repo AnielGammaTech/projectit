@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProjectIT Deep Analysis Report</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0B1929; color: #e2e8f0; line-height: 1.6; }
+  .container { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid #1e3a5f; }
+  .header h1 { font-size: 32px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+  .header .subtitle { color: #74C7FF; font-size: 16px; font-weight: 500; }
+  .header .date { color: #64748b; font-size: 13px; margin-top: 8px; }
+  .header .logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; }
+  .header .logo-box { width: 48px; height: 48px; background: #0F2F44; border-radius: 14px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.08); }
+  .header .logo-box span { color: #fff; font-weight: 800; font-size: 22px; }
+  .header .logo-box .dot { position: absolute; top: -3px; right: -3px; width: 14px; height: 14px; background: #74C7FF; border-radius: 50%; }
+  .header .logo-text { font-size: 24px; font-weight: 700; }
+  .header .logo-text .it { color: #74C7FF; }
+
+  /* Stats bar */
+  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 40px; }
+  .stat-card { background: #111f33; border: 1px solid #1e3a5f; border-radius: 12px; padding: 16px; text-align: center; }
+  .stat-card .number { font-size: 28px; font-weight: 800; color: #74C7FF; }
+  .stat-card .label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+  /* Section */
+  .section { margin-bottom: 40px; }
+  .section-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .section-title .icon { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .green { background: #065f46; }
+  .amber { background: #78350f; }
+  .blue { background: #1e3a5f; }
+  .red { background: #7f1d1d; }
+  .purple { background: #4c1d95; }
+  .slate { background: #1e293b; }
+
+  /* Cards */
+  .card { background: #111f33; border: 1px solid #1e3a5f; border-radius: 12px; padding: 20px; margin-bottom: 12px; }
+  .card h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .card p { font-size: 13px; color: #94a3b8; }
+  .card .fix { margin-top: 10px; padding: 10px 14px; background: #0F2F44; border-radius: 8px; font-size: 12px; color: #74C7FF; border-left: 3px solid #74C7FF; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; background: #0F2F44; color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #1e3a5f; }
+  td { padding: 10px 12px; border-bottom: 1px solid #1a2d44; color: #cbd5e1; }
+  tr:hover td { background: #0F2F44; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .badge-critical { background: #7f1d1d; color: #fca5a5; }
+  .badge-high { background: #78350f; color: #fcd34d; }
+  .badge-medium { background: #1e3a5f; color: #74C7FF; }
+  .badge-low { background: #1e293b; color: #94a3b8; }
+  .badge-open { background: #7f1d1d; color: #fca5a5; }
+  .badge-good { background: #065f46; color: #6ee7b7; }
+  .badge-remove { background: #7f1d1d; color: #fca5a5; }
+  .badge-keep { background: #065f46; color: #6ee7b7; }
+  .badge-consolidate { background: #1e3a5f; color: #74C7FF; }
+
+  /* Priority list */
+  .priority-list { list-style: none; counter-reset: priority; }
+  .priority-list li { counter-increment: priority; padding: 12px 16px; background: #111f33; border: 1px solid #1e3a5f; border-radius: 10px; margin-bottom: 8px; font-size: 14px; color: #cbd5e1; display: flex; align-items: center; gap: 12px; }
+  .priority-list li::before { content: counter(priority); width: 28px; height: 28px; background: #0F2F44; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #74C7FF; flex-shrink: 0; }
+  .priority-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-left: auto; flex-shrink: 0; }
+  .now { background: #7f1d1d; color: #fca5a5; }
+  .week { background: #78350f; color: #fcd34d; }
+  .month { background: #1e3a5f; color: #74C7FF; }
+
+  @media (max-width: 640px) {
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .container { padding: 24px 16px 60px; }
+    .header h1 { font-size: 24px; }
+    table { font-size: 12px; }
+    th, td { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-box"><span>P</span><div class="dot"></div></div>
+      <div class="logo-text">Project<span class="it">IT</span></div>
+    </div>
+    <h1>Deep Analysis Report</h1>
+    <div class="subtitle">Full Software Audit &amp; Recommendations</div>
+    <div class="date">Generated April 13, 2026</div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-card"><div class="number">54</div><div class="label">Pages</div></div>
+    <div class="stat-card"><div class="number">32K</div><div class="label">Lines of Code</div></div>
+    <div class="stat-card"><div class="number">40+</div><div class="label">Entity Types</div></div>
+    <div class="stat-card"><div class="number">12</div><div class="label">Issues Found</div></div>
+  </div>
+
+  <!-- DOING WELL -->
+  <div class="section">
+    <div class="section-title"><div class="icon green">&#10003;</div> 3 Things You're Doing Well</div>
+
+    <div class="card">
+      <h3>1. The Entity System is Solid</h3>
+      <p>Your generic JSONB entity service handles 40+ entity types through one codebase. Admin guards, cascade deletes, access control -- it all works. Adding new features (AssetNote, AssetAcceptance) was trivial because the foundation is right.</p>
+    </div>
+
+    <div class="card">
+      <h3>2. Auth &amp; Security is Strong</h3>
+      <p>Supabase JWT verification on every request, MFA support, admin role guards, webhook HMAC validation, rate limiting, parameterized queries everywhere. The security audit found only minor issues (all fixed). Better than most apps at this stage.</p>
+    </div>
+
+    <div class="card">
+      <h3>3. UX Patterns are Consistent</h3>
+      <p>Shadcn/UI components throughout, consistent dark mode on most pages, skeleton loading states, optimistic updates, toast notifications. The design language (navy brand, rounded cards, status badges) is cohesive.</p>
+    </div>
+  </div>
+
+  <!-- NEEDS IMPROVEMENT -->
+  <div class="section">
+    <div class="section-title"><div class="icon amber">&#9888;</div> 3 Things That Need Improvement</div>
+
+    <div class="card">
+      <h3>1. No Error Boundaries -- One Crash Kills Everything</h3>
+      <p>Zero ErrorBoundary components in the entire app. If ANY component throws during render, the whole app white-screens. This is the <code>w.find is not a function</code> crash you hit on AssetInventory.</p>
+      <div class="fix">Fix: Add a top-level error boundary in App.jsx + per-page boundaries with "Something went wrong, retry" UI.</div>
+    </div>
+
+    <div class="card">
+      <h3>2. Giant Files Are Unmaintainable</h3>
+      <p>Adminland.jsx is <strong>5,400 lines</strong>. ProjectDetail.jsx is 2,159. Dashboard.jsx is 1,912. These are impossible to debug, review, or modify safely. Every change risks breaking something else.</p>
+      <div class="fix">Fix: Split Adminland into ~15 sub-components. Extract card components from ProjectDetail and Dashboard.</div>
+    </div>
+
+    <div class="card">
+      <h3>3. Inconsistent Data Caching</h3>
+      <p>Some pages use staleTime: 0 (refetch every time), others 300000 (5 min), others 30000 (30s) -- with no pattern. This causes stale data on some pages and unnecessary refetches on others.</p>
+      <div class="fix">Fix: Create a shared queryConfig with standard presets: LIVE (0), FRESH (30s), NORMAL (2min), STATIC (10min).</div>
+    </div>
+  </div>
+
+  <!-- FEATURES TO ADD -->
+  <div class="section">
+    <div class="section-title"><div class="icon blue">&#43;</div> Features to Add</div>
+
+    <div class="card">
+      <h3>1. Error Recovery &amp; Offline Handling</h3>
+      <p>Error boundaries per page with retry button. Offline detection banner. Auto-retry on failed API calls. No more white screens.</p>
+    </div>
+
+    <div class="card">
+      <h3>2. Export &amp; Print on Reports</h3>
+      <p>ManageIT reports, project reports, and consent forms need CSV/PDF export. Asset inventory export for audits. Consent forms downloadable as signed PDF.</p>
+    </div>
+
+    <div class="card">
+      <h3>3. Global Search Enhancement</h3>
+      <p>Current search covers projects, proposals, customers, tasks, inventory. Should also include ManageIT assets, employees, parts, and files.</p>
+    </div>
+
+    <div class="card">
+      <h3>4. Push Notifications (Production)</h3>
+      <p>Push notifications are built but stuck on APNs sandbox. Need to switch to production APNs for TestFlight/App Store builds.</p>
+    </div>
+  </div>
+
+  <!-- BUGS -->
+  <div class="section">
+    <div class="section-title"><div class="icon red">&#10007;</div> Known Bugs &amp; Issues</div>
+
+    <table>
+      <thead>
+        <tr><th>#</th><th>Severity</th><th>Bug</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td><span class="badge badge-critical">CRITICAL</span></td><td>No error boundaries -- any render error = white screen</td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>2</td><td><span class="badge badge-high">HIGH</span></td><td>bg-white without dark: variant in Dashboard search + pagination</td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>3</td><td><span class="badge badge-high">HIGH</span></td><td>console.log(data) in ApiDocsSection.jsx line 449 leaks to production</td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>4</td><td><span class="badge badge-high">HIGH</span></td><td>API_URL defined 6 times across files instead of one import</td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>5</td><td><span class="badge badge-medium">MEDIUM</span></td><td>Dual toast libraries (sonner + react-hot-toast) -- extra bundle weight</td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>6</td><td><span class="badge badge-medium">MEDIUM</span></td><td>moment.js (300KB) in dependencies but never imported</td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>7</td><td><span class="badge badge-medium">MEDIUM</span></td><td>three.js (600KB) in dependencies -- likely unused</td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>8</td><td><span class="badge badge-medium">MEDIUM</span></td><td>avatarColors array copy-pasted in 15+ files</td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>9</td><td><span class="badge badge-medium">MEDIUM</span></td><td>Date formatting inconsistent (format() vs toLocaleDateString())</td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>10</td><td><span class="badge badge-low">LOW</span></td><td>Home.jsx is a 9-line empty stub</td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>11</td><td><span class="badge badge-low">LOW</span></td><td>Browserslist data 7 months old</td><td><span class="badge badge-open">Open</span></td></tr>
+        <tr><td>12</td><td><span class="badge badge-low">LOW</span></td><td>Timer leaks possible in 7 pages (setInterval without cleanup)</td><td><span class="badge badge-open">Open</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- REDUNDANCIES -->
+  <div class="section">
+    <div class="section-title"><div class="icon slate">&#8635;</div> Redundancies</div>
+
+    <table>
+      <thead>
+        <tr><th>What</th><th>Why It's Redundant</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>moment in package.json</td><td>date-fns is used everywhere, moment isn't imported</td><td><span class="badge badge-remove">Remove</span></td></tr>
+        <tr><td>three.js in package.json</td><td>No 3D features exist</td><td><span class="badge badge-remove">Remove</span></td></tr>
+        <tr><td>react-hot-toast</td><td>sonner is the actual toast library used</td><td><span class="badge badge-remove">Remove</span></td></tr>
+        <tr><td>Home.jsx (9 lines)</td><td>Empty stub, never navigated to</td><td><span class="badge badge-remove">Remove</span></td></tr>
+        <tr><td>API_URL defined 6 times</td><td>Should import from one place</td><td><span class="badge badge-consolidate">Consolidate</span></td></tr>
+        <tr><td>avatarColors in 15+ files</td><td>Should be shared constant</td><td><span class="badge badge-consolidate">Consolidate</span></td></tr>
+        <tr><td>ProjectBilling.jsx</td><td>Just a redirect to ProjectTime</td><td><span class="badge badge-keep">Keep</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PRIORITY PLAN -->
+  <div class="section">
+    <div class="section-title"><div class="icon purple">&#9733;</div> Priority Action Plan</div>
+
+    <ol class="priority-list">
+      <li>Add error boundary to App.jsx <span class="priority-label now">Now</span></li>
+      <li>Remove unused deps (moment, three, react-hot-toast) <span class="priority-label now">Now</span></li>
+      <li>Remove console.log in ApiDocsSection <span class="priority-label now">Now</span></li>
+      <li>Fix dark mode gaps in Dashboard <span class="priority-label now">Now</span></li>
+      <li>Consolidate API_URL to one import <span class="priority-label week">This Week</span></li>
+      <li>Create shared constants (avatarColors, queryKeys, staleTime) <span class="priority-label week">This Week</span></li>
+      <li>Add CSV export to ManageIT reports <span class="priority-label week">This Week</span></li>
+      <li>Split Adminland.jsx into sub-components <span class="priority-label month">This Month</span></li>
+      <li>Split ProjectDetail.jsx into sub-components <span class="priority-label month">This Month</span></li>
+      <li>Add basic test coverage (entity service + auth) <span class="priority-label month">This Month</span></li>
+    </ol>
+  </div>
+
+  <div style="text-align:center; padding-top:32px; border-top:1px solid #1e3a5f; color:#475569; font-size:12px;">
+    ProjectIT Deep Analysis &middot; Gamma Tech Services &middot; April 2026
+  </div>
+
+</div>
+</body>
+</html>

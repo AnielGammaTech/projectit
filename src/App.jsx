@@ -16,6 +16,7 @@ import Login from '@/pages/Login';
 import AcceptInvite from '@/pages/AcceptInvite';
 import AcceptAsset from '@/pages/AcceptAsset';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -127,12 +128,14 @@ function App() {
       <AuthProvider>
         <QueryClientProvider client={queryClientInstance}>
           <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/accept-invite" element={<AcceptInvite />} />
-              <Route path="/accept/:token" element={<AcceptAsset />} />
-              <Route path="/*" element={<AuthenticatedApp />} />
-            </Routes>
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/accept-invite" element={<AcceptInvite />} />
+                <Route path="/accept/:token" element={<AcceptAsset />} />
+                <Route path="/*" element={<AuthenticatedApp />} />
+              </Routes>
+            </ErrorBoundary>
           </Router>
           <Toaster />
           <SonnerToaster />

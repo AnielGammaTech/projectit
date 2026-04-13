@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/api/apiClient';
+import { format } from 'date-fns';
+import { api, API_URL } from '@/api/apiClient';
 import UserAvatar from '@/components/UserAvatar';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -57,12 +58,7 @@ import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
 import ApiDocsSection from '@/components/adminland/ApiDocsSection';
-
-const avatarColors = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
-  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
-  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
-];
+import { avatarColors } from '@/constants/colors';
 
 const groupColors = {
   slate: 'bg-slate-500', red: 'bg-red-500', orange: 'bg-orange-500',
@@ -672,7 +668,7 @@ function PeopleSection({ queryClient }) {
                               <>
                                 <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                                   <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                  {session.lastActive.toLocaleDateString()} at {session.lastActive.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  {format(session.lastActive, 'MMM d, yyyy')} at {format(session.lastActive, 'hh:mm a')}
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                                   <Globe className="w-3.5 h-3.5 text-slate-400" />
@@ -710,7 +706,7 @@ function PeopleSection({ queryClient }) {
                             {member.created_date && (
                               <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                Joined {new Date(member.created_date).toLocaleDateString()}
+                                Joined {format(new Date(member.created_date), 'MMM d, yyyy')}
                               </div>
                             )}
                           </div>
@@ -1917,7 +1913,7 @@ function ArchivedProjectsContent({ queryClient }) {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Unknown';
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return format(new Date(dateStr), 'MMM d, yyyy');
   };
 
   return (
@@ -2027,7 +2023,7 @@ function DeletedProjectsContent({ queryClient }) {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Unknown';
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return format(new Date(dateStr), 'MMM d, yyyy');
   };
 
   return (
@@ -2128,7 +2124,7 @@ function DeletedProjectsContent({ queryClient }) {
 
 // Database Health Section
 function DatabaseHealthSection() {
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
   const [healthData, setHealthData] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -2373,7 +2369,7 @@ function DatabaseHealthSection() {
                                 <td className="px-4 py-2 text-slate-700">{d.entity_type}</td>
                                 <td className="px-4 py-2 font-mono text-xs text-slate-500">{d.entity_id?.slice(0, 8)}...</td>
                                 <td className="px-4 py-2 text-slate-600">{d.created_by || 'system'}</td>
-                                <td className="px-4 py-2 text-slate-500">{d.deleted_at ? new Date(d.deleted_at).toLocaleDateString() : '—'}</td>
+                                <td className="px-4 py-2 text-slate-500">{d.deleted_at ? format(new Date(d.deleted_at), 'MMM d, yyyy') : '—'}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -2529,7 +2525,7 @@ function DatabaseHealthSection() {
 }
 
 function IntegrationsSection({ queryClient }) {
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
   const [activeTab, setActiveTab] = useState('settings');
   const [saving, setSaving] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
@@ -3509,7 +3505,7 @@ function JumpCloudIntegrationCard({ expandedIntegration, toggleIntegration }) {
 }
 
 function GammaAiIntegrationCard({ expandedIntegration, toggleIntegration }) {
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState(null);
@@ -5115,7 +5111,7 @@ function AboutSection() {
     { label: 'Build Hash', value: BUILD_HASH, mono: true },
     { label: 'Build Date', value: new Date(BUILD_TIMESTAMP).toLocaleString() },
     { label: 'Environment', value: BUILD_ENV, badge: true },
-    { label: 'API URL', value: import.meta.env.VITE_API_URL || 'http://localhost:3001', mono: true },
+    { label: 'API URL', value: API_URL, mono: true },
     { label: 'Supabase Project', value: (import.meta.env.VITE_SUPABASE_URL || '').replace('https://', '').replace('.supabase.co', '') || 'Not configured', mono: true },
     { label: 'Hosting', value: 'Railway', badge: true },
     { label: 'Frontend', value: 'React 18 + Vite 6' },

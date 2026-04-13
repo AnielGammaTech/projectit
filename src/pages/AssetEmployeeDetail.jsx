@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { format } from 'date-fns';
 import { createPageUrl } from '@/utils';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
@@ -58,11 +59,7 @@ function getStatusBadge(employee) {
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  return format(new Date(dateStr), 'MMM d, yyyy');
 }
 
 function AssignmentRow({ assignment, asset }) {

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { format } from 'date-fns';
 import { createPageUrl } from '@/utils';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
@@ -80,11 +81,7 @@ const NOTE_TYPE_STYLES = {
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  return format(new Date(dateStr), 'MMM d, yyyy');
 }
 
 function formatCurrency(value) {

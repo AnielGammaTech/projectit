@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -348,7 +349,7 @@ function TabConsentForms({ acceptances, assets, assignments, employeeMap }) {
                   <Badge className={cn('text-xs capitalize', STATUS_BADGE[r.status] || '')}>{r.status}</Badge>
                 </td>
                 <td className="px-4 py-2.5 text-muted-foreground text-xs">
-                  {r.signed_at ? new Date(r.signed_at).toLocaleDateString() : '--'}
+                  {r.signed_at ? format(new Date(r.signed_at), 'MMM d, yyyy') : '--'}
                 </td>
                 <td className="px-4 py-2.5 text-muted-foreground">{r.signer_name || '--'}</td>
               </tr>

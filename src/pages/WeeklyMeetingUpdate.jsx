@@ -123,7 +123,7 @@ ${formData.clientFeedback || 'None'}
 ${formData.additionalNotes || 'None'}`;
 
     const today = new Date();
-    const defaultTitle = `Weekly Update - ${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    const defaultTitle = `Weekly Update - ${format(today, 'MMM d, yyyy')}`;
 
     await api.entities.ProjectNote.create({
       project_id: projectId,
@@ -183,7 +183,7 @@ ${formData.additionalNotes || 'None'}`;
             <Input
               value={meetingTitle}
               onChange={(e) => setMeetingTitle(e.target.value)}
-              placeholder={`Weekly Update - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+              placeholder={`Weekly Update - ${format(new Date(), 'MMM d, yyyy')}`}
               className="dark:bg-background dark:border-slate-600"
             />
           </div>

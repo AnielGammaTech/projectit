@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { format } from 'date-fns';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import {
@@ -35,7 +36,7 @@ function getExpiryInfo(expiryDate) {
     return { label: `${diffDays}d left`, variant: 'expiring' };
   }
   return {
-    label: expiry.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    label: format(expiry, 'MMM d, yyyy'),
     variant: 'valid',
   };
 }

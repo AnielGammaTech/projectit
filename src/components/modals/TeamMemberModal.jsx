@@ -3,17 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-const avatarColors = [
-  'bg-indigo-500',
-  'bg-emerald-500',
-  'bg-amber-500',
-  'bg-rose-500',
-  'bg-cyan-500',
-  'bg-violet-500',
-  'bg-orange-500',
-  'bg-teal-500'
-];
+import { avatarColors } from '@/constants/colors';
 
 export default function TeamMemberModal({ open, onClose, member, onSave }) {
   const [formData, setFormData] = useState({

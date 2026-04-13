@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
 import { Check, Clock, User, MoreHorizontal, Edit2, Trash2, Flag } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
@@ -128,7 +129,7 @@ export default function TaskGroupCard({ group, tasks = [], onEditGroup, onDelete
                   {task.due_date && (
                     <span className="text-[10px] text-slate-400 flex items-center gap-0.5 bg-slate-50 px-1.5 py-0.5 rounded-md">
                       <Clock className="w-3 h-3" />
-                      {parseLocalDate(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {format(parseLocalDate(task.due_date), 'MMM d')}
                     </span>
                   )}
                   {task.priority === 'high' && (

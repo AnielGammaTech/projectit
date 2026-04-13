@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { format } from 'date-fns';
 import { useAuth } from '@/lib/AuthContext';
 import {
   Monitor,
@@ -36,11 +37,7 @@ const TYPE_BADGE_STYLES = {
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  return format(new Date(dateStr), 'MMM d, yyyy');
 }
 
 function getTypeIcon(type) {

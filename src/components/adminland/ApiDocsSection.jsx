@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -185,7 +186,7 @@ function ApiKeysManager() {
                 </div>
                 <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
                   <span className="font-mono">{key.key_prefix}...</span>
-                  {key.last_used_at && <span>Last used: {new Date(key.last_used_at).toLocaleDateString()}</span>}
+                  {key.last_used_at && <span>Last used: {format(new Date(key.last_used_at), 'MMM d, yyyy')}</span>}
                   {key.usage_count > 0 && <span>{key.usage_count} calls</span>}
                 </div>
               </div>
@@ -446,7 +447,6 @@ const response = await fetch('${baseUrl}/api/external/quotes/accepted', {
 });
 
 const data = await response.json();
-console.log(data);
 // { success: true, incoming_quote_id: "uuid", status: "pending" }`;
 
   const pullExample = `// Example: Get all projects for a customer

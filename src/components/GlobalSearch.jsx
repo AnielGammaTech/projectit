@@ -36,7 +36,8 @@ export default function GlobalSearch({ isOpen, onClose }) {
   useEffect(() => {
     if (isOpen) {
       setQuery('');
-      setTimeout(() => inputRef.current?.focus(), 100);
+      const timer = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 

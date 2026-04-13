@@ -14,27 +14,7 @@ import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/UserAvatar';
 
-const avatarColors = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500',
-  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
-  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-pink-500'
-];
-
-const getColorForEmail = (email) => {
-  if (!email) return avatarColors[0];
-  let hash = 0;
-  for (let i = 0; i < email.length; i++) {
-    hash = email.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return avatarColors[Math.abs(hash) % avatarColors.length];
-};
-
-const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-};
+import { getColorForEmail, getInitials } from '@/constants/colors';
 
 export default function MeetingUpdateModal({ 
   open, 
@@ -131,7 +111,7 @@ ${formData.additionalNotes || 'None'}`;
 
     // Save the note with title
     const today = new Date();
-    const defaultTitle = `Weekly Update - ${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    const defaultTitle = `Weekly Update - ${format(today, 'MMM d, yyyy')}`;
     
     await api.entities.ProjectNote.create({
       project_id: projectId,
@@ -216,7 +196,7 @@ ${formData.additionalNotes || 'None'}`;
             <Input
               value={meetingTitle}
               onChange={(e) => setMeetingTitle(e.target.value)}
-              placeholder={`Weekly Update - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+              placeholder={`Weekly Update - ${format(new Date(), 'MMM d, yyyy')}`}
               className="mt-2"
             />
           </div>

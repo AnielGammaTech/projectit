@@ -949,7 +949,7 @@ export default function Dashboard() {
               Welcome back, {currentUser?.full_name?.split(' ')[0] || 'there'}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              {format(new Date(), 'EEEE, MMMM d')}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -1329,7 +1329,7 @@ export default function Dashboard() {
                     )}
                     {selectedProjects.length === filteredProjects.length ? 'Deselect All' : 'Select All'}
                   </button>
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
                     {selectedProjects.length} selected
                   </span>
                 </div>
@@ -1400,7 +1400,7 @@ export default function Dashboard() {
                   })}
                 </div>
                 {activeLetter && (
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
                     Showing {letterFilteredProjects.length} project{letterFilteredProjects.length !== 1 ? 's' : ''} starting with "{activeLetter}"
                   </span>
                 )}
@@ -1420,12 +1420,12 @@ export default function Dashboard() {
                         placeholder="Find a project..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 bg-white border-slate-200 h-10 pr-10"
+                        className="pl-10 bg-white dark:bg-card border-slate-200 dark:border-border h-10 pr-10"
                       />
                       {searchQuery && (
                         <button 
                           onClick={() => setSearchQuery('')}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -1718,7 +1718,7 @@ export default function Dashboard() {
                               {showGroupHeader && (
                                 <button
                                   onClick={() => toggleGroup(group)}
-                                  className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 mb-3"
+                                  className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 mb-3"
                                 >
                                   {isCollapsed ? (
                                     <ChevronRight className="w-4 h-4" />
@@ -1801,7 +1801,7 @@ export default function Dashboard() {
                         <button
                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                         disabled={currentPage === totalPages}
-                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                         Next
                         </button>
