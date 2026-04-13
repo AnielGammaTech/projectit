@@ -22,6 +22,7 @@ import {
 import { format } from 'date-fns';
 import { parseLocalDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
+import { getColorForEmail, getInitials } from '@/constants/colors';
 
 const statusConfig = {
   needed: { label: 'Needed', color: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600', dot: 'bg-slate-400' },
@@ -30,8 +31,6 @@ const statusConfig = {
   ready_to_install: { label: 'Ready to Install', color: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-700', dot: 'bg-purple-500' },
   installed: { label: 'Installed', color: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700', dot: 'bg-emerald-500' }
 };
-
-import { getColorForEmail, getInitials } from '@/constants/colors';
 
 export default function PartDetailModal({ open, onClose, part: partProp, teamMembers = [], currentUser, onStatusChange, onDelete }) {
   const queryClient = useQueryClient();
