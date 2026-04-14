@@ -178,7 +178,7 @@ function TasksOverviewCard({ tasks, taskGroups, taskProgress, completedTasks, pr
         </div>
         <div className="px-3 pb-2 space-y-0.5">
           {pagedTasks.length > 0 ? pagedTasks.map(t => {
-            const group = t.group_id ? taskGroups.find(g => g.id === parseInt(t.group_id)) : null;
+            const group = t.group_id ? taskGroups.find(g => g.id === t.group_id) : null;
             const assignee = t.assigned_to ? teamMembers.find(m => m.email === t.assigned_to) : null;
             const assigneeName = assignee?.name || (t.assigned_to ? t.assigned_to.split('@')[0] : null);
             const dueInfo = getDueDateLabel(t.due_date);
@@ -297,7 +297,7 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
       order_date: format(new Date(), 'yyyy-MM-dd'),
     };
     if (eta) updateData.est_delivery_date = format(eta, 'yyyy-MM-dd');
-    if (notes) updateData.notes = part.notes ? `${part.notes}\n📦 Order notes: ${notes}` : `📦 Order notes: ${notes}`;
+    if (notes) updateData.notes = part.notes ? `${part.notes}\nOrder notes:${notes}` : `Order notes:${notes}`;
     try {
       await api.entities.Part.update(part.id, updateData);
       if (onPartStatusChange) onPartStatusChange(part, 'ordered');
@@ -329,12 +329,12 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
         installer_email: installer,
         installer_name: member?.name || installer,
         received_date: format(new Date(), 'yyyy-MM-dd'),
-        notes: location ? `${part.notes || ''}\n📍 Location: ${location}`.trim() : part.notes
+        notes: location ? `${part.notes || ''}\nLocation:${location}`.trim() : part.notes
       });
       if (createTask) {
         await api.entities.Task.create({
           title: `Install: ${part.name}`,
-          description: `Install part${part.part_number ? ` #${part.part_number}` : ''}${location ? `\n📍 Location: ${location}` : ''}`,
+          description: `Install part${part.part_number ? ` #${part.part_number}` : ''}${location ? `\nLocation:${location}` : ''}`,
           project_id: projectId,
           assigned_to: installer,
           assigned_name: member?.name || installer,

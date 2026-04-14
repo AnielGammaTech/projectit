@@ -245,7 +245,7 @@ export default function ProjectParts() {
         refetchParts();
       }
     } catch (err) {
-      console.error('Failed to extract parts:', err);
+      toast.error('Failed to extract parts from file');
     }
     setUploading(false);
   };
@@ -352,14 +352,14 @@ export default function ProjectParts() {
         installer_email: installer,
         installer_name: member?.name || installer,
         received_date: format(new Date(), 'yyyy-MM-dd'),
-        notes: location ? `${part.notes || ''}\n📍 Location: ${location}`.trim() : part.notes
+        notes: location ? `${part.notes || ''}\nLocation:${location}`.trim() : part.notes
       });
 
       // Create installation task if checkbox is checked
       if (createTask) {
         await api.entities.Task.create({
           title: `Install: ${part.name}`,
-          description: `Install part${part.part_number ? ` #${part.part_number}` : ''}${location ? `\n📍 Location: ${location}` : ''}`,
+          description: `Install part${part.part_number ? ` #${part.part_number}` : ''}${location ? `\nLocation:${location}` : ''}`,
           project_id: projectId,
           assigned_to: installer,
           assigned_name: member?.name || installer,
@@ -431,7 +431,7 @@ export default function ProjectParts() {
         updateData.est_delivery_date = format(eta, 'yyyy-MM-dd');
       }
       if (notes) {
-        updateData.notes = part.notes ? `${part.notes}\n📦 Order notes: ${notes}` : `📦 Order notes: ${notes}`;
+        updateData.notes = part.notes ? `${part.notes}\nOrder notes:${notes}` : `Order notes:${notes}`;
       }
 
       await api.entities.Part.update(part.id, updateData);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { Link } from 'react-router-dom';
@@ -44,13 +44,13 @@ import { fireTaskConfetti, fireCelebrationConfetti } from '@/utils/confetti';
 import { toast } from 'sonner';
 
 const motivationalMessages = [
-  "Nice work! Keep it up! 💪",
-  "One down, you're crushing it! 🔥",
-  "Task complete! You're on a roll! ⚡",
-  "Great progress! Keep the momentum! 🚀",
-  "Done! Another step closer to the finish line! 🎯",
-  "Nailed it! Your team will thank you! 🙌",
-  "Completed! That's how it's done! ✨",
+  "Nice work! Keep it up!",
+  "One down, you're crushing it!",
+  "Task complete! You're on a roll!",
+  "Great progress! Keep the momentum!",
+  "Done! Another step closer to the finish line!",
+  "Nailed it! Your team will thank you!",
+  "Completed! That's how it's done!",
 ];
 
 // --- Design constants ---
@@ -132,6 +132,7 @@ export default function ProjectTasks() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [bulkDatePickerOpen, setBulkDatePickerOpen] = useState(false);
   const [viewMode, setViewMode] = useState('list');
+  const autoOpenFired = useRef(false);
 
   useEffect(() => {
     api.auth.me().then(setCurrentUser).catch(() => {});
@@ -173,11 +174,15 @@ export default function ProjectTasks() {
 
   // Auto-open task detail if ?task= param is in URL
   useEffect(() => {
-    if (autoOpenTaskId && tasks.length > 0 && !selectedTask) {
+    if (autoOpenFired.current) return;
+    if (autoOpenTaskId && tasks.length > 0) {
       const task = tasks.find(t => t.id === autoOpenTaskId);
-      if (task) setSelectedTask(task);
+      if (task) {
+        setSelectedTask(task);
+        autoOpenFired.current = true;
+      }
     }
-  }, [autoOpenTaskId, tasks, selectedTask]);
+  }, [autoOpenTaskId, tasks]);
 
   // Filter to only project members for assignment dropdowns
   const projectMembers = useMemo(() => {
@@ -377,7 +382,7 @@ export default function ProjectTasks() {
         )
       );
     } catch (err) {
-      console.error('Failed to reorder tasks:', err);
+      toast.error('Failed to reorder tasks');
     }
     await refetchTasks();
   };

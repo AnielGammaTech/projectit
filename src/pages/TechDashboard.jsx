@@ -89,14 +89,14 @@ export default function TechDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Link to={createPageUrl('Dashboard')} className="p-2 hover:bg-slate-800 rounded-lg">
+          <Link to={createPageUrl('Dashboard')} className="p-2 hover:bg-muted rounded-lg">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="flex items-center gap-3">
             <Monitor className="w-8 h-8 text-emerald-400" />
             <div>
               <h1 className="text-lg sm:text-2xl font-bold">Tech Dashboard</h1>
-              <p className="text-slate-400 text-sm">
+              <p className="text-muted-foreground text-sm">
                 {format(currentTime, 'EEEE, MMMM d • h:mm a')} • Welcome, {currentUser?.full_name?.split(' ')[0] || 'Tech'}
               </p>
             </div>
@@ -112,48 +112,48 @@ export default function TechDashboard() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
         {/* Stats Cards */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-800 rounded-2xl p-5">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-lg bg-blue-500/20">
               <ListTodo className="w-5 h-5 text-blue-400" />
             </div>
-            <span className="text-slate-400 text-sm">My Tasks</span>
+            <span className="text-muted-foreground text-sm">My Tasks</span>
           </div>
           <p className="text-2xl sm:text-4xl font-bold">{activeTasks.length}</p>
-          <p className="text-sm text-slate-400 mt-1">{completedToday.length} completed today</p>
+          <p className="text-sm text-muted-foreground mt-1">{completedToday.length} completed today</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-slate-800 rounded-2xl p-5">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-lg bg-amber-500/20">
               <Clock className="w-5 h-5 text-amber-400" />
             </div>
-            <span className="text-slate-400 text-sm">Due Today</span>
+            <span className="text-muted-foreground text-sm">Due Today</span>
           </div>
           <p className="text-2xl sm:text-4xl font-bold text-amber-400">{dueTodayTasks.length}</p>
-          <p className="text-sm text-slate-400 mt-1">{dueTomorrowTasks.length} due tomorrow</p>
+          <p className="text-sm text-muted-foreground mt-1">{dueTomorrowTasks.length} due tomorrow</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-slate-800 rounded-2xl p-5">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-lg bg-purple-500/20">
               <Wrench className="w-5 h-5 text-purple-400" />
             </div>
-            <span className="text-slate-400 text-sm">Ready to Install</span>
+            <span className="text-muted-foreground text-sm">Ready to Install</span>
           </div>
           <p className="text-2xl sm:text-4xl font-bold text-purple-400">{readyToInstall.length}</p>
-          <p className="text-sm text-slate-400 mt-1">parts assigned</p>
+          <p className="text-sm text-muted-foreground mt-1">parts assigned</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-slate-800 rounded-2xl p-5">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-card rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-lg bg-emerald-500/20">
               <Clock className="w-5 h-5 text-emerald-400" />
             </div>
-            <span className="text-slate-400 text-sm">Hours Today</span>
+            <span className="text-muted-foreground text-sm">Hours Today</span>
           </div>
           <p className="text-2xl sm:text-4xl font-bold text-emerald-400">{hoursToday.toFixed(1)}h</p>
-          <Progress value={Math.min((hoursToday / 8) * 100, 100)} className="h-1.5 mt-2 bg-slate-700" />
+          <Progress value={Math.min((hoursToday / 8) * 100, 100)} className="h-1.5 mt-2 bg-muted" />
         </motion.div>
       </div>
 
@@ -161,7 +161,7 @@ export default function TechDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mt-6">
         {/* Priority Tasks */}
         <div className="col-span-2">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-slate-800 rounded-2xl p-5 h-full">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-card rounded-2xl p-5 h-full">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-red-500/20">
                 <AlertTriangle className="w-5 h-5 text-red-400" />
@@ -182,7 +182,7 @@ export default function TechDashboard() {
                   >
                     <div className="flex-1">
                       <p className="font-medium">{task.title}</p>
-                      <p className="text-sm text-slate-400">{getProjectName(task.project_id)}</p>
+                      <p className="text-sm text-muted-foreground">{getProjectName(task.project_id)}</p>
                       <p className="text-xs text-red-400 mt-1">{daysOverdue} day{daysOverdue > 1 ? 's' : ''} overdue</p>
                     </div>
                     <Button 
@@ -204,7 +204,7 @@ export default function TechDashboard() {
                 >
                   <div className="flex-1">
                     <p className="font-medium">{task.title}</p>
-                    <p className="text-sm text-slate-400">{getProjectName(task.project_id)}</p>
+                    <p className="text-sm text-muted-foreground">{getProjectName(task.project_id)}</p>
                     <p className="text-xs text-amber-400 mt-1">Due today</p>
                   </div>
                   <Button 
@@ -221,17 +221,17 @@ export default function TechDashboard() {
               {dueTomorrowTasks.map(task => (
                 <motion.div 
                   key={task.id}
-                  className="bg-slate-700/50 rounded-xl p-4 flex items-center justify-between"
+                  className="bg-muted/50 rounded-xl p-4 flex items-center justify-between"
                 >
                   <div className="flex-1">
                     <p className="font-medium">{task.title}</p>
-                    <p className="text-sm text-slate-400">{getProjectName(task.project_id)}</p>
+                    <p className="text-sm text-muted-foreground">{getProjectName(task.project_id)}</p>
                     <p className="text-xs text-blue-400 mt-1">Due tomorrow</p>
                   </div>
                   <Button 
                     onClick={() => handleCompleteTask(task)}
                     variant="outline"
-                    className="border-slate-600 text-white hover:bg-slate-700"
+                    className="border-border text-foreground hover:bg-muted"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-2" />
                     Complete
@@ -243,7 +243,7 @@ export default function TechDashboard() {
                 <div className="text-center py-12">
                   <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-emerald-400" />
                   <p className="text-emerald-400 font-medium">All caught up!</p>
-                  <p className="text-sm text-slate-400">No urgent tasks</p>
+                  <p className="text-sm text-muted-foreground">No urgent tasks</p>
                 </div>
               )}
             </div>
@@ -253,7 +253,7 @@ export default function TechDashboard() {
         {/* Right Column */}
         <div className="space-y-3 sm:space-y-6">
           {/* Parts to Install */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-slate-800 rounded-2xl p-5">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-card rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-purple-500/20">
                 <Package className="w-5 h-5 text-purple-400" />
@@ -264,17 +264,17 @@ export default function TechDashboard() {
               {readyToInstall.slice(0, 5).map(part => (
                 <div key={part.id} className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3">
                   <p className="font-medium text-sm">{part.name}</p>
-                  {part.part_number && <p className="text-xs text-slate-400">#{part.part_number}</p>}
+                  {part.part_number && <p className="text-xs text-muted-foreground">#{part.part_number}</p>}
                 </div>
               ))}
               {readyToInstall.length === 0 && (
-                <p className="text-slate-400 text-center py-4">No parts pending</p>
+                <p className="text-muted-foreground text-center py-4">No parts pending</p>
               )}
             </div>
           </motion.div>
 
           {/* Completed Today */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="bg-slate-800 rounded-2xl p-5">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="bg-card rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-emerald-500/20">
                 <CheckCircle2 className="w-5 h-5 text-emerald-400" />
@@ -290,7 +290,7 @@ export default function TechDashboard() {
                 </div>
               ))}
               {completedToday.length === 0 && (
-                <p className="text-slate-400 text-center py-4">Nothing completed yet</p>
+                <p className="text-muted-foreground text-center py-4">Nothing completed yet</p>
               )}
             </div>
           </motion.div>

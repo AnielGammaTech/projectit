@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import {
   MessageSquare,
@@ -60,7 +61,7 @@ const typeConfig = {
   bug: { label: 'Bug', icon: Bug, color: 'bg-red-100 text-red-700 border-red-200' },
   feature_request: { label: 'Feature', icon: Lightbulb, color: 'bg-amber-100 text-amber-700 border-amber-200' },
   question: { label: 'Question', icon: HelpCircle, color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  general: { label: 'General', icon: MessageCircle, color: 'bg-slate-100 text-slate-700 border-slate-200' },
+  general: { label: 'General', icon: MessageCircle, color: 'bg-muted text-foreground border-border' },
 };
 
 const statusConfig = {
@@ -71,7 +72,7 @@ const statusConfig = {
 };
 
 const priorityConfig = {
-  low: { label: 'Low', color: 'bg-slate-100 text-slate-600' },
+  low: { label: 'Low', color: 'bg-muted text-muted-foreground' },
   medium: { label: 'Medium', color: 'bg-amber-100 text-amber-700' },
   high: { label: 'High', color: 'bg-orange-100 text-orange-700' },
   critical: { label: 'Critical', color: 'bg-red-100 text-red-700' },
@@ -120,22 +121,30 @@ export default function FeedbackManagement() {
   });
 
   const handleStatusChange = async (feedback, status) => {
-    const finalStatus = status === 'resolved' ? 'closed' : status;
-    await api.entities.Feedback.update(feedback.id, { status: finalStatus });
-    queryClient.invalidateQueries({ queryKey: ['feedback'] });
-    if (selectedFeedback?.id === feedback.id) {
-      setSelectedFeedback({ ...selectedFeedback, status: finalStatus });
+    try {
+      const finalStatus = status === 'resolved' ? 'closed' : status;
+      await api.entities.Feedback.update(feedback.id, { status: finalStatus });
+      queryClient.invalidateQueries({ queryKey: ['feedback'] });
+      if (selectedFeedback?.id === feedback.id) {
+        setSelectedFeedback({ ...selectedFeedback, status: finalStatus });
+      }
+    } catch {
+      toast.error('Failed to update feedback status');
     }
   };
 
   const handleDelete = async () => {
-    if (deleteConfirm.feedback) {
-      await api.entities.Feedback.delete(deleteConfirm.feedback.id);
-      queryClient.invalidateQueries({ queryKey: ['feedback'] });
-      if (selectedFeedback?.id === deleteConfirm.feedback.id) {
-        setSelectedFeedback(null);
+    try {
+      if (deleteConfirm.feedback) {
+        await api.entities.Feedback.delete(deleteConfirm.feedback.id);
+        queryClient.invalidateQueries({ queryKey: ['feedback'] });
+        if (selectedFeedback?.id === deleteConfirm.feedback.id) {
+          setSelectedFeedback(null);
+        }
+        setSelectedIds(prev => { const next = new Set(prev); next.delete(deleteConfirm.feedback.id); return next; });
       }
-      setSelectedIds(prev => { const next = new Set(prev); next.delete(deleteConfirm.feedback.id); return next; });
+    } catch {
+      toast.error('Failed to delete feedback');
     }
     setDeleteConfirm({ open: false, feedback: null });
   };
@@ -161,7 +170,7 @@ export default function FeedbackManagement() {
         queryClient.invalidateQueries({ queryKey: ['feedback'] });
       }
     } catch (err) {
-      console.error('Failed to send to AI:', err);
+      toast.error('Failed to send to AI');
     }
     setSendingAI(null);
   };
@@ -191,7 +200,7 @@ export default function FeedbackManagement() {
         }
       }
     } catch (err) {
-      console.error('Failed local AI analysis:', err);
+      toast.error('Failed local AI analysis');
     }
     setSendingAI(null);
   };
@@ -213,7 +222,7 @@ export default function FeedbackManagement() {
         }
       }
     } catch (err) {
-      console.error('Failed to refresh AI status:', err);
+      toast.error('Failed to refresh AI status');
     }
     setRefreshingAI(null);
   };
@@ -271,7 +280,7 @@ export default function FeedbackManagement() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
         <div className="mb-6">
-          <Link to={createPageUrl('Adminland')} className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 mb-4">
+          <Link to={createPageUrl('Adminland')} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
             <ChevronLeft className="w-4 h-4" />
             Back to Adminland
           </Link>
@@ -281,14 +290,14 @@ export default function FeedbackManagement() {
                 <MessageSquare className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-slate-900">Feedback</h1>
-                <p className="text-slate-500">{feedbackList.length} submissions</p>
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground">Feedback</h1>
+                <p className="text-muted-foreground">{feedbackList.length} submissions</p>
               </div>
             </div>
             {/* Batch actions */}
             {selectedIds.size > 0 && hasAnyAI && (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-slate-500">{selectedIds.size} selected</span>
+                <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>
                 <Button
                   onClick={handleBatchSend}
                   disabled={batchSending}
@@ -313,7 +322,7 @@ export default function FeedbackManagement() {
         {batchResult && (
           <div className={cn(
             "mb-4 p-3 rounded-lg text-sm flex items-center justify-between",
-            batchResult.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+            batchResult.success ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" : "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
           )}>
             <span>{batchResult.message}</span>
             <button onClick={() => setBatchResult(null)} className="text-current hover:opacity-70">
@@ -324,56 +333,56 @@ export default function FeedbackManagement() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl border border-slate-100 p-4">
+          <div className="bg-card rounded-xl border border-border p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-100">
                 <Clock className="w-4 h-4 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{stats.new}</p>
-                <p className="text-xs text-slate-500">New</p>
+                <p className="text-2xl font-bold text-foreground">{stats.new}</p>
+                <p className="text-xs text-muted-foreground">New</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-slate-100 p-4">
+          <div className="bg-card rounded-xl border border-border p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-amber-100">
                 <Eye className="w-4 h-4 text-amber-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{stats.in_review}</p>
-                <p className="text-xs text-slate-500">In Review</p>
+                <p className="text-2xl font-bold text-foreground">{stats.in_review}</p>
+                <p className="text-xs text-muted-foreground">In Review</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-slate-100 p-4">
+          <div className="bg-card rounded-xl border border-border p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-emerald-100">
                 <CheckCircle className="w-4 h-4 text-emerald-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{stats.resolved}</p>
-                <p className="text-xs text-slate-500">Resolved</p>
+                <p className="text-2xl font-bold text-foreground">{stats.resolved}</p>
+                <p className="text-xs text-muted-foreground">Resolved</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-slate-100 p-4">
+          <div className="bg-card rounded-xl border border-border p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-100">
                 <Bug className="w-4 h-4 text-red-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{stats.bugs}</p>
-                <p className="text-xs text-slate-500">Bug Reports</p>
+                <p className="text-2xl font-bold text-foreground">{stats.bugs}</p>
+                <p className="text-xs text-muted-foreground">Bug Reports</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl border border-slate-100 p-4 mb-6 flex items-center gap-4">
+        <div className="bg-card rounded-xl border border-border p-4 mb-6 flex items-center gap-4">
           {hasAnyAI && filteredFeedback.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={toggleSelectAll} className="text-slate-500 hover:text-slate-700 px-2">
+            <Button variant="ghost" size="sm" onClick={toggleSelectAll} className="text-muted-foreground hover:text-foreground px-2">
               {selectedIds.size === filteredFeedback.length ? (
                 <CheckSquare className="w-4 h-4" />
               ) : (
@@ -410,8 +419,8 @@ export default function FeedbackManagement() {
         {/* Feedback List */}
         <div className="space-y-3">
           {isLoading ? (
-            <div className="bg-white rounded-xl border border-slate-100 p-12 text-center">
-              <p className="text-slate-400">Loading...</p>
+            <div className="bg-card rounded-xl border border-border p-12 text-center">
+              <p className="text-muted-foreground">Loading...</p>
             </div>
           ) : filteredFeedback.length > 0 ? (
             filteredFeedback.map((feedback, idx) => {
@@ -430,10 +439,10 @@ export default function FeedbackManagement() {
                   onClick={() => setSelectedFeedback(feedback)}
                   className={cn(
                     "rounded-xl border p-4 hover:shadow-md transition-all cursor-pointer group",
-                    isSelected ? "bg-violet-50/50 border-violet-200" :
+                    isSelected ? "bg-violet-50/50 dark:bg-violet-950/20 border-violet-200 dark:border-violet-800" :
                     feedback.status === 'closed' || feedback.status === 'resolved'
-                      ? "bg-emerald-50/50 border-emerald-200"
-                      : "bg-white border-slate-100"
+                      ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800"
+                      : "bg-card border-border"
                   )}
                 >
                   <div className="flex items-start gap-4">
@@ -441,7 +450,7 @@ export default function FeedbackManagement() {
                     {hasAnyAI && (
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleSelect(feedback.id); }}
-                        className="mt-1 text-slate-400 hover:text-violet-600 transition-colors"
+                        className="mt-1 text-muted-foreground hover:text-violet-600 transition-colors"
                       >
                         {isSelected ? (
                           <CheckSquare className="w-4 h-4 text-violet-600" />
@@ -455,7 +464,7 @@ export default function FeedbackManagement() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-medium text-slate-900 flex items-center gap-2">
+                        <h4 className="font-medium text-foreground flex items-center gap-2">
                           {(feedback.status === 'closed' || feedback.status === 'resolved') && (
                             <CheckCircle className="w-4 h-4 text-emerald-500" />
                           )}
@@ -478,7 +487,7 @@ export default function FeedbackManagement() {
                             </SelectContent>
                           </Select>
                           {feedback.ai_status && (
-                            <Badge className={cn("text-[10px]", aiStatusConfig[feedback.ai_status]?.color || 'bg-slate-100 text-slate-600')}>
+                            <Badge className={cn("text-[10px]", aiStatusConfig[feedback.ai_status]?.color || 'bg-muted text-muted-foreground')}>
                               {feedback.ai_provider === 'local' ? <Cpu className="w-3 h-3 mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
                               {aiStatusConfig[feedback.ai_status]?.label || feedback.ai_status}
                             </Badge>
@@ -532,8 +541,8 @@ export default function FeedbackManagement() {
                           </Button>
                         </div>
                       </div>
-                      <p className="text-sm text-slate-500 mt-1 line-clamp-2">{feedback.description}</p>
-                      <div className="flex items-center gap-4 mt-3 text-xs text-slate-400">
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{feedback.description}</p>
+                      <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                         <Badge variant="outline" className={type.color}>{type.label}</Badge>
                         <span>{feedback.submitter_name || 'Anonymous'}</span>
                         {feedback.submitter_email && <span>{feedback.submitter_email}</span>}
@@ -551,10 +560,10 @@ export default function FeedbackManagement() {
               );
             })
           ) : (
-            <div className="bg-white rounded-xl border border-slate-100 p-12 text-center">
-              <MessageSquare className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">No feedback yet</h3>
-              <p className="text-slate-500">Feedback submissions will appear here</p>
+            <div className="bg-card rounded-xl border border-border p-12 text-center">
+              <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No feedback yet</h3>
+              <p className="text-muted-foreground">Feedback submissions will appear here</p>
             </div>
           )}
         </div>
@@ -599,22 +608,22 @@ export default function FeedbackManagement() {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-slate-900">{selectedFeedback.title}</h3>
+                <h3 className="text-xl font-semibold text-foreground">{selectedFeedback.title}</h3>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-500">Description</label>
-                <p className="text-slate-700 mt-1 whitespace-pre-wrap">{selectedFeedback.description}</p>
+                <label className="text-sm font-medium text-muted-foreground">Description</label>
+                <p className="text-foreground mt-1 whitespace-pre-wrap">{selectedFeedback.description}</p>
               </div>
 
               {selectedFeedback.screenshots?.length > 0 && (
                 <div>
-                  <label className="text-sm font-medium text-slate-500 mb-2 block">Screenshots</label>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Screenshots</label>
                   <div className="grid grid-cols-2 gap-3">
                     {selectedFeedback.screenshots.map((url, idx) => {
                       const isSafeUrl = typeof url === 'string' && url.startsWith('https://');
                       const imgEl = (
-                        <img src={isSafeUrl ? url : ''} alt={`Screenshot ${idx + 1}`} className="rounded-lg border border-slate-200 hover:shadow-md transition-shadow" />
+                        <img src={isSafeUrl ? url : ''} alt={`Screenshot ${idx + 1}`} className="rounded-lg border border-border hover:shadow-md transition-shadow" />
                       );
                       return isSafeUrl ? (
                         <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="block">
@@ -638,7 +647,7 @@ export default function FeedbackManagement() {
                       ) : (
                         <Sparkles className="w-4 h-4 text-violet-600" />
                       )}
-                      <label className="text-sm font-medium text-slate-700">
+                      <label className="text-sm font-medium text-foreground">
                         {selectedFeedback.ai_provider === 'local' ? 'Claude AI Analysis' : 'AI Agent Analysis'}
                       </label>
                     </div>
@@ -664,19 +673,19 @@ export default function FeedbackManagement() {
                   </div>
 
                   {selectedFeedback.ai_status === 'pending' && (
-                    <div className="p-4 rounded-lg bg-violet-50 border border-violet-100 text-sm text-violet-700">
+                    <div className="p-4 rounded-lg bg-violet-50 dark:bg-violet-950/30 border border-violet-100 dark:border-violet-800 text-sm text-violet-700 dark:text-violet-400">
                       <div className="flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Task sent to AI agent. Waiting for analysis...
                       </div>
                       {selectedFeedback.ai_sent_at && (
-                        <p className="text-xs text-violet-500 mt-1">Sent {format(new Date(selectedFeedback.ai_sent_at), 'MMM d, yyyy h:mm a')}</p>
+                        <p className="text-xs text-violet-500 dark:text-violet-400 mt-1">Sent {format(new Date(selectedFeedback.ai_sent_at), 'MMM d, yyyy h:mm a')}</p>
                       )}
                     </div>
                   )}
 
                   {selectedFeedback.ai_status === 'in_progress' && (
-                    <div className="p-4 rounded-lg bg-purple-50 border border-purple-100 text-sm text-purple-700">
+                    <div className="p-4 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-800 text-sm text-purple-700 dark:text-purple-400">
                       <div className="flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         AI is working on this feedback...
@@ -685,7 +694,7 @@ export default function FeedbackManagement() {
                   )}
 
                   {selectedFeedback.ai_status === 'failed' && (
-                    <div className="p-4 rounded-lg bg-red-50 border border-red-100 text-sm text-red-700">
+                    <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-800 text-sm text-red-700 dark:text-red-400">
                       <p>AI analysis failed. You can try sending this feedback again.</p>
                       {typeof selectedFeedback.ai_analysis === 'string' && selectedFeedback.ai_analysis && (
                         <p className="mt-1 text-xs">{selectedFeedback.ai_analysis}</p>
@@ -694,26 +703,26 @@ export default function FeedbackManagement() {
                   )}
 
                   {selectedFeedback.ai_status === 'completed' && selectedFeedback.ai_analysis && (
-                    <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 space-y-2">
+                    <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-800 space-y-2">
                       {typeof selectedFeedback.ai_analysis === 'string' ? (
-                        <p className="text-sm text-slate-700 whitespace-pre-wrap">{selectedFeedback.ai_analysis}</p>
+                        <p className="text-sm text-foreground whitespace-pre-wrap">{selectedFeedback.ai_analysis}</p>
                       ) : (
-                        <div className="text-sm text-slate-700 space-y-2">
+                        <div className="text-sm text-foreground space-y-2">
                           {selectedFeedback.ai_analysis.analysis && (
                             <div>
-                              <label className="text-xs font-medium text-slate-500">Analysis</label>
+                              <label className="text-xs font-medium text-muted-foreground">Analysis</label>
                               <p className="whitespace-pre-wrap">{selectedFeedback.ai_analysis.analysis}</p>
                             </div>
                           )}
                           {selectedFeedback.ai_analysis.recommendation && (
                             <div>
-                              <label className="text-xs font-medium text-slate-500">Recommendation</label>
+                              <label className="text-xs font-medium text-muted-foreground">Recommendation</label>
                               <p className="whitespace-pre-wrap">{selectedFeedback.ai_analysis.recommendation}</p>
                             </div>
                           )}
                           {selectedFeedback.ai_analysis.effort && (
                             <div>
-                              <label className="text-xs font-medium text-slate-500">Estimated Effort</label>
+                              <label className="text-xs font-medium text-muted-foreground">Estimated Effort</label>
                               <Badge className={cn(
                                 "text-xs",
                                 selectedFeedback.ai_analysis.effort === 'low' ? 'bg-green-100 text-green-700' :
@@ -726,19 +735,19 @@ export default function FeedbackManagement() {
                           )}
                           {selectedFeedback.ai_analysis.risks && (
                             <div>
-                              <label className="text-xs font-medium text-slate-500">Risks & Considerations</label>
+                              <label className="text-xs font-medium text-muted-foreground">Risks & Considerations</label>
                               <p className="whitespace-pre-wrap">{selectedFeedback.ai_analysis.risks}</p>
                             </div>
                           )}
                           {selectedFeedback.ai_analysis.category && (
                             <div>
-                              <label className="text-xs font-medium text-slate-500">Suggested Category</label>
+                              <label className="text-xs font-medium text-muted-foreground">Suggested Category</label>
                               <Badge variant="outline">{selectedFeedback.ai_analysis.category}</Badge>
                             </div>
                           )}
                           {/* Fallback: render all keys if no known structure */}
                           {!selectedFeedback.ai_analysis.analysis && !selectedFeedback.ai_analysis.recommendation && (
-                            <pre className="text-xs bg-white p-3 rounded border overflow-auto max-h-60">
+                            <pre className="text-xs bg-muted p-3 rounded border border-border overflow-auto max-h-60">
                               {JSON.stringify(selectedFeedback.ai_analysis, null, 2)}
                             </pre>
                           )}
@@ -821,19 +830,19 @@ export default function FeedbackManagement() {
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t text-sm">
                 <div>
-                  <label className="text-slate-500">Submitted by</label>
+                  <label className="text-muted-foreground">Submitted by</label>
                   <p className="font-medium">{selectedFeedback.submitter_name || 'Anonymous'}</p>
                   {selectedFeedback.submitter_email && (
-                    <p className="text-slate-500">{selectedFeedback.submitter_email}</p>
+                    <p className="text-muted-foreground">{selectedFeedback.submitter_email}</p>
                   )}
                 </div>
                 <div>
-                  <label className="text-slate-500">Date</label>
+                  <label className="text-muted-foreground">Date</label>
                   <p className="font-medium">{format(new Date(selectedFeedback.created_date), 'MMM d, yyyy h:mm a')}</p>
                 </div>
                 {selectedFeedback.page_url && (
                   <div className="col-span-2">
-                    <label className="text-slate-500">Page URL</label>
+                    <label className="text-muted-foreground">Page URL</label>
                     <a href={selectedFeedback.page_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
                       {selectedFeedback.page_url}
                       <ExternalLink className="w-3 h-3" />

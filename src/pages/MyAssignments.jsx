@@ -11,6 +11,7 @@ import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 import { getColorForEmail, getInitials } from '@/constants/colors';
+import { toast } from 'sonner';
 
 export default function MyAssignments() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -42,9 +43,13 @@ export default function MyAssignments() {
   };
 
   const handleToggleComplete = async (task) => {
-    const newStatus = task.status === 'completed' ? 'todo' : 'completed';
-    await api.entities.Task.update(task.id, { status: newStatus });
-    queryClient.invalidateQueries({ queryKey: ['myTasks'] });
+    try {
+      const newStatus = task.status === 'completed' ? 'todo' : 'completed';
+      await api.entities.Task.update(task.id, { status: newStatus });
+      queryClient.invalidateQueries({ queryKey: ['myTasks'] });
+    } catch {
+      toast.error('Failed to update task');
+    }
   };
 
   // Get active project IDs (exclude archived, deleted, completed)
@@ -84,7 +89,7 @@ export default function MyAssignments() {
         noDueDate.push(task);
         return;
       }
-      
+
       const dueDate = parseISO(task.due_date);
       if (isPast(dueDate) && !isToday(dueDate)) {
         overdue.push(task);
@@ -115,11 +120,11 @@ export default function MyAssignments() {
   const renderTask = (task) => {
     const project = getProjectInfo(task.project_id);
     const assignees = task.assigned_name ? [{ name: task.assigned_name, email: task.assigned_to }] : [];
-    
+
     return (
-      <div 
+      <div
         key={task.id}
-        className="flex items-start gap-3 py-3 border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 px-2 -mx-2 rounded-lg transition-colors"
+        className="flex items-start gap-3 py-3 border-b border-border last:border-b-0 hover:bg-muted/50 px-2 -mx-2 rounded-lg transition-colors"
       >
         <button
           onClick={() => handleToggleComplete(task)}
@@ -127,38 +132,38 @@ export default function MyAssignments() {
             "mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0",
             task.status === 'completed'
               ? "bg-emerald-500 border-emerald-500 text-white"
-              : "border-slate-300 hover:border-emerald-400"
+              : "border-border hover:border-emerald-400"
           )}
         >
           {task.status === 'completed' && <CheckSquare className="w-3 h-3" />}
         </button>
-        
+
         <div className="flex-1 min-w-0">
-          <Link 
+          <Link
             to={createPageUrl('ProjectTasks') + `?id=${task.project_id}`}
             className={cn(
               "font-medium text-foreground hover:text-primary transition-colors",
-              task.status === 'completed' && "line-through text-slate-400"
+              task.status === 'completed' && "line-through text-muted-foreground"
             )}
           >
             {task.title}
           </Link>
-          
+
           {task.notes && (
-            <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-500">
+            <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
               <MessageSquare className="w-3 h-3" />
               <span className="truncate">{task.notes}</span>
             </div>
           )}
         </div>
-        
+
         {/* Assignees */}
         <div className="flex -space-x-1.5">
           {assignees.map((assignee, idx) => (
             <div
               key={idx}
               className={cn(
-                "w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-medium border-2 border-white",
+                "w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-medium border-2 border-card",
                 getColorForEmail(assignee.email)
               )}
               title={assignee.name}
@@ -173,10 +178,10 @@ export default function MyAssignments() {
 
   const renderProjectGroup = (projectId, projectTasks) => {
     const project = getProjectInfo(projectId);
-    
+
     return (
       <div key={projectId} className="mb-4">
-        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 px-2">
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 px-2">
           {project.client && `${project.client} - `}{project.name}
         </div>
         {projectTasks.map(renderTask)}
@@ -224,8 +229,8 @@ export default function MyAssignments() {
             className={cn(
               "px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-manipulation",
               activeTab === 'all'
-                ? "bg-slate-900 text-white"
-                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                ? "bg-foreground text-background"
+                : "bg-card text-muted-foreground hover:bg-muted border border-border"
             )}
           >
             <span className="sm:hidden">All</span>
@@ -236,8 +241,8 @@ export default function MyAssignments() {
             className={cn(
               "px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-manipulation",
               activeTab === 'with_dates'
-                ? "bg-slate-900 text-white"
-                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                ? "bg-foreground text-background"
+                : "bg-card text-muted-foreground hover:bg-muted border border-border"
             )}
           >
             <span className="sm:hidden">With dates</span>
@@ -248,8 +253,8 @@ export default function MyAssignments() {
             className={cn(
               "px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-manipulation",
               activeTab === 'assigned_by_me'
-                ? "bg-slate-900 text-white"
-                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                ? "bg-foreground text-background"
+                : "bg-card text-muted-foreground hover:bg-muted border border-border"
             )}
           >
             <span className="sm:hidden">Assigned</span>
@@ -258,12 +263,12 @@ export default function MyAssignments() {
         </div>
 
         {/* Task List */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           {/* Overdue Section */}
           {overdue.length > 0 && (
-            <div className="border-b border-slate-200">
-              <div className="px-4 py-3 bg-red-50">
-                <h3 className="text-sm font-semibold text-red-700">Overdue</h3>
+            <div className="border-b border-border">
+              <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20">
+                <h3 className="text-sm font-semibold text-red-700 dark:text-red-400">Overdue</h3>
               </div>
               <div className="px-4 py-2">
                 {Object.entries(groupByProject(overdue)).map(([projectId, tasks]) => {
@@ -271,11 +276,11 @@ export default function MyAssignments() {
                   return (
                     <div key={projectId} className="mb-3 last:mb-0">
                       <div className="flex items-baseline gap-4 py-2">
-                        <span className="text-xs font-medium text-slate-400 w-20 sm:w-24 shrink-0 uppercase">
+                        <span className="text-xs font-medium text-muted-foreground w-20 sm:w-24 shrink-0 uppercase">
                           {format(parseISO(tasks[0].due_date), 'EEE, MMM d')}
                         </span>
                         <div className="flex-1">
-                          <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+                          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                             {project.client && `${project.client} - `}{project.name}
                           </div>
                           {tasks.map(renderTask)}
@@ -290,9 +295,9 @@ export default function MyAssignments() {
 
           {/* Due Today Section */}
           {dueToday.length > 0 && (
-            <div className="border-b border-slate-200">
-              <div className="px-4 py-3 bg-amber-50">
-                <h3 className="text-sm font-semibold text-amber-700">Due today</h3>
+            <div className="border-b border-border">
+              <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/20">
+                <h3 className="text-sm font-semibold text-amber-700 dark:text-amber-400">Due today</h3>
               </div>
               <div className="px-4 py-2">
                 {Object.entries(groupByProject(dueToday)).map(([projectId, tasks]) => {
@@ -300,11 +305,11 @@ export default function MyAssignments() {
                   return (
                     <div key={projectId} className="mb-3 last:mb-0">
                       <div className="flex items-baseline gap-4 py-2">
-                        <span className="text-xs font-medium text-slate-400 w-20 sm:w-24 shrink-0 uppercase">
+                        <span className="text-xs font-medium text-muted-foreground w-20 sm:w-24 shrink-0 uppercase">
                           {format(new Date(), 'EEE, MMM d')}
                         </span>
                         <div className="flex-1">
-                          <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+                          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                             {project.client && `${project.client} - `}{project.name}
                           </div>
                           {tasks.map(renderTask)}
@@ -319,9 +324,9 @@ export default function MyAssignments() {
 
           {/* Due Later Section */}
           {Object.keys(dueLaterGrouped).length > 0 && (
-            <div className="border-b border-slate-200">
-              <div className="px-4 py-3 bg-blue-50">
-                <h3 className="text-sm font-semibold text-blue-700">Due later</h3>
+            <div className="border-b border-border">
+              <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20">
+                <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-400">Due later</h3>
               </div>
               <div className="px-4 py-2">
                 {Object.entries(dueLaterGrouped).map(([date, dateTasks]) => {
@@ -331,11 +336,11 @@ export default function MyAssignments() {
                     return (
                       <div key={`${date}-${projectId}`} className="mb-3 last:mb-0">
                         <div className="flex items-baseline gap-4 py-2">
-                          <span className="text-xs font-medium text-slate-400 w-20 sm:w-24 shrink-0 uppercase">
+                          <span className="text-xs font-medium text-muted-foreground w-20 sm:w-24 shrink-0 uppercase">
                             {format(parseISO(date), 'EEE, MMM d')}
                           </span>
                           <div className="flex-1">
-                            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+                            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                               {project.client && `${project.client} - `}{project.name}
                             </div>
                             {tasks.map(renderTask)}
@@ -352,11 +357,11 @@ export default function MyAssignments() {
           {/* No Due Date Section */}
           {noDueDate.length > 0 && activeTab === 'all' && (
             <div>
-              <div className="px-4 py-3 bg-slate-50">
-                <h3 className="text-sm font-semibold text-slate-600">No due date</h3>
+              <div className="px-4 py-3 bg-muted/50">
+                <h3 className="text-sm font-semibold text-muted-foreground">No due date</h3>
               </div>
               <div className="px-4 py-2">
-                {Object.entries(groupByProject(noDueDate)).map(([projectId, tasks]) => 
+                {Object.entries(groupByProject(noDueDate)).map(([projectId, tasks]) =>
                   renderProjectGroup(projectId, tasks)
                 )}
               </div>
@@ -366,7 +371,7 @@ export default function MyAssignments() {
           {/* Empty State */}
           {filteredTasks.length === 0 && (
             <div className="p-12 text-center">
-              <ListTodo className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+              <ListTodo className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">No assignments</h3>
               <p className="text-muted-foreground">You're all caught up!</p>
             </div>

@@ -4,7 +4,7 @@ import { api } from '@/api/apiClient';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { 
+import {
   Tag, Plus, Edit2, Trash2, GripVertical, Check, X, Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -124,7 +124,7 @@ export default function ProjectStatuses() {
         )
       );
     } catch (err) {
-      console.error('Failed to save order:', err);
+      toast.error('Failed to save status order');
     }
     // Wait for refetch to complete so cache stays in sync
     await refetch();
@@ -151,7 +151,7 @@ export default function ProjectStatuses() {
               </div>
               <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Project Statuses</h1>
             </div>
-            <p className="text-slate-500">Customize project statuses and their display</p>
+            <p className="text-muted-foreground">Customize project statuses and their display</p>
           </div>
           <Button onClick={() => { setEditingStatus(null); setShowModal(true); }} className="bg-primary hover:bg-primary/80">
             <Plus className="w-4 h-4 mr-2" />
@@ -164,10 +164,10 @@ export default function ProjectStatuses() {
             {(provided) => (
               <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
                 {statuses.length === 0 ? (
-                  <div className="bg-white rounded-2xl border p-12 text-center">
-                    <Tag className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">No custom statuses yet</h3>
-                    <p className="text-slate-500 mb-4">Create statuses like "Planning", "In Progress", "Completed"</p>
+                  <div className="bg-card rounded-2xl border p-12 text-center">
+                    <Tag className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">No custom statuses yet</h3>
+                    <p className="text-muted-foreground mb-4">Create statuses like "Planning", "In Progress", "Completed"</p>
                     <Button onClick={() => setShowModal(true)} className="bg-primary hover:bg-primary/80">
                       <Plus className="w-4 h-4 mr-2" />
                       Add Status
@@ -183,14 +183,14 @@ export default function ProjectStatuses() {
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             className={cn(
-                              "bg-white rounded-xl border p-4 hover:shadow-md transition-all",
+                              "bg-card rounded-xl border p-4 hover:shadow-md transition-all",
                               snapshot.isDragging && "shadow-lg ring-2 ring-primary"
                             )}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
                                 <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing p-1">
-                                  <GripVertical className="w-5 h-5 text-slate-400" />
+                                  <GripVertical className="w-5 h-5 text-muted-foreground" />
                                 </div>
                                 <div className={cn("w-4 h-4 rounded-full", colorConfig.bg)} />
                                 <div>
@@ -199,19 +199,19 @@ export default function ProjectStatuses() {
                                       {status.name}
                                     </Badge>
                                     {status.is_default && (
-                                      <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                                      <Badge variant="outline" className="text-xs bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800">
                                         <Star className="w-3 h-3 mr-1 fill-current" />
                                         Default
                                       </Badge>
                                     )}
                                     {status.is_completed && (
-                                      <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
+                                      <Badge variant="outline" className="text-xs bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
                                         <Check className="w-3 h-3 mr-1" />
                                         Completed Status
                                       </Badge>
                                     )}
                                   </div>
-                                  <p className="text-xs text-slate-500 mt-1">Key: {status.key}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">Key: {status.key}</p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -220,7 +220,7 @@ export default function ProjectStatuses() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleSetDefault(status)}
-                                    className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                    className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30"
                                   >
                                     <Star className="w-4 h-4" />
                                   </Button>
@@ -230,7 +230,7 @@ export default function ProjectStatuses() {
                                   size="sm"
                                   onClick={() => { setEditingStatus(status); setShowModal(true); }}
                                 >
-                                  <Edit2 className="w-4 h-4 text-slate-500" />
+                                  <Edit2 className="w-4 h-4 text-muted-foreground" />
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -366,10 +366,10 @@ function StatusModal({ open, onClose, status, onSave }) {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
             <div>
               <Label>Completed Status</Label>
-              <p className="text-xs text-slate-500">Mark this as a completion status</p>
+              <p className="text-xs text-muted-foreground">Mark this as a completion status</p>
             </div>
             <Switch
               checked={formData.is_completed}

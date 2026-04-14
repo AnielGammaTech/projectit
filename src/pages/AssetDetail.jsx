@@ -206,7 +206,6 @@ function AcknowledgmentBadge({ assignment, acceptances, onExpire, asset, employe
       onExpire?.();
       toast.success('Consent form expired');
     } catch (err) {
-      console.error('Expire failed:', err);
       toast.error(err?.message || 'Failed to expire consent form');
     } finally {
       setExpiring(false);

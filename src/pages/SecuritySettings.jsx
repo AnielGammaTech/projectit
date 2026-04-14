@@ -94,7 +94,7 @@ export default function SecuritySettings() {
           setSettings(secSettings[0]);
         }
       } catch (err) {
-        console.error('Failed to load MFA status:', err);
+        toast.error('Failed to load MFA status');
       }
       setLoadingMfa(false);
     };

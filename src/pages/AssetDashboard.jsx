@@ -198,7 +198,7 @@ export default function AssetDashboard() {
           {statCards.map((card) => (
             <div
               key={card.label}
-              className="rounded-xl bg-white dark:bg-card border border-border px-3 py-2.5"
+              className="rounded-xl bg-card border border-border px-3 py-2.5"
             >
               <div className="flex items-center gap-2 mb-1">
                 {card.dot ? (
@@ -223,7 +223,7 @@ export default function AssetDashboard() {
           <motion.div
             {...FADE_IN}
             transition={{ duration: 0.3, delay: 0.05 }}
-            className="rounded-xl bg-white dark:bg-card border border-border p-4"
+            className="rounded-xl bg-card border border-border p-4"
           >
             <h2 className="text-sm font-semibold text-foreground mb-3">Needs Attention</h2>
             {!hasAttentionItems ? (
@@ -280,7 +280,7 @@ export default function AssetDashboard() {
           <motion.div
             {...FADE_IN}
             transition={{ duration: 0.3, delay: 0.1 }}
-            className="rounded-xl bg-white dark:bg-card border border-border p-4"
+            className="rounded-xl bg-card border border-border p-4"
           >
             <h2 className="text-sm font-semibold text-foreground mb-3">Devices by OS</h2>
             <div className="space-y-2.5">
@@ -319,7 +319,7 @@ export default function AssetDashboard() {
         <motion.div
           {...FADE_IN}
           transition={{ duration: 0.3, delay: 0.15 }}
-          className="rounded-xl bg-white dark:bg-card border border-border overflow-hidden"
+          className="rounded-xl bg-card border border-border overflow-hidden"
         >
           <div className="px-4 py-3 border-b border-border">
             <h2 className="text-sm font-semibold text-foreground">Who Has What</h2>
@@ -371,7 +371,7 @@ export default function AssetDashboard() {
         <motion.div
           {...FADE_IN}
           transition={{ duration: 0.3, delay: 0.2 }}
-          className="rounded-xl bg-white dark:bg-card border border-border overflow-hidden"
+          className="rounded-xl bg-card border border-border overflow-hidden"
         >
           <div className="px-4 py-3 border-b border-border">
             <h2 className="text-sm font-semibold text-foreground">Recent Activity</h2>

@@ -85,7 +85,7 @@ export default function Team() {
   if (loadingTeam) return <CardGridSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
@@ -94,12 +94,12 @@ export default function Team() {
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
         >
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Team</h1>
-            <p className="text-slate-500 mt-1">Manage your technicians and team members</p>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">Team</h1>
+            <p className="text-muted-foreground mt-1">Manage your technicians and team members</p>
           </div>
           <Button
             onClick={() => { setEditingMember(null); setShowModal(true); }}
-            className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200"
+            className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-border"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Member
@@ -121,7 +121,7 @@ export default function Team() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="group bg-white rounded-2xl border border-slate-100 p-6 hover:shadow-lg hover:border-slate-200 transition-all"
+                    className="group bg-card rounded-2xl border border-border p-6 hover:shadow-lg hover:border-border transition-all"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <UserAvatar
@@ -151,35 +151,35 @@ export default function Team() {
                       </DropdownMenu>
                     </div>
 
-                    <h3 className="text-lg font-semibold text-slate-900">{member.name}</h3>
+                    <h3 className="text-lg font-semibold text-foreground">{member.name}</h3>
                     {member.role && (
-                      <div className="flex items-center gap-1.5 text-sm text-slate-500 mt-1">
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
                         <Briefcase className="w-3.5 h-3.5" />
                         {member.role}
                       </div>
                     )}
 
                     <div className="mt-4 space-y-2 text-sm">
-                      <a href={`mailto:${member.email}`} className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition-colors">
+                      <a href={`mailto:${member.email}`} className="flex items-center gap-2 text-muted-foreground hover:text-indigo-600 transition-colors">
                         <Mail className="w-4 h-4" />
                         {member.email}
                       </a>
                       {member.phone && (
-                        <a href={`tel:${member.phone}`} className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition-colors">
+                        <a href={`tel:${member.phone}`} className="flex items-center gap-2 text-muted-foreground hover:text-indigo-600 transition-colors">
                           <Phone className="w-4 h-4" />
                           {member.phone}
                         </a>
                       )}
                     </div>
 
-                    <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="mt-4 pt-4 border-t border-border">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-500">Assigned Tasks</span>
-                        <span className="font-medium text-slate-900">{assignedTasks.length}</span>
+                        <span className="text-muted-foreground">Assigned Tasks</span>
+                        <span className="font-medium text-foreground">{assignedTasks.length}</span>
                       </div>
                       {assignedTasks.length > 0 && (
                         <div className="flex items-center justify-between text-sm mt-1">
-                          <span className="text-slate-500">Completed</span>
+                          <span className="text-muted-foreground">Completed</span>
                           <span className="font-medium text-emerald-600">{completedTasks}</span>
                         </div>
                       )}
@@ -193,11 +193,11 @@ export default function Team() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-white rounded-2xl border border-slate-100 p-12 text-center"
+            className="bg-card rounded-2xl border border-border p-12 text-center"
           >
-            <Users className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No team members yet</h3>
-            <p className="text-slate-500 mb-6">Add your first technician to start assigning tasks</p>
+            <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No team members yet</h3>
+            <p className="text-muted-foreground mb-6">Add your first technician to start assigning tasks</p>
             <Button onClick={() => setShowModal(true)} className="bg-indigo-600 hover:bg-indigo-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Team Member

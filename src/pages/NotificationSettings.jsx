@@ -70,6 +70,7 @@ export default function NotificationSettings() {
   }, [savedSettings]);
 
   const sendTestEmail = async () => {
+    if (!currentUser?.email) { toast.error('Please wait...'); return; }
     setSendingTest(true);
     try {
       await api.integrations.Core.SendEmail({
@@ -99,7 +100,8 @@ export default function NotificationSettings() {
       queryClient.invalidateQueries({ queryKey: ['notificationSettings'] });
       toast.success('Settings saved successfully');
       setHasChanges(false);
-    }
+    },
+    onError: () => toast.error('Failed to save notification settings')
   });
 
   const handleChange = (key, value) => {
@@ -145,16 +147,16 @@ export default function NotificationSettings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div>
-                  <Label className="text-base font-medium text-slate-900">Delivery Frequency</Label>
-                  <p className="text-sm text-slate-500 mt-0.5">How often should we send you email notifications?</p>
+                  <Label className="text-base font-medium text-foreground">Delivery Frequency</Label>
+                  <p className="text-sm text-muted-foreground mt-0.5">How often should we send you email notifications?</p>
                 </div>
                 <Select 
                   value={settings.email_frequency} 
                   onValueChange={(v) => handleChange('email_frequency', v)}
                 >
-                  <SelectTrigger className="w-44 bg-white">
+                  <SelectTrigger className="w-44">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -194,14 +196,14 @@ export default function NotificationSettings() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Task Assigned */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-lg bg-blue-100">
                     <CheckCircle2 className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <Label className="text-base font-medium text-slate-900">Task Assigned</Label>
-                    <p className="text-sm text-slate-500 mt-0.5">Get notified when a task is assigned to you</p>
+                    <Label className="text-base font-medium text-foreground">Task Assigned</Label>
+                    <p className="text-sm text-muted-foreground mt-0.5">Get notified when a task is assigned to you</p>
                   </div>
                 </div>
                 <Switch
@@ -211,14 +213,14 @@ export default function NotificationSettings() {
               </div>
 
               {/* Task Completed */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-lg bg-emerald-100">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
-                    <Label className="text-base font-medium text-slate-900">Task Completed</Label>
-                    <p className="text-sm text-slate-500 mt-0.5">Get notified when tasks you're involved in are completed</p>
+                    <Label className="text-base font-medium text-foreground">Task Completed</Label>
+                    <p className="text-sm text-muted-foreground mt-0.5">Get notified when tasks you're involved in are completed</p>
                   </div>
                 </div>
                 <Switch
@@ -228,14 +230,14 @@ export default function NotificationSettings() {
               </div>
 
               {/* Task Due Soon */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-lg bg-amber-100">
                     <Clock className="w-5 h-5 text-amber-600" />
                   </div>
                   <div>
-                    <Label className="text-base font-medium text-slate-900">Task Due Soon</Label>
-                    <p className="text-sm text-slate-500 mt-0.5">Get reminded before a task is due</p>
+                    <Label className="text-base font-medium text-foreground">Task Due Soon</Label>
+                    <p className="text-sm text-muted-foreground mt-0.5">Get reminded before a task is due</p>
                   </div>
                 </div>
                 <Switch
@@ -248,12 +250,12 @@ export default function NotificationSettings() {
               {settings.notify_task_due_soon && (
                 <div className="ml-16 p-4 rounded-xl bg-amber-50 border border-amber-100">
                   <div className="flex items-center gap-4">
-                    <Label className="text-sm text-slate-700">Remind me</Label>
+                    <Label className="text-sm text-foreground">Remind me</Label>
                     <Select 
                       value={String(settings.due_reminder_days)} 
                       onValueChange={(v) => handleChange('due_reminder_days', parseInt(v))}
                     >
-                      <SelectTrigger className="w-32 bg-white">
+                      <SelectTrigger className="w-32">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -268,14 +270,14 @@ export default function NotificationSettings() {
               )}
 
               {/* Task Overdue */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-lg bg-red-100">
                     <AlertTriangle className="w-5 h-5 text-red-600" />
                   </div>
                   <div>
-                    <Label className="text-base font-medium text-slate-900">Task Overdue</Label>
-                    <p className="text-sm text-slate-500 mt-0.5">Get notified when a task becomes overdue</p>
+                    <Label className="text-base font-medium text-foreground">Task Overdue</Label>
+                    <p className="text-sm text-muted-foreground mt-0.5">Get notified when a task becomes overdue</p>
                   </div>
                 </div>
                 <Switch
@@ -299,14 +301,14 @@ export default function NotificationSettings() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Project Assigned */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-lg bg-blue-100">
                     <FolderOpen className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <Label className="text-base font-medium text-slate-900">Project Assigned</Label>
-                    <p className="text-sm text-slate-500 mt-0.5">Get notified when you are added to a project</p>
+                    <Label className="text-base font-medium text-foreground">Project Assigned</Label>
+                    <p className="text-sm text-muted-foreground mt-0.5">Get notified when you are added to a project</p>
                   </div>
                 </div>
                 <Switch
@@ -316,14 +318,14 @@ export default function NotificationSettings() {
               </div>
 
               {/* Project Updates */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-lg bg-violet-100">
                     <FolderOpen className="w-5 h-5 text-violet-600" />
                   </div>
                   <div>
-                    <Label className="text-base font-medium text-slate-900">Project Updates</Label>
-                    <p className="text-sm text-slate-500 mt-0.5">Get notified about progress updates on your projects</p>
+                    <Label className="text-base font-medium text-foreground">Project Updates</Label>
+                    <p className="text-sm text-muted-foreground mt-0.5">Get notified about progress updates on your projects</p>
                   </div>
                 </div>
                 <Switch
@@ -333,14 +335,14 @@ export default function NotificationSettings() {
               </div>
 
               {/* Part Status Changes */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-lg bg-orange-100">
                     <Package className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
-                    <Label className="text-base font-medium text-slate-900">Part Status Changes</Label>
-                    <p className="text-sm text-slate-500 mt-0.5">Get notified when parts are ordered, received, or installed</p>
+                    <Label className="text-base font-medium text-foreground">Part Status Changes</Label>
+                    <p className="text-sm text-muted-foreground mt-0.5">Get notified when parts are ordered, received, or installed</p>
                   </div>
                 </div>
                 <Switch
@@ -364,14 +366,14 @@ export default function NotificationSettings() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Mentions */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-lg bg-teal-100">
                     <AtSign className="w-5 h-5 text-teal-600" />
                   </div>
                   <div>
-                    <Label className="text-base font-medium text-slate-900">@Mentions</Label>
-                    <p className="text-sm text-slate-500 mt-0.5">Get notified when someone mentions you in notes or comments</p>
+                    <Label className="text-base font-medium text-foreground">@Mentions</Label>
+                    <p className="text-sm text-muted-foreground mt-0.5">Get notified when someone mentions you in notes or comments</p>
                   </div>
                 </div>
                 <Switch
@@ -381,14 +383,14 @@ export default function NotificationSettings() {
               </div>
 
               {/* New Comments */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-slate-200">
-                    <MessageSquare className="w-5 h-5 text-slate-600" />
+                  <div className="p-2 rounded-lg bg-muted">
+                    <MessageSquare className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <Label className="text-base font-medium text-slate-900">New Comments</Label>
-                    <p className="text-sm text-slate-500 mt-0.5">Get notified about new comments on tasks you follow</p>
+                    <Label className="text-base font-medium text-foreground">New Comments</Label>
+                    <p className="text-sm text-muted-foreground mt-0.5">Get notified about new comments on tasks you follow</p>
                   </div>
                 </div>
                 <Switch

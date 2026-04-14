@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const groupColors = ['indigo', 'emerald', 'amber', 'rose', 'violet', 'cyan', 'pink'];
 
@@ -90,6 +91,7 @@ export default function UserGroups() {
 
   const addEmail = () => {
     if (!newEmail.trim() || formData.member_emails.includes(newEmail)) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) { toast.error('Invalid email format'); return; }
     setFormData(prev => ({ ...prev, member_emails: [...prev.member_emails, newEmail.trim()] }));
     setNewEmail('');
   };
@@ -121,8 +123,8 @@ export default function UserGroups() {
           className="flex items-center justify-between mb-8"
         >
           <div>
-            <h1 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">User Groups</h1>
-            <p className="text-slate-500 mt-1">Manage access groups for projects</p>
+            <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">User Groups</h1>
+            <p className="text-muted-foreground mt-1">Manage access groups for projects</p>
           </div>
           <Button onClick={() => handleOpenModal()} className="bg-indigo-600 hover:bg-indigo-700">
             <Plus className="w-4 h-4 mr-2" />
@@ -133,16 +135,16 @@ export default function UserGroups() {
         {/* Groups List */}
         <div className="space-y-4">
           {isLoading ? (
-            <div className="text-center py-12 text-slate-400">Loading...</div>
+            <div className="text-center py-12 text-muted-foreground">Loading...</div>
           ) : groups.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="bg-white rounded-2xl border border-slate-100 p-12 text-center"
+              className="bg-card rounded-2xl border border-border p-12 text-center"
             >
-              <Users className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">No user groups yet</h3>
-              <p className="text-slate-500 mb-6">Create groups to manage project access</p>
+              <Users className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No user groups yet</h3>
+              <p className="text-muted-foreground mb-6">Create groups to manage project access</p>
               <Button onClick={() => handleOpenModal()} className="bg-indigo-600 hover:bg-indigo-700">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Group
@@ -155,7 +157,7 @@ export default function UserGroups() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-6 hover:shadow-lg transition-all"
+                className="bg-card rounded-2xl border border-border p-3 sm:p-6 hover:shadow-lg transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
@@ -163,8 +165,8 @@ export default function UserGroups() {
                       <Users className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-900">{group.name}</h3>
-                      {group.description && <p className="text-slate-500 mt-1">{group.description}</p>}
+                      <h3 className="text-lg font-semibold text-foreground">{group.name}</h3>
+                      {group.description && <p className="text-muted-foreground mt-1">{group.description}</p>}
                       <div className="flex flex-wrap gap-2 mt-3">
                         {(group.member_emails || []).map((email) => {
                           const member = teamMembers.find(m => m.email === email);
@@ -175,7 +177,7 @@ export default function UserGroups() {
                           );
                         })}
                         {(!group.member_emails || group.member_emails.length === 0) && (
-                          <span className="text-sm text-slate-400">No members</span>
+                          <span className="text-sm text-muted-foreground">No members</span>
                         )}
                       </div>
                     </div>
@@ -184,7 +186,7 @@ export default function UserGroups() {
                     <Button variant="ghost" size="icon" onClick={() => handleOpenModal(group)}>
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(group)} className="text-slate-400 hover:text-red-600">
+                    <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(group)} className="text-muted-foreground hover:text-red-600">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -203,7 +205,7 @@ export default function UserGroups() {
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div>
-              <label className="text-sm font-medium text-slate-700">Group Name</label>
+              <label className="text-sm font-medium text-foreground">Group Name</label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
@@ -212,7 +214,7 @@ export default function UserGroups() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700">Description</label>
+              <label className="text-sm font-medium text-foreground">Description</label>
               <Input
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -221,7 +223,7 @@ export default function UserGroups() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700">Color</label>
+              <label className="text-sm font-medium text-foreground">Color</label>
               <div className="flex gap-2 mt-2">
                 {groupColors.map((color) => (
                   <button
@@ -229,7 +231,6 @@ export default function UserGroups() {
                     onClick={() => setFormData(prev => ({ ...prev, color }))}
                     className={cn(
                       "w-8 h-8 rounded-full transition-all",
-                      `bg-${color}-500`,
                       formData.color === color ? "ring-2 ring-offset-2 ring-indigo-500" : ""
                     )}
                     style={{ backgroundColor: color === 'indigo' ? '#6366f1' : color === 'emerald' ? '#10b981' : color === 'amber' ? '#f59e0b' : color === 'rose' ? '#f43f5e' : color === 'violet' ? '#8b5cf6' : color === 'cyan' ? '#06b6d4' : '#ec4899' }}
@@ -238,7 +239,7 @@ export default function UserGroups() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700">Members</label>
+              <label className="text-sm font-medium text-foreground">Members</label>
               <div className="flex gap-2 mt-1.5">
                 <Input
                   value={newEmail}
@@ -253,13 +254,13 @@ export default function UserGroups() {
               {/* Quick add from team */}
               {teamMembers.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-xs text-slate-500 mb-1">Quick add from team:</p>
+                  <p className="text-xs text-muted-foreground mb-1">Quick add from team:</p>
                   <div className="flex flex-wrap gap-1">
                     {teamMembers.filter(m => !formData.member_emails.includes(m.email)).slice(0, 5).map((member) => (
                       <button
                         key={member.id}
                         onClick={() => setFormData(prev => ({ ...prev, member_emails: [...prev.member_emails, member.email] }))}
-                        className="text-xs px-2 py-1 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors"
+                        className="text-xs px-2 py-1 bg-muted rounded-md hover:bg-muted/80 transition-colors text-foreground"
                       >
                         + {member.name}
                       </button>

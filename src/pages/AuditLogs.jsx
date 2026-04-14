@@ -149,12 +149,13 @@ export default function AuditLogs() {
 
   // Filter logs
   const filteredLogs = useMemo(() => {
+    const lowerSearch = search.toLowerCase();
     return logs.filter(log => {
       const matchesSearch = !search ||
-        log.action?.toLowerCase().includes(search.toLowerCase()) ||
-        log.entity_name?.toLowerCase().includes(search.toLowerCase()) ||
-        log.user_name?.toLowerCase().includes(search.toLowerCase()) ||
-        log.details?.toLowerCase().includes(search.toLowerCase());
+        log.action?.toLowerCase().includes(lowerSearch) ||
+        log.entity_name?.toLowerCase().includes(lowerSearch) ||
+        log.user_name?.toLowerCase().includes(lowerSearch) ||
+        log.details?.toLowerCase().includes(lowerSearch);
 
       const matchesCategory = categoryFilter === 'all' || log.action_category === categoryFilter;
       const matchesUser = userFilter === 'all' || log.user_email === userFilter;

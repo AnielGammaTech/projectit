@@ -101,7 +101,7 @@ function HorizontalBar({ label, value, max, color = 'bg-emerald-700' }) {
         <span className="font-medium text-foreground">{label}</span>
         <span className="text-muted-foreground">{formatCurrency(value)}</span>
       </div>
-      <div className="h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+      <div className="h-2.5 rounded-full bg-muted overflow-hidden">
         <div className={cn('h-full rounded-full transition-all duration-500', color)} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -183,7 +183,7 @@ function TabAllAssets({ assets, employeeMap, assignments, search }) {
           Download CSV
         </Button>
       </div>
-      <div className="overflow-x-auto rounded-xl border bg-white dark:bg-card">
+      <div className="overflow-x-auto rounded-xl border bg-card">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-slate-50 dark:bg-slate-900/50">
@@ -302,7 +302,7 @@ function TabByEmployee({ employees, assignments, assets }) {
       {employeeDevices.map((emp) => {
         const isOpen = expanded.has(emp.id);
         return (
-          <div key={emp.id} className="rounded-xl border bg-white dark:bg-card overflow-hidden">
+          <div key={emp.id} className="rounded-xl border bg-card overflow-hidden">
             <button
               onClick={() => toggle(emp.id)}
               className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors"
@@ -396,7 +396,7 @@ function TabConsentForms({ acceptances, assets, assignments, employeeMap }) {
           Download CSV
         </Button>
       </div>
-      <div className="overflow-x-auto rounded-xl border bg-white dark:bg-card">
+      <div className="overflow-x-auto rounded-xl border bg-card">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-slate-50 dark:bg-slate-900/50">
@@ -468,17 +468,17 @@ function TabValueCost({ assets, employees, assignments }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-xl border bg-white dark:bg-card p-6">
+        <div className="rounded-xl border bg-card p-6">
           <p className="text-sm text-muted-foreground mb-1">Total Fleet Value</p>
           <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(totalValue)}</p>
         </div>
-        <div className="rounded-xl border bg-white dark:bg-card p-6">
+        <div className="rounded-xl border bg-card p-6">
           <p className="text-sm text-muted-foreground mb-1">Average Device Cost</p>
           <p className="text-3xl font-bold text-foreground">{formatCurrency(avgCost)}</p>
         </div>
       </div>
 
-      <div className="rounded-xl border bg-white dark:bg-card p-5 space-y-4">
+      <div className="rounded-xl border bg-card p-5 space-y-4">
         <h3 className="text-base font-semibold text-foreground">Cost by Type</h3>
         <div className="space-y-3">
           {costByType.map(([type, value]) => (
@@ -487,7 +487,7 @@ function TabValueCost({ assets, employees, assignments }) {
         </div>
       </div>
 
-      <div className="rounded-xl border bg-white dark:bg-card p-5 space-y-4">
+      <div className="rounded-xl border bg-card p-5 space-y-4">
         <h3 className="text-base font-semibold text-foreground">Cost by Department</h3>
         <div className="space-y-3">
           {costByDept.map(([dept, value]) => (

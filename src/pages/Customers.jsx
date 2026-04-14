@@ -150,7 +150,7 @@ export default function Customers() {
     } else {
       setFormData({ name: '', email: '', phone: '', company: '', address: '', city: '', state: '', zip: '', notes: '', is_company: false, company_id: '' });
     }
-  }, [editingCustomer, showModal, addingContactTo, customers]);
+  }, [editingCustomer, showModal, addingContactTo]);
 
   const filteredCompanies = companies.filter(c =>
     c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -283,7 +283,7 @@ export default function Customers() {
       refetch();
       refetchSites();
     } catch (e) {
-      console.error('Sync failed', e);
+      toast.error('Sync failed');
     }
     setSyncing(false);
   };

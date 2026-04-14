@@ -79,9 +79,13 @@ export default function MySchedule() {
   };
 
   const handleToggleComplete = async (task) => {
-    const newStatus = task.status === 'completed' ? 'todo' : 'completed';
-    await api.entities.Task.update(task.id, { status: newStatus });
-    queryClient.invalidateQueries({ queryKey: ['myScheduleTasks'] });
+    try {
+      const newStatus = task.status === 'completed' ? 'todo' : 'completed';
+      await api.entities.Task.update(task.id, { status: newStatus });
+      queryClient.invalidateQueries({ queryKey: ['myScheduleTasks'] });
+    } catch {
+      toast.error('Failed to update task');
+    }
   };
 
   // Get tasks for a specific date

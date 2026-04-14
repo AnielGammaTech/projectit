@@ -139,7 +139,7 @@ export default function TemplateEditor() {
         {/* Back link */}
         <button
           onClick={() => activeView !== 'overview' ? setView('overview') : navigate(createPageUrl('Templates'))}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-4 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           {activeView !== 'overview' ? 'Back to Template' : 'Back to Templates'}
@@ -149,7 +149,7 @@ export default function TemplateEditor() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl border border-slate-100 dark:border-border shadow-sm p-4 mb-5"
+          className="bg-card rounded-2xl border border-border shadow-sm p-4 mb-5"
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -159,14 +159,14 @@ export default function TemplateEditor() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Template name..."
-                  className="text-lg font-bold border-0 bg-transparent px-0 h-auto focus-visible:ring-0 placeholder:text-slate-300 max-w-md"
+                  className="text-lg font-bold border-0 bg-transparent px-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground/30 max-w-md"
                 />
               </div>
               <Input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Description..."
-                className="text-sm text-slate-500 border-0 bg-transparent px-0 h-auto mt-1 focus-visible:ring-0 placeholder:text-slate-300 max-w-lg"
+                className="text-sm text-muted-foreground border-0 bg-transparent px-0 h-auto mt-1 focus-visible:ring-0 placeholder:text-muted-foreground/30 max-w-lg"
               />
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -177,7 +177,7 @@ export default function TemplateEditor() {
               </Button>
             </div>
           </div>
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t text-xs text-slate-500">
+          <div className="flex items-center gap-4 mt-3 pt-3 border-t text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><ListTodo className="w-3.5 h-3.5 text-blue-500" /> {tasks.length} tasks</span>
             <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5 text-emerald-500" /> {parts.length} parts</span>
             <span className="flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5 text-violet-500" /> {messages.length} messages</span>
@@ -225,7 +225,7 @@ function OverviewView({ tasks, parts, messages, groups, onOpenTasks, onOpenMessa
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         onClick={onOpenTasks}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 min-h-[220px] max-h-[220px] border border-blue-100/60 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 min-h-[220px] max-h-[220px] border border-blue-100/60 dark:border-blue-900/30 bg-gradient-to-br from-card via-blue-50/30 dark:via-blue-950/20 to-indigo-50/40 dark:to-indigo-950/20 hover:shadow-lg hover:shadow-blue-100/50 dark:hover:shadow-blue-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-400" />
         <div className="p-3.5 pb-2">
@@ -235,9 +235,9 @@ function OverviewView({ tasks, parts, messages, groups, onOpenTasks, onOpenMessa
                 <ListTodo className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-800 text-sm leading-none">Tasks</h3>
+                <h3 className="font-bold text-foreground text-sm leading-none">Tasks</h3>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[11px] text-slate-500 font-medium">{tasks.length} tasks</span>
+                  <span className="text-[11px] text-muted-foreground font-medium">{tasks.length} tasks</span>
                   {tasks.length > 0 && (
                     <div className="w-12 h-1.5 rounded-full bg-blue-100 overflow-hidden">
                       <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all" style={{ width: `${taskProgress}%` }} />
@@ -256,15 +256,15 @@ function OverviewView({ tasks, parts, messages, groups, onOpenTasks, onOpenMessa
             const group = t.group_id ? groups.find(g => g._id === t.group_id) : null;
             return (
               <div key={t._id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg">
-                <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 shrink-0" />
-                <span className="text-xs text-slate-700 font-medium truncate flex-1 min-w-0">{t.title}</span>
+                <div className="w-3.5 h-3.5 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+                <span className="text-xs text-foreground font-medium truncate flex-1 min-w-0">{t.title}</span>
                 {t.priority && t.priority !== 'none' && (
                   <span className={cn("text-[8px] px-1 py-0 rounded font-semibold uppercase shrink-0", priorityConfig[t.priority]?.color)}>{t.priority}</span>
                 )}
               </div>
             );
           })}
-          {tasks.length === 0 && <p className="text-xs text-slate-400 text-center py-3">No tasks yet</p>}
+          {tasks.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">No tasks yet</p>}
         </div>
       </motion.div>
 
@@ -272,7 +272,7 @@ function OverviewView({ tasks, parts, messages, groups, onOpenTasks, onOpenMessa
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
         onClick={onOpenMessages}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 min-h-[220px] max-h-[220px] border border-violet-100/60 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/40 hover:shadow-lg hover:shadow-violet-100/50 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 min-h-[220px] max-h-[220px] border border-violet-100/60 dark:border-violet-900/30 bg-gradient-to-br from-card via-violet-50/30 dark:via-violet-950/20 to-purple-50/40 dark:to-purple-950/20 hover:shadow-lg hover:shadow-violet-100/50 dark:hover:shadow-violet-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-400" />
         <div className="p-3.5 pb-2">
@@ -282,8 +282,8 @@ function OverviewView({ tasks, parts, messages, groups, onOpenTasks, onOpenMessa
                 <MessageSquare className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-800 text-sm leading-none">Messages</h3>
-                <span className="text-[11px] text-slate-500 font-medium">{messages.length} total</span>
+                <h3 className="font-bold text-foreground text-sm leading-none">Messages</h3>
+                <span className="text-[11px] text-muted-foreground font-medium">{messages.length} total</span>
               </div>
             </div>
           </div>
@@ -294,11 +294,11 @@ function OverviewView({ tasks, parts, messages, groups, onOpenTasks, onOpenMessa
             return (
               <div key={msg._id} className="flex items-center gap-2 px-1.5 py-1.5 rounded-lg">
                 <span className={cn("text-[9px] font-semibold px-1.5 py-0.5 rounded shrink-0", cfg.color)}>{cfg.label}</span>
-                <p className="text-xs text-slate-600 truncate flex-1 min-w-0">{msg.title || msg.content}</p>
+                <p className="text-xs text-muted-foreground truncate flex-1 min-w-0">{msg.title || msg.content}</p>
               </div>
             );
           })}
-          {messages.length === 0 && <p className="text-xs text-slate-400 text-center py-3">No messages yet</p>}
+          {messages.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">No messages yet</p>}
         </div>
       </motion.div>
 
@@ -306,7 +306,7 @@ function OverviewView({ tasks, parts, messages, groups, onOpenTasks, onOpenMessa
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
         onClick={onOpenParts}
-        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 min-h-[220px] max-h-[220px] border border-emerald-100/60 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/40 hover:shadow-lg hover:shadow-emerald-100/50 hover:-translate-y-0.5"
+        className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 min-h-[220px] max-h-[220px] border border-emerald-100/60 dark:border-emerald-900/30 bg-gradient-to-br from-card via-emerald-50/30 dark:via-emerald-950/20 to-teal-50/40 dark:to-teal-950/20 hover:shadow-lg hover:shadow-emerald-100/50 dark:hover:shadow-emerald-900/30 hover:-translate-y-0.5"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
         <div className="p-3.5 pb-2">
@@ -316,8 +316,8 @@ function OverviewView({ tasks, parts, messages, groups, onOpenTasks, onOpenMessa
                 <Package className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-800 text-sm leading-none">Parts</h3>
-                <span className="text-[11px] text-slate-500 font-medium">{parts.length} parts</span>
+                <h3 className="font-bold text-foreground text-sm leading-none">Parts</h3>
+                <span className="text-[11px] text-muted-foreground font-medium">{parts.length} parts</span>
               </div>
             </div>
             <div className="bg-gradient-to-r from-emerald-500 to-teal-600 h-7 w-7 rounded-lg flex items-center justify-center shadow-md shadow-emerald-200/40">
@@ -329,19 +329,19 @@ function OverviewView({ tasks, parts, messages, groups, onOpenTasks, onOpenMessa
           {parts.slice(0, 5).map(p => (
             <div key={p._id} className="flex items-center gap-2 px-2 py-1 rounded-lg">
               <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-              <span className="text-xs text-slate-700 font-medium truncate flex-1">{p.name}</span>
-              {p.part_number && <span className="text-[10px] text-slate-400">{p.part_number}</span>}
+              <span className="text-xs text-foreground font-medium truncate flex-1">{p.name}</span>
+              {p.part_number && <span className="text-[10px] text-muted-foreground">{p.part_number}</span>}
               <Badge variant="outline" className="text-[10px] px-1.5 py-0">x{p.quantity}</Badge>
             </div>
           ))}
-          {parts.length === 0 && <p className="text-xs text-slate-400 text-center py-3">No parts yet</p>}
+          {parts.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">No parts yet</p>}
         </div>
       </motion.div>
 
       {/* Files Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-        className="relative rounded-2xl overflow-hidden min-h-[220px] max-h-[220px] border border-amber-100/60 bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40"
+        className="relative rounded-2xl overflow-hidden min-h-[220px] max-h-[220px] border border-amber-100/60 dark:border-amber-900/30 bg-gradient-to-br from-card via-amber-50/30 dark:via-amber-950/20 to-orange-50/40 dark:to-orange-950/20"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-400" />
         <div className="p-3.5 pb-2">
@@ -350,13 +350,13 @@ function OverviewView({ tasks, parts, messages, groups, onOpenTasks, onOpenMessa
               <FileText className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-sm leading-none">Files</h3>
-              <span className="text-[11px] text-slate-500 font-medium">0 files</span>
+              <h3 className="font-bold text-foreground text-sm leading-none">Files</h3>
+              <span className="text-[11px] text-muted-foreground font-medium">0 files</span>
             </div>
           </div>
         </div>
         <div className="px-3 pb-3">
-          <p className="text-xs text-slate-400 text-center py-6">Files are added after the project is created</p>
+          <p className="text-xs text-muted-foreground text-center py-6">Files are added after the project is created</p>
         </div>
       </motion.div>
     </div>
@@ -459,7 +459,7 @@ function TasksView({ tasks, setTasks, groups, setGroups }) {
               if (e.key === 'Escape') setInlineGroupId(null);
             }}
           />
-          <span className="text-xs text-slate-400 hidden sm:inline">Press Enter</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">Press Enter</span>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setInlineGroupId(null)}>
             <X className="w-3.5 h-3.5" />
           </Button>
@@ -473,16 +473,16 @@ function TasksView({ tasks, setTasks, groups, setGroups }) {
     const pri = priorityConfig[task.priority] || priorityConfig.medium;
     return (
       <div
-        className="group flex items-center gap-2.5 px-3 py-2 rounded-lg border border-slate-200/80 hover:shadow-sm hover:border-slate-300 hover:bg-slate-50/50 transition-all cursor-pointer"
+        className="group flex items-center gap-2.5 px-3 py-2 rounded-lg border border-border hover:shadow-sm hover:border-border hover:bg-muted/50 transition-all cursor-pointer"
         onClick={() => setEditingTask(task)}
       >
-        <div className="w-[17px] h-[17px] rounded-full border-2 border-slate-300 shrink-0" />
+        <div className="w-[17px] h-[17px] rounded-full border-2 border-muted-foreground/30 shrink-0" />
         <span className="flex-1 font-medium text-[13px] truncate min-w-0">{task.title}</span>
-        {task.description && <MessageSquare className="w-3 h-3 text-slate-300 shrink-0" />}
+        {task.description && <MessageSquare className="w-3 h-3 text-muted-foreground/40 shrink-0" />}
         <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-semibold uppercase shrink-0", pri.color)}>{task.priority}</span>
         <button
           onClick={(e) => { e.stopPropagation(); deleteTask(task._id); }}
-          className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+          className="text-muted-foreground/40 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>
@@ -497,18 +497,18 @@ function TasksView({ tasks, setTasks, groups, setGroups }) {
     const isCollapsed = collapsedGroups.has(group._id);
 
     return (
-      <div className={cn("rounded-xl border border-slate-200 overflow-hidden", `border-l-4 ${gc.accent}`)}>
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50/50">
+      <div className={cn("rounded-xl border border-border overflow-hidden", `border-l-4 ${gc.accent}`)}>
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/50">
           <button onClick={() => toggleGroup(group._id)} className="p-0.5">
-            {isCollapsed ? <ChevronRight className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            {isCollapsed ? <ChevronRight className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
           </button>
           <div className={cn("w-3 h-3 rounded-full", gc.dot)} />
-          <span className="font-semibold text-sm text-slate-700 flex-1">{group.name}</span>
-          <span className="text-xs text-slate-400">{groupTasks.length} tasks</span>
+          <span className="font-semibold text-sm text-foreground flex-1">{group.name}</span>
+          <span className="text-xs text-muted-foreground">{groupTasks.length} tasks</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 rounded hover:bg-slate-200 transition-colors">
-                <MoreHorizontal className="w-4 h-4 text-slate-400" />
+              <button className="p-1 rounded hover:bg-muted transition-colors">
+                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -534,20 +534,20 @@ function TasksView({ tasks, setTasks, groups, setGroups }) {
   return (
     <>
       {/* Stats bar */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-4">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <ListTodo className="w-5 h-5 text-blue-500" />
-              <h2 className="text-lg font-bold text-slate-900">Tasks</h2>
+              <h2 className="text-lg font-bold text-foreground">Tasks</h2>
             </div>
-            <div className="flex items-center gap-3 text-sm text-slate-500">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <span>{tasks.length} total</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -571,12 +571,12 @@ function TasksView({ tasks, setTasks, groups, setGroups }) {
 
         {/* Ungrouped */}
         {(ungroupedTasks.length > 0 || groups.length === 0 || inlineGroupId === '__ungrouped__') && (
-          <div className="rounded-xl border border-slate-200 overflow-hidden">
+          <div className="rounded-xl border border-border overflow-hidden">
             {groups.length > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50/50">
-                <div className="w-3 h-3 rounded-full bg-slate-300" />
-                <span className="font-semibold text-sm text-slate-500 flex-1">Ungrouped</span>
-                <span className="text-xs text-slate-400">{ungroupedTasks.length} tasks</span>
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/50">
+                <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />
+                <span className="font-semibold text-sm text-muted-foreground flex-1">Ungrouped</span>
+                <span className="text-xs text-muted-foreground">{ungroupedTasks.length} tasks</span>
               </div>
             )}
             <div className="px-4 py-2 space-y-1.5">
@@ -685,7 +685,7 @@ function TaskEditForm({ task, groups, onSave, onCancel }) {
               {groups.map(g => (
                 <SelectItem key={g._id} value={g._id}>
                   <div className="flex items-center gap-2">
-                    <div className={cn("w-2.5 h-2.5 rounded-full", groupColorMap[g.color]?.dot || 'bg-slate-400')} />
+                    <div className={cn("w-2.5 h-2.5 rounded-full", groupColorMap[g.color]?.dot || 'bg-muted-foreground/40')} />
                     {g.name}
                   </div>
                 </SelectItem>
@@ -752,16 +752,16 @@ function MessagesView({ messages, setMessages }) {
   return (
     <>
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-4">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-violet-500" />
-            <h2 className="text-lg font-bold text-slate-900">Messages</h2>
-            <span className="text-sm text-slate-500">{messages.length} total</span>
+            <h2 className="text-lg font-bold text-foreground">Messages</h2>
+            <span className="text-sm text-muted-foreground">{messages.length} total</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search..." className="pl-9 h-9 w-52" />
             </div>
             <div className="flex gap-1 ml-2">
@@ -772,8 +772,8 @@ function MessagesView({ messages, setMessages }) {
                   className={cn(
                     "px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all",
                     typeFilter === type
-                      ? type === 'all' ? 'bg-slate-800 text-white' : (typeConfig[type]?.color || '') + ' ring-1 ring-offset-1 ring-indigo-300'
-                      : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                      ? type === 'all' ? 'bg-foreground text-background' : (typeConfig[type]?.color || '') + ' ring-1 ring-offset-1 ring-indigo-300'
+                      : 'bg-muted text-muted-foreground hover:bg-muted'
                   )}
                 >
                   {type === 'all' ? 'All' : typeConfig[type]?.label}
@@ -785,9 +785,9 @@ function MessagesView({ messages, setMessages }) {
       </div>
 
       {/* Add message form */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-4">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-4 mb-4">
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm font-medium text-slate-700">New message</span>
+          <span className="text-sm font-medium text-foreground">New message</span>
           <div className="flex gap-1 ml-auto">
             {Object.entries(typeConfig).map(([type, cfg]) => {
               const Icon = cfg.icon;
@@ -797,7 +797,7 @@ function MessagesView({ messages, setMessages }) {
                   onClick={() => setNewType(type)}
                   className={cn(
                     "px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all",
-                    newType === type ? cfg.color + " ring-1 ring-offset-1 ring-indigo-300" : "bg-slate-50 text-slate-400 hover:bg-slate-100"
+                    newType === type ? cfg.color + " ring-1 ring-offset-1 ring-indigo-300" : "bg-muted text-muted-foreground hover:bg-muted"
                   )}
                 >
                   <Icon className="w-3 h-3" /> {cfg.label}
@@ -815,7 +815,7 @@ function MessagesView({ messages, setMessages }) {
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleAdd(); }}
         />
         <div className="flex justify-between items-center">
-          <span className="text-xs text-slate-400">Ctrl+Enter to submit</span>
+          <span className="text-xs text-muted-foreground">Ctrl+Enter to submit</span>
           <Button onClick={handleAdd} disabled={!newContent.trim()} className="bg-violet-500 hover:bg-violet-600 gap-1.5">
             <Plus className="w-4 h-4" /> Add Message
           </Button>
@@ -833,7 +833,7 @@ function MessagesView({ messages, setMessages }) {
               key={msg._id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 group"
+              className="bg-card rounded-xl border border-border shadow-sm p-4 group"
             >
               <div className="flex items-start gap-3">
                 <div className={cn("p-1.5 rounded-lg shrink-0 mt-0.5", cfg.color)}>
@@ -842,9 +842,9 @@ function MessagesView({ messages, setMessages }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded", cfg.color)}>{cfg.label}</span>
-                    {msg.title && <h4 className="font-semibold text-sm text-slate-800">{msg.title}</h4>}
+                    {msg.title && <h4 className="font-semibold text-sm text-foreground">{msg.title}</h4>}
                   </div>
-                  <p className={cn("text-sm text-slate-600 whitespace-pre-wrap", !isExpanded && "line-clamp-3")}>{msg.content}</p>
+                  <p className={cn("text-sm text-muted-foreground whitespace-pre-wrap", !isExpanded && "line-clamp-3")}>{msg.content}</p>
                   {msg.content.length > 200 && (
                     <button onClick={() => toggleExpand(msg._id)} className="text-xs text-violet-500 hover:text-violet-700 mt-1">
                       {isExpanded ? 'Show less' : 'Show more'}
@@ -853,7 +853,7 @@ function MessagesView({ messages, setMessages }) {
                 </div>
                 <button
                   onClick={() => handleDelete(msg._id)}
-                  className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  className="text-muted-foreground/40 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -862,7 +862,7 @@ function MessagesView({ messages, setMessages }) {
           );
         })}
         {filteredMessages.length === 0 && (
-          <div className="text-center py-12 text-slate-400">
+          <div className="text-center py-12 text-muted-foreground">
             <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p className="text-sm">No messages yet</p>
           </div>
@@ -907,16 +907,16 @@ function PartsView({ parts, setParts }) {
   return (
     <>
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-4">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Package className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-lg font-bold text-slate-900">Parts</h2>
-            <span className="text-sm text-slate-500">{parts.length} total</span>
+            <h2 className="text-lg font-bold text-foreground">Parts</h2>
+            <span className="text-sm text-muted-foreground">{parts.length} total</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search parts..." className="pl-9 h-9 w-52" />
             </div>
             <Button onClick={() => setShowAddForm(true)} className="h-9 bg-primary hover:bg-primary/80 gap-1.5">
@@ -928,20 +928,20 @@ function PartsView({ parts, setParts }) {
 
       {/* Add form */}
       {showAddForm && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-emerald-200 shadow-sm p-4 mb-4">
-          <h3 className="text-sm font-semibold text-slate-700 mb-3">New Part</h3>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-2xl border border-emerald-200 dark:border-emerald-800 shadow-sm p-4 mb-4">
+          <h3 className="text-sm font-semibold text-foreground mb-3">New Part</h3>
           <div className="flex gap-3 items-end">
             <div className="flex-1">
-              <label className="text-xs text-slate-500">Name</label>
+              <label className="text-xs text-muted-foreground">Name</label>
               <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Part name" className="mt-1 h-9" autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && handleAdd()} />
             </div>
             <div className="w-32">
-              <label className="text-xs text-slate-500">Part #</label>
+              <label className="text-xs text-muted-foreground">Part #</label>
               <Input value={newPartNumber} onChange={(e) => setNewPartNumber(e.target.value)} placeholder="Part #" className="mt-1 h-9" />
             </div>
             <div className="w-20">
-              <label className="text-xs text-slate-500">Qty</label>
+              <label className="text-xs text-muted-foreground">Qty</label>
               <Input type="number" value={newQty} onChange={(e) => setNewQty(parseInt(e.target.value) || 1)} className="mt-1 h-9 text-center" />
             </div>
             <Button onClick={handleAdd} disabled={!newName.trim()} className="bg-emerald-500 hover:bg-emerald-600 h-9">Add</Button>
@@ -951,20 +951,20 @@ function PartsView({ parts, setParts }) {
       )}
 
       {/* Parts list */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         {filteredParts.length > 0 ? (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-border">
             {filteredParts.map(part => (
-              <div key={part._id} className="flex items-center gap-4 px-4 py-3 hover:bg-slate-50/50 transition-colors group">
+              <div key={part._id} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors group">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
-                <span className="flex-1 font-medium text-sm text-slate-700 min-w-0 truncate">{part.name}</span>
+                <span className="flex-1 font-medium text-sm text-foreground min-w-0 truncate">{part.name}</span>
                 {part.part_number && (
-                  <span className="text-xs text-slate-400 font-mono shrink-0">{part.part_number}</span>
+                  <span className="text-xs text-muted-foreground font-mono shrink-0">{part.part_number}</span>
                 )}
                 <Badge variant="outline" className="text-xs shrink-0">Qty: {part.quantity}</Badge>
                 <button
                   onClick={() => handleDelete(part._id)}
-                  className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  className="text-muted-foreground/40 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -972,7 +972,7 @@ function PartsView({ parts, setParts }) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-slate-400">
+          <div className="text-center py-12 text-muted-foreground">
             <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p className="text-sm">No parts yet</p>
           </div>

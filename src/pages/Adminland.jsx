@@ -386,10 +386,9 @@ function PeopleSection({ queryClient }) {
     setResendingInvite(member.email);
     try {
       await api.users.resendInvite(member.email);
-      alert(`Invite re-sent to ${member.email}`);
+      toast.success(`Invite re-sent to ${member.email}`);
     } catch (err) {
-      console.error('Resend invite failed:', err);
-      alert(err?.message || 'Failed to resend invite');
+      toast.error(err?.message || 'Failed to resend invite');
     } finally {
       setResendingInvite(null);
     }

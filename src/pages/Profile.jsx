@@ -102,7 +102,7 @@ export default function Profile() {
           setMfaDeadline(new Date(currentUser.mfa_enforcement_deadline));
         }
       } catch (err) {
-        console.error('MFA status check failed:', err);
+        toast.error('Failed to load MFA status');
       }
     };
     checkMfa();
@@ -132,7 +132,7 @@ export default function Profile() {
           });
         }
       } catch (err) {
-        console.error('Failed to load email preferences:', err);
+        toast.error('Failed to load email preferences');
       }
     };
     loadEmailPrefs();

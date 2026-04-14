@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { 
+import {
   Zap, Plus, Edit2, Trash2, MoreHorizontal, Play, Pause,
   Mail, Bell, ListTodo, Users, FileText, Clock, CheckCircle2,
   ArrowRight, Activity, History, Sparkles
@@ -61,7 +61,7 @@ const actionTypes = {
   assign_task: { label: 'Assign Task', icon: Users, color: 'text-green-600' },
   update_project_status: { label: 'Update Project Status', icon: Activity, color: 'text-purple-600' },
   create_invoice_draft: { label: 'Create Invoice Draft', icon: FileText, color: 'text-emerald-600' },
-  add_note: { label: 'Add Note', icon: FileText, color: 'text-slate-600' },
+  add_note: { label: 'Add Note', icon: FileText, color: 'text-muted-foreground' },
 };
 
 export default function Workflows() {
@@ -141,7 +141,7 @@ export default function Workflows() {
               </div>
               <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Workflows</h1>
             </div>
-            <p className="text-slate-500">Automate actions based on triggers</p>
+            <p className="text-muted-foreground">Automate actions based on triggers</p>
           </div>
           <Button onClick={() => { setEditingWorkflow(null); setShowModal(true); }} className="bg-primary hover:bg-primary/80">
             <Plus className="w-4 h-4 mr-2" />
@@ -168,10 +168,10 @@ export default function Workflows() {
           <TabsContent value="workflows">
             <div className="grid gap-4">
               {workflows.length === 0 ? (
-                <div className="bg-white rounded-2xl border p-12 text-center">
-                  <Zap className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">No workflows yet</h3>
-                  <p className="text-slate-500 mb-4">Create your first workflow to automate repetitive tasks</p>
+                <div className="bg-card rounded-2xl border p-12 text-center">
+                  <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No workflows yet</h3>
+                  <p className="text-muted-foreground mb-4">Create your first workflow to automate repetitive tasks</p>
                   <Button onClick={() => setShowModal(true)} className="bg-primary hover:bg-primary/80">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Workflow
@@ -188,25 +188,25 @@ export default function Workflows() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                       className={cn(
-                        "bg-white rounded-xl border p-5 hover:shadow-md transition-all",
+                        "bg-card rounded-xl border p-5 hover:shadow-md transition-all",
                         !workflow.is_active && "opacity-60"
                       )}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-4">
-                          <div className={cn("p-2.5 rounded-xl text-white", trigger?.color || 'bg-slate-500')}>
+                          <div className={cn("p-2.5 rounded-xl text-white", trigger?.color || 'bg-muted-foreground')}>
                             <TriggerIcon className="w-5 h-5" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-slate-900">{workflow.name}</h3>
+                            <h3 className="font-semibold text-foreground">{workflow.name}</h3>
                             {workflow.description && (
-                              <p className="text-sm text-slate-500 mt-0.5">{workflow.description}</p>
+                              <p className="text-sm text-muted-foreground mt-0.5">{workflow.description}</p>
                             )}
                             <div className="flex items-center gap-2 mt-3">
                               <Badge variant="outline" className="text-xs">
                                 {trigger?.label || workflow.trigger_type}
                               </Badge>
-                              <ArrowRight className="w-3 h-3 text-slate-400" />
+                              <ArrowRight className="w-3 h-3 text-muted-foreground" />
                               <div className="flex gap-1">
                                 {workflow.actions?.map((action, i) => {
                                   const actionConfig = actionTypes[action.action_type];
@@ -221,7 +221,7 @@ export default function Workflows() {
                               </div>
                             </div>
                             {workflow.trigger_count > 0 && (
-                              <p className="text-xs text-slate-400 mt-2">
+                              <p className="text-xs text-muted-foreground mt-2">
                                 Triggered {workflow.trigger_count} times
                                 {workflow.last_triggered && (() => { try { return ` • Last: ${format(new Date(workflow.last_triggered), 'MMM d, h:mm a')}`; } catch { return ''; } })()}
                               </p>
@@ -260,7 +260,7 @@ export default function Workflows() {
           </TabsContent>
 
           <TabsContent value="suggestions">
-            <div className="bg-white rounded-2xl border p-3 sm:p-6">
+            <div className="bg-card rounded-2xl border p-3 sm:p-6">
               <AIWorkflowSuggestions
                 existingWorkflows={workflows}
                 onCreateWorkflow={async (workflow) => {
@@ -272,34 +272,34 @@ export default function Workflows() {
           </TabsContent>
 
           <TabsContent value="history">
-            <div className="bg-white rounded-2xl border overflow-hidden">
-              <div className="p-4 border-b bg-slate-50">
-                <h3 className="font-semibold text-slate-900">Recent Workflow Executions</h3>
+            <div className="bg-card rounded-2xl border overflow-hidden">
+              <div className="p-4 border-b bg-muted/50">
+                <h3 className="font-semibold text-foreground">Recent Workflow Executions</h3>
               </div>
               {workflowLogs.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">
+                <div className="p-8 text-center text-muted-foreground">
                   No workflow executions yet
                 </div>
               ) : (
                 <div className="divide-y">
                   {workflowLogs.map((log) => (
-                    <div key={log.id} className="p-4 hover:bg-slate-50">
+                    <div key={log.id} className="p-4 hover:bg-muted/50">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium text-slate-900">{log.workflow_name}</p>
-                          <p className="text-sm text-slate-500">
+                          <p className="font-medium text-foreground">{log.workflow_name}</p>
+                          <p className="text-sm text-muted-foreground">
                             {triggerTypes[log.trigger_type]?.label || log.trigger_type}
                           </p>
                         </div>
                         <div className="text-right">
                           <Badge className={cn(
-                            log.status === 'success' ? 'bg-green-100 text-green-700' :
-                            log.status === 'failed' ? 'bg-red-100 text-red-700' :
-                            'bg-amber-100 text-amber-700'
+                            log.status === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
+                            log.status === 'failed' ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400' :
+                            'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
                           )}>
                             {log.status}
                           </Badge>
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             {log.created_date ? (() => { try { return format(new Date(log.created_date), 'MMM d, h:mm a'); } catch { return ''; } })() : ''}
                           </p>
                         </div>
@@ -418,7 +418,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
                 onClick={() => setStep(s)}
                 className={cn(
                   "flex-1 h-2 rounded-full transition-colors",
-                  step >= s ? "bg-primary" : "bg-slate-200"
+                  step >= s ? "bg-primary" : "bg-muted"
                 )}
               />
             ))}
@@ -427,7 +427,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
           {/* Step 1: Basic Info */}
           {step === 1 && (
             <div className="space-y-4">
-              <h3 className="font-semibold text-slate-900">Basic Information</h3>
+              <h3 className="font-semibold text-foreground">Basic Information</h3>
               <div>
                 <Label>Workflow Name</Label>
                 <Input
@@ -452,8 +452,8 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
           {/* Step 2: Trigger */}
           {step === 2 && (
             <div className="space-y-4">
-              <h3 className="font-semibold text-slate-900">Select Trigger</h3>
-              <p className="text-sm text-slate-500">Choose what event starts this workflow</p>
+              <h3 className="font-semibold text-foreground">Select Trigger</h3>
+              <p className="text-sm text-muted-foreground">Choose what event starts this workflow</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Object.entries(triggerTypes).map(([key, config]) => {
                   const Icon = config.icon;
@@ -464,14 +464,14 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
                       className={cn(
                         "p-4 rounded-xl border-2 text-left transition-all hover:shadow-md",
                         formData.trigger_type === key
-                          ? "border-primary bg-blue-50"
-                          : "border-slate-200 hover:border-slate-300"
+                          ? "border-primary bg-blue-50 dark:bg-blue-900/20"
+                          : "border-border hover:border-border"
                       )}
                     >
                       <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center text-white mb-2", config.color)}>
                         <Icon className="w-5 h-5" />
                       </div>
-                      <p className="font-medium text-slate-900">{config.label}</p>
+                      <p className="font-medium text-foreground">{config.label}</p>
                     </button>
                   );
                 })}
@@ -479,13 +479,13 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
 
               {/* Status-specific trigger condition */}
               {formData.trigger_type === 'project_status_to_specific' && projectStatuses.length > 0 && (
-                <div className="p-4 bg-slate-50 rounded-xl border mt-4">
+                <div className="p-4 bg-muted/50 rounded-xl border mt-4">
                   <Label className="text-sm font-medium">When status changes to:</Label>
                   <select
                     value={formData.trigger_conditions.target_status || ''}
-                    onChange={(e) => setFormData(p => ({ 
-                      ...p, 
-                      trigger_conditions: { ...p.trigger_conditions, target_status: e.target.value } 
+                    onChange={(e) => setFormData(p => ({
+                      ...p,
+                      trigger_conditions: { ...p.trigger_conditions, target_status: e.target.value }
                     }))}
                     className="mt-2 w-full h-10 rounded-md border px-3 text-sm"
                   >
@@ -502,8 +502,8 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
           {/* Step 3: Actions */}
           {step === 3 && (
             <div className="space-y-4">
-              <h3 className="font-semibold text-slate-900">Configure Actions</h3>
-              <p className="text-sm text-slate-500">Add actions to execute when triggered</p>
+              <h3 className="font-semibold text-foreground">Configure Actions</h3>
+              <p className="text-sm text-muted-foreground">Add actions to execute when triggered</p>
 
               {formData.actions.length > 0 && (
                 <div className="space-y-3">
@@ -511,7 +511,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
                     const actionConfig = actionTypes[action.action_type];
                     const ActionIcon = actionConfig?.icon || Zap;
                     return (
-                      <div key={idx} className="p-4 bg-slate-50 rounded-xl border">
+                      <div key={idx} className="p-4 bg-muted/50 rounded-xl border">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <ActionIcon className={cn("w-4 h-4", actionConfig?.color)} />
@@ -526,7 +526,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
                         {action.action_type === 'send_email' && (
                           <div className="space-y-3">
                             <div>
-                              <Label className="text-xs">To (use {{customer_email}} for dynamic)</Label>
+                              <Label className="text-xs">To (use {'{{customer_email}}'} for dynamic)</Label>
                               <Input
                                 value={action.config.email_to || ''}
                                 onChange={(e) => updateAction(idx, { email_to: e.target.value })}
@@ -634,8 +634,8 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
                 </div>
               )}
 
-              <div className="p-4 border-2 border-dashed border-slate-200 rounded-xl">
-                <p className="text-sm text-slate-500 mb-3">Add an action:</p>
+              <div className="p-4 border-2 border-dashed border-border rounded-xl">
+                <p className="text-sm text-muted-foreground mb-3">Add an action:</p>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(actionTypes).map(([key, config]) => {
                     const Icon = config.icon;

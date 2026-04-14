@@ -60,8 +60,8 @@ export default function Templates() {
     queryFn: () => api.entities.TeamMember.list('name')
   });
 
-  const filteredCustomers = customers.filter(c => 
-    c.is_company && 
+  const filteredCustomers = customers.filter(c =>
+    c.is_company &&
     (c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
      c.email?.toLowerCase().includes(customerSearch.toLowerCase()))
   ).slice(0, 5);
@@ -90,7 +90,7 @@ export default function Templates() {
   };
 
   const toggleTeamMember = (email) => {
-    setSelectedTeamMembers(prev => 
+    setSelectedTeamMembers(prev =>
       prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
     );
   };
@@ -177,7 +177,7 @@ export default function Templates() {
 
   const TemplateCard = ({ template, index }) => {
     const isProject = template.template_type !== 'todo';
-    
+
     return (
       <motion.div
         key={template.id}
@@ -195,11 +195,11 @@ export default function Templates() {
         {/* Menu Button */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button 
+            <button
               onClick={(e) => e.stopPropagation()}
-              className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/80 dark:bg-slate-700/80 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white dark:hover:bg-slate-600 shadow-sm"
+              className="absolute top-3 right-3 p-1.5 rounded-lg bg-card/80 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card shadow-sm"
             >
-              <MoreHorizontal className="w-4 h-4 text-slate-500" />
+              <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -250,12 +250,12 @@ export default function Templates() {
           </div>
           {isProject && (
             <>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 text-amber-700 text-xs font-medium">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-xs font-medium">
                 <Package className="w-3 h-3" />
                 {template.default_parts?.length || 0}
               </div>
               {(template.default_messages?.length || 0) > 0 && (
-                <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-violet-100 text-violet-700 text-xs font-medium">
+                <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-violet-100 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400 text-xs font-medium">
                   <MessageSquare className="w-3 h-3" />
                   {template.default_messages.length}
                 </div>
@@ -283,9 +283,9 @@ export default function Templates() {
       >
         <div className={cn(
           "w-12 h-12 rounded-xl flex items-center justify-center mb-3",
-          isProject ? "bg-muted" : "bg-emerald-100"
+          isProject ? "bg-muted" : "bg-emerald-100 dark:bg-emerald-900/30"
         )}>
-          <Plus className={cn("w-6 h-6", isProject ? "text-foreground" : "text-emerald-600")} />
+          <Plus className={cn("w-6 h-6", isProject ? "text-foreground" : "text-emerald-600 dark:text-emerald-400")} />
         </div>
         <span className={cn("font-medium", isProject ? "text-foreground" : "text-emerald-700 dark:text-emerald-300")}>
           New Template
@@ -307,7 +307,7 @@ export default function Templates() {
         >
           <h1 className="text-2xl sm:text-4xl font-bold text-foreground tracking-tight mb-3">Project Templates</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Save yourself time by creating project templates with frequently-used tools, to-do lists, files, and more. 
+            Save yourself time by creating project templates with frequently-used tools, to-do lists, files, and more.
             Anyone on your account who can create projects can use and edit these templates.
           </p>
         </motion.div>
@@ -315,17 +315,17 @@ export default function Templates() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex justify-center mb-8">
-            <TabsList className="bg-slate-100 dark:bg-slate-700/50 p-1">
-              <TabsTrigger 
-                value="project" 
-                className="data-[state=active]:bg-primary data-[state=active]:text-white text-slate-600 px-6"
+            <TabsList className="bg-muted dark:bg-slate-700/50 p-1">
+              <TabsTrigger
+                value="project"
+                className="data-[state=active]:bg-primary data-[state=active]:text-white text-muted-foreground px-6"
               >
                 <Briefcase className="w-4 h-4 mr-2" />
                 Project Templates
               </TabsTrigger>
-              <TabsTrigger 
-                value="todo" 
-                className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white text-slate-600 px-6"
+              <TabsTrigger
+                value="todo"
+                className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white text-muted-foreground px-6"
               >
                 <CheckSquare className="w-4 h-4 mr-2" />
                 To-Do Templates
@@ -342,10 +342,10 @@ export default function Templates() {
               ))}
             </div>
             {projectTemplates.length === 0 && (
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center text-slate-500 mt-8"
+                className="text-center text-muted-foreground mt-8"
               >
                 No project templates yet. Create one to get started!
               </motion.p>
@@ -361,10 +361,10 @@ export default function Templates() {
               ))}
             </div>
             {todoTemplates.length === 0 && (
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center text-slate-500 mt-8"
+                className="text-center text-muted-foreground mt-8"
               >
                 No to-do templates yet. Create one to get started!
               </motion.p>
@@ -414,19 +414,19 @@ export default function Templates() {
             <div>
               <Label>Customer</Label>
               {selectedCustomer ? (
-                <div className="mt-1 flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
+                <div className="mt-1 flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border">
                   <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-slate-500" />
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
                     <span className="font-medium">{selectedCustomer.name}</span>
                   </div>
-                  <button onClick={() => setSelectedCustomer(null)} className="text-slate-400 hover:text-slate-600">
+                  <button onClick={() => setSelectedCustomer(null)} className="text-muted-foreground hover:text-foreground">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               ) : (
                 <div className="mt-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       value={customerSearch}
                       onChange={(e) => setCustomerSearch(e.target.value)}
@@ -435,14 +435,14 @@ export default function Templates() {
                     />
                   </div>
                   {customerSearch && filteredCustomers.length > 0 && (
-                    <div className="mt-1 border rounded-lg max-h-32 overflow-y-auto">
+                    <div className="mt-1 border border-border rounded-lg max-h-32 overflow-y-auto">
                       {filteredCustomers.map(customer => (
                         <button
                           key={customer.id}
                           onClick={() => { setSelectedCustomer(customer); setCustomerSearch(''); }}
-                          className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2"
+                          className="w-full text-left px-3 py-2 hover:bg-muted/50 flex items-center gap-2"
                         >
-                          <Building2 className="w-4 h-4 text-slate-400" />
+                          <Building2 className="w-4 h-4 text-muted-foreground" />
                           <span>{customer.name}</span>
                         </button>
                       ))}
@@ -455,12 +455,12 @@ export default function Templates() {
             {/* Team Members */}
             <div>
               <Label>Team Members</Label>
-              <div className="mt-1 border rounded-lg max-h-32 overflow-y-auto">
+              <div className="mt-1 border border-border rounded-lg max-h-32 overflow-y-auto">
                 {teamMembers.length > 0 ? (
                   teamMembers.map(member => (
                     <label
                       key={member.id}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 cursor-pointer"
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 cursor-pointer"
                     >
                       <Checkbox
                         checked={selectedTeamMembers.includes(member.email)}
@@ -470,29 +470,29 @@ export default function Templates() {
                     </label>
                   ))
                 ) : (
-                  <p className="px-3 py-2 text-sm text-slate-500">No team members available</p>
+                  <p className="px-3 py-2 text-sm text-muted-foreground">No team members available</p>
                 )}
               </div>
               {selectedTeamMembers.length > 0 && (
-                <p className="text-xs text-slate-500 mt-1">{selectedTeamMembers.length} selected</p>
+                <p className="text-xs text-muted-foreground mt-1">{selectedTeamMembers.length} selected</p>
               )}
             </div>
 
             {/* Template Info */}
             {createFromTemplate && (
-              <div className="p-3 bg-slate-50 rounded-lg">
-                <p className="text-sm text-slate-600 mb-2">This template includes:</p>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground mb-2">This template includes:</p>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1 text-sm text-slate-700">
+                  <div className="flex items-center gap-1 text-sm text-foreground">
                     <ListTodo className="w-4 h-4 text-indigo-500" />
                     {createFromTemplate.default_tasks?.length || 0} tasks
                   </div>
-                  <div className="flex items-center gap-1 text-sm text-slate-700">
+                  <div className="flex items-center gap-1 text-sm text-foreground">
                     <Package className="w-4 h-4 text-amber-500" />
                     {createFromTemplate.default_parts?.length || 0} parts
                   </div>
                   {(createFromTemplate.default_messages?.length || 0) > 0 && (
-                    <div className="flex items-center gap-1 text-sm text-slate-700">
+                    <div className="flex items-center gap-1 text-sm text-foreground">
                       <MessageSquare className="w-4 h-4 text-violet-500" />
                       {createFromTemplate.default_messages.length} messages
                     </div>
@@ -505,8 +505,8 @@ export default function Templates() {
             <Button variant="outline" onClick={() => setCreateFromTemplate(null)} disabled={creating}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleCreateProject} 
+            <Button
+              onClick={handleCreateProject}
               disabled={!projectName.trim() || creating}
               className="bg-primary hover:bg-primary/80"
             >

@@ -27,9 +27,9 @@ import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import { ProjectSubpageSkeleton } from '@/components/ui/PageSkeletons';
 
 const typeConfig = {
-  note: { icon: StickyNote, color: 'bg-slate-100 text-slate-700', label: 'Note' },
-  message: { icon: MessageSquare, color: 'bg-blue-100 text-blue-700', label: 'Message' },
-  update: { icon: Bell, color: 'bg-amber-100 text-amber-700', label: 'Update' }
+  note: { icon: StickyNote, color: 'bg-muted text-muted-foreground', label: 'Note' },
+  message: { icon: MessageSquare, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', label: 'Message' },
+  update: { icon: Bell, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', label: 'Update' }
 };
 
 export default function ProjectNotes() {
@@ -114,7 +114,7 @@ export default function ProjectNotes() {
   if (!project) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading...</div>
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
       </div>
     );
   }
@@ -129,7 +129,7 @@ export default function ProjectNotes() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-violet-600 shadow-lg shadow-violet-200">
+            <div className="p-3 rounded-xl bg-violet-600 shadow-lg shadow-violet-500/20">
               <MessageSquare className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -146,7 +146,7 @@ export default function ProjectNotes() {
         </div>
 
         {/* Add New */}
-        <div className="bg-card rounded-2xl border border-slate-100 dark:border-border p-5 mb-6">
+        <div className="bg-card rounded-2xl border border-border p-5 mb-6">
           <div className="flex gap-2 mb-3 flex-wrap">
             {Object.entries(typeConfig).map(([key, config]) => {
               const Icon = config.icon;
@@ -156,7 +156,7 @@ export default function ProjectNotes() {
                   onClick={() => setNewType(key)}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-                    newType === key ? config.color : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                    newType === key ? config.color : "bg-muted text-muted-foreground hover:bg-muted/80"
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -208,8 +208,8 @@ export default function ProjectNotes() {
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
                   typeFilter === type 
-                    ? "bg-violet-100 text-violet-700" 
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400" 
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
                 )}
               >
                 {type === 'all' ? 'All' : typeConfig[type].label}
@@ -221,9 +221,9 @@ export default function ProjectNotes() {
         {/* Notes List */}
         <div className="space-y-3">
           {isLoading ? (
-            <div className="text-center py-12 text-slate-400">Loading...</div>
+            <div className="text-center py-12 text-muted-foreground">Loading...</div>
           ) : filteredNotes.length === 0 ? (
-            <div className="bg-card rounded-2xl border border-slate-100 dark:border-border p-12 text-center">
+            <div className="bg-card rounded-2xl border border-border p-12 text-center">
               <MessageSquare className="w-12 h-12 mx-auto text-slate-300 mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">No notes found</h3>
               <p className="text-muted-foreground">Start adding notes and messages to this project</p>
@@ -244,7 +244,7 @@ export default function ProjectNotes() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     transition={{ delay: idx * 0.02 }}
-                    className="group bg-card border border-slate-200 dark:border-border rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+                    className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-md transition-shadow"
                   >
                     {/* Header */}
                     <div 
@@ -263,20 +263,20 @@ export default function ProjectNotes() {
                           {hasTitle ? (
                             <>
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-slate-400" />
+                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-slate-400" />
+                                <ChevronRight className="w-4 h-4 text-muted-foreground" />
                               )}
                               <span className="font-semibold text-foreground">{note.title}</span>
                             </>
                           ) : (
-                            <span className="text-slate-700 dark:text-slate-300">{note.content}</span>
+                            <span className="text-foreground">{note.content}</span>
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-slate-500">{note.author_name}</span>
-                          <span className="text-xs text-slate-400">•</span>
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-muted-foreground">{note.author_name}</span>
+                          <span className="text-xs text-muted-foreground">•</span>
+                          <span className="text-xs text-muted-foreground">
                             {format(new Date(note.created_date), 'MMM d, yyyy h:mm a')}
                           </span>
                           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", config.color)}>
@@ -304,10 +304,10 @@ export default function ProjectNotes() {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="border-t border-slate-100"
+                            className="border-t border-border"
                           >
                             <div className="px-4 py-4">
-                              <p className="text-slate-600 dark:text-slate-300 whitespace-pre-wrap text-sm leading-relaxed">
+                              <p className="text-foreground whitespace-pre-wrap text-sm leading-relaxed">
                                 {note.content}
                               </p>
                             </div>

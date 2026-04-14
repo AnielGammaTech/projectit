@@ -202,13 +202,13 @@ export default function Reports() {
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 w-40 bg-slate-200 rounded-lg" />
+            <div className="h-8 w-40 bg-muted rounded-lg" />
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-              {[1,2,3,4].map(i => <div key={i} className="h-28 bg-slate-200 rounded-xl" />)}
+              {[1,2,3,4].map(i => <div key={i} className="h-28 bg-muted rounded-xl" />)}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="h-64 bg-slate-200 rounded-xl" />
-              <div className="h-64 bg-slate-200 rounded-xl" />
+              <div className="h-64 bg-muted rounded-xl" />
+              <div className="h-64 bg-muted rounded-xl" />
             </div>
           </div>
         </div>
@@ -216,8 +216,8 @@ export default function Reports() {
     );
   }
 
-  const StatCard = ({ icon: Icon, label, value, sub, color = 'text-foreground', iconBg = 'bg-slate-100', iconColor = 'text-slate-600' }) => (
-    <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-4 hover:shadow-sm transition-shadow">
+  const StatCard = ({ icon: Icon, label, value, sub, color = 'text-foreground', iconBg = 'bg-muted', iconColor = 'text-muted-foreground' }) => (
+    <div className="bg-card rounded-xl border border-border p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-center gap-3 mb-3">
         <div className={cn("p-2 rounded-lg", iconBg)}>
           <Icon className={cn("w-4 h-4", iconColor)} />
@@ -225,7 +225,7 @@ export default function Reports() {
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</span>
       </div>
       <p className={cn("text-lg sm:text-2xl font-bold", color)}>{value}</p>
-      {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
+      {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
     </div>
   );
 
@@ -242,7 +242,7 @@ export default function Reports() {
           <p className="text-muted-foreground mt-1">Business metrics and team performance</p>
 
           {/* Tabs */}
-          <div className="flex gap-1 mt-4 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg w-fit">
+          <div className="flex gap-1 mt-4 p-1 bg-muted rounded-lg w-fit">
             {tabs.map(tab => {
               const Icon = tab.icon;
               return (
@@ -253,7 +253,7 @@ export default function Reports() {
                     "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
                     activeTab === tab.key
                       ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-slate-700 dark:hover:text-slate-200"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -284,7 +284,7 @@ export default function Reports() {
             {/* Charts Row */}
             <div className="grid lg:grid-cols-2 gap-3 sm:gap-6">
               {/* Task Status Pie */}
-              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+              <div className="bg-card rounded-xl border border-border p-5">
                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                   <PieChart className="w-4 h-4 text-primary" />
                   Task Status
@@ -306,7 +306,7 @@ export default function Reports() {
                         <div key={item.name} className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                            <span className="text-sm text-slate-600 dark:text-slate-300">{item.name}</span>
+                            <span className="text-sm text-muted-foreground">{item.name}</span>
                           </div>
                           <span className="text-sm font-medium text-foreground">{item.value}</span>
                         </div>
@@ -314,12 +314,12 @@ export default function Reports() {
                     </div>
                   </div>
                 ) : (
-                  <div className="h-[180px] flex items-center justify-center text-slate-400">No data</div>
+                  <div className="h-[180px] flex items-center justify-center text-muted-foreground">No data</div>
                 )}
               </div>
 
               {/* Completion Trend */}
-              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+              <div className="bg-card rounded-xl border border-border p-5">
                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-primary" />
                   Completion Trend
@@ -344,21 +344,21 @@ export default function Reports() {
 
             {/* Overdue & Pipeline summary */}
             <div className="grid lg:grid-cols-3 gap-4">
-              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+              <div className="bg-card rounded-xl border border-border p-5">
                 <h3 className="font-semibold text-foreground mb-3 text-sm">Overdue Tasks</h3>
                 {overdueTasks.length > 0 ? (
                   <div className="space-y-2">
                     {overdueTasks.slice(0, 5).map(task => (
                       <Link key={task.id} to={createPageUrl('ProjectDetail') + `?id=${task.project_id}`} className="flex items-center gap-2 p-2 rounded-lg hover:bg-red-50 transition-colors">
                         <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                        <span className="text-sm text-slate-700 dark:text-slate-300 truncate flex-1">{task.title}</span>
+                        <span className="text-sm text-foreground truncate flex-1">{task.title}</span>
                         <span className="text-[10px] text-red-500 font-medium">
                           {task.due_date && format(parseLocalDate(task.due_date) || new Date(), 'MMM d')}
                         </span>
                       </Link>
                     ))}
                     {overdueTasks.length > 5 && (
-                      <p className="text-xs text-slate-400 text-center">+{overdueTasks.length - 5} more</p>
+                      <p className="text-xs text-muted-foreground text-center">+{overdueTasks.length - 5} more</p>
                     )}
                   </div>
                 ) : (
@@ -369,34 +369,34 @@ export default function Reports() {
                 )}
               </div>
 
-              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+              <div className="bg-card rounded-xl border border-border p-5">
                 <h3 className="font-semibold text-foreground mb-3 text-sm">Parts Pipeline</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <ShoppingCart className="w-4 h-4 text-red-500" />
-                      <span className="text-sm text-slate-600">Needed</span>
+                      <span className="text-sm text-muted-foreground">Needed</span>
                     </div>
                     <span className="text-sm font-medium">{partsNeeded.length} items</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Truck className="w-4 h-4 text-amber-500" />
-                      <span className="text-sm text-slate-600">In Transit</span>
+                      <span className="text-sm text-muted-foreground">In Transit</span>
                     </div>
                     <span className="text-sm font-medium">{partsInTransit.length} items</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Package className="w-4 h-4 text-emerald-500" />
-                      <span className="text-sm text-slate-600">In Stock</span>
+                      <span className="text-sm text-muted-foreground">In Stock</span>
                     </div>
                     <span className="text-sm font-medium">{inventory.length} items</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+              <div className="bg-card rounded-xl border border-border p-5">
                 <h3 className="font-semibold text-foreground mb-3 text-sm">Project Health</h3>
                 <div className="space-y-3">
                   {activeProjects.slice(0, 4).map(project => {
@@ -406,8 +406,8 @@ export default function Reports() {
                     return (
                       <div key={project.id}>
                         <div className="flex items-center justify-between mb-1">
-                          <Link to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="text-xs text-slate-700 hover:text-primary truncate">{project.name}</Link>
-                          <span className="text-[10px] text-slate-400">{pct}%</span>
+                          <Link to={createPageUrl('ProjectDetail') + `?id=${project.id}`} className="text-xs text-foreground hover:text-primary truncate">{project.name}</Link>
+                          <span className="text-[10px] text-muted-foreground">{pct}%</span>
                         </div>
                         <Progress value={pct} className="h-1.5" />
                       </div>
@@ -438,11 +438,11 @@ export default function Reports() {
 
             {/* Totals Row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-4 sm:p-5">
+              <div className="bg-card rounded-xl border border-border p-4 sm:p-5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Total Cost</p>
                 <p className="text-xl sm:text-3xl font-bold text-foreground">${totalCost.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
               </div>
-              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-4 sm:p-5">
+              <div className="bg-card rounded-xl border border-border p-4 sm:p-5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Total Retail</p>
                 <p className="text-xl sm:text-3xl font-bold text-emerald-600">${totalRetail.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
               </div>
@@ -454,7 +454,7 @@ export default function Reports() {
             </div>
 
             {/* Project Drilldown */}
-            <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+            <div className="bg-card rounded-xl border border-border p-5">
               <h3 className="font-semibold text-foreground mb-4">Project Cost Breakdown</h3>
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger className="w-full max-w-md mb-4">
@@ -491,24 +491,24 @@ export default function Reports() {
                       <div key={status} className={`bg-${color}-50 border border-${color}-200 rounded-lg p-3`}>
                         <p className={`text-xs text-${color}-600 mb-1`}>{label}</p>
                         <p className={`text-lg font-bold text-${color}-600`}>${getPartsCost(status).toFixed(0)}</p>
-                        <p className="text-[10px] text-slate-500">{getPartsByStatus(status).length} items</p>
+                        <p className="text-[10px] text-muted-foreground">{getPartsByStatus(status).length} items</p>
                       </div>
                     ))}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="bg-slate-50 dark:bg-background rounded-lg p-4">
+                    <div className="bg-muted/50 dark:bg-background rounded-lg p-4">
                       <p className="text-xs text-muted-foreground mb-1">Cost</p>
                       <p className="text-xl font-bold text-foreground">${projTotalCost.toFixed(0)}</p>
                     </div>
-                    <div className="bg-slate-50 dark:bg-background rounded-lg p-4">
+                    <div className="bg-muted/50 dark:bg-background rounded-lg p-4">
                       <p className="text-xs text-muted-foreground mb-1">Retail</p>
                       <p className="text-xl font-bold text-foreground">${projTotalRetail.toFixed(0)}</p>
                     </div>
                     <div className="bg-emerald-50 rounded-lg p-4">
                       <p className="text-xs text-emerald-600 mb-1">Margin</p>
                       <p className="text-xl font-bold text-emerald-600">${(projTotalRetail - projTotalCost).toFixed(0)}</p>
-                      <p className="text-[10px] text-slate-500">{projTotalRetail > 0 ? (((projTotalRetail - projTotalCost) / projTotalRetail) * 100).toFixed(1) : 0}%</p>
+                      <p className="text-[10px] text-muted-foreground">{projTotalRetail > 0 ? (((projTotalRetail - projTotalCost) / projTotalRetail) * 100).toFixed(1) : 0}%</p>
                     </div>
                   </div>
                 </div>
@@ -535,7 +535,7 @@ export default function Reports() {
             </div>
 
             {/* Team Performance */}
-            <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+            <div className="bg-card rounded-xl border border-border p-5">
               <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" />
                 Team Performance
@@ -549,14 +549,14 @@ export default function Reports() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{member.fullName}</span>
-                          <span className="text-xs text-slate-500">{member.completed}/{member.total} tasks · {member.hours.toFixed(1)}h</span>
+                          <span className="text-sm font-medium text-foreground">{member.fullName}</span>
+                          <span className="text-xs text-muted-foreground">{member.completed}/{member.total} tasks · {member.hours.toFixed(1)}h</span>
                         </div>
                         <Progress value={member.rate} className="h-2" />
                       </div>
                       <Badge variant="outline" className={cn(
                         "text-xs w-12 justify-center",
-                        member.rate >= 70 ? "text-emerald-600 bg-emerald-50" : member.rate >= 40 ? "text-amber-600 bg-amber-50" : "text-slate-600"
+                        member.rate >= 70 ? "text-emerald-600 bg-emerald-50" : member.rate >= 40 ? "text-amber-600 bg-amber-50" : "text-muted-foreground"
                       )}>
                         {member.rate}%
                       </Badge>
@@ -564,43 +564,43 @@ export default function Reports() {
                   ))}
                 </div>
               ) : (
-                <div className="py-8 text-center text-slate-400">No team data available</div>
+                <div className="py-8 text-center text-muted-foreground">No team data available</div>
               )}
             </div>
 
             {/* Recent Time Entries */}
-            <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+            <div className="bg-card rounded-xl border border-border p-5">
               <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-primary" />
                 Recent Time Entries
               </h3>
               <div className="space-y-1">
                 {timeEntries.slice(0, 8).map(entry => (
-                  <div key={entry.id} className="flex items-center justify-between py-2.5 border-b border-slate-50 dark:border-slate-700/30 last:border-0">
+                  <div key={entry.id} className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-300 shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground shrink-0">
                         {(entry.user_name || entry.user_email || '?')[0].toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{entry.user_name || entry.user_email}</p>
-                        <p className="text-xs text-slate-400 truncate">{entry.description || 'No description'}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{entry.user_name || entry.user_email}</p>
+                        <p className="text-xs text-muted-foreground truncate">{entry.description || 'No description'}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0 ml-4">
                       <p className="text-sm font-semibold text-foreground">{((entry.duration_minutes || 0) / 60).toFixed(1)}h</p>
-                      <p className="text-[10px] text-slate-400">{entry.start_time && format(new Date(entry.start_time), 'MMM d')}</p>
+                      <p className="text-[10px] text-muted-foreground">{entry.start_time && format(new Date(entry.start_time), 'MMM d')}</p>
                     </div>
                   </div>
                 ))}
                 {timeEntries.length === 0 && (
-                  <div className="py-8 text-center text-slate-400">No time entries</div>
+                  <div className="py-8 text-center text-muted-foreground">No time entries</div>
                 )}
               </div>
             </div>
 
             {/* Team Bar Chart */}
             {tasksByMember.length > 0 && (
-              <div className="bg-card rounded-xl border border-slate-100 dark:border-border p-5">
+              <div className="bg-card rounded-xl border border-border p-5">
                 <h3 className="font-semibold text-foreground mb-4">Tasks by Team Member</h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={tasksByMember} barCategoryGap="20%">

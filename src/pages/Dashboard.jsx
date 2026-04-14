@@ -59,8 +59,12 @@ export default function Dashboard() {
   const [showArchived, setShowArchived] = useState(false);
   const [prefillData, setPrefillData] = useState(null);
   const [pinnedProjectIds, setPinnedProjectIds] = useState(() => {
-    const saved = localStorage.getItem('pinnedProjects');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('pinnedProjects');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
   const [activeWidget, setActiveWidget] = useState(() => localStorage.getItem('dashboard-active-widget') || 'tasks');
@@ -128,7 +132,7 @@ export default function Dashboard() {
     try {
       await api.entities.IncomingQuote.update(quote.id, { status: 'dismissed' });
     } catch (err) {
-      console.error('Failed to dismiss quote:', err);
+      toast.error('Failed to dismiss quote');
     }
     refetchIncomingQuotes();
   };
@@ -153,7 +157,7 @@ export default function Dashboard() {
       await api.functions.invoke('pullQuoteITQuotes', {});
       refetchIncomingQuotes();
     } catch (error) {
-      console.error("Sync failed", error);
+      toast.error('Sync failed');
     }
     setIsSyncingQuotes(false);
   };
@@ -629,7 +633,6 @@ export default function Dashboard() {
       }
       toast.success(`${selectedProjects.length} project(s) permanently deleted`);
     } catch (error) {
-      console.error('Error in bulk delete:', error);
       toast.error('Some projects could not be deleted. Please try again.');
     } finally {
       setSelectedProjects([]);
@@ -657,7 +660,6 @@ export default function Dashboard() {
       await api.entities.Project.delete(project.id);
       toast.success('Project permanently deleted');
     } catch (error) {
-      console.error('Error deleting project:', error);
       toast.error('Failed to delete project');
     } finally {
       setIsProcessing(false);
@@ -776,7 +778,7 @@ export default function Dashboard() {
                 link: `${window.location.origin}/ProjectDetail?id=${newProject.id}`
               });
             } catch (notifErr) {
-              console.error('Failed to send project assignment notification:', notifErr);
+              // notification failure is non-critical, suppress silently
             }
           }
         }
@@ -792,7 +794,7 @@ export default function Dashboard() {
                 project_number: newProject.project_number
               });
             } catch (err) {
-              console.error('Failed to link project on QuoteIT:', err);
+              // QuoteIT link failure is non-critical, suppress silently
             }
           }
 

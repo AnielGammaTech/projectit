@@ -98,7 +98,7 @@ export default function WeeklyMeetingUpdate() {
   const handleSubmit = async () => {
     setSaving(true);
     try {
-      const noteContent = `📋 Weekly Meeting Update
+      const noteContent = `Weekly Meeting Update
 
 **Project Status:** ${formData.projectStatus || 'Not specified'}
 

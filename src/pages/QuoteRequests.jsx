@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FileText, Plus, Clock, CheckCircle2, Package, Truck, 
-  Calendar, DollarSign, Building2, Search, Filter, 
+import {
+  FileText, Plus, Clock, CheckCircle2, Package, Truck,
+  Calendar, DollarSign, Building2, Search, Filter,
   ChevronRight, Edit2, Trash2, User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,21 +17,22 @@ import { cn } from '@/lib/utils';
 import QuoteRequestModal from '@/components/modals/QuoteRequestModal';
 import QuoteRequestDetailModal from '@/components/modals/QuoteRequestDetailModal';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
+import { toast } from 'sonner';
 
 const statusConfig = {
-  pending: { label: 'Pending', color: 'bg-slate-100 text-slate-700', icon: Clock },
-  in_review: { label: 'In Review', color: 'bg-blue-100 text-blue-700', icon: FileText },
-  quoted: { label: 'Quoted', color: 'bg-purple-100 text-purple-700', icon: DollarSign },
-  approved: { label: 'Approved', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle2 },
-  ordered: { label: 'Ordered', color: 'bg-amber-100 text-amber-700', icon: Package },
-  received: { label: 'Received', color: 'bg-green-100 text-green-700', icon: Truck }
+  pending: { label: 'Pending', color: 'bg-muted text-muted-foreground', icon: Clock },
+  in_review: { label: 'In Review', color: 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400', icon: FileText },
+  quoted: { label: 'Quoted', color: 'bg-purple-100 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400', icon: DollarSign },
+  approved: { label: 'Approved', color: 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400', icon: CheckCircle2 },
+  ordered: { label: 'Ordered', color: 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400', icon: Package },
+  received: { label: 'Received', color: 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400', icon: Truck }
 };
 
 const priorityColors = {
-  low: 'border-slate-200',
-  medium: 'border-blue-200',
-  high: 'border-orange-200',
-  urgent: 'border-red-300 bg-red-50/50'
+  low: 'border-border',
+  medium: 'border-blue-200 dark:border-blue-800',
+  high: 'border-orange-200 dark:border-orange-800',
+  urgent: 'border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-950/10'
 };
 
 export default function QuoteRequests() {
@@ -61,7 +62,8 @@ export default function QuoteRequests() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => api.entities.QuoteRequest.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['quoteRequests'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['quoteRequests'] }),
+    onError: () => toast.error('Failed to delete quote request')
   });
 
   const getProjectName = (projectId) => {
@@ -92,12 +94,12 @@ export default function QuoteRequests() {
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
         >
           <div>
-            <h1 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">Quote Requests</h1>
-            <p className="text-slate-500 mt-1">Submit and track quote requests for projects</p>
+            <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Quote Requests</h1>
+            <p className="text-muted-foreground mt-1">Submit and track quote requests for projects</p>
           </div>
           <Button
             onClick={() => { setEditingQuote(null); setShowCreateModal(true); }}
-            className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200"
+            className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Request
@@ -116,7 +118,7 @@ export default function QuoteRequests() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
               >
-                <Card 
+                <Card
                   className={cn(
                     "cursor-pointer transition-all hover:shadow-md",
                     statusFilter === key && "ring-2 ring-indigo-500"
@@ -129,8 +131,8 @@ export default function QuoteRequests() {
                         <Icon className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-lg sm:text-2xl font-bold text-slate-900">{count}</p>
-                        <p className="text-xs text-slate-500">{config.label}</p>
+                        <p className="text-lg sm:text-2xl font-bold text-foreground">{count}</p>
+                        <p className="text-xs text-muted-foreground">{config.label}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -143,16 +145,16 @@ export default function QuoteRequests() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search requests..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-white"
+              className="pl-9 bg-card"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40 bg-white">
+            <SelectTrigger className="w-40 bg-card">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
@@ -167,16 +169,16 @@ export default function QuoteRequests() {
 
         {/* Quote List */}
         {isLoading ? (
-          <div className="text-center py-12 text-slate-400">Loading...</div>
+          <div className="text-center py-12 text-muted-foreground">Loading...</div>
         ) : filteredQuotes.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-16 bg-white rounded-2xl border border-slate-100"
+            className="text-center py-16 bg-card rounded-2xl border border-border"
           >
-            <FileText className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No quote requests</h3>
-            <p className="text-slate-500 mb-6">Submit your first quote request to get started</p>
+            <FileText className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No quote requests</h3>
+            <p className="text-muted-foreground mb-6">Submit your first quote request to get started</p>
             <Button onClick={() => setShowCreateModal(true)} className="bg-indigo-600 hover:bg-indigo-700">
               <Plus className="w-4 h-4 mr-2" />
               New Request
@@ -187,7 +189,7 @@ export default function QuoteRequests() {
             {/* Active Requests */}
             {activeQuotes.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                   Active Requests ({activeQuotes.length})
                 </h3>
                 <div className="grid gap-3">
@@ -205,7 +207,7 @@ export default function QuoteRequests() {
                           transition={{ delay: idx * 0.03 }}
                           onClick={() => setSelectedQuote(quote)}
                           className={cn(
-                            "bg-white rounded-xl border-2 p-4 cursor-pointer hover:shadow-lg transition-all group",
+                            "bg-card rounded-xl border-2 p-4 cursor-pointer hover:shadow-lg transition-all group",
                             priorityColors[quote.priority]
                           )}
                         >
@@ -216,14 +218,14 @@ export default function QuoteRequests() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-3">
                                 <div>
-                                  <h4 className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                  <h4 className="font-semibold text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                     {quote.title}
                                   </h4>
-                                  <p className="text-sm text-slate-500 line-clamp-1 mt-0.5">{quote.description}</p>
+                                  <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">{quote.description}</p>
                                 </div>
                                 <Badge className={status.color}>{status.label}</Badge>
                               </div>
-                              <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-slate-500">
+                              <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1.5">
                                   <Building2 className="w-3.5 h-3.5" />
                                   {getProjectName(quote.project_id)}
@@ -241,17 +243,17 @@ export default function QuoteRequests() {
                                   </span>
                                 )}
                                 {quote.assigned_to_name && (
-                                                                  <span className="flex items-center gap-1.5 text-indigo-600">
-                                                                    <User className="w-3.5 h-3.5" />
-                                                                    {quote.assigned_to_name}
-                                                                  </span>
-                                                                )}
-                                                                <span className="text-slate-400">
-                                                                  by {quote.requested_by_name}
-                                                                </span>
+                                  <span className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
+                                    <User className="w-3.5 h-3.5" />
+                                    {quote.assigned_to_name}
+                                  </span>
+                                )}
+                                <span className="text-muted-foreground">
+                                  by {quote.requested_by_name}
+                                </span>
                               </div>
                             </div>
-                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />
+                            <ChevronRight className="w-5 h-5 text-muted-foreground/40 group-hover:text-indigo-500 transition-colors" />
                           </div>
                         </motion.div>
                       );
@@ -264,7 +266,7 @@ export default function QuoteRequests() {
             {/* Completed */}
             {completedQuotes.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                   Completed ({completedQuotes.length})
                 </h3>
                 <div className="grid gap-2">
@@ -274,15 +276,15 @@ export default function QuoteRequests() {
                       <div
                         key={quote.id}
                         onClick={() => setSelectedQuote(quote)}
-                        className="bg-slate-50 rounded-lg border border-slate-100 p-3 cursor-pointer hover:bg-slate-100 transition-colors"
+                        className="bg-muted/50 rounded-lg border border-border p-3 cursor-pointer hover:bg-muted transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <CheckCircle2 className="w-4 h-4 text-green-500" />
-                          <span className="font-medium text-slate-700">{quote.title}</span>
+                          <span className="font-medium text-foreground">{quote.title}</span>
                           {quote.quote_amount && (
-                            <span className="text-sm text-slate-500">${quote.quote_amount.toLocaleString()}</span>
+                            <span className="text-sm text-muted-foreground">${quote.quote_amount.toLocaleString()}</span>
                           )}
-                          <span className="text-xs text-slate-400 ml-auto">
+                          <span className="text-xs text-muted-foreground ml-auto">
                             {format(new Date(quote.created_date), 'MMM d')}
                           </span>
                         </div>

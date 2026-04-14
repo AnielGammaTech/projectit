@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, AlertTriangle, ArrowDownUp, HardDrive, ScanLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -19,10 +20,10 @@ export default function Stock() {
     try {
       const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
       const { supported } = await BarcodeScanner.isSupported();
-      if (!supported) return alert('Barcode scanning not supported');
+      if (!supported) { toast.error('Barcode scanning not supported'); return; }
 
       const { camera } = await BarcodeScanner.requestPermissions();
-      if (camera !== 'granted') return alert('Camera permission required');
+      if (camera !== 'granted') { toast.error('Camera permission required'); return; }
 
       const { barcodes } = await BarcodeScanner.scan();
       if (barcodes.length > 0) {
@@ -30,7 +31,7 @@ export default function Stock() {
         setScanResult(barcodes[0].rawValue);
       }
     } catch (err) {
-      console.error('Scan failed:', err);
+      toast.error('Scan failed');
     }
   };
 

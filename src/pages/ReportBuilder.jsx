@@ -245,7 +245,10 @@ export default function ReportBuilder() {
     const a = document.createElement('a');
     a.href = url;
     a.download = `${reportConfig.name || 'report'}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const renderChart = () => {
@@ -333,7 +336,7 @@ export default function ReportBuilder() {
           className="flex items-center justify-between mb-8"
         >
           <div>
-            <Link to={createPageUrl('Reports')} className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-2">
+            <Link to={createPageUrl('Reports')} className="inline-flex items-center text-muted-foreground hover:text-foreground mb-2">
               <ArrowLeft className="w-4 h-4 mr-1" />
               Back to Reports
             </Link>
@@ -447,10 +450,10 @@ export default function ReportBuilder() {
                               "p-3 rounded-lg border-2 text-center transition-all",
                               reportConfig.chart_type === ct.id
                                 ? "border-primary bg-primary/10"
-                                : "border-slate-200 hover:border-slate-300"
+                                : "border-border hover:border-border/80"
                             )}
                           >
-                            <Icon className="w-5 h-5 mx-auto mb-1 text-slate-600" />
+                            <Icon className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
                             <span className="text-xs">{ct.label}</span>
                           </button>
                         );
@@ -473,14 +476,14 @@ export default function ReportBuilder() {
                             key={metric.id}
                             className={cn(
                               "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors",
-                              reportConfig.metrics.includes(metric.id) ? "bg-blue-50" : "hover:bg-slate-50"
+                              reportConfig.metrics.includes(metric.id) ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-muted/50"
                             )}
                           >
                             <Checkbox
                               checked={reportConfig.metrics.includes(metric.id)}
                               onCheckedChange={() => toggleMetric(metric.id)}
                             />
-                            <Icon className="w-4 h-4 text-slate-500" />
+                            <Icon className="w-4 h-4 text-muted-foreground" />
                             <span className="text-sm">{metric.label}</span>
                           </label>
                         );
@@ -501,7 +504,7 @@ export default function ReportBuilder() {
                   </CardHeader>
                   <CardContent>
                     {reportConfig.metrics.length === 0 ? (
-                      <div className="h-[400px] flex items-center justify-center text-slate-400">
+                      <div className="h-[400px] flex items-center justify-center text-muted-foreground">
                         Select metrics to generate chart
                       </div>
                     ) : (
@@ -515,11 +518,11 @@ export default function ReportBuilder() {
                         const Icon = metric?.icon || BarChart3;
                         return (
                           <div key={metricId} className="text-center">
-                            <Icon className="w-5 h-5 mx-auto text-slate-400 mb-1" />
-                            <p className="text-lg sm:text-2xl font-bold text-slate-900">
+                            <Icon className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
+                            <p className="text-lg sm:text-2xl font-bold text-foreground">
                               {metricId.includes('value') ? `$${metrics[metricId]?.toLocaleString()}` : metrics[metricId]}
                             </p>
-                            <p className="text-xs text-slate-500">{metric?.label}</p>
+                            <p className="text-xs text-muted-foreground">{metric?.label}</p>
                           </div>
                         );
                       })}
@@ -534,9 +537,9 @@ export default function ReportBuilder() {
             <div className="grid gap-4">
               {savedReports.length === 0 ? (
                 <Card className="p-12 text-center">
-                  <Star className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                  <Star className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No saved reports</h3>
-                  <p className="text-slate-500">Create and save reports to access them here</p>
+                  <p className="text-muted-foreground">Create and save reports to access them here</p>
                 </Card>
               ) : (
                 savedReports.map(report => (
@@ -544,10 +547,10 @@ export default function ReportBuilder() {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold text-slate-900">{report.name}</h3>
+                          <h3 className="font-semibold text-foreground">{report.name}</h3>
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="outline">{report.chart_type}</Badge>
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-muted-foreground">
                               {report.metrics?.length || 0} metrics
                             </span>
                           </div>

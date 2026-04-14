@@ -14,7 +14,7 @@ export default function AcceptInvite() {
   const [searchParams] = useSearchParams();
   const prefillEmail = searchParams.get('email') || '';
 
-  const [step, setStep] = useState(prefillEmail ? 'email' : 'email'); // email → otp → password
+  const [step, setStep] = useState('email'); // email → otp → password
   const [email, setEmail] = useState(prefillEmail);
   const [otpCode, setOtpCode] = useState('');
   const [password, setPassword] = useState('');
@@ -157,15 +157,15 @@ export default function AcceptInvite() {
 
           {/* Step indicator */}
           <div className="flex items-center justify-center gap-2 mb-6 mt-3">
-            <div className={`w-2 h-2 rounded-full ${step === 'email' ? 'bg-blue-600' : 'bg-blue-200'}`} />
-            <div className={`w-8 h-0.5 ${step !== 'email' ? 'bg-blue-400' : 'bg-slate-200'}`} />
-            <div className={`w-2 h-2 rounded-full ${step === 'otp' ? 'bg-blue-600' : step === 'password' ? 'bg-blue-200' : 'bg-slate-200'}`} />
-            <div className={`w-8 h-0.5 ${step === 'password' ? 'bg-blue-400' : 'bg-slate-200'}`} />
-            <div className={`w-2 h-2 rounded-full ${step === 'password' ? 'bg-blue-600' : 'bg-slate-200'}`} />
+            <div className={`w-2 h-2 rounded-full ${step === 'email' ? 'bg-blue-600' : 'bg-muted'}`} />
+            <div className={`w-8 h-0.5 ${step !== 'email' ? 'bg-blue-400' : 'bg-muted'}`} />
+            <div className={`w-2 h-2 rounded-full ${step === 'otp' ? 'bg-blue-600' : step === 'password' ? 'bg-muted' : 'bg-muted'}`} />
+            <div className={`w-8 h-0.5 ${step === 'password' ? 'bg-blue-400' : 'bg-muted'}`} />
+            <div className={`w-2 h-2 rounded-full ${step === 'password' ? 'bg-blue-600' : 'bg-muted'}`} />
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-700 text-sm rounded-lg px-4 py-3 border border-red-200 mb-4">
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm rounded-lg px-4 py-3 border border-red-200 dark:border-red-800/50 mb-4">
               {error}
             </div>
           )}

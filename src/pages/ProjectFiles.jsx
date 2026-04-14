@@ -158,8 +158,7 @@ export default function ProjectFiles() {
         });
         successCount++;
       } catch (err) {
-        console.error('Failed to upload file:', err);
-        failCount++;
+          failCount++;
         toast.error(`Failed to upload ${file.name}`);
       }
     }
@@ -250,7 +249,7 @@ export default function ProjectFiles() {
             <div className="bg-card rounded-2xl p-8 shadow-2xl border-2 border-dashed border-teal-500 text-center">
               <Upload className="w-12 h-12 text-teal-500 mx-auto mb-3" />
               <h3 className="text-lg font-semibold text-foreground">Drop files to upload</h3>
-              <p className="text-sm text-slate-500 mt-1">Files will be added to {currentFolder?.name || 'root'}</p>
+              <p className="text-sm text-muted-foreground mt-1">Files will be added to {currentFolder?.name || 'root'}</p>
             </div>
           </motion.div>
         )}
@@ -311,7 +310,7 @@ export default function ProjectFiles() {
         <div className="bg-card rounded-2xl border border-slate-100 dark:border-border p-4 mb-6">
           <div className="flex flex-wrap items-center gap-4">
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search files..."
                 value={searchQuery}
@@ -384,7 +383,7 @@ export default function ProjectFiles() {
         {/* Folders */}
         {!currentFolderId && folders.length > 0 && !searchQuery && (
           <div className="mb-6">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">Folders</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Folders</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {folders.map(folder => {
                 const colorConfig = getFolderColor(folder.color);
@@ -421,7 +420,7 @@ export default function ProjectFiles() {
 
         {/* Files section header */}
         {(currentFiles.length > 0 || currentFolderId) && !searchQuery && (
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
             {currentFolder ? `Files in ${currentFolder.name}` : 'Files'}
           </h3>
         )}

@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Settings as SettingsIcon, 
-  Plus, 
-  Trash2, 
+import {
+  Settings as SettingsIcon,
+  Plus,
+  Trash2,
   Save,
   FolderKanban,
   ListTodo,
@@ -24,21 +24,21 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 
 const colorOptions = [
-  { name: 'slate', bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200' },
-  { name: 'red', bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-200' },
-  { name: 'orange', bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200' },
-  { name: 'amber', bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200' },
-  { name: 'yellow', bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-200' },
-  { name: 'green', bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' },
-  { name: 'emerald', bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-200' },
-  { name: 'teal', bg: 'bg-teal-100', text: 'text-teal-700', border: 'border-teal-200' },
-  { name: 'cyan', bg: 'bg-cyan-100', text: 'text-cyan-700', border: 'border-cyan-200' },
-  { name: 'blue', bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' },
-  { name: 'indigo', bg: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-200' },
-  { name: 'violet', bg: 'bg-violet-100', text: 'text-violet-700', border: 'border-violet-200' },
-  { name: 'purple', bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
-  { name: 'pink', bg: 'bg-pink-100', text: 'text-pink-700', border: 'border-pink-200' },
-  { name: 'rose', bg: 'bg-rose-100', text: 'text-rose-700', border: 'border-rose-200' }
+  { name: 'slate', bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' },
+  { name: 'red', bg: 'bg-red-100 dark:bg-red-900/20', text: 'text-red-700 dark:text-red-400', border: 'border-red-200 dark:border-red-800' },
+  { name: 'orange', bg: 'bg-orange-100 dark:bg-orange-900/20', text: 'text-orange-700 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-800' },
+  { name: 'amber', bg: 'bg-amber-100 dark:bg-amber-900/20', text: 'text-amber-700 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-800' },
+  { name: 'yellow', bg: 'bg-yellow-100 dark:bg-yellow-900/20', text: 'text-yellow-700 dark:text-yellow-400', border: 'border-yellow-200 dark:border-yellow-800' },
+  { name: 'green', bg: 'bg-green-100 dark:bg-green-900/20', text: 'text-green-700 dark:text-green-400', border: 'border-green-200 dark:border-green-800' },
+  { name: 'emerald', bg: 'bg-emerald-100 dark:bg-emerald-900/20', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-800' },
+  { name: 'teal', bg: 'bg-teal-100 dark:bg-teal-900/20', text: 'text-teal-700 dark:text-teal-400', border: 'border-teal-200 dark:border-teal-800' },
+  { name: 'cyan', bg: 'bg-cyan-100 dark:bg-cyan-900/20', text: 'text-cyan-700 dark:text-cyan-400', border: 'border-cyan-200 dark:border-cyan-800' },
+  { name: 'blue', bg: 'bg-blue-100 dark:bg-blue-900/20', text: 'text-blue-700 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800' },
+  { name: 'indigo', bg: 'bg-indigo-100 dark:bg-indigo-900/20', text: 'text-indigo-700 dark:text-indigo-400', border: 'border-indigo-200 dark:border-indigo-800' },
+  { name: 'violet', bg: 'bg-violet-100 dark:bg-violet-900/20', text: 'text-violet-700 dark:text-violet-400', border: 'border-violet-200 dark:border-violet-800' },
+  { name: 'purple', bg: 'bg-purple-100 dark:bg-purple-900/20', text: 'text-purple-700 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-800' },
+  { name: 'pink', bg: 'bg-pink-100 dark:bg-pink-900/20', text: 'text-pink-700 dark:text-pink-400', border: 'border-pink-200 dark:border-pink-800' },
+  { name: 'rose', bg: 'bg-rose-100 dark:bg-rose-900/20', text: 'text-rose-700 dark:text-rose-400', border: 'border-rose-200 dark:border-rose-800' }
 ];
 
 const defaultSettings = {
@@ -106,19 +106,19 @@ function OptionEditor({ items, onChange, entityName }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, x: -20, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="group flex items-center gap-3 p-4 bg-gradient-to-r from-white to-slate-50/50 rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all"
+              className="group flex items-center gap-3 p-4 bg-card rounded-xl border border-border hover:border-border hover:shadow-md transition-all"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-400 group-hover:bg-slate-200 transition-colors">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted text-muted-foreground group-hover:bg-muted transition-colors">
                 <span className="text-sm font-bold">{idx + 1}</span>
               </div>
-              
+
               <Input
                 value={item.label}
                 onChange={(e) => updateItem(idx, 'label', e.target.value)}
-                className="flex-1 font-medium border-slate-200 focus:border-indigo-300 focus:ring-indigo-200"
+                className="flex-1 font-medium border-border focus:border-indigo-300 focus:ring-indigo-200"
                 placeholder="Option label"
               />
-              
+
               <Popover>
                 <PopoverTrigger asChild>
                   <button className={cn(
@@ -155,11 +155,11 @@ function OptionEditor({ items, onChange, entityName }) {
               )}>
                 {item.label || 'Preview'}
               </div>
-              
+
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 text-slate-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                className="h-9 w-9 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all"
                 onClick={() => removeItem(idx)}
                 disabled={items.length <= 1}
               >
@@ -169,12 +169,12 @@ function OptionEditor({ items, onChange, entityName }) {
           );
         })}
       </AnimatePresence>
-      
+
       <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-        <Button 
-          variant="outline" 
-          onClick={addItem} 
-          className="w-full border-2 border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/50 py-6 text-slate-500 hover:text-indigo-600 transition-all"
+        <Button
+          variant="outline"
+          onClick={addItem}
+          className="w-full border-2 border-dashed border-border hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 py-6 text-muted-foreground hover:text-indigo-600 transition-all"
         >
           <Plus className="w-5 h-5 mr-2" />
           Add New Option
@@ -238,12 +238,12 @@ export default function Settings() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center bg-white rounded-3xl p-12 shadow-xl border border-slate-200 max-w-md"
+          className="text-center bg-card rounded-3xl p-12 shadow-xl border border-border max-w-md"
         >
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-red-100 to-rose-200 flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
             <ShieldAlert className="w-10 h-10 text-red-500" />
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-3">Admin Access Required</h2>
@@ -256,7 +256,7 @@ export default function Settings() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <motion.div 
+        <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         >
@@ -270,7 +270,7 @@ export default function Settings() {
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-primary rounded-3xl p-8 mb-8 shadow-2xl shadow-primary/20"
@@ -286,8 +286,8 @@ export default function Settings() {
               </div>
             </div>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button 
-                onClick={handleSave} 
+              <Button
+                onClick={handleSave}
                 disabled={!hasChanges || saveMutation.isPending}
                 size="lg"
                 className={cn(
@@ -315,7 +315,7 @@ export default function Settings() {
 
         {/* Tabs */}
         <Tabs defaultValue="projects" className="space-y-6">
-          <TabsList className="bg-white/80 backdrop-blur-sm border border-slate-200 p-1.5 rounded-2xl shadow-sm">
+          <TabsList className="bg-card border border-border p-1.5 rounded-2xl shadow-sm">
             <TabsTrigger value="projects" className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all">
               <FolderKanban className="w-4 h-4 mr-2" />
               Projects
@@ -332,14 +332,14 @@ export default function Settings() {
 
           {/* Projects Tab */}
           <TabsContent value="projects" className="space-y-6">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-card rounded-3xl border border-border p-8 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100">
-                  <Sparkles className="w-5 h-5 text-indigo-600" />
+                <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/20">
+                  <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
                   <Label className="text-xl font-bold text-foreground block">Project Statuses</Label>
@@ -352,15 +352,15 @@ export default function Settings() {
                 entityName="project"
               />
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-card rounded-3xl border border-border p-8 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-orange-100 to-amber-100">
-                  <Sparkles className="w-5 h-5 text-orange-600" />
+                <div className="p-2.5 rounded-xl bg-orange-100 dark:bg-orange-900/20">
+                  <Sparkles className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
                   <Label className="text-xl font-bold text-foreground block">Project Priorities</Label>
@@ -377,14 +377,14 @@ export default function Settings() {
 
           {/* Tasks Tab */}
           <TabsContent value="tasks" className="space-y-6">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-card rounded-3xl border border-border p-8 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100">
-                  <Sparkles className="w-5 h-5 text-emerald-600" />
+                <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/20">
+                  <Sparkles className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
                   <Label className="text-xl font-bold text-foreground block">Task Statuses</Label>
@@ -397,15 +397,15 @@ export default function Settings() {
                 entityName="task"
               />
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-card rounded-3xl border border-border p-8 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-100 to-purple-100">
-                  <Sparkles className="w-5 h-5 text-violet-600" />
+                <div className="p-2.5 rounded-xl bg-violet-100 dark:bg-violet-900/20">
+                  <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400" />
                 </div>
                 <div>
                   <Label className="text-xl font-bold text-foreground block">Task Priorities</Label>
@@ -422,14 +422,14 @@ export default function Settings() {
 
           {/* Parts Tab */}
           <TabsContent value="parts" className="space-y-6">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-card rounded-3xl border border-border p-8 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-100 to-yellow-100">
-                  <Sparkles className="w-5 h-5 text-amber-600" />
+                <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/20">
+                  <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
                   <Label className="text-xl font-bold text-foreground block">Part Statuses</Label>

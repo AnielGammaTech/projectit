@@ -107,7 +107,7 @@ export default function ProjectTime() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-blue-500 shadow-lg shadow-blue-200">
+            <div className="p-3 rounded-xl bg-blue-500 shadow-lg shadow-blue-500/20">
               <Clock className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -213,8 +213,8 @@ export default function ProjectTime() {
             className="bg-card rounded-xl border border-border p-4"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-100">
-                <Clock className="w-5 h-5 text-blue-600" />
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Hours</p>
@@ -230,8 +230,8 @@ export default function ProjectTime() {
             className="bg-card rounded-xl border border-border p-4"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-100">
-                <TrendingUp className="w-5 h-5 text-emerald-600" />
+              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">This Week</p>
@@ -247,8 +247,8 @@ export default function ProjectTime() {
             className="bg-card rounded-xl border border-border p-4"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-violet-100">
-                <User className="w-5 h-5 text-violet-600" />
+              <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-900/30">
+                <User className="w-5 h-5 text-violet-600 dark:text-violet-400" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Team Members</p>
@@ -334,7 +334,7 @@ export default function ProjectTime() {
                         {entry.date && <span>{format(parseISO(entry.date), 'MMM d, yyyy')}</span>}
                       </div>
                     </div>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50">
                       {(entry.duration_hours || 0).toFixed(1)}h
                     </Badge>
                   </div>

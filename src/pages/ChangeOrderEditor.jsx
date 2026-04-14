@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
-import { 
+import {
   ArrowLeft, Save, Send, Plus, Trash2, ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,17 +24,17 @@ import { FormPageSkeleton } from '@/components/ui/PageSkeletons';
 import { toast } from 'sonner';
 
 const statusConfig = {
-  draft: { label: 'Draft', color: 'bg-slate-100 text-slate-600 border-slate-200' },
-  sent: { label: 'Sent', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  approved: { label: 'Approved', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700 border-red-200' }
+  draft: { label: 'Draft', color: 'bg-muted text-muted-foreground border-border' },
+  sent: { label: 'Sent', color: 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800' },
+  approved: { label: 'Approved', color: 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' },
+  rejected: { label: 'Rejected', color: 'bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800' }
 };
 
 export default function ChangeOrderEditor() {
   const urlParams = new URLSearchParams(window.location.search);
   const changeOrderId = urlParams.get('id');
   const queryClient = useQueryClient();
-  
+
   const [currentUser, setCurrentUser] = useState(null);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -127,7 +127,7 @@ export default function ChangeOrderEditor() {
       else if (item.type === 'remove') changeAmount -= lineTotal;
       else if (item.type === 'modify') changeAmount += lineTotal - (item.original_price || 0);
     });
-    
+
     setFormData(prev => ({
       ...prev,
       change_amount: changeAmount,
@@ -161,22 +161,22 @@ export default function ChangeOrderEditor() {
   return (
     <div className="min-h-screen bg-background">
       {/* Top Navigation */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-20">
+      <div className="bg-card border-b border-border sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to={createPageUrl('Proposals')} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5 text-slate-600" />
+            <Link to={createPageUrl('Proposals')} className="p-2 hover:bg-muted rounded-lg transition-colors">
+              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
             </Link>
-            <div className="h-6 w-px bg-slate-200" />
+            <div className="h-6 w-px bg-border" />
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs font-mono bg-orange-50 text-orange-600 border-orange-200">
+              <Badge variant="outline" className="text-xs font-mono bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800">
                 {formData.change_order_number}
               </Badge>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className={cn(
                     "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border cursor-pointer hover:opacity-80",
-                    statusConfig[formData.status]?.color || "bg-slate-100 text-slate-600"
+                    statusConfig[formData.status]?.color || "bg-muted text-muted-foreground"
                   )}>
                     {statusConfig[formData.status]?.label || formData.status}
                     <ChevronDown className="w-3 h-3" />
@@ -210,14 +210,14 @@ export default function ChangeOrderEditor() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-5">
             {/* Title */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-slate-200 p-4">
-              <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">Change Order Title</label>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl border border-border p-4">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Change Order Title</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Enter change order title..."
-                className="w-full text-xl font-bold border border-slate-200 rounded-lg h-12 px-4 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-slate-300"
+                className="w-full text-xl font-bold border border-border rounded-lg h-12 px-4 focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground/40 bg-background text-foreground"
               />
             </motion.div>
 
@@ -226,17 +226,17 @@ export default function ChangeOrderEditor() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="bg-orange-50 rounded-xl border border-orange-200 p-4"
+              className="bg-orange-50 dark:bg-orange-950/20 rounded-xl border border-orange-200 dark:border-orange-800 p-4"
             >
-              <h3 className="text-sm font-semibold text-orange-800 mb-2">Original Proposal</h3>
+              <h3 className="text-sm font-semibold text-orange-800 dark:text-orange-300 mb-2">Original Proposal</h3>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-mono text-sm text-orange-600">{formData.original_proposal_number}</p>
-                  <p className="text-sm text-slate-600">{formData.customer_name}</p>
+                  <p className="font-mono text-sm text-orange-600 dark:text-orange-400">{formData.original_proposal_number}</p>
+                  <p className="text-sm text-muted-foreground">{formData.customer_name}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-slate-900">${formData.original_total?.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500">Original Total</p>
+                  <p className="text-lg font-bold text-foreground">${formData.original_total?.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">Original Total</p>
                 </div>
               </div>
             </motion.div>
@@ -246,9 +246,9 @@ export default function ChangeOrderEditor() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-xl border border-slate-200 p-4"
+              className="bg-card rounded-xl border border-border p-4"
             >
-              <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">Reason for Change</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Reason for Change</Label>
               <Textarea
                 value={formData.reason}
                 onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
@@ -262,21 +262,21 @@ export default function ChangeOrderEditor() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+              className="bg-card rounded-xl border border-border overflow-hidden"
             >
-              <div className="p-4 border-b bg-slate-50">
-                <h3 className="font-semibold text-slate-900">Change Items</h3>
+              <div className="p-4 border-b bg-muted/50">
+                <h3 className="font-semibold text-foreground">Change Items</h3>
               </div>
-              
+
               {formData.items.length > 0 && (
-                <div className="divide-y">
+                <div className="divide-y divide-border">
                   {formData.items.map((item, idx) => (
                     <div key={idx} className="p-4 flex items-start gap-4">
                       <Badge className={cn(
                         "mt-1",
-                        item.type === 'add' && "bg-emerald-100 text-emerald-700",
-                        item.type === 'remove' && "bg-red-100 text-red-700",
-                        item.type === 'modify' && "bg-blue-100 text-blue-700"
+                        item.type === 'add' && "bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400",
+                        item.type === 'remove' && "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400",
+                        item.type === 'modify' && "bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400"
                       )}>
                         {item.type === 'add' ? '+Add' : item.type === 'remove' ? '-Remove' : '~Modify'}
                       </Badge>
@@ -296,7 +296,7 @@ export default function ChangeOrderEditor() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-20">
-                          <Label className="text-[9px] text-slate-400">Qty</Label>
+                          <Label className="text-[9px] text-muted-foreground">Qty</Label>
                           <Input
                             type="number"
                             value={item.quantity}
@@ -305,7 +305,7 @@ export default function ChangeOrderEditor() {
                           />
                         </div>
                         <div className="w-24">
-                          <Label className="text-[9px] text-slate-400">Price</Label>
+                          <Label className="text-[9px] text-muted-foreground">Price</Label>
                           <Input
                             type="number"
                             step="0.01"
@@ -315,7 +315,7 @@ export default function ChangeOrderEditor() {
                           />
                         </div>
                         <div className="w-24 text-right">
-                          <Label className="text-[9px] text-slate-400">Total</Label>
+                          <Label className="text-[9px] text-muted-foreground">Total</Label>
                           <p className={cn(
                             "h-9 flex items-center justify-end font-semibold",
                             item.type === 'add' && "text-emerald-600",
@@ -326,7 +326,7 @@ export default function ChangeOrderEditor() {
                             ${((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)}
                           </p>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => removeItem(idx)} className="text-slate-400 hover:text-red-500">
+                        <Button variant="ghost" size="icon" onClick={() => removeItem(idx)} className="text-muted-foreground hover:text-red-500">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -335,16 +335,16 @@ export default function ChangeOrderEditor() {
                 </div>
               )}
 
-              <div className="p-4 bg-slate-50 border-t flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => addItem('add')} className="text-emerald-600 border-emerald-200 hover:bg-emerald-50">
+              <div className="p-4 bg-muted/50 border-t flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => addItem('add')} className="text-emerald-600 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30">
                   <Plus className="w-4 h-4 mr-1" />
                   Add Item
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => addItem('remove')} className="text-red-600 border-red-200 hover:bg-red-50">
+                <Button variant="outline" size="sm" onClick={() => addItem('remove')} className="text-red-600 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30">
                   <Plus className="w-4 h-4 mr-1" />
                   Remove Item
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => addItem('modify')} className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                <Button variant="outline" size="sm" onClick={() => addItem('modify')} className="text-blue-600 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/30">
                   <Plus className="w-4 h-4 mr-1" />
                   Modify Item
                 </Button>
@@ -354,15 +354,15 @@ export default function ChangeOrderEditor() {
 
           {/* Sidebar */}
           <div className="space-y-4">
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <h3 className="font-semibold text-slate-900 mb-4">Summary</h3>
+            <div className="bg-card rounded-xl border border-border p-4">
+              <h3 className="font-semibold text-foreground mb-4">Summary</h3>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Original Total</span>
+                  <span className="text-muted-foreground">Original Total</span>
                   <span className="font-medium">${formData.original_total?.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Change Amount</span>
+                  <span className="text-muted-foreground">Change Amount</span>
                   <span className={cn(
                     "font-semibold",
                     formData.change_amount >= 0 ? "text-emerald-600" : "text-red-600"
@@ -372,13 +372,13 @@ export default function ChangeOrderEditor() {
                 </div>
                 <div className="pt-3 border-t flex justify-between">
                   <span className="font-semibold">New Total</span>
-                  <span className="text-xl font-bold text-slate-900">${formData.new_total?.toLocaleString()}</span>
+                  <span className="text-xl font-bold text-foreground">${formData.new_total?.toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">Internal Notes</Label>
+            <div className="bg-card rounded-xl border border-border p-4">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Internal Notes</Label>
               <Textarea
                 value={formData.notes}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}

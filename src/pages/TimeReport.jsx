@@ -100,11 +100,11 @@ export default function TimeReport() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#74C7FF]/10">
+    <div className="min-h-screen bg-background">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Back Link */}
         {selectedProject !== 'all' && selectedProjectData && (
-          <Link to={createPageUrl('ProjectDetail') + `?id=${selectedProject}`} className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-6 transition-colors">
+          <Link to={createPageUrl('ProjectDetail') + `?id=${selectedProject}`} className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to {selectedProjectData.name}
           </Link>
@@ -121,8 +121,8 @@ export default function TimeReport() {
               <Clock className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg sm:text-2xl font-bold text-slate-900">Time Report</h1>
-              <p className="text-slate-500">
+              <h1 className="text-lg sm:text-2xl font-bold text-foreground">Time Report</h1>
+              <p className="text-muted-foreground">
                 {formatDuration(totalMinutes)} total logged
                 {selectedProjectData && ` for ${selectedProjectData.name}`}
               </p>
@@ -130,7 +130,7 @@ export default function TimeReport() {
           </div>
           <div className="flex items-center gap-3">
             <Select value={selectedProject} onValueChange={setSelectedProject}>
-              <SelectTrigger className="w-48 bg-white">
+              <SelectTrigger className="w-48">
                 <SelectValue placeholder="All Projects" />
               </SelectTrigger>
               <SelectContent>
@@ -141,7 +141,7 @@ export default function TimeReport() {
               </SelectContent>
             </Select>
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-36 bg-white">
+              <SelectTrigger className="w-36">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -163,28 +163,28 @@ export default function TimeReport() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-slate-500">Total Time</p>
-              <p className="text-lg sm:text-2xl font-bold text-[#133F5C]">{totalHours.toFixed(1)}h</p>
+              <p className="text-sm text-muted-foreground">Total Time</p>
+              <p className="text-lg sm:text-2xl font-bold text-foreground">{totalHours.toFixed(1)}h</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-slate-500">Entries</p>
-              <p className="text-lg sm:text-2xl font-bold text-[#133F5C]">{filteredEntries.length}</p>
+              <p className="text-sm text-muted-foreground">Entries</p>
+              <p className="text-lg sm:text-2xl font-bold text-foreground">{filteredEntries.length}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-slate-500">Avg per Entry</p>
-              <p className="text-lg sm:text-2xl font-bold text-[#133F5C]">
+              <p className="text-sm text-muted-foreground">Avg per Entry</p>
+              <p className="text-lg sm:text-2xl font-bold text-foreground">
                 {filteredEntries.length > 0 ? formatDuration(Math.round(totalMinutes / filteredEntries.length)) : '0h 0m'}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-slate-500">Team Members</p>
-              <p className="text-lg sm:text-2xl font-bold text-[#133F5C]">{Object.keys(entriesByUser).length}</p>
+              <p className="text-sm text-muted-foreground">Team Members</p>
+              <p className="text-lg sm:text-2xl font-bold text-foreground">{Object.keys(entriesByUser).length}</p>
             </CardContent>
           </Card>
         </div>
@@ -205,21 +205,21 @@ export default function TimeReport() {
                     .sort((a, b) => b[1].totalMinutes - a[1].totalMinutes)
                     .map(([email, data]) => (
                       <div key={email} className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-slate-700">{data.name}</span>
+                        <span className="text-sm font-medium text-foreground">{data.name}</span>
                         <div className="flex items-center gap-2">
-                          <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                             <div 
                               className="h-full bg-[#0069AF]" 
                               style={{ width: `${(data.totalMinutes / totalMinutes) * 100}%` }}
                             />
                           </div>
-                          <span className="text-sm text-slate-600 w-16 text-right">{formatDuration(data.totalMinutes)}</span>
+                          <span className="text-sm text-muted-foreground w-16 text-right">{formatDuration(data.totalMinutes)}</span>
                         </div>
                       </div>
                     ))}
                 </div>
               ) : (
-                <p className="text-slate-400 text-center py-4">No time entries</p>
+                <p className="text-muted-foreground text-center py-4">No time entries</p>
               )}
             </CardContent>
           </Card>
@@ -236,12 +236,12 @@ export default function TimeReport() {
               {filteredEntries.length > 0 ? (
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
                   {filteredEntries.map((entry) => (
-                    <div key={entry.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div key={entry.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-slate-900 text-sm">{entry.description || 'No description'}</span>
+                          <span className="font-medium text-foreground text-sm">{entry.description || 'No description'}</span>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           <span>{entry.user_name}</span>
                           <span>•</span>
                           <span>{getProjectName(entry.project_id)}</span>
@@ -249,14 +249,14 @@ export default function TimeReport() {
                           <span>{format(new Date(entry.start_time), 'MMM d, yyyy')}</span>
                         </div>
                       </div>
-                      <Badge variant="outline" className="bg-white">
+                      <Badge variant="outline">
                         {formatDuration(entry.duration_minutes)}
                       </Badge>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-slate-400 text-center py-8">No time entries for this period</p>
+                <p className="text-muted-foreground text-center py-8">No time entries for this period</p>
               )}
             </CardContent>
           </Card>

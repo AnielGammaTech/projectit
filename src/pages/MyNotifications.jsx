@@ -14,16 +14,16 @@ import { format } from 'date-fns';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 const notificationConfig = {
-  mention: { icon: AtSign, bg: 'bg-indigo-100', color: 'text-indigo-600' },
-  progress_update: { icon: CheckCircle2, bg: 'bg-emerald-100', color: 'text-emerald-600' },
-  task_assigned: { icon: CheckCircle2, bg: 'bg-blue-100', color: 'text-blue-600' },
-  task_due: { icon: Clock, bg: 'bg-amber-100', color: 'text-amber-600' },
-  task_completed: { icon: CheckCircle2, bg: 'bg-emerald-100', color: 'text-emerald-600' },
-  task_overdue: { icon: AlertTriangle, bg: 'bg-red-100', color: 'text-red-600' },
-  part_status: { icon: Package, bg: 'bg-orange-100', color: 'text-orange-600' },
-  project_update: { icon: FolderOpen, bg: 'bg-violet-100', color: 'text-violet-600' },
-  project_assigned: { icon: FolderOpen, bg: 'bg-blue-100', color: 'text-blue-600' },
-  comment: { icon: MessageSquare, bg: 'bg-teal-100', color: 'text-teal-600' }
+  mention: { icon: AtSign, bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' },
+  progress_update: { icon: CheckCircle2, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
+  task_assigned: { icon: CheckCircle2, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
+  task_due: { icon: Clock, bg: 'bg-amber-100 dark:bg-amber-900/30', color: 'text-amber-600 dark:text-amber-400' },
+  task_completed: { icon: CheckCircle2, bg: 'bg-emerald-100 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400' },
+  task_overdue: { icon: AlertTriangle, bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400' },
+  part_status: { icon: Package, bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600 dark:text-orange-400' },
+  project_update: { icon: FolderOpen, bg: 'bg-violet-100 dark:bg-violet-900/30', color: 'text-violet-600 dark:text-violet-400' },
+  project_assigned: { icon: FolderOpen, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
+  comment: { icon: MessageSquare, bg: 'bg-teal-100 dark:bg-teal-900/30', color: 'text-teal-600 dark:text-teal-400' }
 };
 
 export default function MyNotifications() {

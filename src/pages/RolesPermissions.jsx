@@ -247,7 +247,7 @@ export default function RolesPermissions() {
                 </div>
                 <h1 className="text-xl sm:text-3xl font-bold text-foreground tracking-tight">Roles & Permissions</h1>
               </div>
-              <p className="text-slate-500">Manage user roles and access control</p>
+              <p className="text-muted-foreground">Manage user roles and access control</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex rounded-lg border overflow-hidden">
@@ -255,7 +255,7 @@ export default function RolesPermissions() {
                   onClick={() => setViewMode('cards')}
                   className={cn(
                     "px-4 py-2 text-sm font-medium transition-colors",
-                    viewMode === 'cards' ? "bg-primary text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+                    viewMode === 'cards' ? "bg-primary text-white" : "bg-card text-muted-foreground hover:bg-muted/50"
                   )}
                 >
                   Cards
@@ -264,7 +264,7 @@ export default function RolesPermissions() {
                   onClick={() => setViewMode('matrix')}
                   className={cn(
                     "px-4 py-2 text-sm font-medium transition-colors",
-                    viewMode === 'matrix' ? "bg-primary text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+                    viewMode === 'matrix' ? "bg-primary text-white" : "bg-card text-muted-foreground hover:bg-muted/50"
                   )}
                 >
                   Matrix
@@ -287,19 +287,19 @@ export default function RolesPermissions() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="bg-white rounded-2xl border shadow-sm overflow-hidden"
+                className="bg-card rounded-2xl border shadow-sm overflow-hidden"
               >
                 <div className={cn("h-2", roleColors[role.color] || 'bg-blue-500')} />
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-slate-900">{role.name}</h3>
+                        <h3 className="font-semibold text-foreground">{role.name}</h3>
                         {role.is_system && (
                           <Badge variant="outline" className="text-xs">System</Badge>
                         )}
                       </div>
-                      <p className="text-sm text-slate-500 mt-1">{role.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{role.description}</p>
                     </div>
                     <div className="flex gap-1">
                       {!role.is_system ? (
@@ -334,7 +334,7 @@ export default function RolesPermissions() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 mb-4 text-sm text-slate-600">
+                  <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
                     <Users className="w-4 h-4" />
                     <span>{getMembersWithRole(role.name)} members</span>
                   </div>
@@ -346,11 +346,11 @@ export default function RolesPermissions() {
                       const Icon = cat.icon;
                       return (
                         <div key={cat.id} className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2 text-slate-600">
+                          <div className="flex items-center gap-2 text-muted-foreground">
                             <Icon className="w-4 h-4" />
                             <span>{cat.label}</span>
                           </div>
-                          <span className="text-slate-400">{enabledCount}/{cat.permissions.length}</span>
+                          <span className="text-muted-foreground">{enabledCount}/{cat.permissions.length}</span>
                         </div>
                       );
                     })}
@@ -364,20 +364,20 @@ export default function RolesPermissions() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }} 
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl border shadow-sm overflow-hidden"
+            className="bg-card rounded-2xl border shadow-sm overflow-hidden"
           >
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50 border-b">
-                    <th className="text-left p-4 font-medium text-slate-700 sticky left-0 bg-slate-50 min-w-[200px]">
+                  <tr className="bg-muted/50 border-b">
+                    <th className="text-left p-4 font-medium text-foreground sticky left-0 bg-muted/50 min-w-[200px]">
                       Permission
                     </th>
                     {allRoles.map(role => (
                       <th key={role.id || role.name} className="p-4 text-center min-w-[120px]">
                         <div className="flex flex-col items-center gap-1">
                           <div className={cn("w-3 h-3 rounded-full", roleColors[role.color])} />
-                          <span className="font-medium text-slate-700 text-sm">{role.name}</span>
+                          <span className="font-medium text-foreground text-sm">{role.name}</span>
                         </div>
                       </th>
                     ))}
@@ -386,17 +386,17 @@ export default function RolesPermissions() {
                 <tbody>
                   {permissionCategories.map(cat => (
                     <>
-                      <tr key={cat.id} className="bg-slate-50/50">
+                      <tr key={cat.id} className="bg-muted/30">
                         <td colSpan={allRoles.length + 1} className="p-3">
-                          <div className="flex items-center gap-2 font-medium text-slate-700">
+                          <div className="flex items-center gap-2 font-medium text-foreground">
                             <cat.icon className="w-4 h-4" />
                             {cat.label}
                           </div>
                         </td>
                       </tr>
                       {cat.permissions.map(perm => (
-                        <tr key={perm.key} className="border-b border-slate-100 hover:bg-slate-50/50">
-                          <td className="p-4 pl-8 text-sm text-slate-600 sticky left-0 bg-white">
+                        <tr key={perm.key} className="border-b border-border hover:bg-muted/30">
+                          <td className="p-4 pl-8 text-sm text-muted-foreground sticky left-0 bg-card">
                             {perm.label}
                           </td>
                           {allRoles.map(role => (
@@ -406,8 +406,8 @@ export default function RolesPermissions() {
                                   <Check className="w-4 h-4 text-emerald-600" />
                                 </div>
                               ) : (
-                                <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100">
-                                  <X className="w-4 h-4 text-slate-400" />
+                                <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted">
+                                  <X className="w-4 h-4 text-muted-foreground" />
                                 </div>
                               )}
                             </td>
@@ -552,7 +552,7 @@ function RoleModal({ open, onClose, role, onSave }) {
 
           <div>
             <Label className="text-base">Permissions</Label>
-            <p className="text-sm text-slate-500 mb-4">Select what users with this role can do</p>
+            <p className="text-sm text-muted-foreground mb-4">Select what users with this role can do</p>
             
             <div className="space-y-4">
               {permissionCategories.map(cat => {
@@ -566,29 +566,29 @@ function RoleModal({ open, onClose, role, onSave }) {
                     <button
                       type="button"
                       onClick={() => toggleCategory(cat)}
-                      className="w-full p-3 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
+                      className="w-full p-3 bg-muted/50 flex items-center justify-between hover:bg-muted transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <Checkbox 
-                          checked={allEnabled} 
-                          className={someEnabled ? "data-[state=checked]:bg-slate-400" : ""}
+                        <Checkbox
+                          checked={allEnabled}
+                          className={someEnabled ? "data-[state=checked]:bg-muted-foreground" : ""}
                         />
-                        <Icon className="w-4 h-4 text-slate-600" />
-                        <span className="font-medium text-slate-700">{cat.label}</span>
+                        <Icon className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium text-foreground">{cat.label}</span>
                       </div>
-                      <span className="text-sm text-slate-500">{enabledCount}/{cat.permissions.length}</span>
+                      <span className="text-sm text-muted-foreground">{enabledCount}/{cat.permissions.length}</span>
                     </button>
                     <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {cat.permissions.map(perm => (
-                        <label 
-                          key={perm.key} 
-                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                        <label
+                          key={perm.key}
+                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 cursor-pointer"
                         >
                           <Checkbox
                             checked={formData.permissions[perm.key] || false}
                             onCheckedChange={() => togglePermission(perm.key)}
                           />
-                          <span className="text-sm text-slate-600">{perm.label}</span>
+                          <span className="text-sm text-muted-foreground">{perm.label}</span>
                         </label>
                       ))}
                     </div>
