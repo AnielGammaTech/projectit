@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
+import { toast } from 'sonner';
 
 export default function Templates() {
   const queryClient = useQueryClient();
@@ -96,70 +97,74 @@ export default function Templates() {
 
   const handleCreateProject = async () => {
     if (!createFromTemplate || !projectName.trim()) return;
-    
+
     setCreating(true);
-    
-    // Get highest project number and increment
-    const allProjects = await api.entities.Project.list('-project_number', 1);
-    const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
-    
-    const newProject = await api.entities.Project.create({
-      name: projectName.trim(),
-      status: 'planning',
-      project_number: nextNumber,
-      customer_id: selectedCustomer?.id || '',
-      client: selectedCustomer?.name || '',
-      team_members: selectedTeamMembers
-    });
-    
-    // Create task groups first and map template IDs to real IDs
-    const groupIdMap = {};
-    if (createFromTemplate.default_groups?.length) {
-      for (const group of createFromTemplate.default_groups) {
-        const created = await api.entities.TaskGroup.create({
-          name: group.name,
-          color: group.color,
-          project_id: newProject.id
-        });
-        if (group._template_id) {
-          groupIdMap[group._template_id] = created.id;
+    try {
+      // Get highest project number and increment
+      const allProjects = await api.entities.Project.list('-project_number', 1);
+      const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
+
+      const newProject = await api.entities.Project.create({
+        name: projectName.trim(),
+        status: 'planning',
+        project_number: nextNumber,
+        customer_id: selectedCustomer?.id || '',
+        client: selectedCustomer?.name || '',
+        team_members: selectedTeamMembers
+      });
+
+      // Create task groups first and map template IDs to real IDs
+      const groupIdMap = {};
+      if (createFromTemplate.default_groups?.length) {
+        for (const group of createFromTemplate.default_groups) {
+          const created = await api.entities.TaskGroup.create({
+            name: group.name,
+            color: group.color,
+            project_id: newProject.id
+          });
+          if (group._template_id) {
+            groupIdMap[group._template_id] = created.id;
+          }
         }
       }
-    }
 
-    if (createFromTemplate.default_tasks?.length) {
-      for (const task of createFromTemplate.default_tasks) {
-        const taskData = { ...task, project_id: newProject.id, status: 'todo' };
-        // Map template group_id to real group_id
-        if (taskData.group_id && groupIdMap[taskData.group_id]) {
-          taskData.group_id = String(groupIdMap[taskData.group_id]);
-        } else {
-          delete taskData.group_id;
+      if (createFromTemplate.default_tasks?.length) {
+        for (const task of createFromTemplate.default_tasks) {
+          const taskData = { ...task, project_id: newProject.id, status: 'todo' };
+          // Map template group_id to real group_id
+          if (taskData.group_id && groupIdMap[taskData.group_id]) {
+            taskData.group_id = String(groupIdMap[taskData.group_id]);
+          } else {
+            delete taskData.group_id;
+          }
+          await api.entities.Task.create(taskData);
         }
-        await api.entities.Task.create(taskData);
       }
-    }
-    
-    if (createFromTemplate.default_parts?.length) {
-      for (const part of createFromTemplate.default_parts) {
-        await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
-      }
-    }
 
-    if (createFromTemplate.default_messages?.length) {
-      for (const msg of createFromTemplate.default_messages) {
-        await api.entities.ProjectNote.create({
-          project_id: newProject.id,
-          title: msg.title || '',
-          content: msg.content || '',
-          type: msg.type || 'note'
-        });
+      if (createFromTemplate.default_parts?.length) {
+        for (const part of createFromTemplate.default_parts) {
+          await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
+        }
       }
-    }
 
-    setCreating(false);
-    setCreateFromTemplate(null);
-    navigate(createPageUrl('ProjectDetail') + `?id=${newProject.id}`);
+      if (createFromTemplate.default_messages?.length) {
+        for (const msg of createFromTemplate.default_messages) {
+          await api.entities.ProjectNote.create({
+            project_id: newProject.id,
+            title: msg.title || '',
+            content: msg.content || '',
+            type: msg.type || 'note'
+          });
+        }
+      }
+
+      navigate(createPageUrl('ProjectDetail') + `?id=${newProject.id}`);
+    } catch (err) {
+      toast.error('Failed to create project. Please try again.');
+    } finally {
+      setCreating(false);
+      setCreateFromTemplate(null);
+    }
   };
 
   const handleNewTemplate = () => {

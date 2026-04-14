@@ -22,6 +22,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 // --- Design constants (matching real project pages) ---
 
@@ -98,24 +99,29 @@ export default function TemplateEditor() {
   const handleSave = async () => {
     if (!name.trim()) return;
     setSaving(true);
-    const templateData = {
-      name: name.trim(),
-      description: description.trim(),
-      template_type: 'project',
-      default_tasks: tasks.map(({ _id, ...rest }) => rest),
-      default_parts: parts.map(({ _id, ...rest }) => rest),
-      default_messages: messages.map(({ _id, ...rest }) => rest),
-      default_groups: groups.map(({ _id, ...rest }) => ({ ...rest, _template_id: _id }))
-    };
+    try {
+      const templateData = {
+        name: name.trim(),
+        description: description.trim(),
+        template_type: 'project',
+        default_tasks: tasks.map(({ _id, ...rest }) => rest),
+        default_parts: parts.map(({ _id, ...rest }) => rest),
+        default_messages: messages.map(({ _id, ...rest }) => rest),
+        default_groups: groups.map(({ _id, ...rest }) => ({ ...rest, _template_id: _id }))
+      };
 
-    if (templateId && existingTemplate) {
-      await api.entities.ProjectTemplate.update(templateId, templateData);
-    } else {
-      await api.entities.ProjectTemplate.create(templateData);
+      if (templateId && existingTemplate) {
+        await api.entities.ProjectTemplate.update(templateId, templateData);
+      } else {
+        await api.entities.ProjectTemplate.create(templateData);
+      }
+      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      navigate(createPageUrl('Templates'));
+    } catch (err) {
+      toast.error('Failed to save template. Please try again.');
+    } finally {
+      setSaving(false);
     }
-    queryClient.invalidateQueries({ queryKey: ['templates'] });
-    setSaving(false);
-    navigate(createPageUrl('Templates'));
   };
 
   if (isLoading) {

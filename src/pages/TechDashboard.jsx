@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
@@ -73,8 +74,12 @@ export default function TechDashboard() {
   };
 
   const handleCompleteTask = async (task) => {
-    await api.entities.Task.update(task.id, { status: 'completed' });
-    refetchTasks();
+    try {
+      await api.entities.Task.update(task.id, { status: 'completed' });
+      refetchTasks();
+    } catch (err) {
+      toast.error('Failed to complete task. Please try again.');
+    }
   };
 
   if (!currentUser || loadingProjects) return <DashboardSkeleton />;

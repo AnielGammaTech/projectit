@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Mail, Phone, MoreHorizontal, Edit2, Trash2, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -54,20 +55,29 @@ export default function Team() {
   const activeProjectTasks = tasks.filter(t => activeProjectIds.includes(t.project_id));
 
   const handleSave = async (data) => {
-    if (editingMember) {
-      await api.entities.TeamMember.update(editingMember.id, data);
-    } else {
-      await api.entities.TeamMember.create(data);
+    try {
+      if (editingMember) {
+        await api.entities.TeamMember.update(editingMember.id, data);
+      } else {
+        await api.entities.TeamMember.create(data);
+      }
+      refetch();
+      setShowModal(false);
+      setEditingMember(null);
+    } catch (err) {
+      toast.error('Failed to save team member');
     }
-    refetch();
-    setShowModal(false);
-    setEditingMember(null);
   };
 
   const handleDelete = async () => {
-    await api.entities.TeamMember.delete(deleteConfirm.member.id);
-    refetch();
-    setDeleteConfirm({ open: false, member: null });
+    try {
+      await api.entities.TeamMember.delete(deleteConfirm.member.id);
+      refetch();
+      setDeleteConfirm({ open: false, member: null });
+    } catch (err) {
+      toast.error('Failed to delete team member');
+      setDeleteConfirm({ open: false, member: null });
+    }
   };
 
   const getAssignedTasks = (email) => activeProjectTasks.filter(t => t.assigned_to === email);

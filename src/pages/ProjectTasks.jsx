@@ -264,47 +264,59 @@ export default function ProjectTasks() {
   };
 
   const handleBulkArchive = async () => {
-    for (const taskId of selectedTasks) {
-      await api.entities.Task.update(taskId, { status: 'archived' });
+    try {
+      for (const taskId of selectedTasks) {
+        await api.entities.Task.update(taskId, { status: 'archived' });
+      }
+      refetchTasks();
+      clearSelection();
+    } catch (err) {
+      toast.error('Failed to archive tasks. Please try again.');
     }
-    refetchTasks();
-    clearSelection();
   };
 
   const handleBulkDelete = async () => {
-    for (const taskId of selectedTasks) {
-      await api.entities.Task.delete(taskId);
+    try {
+      for (const taskId of selectedTasks) {
+        await api.entities.Task.delete(taskId);
+      }
+      refetchTasks();
+      clearSelection();
+    } catch (err) {
+      toast.error('Failed to delete tasks. Please try again.');
     }
-    refetchTasks();
-    clearSelection();
   };
 
   const handleBulkAssign = async (email) => {
-    const member = teamMembers.find(m => m.email === email);
-    const tasksToNotify = [];
-    for (const taskId of selectedTasks) {
-      const task = tasks.find(t => t.id === taskId);
-      if (task && task.assigned_to !== email) {
-        tasksToNotify.push(task);
+    try {
+      const member = teamMembers.find(m => m.email === email);
+      const tasksToNotify = [];
+      for (const taskId of selectedTasks) {
+        const task = tasks.find(t => t.id === taskId);
+        if (task && task.assigned_to !== email) {
+          tasksToNotify.push(task);
+        }
+        await api.entities.Task.update(taskId, {
+          assigned_to: email,
+          assigned_name: member?.name || email
+        });
       }
-      await api.entities.Task.update(taskId, {
-        assigned_to: email,
-        assigned_name: member?.name || email
-      });
-    }
 
-    for (const task of tasksToNotify) {
-      await sendTaskAssignmentNotification({
-        assigneeEmail: email,
-        taskTitle: task.title,
-        projectId,
-        projectName: project?.name,
-        currentUser,
-      });
-    }
+      for (const task of tasksToNotify) {
+        await sendTaskAssignmentNotification({
+          assigneeEmail: email,
+          taskTitle: task.title,
+          projectId,
+          projectName: project?.name,
+          currentUser,
+        });
+      }
 
-    refetchTasks();
-    clearSelection();
+      refetchTasks();
+      clearSelection();
+    } catch (err) {
+      toast.error('Failed to assign tasks. Please try again.');
+    }
   };
 
   const handleBulkDueDate = async (date) => {
@@ -388,36 +400,41 @@ export default function ProjectTasks() {
     if (!inlineTaskData.title.trim() || isCreating) return;
 
     setIsCreating(true);
-    const member = teamMembers.find(m => m.email === inlineTaskData.assigned_to);
-    const taskTitle = inlineTaskData.title.trim();
-    const assigneeEmail = inlineTaskData.assigned_to || '';
-    await api.entities.Task.create({
-      title: taskTitle,
-      project_id: projectId,
-      status: 'todo',
-      priority: 'medium',
-      group_id: groupId || '',
-      due_date: inlineTaskData.due_date ? format(inlineTaskData.due_date, 'yyyy-MM-dd') : '',
-      assigned_to: assigneeEmail,
-      assigned_name: member?.name || '',
-      description: inlineTaskData.description || ''
-    });
-
-    if (assigneeEmail) {
-      await sendTaskAssignmentNotification({
-        assigneeEmail,
-        taskTitle,
-        projectId,
-        projectName: project?.name,
-        currentUser,
+    try {
+      const member = teamMembers.find(m => m.email === inlineTaskData.assigned_to);
+      const taskTitle = inlineTaskData.title.trim();
+      const assigneeEmail = inlineTaskData.assigned_to || '';
+      await api.entities.Task.create({
+        title: taskTitle,
+        project_id: projectId,
+        status: 'todo',
+        priority: 'medium',
+        group_id: groupId || '',
+        due_date: inlineTaskData.due_date ? format(inlineTaskData.due_date, 'yyyy-MM-dd') : '',
+        assigned_to: assigneeEmail,
+        assigned_name: member?.name || '',
+        description: inlineTaskData.description || ''
       });
-    }
 
-    setInlineTaskData({ title: '', assigned_to: '', due_date: null, description: '' });
-    setInlineTaskGroupId(null);
-    setInlineExpanded(false);
-    setIsCreating(false);
-    refetchTasks();
+      if (assigneeEmail) {
+        await sendTaskAssignmentNotification({
+          assigneeEmail,
+          taskTitle,
+          projectId,
+          projectName: project?.name,
+          currentUser,
+        });
+      }
+
+      setInlineTaskData({ title: '', assigned_to: '', due_date: null, description: '' });
+      setInlineTaskGroupId(null);
+      setInlineExpanded(false);
+      refetchTasks();
+    } catch (err) {
+      toast.error('Failed to create task. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const cancelInlineCreate = () => {
@@ -427,33 +444,37 @@ export default function ProjectTasks() {
   };
 
   const handleStatusChange = async (task, status) => {
-    await api.entities.Task.update(task.id, { status });
+    try {
+      await api.entities.Task.update(task.id, { status });
 
-    if (status === 'completed') {
-      fireTaskConfetti();
-      const msg = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
-      toast.success(msg);
+      if (status === 'completed') {
+        fireTaskConfetti();
+        const msg = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+        toast.success(msg);
 
-      await sendTaskCompletionNotification({
-        task,
-        projectId,
-        projectName: project?.name,
-        currentUser,
-      });
+        await sendTaskCompletionNotification({
+          task,
+          projectId,
+          projectName: project?.name,
+          currentUser,
+        });
 
-      // Check if all tasks are now completed for a big celebration
-      const updatedTasks = tasks.map(t => t.id === task.id ? { ...t, status } : t);
-      const activeTasks = updatedTasks.filter(t => t.status !== 'archived');
-      const allDone = activeTasks.length > 0 && activeTasks.every(t => t.status === 'completed');
-      if (allDone) {
-        setTimeout(() => {
-          fireCelebrationConfetti();
-          toast.success("All tasks completed! Amazing work! 🎉🎊");
-        }, 500);
+        // Check if all tasks are now completed for a big celebration
+        const updatedTasks = tasks.map(t => t.id === task.id ? { ...t, status } : t);
+        const activeTasks = updatedTasks.filter(t => t.status !== 'archived');
+        const allDone = activeTasks.length > 0 && activeTasks.every(t => t.status === 'completed');
+        if (allDone) {
+          setTimeout(() => {
+            fireCelebrationConfetti();
+            toast.success("All tasks completed! Amazing work! 🎉🎊");
+          }, 500);
+        }
       }
-    }
 
-    refetchTasks();
+      refetchTasks();
+    } catch (err) {
+      toast.error('Failed to update task status. Please try again.');
+    }
   };
 
   const handleSaveTask = async (data) => {

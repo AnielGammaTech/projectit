@@ -141,6 +141,7 @@ export default function AssetAssign() {
 
       if (!assignment) {
         toast.error('Assignment not found');
+        setSubmitting(false);
         return;
       }
 

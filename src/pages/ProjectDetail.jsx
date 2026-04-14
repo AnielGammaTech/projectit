@@ -298,11 +298,16 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
     };
     if (eta) updateData.est_delivery_date = format(eta, 'yyyy-MM-dd');
     if (notes) updateData.notes = part.notes ? `${part.notes}\n📦 Order notes: ${notes}` : `📦 Order notes: ${notes}`;
-    await api.entities.Part.update(part.id, updateData);
-    if (onPartStatusChange) onPartStatusChange(part, 'ordered');
-    else refetchParts?.();
-    setOrderDialog({ open: false, part: null, screenshot: null, eta: null, notes: '' });
-    setOrderScreenshotPreview(null);
+    try {
+      await api.entities.Part.update(part.id, updateData);
+      if (onPartStatusChange) onPartStatusChange(part, 'ordered');
+      else refetchParts?.();
+      setOrderDialog({ open: false, part: null, screenshot: null, eta: null, notes: '' });
+      setOrderScreenshotPreview(null);
+    } catch (err) {
+      console.error('Failed to confirm order:', err);
+      toast.error('Failed to confirm order. Please try again.');
+    }
   };
 
   const handleSetDeliveryDate = async (part, date) => {
@@ -318,31 +323,41 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
     const { part, installer, location, createTask } = receiveDialog;
     if (!part || !installer) return;
     const member = projectMembers.find(m => m.email === installer);
-    await api.entities.Part.update(part.id, {
-      status: 'ready_to_install',
-      installer_email: installer,
-      installer_name: member?.name || installer,
-      received_date: format(new Date(), 'yyyy-MM-dd'),
-      notes: location ? `${part.notes || ''}\n📍 Location: ${location}`.trim() : part.notes
-    });
-    if (createTask) {
-      await api.entities.Task.create({
-        title: `Install: ${part.name}`,
-        description: `Install part${part.part_number ? ` #${part.part_number}` : ''}${location ? `\n📍 Location: ${location}` : ''}`,
-        project_id: projectId,
-        assigned_to: installer,
-        assigned_name: member?.name || installer,
-        status: 'todo',
-        priority: 'medium'
+    try {
+      await api.entities.Part.update(part.id, {
+        status: 'ready_to_install',
+        installer_email: installer,
+        installer_name: member?.name || installer,
+        received_date: format(new Date(), 'yyyy-MM-dd'),
+        notes: location ? `${part.notes || ''}\n📍 Location: ${location}`.trim() : part.notes
       });
+      if (createTask) {
+        await api.entities.Task.create({
+          title: `Install: ${part.name}`,
+          description: `Install part${part.part_number ? ` #${part.part_number}` : ''}${location ? `\n📍 Location: ${location}` : ''}`,
+          project_id: projectId,
+          assigned_to: installer,
+          assigned_name: member?.name || installer,
+          status: 'todo',
+          priority: 'medium'
+        });
+      }
+      refetchParts?.();
+      setReceiveDialog({ open: false, part: null, installer: '', location: '', createTask: false });
+    } catch (err) {
+      console.error('Failed to confirm receive:', err);
+      toast.error('Failed to confirm receive. Please try again.');
     }
-    refetchParts?.();
-    setReceiveDialog({ open: false, part: null, installer: '', location: '', createTask: false });
   };
 
   const handleMarkInstalled = async (part) => {
-    await api.entities.Part.update(part.id, { status: 'installed', installed_date: format(new Date(), 'yyyy-MM-dd') });
-    refetchParts?.();
+    try {
+      await api.entities.Part.update(part.id, { status: 'installed', installed_date: format(new Date(), 'yyyy-MM-dd') });
+      refetchParts?.();
+    } catch (err) {
+      console.error('Failed to mark part as installed:', err);
+      toast.error('Failed to mark part as installed. Please try again.');
+    }
   };
 
   const getDateLabel = (dateStr) => {
@@ -879,58 +894,68 @@ export default function ProjectDetail() {
 
   // Handle completing project
   const handleCompleteProject = async (notes) => {
-    const completedTag = projectTags.find(t => t.name === 'Completed');
-    const inProgressTag = projectTags.find(t => t.name === 'In Progress');
-    const onHoldTag = projectTags.find(t => t.name === 'On Hold');
-    
-    // Remove In Progress/On Hold tags, add Completed
-    let newTags = (project.tags || []).filter(id => 
-      id !== inProgressTag?.id && id !== onHoldTag?.id
-    );
-    if (completedTag && !newTags.includes(completedTag.id)) {
-      newTags.push(completedTag.id);
-    }
-    
-    await api.entities.Project.update(projectId, { 
-      tags: newTags,
-      status: 'completed'
-    });
-    
-    // Add completion notes if provided
-    if (notes?.trim()) {
-      await api.entities.ProjectNote.create({
-        project_id: projectId,
-        type: 'note',
-        content: `✅ **Project completed:** ${notes}`,
-        created_by: currentUser?.email,
-        created_by_name: currentUser?.full_name || currentUser?.email
+    try {
+      const completedTag = projectTags.find(t => t.name === 'Completed');
+      const inProgressTag = projectTags.find(t => t.name === 'In Progress');
+      const onHoldTag = projectTags.find(t => t.name === 'On Hold');
+
+      // Remove In Progress/On Hold tags, add Completed
+      let newTags = (project.tags || []).filter(id =>
+        id !== inProgressTag?.id && id !== onHoldTag?.id
+      );
+      if (completedTag && !newTags.includes(completedTag.id)) {
+        newTags.push(completedTag.id);
+      }
+
+      await api.entities.Project.update(projectId, {
+        tags: newTags,
+        status: 'completed'
       });
+
+      // Add completion notes if provided
+      if (notes?.trim()) {
+        await api.entities.ProjectNote.create({
+          project_id: projectId,
+          type: 'note',
+          content: `✅ **Project completed:** ${notes}`,
+          created_by: currentUser?.email,
+          created_by_name: currentUser?.full_name || currentUser?.email
+        });
+      }
+
+      await logActivity(projectId, 'project_completed', `completed project${notes ? ': ' + notes : ''}`, currentUser);
+      refetchProject();
+      queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
+      setShowCompleteModal(false);
+    } catch (err) {
+      console.error('Failed to complete project:', err);
+      toast.error('Failed to complete project. Please try again.');
     }
-    
-    await logActivity(projectId, 'project_completed', `completed project${notes ? ': ' + notes : ''}`, currentUser);
-    refetchProject();
-    queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
-    setShowCompleteModal(false);
   };
 
   // Resume project from On Hold
   const handleResumeProject = async () => {
-    const inProgressTag = projectTags.find(t => t.name === 'In Progress');
-    const onHoldTag = projectTags.find(t => t.name === 'On Hold');
-    
-    let newTags = (project.tags || []).filter(id => id !== onHoldTag?.id);
-    if (inProgressTag && !newTags.includes(inProgressTag.id)) {
-      newTags.push(inProgressTag.id);
+    try {
+      const inProgressTag = projectTags.find(t => t.name === 'In Progress');
+      const onHoldTag = projectTags.find(t => t.name === 'On Hold');
+
+      let newTags = (project.tags || []).filter(id => id !== onHoldTag?.id);
+      if (inProgressTag && !newTags.includes(inProgressTag.id)) {
+        newTags.push(inProgressTag.id);
+      }
+
+      await api.entities.Project.update(projectId, {
+        tags: newTags,
+        status: 'planning',
+        on_hold_reason: ''
+      });
+
+      await logActivity(projectId, 'project_resumed', 'resumed project from on hold', currentUser);
+      refetchProject();
+    } catch (err) {
+      console.error('Failed to resume project:', err);
+      toast.error('Failed to resume project. Please try again.');
     }
-    
-    await api.entities.Project.update(projectId, { 
-      tags: newTags,
-      status: 'planning',
-      on_hold_reason: ''
-    });
-    
-    await logActivity(projectId, 'project_resumed', 'resumed project from on hold', currentUser);
-    refetchProject();
   };
 
   // Tasks
@@ -938,48 +963,58 @@ export default function ProjectDetail() {
       const wasAssigned = editingTask?.assigned_to;
       const isNewlyAssigned = data.assigned_to && data.assigned_to !== 'unassigned' && data.assigned_to !== wasAssigned;
 
-      if (editingTask) {
-        await api.entities.Task.update(editingTask.id, data);
-        await logActivity(projectId, ActivityActions.TASK_UPDATED, `updated task "${data.title}"`, currentUser, 'task', editingTask.id);
-      } else {
-        const newTask = await api.entities.Task.create(data);
-        await logActivity(projectId, ActivityActions.TASK_CREATED, `created task "${data.title}"`, currentUser, 'task', newTask.id);
-      }
+      try {
+        if (editingTask) {
+          await api.entities.Task.update(editingTask.id, data);
+          await logActivity(projectId, ActivityActions.TASK_UPDATED, `updated task "${data.title}"`, currentUser, 'task', editingTask.id);
+        } else {
+          const newTask = await api.entities.Task.create(data);
+          await logActivity(projectId, ActivityActions.TASK_CREATED, `created task "${data.title}"`, currentUser, 'task', newTask.id);
+        }
 
-      // Send notification if task is newly assigned to someone
-      if (isNewlyAssigned) {
-        await sendTaskAssignmentNotification({
-          assigneeEmail: data.assigned_to,
-          taskTitle: data.title,
+        // Send notification if task is newly assigned to someone
+        if (isNewlyAssigned) {
+          await sendTaskAssignmentNotification({
+            assigneeEmail: data.assigned_to,
+            taskTitle: data.title,
+            projectId,
+            projectName: project?.name,
+            currentUser,
+          });
+        }
+
+        refetchTasks();
+        queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
+        setShowTaskModal(false);
+        setEditingTask(null);
+      } catch (err) {
+        console.error('Failed to save task:', err);
+        toast.error('Failed to save task. Please try again.');
+      }
+    };
+
+  const handleTaskStatusChange = async (task, status) => {
+    try {
+      await api.entities.Task.update(task.id, { status });
+      if (status === 'completed') {
+        await logActivity(projectId, ActivityActions.TASK_COMPLETED, `completed task "${task.title}"`, currentUser, 'task', task.id);
+
+        // Notify people who should be notified on task completion
+        await sendTaskCompletionNotification({
+          task,
           projectId,
           projectName: project?.name,
           currentUser,
         });
+      } else {
+        await logActivity(projectId, ActivityActions.TASK_UPDATED, `changed task "${task.title}" status to ${status.replace('_', ' ')}`, currentUser, 'task', task.id);
       }
-
       refetchTasks();
       queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
-      setShowTaskModal(false);
-      setEditingTask(null);
-    };
-
-  const handleTaskStatusChange = async (task, status) => {
-    await api.entities.Task.update(task.id, { ...task, status });
-    if (status === 'completed') {
-      await logActivity(projectId, ActivityActions.TASK_COMPLETED, `completed task "${task.title}"`, currentUser, 'task', task.id);
-
-      // Notify people who should be notified on task completion
-      await sendTaskCompletionNotification({
-        task,
-        projectId,
-        projectName: project?.name,
-        currentUser,
-      });
-    } else {
-      await logActivity(projectId, ActivityActions.TASK_UPDATED, `changed task "${task.title}" status to ${status.replace('_', ' ')}`, currentUser, 'task', task.id);
+    } catch (err) {
+      console.error('Failed to update task status:', err);
+      toast.error('Failed to update task status. Please try again.');
     }
-    refetchTasks();
-    queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
   };
 
   // Groups
@@ -1004,7 +1039,7 @@ export default function ProjectDetail() {
     // Ungroup tasks
     const groupTasks = tasks.filter(t => t.group_id === group.id);
     for (const task of groupTasks) {
-      await api.entities.Task.update(task.id, { ...task, group_id: '' });
+      await api.entities.Task.update(task.id, { group_id: '' });
     }
     refetchGroups();
     refetchTasks();
@@ -1012,21 +1047,32 @@ export default function ProjectDetail() {
 
   // Parts
   const handleSavePart = async (data) => {
-    if (editingPart) {
-      await api.entities.Part.update(editingPart.id, data);
-      await logActivity(projectId, ActivityActions.PART_UPDATED, `updated part "${data.name}"`, currentUser, 'part', editingPart.id);
-    } else {
-      const newPart = await api.entities.Part.create(data);
-      await logActivity(projectId, ActivityActions.PART_CREATED, `added part "${data.name}"`, currentUser, 'part', newPart.id);
+    try {
+      if (editingPart) {
+        await api.entities.Part.update(editingPart.id, data);
+        await logActivity(projectId, ActivityActions.PART_UPDATED, `updated part "${data.name}"`, currentUser, 'part', editingPart.id);
+      } else {
+        const newPart = await api.entities.Part.create(data);
+        await logActivity(projectId, ActivityActions.PART_CREATED, `added part "${data.name}"`, currentUser, 'part', newPart.id);
+      }
+      refetchParts();
+      queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
+      setShowPartModal(false);
+      setEditingPart(null);
+    } catch (err) {
+      console.error('Failed to save part:', err);
+      toast.error('Failed to save part. Please try again.');
     }
-    refetchParts();
-    queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
-    setShowPartModal(false);
-    setEditingPart(null);
   };
 
   const handlePartStatusChange = async (part, status) => {
-    await api.entities.Part.update(part.id, { ...part, status });
+    try {
+    await api.entities.Part.update(part.id, { status });
+    } catch (err) {
+      console.error('Failed to update part status:', err);
+      toast.error('Failed to update part status. Please try again.');
+      return;
+    }
     const actionMap = {
       ordered: ActivityActions.PART_ORDERED,
       received: ActivityActions.PART_RECEIVED,
@@ -1160,25 +1206,31 @@ export default function ProjectDetail() {
   // Project
   const handleUpdateProject = async (data) => {
     await api.entities.Project.update(projectId, data);
-    // Auto-archive when completed
-    if (data.status === 'completed') {
-      await api.entities.Project.update(projectId, { ...data, status: 'archived' });
-    }
     refetchProject();
     setShowProjectModal(false);
   };
 
   // Quick inline update
   const handleQuickUpdate = async (field, value) => {
-    await api.entities.Project.update(projectId, { ...project, [field]: value });
-    refetchProject();
+    try {
+      await api.entities.Project.update(projectId, { [field]: value });
+      refetchProject();
+    } catch (err) {
+      console.error('Failed to update project field:', err);
+      toast.error('Failed to update project. Please try again.');
+    }
   };
 
   const handleTeamUpdate = async (emails) => {
     const previousMembers = project?.team_members || [];
     const newMembers = emails.filter(e => !previousMembers.includes(e));
-    await api.entities.Project.update(projectId, { ...project, team_members: emails });
-    refetchProject();
+    try {
+      await api.entities.Project.update(projectId, { team_members: emails });
+      refetchProject();
+    } catch (err) {
+      console.error('Failed to update team members:', err);
+      toast.error('Failed to update team. Please try again.');
+    }
 
     // Send notifications to newly added team members
     for (const memberEmail of newMembers) {
@@ -1246,7 +1298,7 @@ export default function ProjectDetail() {
       }))
     };
     await api.entities.ProjectTemplate.create(templateData);
-    alert('Project saved as template!');
+    toast.success('Project saved as template!');
   };
 
   // Archive project

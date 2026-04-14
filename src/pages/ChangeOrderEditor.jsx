@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { FormPageSkeleton } from '@/components/ui/PageSkeletons';
+import { toast } from 'sonner';
 
 const statusConfig = {
   draft: { label: 'Draft', color: 'bg-slate-100 text-slate-600 border-slate-200' },
@@ -135,14 +136,24 @@ export default function ChangeOrderEditor() {
   }, [formData.items, formData.original_total]);
 
   const handleSave = async () => {
+    if (!changeOrderId) {
+      toast.error('No change order selected');
+      return;
+    }
     setSaving(true);
-    await api.entities.ChangeOrder.update(changeOrderId, {
-      ...formData,
-      created_by_email: currentUser?.email,
-      created_by_name: currentUser?.full_name
-    });
-    queryClient.invalidateQueries({ queryKey: ['changeOrders'] });
-    setSaving(false);
+    try {
+      await api.entities.ChangeOrder.update(changeOrderId, {
+        ...formData,
+        created_by_email: currentUser?.email,
+        created_by_name: currentUser?.full_name
+      });
+      queryClient.invalidateQueries({ queryKey: ['changeOrders'] });
+      toast.success('Change order saved');
+    } catch (err) {
+      toast.error('Failed to save change order. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (isLoading) return <FormPageSkeleton />;
@@ -186,7 +197,7 @@ export default function ChangeOrderEditor() {
               <Save className="w-4 h-4 mr-1.5" />
               {saving ? 'Saving...' : 'Save'}
             </Button>
-            <Button size="sm" className="bg-primary hover:bg-primary/80">
+            <Button size="sm" className="bg-primary hover:bg-primary/80" disabled={true} title="Send functionality coming soon">
               <Send className="w-4 h-4 mr-1.5" />
               Send
             </Button>

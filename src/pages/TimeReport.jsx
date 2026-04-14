@@ -80,7 +80,7 @@ export default function TimeReport() {
     const csvRows = [
       ['Date', 'Project', 'User', 'Description', 'Duration (hours)'],
       ...filteredEntries.map(e => [
-        format(new Date(e.start_time), 'yyyy-MM-dd'),
+        e.start_time ? format(new Date(e.start_time), 'yyyy-MM-dd') : '',
         getProjectName(e.project_id),
         e.user_name,
         e.description || '',
@@ -93,7 +93,10 @@ export default function TimeReport() {
     const a = document.createElement('a');
     a.href = url;
     a.download = `time-report-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
   return (

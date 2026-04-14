@@ -30,13 +30,16 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-// Generate backup codes (stored in our DB, not Supabase)
+// Generate backup codes using cryptographically secure random values
 const generateBackupCodes = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   const codes = [];
   for (let i = 0; i < 8; i++) {
-    const code = Math.random().toString(36).substring(2, 6).toUpperCase() + '-' +
-                 Math.random().toString(36).substring(2, 6).toUpperCase();
-    codes.push(code);
+    const segment = (len) => {
+      const bytes = crypto.getRandomValues(new Uint8Array(len));
+      return Array.from(bytes).map((b) => chars[b % chars.length]).join('');
+    };
+    codes.push(`${segment(4)}-${segment(4)}`);
   }
   return codes;
 };

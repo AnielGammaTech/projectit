@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
@@ -21,8 +21,14 @@ export default function MySchedule() {
   const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
 
-  const calendarFeedUrl = `${window.location.origin}/api/calendar-feed/${currentUser?.id}.ics`;
-  const webcalUrl = calendarFeedUrl.replace('https://', 'webcal://').replace('http://', 'webcal://');
+  const calendarFeedUrl = useMemo(() => {
+    if (!currentUser?.id) return '';
+    return `${window.location.origin}/api/calendar-feed/${currentUser.id}.ics`;
+  }, [currentUser?.id]);
+  const webcalUrl = useMemo(() => {
+    if (!calendarFeedUrl) return '';
+    return calendarFeedUrl.replace('https://', 'webcal://').replace('http://', 'webcal://');
+  }, [calendarFeedUrl]);
 
   const handleCopy = (url) => {
     navigator.clipboard.writeText(url);

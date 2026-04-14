@@ -173,7 +173,11 @@ export default function AssetInventory() {
     setSyncing(true);
     try {
       const result = await api.functions.invoke('syncJumpCloudDevices');
-      const s = result.summary;
+      const s = result?.summary;
+      if (!s) {
+        toast.success('Sync complete');
+        return;
+      }
       toast.success(`Synced ${s.total} devices: ${s.created} new, ${s.updated} updated, ${s.autoAssigned} auto-assigned`);
       invalidateAll();
     } catch (error) {

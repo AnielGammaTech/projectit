@@ -729,10 +729,9 @@ export default function Dashboard() {
         const inProgressTag = allTags.find(t => t.name === 'In Progress');
 
         // Ensure team_members includes the creator if not already
-        const teamMembersList = data.team_members || [];
-        if (currentUser?.email && !teamMembersList.includes(currentUser.email)) {
-          teamMembersList.push(currentUser.email);
-        }
+        const teamMembersList = currentUser?.email && !(data.team_members || []).includes(currentUser.email)
+          ? [...(data.team_members || []), currentUser.email]
+          : [...(data.team_members || [])];
 
         // Ensure customer_id is correctly passed
         const projectData = {

@@ -236,7 +236,10 @@ export default function AuditLogs() {
     const a = document.createElement('a');
     a.href = url;
     a.download = `audit-logs-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
   if (isLoading) return <TablePageSkeleton />;

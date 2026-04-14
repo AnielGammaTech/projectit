@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
@@ -208,16 +209,20 @@ export default function ReportBuilder() {
   };
 
   const handleSaveReport = async (name) => {
-    const reportData = {
-      name,
-      report_type: 'custom',
-      metrics: reportConfig.metrics,
-      chart_type: reportConfig.chart_type,
-      filters: reportConfig.filters,
-    };
-    await api.entities.SavedReport.create(reportData);
-    refetchReports();
-    setShowSaveModal(false);
+    try {
+      const reportData = {
+        name,
+        report_type: 'custom',
+        metrics: reportConfig.metrics,
+        chart_type: reportConfig.chart_type,
+        filters: reportConfig.filters,
+      };
+      await api.entities.SavedReport.create(reportData);
+      refetchReports();
+      setShowSaveModal(false);
+    } catch (err) {
+      toast.error('Failed to save report. Please try again.');
+    }
   };
 
   const loadReport = (report) => {

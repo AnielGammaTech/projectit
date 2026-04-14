@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/api/apiClient';
+import { toast } from 'sonner';
 import { User, Mail, Camera, Lock, LogOut, ArrowLeft, Loader2, Sun, Moon, Monitor, Palette, CheckCircle2, AtSign, Shield, ShieldCheck, ShieldAlert, Save, Clock, AlertTriangle, Package, FolderOpen, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -164,20 +165,30 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await api.integrations.Core.UploadFile({ file });
-    setFormData(prev => ({ ...prev, avatar_url: file_url }));
-    setUploading(false);
+    try {
+      const { file_url } = await api.integrations.Core.UploadFile({ file });
+      setFormData(prev => ({ ...prev, avatar_url: file_url }));
+    } catch (err) {
+      toast.error('Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = async () => {
     setSaving(true);
-    await api.auth.updateMe(formData);
-    const updated = await api.auth.me();
-    setCurrentUser(updated);
-    if (formData.theme) {
-      applyTheme(formData.theme);
+    try {
+      await api.auth.updateMe(formData);
+      const updated = await api.auth.me();
+      setCurrentUser(updated);
+      if (formData.theme) {
+        applyTheme(formData.theme);
+      }
+    } catch (err) {
+      toast.error('Failed to save profile. Please try again.');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const handleLogout = () => {

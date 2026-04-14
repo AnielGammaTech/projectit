@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, MoreHorizontal, FileText, FolderKanban, Eye, ChevronDown, ChevronRight, UserPlus, Upload, Loader2, MessageSquare, Send, CheckSquare, Square, X, Globe, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -173,23 +174,32 @@ export default function Customers() {
   const getTotalValue = (name, company, email) => getCustomerQuotes(name, company, email).reduce((sum, q) => sum + (q.amount || 0), 0);
 
   const handleSave = async () => {
-    if (editingCustomer) {
-      await api.entities.Customer.update(editingCustomer.id, formData);
-    } else {
-      await api.entities.Customer.create(formData);
+    try {
+      if (editingCustomer) {
+        await api.entities.Customer.update(editingCustomer.id, formData);
+      } else {
+        await api.entities.Customer.create(formData);
+      }
+      refetch();
+      setShowModal(false);
+      setEditingCustomer(null);
+      setAddingContactTo(null);
+    } catch (err) {
+      toast.error('Failed to save customer');
     }
-    refetch();
-    setShowModal(false);
-    setEditingCustomer(null);
-    setAddingContactTo(null);
   };
 
   const handleDelete = async () => {
-    if (deleteConfirm.customer) {
-      await api.entities.Customer.delete(deleteConfirm.customer.id);
-      refetch();
+    try {
+      if (deleteConfirm.customer) {
+        await api.entities.Customer.delete(deleteConfirm.customer.id);
+        refetch();
+      }
+    } catch (err) {
+      toast.error('Failed to delete customer');
+    } finally {
+      setDeleteConfirm({ open: false, customer: null });
     }
-    setDeleteConfirm({ open: false, customer: null });
   };
 
   // Multi-select handlers
@@ -220,17 +230,22 @@ export default function Customers() {
   };
 
   const handleBulkDelete = async () => {
-    const ids = Array.from(selectedIds);
-    for (let i = 0; i < ids.length; i++) {
-      await api.entities.Customer.delete(ids[i]);
-      // Small delay to avoid rate limiting
-      if (i < ids.length - 1) {
-        await new Promise(r => setTimeout(r, 100));
+    try {
+      const ids = Array.from(selectedIds);
+      for (let i = 0; i < ids.length; i++) {
+        await api.entities.Customer.delete(ids[i]);
+        // Small delay to avoid rate limiting
+        if (i < ids.length - 1) {
+          await new Promise(r => setTimeout(r, 100));
+        }
       }
+      refetch();
+      clearSelection();
+    } catch (err) {
+      toast.error('Failed to delete selected customers');
+    } finally {
+      setBulkDeleteConfirm(false);
     }
-    refetch();
-    clearSelection();
-    setBulkDeleteConfirm(false);
   };
 
   const handleImport = async () => {

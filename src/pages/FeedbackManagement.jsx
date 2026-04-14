@@ -611,11 +611,19 @@ export default function FeedbackManagement() {
                 <div>
                   <label className="text-sm font-medium text-slate-500 mb-2 block">Screenshots</label>
                   <div className="grid grid-cols-2 gap-3">
-                    {selectedFeedback.screenshots.map((url, idx) => (
-                      <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="block">
-                        <img src={url} alt={`Screenshot ${idx + 1}`} className="rounded-lg border border-slate-200 hover:shadow-md transition-shadow" />
-                      </a>
-                    ))}
+                    {selectedFeedback.screenshots.map((url, idx) => {
+                      const isSafeUrl = typeof url === 'string' && url.startsWith('https://');
+                      const imgEl = (
+                        <img src={isSafeUrl ? url : ''} alt={`Screenshot ${idx + 1}`} className="rounded-lg border border-slate-200 hover:shadow-md transition-shadow" />
+                      );
+                      return isSafeUrl ? (
+                        <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                          {imgEl}
+                        </a>
+                      ) : (
+                        <div key={idx} className="block">{imgEl}</div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

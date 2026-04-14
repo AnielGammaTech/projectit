@@ -97,8 +97,8 @@ export default function WeeklyMeetingUpdate() {
 
   const handleSubmit = async () => {
     setSaving(true);
-
-    const noteContent = `📋 Weekly Meeting Update
+    try {
+      const noteContent = `📋 Weekly Meeting Update
 
 **Project Status:** ${formData.projectStatus || 'Not specified'}
 
@@ -122,34 +122,38 @@ ${formData.clientFeedback || 'None'}
 **Additional Notes:**
 ${formData.additionalNotes || 'None'}`;
 
-    const today = new Date();
-    const defaultTitle = `Weekly Update - ${format(today, 'MMM d, yyyy')}`;
+      const today = new Date();
+      const defaultTitle = `Weekly Update - ${format(today, 'MMM d, yyyy')}`;
 
-    await api.entities.ProjectNote.create({
-      project_id: projectId,
-      title: meetingTitle.trim() || defaultTitle,
-      content: noteContent,
-      type: 'update',
-      author_email: currentUser?.email,
-      author_name: currentUser?.full_name || currentUser?.email
-    });
-
-    const tasksToCreate = formData.nextSteps.filter(a => a.title.trim());
-    for (const action of tasksToCreate) {
-      await api.entities.Task.create({
-        title: action.title,
+      await api.entities.ProjectNote.create({
         project_id: projectId,
-        assigned_to: action.assigned_to || '',
-        assigned_name: action.assigned_name || '',
-        due_date: action.due_date ? format(action.due_date, 'yyyy-MM-dd') : '',
-        status: 'todo',
-        priority: 'medium'
+        title: meetingTitle.trim() || defaultTitle,
+        content: noteContent,
+        type: 'update',
+        author_email: currentUser?.email,
+        author_name: currentUser?.full_name || currentUser?.email
       });
-    }
 
-    setSaving(false);
-    toast.success('Meeting update saved and tasks created');
-    navigate(`/ProjectNotes?id=${projectId}`);
+      const tasksToCreate = formData.nextSteps.filter(a => a.title.trim());
+      for (const action of tasksToCreate) {
+        await api.entities.Task.create({
+          title: action.title,
+          project_id: projectId,
+          assigned_to: action.assigned_to || '',
+          assigned_name: action.assigned_name || '',
+          due_date: action.due_date ? format(action.due_date, 'yyyy-MM-dd') : '',
+          status: 'todo',
+          priority: 'medium'
+        });
+      }
+
+      toast.success('Meeting update saved and tasks created');
+      navigate(`/ProjectNotes?id=${projectId}`);
+    } catch (err) {
+      toast.error('Failed to save meeting update. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

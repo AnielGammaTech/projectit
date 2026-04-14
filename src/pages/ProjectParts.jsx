@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -168,27 +169,40 @@ export default function ProjectParts() {
   });
 
   const handleSavePart = async (data) => {
-    if (editingPart) {
-      await api.entities.Part.update(editingPart.id, data);
-    } else {
-      await api.entities.Part.create(data);
+    try {
+      if (editingPart) {
+        await api.entities.Part.update(editingPart.id, data);
+      } else {
+        await api.entities.Part.create(data);
+      }
+      refetchParts();
+      setShowPartModal(false);
+      setEditingPart(null);
+    } catch (err) {
+      toast.error('Failed to save part');
     }
-    refetchParts();
-    setShowPartModal(false);
-    setEditingPart(null);
   };
 
   const handleStatusChange = async (part, status) => {
-    await api.entities.Part.update(part.id, { ...part, status });
-    refetchParts();
+    try {
+      await api.entities.Part.update(part.id, { ...part, status });
+      refetchParts();
+    } catch (err) {
+      toast.error('Failed to update part status');
+    }
   };
 
   const handleDelete = async () => {
-    if (deleteConfirm.part) {
-      await api.entities.Part.delete(deleteConfirm.part.id);
-      refetchParts();
+    try {
+      if (deleteConfirm.part) {
+        await api.entities.Part.delete(deleteConfirm.part.id);
+        refetchParts();
+      }
+    } catch (err) {
+      toast.error('Failed to delete part');
+    } finally {
+      setDeleteConfirm({ open: false, part: null });
     }
-    setDeleteConfirm({ open: false, part: null });
   };
 
   const handleFileUpload = async (e) => {
@@ -271,31 +285,43 @@ export default function ProjectParts() {
   };
 
   const handleBulkAssign = async (email) => {
-    const member = teamMembers.find(m => m.email === email);
-    for (const partId of selectedParts) {
-      await api.entities.Part.update(partId, {
-        assigned_to: email,
-        assigned_name: member?.name || email
-      });
+    try {
+      const member = teamMembers.find(m => m.email === email);
+      for (const partId of selectedParts) {
+        await api.entities.Part.update(partId, {
+          assigned_to: email,
+          assigned_name: member?.name || email
+        });
+      }
+      refetchParts();
+      clearSelection();
+    } catch (err) {
+      toast.error('Failed to assign parts');
     }
-    refetchParts();
-    clearSelection();
   };
 
   const handleBulkStatusChange = async (status) => {
-    for (const partId of selectedParts) {
-      await api.entities.Part.update(partId, { status });
+    try {
+      for (const partId of selectedParts) {
+        await api.entities.Part.update(partId, { status });
+      }
+      refetchParts();
+      clearSelection();
+    } catch (err) {
+      toast.error('Failed to update part statuses');
     }
-    refetchParts();
-    clearSelection();
   };
 
   const handleBulkDelete = async () => {
-    for (const partId of selectedParts) {
-      await api.entities.Part.delete(partId);
+    try {
+      for (const partId of selectedParts) {
+        await api.entities.Part.delete(partId);
+      }
+      refetchParts();
+      clearSelection();
+    } catch (err) {
+      toast.error('Failed to delete parts');
     }
-    refetchParts();
-    clearSelection();
   };
 
   const handleQuickAssign = async (part, email) => {
@@ -319,32 +345,36 @@ export default function ProjectParts() {
   const handleConfirmReceive = async () => {
     const { part, installer, location, createTask } = receiveDialog;
     if (!part || !installer) return;
-    
-    const member = teamMembers.find(m => m.email === installer);
-    await api.entities.Part.update(part.id, {
-      status: 'ready_to_install',
-      installer_email: installer,
-      installer_name: member?.name || installer,
-      received_date: format(new Date(), 'yyyy-MM-dd'),
-      notes: location ? `${part.notes || ''}\n📍 Location: ${location}`.trim() : part.notes
-    });
-    
-    // Create installation task if checkbox is checked
-    if (createTask) {
-      await api.entities.Task.create({
-        title: `Install: ${part.name}`,
-        description: `Install part${part.part_number ? ` #${part.part_number}` : ''}${location ? `\n📍 Location: ${location}` : ''}`,
-        project_id: projectId,
-        assigned_to: installer,
-        assigned_name: member?.name || installer,
-        status: 'todo',
-        priority: 'medium'
+    try {
+      const member = teamMembers.find(m => m.email === installer);
+      await api.entities.Part.update(part.id, {
+        status: 'ready_to_install',
+        installer_email: installer,
+        installer_name: member?.name || installer,
+        received_date: format(new Date(), 'yyyy-MM-dd'),
+        notes: location ? `${part.notes || ''}\n📍 Location: ${location}`.trim() : part.notes
       });
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+
+      // Create installation task if checkbox is checked
+      if (createTask) {
+        await api.entities.Task.create({
+          title: `Install: ${part.name}`,
+          description: `Install part${part.part_number ? ` #${part.part_number}` : ''}${location ? `\n📍 Location: ${location}` : ''}`,
+          project_id: projectId,
+          assigned_to: installer,
+          assigned_name: member?.name || installer,
+          status: 'todo',
+          priority: 'medium'
+        });
+        queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      }
+
+      refetchParts();
+    } catch (err) {
+      toast.error('Failed to mark part as received');
+    } finally {
+      setReceiveDialog({ open: false, part: null, installer: '', location: '', createTask: false });
     }
-    
-    refetchParts();
-    setReceiveDialog({ open: false, part: null, installer: '', location: '', createTask: false });
   };
 
   const handleMarkInstalled = async (part) => {
@@ -391,23 +421,27 @@ export default function ProjectParts() {
   const handleConfirmOrder = async () => {
     const { part, screenshot, eta, notes } = orderDialog;
     if (!part) return;
+    try {
+      const updateData = {
+        status: 'ordered',
+        order_proof: screenshot || null,
+        order_date: format(new Date(), 'yyyy-MM-dd'),
+      };
+      if (eta) {
+        updateData.est_delivery_date = format(eta, 'yyyy-MM-dd');
+      }
+      if (notes) {
+        updateData.notes = part.notes ? `${part.notes}\n📦 Order notes: ${notes}` : `📦 Order notes: ${notes}`;
+      }
 
-    const updateData = {
-      status: 'ordered',
-      order_proof: screenshot || null,
-      order_date: format(new Date(), 'yyyy-MM-dd'),
-    };
-    if (eta) {
-      updateData.est_delivery_date = format(eta, 'yyyy-MM-dd');
+      await api.entities.Part.update(part.id, updateData);
+      refetchParts();
+    } catch (err) {
+      toast.error('Failed to confirm order');
+    } finally {
+      setOrderDialog({ open: false, part: null, screenshot: null, eta: null, notes: '' });
+      setOrderScreenshotPreview(null);
     }
-    if (notes) {
-      updateData.notes = part.notes ? `${part.notes}\n📦 Order notes: ${notes}` : `📦 Order notes: ${notes}`;
-    }
-
-    await api.entities.Part.update(part.id, updateData);
-    refetchParts();
-    setOrderDialog({ open: false, part: null, screenshot: null, eta: null, notes: '' });
-    setOrderScreenshotPreview(null);
   };
 
   // Group parts by status for sections

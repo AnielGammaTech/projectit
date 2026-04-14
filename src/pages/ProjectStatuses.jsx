@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { 
@@ -63,32 +64,45 @@ export default function ProjectStatuses() {
   });
 
   const handleSave = async (data) => {
-    if (editingStatus) {
-      await api.entities.ProjectStatus.update(editingStatus.id, data);
-    } else {
-      const maxOrder = Math.max(0, ...statuses.map(s => s.order || 0));
-      await api.entities.ProjectStatus.create({ ...data, order: maxOrder + 1 });
+    try {
+      if (editingStatus) {
+        await api.entities.ProjectStatus.update(editingStatus.id, data);
+      } else {
+        const maxOrder = Math.max(0, ...statuses.map(s => s.order || 0));
+        await api.entities.ProjectStatus.create({ ...data, order: maxOrder + 1 });
+      }
+      refetch();
+      setShowModal(false);
+      setEditingStatus(null);
+    } catch (err) {
+      toast.error('Failed to save status');
     }
-    refetch();
-    setShowModal(false);
-    setEditingStatus(null);
   };
 
   const handleDelete = async () => {
-    await api.entities.ProjectStatus.delete(deleteConfirm.id);
-    refetch();
-    setDeleteConfirm(null);
+    try {
+      await api.entities.ProjectStatus.delete(deleteConfirm.id);
+      refetch();
+    } catch (err) {
+      toast.error('Failed to delete status');
+    } finally {
+      setDeleteConfirm(null);
+    }
   };
 
   const handleSetDefault = async (status) => {
-    // Remove default from all others
-    for (const s of statuses) {
-      if (s.is_default && s.id !== status.id) {
-        await api.entities.ProjectStatus.update(s.id, { is_default: false });
+    try {
+      // Remove default from all others
+      for (const s of statuses) {
+        if (s.is_default && s.id !== status.id) {
+          await api.entities.ProjectStatus.update(s.id, { is_default: false });
+        }
       }
+      await api.entities.ProjectStatus.update(status.id, { is_default: true });
+      refetch();
+    } catch (err) {
+      toast.error('Failed to set default status');
     }
-    await api.entities.ProjectStatus.update(status.id, { is_default: true });
-    refetch();
   };
 
   const handleDragEnd = async (result) => {

@@ -63,7 +63,7 @@ function formatDate(dateStr) {
 }
 
 function AssignmentRow({ assignment, asset }) {
-  const TypeIcon = getTypeIcon(asset?.asset_type);
+  const TypeIcon = getTypeIcon(asset?.type);
   const assetName = asset?.name || 'Unknown Asset';
   const isReturned = Boolean(assignment.returned_date);
 
@@ -79,7 +79,7 @@ function AssignmentRow({ assignment, asset }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground truncate">{assetName}</p>
         <p className="text-xs text-muted-foreground">
-          {asset?.asset_type || 'Unknown Type'}
+          {asset?.type || 'Unknown Type'}
         </p>
       </div>
 

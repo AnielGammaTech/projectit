@@ -72,9 +72,11 @@ export default function MyNotifications() {
 
   const markAllAsRead = useMutation({
     mutationFn: async () => {
-      for (const n of notifications.filter(n => !n.is_read)) {
-        await api.entities.UserNotification.update(n.id, { is_read: true });
-      }
+      await Promise.all(
+        notifications.filter(n => !n.is_read).map(n =>
+          api.entities.UserNotification.update(n.id, { is_read: true })
+        )
+      );
     },
     onSuccess: () => {
       refetchNotifications();
@@ -92,9 +94,9 @@ export default function MyNotifications() {
 
   const clearAll = useMutation({
     mutationFn: async () => {
-      for (const n of notifications) {
-        await api.entities.UserNotification.delete(n.id);
-      }
+      await Promise.all(
+        notifications.map(n => api.entities.UserNotification.delete(n.id))
+      );
     },
     onSuccess: () => {
       refetchNotifications();

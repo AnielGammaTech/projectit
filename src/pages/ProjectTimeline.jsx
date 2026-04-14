@@ -10,6 +10,7 @@ import GanttChart from '@/components/project/GanttChart';
 import TaskModal from '@/components/modals/TaskModal';
 import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import { ProjectSubpageSkeleton } from '@/components/ui/PageSkeletons';
+import { toast } from 'sonner';
 
 export default function ProjectTimeline() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -53,11 +54,15 @@ export default function ProjectTimeline() {
   const handleTaskUpdate = async (taskId, updates) => {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
-      await api.entities.Task.update(taskId, { ...task, ...updates });
-      refetchTasks();
-      
-      // Recalculate project end date based on tasks
-      await recalculateProjectDates();
+      try {
+        await api.entities.Task.update(taskId, { ...task, ...updates });
+        refetchTasks();
+
+        // Recalculate project end date based on tasks
+        await recalculateProjectDates();
+      } catch (err) {
+        toast.error('Failed to update task. Please try again.');
+      }
     }
   };
 
@@ -79,15 +84,19 @@ export default function ProjectTimeline() {
   };
 
   const handleSaveTask = async (data) => {
-    if (editingTask) {
-      await api.entities.Task.update(editingTask.id, data);
-    } else {
-      await api.entities.Task.create(data);
+    try {
+      if (editingTask) {
+        await api.entities.Task.update(editingTask.id, data);
+      } else {
+        await api.entities.Task.create(data);
+      }
+      refetchTasks();
+      setShowTaskModal(false);
+      setEditingTask(null);
+      await recalculateProjectDates();
+    } catch (err) {
+      toast.error('Failed to save task. Please try again.');
     }
-    refetchTasks();
-    setShowTaskModal(false);
-    setEditingTask(null);
-    await recalculateProjectDates();
   };
 
   if (loadingProject) return <ProjectSubpageSkeleton />;

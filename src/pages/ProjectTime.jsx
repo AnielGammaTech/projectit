@@ -21,6 +21,7 @@ import { format, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date
 import { cn } from '@/lib/utils';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import UserAvatar from '@/components/UserAvatar';
+import { toast } from 'sonner';
 
 export default function ProjectTime() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -85,10 +86,15 @@ export default function ProjectTime() {
   }, {});
 
   const handleSaveBudget = async () => {
-    const hours = parseFloat(budgetValue) || 0;
-    await api.entities.Project.update(projectId, { time_budget_hours: hours });
-    refetchProject();
-    setEditingBudget(false);
+    try {
+      const hours = parseFloat(budgetValue) || 0;
+      await api.entities.Project.update(projectId, { time_budget_hours: hours });
+      refetchProject();
+    } catch (err) {
+      toast.error('Failed to save budget. Please try again.');
+    } finally {
+      setEditingBudget(false);
+    }
   };
 
   if (!project) return <ProjectSubpageSkeleton />;

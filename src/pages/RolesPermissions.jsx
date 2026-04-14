@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
 import { 
@@ -186,22 +187,30 @@ export default function RolesPermissions() {
   const allRoles = [...defaultRoles, ...customRoles.filter(r => !r.is_system)];
 
   const handleSaveRole = async (data) => {
-    if (editingRole?.id) {
-      await api.entities.CustomRole.update(editingRole.id, data);
-    } else {
-      await api.entities.CustomRole.create(data);
+    try {
+      if (editingRole?.id) {
+        await api.entities.CustomRole.update(editingRole.id, data);
+      } else {
+        await api.entities.CustomRole.create(data);
+      }
+      refetch();
+      setShowRoleModal(false);
+      setEditingRole(null);
+    } catch (err) {
+      toast.error('Failed to save role. Please try again.');
     }
-    refetch();
-    setShowRoleModal(false);
-    setEditingRole(null);
   };
 
   const handleDeleteRole = async () => {
-    if (deleteConfirm?.id) {
-      await api.entities.CustomRole.delete(deleteConfirm.id);
-      refetch();
+    try {
+      if (deleteConfirm?.id) {
+        await api.entities.CustomRole.delete(deleteConfirm.id);
+        refetch();
+      }
+      setDeleteConfirm(null);
+    } catch (err) {
+      toast.error('Failed to delete role. Please try again.');
     }
-    setDeleteConfirm(null);
   };
 
   const handleDuplicateRole = (role) => {

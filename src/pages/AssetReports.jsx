@@ -160,7 +160,7 @@ function TabAllAssets({ assets, employeeMap, assignments, search }) {
       const emp = empId ? employeeMap.get(empId) : null;
       return [
         asset.name || '',
-        asset.asset_type || '',
+        asset.type || '',
         asset.os || '',
         asset.serial_number || '',
         asset.model || '',
@@ -438,7 +438,7 @@ function TabValueCost({ assets, employees, assignments }) {
   const costByType = useMemo(() => {
     const map = {};
     for (const a of assets) {
-      const type = a.asset_type || 'Other';
+      const type = a.type || 'Other';
       map[type] = (map[type] || 0) + (Number(a.purchase_cost) || 0);
     }
     return Object.entries(map).sort(([, a], [, b]) => b - a);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { 
   Zap, Plus, Edit2, Trash2, MoreHorizontal, Play, Pause,
@@ -91,25 +92,38 @@ export default function Workflows() {
   });
 
   const handleSave = async (data) => {
-    if (editingWorkflow) {
-      await api.entities.Workflow.update(editingWorkflow.id, data);
-    } else {
-      await api.entities.Workflow.create(data);
+    try {
+      if (editingWorkflow) {
+        await api.entities.Workflow.update(editingWorkflow.id, data);
+      } else {
+        await api.entities.Workflow.create(data);
+      }
+      refetch();
+      setShowModal(false);
+      setEditingWorkflow(null);
+    } catch (err) {
+      toast.error('Failed to save workflow');
     }
-    refetch();
-    setShowModal(false);
-    setEditingWorkflow(null);
   };
 
   const handleDelete = async () => {
-    await api.entities.Workflow.delete(deleteConfirm.id);
-    refetch();
-    setDeleteConfirm(null);
+    try {
+      await api.entities.Workflow.delete(deleteConfirm.id);
+      refetch();
+      setDeleteConfirm(null);
+    } catch (err) {
+      toast.error('Failed to delete workflow');
+      setDeleteConfirm(null);
+    }
   };
 
   const handleToggleActive = async (workflow) => {
-    await api.entities.Workflow.update(workflow.id, { ...workflow, is_active: !workflow.is_active });
-    refetch();
+    try {
+      await api.entities.Workflow.update(workflow.id, { ...workflow, is_active: !workflow.is_active });
+      refetch();
+    } catch (err) {
+      toast.error('Failed to update workflow');
+    }
   };
 
   return (
@@ -209,7 +223,7 @@ export default function Workflows() {
                             {workflow.trigger_count > 0 && (
                               <p className="text-xs text-slate-400 mt-2">
                                 Triggered {workflow.trigger_count} times
-                                {workflow.last_triggered && ` • Last: ${format(new Date(workflow.last_triggered), 'MMM d, h:mm a')}`}
+                                {workflow.last_triggered && (() => { try { return ` • Last: ${format(new Date(workflow.last_triggered), 'MMM d, h:mm a')}`; } catch { return ''; } })()}
                               </p>
                             )}
                           </div>
@@ -286,7 +300,7 @@ export default function Workflows() {
                             {log.status}
                           </Badge>
                           <p className="text-xs text-slate-400 mt-1">
-                            {format(new Date(log.created_date), 'MMM d, h:mm a')}
+                            {log.created_date ? (() => { try { return format(new Date(log.created_date), 'MMM d, h:mm a'); } catch { return ''; } })() : ''}
                           </p>
                         </div>
                       </div>
