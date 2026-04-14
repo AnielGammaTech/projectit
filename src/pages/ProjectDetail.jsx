@@ -310,8 +310,12 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
   };
 
   const handleSetDeliveryDate = async (part, date) => {
-    await api.entities.Part.update(part.id, { est_delivery_date: format(date, 'yyyy-MM-dd') });
-    refetchParts?.();
+    try {
+      await api.entities.Part.update(part.id, { est_delivery_date: format(date, 'yyyy-MM-dd') });
+      refetchParts?.();
+    } catch (err) {
+      toast.error('Failed to set delivery date. Please try again.');
+    }
   };
 
   const openReceiveDialog = (part, installerEmail) => {
@@ -1235,6 +1239,7 @@ export default function ProjectDetail() {
       refetchProject();
     } catch (err) {
       toast.error('Failed to update team. Please try again.');
+      return;
     }
 
     // Send notifications to newly added team members

@@ -127,7 +127,7 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
   };
 
   useEffect(() => {
-    if (teamMembers.length > 0 && tasks.length > 0) {
+    if (teamMembers.length > 0 && tasks.length > 0 && (!aiInsights || aiInsights.length === 0) && !loadingInsights) {
       generateInsights();
     }
   }, [teamMembers.length, tasks.length]);

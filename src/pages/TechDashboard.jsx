@@ -22,7 +22,7 @@ export default function TechDashboard() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    api.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => { toast.error('Failed to load user'); });
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);

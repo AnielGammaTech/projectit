@@ -12,6 +12,7 @@ import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
+import { toast } from 'sonner';
 
 const notificationConfig = {
   mention: { icon: AtSign, bg: 'bg-indigo-100 dark:bg-indigo-900/30', color: 'text-indigo-600 dark:text-indigo-400' },
@@ -81,7 +82,8 @@ export default function MyNotifications() {
     onSuccess: () => {
       refetchNotifications();
       queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
-    }
+    },
+    onError: () => toast.error('Failed to mark notifications as read')
   });
 
   const dismissNotification = useMutation({
@@ -101,7 +103,8 @@ export default function MyNotifications() {
     onSuccess: () => {
       refetchNotifications();
       queryClient.invalidateQueries({ queryKey: ['layoutNotifications'] });
-    }
+    },
+    onError: () => toast.error('Failed to clear notifications')
   });
 
   if (loading) return <CardGridSkeleton />;

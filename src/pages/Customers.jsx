@@ -250,30 +250,35 @@ export default function Customers() {
 
   const handleImport = async () => {
     setImporting(true);
-    const lines = importData.trim().split('\n');
-    const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
-    
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim());
-      const customer = {};
-      headers.forEach((header, idx) => {
-        if (header === 'name') customer.name = values[idx];
-        if (header === 'email') customer.email = values[idx];
-        if (header === 'phone') customer.phone = values[idx];
-        if (header === 'company') customer.company = values[idx];
-        if (header === 'address') customer.address = values[idx];
-        if (header === 'city') customer.city = values[idx];
-        if (header === 'state') customer.state = values[idx];
-        if (header === 'zip') customer.zip = values[idx];
-      });
-      if (customer.name) {
-        await api.entities.Customer.create({ ...customer, source: 'import' });
+    try {
+      const lines = importData.trim().split('\n');
+      const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim());
+        const customer = {};
+        headers.forEach((header, idx) => {
+          if (header === 'name') customer.name = values[idx];
+          if (header === 'email') customer.email = values[idx];
+          if (header === 'phone') customer.phone = values[idx];
+          if (header === 'company') customer.company = values[idx];
+          if (header === 'address') customer.address = values[idx];
+          if (header === 'city') customer.city = values[idx];
+          if (header === 'state') customer.state = values[idx];
+          if (header === 'zip') customer.zip = values[idx];
+        });
+        if (customer.name) {
+          await api.entities.Customer.create({ ...customer, source: 'import' });
+        }
       }
+      refetch();
+      setImportData('');
+    } catch (err) {
+      toast.error('Failed to import customers. Please try again.');
+    } finally {
+      setImporting(false);
+      setShowImportModal(false);
     }
-    refetch();
-    setImporting(false);
-    setShowImportModal(false);
-    setImportData('');
   };
 
   const handleHaloPSASync = async () => {

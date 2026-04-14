@@ -55,7 +55,7 @@ export default function ProjectTimeline() {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
       try {
-        await api.entities.Task.update(taskId, { ...task, ...updates });
+        await api.entities.Task.update(taskId, { ...updates });
         refetchTasks();
 
         // Recalculate project end date based on tasks

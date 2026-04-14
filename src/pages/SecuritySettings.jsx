@@ -68,7 +68,7 @@ export default function SecuritySettings() {
   const [settings, setSettings] = useState({});
 
   useEffect(() => {
-    api.auth.me().then(setCurrentUser).catch(() => {});
+    api.auth.me().then(setCurrentUser).catch(() => { toast.error('Failed to load user session'); });
   }, []);
 
   // Load MFA factors from Supabase + settings from our DB

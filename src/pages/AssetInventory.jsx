@@ -216,8 +216,8 @@ export default function AssetInventory() {
       await api.entities.Asset.update(asset.id, { sync_locked: locked });
       toast.success(locked ? 'Asset locked — sync will skip auto-assignment' : 'Asset unlocked — sync can auto-assign');
       invalidateAll();
-    } catch {
-      toast.error('Failed to update asset');
+    } catch (err) {
+      toast.error(err?.message || 'Failed to update asset');
     }
   };
 
@@ -246,12 +246,12 @@ export default function AssetInventory() {
 
       const link = `${window.location.origin}/accept/${rawToken}`;
       setConsentLink(link);
-      navigator.clipboard.writeText(link);
+      navigator.clipboard.writeText(link).catch(() => toast.error('Failed to copy link'));
       setConsentCopied(true);
       setTimeout(() => setConsentCopied(false), 2000);
       toast.success('Consent form link copied to clipboard');
-    } catch {
-      toast.error('Failed to generate consent form');
+    } catch (err) {
+      toast.error(err?.message || 'Failed to generate consent form');
     }
   };
 

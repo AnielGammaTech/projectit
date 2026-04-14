@@ -640,9 +640,13 @@ export default function Dashboard() {
   const unstackedProjects = unpinnedProjects.filter(p => !projectsInStacks.includes(p.id));
 
   const handleTaskComplete = async (task) => {
-    await api.entities.Task.update(task.id, { ...task, status: 'completed' });
-    fireSubtleConfetti();
-    refetchTasks();
+    try {
+      await api.entities.Task.update(task.id, { ...task, status: 'completed' });
+      fireSubtleConfetti();
+      refetchTasks();
+    } catch (err) {
+      toast.error('Failed to complete task. Please try again.');
+    }
   };
 
   const toggleProjectSelection = (projectId) => {
@@ -680,12 +684,16 @@ export default function Dashboard() {
   };
 
   const handleRestoreProject = async (project) => {
-    await api.entities.Project.update(project.id, {
-      status: 'planning',
-      deleted_date: null
-    });
-    toast.success('Project restored');
-    refetchProjects();
+    try {
+      await api.entities.Project.update(project.id, {
+        status: 'planning',
+        deleted_date: null
+      });
+      toast.success('Project restored');
+      refetchProjects();
+    } catch (err) {
+      toast.error('Failed to restore project. Please try again.');
+    }
   };
 
   const handlePermanentDelete = async (project) => {

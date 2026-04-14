@@ -223,6 +223,10 @@ export default function Settings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appSettings'] });
       setHasChanges(false);
+    },
+    onError: () => {
+      toast.error('Failed to save settings');
+      setHasChanges(true);
     }
   });
 
