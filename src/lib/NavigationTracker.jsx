@@ -32,7 +32,11 @@ export default function NavigationTracker() {
         }
 
         if (isAuthenticated && pageName) {
-            api.appLogs.logUserInApp(pageName).catch(() => {
+            // Extract project context from URL params if available
+            const params = new URLSearchParams(location.search);
+            const projectId = params.get('id') || params.get('project_id') || null;
+
+            api.activity.pageView(pageName, projectId).catch(() => {
                 // Silently fail - logging shouldn't break the app
             });
         }

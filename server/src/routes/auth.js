@@ -1,7 +1,26 @@
 import { Router } from 'express';
 import authService from '../services/authService.js';
+import entityService from '../services/entityService.js';
 import authMiddleware from '../middleware/auth.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
+
+// Helper: write a login audit log entry
+function logLoginEvent(email, req) {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+  const userAgent = req.headers['user-agent'] || 'unknown';
+  entityService.create('AuditLog', {
+    action: 'login',
+    action_category: 'auth',
+    entity_type: 'User',
+    entity_id: null,
+    entity_name: email,
+    user_email: email,
+    user_name: email,
+    details: `User logged in`,
+    ip_address: ip,
+    user_agent: userAgent,
+  }, 'system').catch(() => {});
+}
 
 const router = Router();
 
@@ -71,6 +90,9 @@ router.post('/verify-otp', authLimiter, async (req, res, next) => {
     const userAgent = req.headers['user-agent'] || 'unknown';
     authService.recordLoginAndAlert(email, ip, userAgent).catch(() => {});
 
+    // Audit log: login event
+    logLoginEvent(email, req);
+
     res.json(result);
   } catch (err) {
     next(err);
@@ -105,6 +127,9 @@ router.post('/login', authLimiter, async (req, res, next) => {
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
     const userAgent = req.headers['user-agent'] || 'unknown';
     authService.recordLoginAndAlert(email, ip, userAgent).catch(() => {});
+
+    // Audit log: login event
+    logLoginEvent(email, req);
 
     res.json(result);
   } catch (err) {

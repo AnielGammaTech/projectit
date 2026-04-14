@@ -246,10 +246,20 @@ const users = {
   },
 };
 
+const activity = {
+  async pageView(page, projectId, projectName) {
+    return apiFetch('/api/activity/page-view', {
+      method: 'POST',
+      body: JSON.stringify({ page, projectId, projectName }),
+    });
+  },
+};
+
 export const api = {
   entities: entitiesProxy,
   auth,
   integrations,
   functions,
   users,
+  activity,
 };

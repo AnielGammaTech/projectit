@@ -10,10 +10,12 @@ import functionRoutes from './routes/functions/index.js';
 import webhookRoutes from './routes/webhooks.js';
 import externalApiRoutes from './routes/externalApi.js';
 import acceptanceRoutes from './routes/acceptance.js';
+import activityRoutes from './routes/activityRoutes.js';
 import authMiddleware from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
 import { runDueReminders } from './routes/functions/sendDueReminders.js';
 import calendarFeed from './routes/functions/calendarFeed.js';
+import { purgeOldAuditLogs } from './jobs/auditRetention.js';
 // File uploads now go to Supabase Storage (no local UPLOAD_DIR needed)
 
 const app = express();
@@ -64,6 +66,7 @@ app.use('/api/accept', acceptanceRoutes);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/entities', authMiddleware, perUserLimiter, entityRoutes);
+app.use('/api/activity', authMiddleware, activityRoutes);
 app.use('/api/integrations', authMiddleware, perUserLimiter, integrationRoutes);
 app.use('/api/functions', functionRoutes); // Auth handled per-function inside router
 app.use('/api/webhooks', webhookRoutes);
@@ -111,4 +114,14 @@ app.listen(PORT, () => {
   }, REMINDER_INTERVAL_MS);
 
   console.log('[Scheduler] Due reminder checks scheduled every 1 hour');
+
+  // --- Audit log retention: purge entries older than 90 days (daily) ---
+  const RETENTION_INTERVAL_MS = 24 * 60 * 60 * 1000;
+  setTimeout(() => {
+    purgeOldAuditLogs().catch(() => {});
+  }, 120000); // 2 min after startup
+  setInterval(() => {
+    purgeOldAuditLogs().catch(() => {});
+  }, RETENTION_INTERVAL_MS);
+  console.log('[Scheduler] Audit log retention purge scheduled daily');
 });

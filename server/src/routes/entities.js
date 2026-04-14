@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import entityService from '../services/entityService.js';
 import projectAccessMiddleware from '../middleware/projectAccess.js';
+import auditMiddleware from '../middleware/auditMiddleware.js';
 import { autoSendFeedback } from './functions/agentBridge.js';
 
 const router = Router();
@@ -43,6 +44,9 @@ function adminGuard(req, res, next) {
 // Project-based access control — runs before all entity routes
 router.use(projectAccessMiddleware);
 router.use(adminGuard);
+// Audit middleware — auto-logs all entity mutations (create/update/delete)
+router.use('/:entityType', auditMiddleware);
+router.use('/:entityType/:id', auditMiddleware);
 
 // GET /api/entities/:entityType/list?sort=...&limit=...
 router.get('/:entityType/list', async (req, res, next) => {
