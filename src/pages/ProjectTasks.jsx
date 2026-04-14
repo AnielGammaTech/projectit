@@ -566,13 +566,17 @@ export default function ProjectTasks() {
 
   const handleDelete = async () => {
     const { type, item } = deleteConfirm;
-    if (type === 'task') {
-      await api.entities.Task.delete(item.id);
-      refetchTasks();
-    } else if (type === 'group') {
-      await handleDeleteGroup(item);
+    try {
+      if (type === 'task') {
+        await api.entities.Task.delete(item.id);
+        refetchTasks();
+      } else if (type === 'group') {
+        await handleDeleteGroup(item);
+      }
+      setDeleteConfirm({ open: false, type: null, item: null });
+    } catch (err) {
+      toast.error('Failed to delete. Please try again.');
     }
-    setDeleteConfirm({ open: false, type: null, item: null });
   };
 
   const handleTaskAssign = async (task, email) => {

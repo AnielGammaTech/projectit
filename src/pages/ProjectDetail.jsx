@@ -643,9 +643,9 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
               <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2"><MapPin className="w-4 h-4" />Where stored? (optional)</label>
               <Textarea value={receiveDialog.location} onChange={(e) => setReceiveDialog(prev => ({ ...prev, location: e.target.value }))} placeholder="e.g., Warehouse shelf B3..." className="h-20" />
             </div>
-            <div className="flex items-center space-x-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+            <div className="flex items-center space-x-2 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200">
               <Checkbox id="createTaskPD" checked={receiveDialog.createTask} onCheckedChange={(checked) => setReceiveDialog(prev => ({ ...prev, createTask: checked }))} />
-              <Label htmlFor="createTaskPD" className="text-sm font-medium text-indigo-900 cursor-pointer">Create installation task</Label>
+              <Label htmlFor="createTaskPD" className="text-sm font-medium text-indigo-900 dark:text-indigo-300 cursor-pointer">Create installation task</Label>
             </div>
           </div>
           <AlertDialogFooter>
@@ -1114,6 +1114,7 @@ export default function ProjectDetail() {
         queryClient.invalidateQueries({ queryKey: ['allTasks'] });
         queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       } catch (err) {
+        // Non-critical: notification/auto-task failures are silently ignored
       }
     }
 
@@ -1146,6 +1147,7 @@ export default function ProjectDetail() {
         queryClient.invalidateQueries({ queryKey: ['allTasks'] });
         queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       } catch (err) {
+        // Non-critical: notification/auto-task failures are silently ignored
       }
     }
 
@@ -1165,6 +1167,7 @@ export default function ProjectDetail() {
         queryClient.invalidateQueries({ queryKey: ['allTasks'] });
         queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       } catch (err) {
+        // Non-critical: notification/auto-task failures are silently ignored
       }
     }
 
@@ -1195,6 +1198,7 @@ export default function ProjectDetail() {
           link: `${window.location.origin}/ProjectDetail?id=${projectId}`
         });
       } catch (err) {
+        // Non-critical: notification/auto-task failures are silently ignored
       }
     }
 

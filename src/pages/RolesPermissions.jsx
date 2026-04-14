@@ -385,8 +385,8 @@ export default function RolesPermissions() {
                 </thead>
                 <tbody>
                   {permissionCategories.map(cat => (
-                    <>
-                      <tr key={cat.id} className="bg-muted/30">
+                    <React.Fragment key={cat.id}>
+                      <tr className="bg-muted/30">
                         <td colSpan={allRoles.length + 1} className="p-3">
                           <div className="flex items-center gap-2 font-medium text-foreground">
                             <cat.icon className="w-4 h-4" />
@@ -414,7 +414,7 @@ export default function RolesPermissions() {
                           ))}
                         </tr>
                       ))}
-                    </>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

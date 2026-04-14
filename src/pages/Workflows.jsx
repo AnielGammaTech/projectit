@@ -487,7 +487,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
                       ...p,
                       trigger_conditions: { ...p.trigger_conditions, target_status: e.target.value }
                     }))}
-                    className="mt-2 w-full h-10 rounded-md border px-3 text-sm"
+                    className="mt-2 w-full h-10 rounded-md border px-3 text-sm bg-background text-foreground"
                   >
                     <option value="">Select a status...</option>
                     {projectStatuses.map(s => (
@@ -562,7 +562,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
                               <select
                                 value={action.config.assignee_email || ''}
                                 onChange={(e) => updateAction(idx, { assignee_email: e.target.value })}
-                                className="mt-1 w-full h-10 rounded-md border px-3 text-sm"
+                                className="mt-1 w-full h-10 rounded-md border px-3 text-sm bg-background text-foreground"
                               >
                                 <option value="">Select team member</option>
                                 {teamMembers.map(m => (
@@ -598,7 +598,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
                               <select
                                 value={action.config.assignee_email || ''}
                                 onChange={(e) => updateAction(idx, { assignee_email: e.target.value })}
-                                className="mt-1 w-full h-10 rounded-md border px-3 text-sm"
+                                className="mt-1 w-full h-10 rounded-md border px-3 text-sm bg-background text-foreground"
                               >
                                 <option value="">Select team member</option>
                                 {teamMembers.map(m => (
@@ -668,7 +668,7 @@ function WorkflowModal({ open, onClose, workflow, teamMembers, projectStatuses =
             {step < 3 ? (
               <Button
                 onClick={() => setStep(step + 1)}
-                disabled={step === 1 && !formData.name || step === 2 && !formData.trigger_type}
+                disabled={(step === 1 && !formData.name) || (step === 2 && !formData.trigger_type)}
                 className="bg-primary hover:bg-primary/80"
               >
                 Continue

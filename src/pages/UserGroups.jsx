@@ -55,7 +55,8 @@ export default function UserGroups() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userGroups'] });
       handleCloseModal();
-    }
+    },
+    onError: () => toast.error('Failed to save group')
   });
 
   const deleteMutation = useMutation({
@@ -63,7 +64,8 @@ export default function UserGroups() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userGroups'] });
       setDeleteConfirm(null);
-    }
+    },
+    onError: () => toast.error('Failed to delete group')
   });
 
   const handleOpenModal = (group = null) => {

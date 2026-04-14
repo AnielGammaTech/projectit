@@ -346,14 +346,18 @@ function PeopleSection({ queryClient }) {
   };
 
   const handleSaveGroup = async (data) => {
-    if (editingGroup) {
-      await api.entities.UserGroup.update(editingGroup.id, data);
-    } else {
-      await api.entities.UserGroup.create(data);
+    try {
+      if (editingGroup) {
+        await api.entities.UserGroup.update(editingGroup.id, data);
+      } else {
+        await api.entities.UserGroup.create(data);
+      }
+      queryClient.invalidateQueries({ queryKey: ['userGroups'] });
+      setShowGroupModal(false);
+      setEditingGroup(null);
+    } catch (err) {
+      toast.error('Failed to save group. Please try again.');
     }
-    queryClient.invalidateQueries({ queryKey: ['userGroups'] });
-    setShowGroupModal(false);
-    setEditingGroup(null);
   };
 
   const handleDelete = async () => {
@@ -1585,7 +1589,7 @@ function CompanySettingsSection({ queryClient }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">App Settings</h2>
@@ -1702,7 +1706,7 @@ function ProjectTagsSection({ queryClient }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">Project Tags</h2>
@@ -1828,7 +1832,7 @@ function ProjectManagementSection({ queryClient }) {
   const [activeTab, setActiveTab] = useState('archived');
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
       <div className="p-6 border-b">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 rounded-lg bg-amber-100">

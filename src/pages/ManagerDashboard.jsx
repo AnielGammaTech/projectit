@@ -118,11 +118,12 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
         },
         feature: 'manager_insights'
       });
-      setAiInsights(result.insights);
+      setAiInsights(result?.insights || []);
     } catch (err) {
       toast.error('Failed to generate insights');
+    } finally {
+      setLoadingInsights(false);
     }
-    setLoadingInsights(false);
   };
 
   useEffect(() => {

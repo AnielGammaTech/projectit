@@ -838,7 +838,7 @@ export default function FeedbackManagement() {
                 </div>
                 <div>
                   <label className="text-muted-foreground">Date</label>
-                  <p className="font-medium">{format(new Date(selectedFeedback.created_date), 'MMM d, yyyy h:mm a')}</p>
+                  <p className="font-medium">{selectedFeedback.created_date ? format(new Date(selectedFeedback.created_date), 'MMM d, yyyy h:mm a') : '—'}</p>
                 </div>
                 {selectedFeedback.page_url && (
                   <div className="col-span-2">

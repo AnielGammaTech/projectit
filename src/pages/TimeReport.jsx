@@ -246,7 +246,7 @@ export default function TimeReport() {
                           <span>•</span>
                           <span>{getProjectName(entry.project_id)}</span>
                           <span>•</span>
-                          <span>{format(new Date(entry.start_time), 'MMM d, yyyy')}</span>
+                          <span>{entry.start_time ? format(new Date(entry.start_time), 'MMM d, yyyy') : ''}</span>
                         </div>
                       </div>
                       <Badge variant="outline">

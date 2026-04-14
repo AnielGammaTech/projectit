@@ -40,7 +40,7 @@ export default function WeeklyMeetingUpdate() {
 
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
-    queryFn: () => api.entities.Project.get(projectId),
+    queryFn: () => api.entities.Project.filter({ id: projectId }).then(r => r[0]),
     enabled: !!projectId
   });
 
@@ -112,7 +112,10 @@ ${formatList(formData.challenges)}
 ${formData.nextSteps.filter(a => a.title.trim()).map(a => {
   let item = `• ${a.title}`;
   if (a.assigned_name) item += ` → @${a.assigned_name}`;
-  if (a.due_date) item += ` (Due: ${format(parseLocalDate(a.due_date), 'MMM d')})`;
+  if (a.due_date) {
+    const d = a.due_date instanceof Date ? a.due_date : parseLocalDate(a.due_date);
+    item += d ? ` (Due: ${format(d, 'MMM d')})` : '';
+  }
   return item;
 }).join('\n') || '• None'}
 

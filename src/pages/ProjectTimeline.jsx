@@ -75,11 +75,14 @@ export default function ProjectTimeline() {
     
     // Only update if tasks extend beyond current due date
     if (!currentDueDate || latestDate > currentDueDate) {
-      await api.entities.Project.update(projectId, {
-        ...project,
-        due_date: format(latestDate, 'yyyy-MM-dd')
-      });
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      try {
+        await api.entities.Project.update(projectId, {
+          due_date: format(latestDate, 'yyyy-MM-dd')
+        });
+        queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      } catch (err) {
+        toast.error('Failed to update project due date.');
+      }
     }
   };
 
