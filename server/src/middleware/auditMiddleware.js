@@ -2,11 +2,17 @@ import entityService from '../services/entityService.js';
 
 // Entity types that should NOT be audit-logged (to avoid infinite loops or noise)
 const EXCLUDED_ENTITIES = new Set([
-  'AuditLog',           // Don't log writes to the audit log itself
-  'UserNotification',   // High-volume, low-value noise
-  'DeviceToken',        // Device registration noise
-  'DashboardView',      // User preference, not actionable
-  'NotificationSettings', // User preference
+  'AuditLog',              // Don't log writes to the audit log itself
+  'UserNotification',      // High-volume, low-value noise
+  'DeviceToken',           // Device registration noise
+  'DashboardView',         // User preference, not actionable
+  'NotificationSettings',  // User preference
+  'AppSettings',           // Auto-saved settings, not manual user action
+  'ProposalSettings',      // Settings noise
+  'ProjectActivity',       // Internal activity feed records
+  'WorkflowLog',           // Automation logs
+  'UserSecuritySettings',  // Login device tracking (handled by auth logs)
+  'UserSession',           // Session management
 ]);
 
 // Map entity types to human-readable categories
@@ -221,6 +227,15 @@ async function writeAuditLog(method, entityType, entityId, user, beforeState, re
     const entityName = getEntityName(entityType, afterState || beforeState, requestBody);
     const projectCtx = await resolveProjectContext(entityType, afterState || beforeState, requestBody);
     const changes = method === 'PUT' ? computeChanges(beforeState, afterState) : null;
+
+    // Detect auto-created entities (from workflows, not manual user action)
+    const isAutoCreated = method === 'POST' && (
+      requestBody?.notes?.startsWith('Auto-created') ||
+      afterState?.notes?.startsWith('Auto-created')
+    );
+
+    // Skip logging auto-created entities — these are system-generated, not user actions
+    if (isAutoCreated) return;
 
     // Build a human-readable details string
     let details = '';
