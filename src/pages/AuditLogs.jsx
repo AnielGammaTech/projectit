@@ -139,20 +139,13 @@ export default function AuditLogs() {
     queryFn: () => api.entities.TeamMember.list()
   });
 
-  // Get unique users from logs with names
+  // Show only real team members (not system accounts like Auto-send, QuoteIT API)
   const uniqueUsers = useMemo(() => {
-    const userMap = new Map();
-    for (const log of logs) {
-      if (log.user_email && !userMap.has(log.user_email)) {
-        const member = teamMembers.find(m => m.email === log.user_email);
-        userMap.set(log.user_email, {
-          email: log.user_email,
-          name: member?.name || log.user_name || log.user_email.split('@')[0],
-        });
-      }
-    }
-    return [...userMap.values()].sort((a, b) => a.name.localeCompare(b.name));
-  }, [logs, teamMembers]);
+    return teamMembers
+      .filter(m => m.email && m.name)
+      .map(m => ({ email: m.email, name: m.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [teamMembers]);
 
   // Filter logs
   const filteredLogs = useMemo(() => {

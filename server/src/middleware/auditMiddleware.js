@@ -52,23 +52,52 @@ const ENTITY_CATEGORIES = {
   Employee: 'user',
 };
 
-// Derive a human-readable name from entity data
-function getEntityName(entityType, data) {
-  if (!data) return null;
-  // Try common name fields in order of preference
-  return data.name || data.title || data.subject || data.content?.slice(0, 60) || null;
+// Derive a human-readable name from entity data, checking multiple sources
+function getEntityName(entityType, data, requestBody) {
+  // Check response data first, then request body as fallback
+  const sources = [data, requestBody].filter(Boolean);
+  for (const src of sources) {
+    const name = src.name || src.title || src.subject;
+    if (name) return name;
+  }
+  // Last resort: truncated content
+  for (const src of sources) {
+    if (src.content && typeof src.content === 'string') {
+      return src.content.replace(/[#*_\n]/g, '').slice(0, 60);
+    }
+  }
+  return null;
 }
 
 // Derive the project context from entity data
-function getProjectContext(entityType, data) {
-  if (!data) return { project_id: null, project_name: null };
+// Since project_name is rarely stored on child entities, look it up if we have project_id
+async function resolveProjectContext(entityType, data, requestBody) {
+  const src = data || requestBody;
+  if (!src) return { project_id: null, project_name: null };
+
   if (entityType === 'Project') {
-    return { project_id: null, project_name: data.name || null };
+    return { project_id: src.id || null, project_name: src.name || requestBody?.name || null };
   }
-  return {
-    project_id: data.project_id || null,
-    project_name: data.project_name || null,
-  };
+
+  const projectId = src.project_id || requestBody?.project_id || null;
+  if (!projectId) return { project_id: null, project_name: null };
+
+  // Try to get project name from the data first
+  let projectName = src.project_name || requestBody?.project_name || null;
+
+  // If no name, look it up from the Project table
+  if (!projectName && projectId) {
+    try {
+      const projects = await entityService.filter('Project', { id: projectId });
+      if (projects[0]) {
+        projectName = projects[0].name || null;
+      }
+    } catch {
+      // Non-critical — proceed without project name
+    }
+  }
+
+  return { project_id: projectId, project_name: projectName };
 }
 
 // Build a standardized action string
@@ -164,11 +193,14 @@ export default function auditMiddleware(req, res, next) {
       // If we can't read the before state, continue anyway — don't block the request
     }
 
+    // Capture the request body before it gets consumed
+    const requestBody = req.body;
+
     // Intercept the response to log after success
     const originalJson = res.json.bind(res);
     res.json = function (data) {
       // Fire-and-forget: write the audit log asynchronously
-      writeAuditLog(method, entityType, entityId, user, beforeState, data, req).catch(() => {});
+      writeAuditLog(method, entityType, entityId, user, beforeState, data, requestBody, req).catch(() => {});
       return originalJson(data);
     };
 
@@ -178,7 +210,7 @@ export default function auditMiddleware(req, res, next) {
   captureAndProceed();
 }
 
-async function writeAuditLog(method, entityType, entityId, user, beforeState, responseData, req) {
+async function writeAuditLog(method, entityType, entityId, user, beforeState, responseData, requestBody, req) {
   try {
     // For creates, the response IS the new entity
     const afterState = method === 'DELETE' ? null : responseData;
@@ -186,8 +218,8 @@ async function writeAuditLog(method, entityType, entityId, user, beforeState, re
     // Build the log entry
     const action = buildAction(method, entityType, beforeState, afterState);
     const category = ENTITY_CATEGORIES[entityType] || 'settings';
-    const entityName = getEntityName(entityType, afterState || beforeState);
-    const projectCtx = getProjectContext(entityType, afterState || beforeState);
+    const entityName = getEntityName(entityType, afterState || beforeState, requestBody);
+    const projectCtx = await resolveProjectContext(entityType, afterState || beforeState, requestBody);
     const changes = method === 'PUT' ? computeChanges(beforeState, afterState) : null;
 
     // Build a human-readable details string
