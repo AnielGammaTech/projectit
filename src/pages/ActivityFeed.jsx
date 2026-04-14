@@ -137,6 +137,7 @@ export default function ActivityFeed() {
 
   // Group activities by date
   const groupedActivities = filteredActivities.reduce((groups, activity) => {
+    if (!activity.created_date) return groups;
     const date = format(new Date(activity.created_date), 'yyyy-MM-dd');
     if (!groups[date]) groups[date] = [];
     groups[date].push(activity);
@@ -360,7 +361,7 @@ export default function ActivityFeed() {
                                   </div>
 
                                   <span className="text-xs text-muted-foreground shrink-0 ml-4">
-                                    {format(new Date(activity.created_date), 'h:mma').toLowerCase()}
+                                    {activity.created_date ? format(new Date(activity.created_date), 'h:mma').toLowerCase() : ''}
                                   </span>
                                 </div>
                               </div>

@@ -480,21 +480,35 @@ export default function Reports() {
                     <Badge variant="outline">{selectedProjectParts.length} items</Badge>
                   </div>
 
-                  <div className="grid grid-cols-5 gap-3 mb-5">
-                    {[
-                      { label: 'Needed', status: 'needed', color: 'red' },
-                      { label: 'In Transit', status: 'ordered', color: 'amber' },
-                      { label: 'In Stock', status: 'received', color: 'blue' },
-                      { label: 'Checked Out', status: 'ready_to_install', color: 'purple' },
-                      { label: 'Installed', status: 'installed', color: 'emerald' },
-                    ].map(({ label, status, color }) => (
-                      <div key={status} className={`bg-${color}-50 border border-${color}-200 rounded-lg p-3`}>
-                        <p className={`text-xs text-${color}-600 mb-1`}>{label}</p>
-                        <p className={`text-lg font-bold text-${color}-600`}>${getPartsCost(status).toFixed(0)}</p>
-                        <p className="text-[10px] text-muted-foreground">{getPartsByStatus(status).length} items</p>
+                  {(() => {
+                    const partsColorMap = {
+                      red:    { card: 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40',     text: 'text-red-600 dark:text-red-400' },
+                      amber:  { card: 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40',   text: 'text-amber-600 dark:text-amber-400' },
+                      blue:   { card: 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40',    text: 'text-blue-600 dark:text-blue-400' },
+                      purple: { card: 'bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/40', text: 'text-purple-600 dark:text-purple-400' },
+                      emerald:{ card: 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40', text: 'text-emerald-600 dark:text-emerald-400' },
+                    };
+                    return (
+                      <div className="grid grid-cols-5 gap-3 mb-5">
+                        {[
+                          { label: 'Needed', status: 'needed', color: 'red' },
+                          { label: 'In Transit', status: 'ordered', color: 'amber' },
+                          { label: 'In Stock', status: 'received', color: 'blue' },
+                          { label: 'Checked Out', status: 'ready_to_install', color: 'purple' },
+                          { label: 'Installed', status: 'installed', color: 'emerald' },
+                        ].map(({ label, status, color }) => {
+                          const cls = partsColorMap[color];
+                          return (
+                            <div key={status} className={`${cls.card} rounded-lg p-3`}>
+                              <p className={`text-xs ${cls.text} mb-1`}>{label}</p>
+                              <p className={`text-lg font-bold ${cls.text}`}>${getPartsCost(status).toFixed(0)}</p>
+                              <p className="text-[10px] text-muted-foreground">{getPartsByStatus(status).length} items</p>
+                            </div>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })()}
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="bg-muted/50 dark:bg-background rounded-lg p-4">

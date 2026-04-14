@@ -327,7 +327,8 @@ Provide brief, actionable recommendations. Focus on bottlenecks and priorities.`
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {overdueTasks.slice(0, 8).map(task => {
-            const daysOverdue = differenceInDays(new Date(), parseLocalDate(task.due_date));
+            const parsedDue = parseLocalDate(task.due_date);
+            const daysOverdue = parsedDue ? differenceInDays(new Date(), parsedDue) : 0;
             return (
               <div key={task.id} className="bg-muted/50 rounded-xl p-3 border border-red-500/20">
                 <p className="font-medium text-sm truncate">{task.title}</p>

@@ -16,6 +16,7 @@ import TaskDetailModal from '@/components/modals/TaskDetailModal';
 import { format, isPast, isToday, isTomorrow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { sendTaskAssignmentNotification, sendTaskCompletionNotification } from '@/utils/notifications';
+import { toast } from 'sonner';
 import { parseLocalDate } from '@/utils/dateUtils';
 import UserAvatar from '@/components/UserAvatar';
 import { TablePageSkeleton } from '@/components/ui/PageSkeletons';
@@ -23,16 +24,16 @@ import PageShell from '@/components/ui/PageShell';
 import EmptyState from '@/components/ui/EmptyState';
 
 const statusConfig = {
-  todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100', label: 'To Do' },
-  in_progress: { icon: ArrowUpCircle, color: 'text-blue-500', bg: 'bg-blue-100', label: 'In Progress' },
-  review: { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-100', label: 'Review' },
-  completed: { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-100', label: 'Completed' }
+  todo: { icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100 dark:bg-slate-800', label: 'To Do' },
+  in_progress: { icon: ArrowUpCircle, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/40', label: 'In Progress' },
+  review: { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/40', label: 'Review' },
+  completed: { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/40', label: 'Completed' }
 };
 
 const priorityColors = {
-  low: 'bg-slate-100 text-slate-600',
-  medium: 'bg-amber-100 text-amber-700',
-  high: 'bg-red-100 text-red-700'
+  low: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+  medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
+  high: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
 };
 
 // Monday.com-style task row for the flat table view
@@ -528,81 +529,115 @@ export default function AllTasks() {
   const handleQuickComplete = async (e, taskId) => {
     e.stopPropagation();
     const task = tasks.find(t => t.id === taskId);
-    await api.entities.Task.update(taskId, { status: 'completed' });
-
-    if (task) {
-      await sendTaskCompletionNotification({
-        task,
-        projectId: task.project_id,
-        projectName: getProjectName(task.project_id),
-        currentUser,
-      });
+    try {
+      await api.entities.Task.update(taskId, { status: 'completed' });
+      if (task) {
+        await sendTaskCompletionNotification({
+          task,
+          projectId: task.project_id,
+          projectName: getProjectName(task.project_id),
+          currentUser,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+    } catch (err) {
+      toast.error('Failed to complete task');
     }
-
-    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
   };
 
   const handleTaskAssign = async (task, email) => {
     const member = teamMembers.find(m => m.email === email);
-    await api.entities.Task.update(task.id, {
-      assigned_to: email,
-      assigned_name: member?.name || email
-    });
-    if (email !== task.assigned_to) {
-      await sendTaskAssignmentNotification({
-        assigneeEmail: email,
-        taskTitle: task.title,
-        projectId: task.project_id,
-        projectName: getProjectName(task.project_id),
-        currentUser,
+    try {
+      await api.entities.Task.update(task.id, {
+        assigned_to: email,
+        assigned_name: member?.name || email
       });
+      if (email !== task.assigned_to) {
+        await sendTaskAssignmentNotification({
+          assigneeEmail: email,
+          taskTitle: task.title,
+          projectId: task.project_id,
+          projectName: getProjectName(task.project_id),
+          currentUser,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+    } catch (err) {
+      toast.error('Failed to assign task');
     }
-    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
   };
 
   const handleTaskUnassign = async (task) => {
-    await api.entities.Task.update(task.id, { assigned_to: '', assigned_name: '' });
-    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+    try {
+      await api.entities.Task.update(task.id, { assigned_to: '', assigned_name: '' });
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+    } catch (err) {
+      toast.error('Failed to unassign task');
+    }
   };
 
   const handleTaskDueDateChange = async (task, date) => {
-    await api.entities.Task.update(task.id, {
-      due_date: date ? format(date, 'yyyy-MM-dd') : ''
-    });
-    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+    try {
+      await api.entities.Task.update(task.id, {
+        due_date: date ? format(date, 'yyyy-MM-dd') : ''
+      });
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+    } catch (err) {
+      toast.error('Failed to update due date');
+    }
   };
 
   const handlePartAssign = async (part, email) => {
     const member = teamMembers.find(m => m.email === email);
-    await api.entities.Part.update(part.id, {
-      assigned_to: email,
-      assigned_name: member?.name || email
-    });
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    try {
+      await api.entities.Part.update(part.id, {
+        assigned_to: email,
+        assigned_name: member?.name || email
+      });
+      queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    } catch (err) {
+      toast.error('Failed to assign part');
+    }
   };
 
   const handlePartUnassign = async (part) => {
-    await api.entities.Part.update(part.id, { assigned_to: '', assigned_name: '' });
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    try {
+      await api.entities.Part.update(part.id, { assigned_to: '', assigned_name: '' });
+      queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    } catch (err) {
+      toast.error('Failed to unassign part');
+    }
   };
 
   const handlePartDueDateChange = async (part, date) => {
-    await api.entities.Part.update(part.id, {
-      due_date: date ? format(date, 'yyyy-MM-dd') : ''
-    });
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    try {
+      await api.entities.Part.update(part.id, {
+        due_date: date ? format(date, 'yyyy-MM-dd') : ''
+      });
+      queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    } catch (err) {
+      toast.error('Failed to update part due date');
+    }
   };
 
   const handlePartStatusChange = async (part, newStatus) => {
-    await api.entities.Part.update(part.id, { status: newStatus });
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    try {
+      await api.entities.Part.update(part.id, { status: newStatus });
+      queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    } catch (err) {
+      toast.error('Failed to update part status');
+    }
   };
 
   const handlePartETAChange = async (part, date) => {
-    await api.entities.Part.update(part.id, {
-      est_delivery_date: date ? format(date, 'yyyy-MM-dd') : ''
-    });
-    queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    try {
+      await api.entities.Part.update(part.id, {
+        est_delivery_date: date ? format(date, 'yyyy-MM-dd') : ''
+      });
+      queryClient.invalidateQueries({ queryKey: ['allParts'] });
+    } catch (err) {
+      toast.error('Failed to update part ETA');
+    }
   };
 
   const getDueDateLabel = (date) => {

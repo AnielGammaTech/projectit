@@ -206,7 +206,7 @@ function TabAllAssets({ assets, employeeMap, assignments, search }) {
             return (
               <tr key={asset.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
                 <td className="px-4 py-2.5 font-medium text-foreground">{asset.name}</td>
-                <td className="px-4 py-2.5 text-muted-foreground">{asset.asset_type || '--'}</td>
+                <td className="px-4 py-2.5 text-muted-foreground">{asset.type || asset.asset_type || '--'}</td>
                 <td className="px-4 py-2.5">
                   {osInfo ? (
                     <span className="flex items-center gap-1.5 text-muted-foreground">

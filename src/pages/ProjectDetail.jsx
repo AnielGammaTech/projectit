@@ -101,9 +101,9 @@ import { cn } from '@/lib/utils';
 import { ProjectDetailSkeleton } from '@/components/ui/PageSkeletons';
 
 const statusColors = {
-  planning: 'bg-amber-50 text-amber-700 border-amber-200',
-  on_hold: 'bg-slate-50 text-slate-700 border-slate-200',
-  completed: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+  planning: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+  on_hold: 'bg-slate-50 dark:bg-slate-950/30 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-800',
+  completed: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
 };
 
 const statusOptions = [
@@ -305,7 +305,6 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
       setOrderDialog({ open: false, part: null, screenshot: null, eta: null, notes: '' });
       setOrderScreenshotPreview(null);
     } catch (err) {
-      console.error('Failed to confirm order:', err);
       toast.error('Failed to confirm order. Please try again.');
     }
   };
@@ -345,7 +344,6 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
       refetchParts?.();
       setReceiveDialog({ open: false, part: null, installer: '', location: '', createTask: false });
     } catch (err) {
-      console.error('Failed to confirm receive:', err);
       toast.error('Failed to confirm receive. Please try again.');
     }
   };
@@ -355,7 +353,6 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
       await api.entities.Part.update(part.id, { status: 'installed', installed_date: format(new Date(), 'yyyy-MM-dd') });
       refetchParts?.();
     } catch (err) {
-      console.error('Failed to mark part as installed:', err);
       toast.error('Failed to mark part as installed. Please try again.');
     }
   };
@@ -638,12 +635,12 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
               Receive Part
             </AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="font-medium text-slate-900">{receiveDialog.part?.name}</span>
+              <span className="font-medium text-foreground">{receiveDialog.part?.name}</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4 space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2"><MapPin className="w-4 h-4" />Where stored? (optional)</label>
+              <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2"><MapPin className="w-4 h-4" />Where stored? (optional)</label>
               <Textarea value={receiveDialog.location} onChange={(e) => setReceiveDialog(prev => ({ ...prev, location: e.target.value }))} placeholder="e.g., Warehouse shelf B3..." className="h-20" />
             </div>
             <div className="flex items-center space-x-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
@@ -671,8 +668,8 @@ function PartsOverviewCard({ parts, projectId, projectMembers = [], onAddPart, o
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div>
-                <span className="font-medium text-slate-900">{viewingProof?.name}</span>
-                {viewingProof?.order_date && <span className="text-slate-500"> · Ordered {format(parseLocalDate(viewingProof.order_date) || new Date(), 'MMM d, yyyy')}</span>}
+                <span className="font-medium text-foreground">{viewingProof?.name}</span>
+                {viewingProof?.order_date && <span className="text-muted-foreground"> · Ordered {format(parseLocalDate(viewingProof.order_date) || new Date(), 'MMM d, yyyy')}</span>}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -878,7 +875,7 @@ export default function ProjectDetail() {
       await api.entities.ProjectNote.create({
         project_id: projectId,
         type: 'note',
-        content: `🔸 **Project put on hold:** ${reason}`,
+        content: `**Project put on hold:** ${reason}`,
         created_by: currentUser?.email,
         created_by_name: currentUser?.full_name || currentUser?.email
       });
@@ -888,7 +885,7 @@ export default function ProjectDetail() {
       refetchProject();
       queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
     } catch (err) {
-      console.error('Failed to put project on hold:', err);
+      toast.error('Failed to put project on hold. Please try again.');
     }
   };
 
@@ -917,7 +914,7 @@ export default function ProjectDetail() {
         await api.entities.ProjectNote.create({
           project_id: projectId,
           type: 'note',
-          content: `✅ **Project completed:** ${notes}`,
+          content: `**Project completed:** ${notes}`,
           created_by: currentUser?.email,
           created_by_name: currentUser?.full_name || currentUser?.email
         });
@@ -928,7 +925,6 @@ export default function ProjectDetail() {
       queryClient.invalidateQueries({ queryKey: ['projectNotes', projectId] });
       setShowCompleteModal(false);
     } catch (err) {
-      console.error('Failed to complete project:', err);
       toast.error('Failed to complete project. Please try again.');
     }
   };
@@ -953,7 +949,6 @@ export default function ProjectDetail() {
       await logActivity(projectId, 'project_resumed', 'resumed project from on hold', currentUser);
       refetchProject();
     } catch (err) {
-      console.error('Failed to resume project:', err);
       toast.error('Failed to resume project. Please try again.');
     }
   };
@@ -988,7 +983,6 @@ export default function ProjectDetail() {
         setShowTaskModal(false);
         setEditingTask(null);
       } catch (err) {
-        console.error('Failed to save task:', err);
         toast.error('Failed to save task. Please try again.');
       }
     };
@@ -1012,37 +1006,48 @@ export default function ProjectDetail() {
       refetchTasks();
       queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
     } catch (err) {
-      console.error('Failed to update task status:', err);
       toast.error('Failed to update task status. Please try again.');
     }
   };
 
   // Groups
   const handleCreateGroup = async (data) => {
-    await api.entities.TaskGroup.create({ ...data, project_id: projectId });
-    refetchGroups();
+    try {
+      await api.entities.TaskGroup.create({ ...data, project_id: projectId });
+      refetchGroups();
+    } catch (err) {
+      toast.error('Failed to create group. Please try again.');
+    }
   };
 
   const handleSaveGroup = async (data) => {
-    if (editingGroup) {
-      await api.entities.TaskGroup.update(editingGroup.id, data);
-    } else {
-      await api.entities.TaskGroup.create(data);
+    try {
+      if (editingGroup) {
+        await api.entities.TaskGroup.update(editingGroup.id, data);
+      } else {
+        await api.entities.TaskGroup.create(data);
+      }
+      refetchGroups();
+      setShowGroupModal(false);
+      setEditingGroup(null);
+    } catch (err) {
+      toast.error('Failed to save group. Please try again.');
     }
-    refetchGroups();
-    setShowGroupModal(false);
-    setEditingGroup(null);
   };
 
   const handleDeleteGroup = async (group) => {
-    await api.entities.TaskGroup.delete(group.id);
-    // Ungroup tasks
-    const groupTasks = tasks.filter(t => t.group_id === group.id);
-    for (const task of groupTasks) {
-      await api.entities.Task.update(task.id, { group_id: '' });
+    try {
+      await api.entities.TaskGroup.delete(group.id);
+      // Ungroup tasks
+      const groupTasks = tasks.filter(t => t.group_id === group.id);
+      for (const task of groupTasks) {
+        await api.entities.Task.update(task.id, { group_id: '' });
+      }
+      refetchGroups();
+      refetchTasks();
+    } catch (err) {
+      toast.error('Failed to delete group. Please try again.');
     }
-    refetchGroups();
-    refetchTasks();
   };
 
   // Parts
@@ -1060,7 +1065,6 @@ export default function ProjectDetail() {
       setShowPartModal(false);
       setEditingPart(null);
     } catch (err) {
-      console.error('Failed to save part:', err);
       toast.error('Failed to save part. Please try again.');
     }
   };
@@ -1069,7 +1073,6 @@ export default function ProjectDetail() {
     try {
     await api.entities.Part.update(part.id, { status });
     } catch (err) {
-      console.error('Failed to update part status:', err);
       toast.error('Failed to update part status. Please try again.');
       return;
     }
@@ -1111,7 +1114,6 @@ export default function ProjectDetail() {
         queryClient.invalidateQueries({ queryKey: ['allTasks'] });
         queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       } catch (err) {
-        console.error('Auto-task workflow (ordered) failed:', err);
       }
     }
 
@@ -1144,7 +1146,6 @@ export default function ProjectDetail() {
         queryClient.invalidateQueries({ queryKey: ['allTasks'] });
         queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       } catch (err) {
-        console.error('Auto-task workflow (received) failed:', err);
       }
     }
 
@@ -1164,7 +1165,6 @@ export default function ProjectDetail() {
         queryClient.invalidateQueries({ queryKey: ['allTasks'] });
         queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       } catch (err) {
-        console.error('Auto-task workflow (installed) failed:', err);
       }
     }
 
@@ -1195,7 +1195,6 @@ export default function ProjectDetail() {
           link: `${window.location.origin}/ProjectDetail?id=${projectId}`
         });
       } catch (err) {
-        console.error('Failed to send part notification:', err);
       }
     }
 
@@ -1205,9 +1204,13 @@ export default function ProjectDetail() {
 
   // Project
   const handleUpdateProject = async (data) => {
-    await api.entities.Project.update(projectId, data);
-    refetchProject();
-    setShowProjectModal(false);
+    try {
+      await api.entities.Project.update(projectId, data);
+      refetchProject();
+      setShowProjectModal(false);
+    } catch (err) {
+      toast.error('Failed to update project. Please try again.');
+    }
   };
 
   // Quick inline update
@@ -1216,7 +1219,6 @@ export default function ProjectDetail() {
       await api.entities.Project.update(projectId, { [field]: value });
       refetchProject();
     } catch (err) {
-      console.error('Failed to update project field:', err);
       toast.error('Failed to update project. Please try again.');
     }
   };
@@ -1228,7 +1230,6 @@ export default function ProjectDetail() {
       await api.entities.Project.update(projectId, { team_members: emails });
       refetchProject();
     } catch (err) {
-      console.error('Failed to update team members:', err);
       toast.error('Failed to update team. Please try again.');
     }
 
@@ -1259,7 +1260,6 @@ export default function ProjectDetail() {
             link: `${window.location.origin}/ProjectDetail?id=${projectId}`
           });
         } catch (notifErr) {
-          console.error('Failed to send project assignment notification:', notifErr);
         }
       }
     }
@@ -1267,38 +1267,42 @@ export default function ProjectDetail() {
 
   // Save as Template
   const handleSaveAsTemplate = async () => {
-    // Build group mapping for tasks
-    const groupTemplateIds = {};
-    const templateGroups = taskGroups.map(g => {
-      const templateId = `grp_${g.id}`;
-      groupTemplateIds[g.id] = templateId;
-      return { name: g.name, color: g.color || 'slate', _template_id: templateId };
-    });
+    try {
+      // Build group mapping for tasks
+      const groupTemplateIds = {};
+      const templateGroups = taskGroups.map(g => {
+        const templateId = `grp_${g.id}`;
+        groupTemplateIds[g.id] = templateId;
+        return { name: g.name, color: g.color || 'slate', _template_id: templateId };
+      });
 
-    const templateData = {
-      name: `${project.name} Template`,
-      description: project.description || '',
-      template_type: 'project',
-      default_groups: templateGroups,
-      default_tasks: tasks.map(t => ({
-        title: t.title,
-        description: t.description || '',
-        priority: t.priority || 'medium',
-        group_id: t.group_id ? (groupTemplateIds[parseInt(t.group_id)] || '') : ''
-      })),
-      default_parts: parts.map(p => ({
-        name: p.name,
-        part_number: p.part_number || '',
-        quantity: p.quantity || 1
-      })),
-      default_messages: projectNotes.map(n => ({
-        title: n.title || '',
-        content: n.content || '',
-        type: n.type || 'note'
-      }))
-    };
-    await api.entities.ProjectTemplate.create(templateData);
-    toast.success('Project saved as template!');
+      const templateData = {
+        name: `${project.name} Template`,
+        description: project.description || '',
+        template_type: 'project',
+        default_groups: templateGroups,
+        default_tasks: tasks.map(t => ({
+          title: t.title,
+          description: t.description || '',
+          priority: t.priority || 'medium',
+          group_id: t.group_id ? (groupTemplateIds[parseInt(t.group_id)] || '') : ''
+        })),
+        default_parts: parts.map(p => ({
+          name: p.name,
+          part_number: p.part_number || '',
+          quantity: p.quantity || 1
+        })),
+        default_messages: projectNotes.map(n => ({
+          title: n.title || '',
+          content: n.content || '',
+          type: n.type || 'note'
+        }))
+      };
+      await api.entities.ProjectTemplate.create(templateData);
+      toast.success('Project saved as template!');
+    } catch (err) {
+      toast.error('Failed to save as template. Please try again.');
+    }
   };
 
   // Archive project
@@ -1318,7 +1322,6 @@ export default function ProjectDetail() {
       toast.success('Project archived successfully');
       navigate(createPageUrl('Dashboard'));
     } catch (error) {
-      console.error('Error archiving project:', error);
       toast.error('Failed to archive project. Please try again.');
     } finally {
       setIsProcessing(false);
@@ -1336,7 +1339,6 @@ export default function ProjectDetail() {
       toast.success('Project permanently deleted');
       navigate(createPageUrl('Dashboard'));
     } catch (error) {
-      console.error('Error deleting project:', error);
       toast.error('Failed to delete project. Please try again.');
     } finally {
       setIsProcessing(false);
@@ -1346,23 +1348,31 @@ export default function ProjectDetail() {
 
   // Progress update
   const handleProgressUpdate = async (progressValue) => {
-    await api.entities.Project.update(projectId, { ...project, progress: progressValue });
-    await logActivity(projectId, ActivityActions.PROGRESS_UPDATED, `updated progress to ${progressValue}%`, currentUser);
-    refetchProject();
-    queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
+    try {
+      await api.entities.Project.update(projectId, { ...project, progress: progressValue });
+      await logActivity(projectId, ActivityActions.PROGRESS_UPDATED, `updated progress to ${progressValue}%`, currentUser);
+      refetchProject();
+      queryClient.invalidateQueries({ queryKey: ['projectActivity', projectId] });
+    } catch (err) {
+      toast.error('Failed to update progress. Please try again.');
+    }
   };
 
   // Delete
   const handleDelete = async () => {
     const { type, item } = deleteConfirm;
-    if (type === 'task') {
-      await api.entities.Task.delete(item.id);
-      refetchTasks();
-    } else if (type === 'part') {
-      await api.entities.Part.delete(item.id);
-      refetchParts();
+    try {
+      if (type === 'task') {
+        await api.entities.Task.delete(item.id);
+        refetchTasks();
+      } else if (type === 'part') {
+        await api.entities.Part.delete(item.id);
+        refetchParts();
+      }
+      setDeleteConfirm({ open: false, type: null, item: null });
+    } catch (err) {
+      toast.error('Failed to delete. Please try again.');
     }
-    setDeleteConfirm({ open: false, type: null, item: null });
   };
 
   if (loadingProject) return <ProjectDetailSkeleton />;
@@ -1433,16 +1443,16 @@ export default function ProjectDetail() {
                 <Trash2 className="w-10 h-10 text-white" />
               )}
             </div>
-            <h2 className="text-2xl font-bold text-slate-800">
+            <h2 className="text-2xl font-bold text-foreground">
               {project.status === 'archived' ? 'Project Archived' : 'Project Deleted'}
             </h2>
-            <p className="text-slate-500 text-center max-w-md">
+            <p className="text-muted-foreground text-center max-w-md">
               {project.status === 'archived'
                 ? 'This project has been archived and is no longer active. You can restore it from the Dashboard or click below.'
                 : 'This project has been deleted.'}
             </p>
             {project.archive_reason && (
-              <p className="text-sm text-slate-400 italic">Reason: {project.archive_reason}</p>
+              <p className="text-sm text-muted-foreground italic">Reason: {project.archive_reason}</p>
             )}
             <div className="flex items-center gap-3 mt-2">
               <Link to={createPageUrl('Dashboard')}>

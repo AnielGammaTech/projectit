@@ -466,7 +466,7 @@ export default function ProjectFiles() {
                           <span>·</span>
                           <span>{file.uploaded_by_name}</span>
                           <span>·</span>
-                          <span>{format(new Date(file.created_date), 'MMM d, yyyy')}</span>
+                          <span>{file.created_date ? format(new Date(file.created_date), 'MMM d, yyyy') : ''}</span>
                           {commentCount > 0 && (
                             <>
                               <span>·</span>

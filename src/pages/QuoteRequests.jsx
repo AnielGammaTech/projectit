@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import QuoteRequestModal from '@/components/modals/QuoteRequestModal';
 import QuoteRequestDetailModal from '@/components/modals/QuoteRequestDetailModal';
@@ -239,7 +239,7 @@ export default function QuoteRequests() {
                                 {quote.install_date && (
                                   <span className="flex items-center gap-1.5">
                                     <Calendar className="w-3.5 h-3.5" />
-                                    Install: {format(new Date(quote.install_date), 'MMM d')}
+                                    Install: {format(parseISO(quote.install_date), 'MMM d')}
                                   </span>
                                 )}
                                 {quote.assigned_to_name && (
@@ -285,7 +285,7 @@ export default function QuoteRequests() {
                             <span className="text-sm text-muted-foreground">${quote.quote_amount.toLocaleString()}</span>
                           )}
                           <span className="text-xs text-muted-foreground ml-auto">
-                            {format(new Date(quote.created_date), 'MMM d')}
+                            {quote.created_date ? format(new Date(quote.created_date), 'MMM d') : ''}
                           </span>
                         </div>
                       </div>

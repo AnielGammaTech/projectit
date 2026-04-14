@@ -325,21 +325,29 @@ export default function ProjectTasks() {
   };
 
   const handleBulkDueDate = async (date) => {
-    for (const taskId of selectedTasks) {
-      await api.entities.Task.update(taskId, {
-        due_date: date ? format(date, 'yyyy-MM-dd') : ''
-      });
+    try {
+      for (const taskId of selectedTasks) {
+        await api.entities.Task.update(taskId, {
+          due_date: date ? format(date, 'yyyy-MM-dd') : ''
+        });
+      }
+      refetchTasks();
+      setBulkDatePickerOpen(false);
+    } catch (err) {
+      toast.error('Failed to update due dates. Please try again.');
     }
-    refetchTasks();
-    setBulkDatePickerOpen(false);
   };
 
   const handleBulkMoveToGroup = async (groupId) => {
-    for (const taskId of selectedTasks) {
-      await api.entities.Task.update(taskId, { group_id: groupId || '' });
+    try {
+      for (const taskId of selectedTasks) {
+        await api.entities.Task.update(taskId, { group_id: groupId || '' });
+      }
+      refetchTasks();
+      clearSelection();
+    } catch (err) {
+      toast.error('Failed to move tasks to group. Please try again.');
     }
-    refetchTasks();
-    clearSelection();
   };
 
   // Drag and drop handler
@@ -471,7 +479,7 @@ export default function ProjectTasks() {
         if (allDone) {
           setTimeout(() => {
             fireCelebrationConfetti();
-            toast.success("All tasks completed! Amazing work! 🎉🎊");
+            toast.success("All tasks completed! Amazing work!");
           }, 500);
         }
       }
@@ -483,61 +491,77 @@ export default function ProjectTasks() {
   };
 
   const handleSaveTask = async (data) => {
-    const wasAssigned = editingTask?.assigned_to;
-    const isNewlyAssigned = data.assigned_to && data.assigned_to !== 'unassigned' && data.assigned_to !== wasAssigned;
+    try {
+      const wasAssigned = editingTask?.assigned_to;
+      const isNewlyAssigned = data.assigned_to && data.assigned_to !== 'unassigned' && data.assigned_to !== wasAssigned;
 
-    if (editingTask) {
-      await api.entities.Task.update(editingTask.id, data);
-    } else {
-      await api.entities.Task.create(data);
+      if (editingTask) {
+        await api.entities.Task.update(editingTask.id, data);
+      } else {
+        await api.entities.Task.create(data);
+      }
+
+      if (isNewlyAssigned) {
+        await sendTaskAssignmentNotification({
+          assigneeEmail: data.assigned_to,
+          taskTitle: data.title,
+          projectId,
+          projectName: project?.name,
+          currentUser,
+        });
+      }
+
+      await refetchTasks();
+      setShowTaskModal(false);
+      setEditingTask(null);
+    } catch (err) {
+      toast.error('Failed to save task. Please try again.');
     }
-
-    if (isNewlyAssigned) {
-      await sendTaskAssignmentNotification({
-        assigneeEmail: data.assigned_to,
-        taskTitle: data.title,
-        projectId,
-        projectName: project?.name,
-        currentUser,
-      });
-    }
-
-    await refetchTasks();
-    setShowTaskModal(false);
-    setEditingTask(null);
   };
 
   const handleBulkCreateTasks = async (tasksData) => {
-    for (const taskData of tasksData) {
-      await api.entities.Task.create({
-        ...taskData,
-        project_id: projectId
-      });
+    try {
+      for (const taskData of tasksData) {
+        await api.entities.Task.create({
+          ...taskData,
+          project_id: projectId
+        });
+      }
+      await refetchTasks();
+      setShowTaskModal(false);
+    } catch (err) {
+      toast.error('Failed to create tasks. Please try again.');
     }
-    await refetchTasks();
-    setShowTaskModal(false);
   };
 
 
   const handleSaveGroup = async (data, existingGroup) => {
-    if (existingGroup) {
-      await api.entities.TaskGroup.update(existingGroup.id, data);
-    } else {
-      await api.entities.TaskGroup.create({ ...data, project_id: projectId });
+    try {
+      if (existingGroup) {
+        await api.entities.TaskGroup.update(existingGroup.id, data);
+      } else {
+        await api.entities.TaskGroup.create({ ...data, project_id: projectId });
+      }
+      refetchGroups();
+      setShowGroupModal(false);
+      setEditingGroup(null);
+    } catch (err) {
+      toast.error('Failed to save group. Please try again.');
     }
-    refetchGroups();
-    setShowGroupModal(false);
-    setEditingGroup(null);
   };
 
   const handleDeleteGroup = async (group) => {
-    await api.entities.TaskGroup.delete(group.id);
-    const groupTasks = tasks.filter(t => t.group_id === group.id);
-    for (const task of groupTasks) {
-      await api.entities.Task.update(task.id, { group_id: '' });
+    try {
+      await api.entities.TaskGroup.delete(group.id);
+      const groupTasks = tasks.filter(t => t.group_id === group.id);
+      for (const task of groupTasks) {
+        await api.entities.Task.update(task.id, { group_id: '' });
+      }
+      refetchGroups();
+      refetchTasks();
+    } catch (err) {
+      toast.error('Failed to delete group. Please try again.');
     }
-    refetchGroups();
-    refetchTasks();
   };
 
   const handleDelete = async () => {
@@ -552,38 +576,50 @@ export default function ProjectTasks() {
   };
 
   const handleTaskAssign = async (task, email) => {
-    const member = teamMembers.find(m => m.email === email);
-    await api.entities.Task.update(task.id, {
-      assigned_to: email,
-      assigned_name: member?.name || email
-    });
-
-    if (email !== task.assigned_to) {
-      await sendTaskAssignmentNotification({
-        assigneeEmail: email,
-        taskTitle: task.title,
-        projectId,
-        projectName: project?.name,
-        currentUser,
+    try {
+      const member = teamMembers.find(m => m.email === email);
+      await api.entities.Task.update(task.id, {
+        assigned_to: email,
+        assigned_name: member?.name || email
       });
-    }
 
-    refetchTasks();
+      if (email !== task.assigned_to) {
+        await sendTaskAssignmentNotification({
+          assigneeEmail: email,
+          taskTitle: task.title,
+          projectId,
+          projectName: project?.name,
+          currentUser,
+        });
+      }
+
+      refetchTasks();
+    } catch (err) {
+      toast.error('Failed to assign task. Please try again.');
+    }
   };
 
   const handleTaskUnassign = async (task) => {
-    await api.entities.Task.update(task.id, {
-      assigned_to: '',
-      assigned_name: ''
-    });
-    refetchTasks();
+    try {
+      await api.entities.Task.update(task.id, {
+        assigned_to: '',
+        assigned_name: ''
+      });
+      refetchTasks();
+    } catch (err) {
+      toast.error('Failed to unassign task. Please try again.');
+    }
   };
 
   const handleTaskDueDateChange = async (task, date) => {
-    await api.entities.Task.update(task.id, {
-      due_date: date ? format(date, 'yyyy-MM-dd') : ''
-    });
-    refetchTasks();
+    try {
+      await api.entities.Task.update(task.id, {
+        due_date: date ? format(date, 'yyyy-MM-dd') : ''
+      });
+      refetchTasks();
+    } catch (err) {
+      toast.error('Failed to update due date. Please try again.');
+    }
   };
 
   // ---- Inline Task Creator (DRY) ----

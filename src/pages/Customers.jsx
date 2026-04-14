@@ -305,11 +305,11 @@ export default function Customers() {
               </div>
             </div>
             {/* Search bar skeleton */}
-            <div className="bg-card rounded-2xl border border-slate-100 dark:border-border p-4">
+            <div className="bg-card rounded-2xl border border-border p-4">
               <div className="flex gap-3">
-                <div className="flex-1 h-10 bg-slate-100 dark:bg-slate-700/40 rounded-lg animate-pulse" />
-                <div className="h-10 w-20 bg-slate-100 dark:bg-slate-700/40 rounded-lg animate-pulse" />
-                <div className="h-10 w-72 bg-slate-100 dark:bg-slate-700/40 rounded-lg animate-pulse" />
+                <div className="flex-1 h-10 bg-muted rounded-lg animate-pulse" />
+                <div className="h-10 w-20 bg-muted rounded-lg animate-pulse" />
+                <div className="h-10 w-72 bg-muted rounded-lg animate-pulse" />
               </div>
             </div>
             {/* Card grid skeleton */}
@@ -317,7 +317,7 @@ export default function Customers() {
               {Array.from({ length: 8 }, (_, i) => (
                 <div
                   key={i}
-                  className="bg-card rounded-xl border border-slate-200 dark:border-border p-4"
+                  className="bg-card rounded-xl border border-border p-4"
                   style={{ animationDelay: `${i * 75}ms` }}
                 >
                   <div className="flex items-start gap-3 animate-pulse">
@@ -327,7 +327,7 @@ export default function Customers() {
                       <div className="h-3 bg-slate-100 dark:bg-slate-700/60 rounded w-2/5" />
                     </div>
                   </div>
-                  <div className="flex gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/40 animate-pulse">
+                  <div className="flex gap-4 mt-3 pt-3 border-t border-border/50 animate-pulse">
                     <div className="h-5 w-10 bg-slate-100 dark:bg-slate-700/40 rounded" />
                     <div className="h-5 w-10 bg-slate-100 dark:bg-slate-700/40 rounded" />
                     <div className="h-5 w-10 bg-slate-100 dark:bg-slate-700/40 rounded" />
@@ -351,8 +351,8 @@ export default function Customers() {
         >
           <div className="flex items-center gap-3">
             <h1 className="text-lg sm:text-3xl font-bold text-foreground tracking-tight">Customers</h1>
-            <span className="text-xs text-slate-400 sm:hidden">{companies.length + standaloneContacts.length}</span>
-            <p className="hidden sm:block text-slate-500 text-sm">Manage your client relationships</p>
+            <span className="text-xs text-muted-foreground sm:hidden">{companies.length + standaloneContacts.length}</span>
+            <p className="hidden sm:block text-muted-foreground text-sm">Manage your client relationships</p>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Button variant="outline" size="sm" onClick={handleHaloPSASync} disabled={syncing} className="hidden sm:inline-flex">
@@ -400,21 +400,21 @@ export default function Customers() {
         {/* Mobile: compact search only */}
         <div className="sm:hidden mb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search customers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-10 text-sm rounded-xl bg-card border-slate-200 dark:border-border"
+              className="pl-9 h-10 text-sm rounded-xl bg-card border-border"
             />
           </div>
         </div>
 
         {/* Desktop: search + filter toolbar in card */}
-        <div className="hidden sm:block bg-card rounded-2xl border border-slate-100 dark:border-border p-4 mb-6">
+        <div className="hidden sm:block bg-card rounded-2xl border border-border p-4 mb-6">
           <div className="flex gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search customers..."
                 value={searchQuery}
@@ -431,12 +431,12 @@ export default function Customers() {
               <CheckSquare className="w-4 h-4 mr-2" />
               {selectionMode ? 'Done' : 'Select'}
             </Button>
-            <div className="flex gap-1 bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
+            <div className="flex gap-1 bg-muted p-1 rounded-lg">
               <button
                 onClick={() => setViewFilter('all')}
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                  viewFilter === 'all' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  viewFilter === 'all' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 All ({companies.length + standaloneContacts.length})
@@ -445,7 +445,7 @@ export default function Customers() {
                 onClick={() => setViewFilter('companies')}
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
-                  viewFilter === 'companies' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  viewFilter === 'companies' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Building2 className="w-3.5 h-3.5" />
@@ -455,7 +455,7 @@ export default function Customers() {
                 onClick={() => setViewFilter('contacts')}
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
-                  viewFilter === 'contacts' ? "bg-white dark:bg-slate-600 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  viewFilter === 'contacts' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Users className="w-3.5 h-3.5" />
@@ -470,7 +470,7 @@ export default function Customers() {
           {(viewFilter === 'all' || viewFilter === 'companies') && filteredCompanies.length > 0 && (
             <>
               {/* Mobile compact list */}
-              <div className="sm:hidden bg-card rounded-xl border border-slate-200 dark:border-border overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/30">
+              <div className="sm:hidden bg-card rounded-xl border border-border overflow-hidden divide-y divide-border/50">
                 {filteredCompanies.map((company) => {
                   const contacts = getContactsForCompany(company.id);
                   const companySites = getSitesForCompany(company.id);
@@ -483,10 +483,10 @@ export default function Customers() {
                   return (
                     <div
                       key={company.id}
-                      className="flex items-center gap-3 px-3 py-2.5 active:bg-slate-50 dark:active:bg-slate-700/30 cursor-pointer"
+                      className="flex items-center gap-3 px-3 py-2.5 active:bg-muted cursor-pointer"
                       onClick={() => setSelectedCustomer(company)}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground shrink-0">
                         <Building2 className="w-3.5 h-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -579,7 +579,7 @@ export default function Customers() {
           {(viewFilter === 'all' || viewFilter === 'contacts') && filteredStandaloneContacts.length > 0 && (
             <>
               {/* Mobile compact list */}
-              <div className="sm:hidden bg-card rounded-xl border border-slate-200 dark:border-border overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/30 mt-2">
+              <div className="sm:hidden bg-card rounded-xl border border-border overflow-hidden divide-y divide-border/50 mt-2">
                 {filteredStandaloneContacts.map((customer) => (
                   <div
                     key={customer.id}

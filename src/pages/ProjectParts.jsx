@@ -185,7 +185,7 @@ export default function ProjectParts() {
 
   const handleStatusChange = async (part, status) => {
     try {
-      await api.entities.Part.update(part.id, { ...part, status });
+      await api.entities.Part.update(part.id, { status });
       refetchParts();
     } catch (err) {
       toast.error('Failed to update part status');
@@ -325,17 +325,25 @@ export default function ProjectParts() {
   };
 
   const handleQuickAssign = async (part, email) => {
-    const member = teamMembers.find(m => m.email === email);
-    await api.entities.Part.update(part.id, {
-      assigned_to: email,
-      assigned_name: member?.name || email
-    });
-    refetchParts();
+    try {
+      const member = teamMembers.find(m => m.email === email);
+      await api.entities.Part.update(part.id, {
+        assigned_to: email,
+        assigned_name: member?.name || email
+      });
+      refetchParts();
+    } catch (err) {
+      toast.error('Failed to assign part. Please try again.');
+    }
   };
 
   const handleSetDeliveryDate = async (part, date) => {
-    await api.entities.Part.update(part.id, { est_delivery_date: format(date, 'yyyy-MM-dd') });
-    refetchParts();
+    try {
+      await api.entities.Part.update(part.id, { est_delivery_date: format(date, 'yyyy-MM-dd') });
+      refetchParts();
+    } catch (err) {
+      toast.error('Failed to set delivery date. Please try again.');
+    }
   };
 
   const openReceiveDialog = (part, installerEmail) => {
@@ -378,11 +386,15 @@ export default function ProjectParts() {
   };
 
   const handleMarkInstalled = async (part) => {
-    await api.entities.Part.update(part.id, {
-      status: 'installed',
-      installed_date: format(new Date(), 'yyyy-MM-dd')
-    });
-    refetchParts();
+    try {
+      await api.entities.Part.update(part.id, {
+        status: 'installed',
+        installed_date: format(new Date(), 'yyyy-MM-dd')
+      });
+      refetchParts();
+    } catch (err) {
+      toast.error('Failed to mark part as installed. Please try again.');
+    }
   };
 
   const openOrderDialog = (part) => {

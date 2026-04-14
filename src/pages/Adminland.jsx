@@ -338,7 +338,6 @@ function PeopleSection({ queryClient }) {
       setShowModal(false);
       setEditing(null);
     } catch (err) {
-      console.error('Failed to save member:', err);
       const msg = err?.message || err?.error || 'Failed to save team member';
       setMemberError(typeof msg === 'string' ? msg : JSON.stringify(msg));
     } finally {
@@ -374,9 +373,10 @@ function PeopleSection({ queryClient }) {
         queryClient.invalidateQueries({ queryKey: ['userGroups'] });
       }
     } catch (err) {
-      console.error('Delete failed:', err);
+      toast.error(err?.message || 'Failed to delete');
+    } finally {
+      setDeleteConfirm(null);
     }
-    setDeleteConfirm(null);
   };
 
   const [resendingInvite, setResendingInvite] = useState(null); // email of user being re-invited
@@ -400,7 +400,6 @@ function PeopleSection({ queryClient }) {
       toast.success('Password has been reset successfully');
       setResetPasswordMember(null);
     } catch (err) {
-      console.error('Reset password failed:', err);
       throw err;
     }
   };
@@ -412,7 +411,6 @@ function PeopleSection({ queryClient }) {
       toast.success('MFA has been reset successfully');
       setResetMfaMember(null);
     } catch (err) {
-      console.error('Reset MFA failed:', err);
       toast.error(err?.message || 'Failed to reset MFA');
       setResetMfaMember(null);
     }

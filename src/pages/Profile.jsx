@@ -156,7 +156,7 @@ export default function Profile() {
       }
       setEmailPrefsDirty(false);
     } catch (err) {
-      console.error('Failed to save email preferences:', err);
+      toast.error('Failed to save email preferences');
     }
     setSavingEmailPrefs(false);
   };

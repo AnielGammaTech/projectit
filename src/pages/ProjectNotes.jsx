@@ -277,7 +277,7 @@ export default function ProjectNotes() {
                           <span className="text-xs text-muted-foreground">{note.author_name}</span>
                           <span className="text-xs text-muted-foreground">•</span>
                           <span className="text-xs text-muted-foreground">
-                            {format(new Date(note.created_date), 'MMM d, yyyy h:mm a')}
+                            {note.created_date ? format(new Date(note.created_date), 'MMM d, yyyy h:mm a') : ''}
                           </span>
                           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", config.color)}>
                             {config.label}

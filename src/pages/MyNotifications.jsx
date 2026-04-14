@@ -178,7 +178,7 @@ export default function MyNotifications() {
                         {notification.title}
                       </p>
                       <span className="text-[10px] text-muted-foreground shrink-0 mt-0.5">
-                        {format(new Date(notification.created_date), 'MMM d')}
+                        {notification.created_date ? format(new Date(notification.created_date), 'MMM d') : ''}
                       </span>
                     </div>
                     {notification.message && (

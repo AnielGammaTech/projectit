@@ -76,9 +76,14 @@ export default function Templates() {
   const todoTemplates = templates.filter(t => t.template_type === 'todo');
 
   const handleDelete = async () => {
-    await api.entities.ProjectTemplate.delete(deleteConfirm.id);
-    queryClient.invalidateQueries({ queryKey: ['templates'] });
-    setDeleteConfirm(null);
+    try {
+      await api.entities.ProjectTemplate.delete(deleteConfirm.id);
+      queryClient.invalidateQueries({ queryKey: ['templates'] });
+    } catch (err) {
+      toast.error('Failed to delete template');
+    } finally {
+      setDeleteConfirm(null);
+    }
   };
 
   const handleOpenCreateModal = (template) => {

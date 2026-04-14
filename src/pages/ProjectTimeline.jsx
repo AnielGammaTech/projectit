@@ -120,8 +120,9 @@ export default function ProjectTimeline() {
   // Calculate project stats
   const tasksWithDates = tasks.filter(t => t.start_date || t.due_date);
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
-  const estimatedEndDate = tasks.length > 0 && tasksWithDates.length > 0
-    ? format(max(tasksWithDates.filter(t => t.due_date).map(t => parseISO(t.due_date))), 'MMM d, yyyy')
+  const datedTasks = tasksWithDates.filter(t => t.due_date);
+  const estimatedEndDate = tasks.length > 0 && datedTasks.length > 0
+    ? format(max(datedTasks.map(t => parseISO(t.due_date))), 'MMM d, yyyy')
     : 'Not set';
 
   return (

@@ -200,10 +200,10 @@ ${formData.additionalNotes || 'None'}`;
                 <SelectValue placeholder="How is the project going?" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="on_track">🟢 On Track</SelectItem>
-                <SelectItem value="at_risk">🟡 At Risk</SelectItem>
-                <SelectItem value="behind">🔴 Behind Schedule</SelectItem>
-                <SelectItem value="ahead">🚀 Ahead of Schedule</SelectItem>
+                <SelectItem value="on_track">On Track</SelectItem>
+                <SelectItem value="at_risk">At Risk</SelectItem>
+                <SelectItem value="behind">Behind Schedule</SelectItem>
+                <SelectItem value="ahead">Ahead of Schedule</SelectItem>
               </SelectContent>
             </Select>
           </div>

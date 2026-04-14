@@ -58,31 +58,31 @@ import {
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 
 const typeConfig = {
-  bug: { label: 'Bug', icon: Bug, color: 'bg-red-100 text-red-700 border-red-200' },
-  feature_request: { label: 'Feature', icon: Lightbulb, color: 'bg-amber-100 text-amber-700 border-amber-200' },
-  question: { label: 'Question', icon: HelpCircle, color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  bug: { label: 'Bug', icon: Bug, color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/50' },
+  feature_request: { label: 'Feature', icon: Lightbulb, color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/50' },
+  question: { label: 'Question', icon: HelpCircle, color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/50' },
   general: { label: 'General', icon: MessageCircle, color: 'bg-muted text-foreground border-border' },
 };
 
 const statusConfig = {
-  new: { label: 'New', color: 'bg-blue-100 text-blue-700', icon: null },
-  in_review: { label: 'In Review', color: 'bg-amber-100 text-amber-700', icon: null },
-  resolved: { label: 'Resolved', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle },
-  closed: { label: 'Closed', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle },
+  new: { label: 'New', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300', icon: null },
+  in_review: { label: 'In Review', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300', icon: null },
+  resolved: { label: 'Resolved', color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300', icon: CheckCircle },
+  closed: { label: 'Closed', color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300', icon: CheckCircle },
 };
 
 const priorityConfig = {
   low: { label: 'Low', color: 'bg-muted text-muted-foreground' },
-  medium: { label: 'Medium', color: 'bg-amber-100 text-amber-700' },
-  high: { label: 'High', color: 'bg-orange-100 text-orange-700' },
-  critical: { label: 'Critical', color: 'bg-red-100 text-red-700' },
+  medium: { label: 'Medium', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' },
+  high: { label: 'High', color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' },
+  critical: { label: 'Critical', color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' },
 };
 
 const aiStatusConfig = {
-  pending: { label: 'AI Pending', color: 'bg-violet-100 text-violet-700' },
-  in_progress: { label: 'AI Working', color: 'bg-purple-100 text-purple-700' },
-  completed: { label: 'AI Done', color: 'bg-emerald-100 text-emerald-700' },
-  failed: { label: 'AI Failed', color: 'bg-red-100 text-red-700' },
+  pending: { label: 'AI Pending', color: 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300' },
+  in_progress: { label: 'AI Working', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' },
+  completed: { label: 'AI Done', color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' },
+  failed: { label: 'AI Failed', color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' },
 };
 
 export default function FeedbackManagement() {
@@ -335,7 +335,7 @@ export default function FeedbackManagement() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           <div className="bg-card rounded-xl border border-border p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-100">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                 <Clock className="w-4 h-4 text-blue-600" />
               </div>
               <div>
@@ -346,7 +346,7 @@ export default function FeedbackManagement() {
           </div>
           <div className="bg-card rounded-xl border border-border p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-100">
+              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
                 <Eye className="w-4 h-4 text-amber-600" />
               </div>
               <div>
@@ -357,7 +357,7 @@ export default function FeedbackManagement() {
           </div>
           <div className="bg-card rounded-xl border border-border p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-100">
+              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
                 <CheckCircle className="w-4 h-4 text-emerald-600" />
               </div>
               <div>
@@ -368,7 +368,7 @@ export default function FeedbackManagement() {
           </div>
           <div className="bg-card rounded-xl border border-border p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-red-100">
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
                 <Bug className="w-4 h-4 text-red-600" />
               </div>
               <div>
@@ -546,7 +546,7 @@ export default function FeedbackManagement() {
                         <Badge variant="outline" className={type.color}>{type.label}</Badge>
                         <span>{feedback.submitter_name || 'Anonymous'}</span>
                         {feedback.submitter_email && <span>{feedback.submitter_email}</span>}
-                        <span>{format(new Date(feedback.created_date), 'MMM d, yyyy h:mm a')}</span>
+                        <span>{feedback.created_date ? format(new Date(feedback.created_date), 'MMM d, yyyy h:mm a') : ''}</span>
                         {feedback.screenshots?.length > 0 && (
                           <span className="flex items-center gap-1">
                             <Image className="w-3 h-3" />

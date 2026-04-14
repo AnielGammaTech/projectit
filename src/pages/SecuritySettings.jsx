@@ -300,7 +300,7 @@ export default function SecuritySettings() {
 
           {is2FAEnabled ? (
             <div className="p-4 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <Smartphone className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                   <div>
@@ -372,7 +372,7 @@ export default function SecuritySettings() {
 
             {setupStep === 1 && (
               <div className="space-y-4 mt-4">
-                <div className="flex justify-center p-4 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl">
+                <div className="flex justify-center p-4 bg-background border border-border rounded-xl">
                   {qrCode ? (
                     <img src={qrCode} alt="Scan this QR code" className="w-48 h-48" />
                   ) : (
@@ -381,10 +381,10 @@ export default function SecuritySettings() {
                     </div>
                   )}
                 </div>
-                <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Or enter this secret key manually:</p>
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Or enter this secret key manually:</p>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 text-sm font-mono bg-white dark:bg-slate-900 p-2 rounded border dark:border-slate-700 break-all">{totpSecret || '...'}</code>
+                    <code className="flex-1 text-sm font-mono bg-background p-2 rounded border border-border break-all">{totpSecret || '...'}</code>
                     <Button variant="ghost" size="icon" onClick={() => copyToClipboard(totpSecret)} disabled={!totpSecret}><Copy className="w-4 h-4" /></Button>
                   </div>
                 </div>
@@ -418,9 +418,9 @@ export default function SecuritySettings() {
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                <div className="grid grid-cols-2 gap-2 p-4 bg-muted/50 rounded-xl">
                   {generatedBackupCodes.map((code, idx) => (
-                    <code key={idx} className="text-sm font-mono bg-white dark:bg-slate-900 p-2 rounded border dark:border-slate-700 text-center">{code}</code>
+                    <code key={idx} className="text-sm font-mono bg-background p-2 rounded border border-border text-center">{code}</code>
                   ))}
                 </div>
                 <Button variant="outline" onClick={() => copyToClipboard(generatedBackupCodes.join('\n'))} className="w-full"><Copy className="w-4 h-4 mr-2" />Copy All Codes</Button>
@@ -438,9 +438,9 @@ export default function SecuritySettings() {
               <DialogDescription>Use these codes to access your account if you lose your device</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-2 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <div className="grid grid-cols-2 gap-2 p-4 bg-muted/50 rounded-xl">
                 {(settings.backup_codes || []).map((code, idx) => (
-                  <code key={idx} className="text-sm font-mono bg-white dark:bg-slate-900 p-2 rounded border dark:border-slate-700 text-center">{code}</code>
+                  <code key={idx} className="text-sm font-mono bg-background p-2 rounded border border-border text-center">{code}</code>
                 ))}
               </div>
               <Button variant="outline" onClick={() => copyToClipboard((settings.backup_codes || []).join('\n'))} className="w-full"><Copy className="w-4 h-4 mr-2" />Copy All Codes</Button>

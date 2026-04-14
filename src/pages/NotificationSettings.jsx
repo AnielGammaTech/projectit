@@ -198,7 +198,7 @@ export default function NotificationSettings() {
               {/* Task Assigned */}
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-blue-100">
+                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                     <CheckCircle2 className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
@@ -215,7 +215,7 @@ export default function NotificationSettings() {
               {/* Task Completed */}
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-emerald-100">
+                  <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
@@ -232,7 +232,7 @@ export default function NotificationSettings() {
               {/* Task Due Soon */}
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-amber-100">
+                  <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
                     <Clock className="w-5 h-5 text-amber-600" />
                   </div>
                   <div>
@@ -248,7 +248,7 @@ export default function NotificationSettings() {
 
               {/* Reminder Days */}
               {settings.notify_task_due_soon && (
-                <div className="ml-16 p-4 rounded-xl bg-amber-50 border border-amber-100">
+                <div className="ml-16 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30">
                   <div className="flex items-center gap-4">
                     <Label className="text-sm text-foreground">Remind me</Label>
                     <Select 
@@ -272,7 +272,7 @@ export default function NotificationSettings() {
               {/* Task Overdue */}
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-red-100">
+                  <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
                     <AlertTriangle className="w-5 h-5 text-red-600" />
                   </div>
                   <div>
@@ -303,7 +303,7 @@ export default function NotificationSettings() {
               {/* Project Assigned */}
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-blue-100">
+                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                     <FolderOpen className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
@@ -320,7 +320,7 @@ export default function NotificationSettings() {
               {/* Project Updates */}
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-violet-100">
+                  <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-900/30">
                     <FolderOpen className="w-5 h-5 text-violet-600" />
                   </div>
                   <div>
@@ -337,7 +337,7 @@ export default function NotificationSettings() {
               {/* Part Status Changes */}
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-orange-100">
+                  <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
                     <Package className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
@@ -368,7 +368,7 @@ export default function NotificationSettings() {
               {/* Mentions */}
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-teal-100">
+                  <div className="p-2 rounded-lg bg-teal-100 dark:bg-teal-900/30">
                     <AtSign className="w-5 h-5 text-teal-600" />
                   </div>
                   <div>

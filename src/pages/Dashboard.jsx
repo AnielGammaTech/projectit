@@ -97,8 +97,12 @@ export default function Dashboard() {
     queryClient.setQueryData(['incomingQuotes'], (old) =>
       (old || []).map(q => q.id === quote.id ? { ...q, status: 'accepted' } : q)
     );
-    await api.entities.IncomingQuote.update(quote.id, { status: 'accepted' });
-    refetchIncomingQuotes();
+    try {
+      await api.entities.IncomingQuote.update(quote.id, { status: 'accepted' });
+      refetchIncomingQuotes();
+    } catch (err) {
+      toast.error('Failed to accept quote');
+    }
   };
 
   // Create project from an accepted quote — opens modal pre-filled
@@ -394,23 +398,39 @@ export default function Dashboard() {
   const allGroups = [...new Set(projects.map(p => p.group).filter(Boolean))];
 
   const handleProjectColorChange = async (project, color) => {
-    await api.entities.Project.update(project.id, { color });
-    refetchProjects();
+    try {
+      await api.entities.Project.update(project.id, { color });
+      refetchProjects();
+    } catch (err) {
+      toast.error('Failed to update project color');
+    }
   };
 
   const handleProjectGroupChange = async (project, group) => {
-    await api.entities.Project.update(project.id, { group });
-    refetchProjects();
+    try {
+      await api.entities.Project.update(project.id, { group });
+      refetchProjects();
+    } catch (err) {
+      toast.error('Failed to update project group');
+    }
   };
 
   const handleProjectStatusChange = async (project, status) => {
-    await api.entities.Project.update(project.id, { status });
-    refetchProjects();
+    try {
+      await api.entities.Project.update(project.id, { status });
+      refetchProjects();
+    } catch (err) {
+      toast.error('Failed to update project status');
+    }
   };
 
   const handleProjectDueDateChange = async (project, date) => {
-    await api.entities.Project.update(project.id, { due_date: date ? format(date, 'yyyy-MM-dd') : '' });
-    refetchProjects();
+    try {
+      await api.entities.Project.update(project.id, { due_date: date ? format(date, 'yyyy-MM-dd') : '' });
+      refetchProjects();
+    } catch (err) {
+      toast.error('Failed to update project due date');
+    }
   };
 
   const handlePinToggle = (project) => {
@@ -580,23 +600,39 @@ export default function Dashboard() {
 
   // Stack handlers
   const handleStackToggleCollapse = async (stack) => {
-    await api.entities.ProjectStack.update(stack.id, { is_collapsed: !stack.is_collapsed });
-    refetchStacks();
+    try {
+      await api.entities.ProjectStack.update(stack.id, { is_collapsed: !stack.is_collapsed });
+      refetchStacks();
+    } catch (err) {
+      toast.error('Failed to update stack');
+    }
   };
 
   const handleStackRename = async (stack, newName) => {
-    await api.entities.ProjectStack.update(stack.id, { name: newName });
-    refetchStacks();
+    try {
+      await api.entities.ProjectStack.update(stack.id, { name: newName });
+      refetchStacks();
+    } catch (err) {
+      toast.error('Failed to rename stack');
+    }
   };
 
   const handleStackDelete = async (stack) => {
-    await api.entities.ProjectStack.delete(stack.id);
-    refetchStacks();
+    try {
+      await api.entities.ProjectStack.delete(stack.id);
+      refetchStacks();
+    } catch (err) {
+      toast.error('Failed to delete stack');
+    }
   };
 
   const handleStackColorChange = async (stack, color) => {
-    await api.entities.ProjectStack.update(stack.id, { color });
-    refetchStacks();
+    try {
+      await api.entities.ProjectStack.update(stack.id, { color });
+      refetchStacks();
+    } catch (err) {
+      toast.error('Failed to update stack color');
+    }
   };
 
   // Get projects not in any stack
@@ -670,7 +706,8 @@ export default function Dashboard() {
 
   const handleSaveView = async () => {
     if (!viewName.trim()) return;
-    
+    if (!currentUser) return;
+
     const viewConfig = {
       filters: { status: listFilter },
       layout: viewMode,
@@ -678,16 +715,19 @@ export default function Dashboard() {
       collapsed: collapsedGroups
     };
 
-    await api.entities.DashboardView.create({
-      name: viewName,
-      user_id: currentUser.id,
-      config: viewConfig,
-      is_default: false
-    });
-
-    setViewName('');
-    setShowSaveViewModal(false);
-    refetchViews();
+    try {
+      await api.entities.DashboardView.create({
+        name: viewName,
+        user_id: currentUser.id,
+        config: viewConfig,
+        is_default: false
+      });
+      setViewName('');
+      setShowSaveViewModal(false);
+      refetchViews();
+    } catch (err) {
+      toast.error('Failed to save view');
+    }
   };
 
   const applyView = (view) => {
@@ -866,7 +906,7 @@ export default function Dashboard() {
                 part.matched_product_id = newProduct.id;
                 part.matched_product_name = newProduct.name;
               } catch (prodErr) {
-                console.error('Failed to auto-create product:', prodErr);
+                // silently skip if product auto-create fails
               }
             }
             await api.entities.Part.create({
