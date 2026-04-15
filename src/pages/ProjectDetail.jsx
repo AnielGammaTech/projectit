@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useBlocker } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -771,7 +771,6 @@ export default function ProjectDetail() {
   // ── Auto-start/stop timer on project enter/leave ──────────────────
   const [showLeaveStopModal, setShowLeaveStopModal] = useState(false);
   const [leaveStopDescription, setLeaveStopDescription] = useState('');
-  const [pendingNavigation, setPendingNavigation] = useState(null);
 
   const { data: projectTimeEntries = [] } = useQuery({
     queryKey: ['timeEntries', projectId],
@@ -787,12 +786,10 @@ export default function ProjectDetail() {
 
     const checkAndAutoStart = async () => {
       try {
-        // Check if ANY timer is running for this user
         const allEntries = await api.entities.TimeEntry.list('-created_date', 100);
         const anyRunning = allEntries.find(e => e.is_running && e.user_email === currentUser.email);
-        if (anyRunning) return; // Don't auto-start if already tracking something
+        if (anyRunning) return;
 
-        // Start timer for this project
         await api.entities.TimeEntry.create({
           project_id: projectId,
           user_email: currentUser.email,
@@ -808,20 +805,35 @@ export default function ProjectDetail() {
       }
     };
 
-    // Small delay to let queries settle
     const timeout = setTimeout(checkAndAutoStart, 1500);
     return () => clearTimeout(timeout);
   }, [currentUser?.email, projectId, project?.name]);
 
-  // Auto-stop prompt when navigating away
+  // Block navigation when timer is running — show stop prompt
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+    if (!activeTimeEntry) return false;
+    // Allow navigating within the same project (sub-pages like Tasks, Parts, etc)
+    const currentProjectPage = currentLocation.search.includes(projectId);
+    const nextProjectPage = nextLocation.search.includes(projectId);
+    if (currentProjectPage && nextProjectPage) return false;
+    return true;
+  });
+
+  // Show the modal when blocker triggers
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      setLeaveStopDescription('');
+      setShowLeaveStopModal(true);
+    }
+  }, [blocker.state]);
+
+  // Also warn on browser close/refresh
   useEffect(() => {
     if (!activeTimeEntry) return;
-
     const handleBeforeUnload = (e) => {
       e.preventDefault();
-      e.returnValue = 'You have an active timer running. Are you sure you want to leave?';
+      e.returnValue = 'You have an active timer running.';
     };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [activeTimeEntry]);
@@ -842,9 +854,22 @@ export default function ProjectDetail() {
     stopTimerLiveActivity();
     setShowLeaveStopModal(false);
     setLeaveStopDescription('');
-    if (pendingNavigation) {
-      navigate(pendingNavigation);
-      setPendingNavigation(null);
+    if (blocker.state === 'blocked') {
+      blocker.proceed();
+    }
+  };
+
+  const handleKeepRunning = () => {
+    setShowLeaveStopModal(false);
+    if (blocker.state === 'blocked') {
+      blocker.proceed();
+    }
+  };
+
+  const handleStayOnProject = () => {
+    setShowLeaveStopModal(false);
+    if (blocker.state === 'blocked') {
+      blocker.reset();
     }
   };
 
@@ -2293,11 +2318,11 @@ export default function ProjectDetail() {
       </AlertDialog>
 
       {/* Leave/Stop Timer Modal */}
-      <Dialog open={showLeaveStopModal} onOpenChange={setShowLeaveStopModal}>
+      <Dialog open={showLeaveStopModal} onOpenChange={(open) => { if (!open) handleStayOnProject(); }}>
         <DialogContent className="sm:max-w-sm p-0">
           <div className="px-5 pt-5 pb-4">
-            <p className="text-lg font-bold text-foreground text-center">Stop Timer</p>
-            <p className="text-xs text-muted-foreground text-center mt-1">{project?.name}</p>
+            <p className="text-lg font-bold text-foreground text-center">Timer Running</p>
+            <p className="text-xs text-muted-foreground text-center mt-1">You have an active timer on <strong>{project?.name}</strong></p>
             <Textarea
               value={leaveStopDescription}
               onChange={(e) => setLeaveStopDescription(e.target.value)}
@@ -2306,12 +2331,15 @@ export default function ProjectDetail() {
               autoFocus
             />
           </div>
-          <div className="flex border-t border-border">
-            <button onClick={() => { setShowLeaveStopModal(false); setPendingNavigation(null); }} className="flex-1 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors border-r border-border">
-              Keep Running
+          <div className="flex flex-col border-t border-border">
+            <button onClick={handleLeaveStop} className="py-3 text-sm font-bold text-emerald-600 hover:bg-emerald-500/10 transition-colors border-b border-border">
+              Save & Stop Timer
             </button>
-            <button onClick={handleLeaveStop} className="flex-1 py-3 text-sm font-bold text-emerald-600 hover:bg-emerald-500/10 transition-colors">
-              Save & Stop
+            <button onClick={handleKeepRunning} className="py-3 text-sm font-medium text-blue-600 hover:bg-blue-500/10 transition-colors border-b border-border">
+              Keep Running & Leave
+            </button>
+            <button onClick={handleStayOnProject} className="py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors">
+              Stay on Project
             </button>
           </div>
         </DialogContent>
