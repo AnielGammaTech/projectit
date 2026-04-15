@@ -63,6 +63,7 @@ import PartModal from '@/components/modals/PartModal';
 import PartDetailModal from '@/components/modals/PartDetailModal';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
 import PartsUploader from '@/components/parts/PartsUploader';
+import QuickOrderModal from '@/components/parts/QuickOrderModal';
 
 const statusConfig = {
   needed: { label: 'Needed', color: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-700/40 dark:text-slate-300 dark:border-slate-600', borderColor: 'border-l-orange-400', dot: 'bg-orange-400' },
@@ -95,6 +96,7 @@ export default function ProjectParts() {
   
   // Receive dialog state
   const [receiveDialog, setReceiveDialog] = useState({ open: false, part: null, installer: '', location: '', createTask: false });
+  const [quickOrderPart, setQuickOrderPart] = useState(null);
 
   // Order dialog state
   const [orderDialog, setOrderDialog] = useState({ open: false, part: null, screenshot: null, eta: null, notes: '' });
@@ -189,6 +191,16 @@ export default function ProjectParts() {
       refetchParts();
     } catch (err) {
       toast.error('Failed to update part status');
+    }
+  };
+
+  const handleQuickOrderSave = async (partId, orderData) => {
+    try {
+      await api.entities.Part.update(partId, orderData);
+      refetchParts();
+      setQuickOrderPart(null);
+    } catch (err) {
+      toast.error('Failed to mark part as ordered');
     }
   };
 
@@ -398,8 +410,7 @@ export default function ProjectParts() {
   };
 
   const openOrderDialog = (part) => {
-    setOrderDialog({ open: true, part, screenshot: null, eta: null, notes: '' });
-    setOrderScreenshotPreview(null);
+    setQuickOrderPart(part);
   };
 
   const handleOrderScreenshot = (e) => {
@@ -1043,6 +1054,14 @@ export default function ProjectParts() {
         projectId={projectId}
         teamMembers={projectMembers}
         onSave={handleSavePart}
+      />
+
+      <QuickOrderModal
+        open={!!quickOrderPart}
+        onClose={() => setQuickOrderPart(null)}
+        part={quickOrderPart}
+        onSave={handleQuickOrderSave}
+        teamMembers={projectMembers}
       />
 
       <PartDetailModal

@@ -19,7 +19,7 @@ const statusConfig = {
   installed: { label: 'Installed', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' }
 };
 
-export default function PartsList({ parts = [], onStatusChange, onEdit, onDelete }) {
+export default function PartsList({ parts = [], onStatusChange, onEdit, onDelete, teamMembers = [] }) {
   const [quickOrderPart, setQuickOrderPart] = useState(null);
   const totalCost = parts.reduce((sum, p) => sum + (p.quantity || 1) * (p.unit_cost || 0), 0);
 
@@ -160,6 +160,7 @@ export default function PartsList({ parts = [], onStatusChange, onEdit, onDelete
         onClose={() => setQuickOrderPart(null)}
         part={quickOrderPart}
         onSave={handleQuickOrderSave}
+        teamMembers={teamMembers}
       />
     </div>
   );
