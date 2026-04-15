@@ -70,6 +70,7 @@ import { parseLocalDate } from '@/utils/dateUtils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -88,6 +89,7 @@ import FilesViewModal from '@/components/modals/FilesViewModal';
 import ProjectActivityFeed from '@/components/project/ProjectActivityFeed';
 import UpcomingDueDates from '@/components/project/UpcomingDueDates';
 import TimeTracker from '@/components/project/TimeTracker';
+import { startTimerLiveActivity, stopTimerLiveActivity } from '@/hooks/useLiveActivity';
 import HaloPSATicketLink from '@/components/project/HaloPSATicketLink';
 import ProjectSidebar from '@/components/project/ProjectSidebar';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
@@ -765,6 +767,86 @@ export default function ProjectDetail() {
 
   // Filter teamMembers to only those on this project (for assignment dropdowns)
   const projectMembers = useProjectMembers(teamMembers, project);
+
+  // ── Auto-start/stop timer on project enter/leave ──────────────────
+  const [showLeaveStopModal, setShowLeaveStopModal] = useState(false);
+  const [leaveStopDescription, setLeaveStopDescription] = useState('');
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+
+  const { data: projectTimeEntries = [] } = useQuery({
+    queryKey: ['timeEntries', projectId],
+    queryFn: () => api.entities.TimeEntry.filter({ project_id: projectId }, '-created_date'),
+    enabled: !!projectId
+  });
+
+  const activeTimeEntry = projectTimeEntries.find(e => e.is_running && e.user_email === currentUser?.email);
+
+  // Auto-start timer when entering a project (if no timer is running anywhere)
+  useEffect(() => {
+    if (!currentUser?.email || !projectId || !project) return;
+
+    const checkAndAutoStart = async () => {
+      try {
+        // Check if ANY timer is running for this user
+        const allEntries = await api.entities.TimeEntry.list('-created_date', 100);
+        const anyRunning = allEntries.find(e => e.is_running && e.user_email === currentUser.email);
+        if (anyRunning) return; // Don't auto-start if already tracking something
+
+        // Start timer for this project
+        await api.entities.TimeEntry.create({
+          project_id: projectId,
+          user_email: currentUser.email,
+          user_name: currentUser.full_name || currentUser.email,
+          start_time: new Date().toISOString(),
+          is_running: true
+        });
+        queryClient.invalidateQueries({ queryKey: ['timeEntries', projectId] });
+        queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+        startTimerLiveActivity(project.name || 'Project', new Date().toISOString());
+      } catch (err) {
+        console.warn('[TimeTracker] Auto-start failed:', err);
+      }
+    };
+
+    // Small delay to let queries settle
+    const timeout = setTimeout(checkAndAutoStart, 1500);
+    return () => clearTimeout(timeout);
+  }, [currentUser?.email, projectId, project?.name]);
+
+  // Auto-stop prompt when navigating away
+  useEffect(() => {
+    if (!activeTimeEntry) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = 'You have an active timer running. Are you sure you want to leave?';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [activeTimeEntry]);
+
+  const handleLeaveStop = async () => {
+    if (!activeTimeEntry) return;
+    const endTime = new Date();
+    const startTime = new Date(activeTimeEntry.start_time);
+    const durationMinutes = Math.round((endTime - startTime) / 60000);
+    await api.entities.TimeEntry.update(activeTimeEntry.id, {
+      end_time: endTime.toISOString(),
+      duration_minutes: durationMinutes,
+      is_running: false,
+      description: leaveStopDescription
+    });
+    queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
+    queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+    stopTimerLiveActivity();
+    setShowLeaveStopModal(false);
+    setLeaveStopDescription('');
+    if (pendingNavigation) {
+      navigate(pendingNavigation);
+      setPendingNavigation(null);
+    }
+  };
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
@@ -2209,6 +2291,31 @@ export default function ProjectDetail() {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Leave/Stop Timer Modal */}
+      <Dialog open={showLeaveStopModal} onOpenChange={setShowLeaveStopModal}>
+        <DialogContent className="sm:max-w-sm p-0">
+          <div className="px-5 pt-5 pb-4">
+            <p className="text-lg font-bold text-foreground text-center">Stop Timer</p>
+            <p className="text-xs text-muted-foreground text-center mt-1">{project?.name}</p>
+            <Textarea
+              value={leaveStopDescription}
+              onChange={(e) => setLeaveStopDescription(e.target.value)}
+              placeholder="What did you work on?"
+              className="mt-4 min-h-[80px] bg-muted/30 border-border rounded-xl text-sm"
+              autoFocus
+            />
+          </div>
+          <div className="flex border-t border-border">
+            <button onClick={() => { setShowLeaveStopModal(false); setPendingNavigation(null); }} className="flex-1 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors border-r border-border">
+              Keep Running
+            </button>
+            <button onClick={handleLeaveStop} className="flex-1 py-3 text-sm font-bold text-emerald-600 hover:bg-emerald-500/10 transition-colors">
+              Save & Stop
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
       </div>
       );

@@ -56,6 +56,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import UserAvatar from '@/components/UserAvatar';
+import GlobalTimerBanner from '@/components/GlobalTimerBanner';
 
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
@@ -684,6 +685,9 @@ function LayoutContent({ children, currentPageName }) {
           })}
         </nav>
       </div>
+
+      {/* Global Timer Banner */}
+      <GlobalTimerBanner currentUser={currentUser} />
 
       {/* Main Content */}
       <main className="pt-safe-header pb-20 lg:pb-0">
