@@ -754,6 +754,20 @@ export default function ProjectParts() {
                               {statusConfig[part.status]?.label || part.status}
                             </Badge>
                           </div>
+                          <div className="flex items-center gap-3 mt-0.5">
+                            {part.unit_cost > 0 && (
+                              <span className="text-xs text-muted-foreground font-medium">${((part.unit_cost || 0) * (part.quantity || 1)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            )}
+                            {part.part_number && (
+                              <span className="text-xs text-muted-foreground">#{part.part_number}</span>
+                            )}
+                            {part.supplier && (
+                              <span className="text-xs text-muted-foreground">{part.supplier}</span>
+                            )}
+                            {part.quantity > 1 && (
+                              <span className="text-xs text-muted-foreground">Qty: {part.quantity}</span>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0">

@@ -25,9 +25,12 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
     unit_cost: 0,
     status: 'needed',
     supplier: '',
+    purchase_link: '',
     notes: '',
     assigned_to: '',
     assigned_name: '',
+    receiver_email: '',
+    receiver_name: '',
     due_date: '',
     est_delivery_date: ''
   });
@@ -54,9 +57,12 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
         unit_cost: part.unit_cost || 0,
         status: part.status || 'needed',
         supplier: part.supplier || '',
+        purchase_link: part.purchase_link || '',
         notes: part.notes || '',
         assigned_to: part.assigned_to || '',
         assigned_name: part.assigned_name || '',
+        receiver_email: part.receiver_email || '',
+        receiver_name: part.receiver_name || '',
         due_date: part.due_date || '',
         est_delivery_date: part.est_delivery_date || ''
       });
@@ -73,9 +79,12 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
         unit_cost: 0,
         status: 'needed',
         supplier: '',
+        purchase_link: '',
         notes: '',
         assigned_to: '',
         assigned_name: '',
+        receiver_email: '',
+        receiver_name: '',
         est_delivery_date: '',
         due_date: ''
       });
@@ -98,6 +107,19 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
   const handleClearProduct = () => {
     setFormData(prev => ({ ...prev, product_id: '' }));
     setProductSearch('');
+  };
+
+  const handleReceiverChange = (email) => {
+    if (email === 'unassigned') {
+      setFormData(prev => ({ ...prev, receiver_email: '', receiver_name: '' }));
+    } else {
+      const member = teamMembers.find(m => m.email === email);
+      setFormData(prev => ({
+        ...prev,
+        receiver_email: email,
+        receiver_name: member?.name || ''
+      }));
+    }
   };
 
   const handleAssigneeChange = (email) => {
@@ -264,6 +286,33 @@ export default function PartModal({ open, onClose, part, projectId, teamMembers 
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Assign To</Label>
                 <Select value={formData.assigned_to || 'unassigned'} onValueChange={handleAssigneeChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Unassigned" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {teamMembers.map(member => (
+                      <SelectItem key={member.id} value={member.email}>{member.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Purchase Link & Receiver */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <Label htmlFor="purchase_link" className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Purchase Link</Label>
+                <Input
+                  id="purchase_link"
+                  value={formData.purchase_link}
+                  onChange={(e) => setFormData(prev => ({ ...prev, purchase_link: e.target.value }))}
+                  placeholder="https://..."
+                />
+              </div>
+              <div>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">Receiver</Label>
+                <Select value={formData.receiver_email || 'unassigned'} onValueChange={handleReceiverChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Unassigned" />
                   </SelectTrigger>

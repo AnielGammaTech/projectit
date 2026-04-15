@@ -121,17 +121,14 @@ export default function QuickOrderModal({ open, onClose, part, onSave, teamMembe
       est_delivery_date: estDeliveryDate ? format(estDeliveryDate, 'yyyy-MM-dd') : null,
     };
 
-    // Build notes: combine order notes + image
-    const notesParts = [];
-    if (orderNotes.trim()) notesParts.push(`Order notes:${orderNotes.trim()}`);
-    if (imageUrl) notesParts.push(`Order Photo: ${imageUrl}`);
-
-    if (notesParts.length > 0) {
+    // Append order notes only (no image URL in notes)
+    if (orderNotes.trim()) {
       updateData.notes = part.notes
-        ? `${part.notes}\n\n${notesParts.join('\n')}`
-        : notesParts.join('\n');
+        ? `${part.notes}\nOrder notes:${orderNotes.trim()}`
+        : `Order notes:${orderNotes.trim()}`;
     }
 
+    // Store screenshot in dedicated field
     if (imageUrl) {
       updateData.order_screenshot = imageUrl;
     }

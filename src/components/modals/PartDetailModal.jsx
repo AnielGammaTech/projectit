@@ -17,7 +17,7 @@ import {
 import {
   Package, Calendar as CalendarIcon, User, MessageSquare, Send, Trash2,
   DollarSign, Hash, Truck, UserPlus, ChevronDown, Check, PackageCheck,
-  Wrench, Pencil, X, Link, ExternalLink
+  Wrench, Pencil, X, Link, ExternalLink, ImagePlus
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseLocalDate } from '@/utils/dateUtils';
@@ -543,6 +543,19 @@ export default function PartDetailModal({ open, onClose, part: partProp, teamMem
                 {part.installed_date && (
                   <span className="text-xs text-muted-foreground"><span className="font-medium">Installed:</span> {format(parseLocalDate(part.installed_date), 'MMM d, yyyy')}</span>
                 )}
+              </div>
+            )}
+
+            {/* Order Screenshot */}
+            {part.order_screenshot && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1"><ImagePlus className="w-2.5 h-2.5" /> Order Proof</span>
+                <a href={part.order_screenshot} target="_blank" rel="noopener noreferrer" className="block mt-1.5 group relative rounded-lg overflow-hidden border border-border hover:border-primary/30 transition-colors">
+                  <img src={part.order_screenshot} alt="Order confirmation" className="w-full max-h-40 object-cover" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <ExternalLink className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+                  </div>
+                </a>
               </div>
             )}
 
