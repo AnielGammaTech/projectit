@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Link, useNavigate, useBlocker } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl, resolveUploadUrl } from '@/utils';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -809,25 +809,41 @@ export default function ProjectDetail() {
     return () => clearTimeout(timeout);
   }, [currentUser?.email, projectId, project?.name]);
 
-  // Block navigation when timer is running — show stop prompt
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
-    if (!activeTimeEntry) return false;
-    // Allow navigating within the same project (sub-pages like Tasks, Parts, etc)
-    const currentProjectPage = currentLocation.search.includes(projectId);
-    const nextProjectPage = nextLocation.search.includes(projectId);
-    if (currentProjectPage && nextProjectPage) return false;
-    return true;
-  });
-
-  // Show the modal when blocker triggers
-  useEffect(() => {
-    if (blocker.state === 'blocked') {
+  // Intercept navigation when timer is running
+  const pendingNavigationRef = React.useRef(null);
+  const rawNavigate = useNavigate();
+  const timerNavigate = React.useCallback((to, options) => {
+    if (activeTimeEntry) {
+      pendingNavigationRef.current = { to, options };
       setLeaveStopDescription('');
       setShowLeaveStopModal(true);
+    } else {
+      rawNavigate(to, options);
     }
-  }, [blocker.state]);
+  }, [activeTimeEntry, rawNavigate]);
 
-  // Also warn on browser close/refresh
+  // Intercept link clicks globally within this page
+  useEffect(() => {
+    if (!activeTimeEntry) return;
+
+    const handleClick = (e) => {
+      const anchor = e.target.closest('a[href]');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href || href.startsWith('http') || href.startsWith('#')) return;
+      // Allow navigation within same project
+      if (href.includes(projectId)) return;
+      e.preventDefault();
+      pendingNavigationRef.current = { to: href };
+      setLeaveStopDescription('');
+      setShowLeaveStopModal(true);
+    };
+
+    document.addEventListener('click', handleClick, true);
+    return () => document.removeEventListener('click', handleClick, true);
+  }, [activeTimeEntry, projectId]);
+
+  // Warn on browser close/refresh
   useEffect(() => {
     if (!activeTimeEntry) return;
     const handleBeforeUnload = (e) => {
@@ -854,23 +870,21 @@ export default function ProjectDetail() {
     stopTimerLiveActivity();
     setShowLeaveStopModal(false);
     setLeaveStopDescription('');
-    if (blocker.state === 'blocked') {
-      blocker.proceed();
-    }
+    const pending = pendingNavigationRef.current;
+    pendingNavigationRef.current = null;
+    if (pending) rawNavigate(pending.to, pending.options);
   };
 
   const handleKeepRunning = () => {
     setShowLeaveStopModal(false);
-    if (blocker.state === 'blocked') {
-      blocker.proceed();
-    }
+    const pending = pendingNavigationRef.current;
+    pendingNavigationRef.current = null;
+    if (pending) rawNavigate(pending.to, pending.options);
   };
 
   const handleStayOnProject = () => {
     setShowLeaveStopModal(false);
-    if (blocker.state === 'blocked') {
-      blocker.reset();
-    }
+    pendingNavigationRef.current = null;
   };
 
   const { data: templates = [] } = useQuery({
