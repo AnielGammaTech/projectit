@@ -88,6 +88,15 @@ function LayoutContent({ children, currentPageName }) {
     const lastNotificationIdRef = useRef(null);
 
 
+  // Check if any timer is running for this user (to shift content down)
+  const { data: activeTimerEntries = [] } = useQuery({
+    queryKey: ['allTimeEntries'],
+    queryFn: () => api.entities.TimeEntry.list('-created_date', 200),
+    enabled: !!currentUser?.email,
+    refetchInterval: 30000,
+  });
+  const hasActiveTimer = activeTimerEntries.some(e => e.is_running && e.user_email === currentUser?.email);
+
   const { data: appSettings } = useQuery({
     queryKey: ['appSettings'],
     queryFn: async () => {
@@ -690,7 +699,7 @@ function LayoutContent({ children, currentPageName }) {
       <GlobalTimerBanner currentUser={currentUser} />
 
       {/* Main Content */}
-      <main className="pt-safe-header pb-20 lg:pb-0">
+      <main className={cn("pt-safe-header pb-20 lg:pb-0", hasActiveTimer && "mt-7")}>
         {children}
       </main>
 

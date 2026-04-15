@@ -102,16 +102,16 @@ export default function GlobalTimerBanner({ currentUser }) {
     <>
       <div
         className={cn(
-          'fixed top-[56px] left-0 right-0 z-30 h-9',
+          'fixed top-[56px] left-0 right-0 z-30 h-7',
           'bg-gradient-to-r from-emerald-600 to-emerald-500',
           'flex items-center justify-between px-4',
-          'text-white text-sm shadow-md'
+          'text-white text-xs shadow-sm'
         )}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="relative flex h-2.5 w-2.5 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="relative flex h-2 w-2 shrink-0">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
           </span>
 
           <Link
@@ -121,20 +121,19 @@ export default function GlobalTimerBanner({ currentUser }) {
             {projectName}
           </Link>
 
-          <span className="font-mono font-semibold tabular-nums tracking-wide">
+          <span className="font-mono font-semibold tabular-nums">
             {formatElapsed(elapsedSeconds)}
           </span>
         </div>
 
-        <Button
+        <button
           onClick={handleStopClick}
-          size="sm"
-          className="h-6 px-2.5 text-xs bg-white/20 hover:bg-white/30 text-white border-0"
           disabled={stopMutation.isPending}
+          className="flex items-center gap-1 h-5 px-2 rounded text-[10px] font-semibold bg-white/20 hover:bg-white/30 transition-colors"
         >
-          <Square className="w-3 h-3 mr-1" />
+          <Square className="w-2.5 h-2.5" />
           Stop
-        </Button>
+        </button>
       </div>
 
       <Dialog open={showStopModal} onOpenChange={setShowStopModal}>
