@@ -38,6 +38,7 @@ import GlobalSearch from '@/components/GlobalSearch';
 import NotificationToast from '@/components/NotificationToast';
 import NotificationPanel from '@/components/NotificationPanel';
 import FeedbackButton from '@/components/FeedbackButton';
+import GlobalActiveTimer from '@/components/GlobalActiveTimer';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { setBadgeCount } from '@/hooks/usePushNotifications';
 import { cn } from '@/lib/utils';
@@ -720,6 +721,9 @@ function LayoutContent({ children, currentPageName }) {
       <div className="hidden lg:block">
         <FeedbackButton />
       </div>
+
+      {/* Global Active Timer Bar */}
+      <GlobalActiveTimer />
 
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-card/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-border z-40 pb-safe rounded-t-2xl">

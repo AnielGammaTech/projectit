@@ -9,7 +9,7 @@ struct TimerWidgetLiveActivity: Widget {
             HStack(spacing: 12) {
                 Image(systemName: "timer")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.cyan)
+                    .foregroundColor(.white)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(context.attributes.projectName)
@@ -19,19 +19,19 @@ struct TimerWidgetLiveActivity: Widget {
 
                     Text(context.attributes.startTime, style: .timer)
                         .font(.system(size: 13, weight: .medium, design: .monospaced))
-                        .foregroundColor(.cyan)
+                        .foregroundColor(.white.opacity(0.9))
                 }
 
                 Spacer()
 
                 Image(systemName: "circle.fill")
                     .font(.system(size: 8))
-                    .foregroundColor(.red)
+                    .foregroundColor(.white)
                     .opacity(pulseAnimation())
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .activityBackgroundTint(Color(red: 15/255, green: 30/255, blue: 46/255))
+            .activityBackgroundTint(Color.red)
 
         } dynamicIsland: { context in
             DynamicIsland {
@@ -40,7 +40,7 @@ struct TimerWidgetLiveActivity: Widget {
                     HStack(spacing: 6) {
                         Image(systemName: "timer")
                             .font(.system(size: 14))
-                            .foregroundColor(.cyan)
+                            .foregroundColor(.red)
                         Text(context.attributes.projectName)
                             .font(.system(size: 13, weight: .semibold))
                             .lineLimit(1)
@@ -50,7 +50,7 @@ struct TimerWidgetLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.trailing) {
                     Text(context.attributes.startTime, style: .timer)
                         .font(.system(size: 15, weight: .bold, design: .monospaced))
-                        .foregroundColor(.cyan)
+                        .foregroundColor(.red)
                         .monospacedDigit()
                 }
 
@@ -64,20 +64,20 @@ struct TimerWidgetLiveActivity: Widget {
                 // Compact leading (left pill)
                 Image(systemName: "timer")
                     .font(.system(size: 12))
-                    .foregroundColor(.cyan)
+                    .foregroundColor(.red)
 
             } compactTrailing: {
                 // Compact trailing (right pill)
                 Text(context.attributes.startTime, style: .timer)
                     .font(.system(size: 12, weight: .semibold, design: .monospaced))
-                    .foregroundColor(.cyan)
+                    .foregroundColor(.red)
                     .monospacedDigit()
 
             } minimal: {
                 // Minimal (when competing with other activities)
                 Image(systemName: "timer")
                     .font(.system(size: 12))
-                    .foregroundColor(.cyan)
+                    .foregroundColor(.red)
             }
         }
     }
