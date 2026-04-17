@@ -875,6 +875,19 @@ export default function ProjectDetail() {
     if (pending) rawNavigate(pending.to, pending.options);
   };
 
+  const handleDiscardTimer = async () => {
+    if (!activeTimeEntry) return;
+    await api.entities.TimeEntry.delete(activeTimeEntry.id);
+    queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
+    queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+    stopTimerLiveActivity();
+    setShowLeaveStopModal(false);
+    toast('Timer discarded');
+    const pending = pendingNavigationRef.current;
+    pendingNavigationRef.current = null;
+    if (pending) rawNavigate(pending.to, pending.options);
+  };
+
   const handleKeepRunning = () => {
     setShowLeaveStopModal(false);
     const pending = pendingNavigationRef.current;
@@ -2346,8 +2359,12 @@ export default function ProjectDetail() {
             />
           </div>
           <div className="flex flex-col border-t border-border">
-            <button onClick={handleLeaveStop} className="py-3 text-sm font-bold text-emerald-600 hover:bg-emerald-500/10 transition-colors border-b border-border">
+            <button onClick={handleLeaveStop} className="py-3 text-sm font-bold text-[#0F2F44] dark:text-blue-400 hover:bg-blue-500/10 transition-colors border-b border-border">
               Save & Stop Timer
+            </button>
+            <button onClick={handleDiscardTimer} className="flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors border-b border-border">
+              <Trash2 className="w-3.5 h-3.5" />
+              Stop & Discard
             </button>
             <button onClick={handleKeepRunning} className="py-3 text-sm font-medium text-blue-600 hover:bg-blue-500/10 transition-colors border-b border-border">
               Keep Running & Leave

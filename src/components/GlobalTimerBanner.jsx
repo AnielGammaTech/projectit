@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Square } from 'lucide-react';
+import { Square, Trash2 } from 'lucide-react';
 import { stopTimerLiveActivity } from '@/hooks/useLiveActivity';
+import { toast } from 'sonner';
 
 function formatElapsed(seconds) {
   const h = Math.floor(seconds / 3600);
@@ -59,6 +59,12 @@ export default function GlobalTimerBanner({ currentUser }) {
     return () => clearInterval(interval);
   }, [activeEntry]);
 
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
+    queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+    queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+  };
+
   const stopMutation = useMutation({
     mutationFn: async (description) => {
       const endTime = new Date();
@@ -73,13 +79,29 @@ export default function GlobalTimerBanner({ currentUser }) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
-      queryClient.invalidateQueries({ queryKey: ['timeEntries', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
-      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      invalidateAll();
       setShowStopModal(false);
       setStopDescription('');
       stopTimerLiveActivity();
+    },
+    onError: () => {
+      toast.error('Failed to stop timer');
+    },
+  });
+
+  const discardMutation = useMutation({
+    mutationFn: async () => {
+      await api.entities.TimeEntry.delete(activeEntry.id);
+    },
+    onSuccess: () => {
+      invalidateAll();
+      setShowStopModal(false);
+      setStopDescription('');
+      stopTimerLiveActivity();
+      toast('Timer discarded');
+    },
+    onError: () => {
+      toast.error('Failed to discard timer');
     },
   });
 
@@ -92,6 +114,12 @@ export default function GlobalTimerBanner({ currentUser }) {
     stopMutation.mutate(stopDescription);
   };
 
+  const handleDiscard = () => {
+    discardMutation.mutate();
+  };
+
+  const isPending = stopMutation.isPending || discardMutation.isPending;
+
   if (!activeEntry) {
     return null;
   }
@@ -102,46 +130,51 @@ export default function GlobalTimerBanner({ currentUser }) {
     <>
       <div
         className={cn(
-          'fixed top-[56px] left-0 right-0 z-30 h-7',
-          'bg-gradient-to-r from-emerald-600 to-emerald-500',
+          'fixed top-[56px] left-0 right-0 z-30 h-8',
+          'bg-[#0F2F44] dark:bg-[#0a1f2e]',
           'flex items-center justify-between px-4',
-          'text-white text-xs shadow-sm'
+          'text-white text-xs shadow-md'
         )}
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="relative flex h-2 w-2 shrink-0">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
-          </span>
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            </span>
+            <span className="text-emerald-400 font-medium text-[10px] uppercase tracking-wider">Live</span>
+          </div>
+
+          <span className="text-white/30">|</span>
 
           <Link
             to={projectUrl}
-            className="truncate font-medium hover:underline underline-offset-2"
+            className="truncate font-medium text-white/90 hover:text-white transition-colors"
           >
             {projectName}
           </Link>
 
-          <span className="font-mono font-semibold tabular-nums">
+          <span className="font-mono font-bold tabular-nums text-white tracking-wide">
             {formatElapsed(elapsedSeconds)}
           </span>
         </div>
 
         <button
           onClick={handleStopClick}
-          disabled={stopMutation.isPending}
-          className="flex items-center gap-1 h-5 px-2 rounded text-[10px] font-semibold bg-white/20 hover:bg-white/30 transition-colors"
+          disabled={isPending}
+          className="flex items-center gap-1.5 h-5.5 px-2.5 rounded-md text-[10px] font-semibold bg-red-500/90 hover:bg-red-500 text-white transition-colors"
         >
-          <Square className="w-2.5 h-2.5" />
+          <Square className="w-2.5 h-2.5 fill-current" />
           Stop
         </button>
       </div>
 
       <Dialog open={showStopModal} onOpenChange={setShowStopModal}>
-        <DialogContent className="sm:max-w-sm p-0">
+        <DialogContent className="sm:max-w-sm p-0 overflow-hidden">
           <div className="px-5 pt-5 pb-4">
             <p className="text-lg font-bold text-foreground text-center">Stop Timer</p>
             <p className="text-xs text-muted-foreground text-center mt-1">{projectName}</p>
-            <p className="text-3xl font-mono font-bold text-center text-emerald-600 mt-2 tabular-nums">
+            <p className="text-3xl font-mono font-bold text-center text-[#0F2F44] dark:text-blue-400 mt-2 tabular-nums">
               {formatElapsed(elapsedSeconds)}
             </p>
             <Textarea
@@ -155,14 +188,23 @@ export default function GlobalTimerBanner({ currentUser }) {
           <div className="flex border-t border-border">
             <button
               onClick={() => setShowStopModal(false)}
+              disabled={isPending}
               className="flex-1 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors border-r border-border"
             >
               Cancel
             </button>
             <button
+              onClick={handleDiscard}
+              disabled={isPending}
+              className="flex items-center justify-center gap-1.5 flex-1 py-3 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors border-r border-border"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Discard
+            </button>
+            <button
               onClick={handleConfirmStop}
-              disabled={stopMutation.isPending}
-              className="flex-1 py-3 text-sm font-bold text-emerald-600 hover:bg-emerald-500/10 transition-colors"
+              disabled={isPending}
+              className="flex-1 py-3 text-sm font-bold text-[#0F2F44] dark:text-blue-400 hover:bg-blue-500/10 transition-colors"
             >
               Save & Stop
             </button>
