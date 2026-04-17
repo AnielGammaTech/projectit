@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
+import { useAuth } from '@/lib/AuthContext';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +11,8 @@ import { Square, Trash2 } from 'lucide-react';
 import { stopTimerLiveActivity } from '@/hooks/useLiveActivity';
 import { toast } from 'sonner';
 
+const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000;
+
 function formatElapsed(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -18,10 +21,15 @@ function formatElapsed(seconds) {
 }
 
 export default function GlobalTimerBanner({ currentUser }) {
+  const { isAuthenticated } = useAuth();
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showStopModal, setShowStopModal] = useState(false);
   const [stopDescription, setStopDescription] = useState('');
   const queryClient = useQueryClient();
+  const lastActivityRef = useRef(Date.now());
+  const inactivityTimerRef = useRef(null);
+  const wasAuthenticatedRef = useRef(isAuthenticated);
+  const autoStopFiredRef = useRef(false);
 
   const { data: allTimeEntries = [] } = useQuery({
     queryKey: ['allTimeEntries'],
@@ -58,6 +66,61 @@ export default function GlobalTimerBanner({ currentUser }) {
     const interval = setInterval(updateElapsed, 1000);
     return () => clearInterval(interval);
   }, [activeEntry]);
+
+  const stopTimerSilently = useCallback(async (entry, reason) => {
+    if (!entry || autoStopFiredRef.current) return;
+    autoStopFiredRef.current = true;
+    try {
+      const endTime = new Date();
+      const startTime = new Date(entry.start_time);
+      const durationMinutes = Math.round((endTime - startTime) / 60000);
+      await api.entities.TimeEntry.update(entry.id, {
+        end_time: endTime.toISOString(),
+        duration_minutes: durationMinutes,
+        is_running: false,
+        description: reason,
+      });
+      queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
+      queryClient.invalidateQueries({ queryKey: ['myTimeEntries'] });
+      stopTimerLiveActivity();
+      toast(reason);
+    } catch {
+      autoStopFiredRef.current = false;
+    }
+  }, [queryClient]);
+
+  useEffect(() => {
+    if (activeEntry) autoStopFiredRef.current = false;
+  }, [activeEntry?.id]);
+
+  // Auto-stop on sign-out
+  useEffect(() => {
+    if (wasAuthenticatedRef.current && !isAuthenticated && activeEntry) {
+      stopTimerSilently(activeEntry, 'Auto-stopped: signed out');
+    }
+    wasAuthenticatedRef.current = isAuthenticated;
+  }, [isAuthenticated, activeEntry, stopTimerSilently]);
+
+  // Auto-stop after 10 minutes of inactivity
+  useEffect(() => {
+    if (!activeEntry) return;
+    const resetActivity = () => { lastActivityRef.current = Date.now(); };
+    const checkInactivity = () => {
+      if (!activeEntry || autoStopFiredRef.current) return;
+      if (Date.now() - lastActivityRef.current >= INACTIVITY_TIMEOUT_MS) {
+        stopTimerSilently(activeEntry, 'Auto-stopped: 10 min inactivity');
+      }
+    };
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+    events.forEach(e => window.addEventListener(e, resetActivity, { passive: true }));
+    inactivityTimerRef.current = setInterval(checkInactivity, 30000);
+    resetActivity();
+    return () => {
+      events.forEach(e => window.removeEventListener(e, resetActivity));
+      clearInterval(inactivityTimerRef.current);
+    };
+  }, [activeEntry, stopTimerSilently]);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
@@ -131,8 +194,8 @@ export default function GlobalTimerBanner({ currentUser }) {
       <div
         className={cn(
           'fixed bottom-20 lg:bottom-6 right-4 z-40',
-          'bg-[#0F2F44] dark:bg-[#0a1f2e]',
-          'rounded-2xl shadow-2xl border border-white/10',
+          'bg-red-600 dark:bg-red-700',
+          'rounded-2xl shadow-2xl shadow-red-600/30 border border-red-500/20',
           'text-white text-xs',
           'animate-in slide-in-from-bottom-4 fade-in duration-300'
         )}
@@ -170,7 +233,7 @@ export default function GlobalTimerBanner({ currentUser }) {
           <div className="px-5 pt-5 pb-4">
             <p className="text-lg font-bold text-foreground text-center">Stop Timer</p>
             <p className="text-xs text-muted-foreground text-center mt-1">{projectName}</p>
-            <p className="text-3xl font-mono font-bold text-center text-[#0F2F44] dark:text-blue-400 mt-2 tabular-nums">
+            <p className="text-3xl font-mono font-bold text-center text-red-600 dark:text-red-400 mt-2 tabular-nums">
               {formatElapsed(elapsedSeconds)}
             </p>
             <Textarea
@@ -200,7 +263,7 @@ export default function GlobalTimerBanner({ currentUser }) {
             <button
               onClick={handleConfirmStop}
               disabled={isPending}
-              className="flex-1 py-3 text-sm font-bold text-[#0F2F44] dark:text-blue-400 hover:bg-blue-500/10 transition-colors"
+              className="flex-1 py-3 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
             >
               Save & Stop
             </button>
