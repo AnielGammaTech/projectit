@@ -56,7 +56,7 @@ export default function ProjectTime() {
   }, [project]);
 
   // Calculate totals
-  const totalHours = timeEntries.reduce((sum, entry) => sum + (entry.duration_hours || 0), 0);
+  const totalHours = timeEntries.reduce((sum, entry) => sum + ((entry.duration_minutes || 0) / 60), 0);
   const budgetHours = project?.time_budget_hours || 0;
   const budgetUsedPercent = budgetHours > 0 ? Math.min((totalHours / budgetHours) * 100, 100) : 0;
   const remainingHours = Math.max(budgetHours - totalHours, 0);
@@ -72,7 +72,7 @@ export default function ProjectTime() {
       const entryDate = parseISO(entry.date);
       return isWithinInterval(entryDate, { start: weekStart, end: weekEnd });
     })
-    .reduce((sum, entry) => sum + (entry.duration_hours || 0), 0);
+    .reduce((sum, entry) => sum + ((entry.duration_minutes || 0) / 60), 0);
 
   // Group by team member
   const hoursByMember = timeEntries.reduce((acc, entry) => {
@@ -80,7 +80,7 @@ export default function ProjectTime() {
     if (!acc[email]) {
       acc[email] = { hours: 0, name: entry.user_name || email, entries: [] };
     }
-    acc[email].hours += entry.duration_hours || 0;
+    acc[email].hours += (entry.duration_minutes || 0) / 60;
     acc[email].entries.push(entry);
     return acc;
   }, {});
@@ -335,7 +335,7 @@ export default function ProjectTime() {
                       </div>
                     </div>
                     <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50">
-                      {(entry.duration_hours || 0).toFixed(1)}h
+                      {((entry.duration_minutes || 0) / 60).toFixed(1)}h
                     </Badge>
                   </div>
                 ))}
