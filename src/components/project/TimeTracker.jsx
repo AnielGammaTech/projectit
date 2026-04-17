@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { startTimerLiveActivity, stopTimerLiveActivity } from '@/hooks/useLiveActivity';
+import { toast } from 'sonner';
 
 export default function TimeTracker({ projectId, projectName = '', currentUser, timeBudgetHours = 0, variant = 'inline' }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -49,19 +50,39 @@ export default function TimeTracker({ projectId, projectName = '', currentUser, 
   }, [activeEntry]);
 
   const startMutation = useMutation({
-    mutationFn: () => {
-      const now = new Date().toISOString();
+    mutationFn: async () => {
+      const now = new Date();
+
+      // Stop ALL running timers for this user across every project
+      const allRunning = await api.entities.TimeEntry.filter({
+        user_email: currentUser.email,
+        is_running: true
+      });
+      for (const entry of allRunning) {
+        const startTime = new Date(entry.start_time);
+        const durationMinutes = Math.round((now - startTime) / 60000);
+        await api.entities.TimeEntry.update(entry.id, {
+          end_time: now.toISOString(),
+          duration_minutes: durationMinutes,
+          is_running: false,
+          description: entry.description || '(auto-stopped)'
+        });
+      }
+
       return api.entities.TimeEntry.create({
         project_id: projectId,
         user_email: currentUser.email,
         user_name: currentUser.full_name || currentUser.email,
-        start_time: now,
+        start_time: now.toISOString(),
         is_running: true
       });
     },
-    onSuccess: (_, __, context) => {
-      queryClient.invalidateQueries({ queryKey: ['timeEntries', projectId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
       startTimerLiveActivity(projectName || 'Project Timer', new Date().toISOString());
+    },
+    onError: () => {
+      toast.error('Failed to start timer');
     }
   });
 
@@ -70,7 +91,7 @@ export default function TimeTracker({ projectId, projectName = '', currentUser, 
       const endTime = new Date();
       const startTime = new Date(activeEntry.start_time);
       const durationMinutes = Math.round((endTime - startTime) / 60000);
-      
+
       await api.entities.TimeEntry.update(activeEntry.id, {
         end_time: endTime.toISOString(),
         duration_minutes: durationMinutes,
@@ -79,10 +100,13 @@ export default function TimeTracker({ projectId, projectName = '', currentUser, 
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeEntries', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
       setShowStopModal(false);
       setStopDescription('');
       stopTimerLiveActivity();
+    },
+    onError: () => {
+      toast.error('Failed to stop timer. Please try again.');
     }
   });
 
