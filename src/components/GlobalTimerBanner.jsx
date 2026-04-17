@@ -130,43 +130,39 @@ export default function GlobalTimerBanner({ currentUser }) {
     <>
       <div
         className={cn(
-          'fixed top-[56px] left-0 right-0 z-30 h-8',
+          'fixed bottom-20 lg:bottom-6 right-4 z-40',
           'bg-[#0F2F44] dark:bg-[#0a1f2e]',
-          'flex items-center justify-between px-4',
-          'text-white text-xs shadow-md'
+          'rounded-2xl shadow-2xl border border-white/10',
+          'text-white text-xs',
+          'animate-in slide-in-from-bottom-4 fade-in duration-300'
         )}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            </span>
-            <span className="text-emerald-400 font-medium text-[10px] uppercase tracking-wider">Live</span>
-          </div>
-
-          <span className="text-white/30">|</span>
+        <div className="flex items-center gap-3 pl-4 pr-2 py-2.5">
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          </span>
 
           <Link
             to={projectUrl}
-            className="truncate font-medium text-white/90 hover:text-white transition-colors"
+            className="truncate font-medium text-white/90 hover:text-white transition-colors max-w-[160px]"
           >
             {projectName}
           </Link>
 
-          <span className="font-mono font-bold tabular-nums text-white tracking-wide">
+          <span className="font-mono text-sm font-bold tabular-nums text-white tracking-wide">
             {formatElapsed(elapsedSeconds)}
           </span>
-        </div>
 
-        <button
-          onClick={handleStopClick}
-          disabled={isPending}
-          className="flex items-center gap-1.5 h-5.5 px-2.5 rounded-md text-[10px] font-semibold bg-red-500/90 hover:bg-red-500 text-white transition-colors"
-        >
-          <Square className="w-2.5 h-2.5 fill-current" />
-          Stop
-        </button>
+          <button
+            onClick={handleStopClick}
+            disabled={isPending}
+            className="flex items-center gap-1.5 h-7 px-3 rounded-xl text-[11px] font-semibold bg-red-500 hover:bg-red-600 text-white transition-colors ml-1"
+          >
+            <Square className="w-2.5 h-2.5 fill-current" />
+            Stop
+          </button>
+        </div>
       </div>
 
       <Dialog open={showStopModal} onOpenChange={setShowStopModal}>

@@ -699,7 +699,7 @@ function LayoutContent({ children, currentPageName }) {
       <GlobalTimerBanner currentUser={currentUser} />
 
       {/* Main Content */}
-      <main className={cn("pt-safe-header pb-20 lg:pb-0", hasActiveTimer && "mt-7")}>
+      <main className="pt-safe-header pb-20 lg:pb-0">
         {children}
       </main>
 

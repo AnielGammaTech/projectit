@@ -111,18 +111,16 @@ export default function Dashboard() {
       ? quote.matched_items
       : (quote.raw_data?.items || []);
 
-    const quoteNumber = quote.quoteit_id || quote.raw_data?.quote_number || '';
     const quoteTitle = quote.title || '';
-    const projectName = quoteNumber ? `${quoteTitle} - ${quoteNumber}` : quoteTitle;
 
     setPrefillData({
-      name: projectName,
+      name: quoteTitle,
       client: quote.customer_name,
       customer_id: quote.customer_id || '',
       budget: quote.amount || quote.raw_data?.total_amount || 0,
       quoteit_quote_id: quote.quoteit_id,
       incoming_quote_id: quote.id,
-      description: quote.raw_data?.other_relevant_details || quote.raw_data?.description || '',
+      description: quote.raw_data?.description || quote.raw_data?.other_relevant_details || quote.raw_data?.notes || quote.raw_data?.scope_of_work || quote.raw_data?.scope || '',
       proposalItems: items,
     });
     setShowProjectModal(true);

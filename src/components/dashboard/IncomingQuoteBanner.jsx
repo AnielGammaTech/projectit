@@ -58,7 +58,7 @@ export default function IncomingQuoteBanner({ quotes, onAcceptQuote, onCreatePro
         </div>
       )}
 
-      {/* Pending Quotes — need acceptance */}
+      {/* Pending Quotes — ready for project creation */}
       {pendingQuotes.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
@@ -113,11 +113,11 @@ export default function IncomingQuoteBanner({ quotes, onAcceptQuote, onCreatePro
                   </span>
                   <Button
                     size="sm"
-                    onClick={() => onAcceptQuote(quote)}
-                    className="h-7 text-xs bg-emerald-500 hover:bg-emerald-600"
+                    onClick={() => onCreateProject(quote)}
+                    className="h-7 text-xs bg-[#0F2F44] hover:bg-[#1a4a6e] dark:bg-blue-600 dark:hover:bg-blue-700"
                   >
-                    <Check className="w-3 h-3 mr-1" />
-                    Accept
+                    <Plus className="w-3 h-3 mr-1" />
+                    Create Project
                   </Button>
                 </div>
               </motion.div>
