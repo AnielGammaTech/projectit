@@ -1,0 +1,595 @@
+# Instincts generated from https://github.com/AnielGammaTech/projectit
+# Generated: 2026-04-02T20:19:06.097Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: projectit-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat, fix
+
+## Evidence
+
+- 200 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat: ManageIT pill-style tabs matching main nav + green shadows on all cards, fix: collapse ManageIT nav items into single dropdown menu
+
+---
+id: projectit-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Commit Length
+
+## Action
+
+Write moderate-length commit messages (~65 characters)
+
+## Evidence
+
+- Average commit message length: 65 chars
+- Based on 200 commits
+
+---
+id: projectit-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Naming Files
+
+## Action
+
+Use PascalCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: PascalCase
+
+---
+id: projectit-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Export Style
+
+## Action
+
+Prefer default exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: default
+
+---
+id: projectit-arch-type-based
+trigger: "when adding new code"
+confidence: 0.8
+domain: architecture
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Arch Type Based
+
+## Action
+
+Place code in the appropriate type folder (components/, services/, utils/, etc.)
+
+## Evidence
+
+- Type-based module organization detected
+- Folders: api, assets, components, hooks, lib
+
+---
+id: projectit-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: projectit-workflow-feature-development
+trigger: "when implementing a new feature"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Feature Development
+
+## Action
+
+Follow the feature-development workflow:
+1. Add feature implementation
+2. Add tests for feature
+3. Update documentation
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~20x per month
+- Files: src/components/stock/*, src/components/project/*, src/components/modals/*
+
+---
+id: projectit-workflow-add-new-feature-page
+trigger: "when doing add new feature page"
+confidence: 0.75
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Add New Feature Page
+
+## Action
+
+Follow the add-new-feature-page workflow:
+1. Create new page file in src/pages/ (e.g., AssetReports.jsx)
+2. Optionally create or update supporting component(s) in src/components/
+3. Register new page in src/pages.config.js or navigation (e.g., src/Layout.jsx)
+4. Apply branding or shell wrapper if needed
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~5x per month
+- Files: src/pages/*.jsx, src/components/assets/*.jsx, src/pages.config.js
+
+---
+id: projectit-workflow-apply-branding-or-shell-to-multiple-pages
+trigger: "when doing apply branding or shell to multiple pages"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Apply Branding Or Shell To Multiple Pages
+
+## Action
+
+Follow the apply-branding-or-shell-to-multiple-pages workflow:
+1. Create or update shell/branding component in src/components/assets/
+2. Wrap target pages in the shell or update their imports
+3. Update CSS or color tokens as needed
+4. Remove redundant headers or branding from individual pages
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/components/assets/ManageITShell.jsx, src/pages/*.jsx, src/index.css
+
+---
+id: projectit-workflow-add-database-entity-and-api
+trigger: "when doing add database entity and api"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Add Database Entity And Api
+
+## Action
+
+Follow the add-database-entity-and-api workflow:
+1. Create migration SQL file in server/src/db/migrations/
+2. Update migration runner (server/src/db/migrate.js)
+3. Register new entity in server/src/routes/entities.js
+4. Implement or update service logic in server/src/services/
+5. Add or update API routes in server/src/routes/functions/
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: server/src/db/migrations/*.sql, server/src/db/migrate.js, server/src/routes/entities.js
+
+---
+id: projectit-workflow-feature-development-with-supporting-components
+trigger: "when doing feature development with supporting components"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Feature Development With Supporting Components
+
+## Action
+
+Follow the feature-development-with-supporting-components workflow:
+1. Create or update main page in src/pages/
+2. Create or update supporting component(s) in src/components/
+3. Wire up components in the main page
+4. Optionally update navigation or config
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: src/pages/*.jsx, src/components/assets/*.jsx
+
+---
+id: projectit-workflow-ui-redesign-or-layout-update
+trigger: "when doing ui redesign or layout update"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/AnielGammaTech/projectit
+---
+
+# Projectit Workflow Ui Redesign Or Layout Update
+
+## Action
+
+Follow the ui-redesign-or-layout-update workflow:
+1. Update component(s) in src/components/ (e.g., modals, cards, nav)
+2. Update corresponding page(s) in src/pages/
+3. Adjust CSS, color tokens, or layout as needed
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: src/components/*/*.jsx, src/pages/*.jsx, src/index.css
+
+---
+id: projectit-instinct-file-naming
+trigger: "When creating a new file (component, page, or class)"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct File Naming
+
+## Action
+
+Name the file using PascalCase (e.g., AssetReports.jsx, ManageITShell.jsx)
+
+## Evidence
+
+- src/pages/AssetReports.jsx
+- src/components/assets/ManageITShell.jsx
+
+---
+id: projectit-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Function Naming
+
+## Action
+
+Name the function using camelCase (e.g., handleSubmit, fetchAssets)
+
+## Evidence
+
+- Pattern in src/components/*/*.jsx
+- src/hooks/*
+
+---
+id: projectit-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase (e.g., AssetManager)
+
+## Evidence
+
+- Pattern in src/components/*/*.jsx
+
+---
+id: projectit-instinct-constant-naming
+trigger: "When declaring a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE (e.g., MAX_ASSET_COUNT)
+
+## Evidence
+
+- Pattern in src/utils/*
+- src/lib/*
+
+---
+id: projectit-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Import Style
+
+## Action
+
+Use absolute import paths (e.g., import AssetModal from 'src/components/assets/AssetModal')
+
+## Evidence
+
+- Pattern in src/pages/*.jsx
+- src/components/assets/*.jsx
+
+---
+id: projectit-instinct-export-style
+trigger: "When exporting a module"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Export Style
+
+## Action
+
+Use default exports for components and pages
+
+## Evidence
+
+- Pattern in src/components/assets/*.jsx
+- src/pages/*.jsx
+
+---
+id: projectit-instinct-try-catch-error-handling
+trigger: "When handling errors in asynchronous code"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Try Catch Error Handling
+
+## Action
+
+Use try-catch blocks for error handling
+
+## Evidence
+
+- Pattern in src/api/*
+- src/hooks/*
+
+---
+id: projectit-instinct-git-commit-format
+trigger: "When writing a git commit message"
+confidence: 0.95
+domain: git
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Git Commit Format
+
+## Action
+
+Use conventional commit prefixes (feat, fix, docs, chore, security) followed by a colon and a brief summary
+
+## Evidence
+
+- feat: ManageIT pill-style tabs matching main nav + green shadows on all cards
+- fix: collapse ManageIT nav items into single dropdown menu
+
+---
+id: projectit-instinct-git-commit-length
+trigger: "When writing a git commit message"
+confidence: 0.8
+domain: git
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Git Commit Length
+
+## Action
+
+Keep the commit message concise, averaging around 65 characters
+
+## Evidence
+
+- Average commit length is 65
+- Pattern in commit history
+
+---
+id: projectit-instinct-add-new-feature-page
+trigger: "When someone wants to add a new feature or entity page (e.g., AssetReports, AssetLicenses, MyAssets, AssetDetail, AssetEmployees, etc.)"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Add New Feature Page
+
+## Action
+
+Create a new page file in src/pages/, optionally add supporting components in src/components/, register the page in src/pages.config.js or src/Layout.jsx, and apply branding or shell wrapper if needed
+
+## Evidence
+
+- Workflow: add-new-feature-page
+- Files: src/pages/*.jsx, src/components/assets/*.jsx, src/pages.config.js, src/Layout.jsx
+
+---
+id: projectit-instinct-apply-branding-shell
+trigger: "When someone wants to apply a consistent branded UI (e.g., ManageITShell, color scheme) across a set of pages"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Apply Branding Shell
+
+## Action
+
+Create or update a shell/branding component in src/components/assets/, wrap target pages in the shell or update their imports, update CSS or color tokens as needed, and remove redundant headers or branding from individual pages
+
+## Evidence
+
+- Workflow: apply-branding-or-shell-to-multiple-pages
+- Files: src/components/assets/ManageITShell.jsx, src/pages/*.jsx, src/index.css
+
+---
+id: projectit-instinct-add-database-entity-api
+trigger: "When someone wants to add a new backend entity (e.g., assets) and make it available via API"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Add Database Entity Api
+
+## Action
+
+Create migration SQL file in server/src/db/migrations/, update migration runner (server/src/db/migrate.js), register new entity in server/src/routes/entities.js, implement or update service logic in server/src/services/, and add or update API routes in server/src/routes/functions/
+
+## Evidence
+
+- Workflow: add-database-entity-and-api
+- Files: server/src/db/migrations/*.sql, server/src/db/migrate.js, server/src/routes/entities.js, server/src/services/*.js, server/src/routes/functions/*.js
+
+---
+id: projectit-instinct-feature-with-supporting-components
+trigger: "When someone wants to add a feature that requires both a page and reusable UI components (e.g., AssetInventory with AssetModal, AssetDashboard with AssetStatsCard)"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Feature With Supporting Components
+
+## Action
+
+Create or update the main page in src/pages/, create or update supporting component(s) in src/components/, wire up components in the main page, and optionally update navigation or config
+
+## Evidence
+
+- Workflow: feature-development-with-supporting-components
+- Files: src/pages/*.jsx, src/components/assets/*.jsx
+
+---
+id: projectit-instinct-ui-redesign-layout-update
+trigger: "When someone wants to improve or overhaul the UI/UX of a feature (e.g., parts modal, dashboard cards, navigation)"
+confidence: 0.88
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Ui Redesign Layout Update
+
+## Action
+
+Update component(s) in src/components/ (e.g., modals, cards, nav), update corresponding page(s) in src/pages/, and adjust CSS, color tokens, or layout as needed
+
+## Evidence
+
+- Workflow: ui-redesign-or-layout-update
+- Files: src/components/*/*.jsx, src/pages/*.jsx, src/index.css
+
+---
+id: projectit-instinct-feature-development-sequence
+trigger: "When implementing a new feature"
+confidence: 0.8
+domain: workflow
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Feature Development Sequence
+
+## Action
+
+Follow the sequence: add feature implementation, add tests for feature, update documentation
+
+## Evidence
+
+- Workflow: feature-development
+- Commit sequence: Add feature, Add tests, Update docs
+
+---
+id: projectit-instinct-test-location
+trigger: "When adding tests for code in src/"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: AnielGammaTech/projectit
+---
+
+# Projectit Instinct Test Location
+
+## Action
+
+Place tests in a separate test directory, not alongside source files
+
+## Evidence
+
+- Architecture: testLocation is 'separate'
+- Pattern in folder structure
+
