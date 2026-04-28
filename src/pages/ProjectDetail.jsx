@@ -89,7 +89,7 @@ import FilesViewModal from '@/components/modals/FilesViewModal';
 import ProjectActivityFeed from '@/components/project/ProjectActivityFeed';
 import UpcomingDueDates from '@/components/project/UpcomingDueDates';
 import TimeTracker from '@/components/project/TimeTracker';
-import { startTimerLiveActivity, stopTimerLiveActivity } from '@/hooks/useLiveActivity';
+import { startTimerLiveActivity } from '@/hooks/useLiveActivity';
 import HaloPSATicketLink from '@/components/project/HaloPSATicketLink';
 import ProjectSidebar from '@/components/project/ProjectSidebar';
 import ProjectNavHeader from '@/components/navigation/ProjectNavHeader';
@@ -768,10 +768,7 @@ export default function ProjectDetail() {
   // Filter teamMembers to only those on this project (for assignment dropdowns)
   const projectMembers = useProjectMembers(teamMembers, project);
 
-  // ── Auto-start/stop timer on project enter/leave ──────────────────
-  const [showLeaveStopModal, setShowLeaveStopModal] = useState(false);
-  const [leaveStopDescription, setLeaveStopDescription] = useState('');
-
+  // ── Auto-start timer on project enter (stop modal lives in GlobalTimerBanner) ──
   const { data: projectTimeEntries = [] } = useQuery({
     queryKey: ['timeEntries', projectId],
     queryFn: () => api.entities.TimeEntry.filter({ project_id: projectId }, '-created_date'),
@@ -809,96 +806,7 @@ export default function ProjectDetail() {
     return () => clearTimeout(timeout);
   }, [currentUser?.email, projectId, project?.name]);
 
-  // Intercept navigation when timer is running
-  const pendingNavigationRef = React.useRef(null);
-  const rawNavigate = useNavigate();
-  const timerNavigate = React.useCallback((to, options) => {
-    if (activeTimeEntry) {
-      pendingNavigationRef.current = { to, options };
-      setLeaveStopDescription('');
-      setShowLeaveStopModal(true);
-    } else {
-      rawNavigate(to, options);
-    }
-  }, [activeTimeEntry, rawNavigate]);
-
-  // Intercept link clicks globally within this page
-  useEffect(() => {
-    if (!activeTimeEntry) return;
-
-    const handleClick = (e) => {
-      const anchor = e.target.closest('a[href]');
-      if (!anchor) return;
-      const href = anchor.getAttribute('href');
-      if (!href || href.startsWith('http') || href.startsWith('#')) return;
-      // Allow navigation within same project
-      if (href.includes(projectId)) return;
-      e.preventDefault();
-      pendingNavigationRef.current = { to: href };
-      setLeaveStopDescription('');
-      setShowLeaveStopModal(true);
-    };
-
-    document.addEventListener('click', handleClick, true);
-    return () => document.removeEventListener('click', handleClick, true);
-  }, [activeTimeEntry, projectId]);
-
-  // Warn on browser close/refresh
-  useEffect(() => {
-    if (!activeTimeEntry) return;
-    const handleBeforeUnload = (e) => {
-      e.preventDefault();
-      e.returnValue = 'You have an active timer running.';
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [activeTimeEntry]);
-
-  const handleLeaveStop = async () => {
-    if (!activeTimeEntry) return;
-    const endTime = new Date();
-    const startTime = new Date(activeTimeEntry.start_time);
-    const durationMinutes = Math.round((endTime - startTime) / 60000);
-    await api.entities.TimeEntry.update(activeTimeEntry.id, {
-      end_time: endTime.toISOString(),
-      duration_minutes: durationMinutes,
-      is_running: false,
-      description: leaveStopDescription
-    });
-    queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
-    queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
-    stopTimerLiveActivity();
-    setShowLeaveStopModal(false);
-    setLeaveStopDescription('');
-    const pending = pendingNavigationRef.current;
-    pendingNavigationRef.current = null;
-    if (pending) rawNavigate(pending.to, pending.options);
-  };
-
-  const handleDiscardTimer = async () => {
-    if (!activeTimeEntry) return;
-    await api.entities.TimeEntry.delete(activeTimeEntry.id);
-    queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
-    queryClient.invalidateQueries({ queryKey: ['allTimeEntries'] });
-    stopTimerLiveActivity();
-    setShowLeaveStopModal(false);
-    toast('Timer discarded');
-    const pending = pendingNavigationRef.current;
-    pendingNavigationRef.current = null;
-    if (pending) rawNavigate(pending.to, pending.options);
-  };
-
-  const handleKeepRunning = () => {
-    setShowLeaveStopModal(false);
-    const pending = pendingNavigationRef.current;
-    pendingNavigationRef.current = null;
-    if (pending) rawNavigate(pending.to, pending.options);
-  };
-
-  const handleStayOnProject = () => {
-    setShowLeaveStopModal(false);
-    pendingNavigationRef.current = null;
-  };
+  // Navigation guard + leave-stop modal moved to GlobalTimerBanner
 
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
@@ -2243,7 +2151,7 @@ export default function ProjectDetail() {
         teamMembers={projectMembers}
         currentUser={currentUser}
         onStatusChange={handleTaskStatusChange}
-        onEdit={(task) => { setShowTasksView(false); setEditingTask(task); setShowTaskModal(true); }}
+        onEdit={(task) => { setShowTasksView(false); setSelectedTask(task); }}
         onDelete={(task) => setDeleteConfirm({ open: true, type: 'task', item: task })}
         onTaskClick={(task) => { setShowTasksView(false); setSelectedTask(task); }}
         onCreateGroup={handleCreateGroup}
@@ -2268,7 +2176,6 @@ export default function ProjectDetail() {
         task={selectedTask}
         teamMembers={projectMembers}
         currentUser={currentUser}
-        onEdit={(task) => { setSelectedTask(null); setEditingTask(task); setShowTaskModal(true); }}
       />
 
       <FilesViewModal
@@ -2344,37 +2251,6 @@ export default function ProjectDetail() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Leave/Stop Timer Modal */}
-      <Dialog open={showLeaveStopModal} onOpenChange={(open) => { if (!open) handleStayOnProject(); }}>
-        <DialogContent className="sm:max-w-sm p-0">
-          <div className="px-5 pt-5 pb-4">
-            <p className="text-lg font-bold text-foreground text-center">Timer Running</p>
-            <p className="text-xs text-muted-foreground text-center mt-1">You have an active timer on <strong>{project?.name}</strong></p>
-            <Textarea
-              value={leaveStopDescription}
-              onChange={(e) => setLeaveStopDescription(e.target.value)}
-              placeholder="What did you work on?"
-              className="mt-4 min-h-[80px] bg-muted/30 border-border rounded-xl text-sm"
-              autoFocus
-            />
-          </div>
-          <div className="flex flex-col border-t border-border">
-            <button onClick={handleLeaveStop} className="py-3 text-sm font-bold text-[#0F2F44] dark:text-blue-400 hover:bg-blue-500/10 transition-colors border-b border-border">
-              Save & Stop Timer
-            </button>
-            <button onClick={handleDiscardTimer} className="flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors border-b border-border">
-              <Trash2 className="w-3.5 h-3.5" />
-              Stop & Discard
-            </button>
-            <button onClick={handleKeepRunning} className="py-3 text-sm font-medium text-blue-600 hover:bg-blue-500/10 transition-colors border-b border-border">
-              Keep Running & Leave
-            </button>
-            <button onClick={handleStayOnProject} className="py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors">
-              Stay on Project
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
       </div>
       </div>
       );

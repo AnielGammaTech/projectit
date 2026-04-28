@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Square, Trash2 } from 'lucide-react';
 import { stopTimerLiveActivity } from '@/hooks/useLiveActivity';
@@ -25,6 +25,8 @@ export default function GlobalTimerBanner({ currentUser }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showStopModal, setShowStopModal] = useState(false);
   const [stopDescription, setStopDescription] = useState('');
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const lastActivityRef = useRef(Date.now());
   const inactivityTimerRef = useRef(null);
@@ -169,19 +171,82 @@ export default function GlobalTimerBanner({ currentUser }) {
   });
 
   const handleStopClick = () => {
+    setPendingNavigation(null);
     setStopDescription('');
     setShowStopModal(true);
   };
 
+  const finishPendingNavigation = () => {
+    if (pendingNavigation) navigate(pendingNavigation);
+    setPendingNavigation(null);
+  };
+
   const handleConfirmStop = () => {
-    stopMutation.mutate(stopDescription);
+    stopMutation.mutate(stopDescription, {
+      onSuccess: () => finishPendingNavigation(),
+    });
   };
 
   const handleDiscard = () => {
-    discardMutation.mutate();
+    discardMutation.mutate(undefined, {
+      onSuccess: () => finishPendingNavigation(),
+    });
+  };
+
+  const handleKeepRunning = () => {
+    setShowStopModal(false);
+    finishPendingNavigation();
+  };
+
+  const handleStay = () => {
+    setPendingNavigation(null);
+    setShowStopModal(false);
   };
 
   const isPending = stopMutation.isPending || discardMutation.isPending;
+  const isNavigationTriggered = !!pendingNavigation;
+
+  // Intercept link clicks document-wide while a timer is running
+  useEffect(() => {
+    if (!activeEntry) return;
+    const activeProjectId = activeEntry.project_id;
+
+    const handleClick = (e) => {
+      // Ignore modifier keys (cmd/ctrl-click opens new tab)
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (e.button !== 0 && e.button !== undefined) return;
+      const anchor = e.target.closest('a[href]');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href) return;
+      // External or hash links — don't intercept
+      if (href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('#')) return;
+      // Same-project links allowed
+      if (activeProjectId && href.includes(activeProjectId)) return;
+      // Same URL — no actual navigation
+      if (href === window.location.pathname + window.location.search) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingNavigation(href);
+      setStopDescription('');
+      setShowStopModal(true);
+    };
+
+    document.addEventListener('click', handleClick, true);
+    return () => document.removeEventListener('click', handleClick, true);
+  }, [activeEntry]);
+
+  // Warn on browser close/refresh while timer running
+  useEffect(() => {
+    if (!activeEntry) return;
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = 'You have an active timer running.';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [activeEntry]);
 
   if (!activeEntry) {
     return null;
@@ -228,11 +293,13 @@ export default function GlobalTimerBanner({ currentUser }) {
         </div>
       </div>
 
-      <Dialog open={showStopModal} onOpenChange={setShowStopModal}>
+      <Dialog open={showStopModal} onOpenChange={(open) => { if (!open) handleStay(); }}>
         <DialogContent className="sm:max-w-sm p-0 overflow-hidden">
           <div className="px-5 pt-5 pb-4">
-            <p className="text-lg font-bold text-foreground text-center">Stop Timer</p>
-            <p className="text-xs text-muted-foreground text-center mt-1">{projectName}</p>
+            <p className="text-lg font-bold text-foreground text-center">{isNavigationTriggered ? 'Timer Running' : 'Stop Timer'}</p>
+            <p className="text-xs text-muted-foreground text-center mt-1">
+              {isNavigationTriggered ? <>You have an active timer on <strong>{projectName}</strong></> : projectName}
+            </p>
             <p className="text-3xl font-mono font-bold text-center text-red-600 dark:text-red-400 mt-2 tabular-nums">
               {formatElapsed(elapsedSeconds)}
             </p>
@@ -244,9 +311,42 @@ export default function GlobalTimerBanner({ currentUser }) {
               autoFocus
             />
           </div>
+          {isNavigationTriggered ? (
+            <div className="flex flex-col border-t border-border">
+              <button
+                onClick={handleConfirmStop}
+                disabled={isPending}
+                className="py-3 text-sm font-bold text-[#0F2F44] dark:text-blue-400 hover:bg-blue-500/10 transition-colors border-b border-border"
+              >
+                Save & Stop Timer
+              </button>
+              <button
+                onClick={handleDiscard}
+                disabled={isPending}
+                className="flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors border-b border-border"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Stop & Discard
+              </button>
+              <button
+                onClick={handleKeepRunning}
+                disabled={isPending}
+                className="py-3 text-sm font-medium text-blue-600 hover:bg-blue-500/10 transition-colors border-b border-border"
+              >
+                Keep Running & Leave
+              </button>
+              <button
+                onClick={handleStay}
+                disabled={isPending}
+                className="py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+              >
+                Stay on Project
+              </button>
+            </div>
+          ) : (
           <div className="flex border-t border-border">
             <button
-              onClick={() => setShowStopModal(false)}
+              onClick={handleStay}
               disabled={isPending}
               className="flex-1 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors border-r border-border"
             >
@@ -268,6 +368,7 @@ export default function GlobalTimerBanner({ currentUser }) {
               Save & Stop
             </button>
           </div>
+          )}
         </DialogContent>
       </Dialog>
     </>

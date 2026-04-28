@@ -13,7 +13,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Send, Calendar as CalendarIcon, Edit2, Trash2, Paperclip, X,
+  Send, Calendar as CalendarIcon, Trash2, Paperclip, X,
   FileText, Image, Loader2, Check, MoreHorizontal, Bell,
   User, Clock, Flag, MessageSquare, ChevronDown, ChevronUp,
   ListChecks, Plus, GripVertical, Notebook, StickyNote, Camera as CameraIcon,
@@ -42,11 +42,13 @@ const statusPillConfig = {
 
 const getFileIcon = (type) => type?.startsWith('image') ? Image : FileText;
 
-export default function TaskDetailModal({ open, onClose, task, teamMembers = [], onEdit, currentUser, project }) {
+export default function TaskDetailModal({ open, onClose, task, teamMembers = [], currentUser, project }) {
   const [comment, setComment] = useState('');
   const [showMentions, setShowMentions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
   const [notes, setNotes] = useState('');
   const [notifyOnComplete, setNotifyOnComplete] = useState([]);
   const [commentAttachments, setCommentAttachments] = useState([]);
@@ -64,7 +66,7 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
   const { takePhoto, pickFromGallery, isNativeCamera } = useNativeCamera();
   const { success: hapticSuccess, tapLight } = useHaptics();
 
-  useEffect(() => { if (task) { setNotes(task.notes || ''); setNotifyOnComplete(task.notify_on_complete || []); setChecklistItems(task.checklist_items || []); } }, [task?.id]);
+  useEffect(() => { if (task) { setNotes(task.notes || ''); setNotifyOnComplete(task.notify_on_complete || []); setChecklistItems(task.checklist_items || []); setEditingTitle(false); setTitleDraft(task.title || ''); } }, [task?.id]);
 
   const { data: comments = [], refetch: refetchComments } = useQuery({ queryKey: ['taskComments', task?.id], queryFn: () => api.entities.TaskComment.filter({ task_id: task?.id }, '-created_date'), enabled: !!task?.id && open });
 
@@ -210,9 +212,6 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
           </button>
           <div className="w-8 h-1 rounded-full bg-slate-200 dark:bg-slate-600 absolute left-1/2 -translate-x-1/2 top-1.5" />
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={() => onEdit(task)} className="h-7 text-xs px-2 text-slate-500">
-              <Edit2 className="w-3 h-3 mr-1" /> Edit
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-500">
@@ -233,12 +232,42 @@ export default function TaskDetailModal({ open, onClose, task, teamMembers = [],
               <AnimatePresence>{isCompleted && (<motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }}><Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></motion.div>)}</AnimatePresence>
             </motion.button>
             <div className="flex-1 min-w-0">
-              <h2 className={cn("text-sm sm:text-lg font-semibold text-slate-900 dark:text-slate-100 leading-snug", isCompleted && "line-through text-slate-400")}>{task.title}</h2>
+              {editingTitle ? (
+                <input
+                  autoFocus
+                  value={titleDraft}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onBlur={() => {
+                    const trimmed = titleDraft.trim();
+                    if (trimmed && trimmed !== task.title) handleUpdateTask({ title: trimmed });
+                    else setTitleDraft(task.title || '');
+                    setEditingTitle(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
+                    if (e.key === 'Escape') { setTitleDraft(task.title || ''); setEditingTitle(false); }
+                  }}
+                  className={cn(
+                    "w-full text-sm sm:text-lg font-semibold text-slate-900 dark:text-slate-100 leading-snug bg-transparent border border-slate-200 dark:border-slate-600 rounded-md px-2 py-0.5 -mx-2 outline-none focus:border-[#0069AF] focus:ring-2 focus:ring-[#0069AF]/20",
+                    isCompleted && "line-through text-slate-400"
+                  )}
+                />
+              ) : (
+                <h2
+                  onClick={() => setEditingTitle(true)}
+                  title="Click to edit"
+                  className={cn(
+                    "text-sm sm:text-lg font-semibold text-slate-900 dark:text-slate-100 leading-snug cursor-text rounded-md hover:bg-slate-100/60 dark:hover:bg-slate-700/40 px-2 py-0.5 -mx-2 transition-colors",
+                    isCompleted && "line-through text-slate-400"
+                  )}
+                >
+                  {task.title}
+                </h2>
+              )}
               <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1">Created by {task.created_by || 'Unknown'} · {format(new Date(task.created_date), 'MMM d, yyyy')}</p>
             </div>
             {/* Desktop actions */}
             <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
-              <Button variant="ghost" size="icon" onClick={() => onEdit(task)} className="h-8 w-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><Edit2 className="w-4 h-4" /></Button>
               <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem className="text-red-600"><Trash2 className="w-4 h-4 mr-2" />Delete Task</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
             </div>
           </div>

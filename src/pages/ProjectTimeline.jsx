@@ -231,11 +231,6 @@ export default function ProjectTimeline() {
         task={selectedTask}
         teamMembers={teamMembers}
         currentUser={currentUser}
-        onEdit={(task) => { 
-          setSelectedTask(null); 
-          setEditingTask(task); 
-          setShowTaskModal(true); 
-        }}
       />
     </div>
   );

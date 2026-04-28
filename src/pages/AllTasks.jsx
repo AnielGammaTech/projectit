@@ -1181,7 +1181,6 @@ export default function AllTasks() {
         onClose={() => setSelectedTask(null)}
         task={selectedTask}
         teamMembers={teamMembers}
-        onEdit={() => {}}
         currentUser={currentUser}
         project={projects.find(p => p.id === selectedTask?.project_id)}
       />

@@ -1015,7 +1015,7 @@ export default function ProjectTasks() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => { setEditingTask(task); setShowTaskModal(true); }}>
+                <DropdownMenuItem onClick={() => setSelectedTask(task)}>
                   <Edit2 className="w-4 h-4 mr-2" />Edit
                 </DropdownMenuItem>
                 {task.status === 'archived' ? (
@@ -1530,7 +1530,6 @@ export default function ProjectTasks() {
         task={selectedTask}
         teamMembers={projectMembers}
         currentUser={currentUser}
-        onEdit={(task) => { setSelectedTask(null); setEditingTask(task); setShowTaskModal(true); }}
       />
 
       <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => { if (!open) { setDeleteConfirm({ open: false, type: null, item: null }); setSelectedTask(null); } }}>
