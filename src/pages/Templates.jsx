@@ -1,14 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/api/apiClient';
 import { motion } from 'framer-motion';
-import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase, Loader2, Search, Building2, Users, X, MessageSquare } from 'lucide-react';
+import { FileStack, Plus, Edit2, Trash2, ListTodo, Package, PlayCircle, FolderKanban, CheckSquare, MoreHorizontal, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import {
@@ -22,13 +19,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -37,6 +27,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CardGridSkeleton } from '@/components/ui/PageSkeletons';
 import { toast } from 'sonner';
+import ProjectModal from '@/components/modals/ProjectModal';
 
 export default function Templates() {
   const queryClient = useQueryClient();
@@ -44,27 +35,13 @@ export default function Templates() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [activeTab, setActiveTab] = useState('project');
   const [createFromTemplate, setCreateFromTemplate] = useState(null);
-  const [projectName, setProjectName] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [selectedTeamMembers, setSelectedTeamMembers] = useState([]);
-  const [creating, setCreating] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: () => api.entities.Customer.list('name')
-  });
-
-  const { data: teamMembers = [] } = useQuery({
-    queryKey: ['teamMembers'],
-    queryFn: () => api.entities.TeamMember.list('name')
-  });
-
-  const filteredCustomers = customers.filter(c =>
-    c.is_company &&
-    (c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-     c.email?.toLowerCase().includes(customerSearch.toLowerCase()))
-  ).slice(0, 5);
+  useEffect(() => {
+    let mounted = true;
+    api.auth.me().then(user => { if (mounted) setCurrentUser(user); }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
 
   const { data: templates = [], isLoading: loadingTemplates } = useQuery({
     queryKey: ['templates'],
@@ -88,55 +65,72 @@ export default function Templates() {
 
   const handleOpenCreateModal = (template) => {
     setCreateFromTemplate(template);
-    setProjectName('');
-    setSelectedCustomer(null);
-    setCustomerSearch('');
-    setSelectedTeamMembers([]);
   };
 
-  const toggleTeamMember = (email) => {
-    setSelectedTeamMembers(prev =>
-      prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
-    );
-  };
-
-  const handleCreateProject = async () => {
-    if (!createFromTemplate || !projectName.trim()) return;
-
-    setCreating(true);
+  const handleCreateProject = async (data, template, extractedParts) => {
     try {
-      // Get highest project number and increment
       const allProjects = await api.entities.Project.list('-project_number', 1);
       const nextNumber = (allProjects[0]?.project_number || 1000) + 1;
 
+      const allTags = await api.entities.ProjectTag.list();
+      const inProgressTag = allTags.find(t => t.name === 'In Progress');
+
+      const teamMembersList = currentUser?.email && !(data.team_members || []).includes(currentUser.email)
+        ? [...(data.team_members || []), currentUser.email]
+        : [...(data.team_members || [])];
+
       const newProject = await api.entities.Project.create({
-        name: projectName.trim(),
-        status: 'planning',
+        ...data,
         project_number: nextNumber,
-        customer_id: selectedCustomer?.id || '',
-        client: selectedCustomer?.name || '',
-        team_members: selectedTeamMembers
+        tags: inProgressTag ? [inProgressTag.id] : [],
+        team_members: teamMembersList
       });
 
-      // Create task groups first and map template IDs to real IDs
+      for (const memberEmail of teamMembersList) {
+        if (memberEmail !== currentUser?.email) {
+          try {
+            await api.entities.UserNotification.create({
+              user_email: memberEmail,
+              type: 'project_assigned',
+              title: 'You have been added to a project',
+              message: `${currentUser?.full_name || currentUser?.email} added you to "${newProject.name}"`,
+              project_id: newProject.id,
+              project_name: newProject.name,
+              from_user_email: currentUser?.email,
+              from_user_name: currentUser?.full_name || currentUser?.email,
+              link: `/ProjectDetail?id=${newProject.id}`,
+              is_read: false
+            });
+            await api.functions.invoke('sendNotificationEmail', {
+              to: memberEmail,
+              type: 'project_assigned',
+              title: 'You have been added to a project',
+              message: `${currentUser?.full_name || currentUser?.email} added you to "${newProject.name}"`,
+              projectId: newProject.id,
+              projectName: newProject.name,
+              fromUserName: currentUser?.full_name || currentUser?.email,
+              link: `${window.location.origin}/ProjectDetail?id=${newProject.id}`
+            });
+          } catch {/* notify failure non-critical */}
+        }
+      }
+
+      // Apply template content (groups → tasks → parts → messages)
       const groupIdMap = {};
-      if (createFromTemplate.default_groups?.length) {
-        for (const group of createFromTemplate.default_groups) {
+      if (template?.default_groups?.length) {
+        for (const group of template.default_groups) {
           const created = await api.entities.TaskGroup.create({
             name: group.name,
             color: group.color,
             project_id: newProject.id
           });
-          if (group._template_id) {
-            groupIdMap[group._template_id] = created.id;
-          }
+          if (group._template_id) groupIdMap[group._template_id] = created.id;
         }
       }
 
-      if (createFromTemplate.default_tasks?.length) {
-        for (const task of createFromTemplate.default_tasks) {
+      if (template?.default_tasks?.length) {
+        for (const task of template.default_tasks) {
           const taskData = { ...task, project_id: newProject.id, status: 'todo' };
-          // Map template group_id to real group_id
           if (taskData.group_id && groupIdMap[taskData.group_id]) {
             taskData.group_id = String(groupIdMap[taskData.group_id]);
           } else {
@@ -146,14 +140,14 @@ export default function Templates() {
         }
       }
 
-      if (createFromTemplate.default_parts?.length) {
-        for (const part of createFromTemplate.default_parts) {
+      if (template?.default_parts?.length) {
+        for (const part of template.default_parts) {
           await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
         }
       }
 
-      if (createFromTemplate.default_messages?.length) {
-        for (const msg of createFromTemplate.default_messages) {
+      if (template?.default_messages?.length) {
+        for (const msg of template.default_messages) {
           await api.entities.ProjectNote.create({
             project_id: newProject.id,
             title: msg.title || '',
@@ -163,11 +157,16 @@ export default function Templates() {
         }
       }
 
+      if (extractedParts?.length) {
+        for (const part of extractedParts) {
+          await api.entities.Part.create({ ...part, project_id: newProject.id, status: 'needed' });
+        }
+      }
+
+      setCreateFromTemplate(null);
       navigate(createPageUrl('ProjectDetail') + `?id=${newProject.id}`);
     } catch (err) {
       toast.error('Failed to create project. Please try again.');
-    } finally {
-      setCreating(false);
       setCreateFromTemplate(null);
     }
   };
@@ -395,138 +394,15 @@ export default function Templates() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Create Project from Template Modal */}
-      <Dialog open={!!createFromTemplate} onOpenChange={(open) => !open && setCreateFromTemplate(null)}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Create Project from Template</DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            {/* Project Name */}
-            <div>
-              <Label htmlFor="projectName">Project Name *</Label>
-              <Input
-                id="projectName"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                placeholder="Enter project name..."
-                className="mt-1"
-                autoFocus
-              />
-            </div>
-
-            {/* Customer Selection */}
-            <div>
-              <Label>Customer</Label>
-              {selectedCustomer ? (
-                <div className="mt-1 flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium">{selectedCustomer.name}</span>
-                  </div>
-                  <button onClick={() => setSelectedCustomer(null)} className="text-muted-foreground hover:text-foreground">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="mt-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      value={customerSearch}
-                      onChange={(e) => setCustomerSearch(e.target.value)}
-                      placeholder="Search customers..."
-                      className="pl-9"
-                    />
-                  </div>
-                  {customerSearch && filteredCustomers.length > 0 && (
-                    <div className="mt-1 border border-border rounded-lg max-h-32 overflow-y-auto">
-                      {filteredCustomers.map(customer => (
-                        <button
-                          key={customer.id}
-                          onClick={() => { setSelectedCustomer(customer); setCustomerSearch(''); }}
-                          className="w-full text-left px-3 py-2 hover:bg-muted/50 flex items-center gap-2"
-                        >
-                          <Building2 className="w-4 h-4 text-muted-foreground" />
-                          <span>{customer.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Team Members */}
-            <div>
-              <Label>Team Members</Label>
-              <div className="mt-1 border border-border rounded-lg max-h-32 overflow-y-auto">
-                {teamMembers.length > 0 ? (
-                  teamMembers.map(member => (
-                    <label
-                      key={member.id}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 cursor-pointer"
-                    >
-                      <Checkbox
-                        checked={selectedTeamMembers.includes(member.email)}
-                        onCheckedChange={() => toggleTeamMember(member.email)}
-                      />
-                      <span className="text-sm">{member.name}</span>
-                    </label>
-                  ))
-                ) : (
-                  <p className="px-3 py-2 text-sm text-muted-foreground">No team members available</p>
-                )}
-              </div>
-              {selectedTeamMembers.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-1">{selectedTeamMembers.length} selected</p>
-              )}
-            </div>
-
-            {/* Template Info */}
-            {createFromTemplate && (
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-2">This template includes:</p>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1 text-sm text-foreground">
-                    <ListTodo className="w-4 h-4 text-indigo-500" />
-                    {createFromTemplate.default_tasks?.length || 0} tasks
-                  </div>
-                  <div className="flex items-center gap-1 text-sm text-foreground">
-                    <Package className="w-4 h-4 text-amber-500" />
-                    {createFromTemplate.default_parts?.length || 0} parts
-                  </div>
-                  {(createFromTemplate.default_messages?.length || 0) > 0 && (
-                    <div className="flex items-center gap-1 text-sm text-foreground">
-                      <MessageSquare className="w-4 h-4 text-violet-500" />
-                      {createFromTemplate.default_messages.length} messages
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateFromTemplate(null)} disabled={creating}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateProject}
-              disabled={!projectName.trim() || creating}
-              className="bg-primary hover:bg-primary/80"
-            >
-              {creating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                'Create Project'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Create Project from Template — uses ProjectModal for richer UX */}
+      <ProjectModal
+        open={!!createFromTemplate}
+        onClose={() => setCreateFromTemplate(null)}
+        templates={templates}
+        prefillTemplateId={createFromTemplate?.id || null}
+        onSave={handleCreateProject}
+        currentUserEmail={currentUser?.email}
+      />
     </div>
   );
 }

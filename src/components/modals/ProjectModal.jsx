@@ -38,7 +38,7 @@ const colorOptions = [
   { value: 'rose', color: '#f43f5e' },
 ];
 
-export default function ProjectModal({ open, onClose, project, templates = [], onSave, onPartsExtracted, prefillData, currentUserEmail }) {
+export default function ProjectModal({ open, onClose, project, templates = [], onSave, onPartsExtracted, prefillData, prefillTemplateId, currentUserEmail }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -175,12 +175,12 @@ export default function ProjectModal({ open, onClose, project, templates = [], o
       });
       setExtractedParts([]);
     }
-    setSelectedTemplate('');
+    setSelectedTemplate(prefillTemplateId || '');
     setPeopleSearch('');
     setShowLeadPicker(false);
     setShowColorPicker(false);
     setShowTemplatePicker(false);
-  }, [project, open, prefillData, defaultStatus, currentUserEmail, customers]);
+  }, [project, open, prefillData, prefillTemplateId, defaultStatus, currentUserEmail, customers]);
 
   const toggleTeamMember = (email) => {
     setFormData(prev => ({
