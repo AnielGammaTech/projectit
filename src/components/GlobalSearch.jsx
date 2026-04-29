@@ -173,7 +173,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
         c.name?.toLowerCase().includes(lowerQuery) ||
         c.email?.toLowerCase().includes(lowerQuery) ||
         c.company?.toLowerCase().includes(lowerQuery)
-      ).forEach(c => results.push({ type: 'customer', item: c, url: createPageUrl('Customers') + `?highlight=${c.id}` }));
+      ).forEach(c => results.push({ type: 'customer', item: c, url: `/Customers/${c.id}` }));
     }
 
     if (filters.inventory) {

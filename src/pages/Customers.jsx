@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Link } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { cn } from '@/lib/utils';
 import CustomerCommunication from '@/components/customers/CustomerCommunication';
@@ -54,7 +54,20 @@ export default function Customers() {
   });
   const queryClient = useQueryClient();
 
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const { customerId } = useParams();
+  const navigate = useNavigate();
+
+  const openCustomer = (c) => {
+    if (c?.id) navigate(`/Customers/${c.id}`);
+  };
+  const closeCustomer = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/Customers');
+    }
+  };
+
   const [showCommunication, setShowCommunication] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [contactSearch, setContactSearch] = useState('');
@@ -64,7 +77,7 @@ export default function Customers() {
   useEffect(() => {
     setContactSearch('');
     setContactPage(1);
-  }, [selectedCustomer?.id]);
+  }, [customerId]);
   
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -80,6 +93,19 @@ export default function Customers() {
     queryKey: ['sites'],
     queryFn: () => api.entities.Site.list()
   });
+
+  // Derive selected customer from URL
+  const selectedCustomer = customerId
+    ? customers.find(c => c.id === customerId) || null
+    : null;
+
+  // If a customerId is in the URL but no matching customer exists after load,
+  // strip the stale id from the URL.
+  useEffect(() => {
+    if (customerId && !loadingCustomers && customers.length > 0 && !selectedCustomer) {
+      navigate('/Customers', { replace: true });
+    }
+  }, [customerId, loadingCustomers, customers.length, selectedCustomer, navigate]);
 
   // Separate companies and contacts
   const companies = customers.filter(c => c.is_company);
@@ -489,7 +515,7 @@ export default function Customers() {
                     <div
                       key={company.id}
                       className="flex items-center gap-3 px-3 py-2.5 active:bg-muted cursor-pointer"
-                      onClick={() => setSelectedCustomer(company)}
+                      onClick={() => openCustomer(company)}
                     >
                       <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground shrink-0">
                         <Building2 className="w-3.5 h-3.5" />
@@ -540,7 +566,7 @@ export default function Customers() {
                       "flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-muted/50 transition-colors cursor-pointer",
                       selectedIds.has(company.id) && "bg-red-50/30 dark:bg-red-900/10"
                     )}
-                    onClick={() => setSelectedCustomer(company)}
+                    onClick={() => openCustomer(company)}
                   >
                     {selectionMode && (
                       <button
@@ -589,7 +615,7 @@ export default function Customers() {
                   <div
                     key={customer.id}
                     className="flex items-center gap-3 px-3 py-2.5 active:bg-slate-50 dark:active:bg-slate-700/30 cursor-pointer"
-                    onClick={() => setSelectedCustomer(customer)}
+                    onClick={() => openCustomer(customer)}
                   >
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-xs shrink-0">
                       {customer.name?.charAt(0).toUpperCase()}
@@ -617,7 +643,7 @@ export default function Customers() {
                       "flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-muted/50 transition-colors cursor-pointer",
                       selectedIds.has(customer.id) && "bg-red-50/30 dark:bg-red-900/10"
                     )}
-                    onClick={() => setSelectedCustomer(customer)}
+                    onClick={() => openCustomer(customer)}
                   >
                     {selectionMode && (
                       <button
@@ -812,7 +838,7 @@ export default function Customers() {
       </Dialog>
 
       {/* Customer Detail Modal */}
-      <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
+      <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && closeCustomer()}>
         <DialogContent hideCloseOnMobile className="sm:max-w-3xl overflow-hidden p-0 h-[92vh] sm:h-auto sm:max-h-[90vh]">
           {selectedCustomer && (() => {
             const customerSites = getSitesForCompany(selectedCustomer.id);
@@ -833,7 +859,7 @@ export default function Customers() {
                     {/* Mobile: close/edit bar */}
                     <div className="sm:hidden flex items-center justify-between mb-2">
                       <button
-                        onClick={() => setSelectedCustomer(null)}
+                        onClick={() => closeCustomer()}
                         className="flex items-center gap-1.5 text-white text-sm font-semibold bg-white/15 rounded-full px-4 py-1.5"
                       >
                         <X className="w-4 h-4" /> Close

@@ -103,6 +103,16 @@ const AuthenticatedApp = () => {
             <ErrorBoundary><MainPage /></ErrorBoundary>
           </LayoutWrapper>
         } />
+        {Pages.Customers && (
+          <Route
+            path="/Customers/:customerId"
+            element={
+              <LayoutWrapper currentPageName="Customers">
+                <ErrorBoundary><Pages.Customers /></ErrorBoundary>
+              </LayoutWrapper>
+            }
+          />
+        )}
         {Object.entries(Pages).map(([path, Page]) => (
           <Route
             key={path}
