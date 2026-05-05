@@ -32,11 +32,10 @@ export default function HaloPSATicketLink({ project, onUpdate }) {
 
   const ticketMutation = useMutation({
     mutationFn: async (params) => {
-      const response = await api.functions.invoke('haloPSATicket', params);
-      return response.data;
+      return await api.functions.invoke('haloPSATicket', params);
     },
     onSuccess: (data) => {
-      toast.success(data.message);
+      toast.success(data?.message || 'Ticket updated');
       queryClient.invalidateQueries({ queryKey: ['project', project.id] });
       onUpdate?.();
       setShowCreateDialog(false);
@@ -44,7 +43,7 @@ export default function HaloPSATicketLink({ project, onUpdate }) {
       setTicketId('');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.error || error.message);
+      toast.error(error?.data?.error || error?.message || 'Ticket request failed');
     }
   });
 

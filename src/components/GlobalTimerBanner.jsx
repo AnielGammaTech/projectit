@@ -177,7 +177,10 @@ export default function GlobalTimerBanner({ currentUser }) {
   };
 
   const finishPendingNavigation = () => {
-    if (pendingNavigation) navigate(pendingNavigation);
+    if (pendingNavigation && pendingNavigation !== '__back__') {
+      navigate(pendingNavigation);
+    }
+    // For '__back__' the browser already navigated back; nothing to do.
     setPendingNavigation(null);
   };
 
@@ -199,6 +202,10 @@ export default function GlobalTimerBanner({ currentUser }) {
   };
 
   const handleStay = () => {
+    // If back-button triggered, undo the browser back by going forward
+    if (pendingNavigation === '__back__') {
+      navigate(1);
+    }
     setPendingNavigation(null);
     setShowStopModal(false);
   };
@@ -246,6 +253,28 @@ export default function GlobalTimerBanner({ currentUser }) {
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [activeEntry]);
+
+  // Intercept browser back/forward while timer running
+  useEffect(() => {
+    if (!activeEntry) return;
+    const activeProjectId = activeEntry.project_id;
+
+    const handlePopState = () => {
+      // Don't intercept if back navigated within the same project
+      const stillOnProject =
+        activeProjectId &&
+        (window.location.search.includes(activeProjectId) ||
+          window.location.pathname.includes(activeProjectId));
+      if (stillOnProject) return;
+
+      setPendingNavigation('__back__');
+      setStopDescription('');
+      setShowStopModal(true);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [activeEntry]);
 
   if (!activeEntry) {
